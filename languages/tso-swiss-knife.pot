@@ -1,0 +1,6912 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TSO Swiss Knife 1.0.0\n"
+"Report-Msgid-Bugs-To: https://tusoporteonline.es\n"
+"POT-Creation-Date: 2026-07-04 09:12+0000\n"
+"PO-Revision-Date: 2026-07-04 09:12+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: tso-swiss-knife\n"
+
+msgid "%d events are more than one hour overdue."
+msgstr ""
+
+msgid "%d events scheduled"
+msgstr ""
+
+msgid "%d expired transients deleted."
+msgstr ""
+
+msgid ""
+"%d hooks are currently registered. This view is a snapshot at page load. "
+"Results are paginated to prevent server timeouts."
+msgstr ""
+
+msgid "%d overdue events."
+msgstr ""
+
+msgid "%d plugin updates detected."
+msgstr ""
+
+msgid "%d recorded missing URLs."
+msgstr ""
+
+msgid "%d recurring events run more often than every 5 minutes."
+msgstr ""
+
+msgid "%d theme updates detected."
+msgstr ""
+
+msgid "%d transients deleted."
+msgstr ""
+
+msgid "(no title)"
+msgstr ""
+
+msgid ".htaccess permissions"
+msgstr ""
+
+msgid "404 log cleared."
+msgstr ""
+
+msgid "404 monitor"
+msgstr ""
+
+msgid "A Disallow: / rule blocks crawling for the matching user agent."
+msgstr ""
+
+msgid "A cron process appears to be running."
+msgstr ""
+
+msgid "A user named admin exists. Rename it to a non-obvious username."
+msgstr ""
+
+msgid "A wp-config.php protection rule was found."
+msgstr ""
+
+msgid "ABSPATH"
+msgstr ""
+
+msgid "ACF (Pro) uses REST API to expose custom fields."
+msgstr ""
+
+msgid "ACF registers REST API endpoints to expose custom fields."
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Active MU-plugin: %s"
+msgstr ""
+
+msgid "Active Plugins"
+msgstr ""
+
+msgid "Active Theme"
+msgstr ""
+
+msgid "Admin is using SSL."
+msgstr ""
+
+msgid "Admin may not be forced through SSL."
+msgstr ""
+
+msgid "Administrators & Sessions"
+msgstr ""
+
+msgid "Alert settings saved."
+msgstr ""
+
+msgid "All scheduled hooks have callbacks loaded."
+msgstr ""
+
+msgid "Apply Sandbox"
+msgstr ""
+
+msgid "Are you sure you want to delete this item?"
+msgstr ""
+
+msgid "Attachment file not found."
+msgstr ""
+
+msgid "Attachment thumbnails regenerated."
+msgstr ""
+
+msgid "Autoload total: %s"
+msgstr ""
+
+msgid "Autoloaded options"
+msgstr ""
+
+msgid "Autosave & Revisions"
+msgstr ""
+
+msgid "Available"
+msgstr ""
+
+msgid ""
+"Broad access rules were found. Confirm they are scoped to the intended "
+"directory context."
+msgstr ""
+
+msgid "CF7 uses REST API endpoints for form submissions."
+msgstr ""
+
+msgid ""
+"CSS/JS/HTML minification cache. Use Autoptimize › Delete Cache to clear."
+msgstr ""
+
+msgid "Caution"
+msgstr ""
+
+msgid "Changes how WordPress spawns cron requests."
+msgstr ""
+
+msgid "Check"
+msgstr ""
+
+msgid "Check Selected"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Clear 404 Log"
+msgstr ""
+
+msgid "Clear pause"
+msgstr ""
+
+msgid "Close Sessions"
+msgstr ""
+
+msgid "Content Audit"
+msgstr ""
+
+msgid "Controls automatic WordPress core updates."
+msgstr ""
+
+msgid "Controls editor autosave frequency in seconds."
+msgstr ""
+
+msgid "Controls elevated admin/image processing memory limit."
+msgstr ""
+
+msgid "Controls how long trashed content is kept."
+msgstr ""
+
+msgid "Controls how many post revisions WordPress keeps."
+msgstr ""
+
+msgid "Controls normal WordPress memory limit."
+msgstr ""
+
+msgid "Could not clear the log file."
+msgstr ""
+
+msgid "Could not regenerate attachment metadata."
+msgstr ""
+
+msgid "Could not write the MU-plugin file."
+msgstr ""
+
+msgid "Cron"
+msgstr ""
+
+msgid "Cron Manager"
+msgstr ""
+
+msgid "Cron event not found."
+msgstr ""
+
+msgid "Cron lock"
+msgstr ""
+
+msgid "Current Admin Time"
+msgstr ""
+
+msgid "Current Rewrite Rules (%d)"
+msgstr ""
+
+msgid "Current table prefix: %s"
+msgstr ""
+
+msgid ""
+"DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php."
+msgstr ""
+
+msgid "DISALLOW_FILE_EDIT is enabled."
+msgstr ""
+
+msgid "Data: %1$s · Index: %2$s · Overhead: %3$s"
+msgstr ""
+
+msgid "Database"
+msgstr ""
+
+msgid "Database Charset"
+msgstr ""
+
+msgid "TSO Options & Tables Cleaner"
+msgstr ""
+
+msgid "Database Version"
+msgstr ""
+
+msgid "Debug"
+msgstr ""
+
+msgid "Debug Mode"
+msgstr ""
+
+msgid "Debug settings saved. Reload the page to see the new constants."
+msgstr ""
+
+msgid "Default (WordPress standard)"
+msgstr ""
+
+msgid "Default admin username"
+msgstr ""
+
+msgid ""
+"Defines whether the site runs as production, staging, development or local."
+msgstr ""
+
+msgid "Directory indexing appears to be enabled with Options +Indexes."
+msgstr ""
+
+msgid "Disable"
+msgstr ""
+
+msgid "Disable Maintenance Mode"
+msgstr ""
+
+msgid "Disable completely (⚠ disables auto-save)"
+msgstr ""
+
+msgid "Disable everywhere except the post editor"
+msgstr ""
+
+msgid "Disable on frontend only"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Disables automatic background updates when true."
+msgstr ""
+
+msgid "Disables plugin/theme installation, updates and file modifications."
+msgstr ""
+
+msgid "Disables the built-in plugin and theme editors."
+msgstr ""
+
+msgid "Disables traffic-based WP-Cron and expects a real server cron."
+msgstr ""
+
+msgid "Document Root"
+msgstr ""
+
+msgid "Done!"
+msgstr ""
+
+msgid "Duplicate source path detected: %s."
+msgstr ""
+
+msgid ""
+"Elementor uses REST API calls in the page builder and for template library."
+msgstr ""
+
+msgid "Email Diagnostics"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+msgid "Enable DISALLOW_FILE_EDIT to hide plugin/theme editors."
+msgstr ""
+
+msgid "Enable Maintenance Mode"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Enables PHP error reporting and additional debug information."
+msgstr ""
+
+msgid "Enter a valid email address."
+msgstr ""
+
+msgid "Enter a valid regular expression source."
+msgstr ""
+
+msgid "Enter a valid source path such as /old-page/."
+msgstr ""
+
+msgid "Enter a valid target URL or site path."
+msgstr ""
+
+msgid "Error. Please try again."
+msgstr ""
+
+msgid "Errors"
+msgstr ""
+
+msgid "Event deleted."
+msgstr ""
+
+msgid "Event executed successfully."
+msgstr ""
+
+msgid "Event ran but could not be rescheduled."
+msgstr ""
+
+msgid "Exact"
+msgstr ""
+
+msgid "External"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "File editor disabled"
+msgstr ""
+
+msgid "File not found."
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+msgid "Flush Object Cache"
+msgstr ""
+
+msgid "Force SSL admin"
+msgstr ""
+
+msgid "Forces SSL for admin screens and logins."
+msgstr ""
+
+msgid ""
+"Forces the WordPress login page and admin area to always use HTTPS, even if "
+"the front end runs on HTTP. Only enable this if you have a valid SSL "
+"certificate. If you do not have SSL, this will lock you out of the admin."
+msgstr ""
+
+msgid "Gone"
+msgstr ""
+
+msgid ""
+"Good balance: keeps editor features, removes unnecessary polling elsewhere."
+msgstr ""
+
+msgid ""
+"Good option for high-traffic sites that do not need real-time front-end "
+"features."
+msgstr ""
+
+msgid "HTTPS"
+msgstr ""
+
+msgid "Hard Flush"
+msgstr ""
+
+msgid "Health Report"
+msgstr ""
+
+msgid "Heartbeat"
+msgstr ""
+
+msgid ""
+"Heartbeat only runs in the post/page editor to preserve auto-save and lock "
+"detection. Disabled on all other admin pages and the front end."
+msgstr ""
+
+msgid ""
+"Heartbeat runs everywhere at the default interval (15–60 s). Auto-save, lock"
+" detection and login checks work normally. Recommended for most sites."
+msgstr ""
+
+msgid "Heartbeat settings saved."
+msgstr ""
+
+msgid ""
+"Hides the built-in plugin and theme code editors from the WordPress admin "
+"(Appearance › Editor, Plugins › Editor). Strongly recommended on production "
+"sites to prevent accidental or malicious code injection via the dashboard."
+msgstr ""
+
+msgid "Home URL"
+msgstr ""
+
+msgid "Hooks Inspector"
+msgstr ""
+
+msgid "Hooks without callback"
+msgstr ""
+
+msgid "In"
+msgstr ""
+
+msgid "In %s"
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Input"
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Invalid key."
+msgstr ""
+
+msgid "Invalid log file."
+msgstr ""
+
+msgid "Invalid option name."
+msgstr ""
+
+msgid "Invalid parameters."
+msgstr ""
+
+msgid "Invalid recovery item."
+msgstr ""
+
+msgid "Invalid redirect status."
+msgstr ""
+
+msgid "Invalid user."
+msgstr ""
+
+msgid ""
+"Jetpack relies on the REST API for sync, stats, Publicize and many other "
+"features."
+msgstr ""
+
+msgid "Kinsta server-side cache. Use the Kinsta panel or WP-CLI to flush."
+msgstr ""
+
+msgid "LiteSpeed Cache uses REST API for QUIC.cloud integration."
+msgstr ""
+
+msgid "Loads unminified CSS/JS from WordPress core."
+msgstr ""
+
+msgid "Log file cleared."
+msgstr ""
+
+msgid "Log file is not writable."
+msgstr ""
+
+msgid "Log file not found."
+msgstr ""
+
+msgid "Long Slugs"
+msgstr ""
+
+msgid "Mailchimp for WP uses REST API for forms and subscribe endpoints."
+msgstr ""
+
+msgid "Maintenance Mode"
+msgstr ""
+
+msgid "Maintenance mode disabled."
+msgstr ""
+
+msgid "Maintenance mode enabled."
+msgstr ""
+
+msgid "Matched Query"
+msgstr ""
+
+msgid "Matched Regex"
+msgstr ""
+
+msgid "Media Cleaner"
+msgstr ""
+
+msgid "Memcached object cache. The Flush button above will flush this."
+msgstr ""
+
+msgid "Memory"
+msgstr ""
+
+msgid "Missing Attachment Files"
+msgstr ""
+
+msgid "Module not available."
+msgstr ""
+
+msgid ""
+"Multi-layer cache including page, object and browser. Use W3TC Performance ›"
+" Empty All Caches to flush HTML."
+msgstr ""
+
+msgid "Multisite"
+msgstr ""
+
+msgid "Network Active Plugins"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid ""
+"No .htaccess file was found at the WordPress root. This can be normal on "
+"Nginx or if pretty permalinks are not enabled."
+msgstr ""
+
+msgid ""
+"No Sitemap directive was found. Add one if you want crawlers to discover the"
+" XML sitemap directly."
+msgstr ""
+
+msgid "No User-agent directive was found."
+msgstr ""
+
+msgid "No doing_cron lock found."
+msgstr ""
+
+msgid "No explicit wp-config.php protection rule was found in this file."
+msgstr ""
+
+msgid "No obvious issues were detected."
+msgstr ""
+
+msgid "No persistent object cache detected."
+msgstr ""
+
+msgid ""
+"No physical robots.txt file was found. WordPress may still serve a virtual "
+"robots.txt response."
+msgstr ""
+
+msgid "No plugin updates detected."
+msgstr ""
+
+msgid "No plugins or themes have been auto-paused by WordPress."
+msgstr ""
+
+msgid "No rewrite rule matched."
+msgstr ""
+
+msgid "No table specified."
+msgstr ""
+
+msgid "No tables selected."
+msgstr ""
+
+msgid "No theme updates detected."
+msgstr ""
+
+msgid "No user named admin found."
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "None detected"
+msgstr ""
+
+msgid "Normalized Path"
+msgstr ""
+
+msgid "Not available"
+msgstr ""
+
+msgid "Not defined"
+msgstr ""
+
+msgid "Not found"
+msgstr ""
+
+msgid "Not recommended for production. Disables auto-save completely."
+msgstr ""
+
+msgid "OFF"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "ON"
+msgstr ""
+
+msgid "Object Cache"
+msgstr ""
+
+msgid "Object cache"
+msgstr ""
+
+msgid "Object cache flushed."
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Old Pending or Private Content"
+msgstr ""
+
+msgid "Old Registered Accounts"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Operating System"
+msgstr ""
+
+msgid "Optimize"
+msgstr ""
+
+msgid "Optimize Selected"
+msgstr ""
+
+msgid "Option Cleanup"
+msgstr ""
+
+msgid "Option deleted."
+msgstr ""
+
+msgid ""
+"Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if "
+"you rely on the admin for updates."
+msgstr ""
+
+msgid "Overdue by %s"
+msgstr ""
+
+msgid "Overdue cron events"
+msgstr ""
+
+msgid "Overdue events"
+msgstr ""
+
+msgid "PHP Max Execution Time"
+msgstr ""
+
+msgid "PHP Max Input Vars"
+msgstr ""
+
+msgid "PHP Memory Limit"
+msgstr ""
+
+msgid "PHP Post Max Size"
+msgstr ""
+
+msgid "PHP SAPI"
+msgstr ""
+
+msgid "PHP Upload Max Filesize"
+msgstr ""
+
+msgid "PHP Version"
+msgstr ""
+
+msgid "PHP error_log setting"
+msgstr ""
+
+msgid "PHP version"
+msgstr ""
+
+msgid "Page %1$d of %2$d"
+msgstr ""
+
+msgid ""
+"Page HTML cache + object cache. Use LiteSpeed Cache › Manage Cache to flush "
+"HTML. This button flushes LSCache object cache."
+msgstr ""
+
+msgid ""
+"Page HTML cache. Use WP Rocket › Clear Cache for HTML. This button has no "
+"effect on WP Rocket HTML cache."
+msgstr ""
+
+msgid "Page and CSS/JS optimization cache. Use WP Boost settings to clear."
+msgstr ""
+
+msgid "Page cache and asset optimization. Use Hummingbird › Caching to flush."
+msgstr ""
+
+msgid "Paths & URLs"
+msgstr ""
+
+msgid "Paused Plugins"
+msgstr ""
+
+msgid "Paused Themes"
+msgstr ""
+
+msgid "Performance"
+msgstr ""
+
+msgid "Permissions: %s."
+msgstr ""
+
+msgid "Persistent object cache detected."
+msgstr ""
+
+msgid "Plugin Footprint"
+msgstr ""
+
+msgid "Plugin Sandbox"
+msgstr ""
+
+msgid "Plugin updates"
+msgstr ""
+
+msgid "Posts Without Title"
+msgstr ""
+
+msgid ""
+"Prevents any plugin or theme from being installed, updated or deleted from "
+"the WordPress admin. Also disables the WordPress auto-updater. Use on "
+"hardened servers where all deploys are done via version control. Note: this "
+"also blocks WordPress core auto-updates."
+msgstr ""
+
+msgid "Published Posts Without Featured Image"
+msgstr ""
+
+msgid "Purge All"
+msgstr ""
+
+msgid "Purge Expired"
+msgstr ""
+
+msgid "Purge all items?"
+msgstr ""
+
+msgid "Query Vars"
+msgstr ""
+
+msgid "REST API"
+msgstr ""
+
+msgid "REST API access restricted."
+msgstr ""
+
+msgid "REST API settings saved."
+msgstr ""
+
+msgid "REST namespace %s is disabled."
+msgstr ""
+
+msgid "Recommended for production sites."
+msgstr ""
+
+msgid ""
+"Recommended: ON if you have SSL. Never enable without a working SSL "
+"certificate."
+msgstr ""
+
+msgid "Recommended: ON on all production sites."
+msgstr ""
+
+msgid "Recovery storage is not available on this WordPress version."
+msgstr ""
+
+msgid "Redirect Rules (%d)"
+msgstr ""
+
+msgid "Redirect deleted."
+msgstr ""
+
+msgid "Redirect for %s has an invalid or unsafe target."
+msgstr ""
+
+msgid "Redirect for %s is disabled."
+msgstr ""
+
+msgid "Redirect for %s points back to itself."
+msgstr ""
+
+msgid "Redirect not found."
+msgstr ""
+
+msgid "Redirect saved."
+msgstr ""
+
+msgid "Redirect updated."
+msgstr ""
+
+msgid "Redirects"
+msgstr ""
+
+msgid ""
+"Redis-backed WordPress object cache. The Flush button above will flush this."
+msgstr ""
+
+msgid "Regenerate Thumbnails"
+msgstr ""
+
+msgid "Regex"
+msgstr ""
+
+msgid "Registered Post Statuses"
+msgstr ""
+
+msgid "Registered Post Types"
+msgstr ""
+
+msgid "Registered Shortcodes"
+msgstr ""
+
+msgid "Registered Taxonomies"
+msgstr ""
+
+msgid "Repair"
+msgstr ""
+
+msgid "Reset Sandbox"
+msgstr ""
+
+msgid "Resolved Post ID"
+msgstr ""
+
+msgid "Review"
+msgstr ""
+
+msgid "Rewrite Rules"
+msgstr ""
+
+msgid "Rewrite Tags"
+msgstr ""
+
+msgid "Rewrite rules flushed successfully."
+msgstr ""
+
+msgid ""
+"RewriteEngine On was not found. Pretty permalinks and redirect rules may not"
+" work on Apache."
+msgstr ""
+
+msgid "Run"
+msgstr ""
+
+msgid "Running…"
+msgstr ""
+
+msgid "Sandbox applied. Reload the page to see the effect."
+msgstr ""
+
+msgid "Sandbox reset. Normal plugin set is active."
+msgstr ""
+
+msgid "Save Alert Settings"
+msgstr ""
+
+msgid "Save Redirect"
+msgstr ""
+
+msgid "Saves all DB queries to $wpdb->queries array."
+msgstr ""
+
+msgid "Saves errors to wp-content/debug.log."
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "Security Review"
+msgstr ""
+
+msgid "Security settings saved. Reload the page to see the new values."
+msgstr ""
+
+msgid "Send Test"
+msgstr ""
+
+msgid "Sent"
+msgstr ""
+
+msgid "Server Files Review"
+msgstr ""
+
+msgid "Server Software"
+msgstr ""
+
+msgid "Settings saved."
+msgstr ""
+
+msgid "Shows PHP errors on screen (disable on production)."
+msgstr ""
+
+msgid "Single event"
+msgstr ""
+
+msgid "Site URL"
+msgstr ""
+
+msgid "SiteGround dynamic cache. Use SG Optimizer settings to flush."
+msgstr ""
+
+msgid "Soft Flush"
+msgstr ""
+
+msgid "Source path %s appears to resolve to existing WordPress content."
+msgstr ""
+
+msgid ""
+"Static HTML cache. Use the Flush icon in the admin bar or WP Fastest Cache "
+"settings."
+msgstr ""
+
+msgid ""
+"Static HTML page cache. Use Delete Cache in the WP Super Cache settings."
+msgstr ""
+
+msgid ""
+"Static HTML page cache. Use the Clear Cache button in Cache Enabler "
+"settings."
+msgstr ""
+
+msgid ""
+"Stops the Heartbeat from running on public pages. Admin and editor still "
+"work normally. Reduces server load if you have many anonymous visitors."
+msgstr ""
+
+msgid ""
+"Stops the Heartbeat script everywhere, including the editor. Auto-save, post"
+" lock detection and login-expiry warnings stop working. Use only on staging "
+"or maintenance environments, or if you have an alternative auto-save "
+"solution."
+msgstr ""
+
+msgid "TSO Swiss Knife"
+msgstr ""
+
+msgid "Table Prefix"
+msgstr ""
+
+msgid "Table not found."
+msgstr ""
+
+msgid "Test email sent."
+msgstr ""
+
+msgid "The Block Editor requires REST API for all edit operations."
+msgstr ""
+
+msgid "The file could not be read."
+msgstr ""
+
+msgid "The file exists but is not readable by WordPress."
+msgstr ""
+
+msgid "The file is larger than expected, so only metadata is reviewed."
+msgstr ""
+
+msgid ""
+"The file is writable by WordPress. This can be useful for permalink updates,"
+" but review server permissions if it should be locked down."
+msgstr ""
+
+msgid "The mu-plugins directory is not writable."
+msgstr ""
+
+msgid "The paused extension entry was cleared. Reload and test carefully."
+msgstr ""
+
+msgid ""
+"The site recorded %d recent 404 hits. Review the Redirects tab to create "
+"redirects."
+msgstr ""
+
+msgid ""
+"The standard WordPress block was not found. This can be normal with custom "
+"server rules, but permalink rewrites may be managed elsewhere."
+msgstr ""
+
+msgid "The target points back to the source and would create a loop."
+msgstr ""
+
+msgid "Theme updates"
+msgstr ""
+
+msgid "This content is no longer available."
+msgstr ""
+
+msgid "This content is unavailable for legal reasons."
+msgstr ""
+
+msgid "This is a test email sent from TSO Swiss Knife Email Diagnostics."
+msgstr ""
+
+msgid "This option is protected and cannot be deleted."
+msgstr ""
+
+msgid "This will reload the page with the selected plugins. Continue?"
+msgstr ""
+
+msgid "Timezone"
+msgstr ""
+
+msgid "Transient deleted."
+msgstr ""
+
+msgid "Transients"
+msgstr ""
+
+msgid "Unattached Media"
+msgstr ""
+
+msgid "Unavailable For Legal Reasons"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Unknown error"
+msgstr ""
+
+msgid "Update Redirect"
+msgstr ""
+
+msgid ""
+"Uploads are blocked for crawlers. Confirm this is intentional if media files"
+" should rank in search."
+msgstr ""
+
+msgid "User sessions closed."
+msgstr ""
+
+msgid "Users & Sessions"
+msgstr ""
+
+msgid "Users Without Role"
+msgstr ""
+
+msgid "Very frequent events"
+msgstr ""
+
+msgid "WP Constants"
+msgstr ""
+
+msgid "WP Content Directory"
+msgstr ""
+
+msgid "WP Internals"
+msgstr ""
+
+msgid ""
+"WP Rocket uses the REST API for cache invalidation and heartbeat "
+"optimisation."
+msgstr ""
+
+msgid "WP-Cron execution"
+msgstr ""
+
+msgid "WP-Cron is triggered by site traffic."
+msgstr ""
+
+msgid ""
+"WP_DEBUG and WP_DEBUG_LOG are selected. Save settings to activate debug.log."
+msgstr ""
+
+msgid "WP_DEBUG_DISPLAY"
+msgstr ""
+
+msgid ""
+"We are performing scheduled maintenance. We will be back online shortly."
+msgstr ""
+
+msgid "Wildcard"
+msgstr ""
+
+msgid ""
+"WooCommerce uses the REST API for the cart, checkout, store blocks and "
+"mobile apps."
+msgstr ""
+
+msgid "WordPress"
+msgstr ""
+
+msgid "WordPress Locale"
+msgstr ""
+
+msgid "WordPress Version"
+msgstr ""
+
+msgid "WordPress debug.log"
+msgstr ""
+
+msgid "WordPress root error_log"
+msgstr ""
+
+msgid "WordPress version"
+msgstr ""
+
+msgid "XML-RPC"
+msgstr ""
+
+msgid "XML-RPC appears enabled. It can be a brute-force vector if not needed."
+msgstr ""
+
+msgid "XML-RPC is disabled by filters."
+msgstr ""
+
+msgid "YES – Recovery Mode is active"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid ""
+"Yoast SEO uses the REST API for the sidebar integration in the Block Editor."
+msgstr ""
+
+msgid "You cannot close your own sessions from here."
+msgstr ""
+
+msgid "You do not have permission to access this page."
+msgstr ""
+
+msgid "Your current IP: %s"
+msgstr ""
+
+msgid "[%s] 404 alert threshold reached"
+msgstr ""
+
+msgid "[%s] TSO Swiss Knife email test"
+msgstr ""
+
+msgid "ago"
+msgstr ""
+
+msgid "debug.log size"
+msgstr ""
+
+msgid "not defined"
+msgstr ""
+
+msgid "plugins error_log"
+msgstr ""
+
+msgid "robots.txt has no active directives."
+msgstr ""
+
+msgid "tables"
+msgstr ""
+
+msgid "themes error_log"
+msgstr ""
+
+msgid "wp-config.php permissions"
+msgstr ""
+
+msgid "wp-content error_log"
+msgstr ""
+
+msgid "wp_mail returned false."
+msgstr ""
+
+msgid "⚠ MAINTENANCE MODE ON"
+msgstr ""
+
+msgid "%d core files checked"
+msgstr ""
+
+msgid "%d issue(s) found"
+msgstr ""
+
+msgid "%d modified"
+msgstr ""
+
+msgid "%d missing"
+msgstr ""
+
+msgid "%d unexpected"
+msgstr ""
+
+msgid "All core files are intact."
+msgstr ""
+
+msgid "All files match — no issues detected"
+msgstr ""
+
+msgid "All WordPress core files are intact."
+msgstr ""
+
+msgid "Actual MD5"
+msgstr ""
+
+msgid "Cached"
+msgstr ""
+
+msgid ""
+"Cache cleared. Next scan will fetch fresh checksums from WordPress.org."
+msgstr ""
+
+msgid ""
+"Compares every WordPress core file against the official MD5 checksums "
+"published by WordPress.org. Detects files that have been modified, are "
+"missing or have been unexpectedly added to wp-admin/ or wp-includes/. It "
+"does NOT scan plugins, themes or uploads."
+msgstr ""
+
+msgid ""
+"Checksums are fetched from the WordPress.org API and cached locally for 24 "
+"hours. Only WordPress Core files are verified — wp-content/ is intentionally"
+" excluded. Modified files are not automatically restored; always review "
+"changes before taking action."
+msgstr ""
+
+msgid "Connecting to WordPress.org API…"
+msgstr ""
+
+msgid "Core File Integrity"
+msgstr ""
+
+msgid "Could not reach WordPress.org checksums API: %s"
+msgstr ""
+
+msgid "Expected MD5"
+msgstr ""
+
+msgid "File ignored. Re-scan to update results."
+msgstr ""
+
+msgid "File removed from ignore list."
+msgstr ""
+
+msgid "Force Re-scan"
+msgstr ""
+
+msgid "Force fresh scan — ignores the 24-hour cache"
+msgstr ""
+
+msgid "Ignore"
+msgstr ""
+
+msgid "Ignored Files"
+msgstr ""
+
+msgid "Invalid response from WordPress.org API."
+msgstr ""
+
+msgid "issue(s) found — review the results below."
+msgstr ""
+
+msgid "Last scan: %1$s at %2$s"
+msgstr ""
+
+msgid "Modified Files"
+msgstr ""
+
+msgid "Missing Files"
+msgstr ""
+
+msgid "No file specified."
+msgstr ""
+
+msgid "No scan has been run yet. Click «Scan Core Files» to begin."
+msgstr ""
+
+msgid ""
+"No modified, missing or unexpected files were found in wp-admin/ or wp-"
+"includes/."
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Scan Core Files"
+msgstr ""
+
+msgid "Scan Summary"
+msgstr ""
+
+msgid ""
+"These files are excluded from scan results. Remove them from this list to "
+"include them again."
+msgstr ""
+
+msgid ""
+"These files exist on your server but their MD5 hash does not match the "
+"official WordPress release. This could mean the file was legitimately edited"
+" (e.g. by a plugin installer), infected by malware, or corrupted. Review "
+"each file before taking action."
+msgstr ""
+
+msgid ""
+"These files are part of the official WordPress release but were not found on"
+" your server. A missing core file can cause fatal errors or broken "
+"functionality."
+msgstr ""
+
+msgid ""
+"These files were found inside wp-admin/ or wp-includes/ but are NOT part of "
+"the official WordPress release. This is sometimes normal (some plugins "
+"inject files into these directories) but it can also indicate a compromised "
+"installation. Review each file carefully."
+msgstr ""
+
+msgid "To restore:"
+msgstr ""
+
+msgid ""
+"To restore: Download the same WordPress version from "
+"wordpress.org/download/releases/ and replace the affected files via FTP/SFTP"
+" or the Hosting file manager."
+msgstr ""
+
+msgid "Unexpected Files"
+msgstr ""
+
+msgid "WordPress.org API returned HTTP %d."
+msgstr ""
+
+msgid "WordPress %s"
+msgstr ""
+
+msgid "\"%s left\""
+msgstr ""
+
+msgid "%d IP address(es) are currently locked out."
+msgstr ""
+
+msgid "%s failed attempts before lockout (recommended: 5)"
+msgstr ""
+
+msgid "%s left"
+msgstr ""
+
+msgid "%s minutes in which the attempts are counted (recommended: 5)"
+msgstr ""
+
+msgid "%s minutes the IP is blocked (recommended: 30)"
+msgstr ""
+
+msgid "\"[%1$s] Login lockout: %2$s\""
+msgstr ""
+
+msgid "[%1$s] Login lockout: %2$s"
+msgstr ""
+
+msgid "Add my IP"
+msgstr ""
+
+msgid "Attempts"
+msgstr ""
+
+msgid "Block IPs after repeated failed logins"
+msgstr ""
+
+msgid "Brute-Force Protection"
+msgstr ""
+
+msgid ""
+"Changes the login page URL from the default /wp-login.php to a secret "
+"address only you know. Direct requests to /wp-login.php or /wp-admin/ while "
+"logged out will return a 404 instead of the login form, making the page "
+"invisible to bots."
+msgstr ""
+
+msgid "Clear Log"
+msgstr ""
+
+msgid ""
+"Counts consecutive failed login attempts per IP address. Once the threshold "
+"is reached, further login attempts from that IP are blocked for the "
+"configured duration. Successful logins reset the counter."
+msgstr ""
+
+msgid "Current login URL:"
+msgstr ""
+
+msgid "Custom Login URL"
+msgstr ""
+
+msgid "Email notification"
+msgstr ""
+
+msgid "Enable brute-force protection"
+msgstr ""
+
+msgid "Enable custom login URL"
+msgstr ""
+
+msgid "Expired"
+msgstr ""
+
+msgid "Failed Attempts"
+msgstr ""
+
+msgid "First Attempt"
+msgstr ""
+
+msgid "Generate"
+msgstr ""
+
+msgid "Hide /wp-login.php and use the slug below instead"
+msgstr ""
+
+msgid ""
+"IPs that have failed login attempts within the active window but have not "
+"yet been locked out."
+msgstr ""
+
+msgid "IP Address"
+msgstr ""
+
+msgid "IP Whitelist"
+msgstr ""
+
+msgid "IP unlocked."
+msgstr ""
+
+msgid "All IPs unlocked."
+msgstr ""
+
+msgid "Lockout Log"
+msgstr ""
+
+msgid "Lockout duration"
+msgstr ""
+
+msgid "Lockout log cleared."
+msgstr ""
+
+msgid "Locked"
+msgstr ""
+
+msgid "Locked At"
+msgstr ""
+
+msgid "Live Attempt Counters"
+msgstr ""
+
+msgid "Login Protection"
+msgstr ""
+
+msgid "Login protection settings saved."
+msgstr ""
+
+msgid "Login slug"
+msgstr ""
+
+msgid "Max attempts"
+msgstr ""
+
+msgid "No lockouts have been recorded yet."
+msgstr ""
+
+msgid "Not Found"
+msgstr ""
+
+msgid "One IP per line, e.g.:"
+msgstr ""
+
+msgid "Page not found."
+msgstr ""
+
+msgid "Please enter a custom login slug before enabling the custom URL."
+msgstr ""
+
+msgid ""
+"Protect the WordPress login page against brute-force attacks and unwanted "
+"access. Each feature can be enabled and configured independently."
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid ""
+"Save the new URL before enabling — if you lose it, you can disable this "
+"feature from the database or directly from this panel via a whitelisted IP."
+msgstr ""
+
+msgid "See the Lockout Log section below."
+msgstr ""
+
+msgid "Send email when an IP is locked out"
+msgstr ""
+
+msgid ""
+"Too many failed login attempts from %1$s. Please try again in %2$d "
+"minute(s)."
+msgstr ""
+
+msgid ""
+"IP address %1\\$s has been locked out after %3\\$d failed login attempts for username \"%2\\$s\".\n"
+"\n"
+"Site: %4\\$s\n"
+"\n"
+"You can unlock this IP from TSO Swiss Knife › Login Protection."
+msgstr ""
+
+msgid "Attempt window"
+msgstr ""
+
+msgid "Unlock"
+msgstr ""
+
+msgid "Unlock All"
+msgstr ""
+
+msgid "Unlock all currently locked IP addresses?"
+msgstr ""
+
+msgid "Clear the entire lockout log? This cannot be undone."
+msgstr ""
+
+msgid "Invalid IP address."
+msgstr ""
+
+msgid "Unlocks At"
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Whitelisted"
+msgstr ""
+
+msgid ""
+"Whitelisted IPs always have access to the login page regardless of the "
+"custom URL setting, and are never locked out by the brute-force protection. "
+"Add your office and home IPs here."
+msgstr ""
+
+msgid "Whitelisted IPs"
+msgstr ""
+
+msgid "Your IP"
+msgstr ""
+
+msgid "\"%s\" is a reserved slug and cannot be used as the login URL."
+msgstr ""
+
+msgid "Important:"
+msgstr ""
+
+msgid "e.g. enter-4892"
+msgstr ""
+
+msgid "%d options in database"
+msgstr ""
+
+msgid "(deleted)"
+msgstr ""
+
+msgid "(empty)"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add New Option"
+msgstr ""
+
+msgid "Add Option"
+msgstr ""
+
+msgid ""
+"Adds a new row directly to wp_options. Use only for custom plugin options or"
+" development purposes. Names must contain only letters, numbers, hyphens and"
+" underscores."
+msgstr ""
+
+msgid "An option with this name already exists. Use the editor to update it."
+msgstr ""
+
+msgid "Autoload"
+msgstr ""
+
+msgid "Autoload:"
+msgstr ""
+
+msgid "Browse & Edit"
+msgstr ""
+
+msgid ""
+"Browse, search and edit any option stored in the wp_options table. Critical "
+"WordPress core options are read-only. Serialized PHP and JSON values are "
+"auto-detected and displayed in a readable format."
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Caution:"
+msgstr ""
+
+msgid "Change History"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete this option permanently? This cannot be undone."
+msgstr ""
+
+msgid "Edit Option"
+msgstr ""
+
+msgid ""
+"Editing wp_options directly can break your site if critical values are "
+"changed incorrectly. All changes are logged in the History tab. If something"
+" breaks, restore the old value from the history or via phpMyAdmin."
+msgstr ""
+
+msgid ""
+"Invalid option name. Use only letters, numbers, hyphens and underscores."
+msgstr ""
+
+msgid "JSON detected."
+msgstr ""
+
+msgid ""
+"Last %d changes made through this editor. Old values are truncated at 200 "
+"characters."
+msgstr ""
+
+msgid "Letters, numbers, hyphens and underscores only."
+msgstr ""
+
+msgid "Load All"
+msgstr ""
+
+msgid "New Value"
+msgstr ""
+
+msgid "No changes recorded yet."
+msgstr ""
+
+msgid "No options found."
+msgstr ""
+
+msgid "Option Name"
+msgstr ""
+
+msgid "Option added."
+msgstr ""
+
+msgid "Option not found."
+msgstr ""
+
+msgid "Option saved."
+msgstr ""
+
+msgid "Option:"
+msgstr ""
+
+msgid "Options Editor"
+msgstr ""
+
+msgid "Preview"
+msgstr ""
+
+msgid "Previous Value"
+msgstr ""
+
+msgid "Protected"
+msgstr ""
+
+msgid "Save Option"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search option name…"
+msgstr ""
+
+msgid "Serialized PHP — edit only if you know PHP serialization syntax."
+msgstr ""
+
+msgid "Serialized PHP detected."
+msgstr ""
+
+msgid "Show formatted value"
+msgstr ""
+
+msgid "Show raw value"
+msgstr ""
+
+msgid "Size"
+msgstr ""
+
+msgid ""
+"The value is displayed as formatted JSON. The editor stores the raw JSON "
+"string — any change must remain valid JSON syntax."
+msgstr ""
+
+msgid ""
+"The value is shown in a readable format for review. The editor always works "
+"with the raw serialized string — do not modify unless you know PHP "
+"serialization syntax exactly."
+msgstr ""
+
+msgid ""
+"The value looks like serialized PHP but is not valid. Please fix the syntax "
+"or paste plain text instead."
+msgstr ""
+
+msgid ""
+"This option affects core WordPress behavior. Edit carefully and test after "
+"saving."
+msgstr ""
+
+msgid "This option is protected and cannot be edited here."
+msgstr ""
+
+msgid "This option name is reserved."
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid ""
+"Type a full or partial option name and click Search, or Load All to browse "
+"everything."
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+msgid "Update"
+msgstr ""
+
+msgid "Use the search above to find options."
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "JSON — must remain valid JSON after editing."
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "no (recommended for custom options)"
+msgstr ""
+
+msgid "of"
+msgstr ""
+
+msgid "options"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "yes (loaded on every request)"
+msgstr ""
+
+msgid "⚠ Use with caution."
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "%1$d slug(s) fixed, %2$d skipped."
+msgstr ""
+
+msgid "%d characters"
+msgstr ""
+
+msgid "All public types"
+msgstr ""
+
+msgid "Auto-create 301 redirect on rename"
+msgstr ""
+
+msgid "Auto-redirect"
+msgstr ""
+
+msgid "Bulk Fix Selected"
+msgstr ""
+
+msgid "Char Issues"
+msgstr ""
+
+msgid "Character Issues"
+msgstr ""
+
+msgid "Characters"
+msgstr ""
+
+msgid "characters"
+msgstr ""
+
+msgid "Chars"
+msgstr ""
+
+msgid "Create 301 redirect from old URL to new URL"
+msgstr ""
+
+msgid "Current length"
+msgstr ""
+
+msgid "Current slug"
+msgstr ""
+
+msgid "Deselect All"
+msgstr ""
+
+msgid "Duplicate Slugs"
+msgstr ""
+
+msgid "Duplicates"
+msgstr ""
+
+msgid "Long Slug threshold:"
+msgstr ""
+
+msgid "Long slug threshold:"
+msgstr ""
+
+msgid "New slug"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "No posts found."
+msgstr ""
+
+msgid "No posts selected."
+msgstr ""
+
+msgid "Post type:"
+msgstr ""
+
+msgid "Post not found."
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Redirects module is not active. Enable it to use this feature."
+msgstr ""
+
+msgid "Redirect will be added to TSO Swiss Knife Redirects automatically."
+msgstr ""
+
+msgid "Rename"
+msgstr ""
+
+msgid "Rename Slug"
+msgstr ""
+
+msgid "Save New Slug"
+msgstr ""
+
+msgid "Search & Edit"
+msgstr ""
+
+msgid "Search slug…"
+msgstr ""
+
+msgid "Select All"
+msgstr ""
+
+msgid "Slug Manager"
+msgstr ""
+
+msgid "Slug updated and 301 redirect created."
+msgstr ""
+
+msgid "Slug updated."
+msgstr ""
+
+msgid "Slug \"%s\" is already used by another post of the same type."
+msgstr ""
+
+msgid "The new slug is identical to the current one."
+msgstr ""
+
+msgid "The slug cannot be empty. Use only letters, numbers and hyphens."
+msgstr ""
+
+msgid ""
+"The Redirects module is not active. Automatic 301 redirects will not be "
+"created when you rename slugs. Enable the Redirects module to avoid broken "
+"links."
+msgstr ""
+
+msgid "Type a slug fragment or click Load All."
+msgstr ""
+
+msgid ""
+"Audit and fix post slugs across all public post types. Rename any slug "
+"inline with an optional automatic 301 redirect — no broken links. Long slugs"
+" hurt SEO; duplicates confuse crawlers; special characters and uppercase "
+"letters cause encoding issues."
+msgstr ""
+
+msgid ""
+"Posts and pages whose slug exceeds %d characters. Long slugs are harder for "
+"users to share and may negatively affect SEO click-through rates. "
+"Recommended maximum: 50 characters. The Bulk Fix button truncates all "
+"selected slugs at the last word boundary and creates automatic 301 "
+"redirects."
+msgstr ""
+
+msgid ""
+"Posts that share the same slug within the same post type. WordPress appends "
+"a numeric suffix (-2, -3…) at runtime to avoid collisions, but the stored "
+"slug stays as-is. Duplicate slugs confuse search engines and can cause "
+"canonical URL issues."
+msgstr ""
+
+msgid ""
+"Slugs containing uppercase letters, spaces, accented characters, or other "
+"non-ASCII characters. These can cause URL encoding issues, browser "
+"inconsistencies and problems with caching layers. A clean slug uses only "
+"lowercase a–z, digits 0–9 and hyphens."
+msgstr ""
+
+msgid ""
+"Find any post or page by its slug and rename it inline. Leave the search box"
+" empty and click Load to browse all content."
+msgstr ""
+
+msgid "Invalid post ID."
+msgstr ""
+
+msgid "Save Settings"
+msgstr ""
+
+msgid "✓ No long slugs found."
+msgstr ""
+
+msgid "✓ No duplicate slugs found."
+msgstr ""
+
+msgid "✓ No character issues found."
+msgstr ""
+
+msgid "edit ↗"
+msgstr ""
+
+msgid "Edit post ↗"
+msgstr ""
+
+msgid "no title"
+msgstr ""
+
+msgid "Redirects module required"
+msgstr ""
+
+msgid "Drag to reorder · click ✕ to hide"
+msgstr ""
+
+msgid "Hide"
+msgstr ""
+
+msgid "Organise"
+msgstr ""
+
+msgid "Organise sidebar"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Show"
+msgstr ""
+
+msgid "Sidebar layout saved."
+msgstr ""
+
+msgid "Sidebar reset to default order."
+msgstr ""
+
+msgid ""
+"Scan timed out. The server took too long to respond. Try Force Re-scan or "
+"check PHP max_execution_time."
+msgstr ""
+
+msgid ""
+"All options load automatically below. Use the search box to filter by name. "
+"Click a column header to sort."
+msgstr ""
+
+msgid "Also updates .htaccess"
+msgstr ""
+
+msgid ""
+"Browse and edit options stored in wp_options. The list loads automatically "
+"in alphabetical order. Protected core options and transients are hidden by "
+"default."
+msgstr ""
+
+msgid ""
+"Browse and edit options stored in wp_options. The list loads automatically "
+"in alphabetical order. Protected core options and transients are hidden."
+msgstr ""
+
+msgid ""
+"Editing wp_options directly can break your site if critical values are "
+"changed incorrectly."
+msgstr ""
+
+msgid "Show protected options"
+msgstr ""
+
+msgid "Hide protected options"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "Protected option."
+msgstr ""
+
+msgid "This option is protected. You can view it but not change or delete it."
+msgstr ""
+
+msgid "Value type"
+msgstr ""
+
+msgid "Plain text value."
+msgstr ""
+
+msgid "Whole number only, for example: 0 or 42."
+msgstr ""
+
+msgid "Valid JSON object or array."
+msgstr ""
+
+msgid "Valid PHP serialized string."
+msgstr ""
+
+msgid "Integer values must be whole numbers (for example: 0, 42, -3)."
+msgstr ""
+
+msgid "JSON value cannot be empty."
+msgstr ""
+
+msgid "The value is not valid JSON."
+msgstr ""
+
+msgid "Serialized value cannot be empty."
+msgstr ""
+
+msgid "The value does not look like valid serialized PHP."
+msgstr ""
+
+msgid "The value looks like serialized PHP but is not valid."
+msgstr ""
+
+msgid "Transient options cannot be edited here."
+msgstr ""
+
+msgid "Declared in robots.txt"
+msgstr ""
+
+msgid ""
+"Directory indexing appears to be enabled (Options +Indexes). This shows "
+"folder contents to visitors."
+msgstr ""
+
+msgid "Editable"
+msgstr ""
+
+msgid "File contents"
+msgstr ""
+
+msgid "File is not writable."
+msgstr ""
+
+msgid ""
+"File is read-only. To edit it, make it writable via FTP or your hosting "
+"control panel."
+msgstr ""
+
+msgid "File saved."
+msgstr ""
+
+msgid "Filter by option name…"
+msgstr ""
+
+msgid "Found"
+msgstr ""
+
+msgid ""
+"If your links return 404 errors, or you just created a new post type or "
+"changed your permalink structure, these rules may be outdated. Flushing "
+"rebuilds them."
+msgstr ""
+
+msgid "Inactive Plugins"
+msgstr ""
+
+msgid "Invalid file key."
+msgstr ""
+
+msgid "Loading options…"
+msgstr ""
+
+msgid ""
+"No .htaccess file was found at the WordPress root. This is normal on Nginx "
+"servers. On Apache, it is required for pretty permalinks."
+msgstr ""
+
+msgid ""
+"No robots.txt file was found. WordPress may serve a default virtual "
+"robots.txt. You can create one here."
+msgstr ""
+
+msgid ""
+"No Sitemap directive was found. Consider adding one so search engines can "
+"discover your sitemap directly."
+msgstr ""
+
+msgid "Physical file"
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid ""
+"Rebuilds the URL rules saved in the database. Does the same thing as going "
+"to Settings → Permalinks and clicking \"Save Changes\". Use this when: you "
+"added a new page type, changed the URL structure, or installed a new plugin "
+"that has its own URLs."
+msgstr ""
+
+msgid ""
+"Does everything a Soft Flush does, and also rewrites the .htaccess file on "
+"your server (Apache) or web.config (IIS/Windows). Use this when: pretty URLs"
+" stopped working completely, you moved the site to a new folder or domain, "
+"or you changed the web server configuration. Requires the .htaccess file to "
+"be writable."
+msgstr ""
+
+msgid ""
+"Review and edit the server configuration files that control crawling, "
+"permalinks and redirects. Also shows all sitemap files detected on this "
+"installation."
+msgstr ""
+
+msgid "Safe, fast"
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Sitemaps"
+msgstr ""
+
+msgid ""
+"Sitemaps are files that list all the pages on your website so that search "
+"engines like Google can find them more easily. This panel detects sitemaps "
+"generated by popular SEO plugins."
+msgstr ""
+
+msgid ""
+"Shows how many wp_options rows each plugin has created. This is a quick way "
+"to spot plugins that store a lot of data in the database. Matching is "
+"heuristic based on plugin slug."
+msgstr ""
+
+msgid ""
+"The standard WordPress block was not found. This is normal with custom "
+"server rules."
+msgstr ""
+
+msgid "The file is writable by WordPress. You can edit it from this panel."
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+msgid "Virtual (plugin)"
+msgstr ""
+
+msgid "WordPress Core Sitemap (wp-sitemap.xml)"
+msgstr ""
+
+msgid ""
+"WordPress keeps an internal list of URL rules so it knows which page to show"
+" when someone visits a link like /my-post/ or /category/news/. These rules "
+"are called \"rewrite rules\"."
+msgstr ""
+
+msgid ""
+"You are running a pre-release version of WordPress (%s). The WordPress.org "
+"API may not have checksums for this version yet, which will cause the scan "
+"to fail. This is expected behaviour on alpha/beta/RC builds."
+msgstr ""
+
+msgid "%d options"
+msgstr ""
+
+msgid "%d options remaining"
+msgstr ""
+
+msgid ""
+"Inactive plugins may still leave options in the database. If an inactive "
+"plugin has many options you may want to uninstall it properly (Delete in the"
+" Plugins list) rather than just deactivating it."
+msgstr ""
+
+msgid "Files Not Found on Disk"
+msgstr ""
+
+msgid ""
+"These files are listed in the official WordPress checksums but were not "
+"found on your server. In most cases this is NOT a problem: WordPress also "
+"lists checksums for files that belong to plugins and themes that you may "
+"have uninstalled. Only investigate if the missing file is inside wp-admin/ "
+"or wp-includes/ and its absence causes errors."
+msgstr ""
+
+msgid ""
+"These files exist inside wp-admin/ or wp-includes/ but are not listed in the"
+" official WordPress release checksums. This is usually harmless — some "
+"plugins and server environments add helper files to these directories. Only "
+"investigate files you do not recognise and that were added at an unexpected "
+"time."
+msgstr ""
+
+msgid ""
+"RewriteEngine On was not found. Pretty permalinks may not work on Apache."
+msgstr ""
+
+msgid "Active config file: %s"
+msgstr ""
+
+msgid "Config directory:"
+msgstr ""
+
+msgid ""
+"Legacy file found in mu-plugins: %s — save settings once to migrate it to "
+"the correct location and delete the old file."
+msgstr ""
+
+msgid ""
+"Legacy file found in mu-plugins: %s — save settings once to migrate it."
+msgstr ""
+
+msgid "Note about WP_DEBUG:"
+msgstr ""
+
+msgid "Overridden by wp-config.php"
+msgstr ""
+
+msgid "The config directory is not writable."
+msgstr ""
+
+msgid ""
+"This constant is defined in wp-config.php and cannot be overridden by this "
+"plugin."
+msgstr ""
+
+msgid ""
+"WP_DEBUG, WP_DEBUG_LOG and WP_DEBUG_DISPLAY are evaluated by WordPress "
+"before any plugin loads. For them to have full effect (including showing "
+"errors), they must be defined in wp-config.php. This plugin can still set "
+"them for code that reads the constant after plugins load, but it cannot "
+"activate WordPress's own error display."
+msgstr ""
+
+msgid ""
+"Writes a config file to wp-content/uploads/tsosk-config/ that is loaded "
+"automatically by this plugin. Constants already defined in wp-config.php "
+"take precedence and cannot be overridden — they will show an \"Overridden by"
+" wp-config.php\" badge."
+msgstr ""
+
+msgid ""
+"Read-only security review plus safe toggles for WordPress hardening "
+"constants. Toggles write a config file to wp-content/uploads/tsosk-config/ "
+"that is loaded at plugin init time. Constants already defined in wp-"
+"config.php take precedence."
+msgstr ""
+
+msgid "All options"
+msgstr ""
+
+msgid "All types"
+msgstr ""
+
+msgid "Clear all filters"
+msgstr ""
+
+msgid "Editable only"
+msgstr ""
+
+msgid ""
+"Filter by name, type or protection status. Click a column header to sort."
+msgstr ""
+
+msgid "Integer"
+msgstr ""
+
+msgid "Protected only"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Serialized PHP"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "×%d"
+msgstr ""
+
+msgid ""
+"%d distinct queries are executed more than once. This often indicates a "
+"plugin calling get_option(), get_post_meta() or similar in a loop without "
+"caching."
+msgstr ""
+
+msgid "⚠ Duplicate queries detected."
+msgstr ""
+
+msgid "Called by"
+msgstr ""
+
+msgid "Database Queries (SAVEQUERIES)"
+msgstr ""
+
+msgid "Duplicate queries"
+msgstr ""
+
+msgid ""
+"Enable it above, save and reload this page to see the full list of database "
+"queries executed on this page load. Only use this while debugging — it has a"
+" memory overhead on every request."
+msgstr ""
+
+msgid "Filter queries…"
+msgstr ""
+
+msgid ""
+"SAVEQUERIES is active but no queries were recorded yet. Reload the page."
+msgstr ""
+
+msgid "SAVEQUERIES is not active."
+msgstr ""
+
+msgid "Show duplicates only"
+msgstr ""
+
+msgid "Show slow only (>5 ms)"
+msgstr ""
+
+msgid "Slowest query"
+msgstr ""
+
+msgid "SQL"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Total queries"
+msgstr ""
+
+msgid "Total time"
+msgstr ""
+
+msgid ""
+"%1$s set to %2$s in wp-config.php. Reload the page to see the new actual "
+"value."
+msgstr ""
+
+msgid "(wp-config.php is read-only)"
+msgstr ""
+
+msgid "Could not read wp-config.php."
+msgstr ""
+
+msgid "Could not write wp-config.php."
+msgstr ""
+
+msgid "Defined in wp-config.php"
+msgstr ""
+
+msgid "Invalid value. Only true or false are accepted."
+msgstr ""
+
+msgid "Overridden elsewhere"
+msgstr ""
+
+msgid ""
+"Safety check failed: modified content does not start with <?php. Changes "
+"were NOT saved."
+msgstr ""
+
+msgid "Set %1$s = %2$s in wp-config.php"
+msgstr ""
+
+msgid "Set to %s in wp-config.php"
+msgstr ""
+
+msgid ""
+"This will modify wp-config.php directly. A backup is recommended before "
+"proceeding. Continue?"
+msgstr ""
+
+msgid "Unknown constant."
+msgstr ""
+
+msgid ""
+"wp-config.php is not writable. Change file permissions to 644 temporarily, "
+"save, then restore to 440 or 400."
+msgstr ""
+
+msgid "wp-config.php not found."
+msgstr ""
+
+msgid "wp-config.php sets this to %s"
+msgstr ""
+
+msgid "✓ Saved in wp-config.php"
+msgstr ""
+
+msgid "Set in wp-config.php"
+msgstr ""
+
+msgid "wp-config.php → %s"
+msgstr ""
+
+msgid "Unknown plugin"
+msgstr ""
+
+msgid "XML Sitemap Generator for Google"
+msgstr ""
+
+msgid "error"
+msgstr ""
+
+msgid "🌐 This is the file Google reads."
+msgstr ""
+
+msgid ""
+"Search engines (Google, Bing, etc.) always look for robots.txt at the domain"
+" root — for example https://example.com/robots.txt. If your WordPress is "
+"installed in a subdirectory like /blog/ or /pruebas/, the search engines "
+"still only read the one at the root domain. Rules in this file apply to the "
+"entire domain and all its subdirectories."
+msgstr ""
+
+msgid "⚠ Google does not read this file."
+msgstr ""
+
+msgid ""
+"This robots.txt is inside a WordPress subdirectory. Search engines ignore it"
+" — they only read the one at the domain root. You can edit it here for your "
+"own reference, but it has no effect on how crawlers index your site."
+msgstr ""
+
+msgid "robots.txt (domain root)"
+msgstr ""
+
+msgid "robots.txt (WordPress subdirectory)"
+msgstr ""
+
+msgid "Add %1$s = %2$s to wp-config.php"
+msgstr ""
+
+msgid ""
+"Controlled by wp-config.php — use the button on the right to change it."
+msgstr ""
+
+msgid ""
+"\"Quick-setup debug.log\" writes WP_DEBUG=true, WP_DEBUG_LOG=true and "
+"WP_DEBUG_DISPLAY=false directly into wp-config.php in one click — the "
+"standard setup to log PHP errors without showing them on screen."
+msgstr ""
+
+msgid ""
+"\"Save to tsosk-config\" writes a secondary config file loaded by this "
+"plugin — it only takes effect for constants not already defined in wp-"
+"config.php."
+msgstr ""
+
+msgid "+ Add %1$s = %2$s to wp-config.php"
+msgstr ""
+
+msgid "%1$s Set to %2$s in wp-config.php"
+msgstr ""
+
+msgid "Quick-setup debug.log"
+msgstr ""
+
+msgid "Save to tsosk-config (fallback)"
+msgstr ""
+
+msgid ""
+"Created by WordPress when WP_DEBUG=true and WP_DEBUG_LOG=true. Use the "
+"constants above to enable it."
+msgstr ""
+
+msgid ""
+"Created by PHP/your hosting server when PHP error logging is active. This "
+"plugin can read and clear it, but cannot enable it (that requires "
+"server/php.ini configuration)."
+msgstr ""
+
+msgid "%d slow"
+msgstr ""
+
+msgid "%d slow queries logged"
+msgstr ""
+
+msgid "Capture slow queries on every request"
+msgstr ""
+
+msgid ""
+"Captures and logs database queries that take longer than a configurable "
+"threshold. Helps identify performance bottlenecks caused by slow or repeated"
+" queries."
+msgstr ""
+
+msgid "Capturing queries slower than %d ms on every page request."
+msgstr ""
+
+msgid "Count"
+msgstr ""
+
+msgid "Delete this entry?"
+msgstr ""
+
+msgid "Enable monitor"
+msgstr ""
+
+msgid "Exclude"
+msgstr ""
+
+msgid "Filter by SQL, URL or caller…"
+msgstr ""
+
+msgid "Log cleared."
+msgstr ""
+
+msgid "Max log entries"
+msgstr ""
+
+msgid "Max time"
+msgstr ""
+
+msgid "Monitor Settings"
+msgstr ""
+
+msgid "Monitor active."
+msgstr ""
+
+msgid "ms — queries slower than this are logged (recommended: 100)"
+msgstr ""
+
+msgid ""
+"No data. Enable the monitor and activate SAVEQUERIES to start capturing slow"
+" queries."
+msgstr ""
+
+msgid ""
+"No slow queries have been recorded yet. The monitor is active — entries will"
+" appear here after page requests that contain queries exceeding the "
+"threshold."
+msgstr ""
+
+msgid "No slow queries match your search."
+msgstr ""
+
+msgid "Page: %s ms"
+msgstr ""
+
+msgid ""
+"Queries grouped by normalised SQL pattern (numbers replaced with ?). Those "
+"appearing most often or taking longest are listed first."
+msgstr ""
+
+msgid "Requests captured"
+msgstr ""
+
+msgid "request batches (oldest are removed when limit is reached)"
+msgstr ""
+
+msgid ""
+"Settings saved. SAVEQUERIES is not active — enable it in Debug Mode → "
+"Constants so queries are captured."
+msgstr ""
+
+msgid "Showing %1$d of %2$d batches. Use search or pagination to view more."
+msgstr ""
+
+msgid "Clear the entire slow query log? This cannot be undone."
+msgstr ""
+
+msgid "Slow Query Log"
+msgstr ""
+
+msgid "Slow Query Monitor"
+msgstr ""
+
+msgid "Slow threshold"
+msgstr ""
+
+msgid "Slow queries logged"
+msgstr ""
+
+msgid "SQL pattern"
+msgstr ""
+
+msgid ""
+"The monitor is disabled. Enable it below to start capturing slow queries. "
+"SAVEQUERIES must also be active."
+msgstr ""
+
+msgid ""
+"The monitor is active — entries will appear here after page requests that "
+"contain queries exceeding the threshold."
+msgstr ""
+
+msgid "Top Slow Queries"
+msgstr ""
+
+msgid "AJAX requests"
+msgstr ""
+
+msgid "WP-Cron requests"
+msgstr ""
+
+msgid ""
+"The monitor is active but cannot capture queries because SAVEQUERIES is "
+"false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-"
+"config.php."
+msgstr ""
+
+msgid "Entry deleted."
+msgstr ""
+
+msgid "Worst: %s ms"
+msgstr ""
+
+msgid ""
+"⚠ Always make a full database backup before running a replace operation."
+msgstr ""
+
+msgid "advanced — test carefully"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Always make a full database backup before running a replace operation."
+msgstr ""
+
+msgid "Case-sensitive"
+msgstr ""
+
+msgid "Cells"
+msgstr ""
+
+msgid "Clear history"
+msgstr ""
+
+msgid "Clear operation history?"
+msgstr ""
+
+msgid "Deselect all"
+msgstr ""
+
+msgid "Done. Replaced in %1$d table(s), %2$d row(s), %3$d cell(s)."
+msgstr ""
+
+msgid "Empty search term is not allowed."
+msgstr ""
+
+msgid "Execute replace"
+msgstr ""
+
+msgid "History cleared."
+msgstr ""
+
+msgid "Leave empty to delete matches"
+msgstr ""
+
+msgid "No matches found for the search term in the selected tables."
+msgstr ""
+
+msgid "No tables selected. Select at least one table."
+msgstr ""
+
+msgid "Operation History"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Preview — Changes to be made"
+msgstr ""
+
+msgid "Preview changes"
+msgstr ""
+
+msgid ""
+"Run Preview again before executing. The search settings changed or the "
+"preview expired."
+msgstr ""
+
+msgid "Enter a search term."
+msgstr ""
+
+msgid "Settings changed after preview. Run Preview again before executing."
+msgstr ""
+
+msgid "Regular expression"
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Replace with"
+msgstr ""
+
+msgid "Rows"
+msgstr ""
+
+msgid "Search & Replace"
+msgstr ""
+
+msgid ""
+"Search and replace text across any database table. Handles serialized PHP "
+"data correctly — string lengths are automatically recalculated after each "
+"replacement."
+msgstr ""
+
+msgid "Search for"
+msgstr ""
+
+msgid "Select all"
+msgstr ""
+
+msgid "Select WordPress tables"
+msgstr ""
+
+msgid "Tables"
+msgstr ""
+
+msgid "Tables to search"
+msgstr ""
+
+msgid "Text or regex pattern to find…"
+msgstr ""
+
+msgid "The search pattern is not a valid regular expression."
+msgstr ""
+
+msgid ""
+"This tool modifies the database directly. A mistake in the search or replace"
+" field can corrupt content across hundreds of rows. Use the Preview button "
+"first to confirm the scope of changes."
+msgstr ""
+
+msgid ""
+"This will modify the database. Have you made a backup? Click OK to proceed."
+msgstr ""
+
+msgid "matches"
+msgstr ""
+
+msgid "more rows"
+msgstr ""
+
+msgid "rows"
+msgstr ""
+
+msgid "Search term cannot be empty."
+msgstr ""
+
+msgid "Replacement text (leave empty to delete matches)"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Review below and click \"Execute replace\" to commit changes."
+msgstr ""
+
+msgid "Recovery Mode"
+msgstr ""
+
+msgid "Orphan Tables"
+msgstr ""
+
+msgid "WP-Cron Health"
+msgstr ""
+
+msgid "Permalink & Routing Simulator"
+msgstr ""
+
+msgid "Environment Overrides"
+msgstr ""
+
+msgid "Registered Image Sizes"
+msgstr ""
+
+msgid "Roles & Capabilities"
+msgstr ""
+
+msgid "User Summary"
+msgstr ""
+
+msgid "Uploads Files Not Referenced in Database"
+msgstr ""
+
+msgid "Security Checks"
+msgstr ""
+
+msgid "Mail Configuration"
+msgstr ""
+
+msgid "Send Test Email"
+msgstr ""
+
+msgid "Last Test Result"
+msgstr ""
+
+msgid "Broken Shortcodes"
+msgstr ""
+
+msgid ""
+"Inspect hidden WordPress registries loaded in the current request: post "
+"types, statuses, taxonomies, roles, image sizes, query vars, rewrite tags "
+"and shortcodes."
+msgstr ""
+
+msgid "Filter internals..."
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Height"
+msgstr ""
+
+msgid "Crop"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "Capabilities"
+msgstr ""
+
+msgid ""
+"Inspect hidden user/session data: administrator accounts, users without "
+"roles, old accounts and active session tokens."
+msgstr ""
+
+msgid "Total Users"
+msgstr ""
+
+msgid "Administrators"
+msgstr ""
+
+msgid "Users without role"
+msgstr ""
+
+msgid "Old registered accounts"
+msgstr ""
+
+msgid "No users found."
+msgstr ""
+
+msgid "Registered"
+msgstr ""
+
+msgid "Sessions"
+msgstr ""
+
+msgid ""
+"Review media-library mismatches: unattached media, database attachments "
+"missing files, files in uploads not referenced by WordPress, and thumbnail "
+"metadata."
+msgstr ""
+
+msgid ""
+"Limited scan of wp-content/uploads. Review before deleting anything "
+"manually."
+msgstr ""
+
+msgid "No unreferenced files found in the limited scan."
+msgstr ""
+
+msgid "Relative File"
+msgstr ""
+
+msgid ""
+"Read-only security review of hidden WordPress and server settings. This does"
+" not replace a firewall, but it highlights common risky defaults."
+msgstr ""
+
+msgid "File modifications locked"
+msgstr ""
+
+msgid "wp-config.php location"
+msgstr ""
+
+msgid ""
+"Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP "
+"plugins and delivery result."
+msgstr ""
+
+msgid "wp_mail From Email"
+msgstr ""
+
+msgid "wp_mail From Name"
+msgstr ""
+
+msgid "Detected SMTP plugins"
+msgstr ""
+
+msgid "PHP mail function"
+msgstr ""
+
+msgid "No test email has been sent yet."
+msgstr ""
+
+msgid ""
+"Estimate what each plugin adds to WordPress: options, cron hooks, shortcodes"
+" and REST routes. Matching is heuristic based on plugin slug/prefix."
+msgstr ""
+
+msgid "Cron Hooks"
+msgstr ""
+
+msgid "REST Routes"
+msgstr ""
+
+msgid ""
+"Find hidden content problems: empty titles, missing featured images, old "
+"pending/private content, long slugs and broken shortcodes."
+msgstr ""
+
+msgid "No broken shortcodes detected in the sampled content."
+msgstr ""
+
+msgid "Shortcodes"
+msgstr ""
+
+msgid "Plugin tools"
+msgstr ""
+
+msgid "Plugin language"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Path"
+msgstr ""
+
+msgid "Modified"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+msgid "Core"
+msgstr ""
+
+msgid "Custom"
+msgstr ""
+
+msgid "Hook"
+msgstr ""
+
+msgid "Args"
+msgstr ""
+
+msgid "Next Run"
+msgstr ""
+
+msgid "Interval"
+msgstr ""
+
+msgid "No cron events found."
+msgstr ""
+
+msgid ""
+"Lists all scheduled WordPress cron events. Core events are read-only. Custom"
+" events can be run manually or deleted."
+msgstr ""
+
+msgid ""
+"Controls WordPress debug flags by writing a must-use plugin. Constants "
+"defined in wp-config.php take precedence and cannot be overridden here."
+msgstr ""
+
+msgid "Debug Constants"
+msgstr ""
+
+msgid ""
+"To activate the WordPress debug.log file, enable WP_DEBUG and WP_DEBUG_LOG, "
+"keep WP_DEBUG_DISPLAY disabled on production, then save and reload."
+msgstr ""
+
+msgid "Current:"
+msgstr ""
+
+msgid "Save Debug Settings"
+msgstr ""
+
+msgid "Prepare WordPress debug.log"
+msgstr ""
+
+msgid "Available Error Logs"
+msgstr ""
+
+msgid ""
+"Shows readable WordPress/PHP error logs detected inside this WordPress "
+"installation. Previews are limited to the end of each file."
+msgstr ""
+
+msgid ""
+"Only WordPress debug.log can be enabled from this plugin. The error_log "
+"files are created by the hosting/PHP configuration when PHP error logging is"
+" enabled on the server, so this plugin can read or clear them when they "
+"exist but cannot safely activate server-level logging."
+msgstr ""
+
+msgid "Log"
+msgstr ""
+
+msgid ""
+"WordPress Recovery Mode allows an admin to log in and deactivate plugins or "
+"themes that cause a fatal error."
+msgstr ""
+
+msgid "What you can do here"
+msgstr ""
+
+msgid ""
+"Recovery Mode is a WordPress safety feature. It is not a permanent on/off "
+"switch: WordPress enters it when a fatal error is detected, or when you open"
+" a valid recovery URL."
+msgstr ""
+
+msgid "Generate and open a one-time recovery URL."
+msgstr ""
+
+msgid "See plugins or themes that WordPress has paused after a fatal error."
+msgstr ""
+
+msgid ""
+"Clear a paused item after you have fixed the error, so WordPress can try "
+"loading it again."
+msgstr ""
+
+msgid "Recovery Mode Status"
+msgstr ""
+
+msgid "Currently Active"
+msgstr ""
+
+msgid "Recovery Email"
+msgstr ""
+
+msgid "Fatal Error Handler"
+msgstr ""
+
+msgid "Recovery Mode URL"
+msgstr ""
+
+msgid ""
+"Use this URL to enter recovery mode. It is single-use and expires after 1 "
+"hour."
+msgstr ""
+
+msgid "Enter Recovery Mode"
+msgstr ""
+
+msgid "Error Protection Log"
+msgstr ""
+
+msgid ""
+"Read-only view of the most relevant WordPress constants. Sensitive values "
+"(DB_USER, DB_PASSWORD, auth keys) are intentionally omitted."
+msgstr ""
+
+msgid "Useful System Information"
+msgstr ""
+
+msgid "Filter constants…"
+msgstr ""
+
+msgid ""
+"Flush and inspect WordPress rewrite rules. A \"hard flush\" also regenerates"
+" the .htaccess / web.config file."
+msgstr ""
+
+msgid "Flush Rewrite Rules"
+msgstr ""
+
+msgid ""
+"Soft flush: regenerates rules in the database. Hard flush: also updates the "
+"server rewrite configuration file."
+msgstr ""
+
+msgid "No rewrite rules stored. Have you flushed permalinks?"
+msgstr ""
+
+msgid "Filter rules…"
+msgstr ""
+
+msgid "Redirect"
+msgstr ""
+
+msgid ""
+"Inspect and clear the WordPress object cache. The object cache stores "
+"frequently used data in memory to reduce database queries."
+msgstr ""
+
+msgid "Cache Status"
+msgstr ""
+
+msgid "Cache Class"
+msgstr ""
+
+msgid "Persistent Cache"
+msgstr ""
+
+msgid "Yes – External"
+msgstr ""
+
+msgid "No – In-memory only"
+msgstr ""
+
+msgid "Cache Actions"
+msgstr ""
+
+msgid ""
+"You are using an external persistent object cache. Flushing will clear all "
+"cached data from the external store."
+msgstr ""
+
+msgid ""
+"Review the public server configuration files that commonly affect crawling, "
+"permalinks and redirects. This tab is read-only and does not modify files."
+msgstr ""
+
+msgid "Writable"
+msgstr ""
+
+msgid "Preview file contents"
+msgstr ""
+
+msgid ""
+"Create and review safe WordPress-level redirects. Rules are stored in a "
+"prefixed option and are applied before the theme renders."
+msgstr ""
+
+msgid "Add or Edit Redirect"
+msgstr ""
+
+msgid "Source Path"
+msgstr ""
+
+msgid "Target URL or Path"
+msgstr ""
+
+msgid "Status Code"
+msgstr ""
+
+msgid "Enable this redirect"
+msgstr ""
+
+msgid "Clear Form"
+msgstr ""
+
+msgid "Redirect Review"
+msgstr ""
+
+msgid "No redirect issues detected."
+msgstr ""
+
+msgid "No redirects have been created yet."
+msgstr ""
+
+msgid "Source"
+msgstr ""
+
+msgid "Target"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Hits"
+msgstr ""
+
+msgid "Times used"
+msgstr ""
+
+msgid "HTTP code"
+msgstr ""
+
+msgid "Last used: %s"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Use a site-relative path only. Example: /old-page/."
+msgstr ""
+
+msgid "Use a site path or a URL allowed by WordPress safe redirects."
+msgstr ""
+
+msgid "301 Permanent"
+msgstr ""
+
+msgid "302 Temporary"
+msgstr ""
+
+msgid "307 Temporary"
+msgstr ""
+
+msgid "308 Permanent"
+msgstr ""
+
+msgid "Match Type"
+msgstr ""
+
+msgid "Exact path"
+msgstr ""
+
+msgid "Wildcard (*)"
+msgstr ""
+
+msgid ""
+"Wildcard captures can be used in the target as $1, $2, etc. Regex rules "
+"should not include delimiters."
+msgstr ""
+
+msgid ""
+"Use a site path or a URL allowed by WordPress safe redirects. Leave empty "
+"for 410 or 451 responses."
+msgstr ""
+
+msgid "410 Gone"
+msgstr ""
+
+msgid "451 Legal Reasons"
+msgstr ""
+
+msgid "404 Monitor"
+msgstr ""
+
+msgid ""
+"Recent 404 hits are captured so you can create redirects from missing URLs."
+msgstr ""
+
+msgid "No 404 hits recorded yet."
+msgstr ""
+
+msgid "Last Hit"
+msgstr ""
+
+msgid "Referrer"
+msgstr ""
+
+msgid "Create Redirect"
+msgstr ""
+
+msgid "Match"
+msgstr ""
+
+msgid "Search this log..."
+msgstr ""
+
+msgid "All levels"
+msgstr ""
+
+msgid "Warnings"
+msgstr ""
+
+msgid "Notices"
+msgstr ""
+
+msgid "Deprecated"
+msgstr ""
+
+msgid "Download Log"
+msgstr ""
+
+msgid ""
+"A compact health report with checks that help detect risky settings, noisy "
+"logs, broken links and maintenance issues."
+msgstr ""
+
+msgid "Download JSON Report"
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+msgid "Email Alerts"
+msgstr ""
+
+msgid ""
+"Alerts are intentionally small and actionable. The current alert sends an "
+"email when the 404 monitor exceeds the configured hourly threshold."
+msgstr ""
+
+msgid "Enable email alerts"
+msgstr ""
+
+msgid "Alert Email"
+msgstr ""
+
+msgid "404 hourly threshold"
+msgstr ""
+
+msgid ""
+"Temporarily change which plugins are active for your admin session. Other "
+"visitors continue to use the normal plugin set. Perfect for diagnosing "
+"conflicts."
+msgstr ""
+
+msgid "Sandbox mode is active for your session."
+msgstr ""
+
+msgid "Exit Sandbox"
+msgstr ""
+
+msgid "Select Active Plugins for Sandbox"
+msgstr ""
+
+msgid "Select Currently Active"
+msgstr ""
+
+msgid "Normally Active"
+msgstr ""
+
+msgid "How Sandbox Works"
+msgstr ""
+
+msgid "Select the plugin set you want to test."
+msgstr ""
+
+msgid "Click \"Apply Sandbox\" — your choice is stored in your user meta."
+msgstr ""
+
+msgid ""
+"Reload the page. You will see the site with only the selected plugins "
+"active."
+msgstr ""
+
+msgid "Visitors are not affected — they see the normal plugin set."
+msgstr ""
+
+msgid ""
+"Click \"Exit Sandbox\" when done. The normal plugin set is restored for you."
+msgstr ""
+
+msgid "Note:"
+msgstr ""
+
+msgid "This plugin itself and must-use plugins are always loaded."
+msgstr ""
+
+msgid ""
+"Analyse, optimise and repair database tables. OPTIMIZE reclaims wasted space"
+" after deletions. REPAIR fixes corrupted MyISAM tables. CHECK scans for "
+"integrity errors."
+msgstr ""
+
+msgid "Table"
+msgstr ""
+
+msgid "Engine"
+msgstr ""
+
+msgid "Data"
+msgstr ""
+
+msgid "Index"
+msgstr ""
+
+msgid "Overhead"
+msgstr ""
+
+msgid "Maintenance"
+msgstr ""
+
+msgid ""
+"Put the site in maintenance mode. Logged-in administrators always see the "
+"site normally. All other visitors get a 503 page."
+msgstr ""
+
+msgid "Maintenance Mode Status"
+msgstr ""
+
+msgid "Maintenance Page Settings"
+msgstr ""
+
+msgid "Message to Visitors"
+msgstr ""
+
+msgid "Leave empty for the default message."
+msgstr ""
+
+msgid "Whitelisted IP Addresses (one per line)"
+msgstr ""
+
+msgid ""
+"%d hooks are currently registered. This view is a snapshot at page load."
+msgstr ""
+
+msgid "Search hook name…"
+msgstr ""
+
+msgid "Callbacks"
+msgstr ""
+
+msgid "Priority"
+msgstr ""
+
+msgid "Callback"
+msgstr ""
+
+msgid ""
+"WordPress Heartbeat polls the server every 15–60 seconds for auto-save, lock"
+" detection and login expiration. On busy sites this can increase server "
+"load."
+msgstr ""
+
+msgid "Heartbeat Mode"
+msgstr ""
+
+msgid "Custom Interval (seconds)"
+msgstr ""
+
+msgid "0 = use WordPress default (15 s). Range: 15–300 s."
+msgstr ""
+
+msgid ""
+"Control access to the WordPress REST API. Restricting the REST API may break"
+" the Block Editor and some plugins."
+msgstr ""
+
+msgid "REST API Access"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Enabled (default)"
+msgstr ""
+
+msgid "Disabled for non-authenticated users"
+msgstr ""
+
+msgid "Disabled Namespaces (one per line)"
+msgstr ""
+
+msgid "Leave empty to allow all namespaces."
+msgstr ""
+
+msgid "Registered Namespaces"
+msgstr ""
+
+msgid ""
+"Manage WordPress transients stored in the options table. This view works on "
+"sites without an external object cache."
+msgstr ""
+
+msgid "Search transients…"
+msgstr ""
+
+msgid "Delete All"
+msgstr ""
+
+msgid "Key"
+msgstr ""
+
+msgid "Expires"
+msgstr ""
+
+msgid "No transients found."
+msgstr ""
+
+msgid "No expiry"
+msgstr ""
+
+msgid ""
+"Compares all database tables against WordPress core tables and active "
+"plugins. Tables marked as potential orphans may belong to deactivated or "
+"deleted plugins."
+msgstr ""
+
+msgid "This detection is heuristic. Always verify before deleting any table."
+msgstr ""
+
+msgid "Table Name"
+msgstr ""
+
+msgid "Size (KB)"
+msgstr ""
+
+msgid "Active Plugin"
+msgstr ""
+
+msgid "? Potential Orphan"
+msgstr ""
+
+msgid ""
+"Autoloaded options are loaded on every page request. Large autoload data "
+"slows down the site. Review and delete orphaned or unnecessary options."
+msgstr ""
+
+msgid "⚠ High autoload – consider cleanup"
+msgstr ""
+
+msgid "Could not save the file."
+msgstr ""
+
+msgid "Could not write the config file."
+msgstr ""
+
+msgid "Save Security Settings"
+msgstr ""
+
+msgid "Scan complete."
+msgstr ""
+
+msgid "slow"
+msgstr ""
+
+msgid "⚠ %d IP address(es) are currently locked out."
+msgstr ""
+
+msgid "0 = WordPress default (15 s)"
+msgstr ""
+
+msgid ""
+"60 s on shared hosting or low-traffic sites. 15–30 s only if real-time "
+"collaboration is needed."
+msgstr ""
+
+msgid ""
+"A broken shortcode is a [tag] found in post or page content whose plugin or "
+"theme is no longer active or installed. WordPress will not convert it into "
+"HTML — instead, the raw [shortcode] text appears on your page, which looks "
+"unprofessional and may confuse visitors."
+msgstr ""
+
+msgid "Actual:"
+msgstr ""
+
+msgid ""
+"Adds a new row directly to wp_options. Use only for custom plugin options or"
+" development purposes."
+msgstr ""
+
+msgid ""
+"Options are sorted alphabetically by name. Filter by name or type. Click a "
+"column header to sort by size, autoload, or type."
+msgstr ""
+
+msgid ""
+"Anonymous REST requests return a 401 error. Logged-in users are not "
+"affected. Only use this if you do not have any plugin that needs the REST "
+"API for unauthenticated visitors, and you have tested it first in a staging "
+"environment."
+msgstr ""
+
+msgid "Any change must remain valid JSON syntax."
+msgstr ""
+
+msgid ""
+"Block specific REST namespaces completely, regardless of the access mode "
+"above. This affects both authenticated and anonymous requests. Use with "
+"extreme caution — blocking core namespaces (wp/v2, wp-block-editor) will "
+"break the Block Editor."
+msgstr ""
+
+msgid "Cache Stats"
+msgstr ""
+
+msgid ""
+"Common causes: a plugin was deactivated or uninstalled without cleaning up "
+"its shortcodes from content. To fix: re-install the plugin, replace the "
+"shortcode with equivalent HTML, or remove it entirely from the post."
+msgstr ""
+
+msgid "Constant"
+msgstr ""
+
+msgid ""
+"Control anonymous access to the WordPress REST API. Read the compatibility "
+"warnings below before restricting access."
+msgstr ""
+
+msgid ""
+"Core WordPress namespaces are unchecked by default to prevent accidental "
+"breakage."
+msgstr ""
+
+msgid "Currently OFF"
+msgstr ""
+
+msgid "Currently ON"
+msgstr ""
+
+msgid "Defined in wp-config.php – cannot be changed here."
+msgstr ""
+
+msgid "Detected cache plugins:"
+msgstr ""
+
+msgid "Disable Specific Namespaces"
+msgstr ""
+
+msgid ""
+"Download the same WordPress version from wordpress.org/download/releases/ "
+"and replace the affected files via FTP/SFTP or the Hosting file manager."
+msgstr ""
+
+msgid ""
+"Editing wp_options directly can break your site if critical values are "
+"changed incorrectly. All changes are logged in the History tab."
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid ""
+"Enter a public URL or path to see hidden routing details: matching rewrite "
+"rule, resolved post ID and query target."
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Filter hook name…"
+msgstr ""
+
+msgid ""
+"Hidden constants that change WordPress behavior for updates, file editing, "
+"trash, revisions, autosaves, SSL and environments."
+msgstr ""
+
+msgid "Impact"
+msgstr ""
+
+msgid ""
+"Inspect the WordPress object cache and detect active caching plugins. The "
+"object cache stores frequently used database query results in memory."
+msgstr ""
+
+msgid "JSON"
+msgstr ""
+
+msgid ""
+"Lists all scheduled WordPress cron events. Core events are read-only. Custom"
+" events can be run manually or deleted. The Source column shows which plugin"
+" or WordPress itself registered the hook."
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "No items found."
+msgstr ""
+
+msgid "No – In-memory only (lost on each request)"
+msgstr ""
+
+msgid ""
+"Note: this scan samples up to 100 published posts and pages with a [ "
+"character. Shortcodes from MU-plugins, theme functions or late-registered "
+"plugins may appear as false positives."
+msgstr ""
+
+msgid "Object Cache Driver"
+msgstr ""
+
+msgid ""
+"Override how often the Heartbeat polls. 0 = use the WordPress default (15 "
+"s). Range: 15–300 s."
+msgstr ""
+
+msgid "Persistent Object Cache"
+msgstr ""
+
+msgid "Post"
+msgstr ""
+
+msgid ""
+"Read-only overview of common security settings. This does not replace a "
+"firewall or security scanner."
+msgstr ""
+
+msgid "Recommended:"
+msgstr ""
+
+msgid ""
+"Sets WP_DEBUG=true, WP_DEBUG_LOG=true, WP_DEBUG_DISPLAY=false in wp-"
+"config.php — the recommended setup to activate debug.log without showing "
+"errors on screen."
+msgstr ""
+
+msgid "Simulate Route"
+msgstr ""
+
+msgid "Sitemap"
+msgstr ""
+
+msgid "Slug"
+msgstr ""
+
+msgid ""
+"The REST API is fully public. All plugins work normally. Recommended for all"
+" sites using the Block Editor, Jetpack, WooCommerce, ACF, Yoast or similar."
+msgstr ""
+
+msgid ""
+"The WordPress Block Editor (Gutenberg) and many modern plugins rely entirely"
+" on the REST API. Disabling it for non-authenticated users prevents those "
+"plugins from working on the front end, and may also break the admin "
+"dashboard if any plugin makes front-end REST calls while logged out."
+msgstr ""
+
+msgid ""
+"The editor always works with the raw serialized string — do not modify "
+"unless you know PHP serialization syntax exactly."
+msgstr ""
+
+msgid ""
+"The following active plugins are known to require the REST API. Disabling or"
+" restricting it may break their functionality:"
+msgstr ""
+
+msgid ""
+"The monitor is enabled but cannot capture queries because SAVEQUERIES is "
+"false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-"
+"config.php."
+msgstr ""
+
+msgid ""
+"This flushes the WordPress object cache (Redis, Memcached or in-memory). It "
+"does NOT flush HTML page cache from LiteSpeed Cache, WP Rocket, W3 Total "
+"Cache or similar plugins — use those plugins' own flush buttons for that."
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Toggleable Security Constants"
+msgstr ""
+
+msgid "WP_CACHE Constant"
+msgstr ""
+
+msgid "What are broken shortcodes?"
+msgstr ""
+
+msgid ""
+"WordPress Heartbeat polls the server periodically for auto-save, post lock "
+"detection and login expiration. On busy sites this can increase server load."
+" Adjust here without editing any file."
+msgstr ""
+
+msgid "Yes – External (Redis/Memcached)"
+msgstr ""
+
+msgid ""
+"Activate safe WordPress performance and privacy tweaks in one place. "
+"Constants are written to wp-content/uploads/tsosk-config/ and loaded before "
+"plugins. Runtime filters apply on the next page load without editing wp-"
+"config.php."
+msgstr ""
+
+msgid "Active profiles config: %s"
+msgstr ""
+
+msgid ""
+"Applied via WordPress hooks on the next request after saving. No server "
+"reload required."
+msgstr ""
+
+msgid "Automatically empty trash after N days (0 = disable trash expiry)."
+msgstr ""
+
+msgid ""
+"Blocks the xmlrpc.php endpoint (recommended if you do not use the mobile app"
+" or pingbacks)."
+msgstr ""
+
+msgid ""
+"Check the boxes below, then click Save. Presets only select options — "
+"nothing is applied until you save."
+msgstr ""
+
+msgid "Clear selection"
+msgstr ""
+
+msgid "Close new comments & pings"
+msgstr ""
+
+msgid ""
+"Concatenate admin scripts (legacy optimization; may conflict with some "
+"plugins)."
+msgstr ""
+
+msgid ""
+"Compress admin scripts (deprecated in modern WordPress; use only if you know"
+" you need it)."
+msgstr ""
+
+msgid "Constants (uploads config)"
+msgstr ""
+
+msgid "Content & trash"
+msgstr ""
+
+msgid "Content & URLs"
+msgstr ""
+
+msgid "Could not write the profiles config file."
+msgstr ""
+
+msgid "Development"
+msgstr ""
+
+msgid "Disable RSS feeds"
+msgstr ""
+
+msgid ""
+"Disable WordPress pseudo-cron on page visits. Use a real server cron calling"
+" wp-cron.php instead."
+msgstr ""
+
+msgid "Disable emojis"
+msgstr ""
+
+msgid "Disable oEmbed / embeds"
+msgstr ""
+
+msgid "Disable XML-RPC"
+msgstr ""
+
+msgid ""
+"For a full read-only list of defined constants, open %1$sWP Constants%2$s."
+msgstr ""
+
+msgid "Hidden WordPress Profiles"
+msgstr ""
+
+msgid ""
+"Hidden WordPress profiles saved. Reload the page if constant values do not "
+"update immediately."
+msgstr ""
+
+msgid "Increase autosave interval (seconds) to reduce editor autosave load."
+msgstr ""
+
+msgid "Limit post revisions stored in the database."
+msgstr ""
+
+msgid "Privacy & surface"
+msgstr ""
+
+msgid "Profiles & config"
+msgstr ""
+
+msgid "Quick presets"
+msgstr ""
+
+msgid ""
+"Redirects feed URLs to the home page and removes feed link tags from "
+"wp_head."
+msgstr ""
+
+msgid "Removes emoji scripts and styles from the front end and admin."
+msgstr ""
+
+msgid ""
+"Requires a full page reload (or new request) after saving for constant "
+"values to take effect. Values already set in wp-config.php cannot be "
+"overridden here."
+msgstr ""
+
+msgid "Runtime filters"
+msgstr ""
+
+msgid "Save profiles"
+msgstr ""
+
+msgid ""
+"Sets default comment and ping status to closed for new content (does not "
+"change existing posts)."
+msgstr ""
+
+msgid "Site & tools"
+msgstr ""
+
+msgid ""
+"Stops WordPress from embedding external content and related discovery tags."
+msgstr ""
+
+msgid ""
+"To toggle common performance and privacy constants safely, use %1$sHidden "
+"WordPress Profiles%2$s."
+msgstr ""
+
+msgid "View in Options Editor"
+msgstr ""
+
+msgid "404 alert settings"
+msgstr ""
+
+msgid "ACF Pro license data (read-only here — do not share exports)."
+msgstr ""
+
+msgid "Add meta"
+msgstr ""
+
+msgid "Add meta row"
+msgstr ""
+
+msgid "Allow checkout without an account."
+msgstr ""
+
+msgid "Always back up before bulk changes."
+msgstr ""
+
+msgid "Browse all matching options"
+msgstr ""
+
+msgid ""
+"Browse and edit post meta and user meta. Keys related to sessions, "
+"capabilities, or licenses are protected. Always back up before bulk changes."
+msgstr ""
+
+msgid "Common prefix: %s"
+msgstr ""
+
+msgid "Could not encode snapshot."
+msgstr ""
+
+msgid "Default role assigned to new users."
+msgstr ""
+
+msgid "Disable default Elementor color schemes."
+msgstr ""
+
+msgid ""
+"Documented wp_options for WordPress core and popular plugins detected on "
+"this site. Use Options Editor to change values; previews here are read-only."
+msgstr ""
+
+msgid "Download JSON snapshot"
+msgstr ""
+
+msgid "Edit in Options Editor"
+msgstr ""
+
+msgid "Edit meta"
+msgstr ""
+
+msgid ""
+"Editing meta can break posts, users, or page builders (Elementor, ACF, etc.)"
+" if values are changed incorrectly."
+msgstr ""
+
+msgid "Enable stock management globally."
+msgstr ""
+
+msgid ""
+"Save and restore site snapshots of selected TSO Swiss Knife settings as JSON"
+" for staging, backups, or migrations. Only plugin-owned settings are "
+"included — never wp-config or license keys."
+msgstr ""
+
+msgid "Export snapshot"
+msgstr ""
+
+msgid "Filter by key or value…"
+msgstr ""
+
+msgid "Global WPForms settings"
+msgstr ""
+
+msgid "Heartbeat settings"
+msgstr ""
+
+msgid ""
+"Import overwrites existing settings for the selected sections. Always export"
+" a backup first and test on staging."
+msgstr ""
+
+msgid "Import snapshot"
+msgstr ""
+
+msgid "Imported sections: %s. Reload affected tabs to verify settings."
+msgstr ""
+
+msgid "In database"
+msgstr ""
+
+msgid "Installed ACF version string."
+msgstr ""
+
+msgid "Installed Elementor version."
+msgstr ""
+
+msgid "Invalid meta ID."
+msgstr ""
+
+msgid "Invalid snapshot file format."
+msgstr ""
+
+msgid "LiteSpeed cache enabled flag."
+msgstr ""
+
+msgid "Login protection"
+msgstr ""
+
+msgid "Main Rank Math settings (serialized)."
+msgstr ""
+
+msgid "Main Yoast SEO settings (serialized array)."
+msgstr ""
+
+msgid "Meta Editor"
+msgstr ""
+
+msgid "Meta key"
+msgstr ""
+
+msgid "Meta row added."
+msgstr ""
+
+msgid "Meta row deleted."
+msgstr ""
+
+msgid "Meta row not found."
+msgstr ""
+
+msgid "Meta value saved."
+msgstr ""
+
+msgid "No preset libraries matched the active plugins."
+msgstr ""
+
+msgid "No snapshot data received."
+msgstr ""
+
+msgid "Not set"
+msgstr ""
+
+msgid "Number of posts shown on blog pages."
+msgstr ""
+
+msgid "Object"
+msgstr ""
+
+msgid "Object ID"
+msgstr ""
+
+msgid "Object ID and meta key are required."
+msgstr ""
+
+msgid "Object cache settings."
+msgstr ""
+
+msgid "Open Graph and social profiles."
+msgstr ""
+
+msgid "Open in Options Editor"
+msgstr ""
+
+msgid "Open Option Library"
+msgstr ""
+
+msgid "Option Library"
+msgstr ""
+
+msgid "Option not found in the database."
+msgstr ""
+
+msgid "Option preview"
+msgstr ""
+
+msgid "Organise uploads into year/month folders."
+msgstr ""
+
+msgid "Paste JSON from a previous export or upload a .json file."
+msgstr ""
+
+msgid "Post meta"
+msgstr ""
+
+msgid "Post types that use Elementor."
+msgstr ""
+
+msgid "Post/User ID"
+msgstr ""
+
+msgid "Post/User ID (optional)"
+msgstr ""
+
+msgid "REST API settings"
+msgstr ""
+
+msgid "Read-only"
+msgstr ""
+
+msgid "Run a search to load meta rows."
+msgstr ""
+
+msgid "Save meta"
+msgstr ""
+
+msgid "Select sections to include in the JSON file:"
+msgstr ""
+
+msgid "Export/Import TSO Configuration"
+msgstr ""
+
+msgid "Site character encoding (usually UTF-8)."
+msgstr ""
+
+msgid "Site timezone identifier."
+msgstr ""
+
+msgid "Slow query monitor"
+msgstr ""
+
+msgid "Snapshot contains no sections to import."
+msgstr ""
+
+msgid "Site snapshot exported: %s."
+msgstr ""
+
+msgid "Site snapshot imported: %s."
+msgstr ""
+
+msgid "The snapshot JSON could not be parsed."
+msgstr ""
+
+msgid "Select at least one section to export."
+msgstr ""
+
+msgid ""
+"Import will overwrite settings for the sections in this snapshot. Continue?"
+msgstr ""
+
+msgid "Export"
+msgstr ""
+
+msgid "Store currency code (e.g. EUR, USD)."
+msgstr ""
+
+msgid "Store street address."
+msgstr ""
+
+msgid "This meta key cannot be added (protected pattern)."
+msgstr ""
+
+msgid "This meta key is protected and cannot be deleted."
+msgstr ""
+
+msgid "This meta key is protected and cannot be edited."
+msgstr ""
+
+msgid "This option is protected."
+msgstr ""
+
+msgid "Title and meta description templates."
+msgstr ""
+
+msgid "Unknown or undocumented option."
+msgstr ""
+
+msgid "User meta"
+msgstr ""
+
+msgid "User not found."
+msgstr ""
+
+msgid "Whether anyone can register (0 or 1)."
+msgstr ""
+
+msgid "WPForms version."
+msgstr ""
+
+msgid "{ \"format\": \"tsosk-site-snapshot\", ... }"
+msgstr ""
+
+msgid "Delete row"
+msgstr ""
+
+msgid "No recognised sections were imported."
+msgstr ""
+
+msgid "Advanced Custom Fields"
+msgstr ""
+
+msgid "Elementor"
+msgstr ""
+
+msgid "Enabled Rank Math modules."
+msgstr ""
+
+msgid "LiteSpeed Cache"
+msgstr ""
+
+msgid "Rank Math"
+msgstr ""
+
+msgid "WooCommerce"
+msgstr ""
+
+msgid "WPForms"
+msgstr ""
+
+msgid "Yoast SEO"
+msgstr ""
+
+msgid ""
+"Drag tabs within each category block to reorder. After saving, that order is"
+" kept inside the category. Click ✕ to hide a tab."
+msgstr ""
+
+msgid "Favorites"
+msgstr ""
+
+msgid "Favorite tools"
+msgstr ""
+
+msgid "Use Organise on the tools list, then drag tabs here."
+msgstr ""
+
+msgid "Remove from favorites"
+msgstr ""
+
+msgid ""
+"Reorder tabs inside each category, drag tabs into Favorites, and reorder "
+"favorites. Click ✕ on a tool to hide it or on a favorite to remove it."
+msgstr ""
+
+msgid "OK — %s overhead still reported by MySQL"
+msgstr ""
+
+msgid "Add to favorites"
+msgstr ""
+
+msgid "Attack Surface"
+msgstr ""
+
+msgid "Action Scheduler"
+msgstr ""
+
+msgid ""
+"Harden common WordPress attack vectors from one place. Changes apply via the"
+" same safe storage used by Hidden Profiles, REST API, and Security Review."
+msgstr ""
+
+msgid "Save attack surface"
+msgstr ""
+
+msgid ""
+"Attack surface settings saved. Reload the page to apply runtime changes."
+msgstr ""
+
+msgid "Remote access"
+msgstr ""
+
+msgid "REST API (logged-out visitors)"
+msgstr ""
+
+msgid "Require login for REST API"
+msgstr ""
+
+msgid "Admin & filesystem"
+msgstr ""
+
+msgid "Configure login protection"
+msgstr ""
+
+msgid ""
+"Inspect background jobs queued by WooCommerce and other plugins that use "
+"Action Scheduler. Cancel pending or delete failed actions when you know they"
+" are safe to remove."
+msgstr ""
+
+msgid ""
+"Action Scheduler was not detected. Install WooCommerce or a plugin that "
+"bundles Action Scheduler to use this tool."
+msgstr ""
+
+msgid "In progress"
+msgstr ""
+
+msgid ""
+"Inspect which capabilities each WordPress role has. You can add or remove "
+"custom capabilities on non-administrator roles. Dangerous capabilities are "
+"blocked."
+msgstr ""
+
+msgid "Load capabilities"
+msgstr ""
+
+msgid "Add capability"
+msgstr ""
+
+msgid "The administrator role cannot be modified from here."
+msgstr ""
+
+msgid "Drop above: %s"
+msgstr ""
+
+msgid "Drop below: %s"
+msgstr ""
+
+msgid "Drop at end of list"
+msgstr ""
+
+msgid "Preview loaded."
+msgstr ""
+
+msgid "Click Preview on any option below to load its value here."
+msgstr ""
+
+msgid "Your current IP:"
+msgstr ""
+
+msgid "debug.log"
+msgstr ""
+
+msgid "error_log"
+msgstr ""
+
+msgid "failed attempts before lockout (recommended: 5)"
+msgstr ""
+
+msgid "false"
+msgstr ""
+
+msgid "minutes in which the attempts are counted (recommended: 5)"
+msgstr ""
+
+msgid "minutes the IP is blocked (recommended: 30)"
+msgstr ""
+
+msgid "true"
+msgstr ""
+
+msgid "wp-config.php"
+msgstr ""
+
+msgid "⚠ Compatibility Warning"
+msgstr ""
+
+msgid ""
+"⚠ Flushing the object cache from here clears WordPress in-memory data. Page "
+"HTML cache managed by LiteSpeed Cache, WP Rocket, W3 Total Cache or similar "
+"plugins has its OWN flush mechanism inside those plugins. The Flush button "
+"below only clears the WordPress object cache (Redis, Memcached, or in-"
+"memory)."
+msgstr ""
+
+msgid "⚠ SAVEQUERIES is not active."
+msgstr ""
+
+msgid ""
+"⚠ The Redirects module is not active. Automatic 301 redirects will not be "
+"created when you rename slugs. Enable the Redirects module to avoid broken "
+"links."
+msgstr ""
+
+msgid "✓ Monitor active."
+msgstr ""
+
+msgid "Loading…"
+msgstr ""
+
+msgid "Select at least one table."
+msgstr ""
+
+msgid "Search tools"
+msgstr ""
+
+msgid "Search… (Ctrl+K)"
+msgstr ""
+
+msgid "Search tools (Ctrl+K)"
+msgstr ""
+
+msgid "No matching tools."
+msgstr ""
+
+msgid "Type to find a tab, then press Enter or click a result."
+msgstr ""
+
+msgid "Site status"
+msgstr ""
+
+msgid "No special modes active"
+msgstr ""
+
+msgid "Enable dev mode"
+msgstr ""
+
+msgid "Disable dev mode"
+msgstr ""
+
+msgid "Developer mode"
+msgstr ""
+
+msgid "Enable WP_DEBUG, debug.log and SAVEQUERIES"
+msgstr ""
+
+msgid "Debug ON"
+msgstr ""
+
+msgid "WP-Cron off"
+msgstr ""
+
+msgid "REST locked"
+msgstr ""
+
+msgid "XML-RPC off"
+msgstr ""
+
+msgid "Hidden login"
+msgstr ""
+
+msgid "Hardened admin"
+msgstr ""
+
+msgid "Developer mode enabled. Reload the page to apply."
+msgstr ""
+
+msgid "Developer mode disabled. Reload the page to apply."
+msgstr ""
+
+msgid "Enable developer mode"
+msgstr ""
+
+msgid "Disable developer mode"
+msgstr ""
+
+msgid ""
+"One click: WP_DEBUG + WP_DEBUG_LOG + SAVEQUERIES on, WP_DEBUG_DISPLAY off "
+"(safe for staging)."
+msgstr ""
+
+msgid "Download HTML Report"
+msgstr ""
+
+msgid "TSO Swiss Knife — Health Report"
+msgstr ""
+
+msgid "TSO Health Report — %s"
+msgstr ""
+
+msgid "Generated"
+msgstr ""
+
+msgid "Site"
+msgstr ""
+
+msgid "Custom 404 Page"
+msgstr ""
+
+msgid ""
+"Create a custom 404 page like any normal page, then select it here. Visitors"
+" see your page content while the server still returns a real 404 code (no "
+"redirect). Search engines are told the URL does not exist."
+msgstr ""
+
+msgid "404 Page"
+msgstr ""
+
+msgid "Custom 404 active"
+msgstr ""
+
+msgid "Using theme default 404"
+msgstr ""
+
+msgid "Select page"
+msgstr ""
+
+msgid "— None (theme default) —"
+msgstr ""
+
+msgid ""
+"Create the page under Pages → Add New, then pick it here. Permalinks must "
+"not be set to “Plain”."
+msgstr ""
+
+msgid "Edit page"
+msgstr ""
+
+msgid "View page"
+msgstr ""
+
+msgid "Test 404 response"
+msgstr ""
+
+msgid "Hide 404 page from front-end search results"
+msgstr ""
+
+msgid "Hide 404 page from the Pages list in admin"
+msgstr ""
+
+msgid "Return 404 when the 404 page URL is opened directly"
+msgstr ""
+
+msgid "Disable WordPress URL autocorrection guessing on 404"
+msgstr ""
+
+msgid "Send HTTP 410 (Gone) instead of 404"
+msgstr ""
+
+msgid "Show the failed URL on the page"
+msgstr ""
+
+msgid ""
+"Add one of these inside your 404 page content to display the URL that caused"
+" the error."
+msgstr ""
+
+msgid "Shortcode"
+msgstr ""
+
+msgid "Example output"
+msgstr ""
+
+msgid "Full URL"
+msgstr ""
+
+msgid "or"
+msgstr ""
+
+msgid "Path only"
+msgstr ""
+
+msgid "Domain + path"
+msgstr ""
+
+msgid ""
+"Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife)."
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Custom 404 settings saved."
+msgstr ""
+
+msgid "Select a valid page."
+msgstr ""
+
+msgid "The selected page must be published."
+msgstr ""
+
+msgid "URL causing 404 error"
+msgstr ""
+
+msgid "Display"
+msgstr ""
+
+msgid "URL format"
+msgstr ""
+
+msgid "Custom 404"
+msgstr ""
+
+msgid ""
+"Each option below is optional. The short explanations tell you what changes "
+"on your site when you tick the box."
+msgstr ""
+
+msgid ""
+"When a visitor searches your site, this page will not appear in the results."
+" That way people only see it when they hit a broken link, not when they look"
+" for normal content."
+msgstr ""
+
+msgid ""
+"The page still exists and works as your 404, but it disappears from Pages → "
+"All Pages so you are less likely to delete or edit it by mistake."
+msgstr ""
+
+msgid ""
+"If someone types the 404 page address in the browser (instead of landing on "
+"it from a bad link), they still get a “not found” response. Recommended: "
+"leave this on."
+msgstr ""
+
+msgid ""
+"WordPress can redirect a wrong URL to a similar page it thinks you meant. "
+"Enable this to turn off that guess and always show your custom 404 page "
+"instead."
+msgstr ""
+
+msgid ""
+"Your custom 404 page still appears exactly the same for visitors. Only the "
+"hidden HTTP code changes: 410 instead of 404. Use 410 when you removed "
+"content on purpose and want search engines to drop those URLs faster. For "
+"normal broken links, leave this off and keep 404."
+msgstr ""
+
+msgid "How to read each row"
+msgstr ""
+
+msgid "Tick the box to enable that constant in the plugin config file."
+msgstr ""
+
+msgid ""
+"For numbers: the input box is the new value that will be saved when you "
+"click Save."
+msgstr ""
+
+msgid ""
+"The green badge is the value active on your site right now (from wp-"
+"config.php or WordPress default) — not the value in the input box."
+msgstr ""
+
+msgid ""
+"The blue “wp-config.php” badge means that constant is locked in wp-"
+"config.php and cannot be changed from here."
+msgstr ""
+
+msgid "New value if saved"
+msgstr ""
+
+msgid "Current on site"
+msgstr ""
+
+msgid "Value active right now on this site"
+msgstr ""
+
+msgid ""
+"Blocks the xmlrpc.php endpoint. This can break: the official WordPress "
+"mobile app, Jetpack (remote publish and some connected features), pingbacks "
+"and trackbacks, and older automations via IFTTT or Zapier. Some WooCommerce "
+"mobile workflows and remote site managers (ManageWP, MainWP, etc.) may also "
+"rely on it. Safe to disable if you only manage the site in the browser and "
+"do not need those services."
+msgstr ""
+
+msgid ""
+"Compares all database tables against WordPress core tables and installed "
+"plugins. Tables from active or inactive plugins installed on this site "
+"should not appear as orphans."
+msgstr ""
+
+msgid ""
+"This detection scans %d installed plugins for declared table names. Always "
+"verify before deleting any table."
+msgstr ""
+
+msgid "Active plugin: %s"
+msgstr ""
+
+msgid "Installed plugin (inactive): %s"
+msgstr ""
+
+msgid ""
+"Bulk find-and-replace inside your WordPress database — with a preview step "
+"so you see changes before they are written."
+msgstr ""
+
+msgid "What is this tool for?"
+msgstr ""
+
+msgid ""
+"It finds a piece of text inside your database and replaces it with another —"
+" across posts, options, meta, and other tables. Think of it as “Find & "
+"Replace” in a text editor, but for the whole WordPress database."
+msgstr ""
+
+msgid "Typical uses"
+msgstr ""
+
+msgid "Change the site URL after a migration (old domain → new domain)."
+msgstr ""
+
+msgid "Switch http:// to https:// in stored content or options."
+msgstr ""
+
+msgid ""
+"Fix a typo or wrong path that appears in many posts or plugin settings."
+msgstr ""
+
+msgid "How to use it (recommended order)"
+msgstr ""
+
+msgid "Make a full database backup."
+msgstr ""
+
+msgid "Type the exact text to find and what to replace it with."
+msgstr ""
+
+msgid ""
+"Choose which tables to scan (WordPress tables is enough for most URL "
+"changes)."
+msgstr ""
+
+msgid "Click Preview — review every change before touching the database."
+msgstr ""
+
+msgid "Only then click Execute replace."
+msgstr ""
+
+msgid "Example — change domain after moving the site:"
+msgstr ""
+
+msgid ""
+"The exact text you want to find. It is matched inside table cells (post "
+"content, options, meta, etc.)."
+msgstr ""
+
+msgid "The new text. Leave empty to delete the matched text."
+msgstr ""
+
+msgid ""
+"When off, “Site” and “site” are treated the same. Turn on only if capital "
+"letters matter."
+msgstr ""
+
+msgid ""
+"Advanced mode for patterns (not plain text). Only enable if you know regex —"
+" wrong patterns can change too much."
+msgstr ""
+
+msgid ""
+"Which database tables to scan. For URL or content fixes, selecting WordPress"
+" tables (posts, postmeta, options…) is usually enough."
+msgstr ""
+
+msgid ""
+"A wrong search term can alter hundreds of rows at once. Preview is mandatory"
+" — Execute only appears after a successful preview."
+msgstr ""
+
+msgid ""
+"Tick the tables where the text might live. Unsure? Start with “Select "
+"WordPress tables”."
+msgstr ""
+
+msgid "Step 1 — shows what would change, without writing anything."
+msgstr ""
+
+msgid ""
+"Step 2 — applies the replace to the database. Only available after preview."
+msgstr ""
+
+msgid "What is meta data?"
+msgstr ""
+
+msgid ""
+"Meta is extra information stored in the database for each post or user — not"
+" visible in the normal editor. Plugins and themes use it for settings, "
+"layout data, SEO fields, featured images, and much more."
+msgstr ""
+
+msgid "Post meta vs user meta"
+msgstr ""
+
+msgid ""
+"Post meta — attached to a post, page, or custom post type (ID = post ID)."
+msgstr ""
+
+msgid "User meta — attached to a WordPress user account (ID = user ID)."
+msgstr ""
+
+msgid "When to use this tool"
+msgstr ""
+
+msgid "Inspect what a plugin stored for a specific post or user."
+msgstr ""
+
+msgid ""
+"Fix a wrong value (e.g. featured image ID) when you know exactly what to "
+"change."
+msgstr ""
+
+msgid "Remove leftover meta from an uninstalled plugin."
+msgstr ""
+
+msgid "Debug issues with page builders (Elementor), ACF, or SEO plugins."
+msgstr ""
+
+msgid "Choose Post meta or User meta."
+msgstr ""
+
+msgid "Optional: enter a Post/User ID to limit results to one item."
+msgstr ""
+
+msgid "Optional: filter by meta key or part of the value."
+msgstr ""
+
+msgid "Click Search, then Edit on a row to view or change the full value."
+msgstr ""
+
+msgid ""
+"Use Add meta row only when you know the exact key and value a plugin "
+"expects."
+msgstr ""
+
+msgid "Common meta keys (examples)"
+msgstr ""
+
+msgid "Used for"
+msgstr ""
+
+msgid "Featured image — value is the attachment post ID."
+msgstr ""
+
+msgid "Elementor page layout (serialized JSON — edit with extreme care)."
+msgstr ""
+
+msgid "Yoast SEO custom title for the post."
+msgstr ""
+
+msgid "User display nickname (user meta)."
+msgstr ""
+
+msgid "Post meta / User meta"
+msgstr ""
+
+msgid "Which table to search — postmeta for content, usermeta for accounts."
+msgstr ""
+
+msgid ""
+"Leave empty to search across the whole site, or enter one ID to see only "
+"that post or user."
+msgstr ""
+
+msgid ""
+"Search in meta key names and values — e.g. “elementor” or “_thumbnail”."
+msgstr ""
+
+msgid "Protected keys"
+msgstr ""
+
+msgid ""
+"Session tokens, capabilities, and keys containing “license” or “api_key” "
+"cannot be edited — this prevents breaking logins or licenses."
+msgstr ""
+
+msgid ""
+"View and edit hidden post and user data (meta) stored in the database — "
+"useful for debugging plugins and fixing specific values."
+msgstr ""
+
+msgid "Advanced tool — proceed with caution."
+msgstr ""
+
+msgid ""
+"Wrong values can break a page, user account, or page builder layout. Make a "
+"backup before editing. Prefer each plugin’s own settings screen when "
+"possible."
+msgstr ""
+
+msgid "Search meta rows"
+msgstr ""
+
+msgid "All (optional)"
+msgstr ""
+
+msgid "One post or user only"
+msgstr ""
+
+msgid "Key or value contains…"
+msgstr ""
+
+msgid "Meta ID"
+msgstr ""
+
+msgid "Value preview"
+msgstr ""
+
+msgid "Use Search above to load meta rows from the database."
+msgstr ""
+
+msgid "Edit meta value"
+msgstr ""
+
+msgid ""
+"You are editing the raw value stored in the database. Save only if you are "
+"sure the new value is correct."
+msgstr ""
+
+msgid ""
+"Creates a new meta entry for a post or user. The key must match what the "
+"plugin or theme expects."
+msgstr ""
+
+msgid ""
+"The main WordPress API: saves posts and pages, loads media, users, "
+"categories, etc. The Block Editor cannot work without it."
+msgstr ""
+
+msgid "Critical — do not disable"
+msgstr ""
+
+msgid ""
+"Endpoints used exclusively by the Block Editor (Gutenberg) while you edit "
+"content in wp-admin."
+msgstr ""
+
+msgid ""
+"Powers Site Health checks under Tools → Site Health. Disabling hides tests "
+"and status in the admin."
+msgstr ""
+
+msgid "High risk — admin tools break"
+msgstr ""
+
+msgid ""
+"Handles embed previews (YouTube, Twitter, etc.) and allows other sites to "
+"embed your posts. Rarely needed to block."
+msgstr ""
+
+msgid "Medium risk — embeds may fail"
+msgstr ""
+
+msgid "Newer WordPress REST routes. Future core features may depend on it."
+msgstr ""
+
+msgid "High risk — future core features"
+msgstr ""
+
+msgid ""
+"WordPress Abilities API — used by newer core and plugin integrations. Only "
+"block if you know it is unused."
+msgstr ""
+
+msgid "Medium risk — newer integrations"
+msgstr ""
+
+msgid ""
+"Endpoints registered by a plugin or theme. Blocking cuts off every request "
+"to this API group — the related plugin feature will stop working for "
+"everyone, including logged-in admins."
+msgstr ""
+
+msgid "Test on staging first"
+msgstr ""
+
+msgid "What are REST namespaces?"
+msgstr ""
+
+msgid ""
+"WordPress exposes data through the REST API — a set of URLs like /wp-"
+"json/wp/v2/posts that apps, the Block Editor, and plugins use to read or "
+"update content. A “namespace” is a group of those URLs (e.g. wp/v2 = posts, "
+"pages, media)."
+msgstr ""
+
+msgid "What does blocking do?"
+msgstr ""
+
+msgid ""
+"When you tick a namespace below, every request to that API group returns an "
+"error — for visitors and for logged-in admins alike. It is a surgical “off "
+"switch” for one API group, not the same as the access mode above (which only"
+" affects logged-out users)."
+msgstr ""
+
+msgid "Why would you use this?"
+msgstr ""
+
+msgid ""
+"Advanced hardening: hide a plugin’s public API if you do not need it and it "
+"adds attack surface."
+msgstr ""
+
+msgid ""
+"Troubleshooting: temporarily block a namespace to see if a problem comes "
+"from a specific plugin."
+msgstr ""
+
+msgid "Is it dangerous?"
+msgstr ""
+
+msgid ""
+"Yes, if you block the wrong namespace. Core groups (wp/v2, wp-block-editor) "
+"will break the Block Editor immediately. Plugin namespaces will break that "
+"plugin’s features. Leave everything unchecked unless you have a specific "
+"reason and have tested on staging."
+msgstr ""
+
+msgid ""
+"Optional advanced control. Tick a namespace only to completely block that "
+"API group. Most sites should leave all boxes unchecked."
+msgstr ""
+
+msgid "= essential for WordPress; cannot be ticked by default."
+msgstr ""
+
+msgid "= an active plugin on this site needs this namespace."
+msgstr ""
+
+msgid "Block"
+msgstr ""
+
+msgid ""
+"Core WordPress namespaces stay unchecked and locked by default so the Block "
+"Editor keeps working. Only change this if you are deliberately hardening a "
+"site without Gutenberg."
+msgstr ""
+
+msgid ""
+"Read-only security check: compares WordPress core files (wp-admin/, wp-"
+"includes/, root PHP) against official MD5 checksums from WordPress.org. It "
+"reports differences — it never installs, deletes, restores or downloads any "
+"file on your server."
+msgstr ""
+
+msgid "What this tool does and does NOT do"
+msgstr ""
+
+msgid "It does"
+msgstr ""
+
+msgid "Fetch checksums from WordPress.org (cached 24 h)."
+msgstr ""
+
+msgid "Compare hashes and list modified, missing or unexpected core files."
+msgstr ""
+
+msgid "Let you ignore known false positives."
+msgstr ""
+
+msgid "It does NOT"
+msgstr ""
+
+msgid "Scan, install or remove themes in wp-content/themes/."
+msgstr ""
+
+msgid "Scan plugins, uploads or any wp-content/ folder."
+msgstr ""
+
+msgid ""
+"Automatically restore or download files — you must fix issues manually."
+msgstr ""
+
+msgid ""
+"If you suddenly see many default WordPress themes (Twenty Twenty-*, etc.), "
+"this tool did not install them. They usually come from a WordPress core "
+"update (the release ZIP bundles default themes), a hosting installer, a "
+"staging sync, or another plugin — not from this scan."
+msgstr ""
+
+msgid ""
+"These files are listed in the official WordPress core checksums but were not"
+" found on your server. Only worry if the path is inside wp-admin/ or wp-"
+"includes/ and the site shows errors. This scan never downloads or restores "
+"missing files."
+msgstr ""
+
+msgid "Update Manager"
+msgstr ""
+
+msgid "Update Manager settings"
+msgstr ""
+
+msgid "Update Manager settings saved."
+msgstr ""
+
+msgid ""
+"Important: enabling automatic updates here only tells WordPress they are "
+"allowed. Installation still depends on WP-Cron (or a real server cron "
+"calling wp-cron.php) running wp_update_plugins and wp_maybe_auto_update — "
+"usually twice per day, not immediately."
+msgstr ""
+
+msgid "Update status & troubleshooting"
+msgstr ""
+
+msgid ""
+"If updates stay pending for days, check the blockers below. Use the button "
+"to check wordpress.org and apply allowed automatic updates immediately."
+msgstr ""
+
+msgid "Check and apply updates now"
+msgstr ""
+
+msgid "WP-Cron scheduler"
+msgstr ""
+
+msgid "External required"
+msgstr ""
+
+msgid ""
+"DISABLE_WP_CRON is on (often via %1$s). Background updates only run if a "
+"server cron calls wp-cron.php. Check the %2$s tab."
+msgstr ""
+
+msgid "Hidden Profiles"
+msgstr ""
+
+msgid "WordPress schedules update checks on site traffic (twice daily)."
+msgstr ""
+
+msgid "File modifications"
+msgstr ""
+
+msgid "Blocked"
+msgstr ""
+
+msgid "Allowed"
+msgstr ""
+
+msgid ""
+"DISALLOW_FILE_MODS is enabled (%s or wp-config.php). WordPress cannot "
+"install updates automatically."
+msgstr ""
+
+msgid "The updater can write plugin, theme and translation files."
+msgstr ""
+
+msgid "Automatic updater"
+msgstr ""
+
+msgid "WordPress may run background updates when cron executes."
+msgstr ""
+
+msgid "WordPress core blocked automatic updates for this site."
+msgstr ""
+
+msgid "Update Manager policy"
+msgstr ""
+
+msgid "All blocked"
+msgstr ""
+
+msgid "Update Manager preset “Disable all updates” is active."
+msgstr ""
+
+msgid "None enabled"
+msgstr ""
+
+msgid ""
+"This module is not enabling any automatic updates. Use “Enable all automatic"
+" updates” or turn components on in Custom."
+msgstr ""
+
+msgid "Configured"
+msgstr ""
+
+msgid "Auto-update enabled here for: %s."
+msgstr ""
+
+msgid "Next plugin check (cron)"
+msgstr ""
+
+msgid "Not scheduled"
+msgstr ""
+
+msgid "No wp_update_plugins event found in the cron table."
+msgstr ""
+
+msgid "Pending updates now"
+msgstr ""
+
+msgid "Plugins: %1$d · Themes: %2$d · Translations: %3$d · Core: %4$d"
+msgstr ""
+
+msgid ""
+"Update run finished. Pending before — plugins: %1$d, themes: %2$d, "
+"translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations:"
+" %6$d."
+msgstr ""
+
+msgid "Update Manager is blocking all updates. Change the preset first."
+msgstr ""
+
+msgid ""
+"Automatic updates are blocked on this site (file modifications not allowed)."
+msgstr ""
+
+msgid "Automatic updates are disabled by a WordPress filter or constant."
+msgstr ""
+
+msgid "Translation updates are disabled by Update Manager."
+msgstr ""
+
+msgid ""
+"Control WordPress update checks, automatic updates, and update email "
+"notifications from one place."
+msgstr ""
+
+msgid "Individual plugins"
+msgstr ""
+
+msgid ""
+"Override update behaviour for specific plugins. Leave both boxes unchecked "
+"to follow the global settings above."
+msgstr ""
+
+msgid "Filter plugins…"
+msgstr ""
+
+msgid "Block updates"
+msgstr ""
+
+msgid "Auto-update"
+msgstr ""
+
+msgid "No plugins installed."
+msgstr ""
+
+msgid "What does this module do?"
+msgstr ""
+
+msgid ""
+"WordPress checks wordpress.org for core, plugin, theme and translation "
+"updates, can install some automatically, and sends email when updates "
+"happen. Here you choose what is allowed and which emails you receive."
+msgstr ""
+
+msgid "Security note:"
+msgstr ""
+
+msgid ""
+"Blocking updates removes security patches from appearing in the dashboard. "
+"Only disable updates on staging, managed hosts with external patching, or "
+"when you update manually on a schedule."
+msgstr ""
+
+msgid "Quick preset"
+msgstr ""
+
+msgid "Choose a starting point. Select Custom to fine-tune each option below."
+msgstr ""
+
+msgid "WordPress default"
+msgstr ""
+
+msgid ""
+"No overrides — WordPress decides update checks, auto-updates and emails as "
+"usual."
+msgstr ""
+
+msgid "Disable all updates"
+msgstr ""
+
+msgid ""
+"Stop update checks for core, plugins, themes and translations. Disable "
+"automatic updates and hide dashboard nags."
+msgstr ""
+
+msgid "Enable all automatic updates"
+msgstr ""
+
+msgid ""
+"Allow automatic core (major + minor), plugin, theme and translation updates."
+msgstr ""
+
+msgid "Configure each component and email option individually."
+msgstr ""
+
+msgid "Update checks"
+msgstr ""
+
+msgid ""
+"Prevent WordPress from seeing available updates in the dashboard (blocks the"
+" API check)."
+msgstr ""
+
+msgid "Block WordPress core updates"
+msgstr ""
+
+msgid "Block plugin updates"
+msgstr ""
+
+msgid "Block theme updates"
+msgstr ""
+
+msgid "Block translation updates"
+msgstr ""
+
+msgid "Hide update nags in the admin"
+msgstr ""
+
+msgid "Automatic updates"
+msgstr ""
+
+msgid "Control what WordPress installs automatically in the background."
+msgstr ""
+
+msgid "WordPress core"
+msgstr ""
+
+msgid "Minor / security only"
+msgstr ""
+
+msgid "Major and minor"
+msgstr ""
+
+msgid "Plugins"
+msgstr ""
+
+msgid "Themes"
+msgstr ""
+
+msgid "Translations"
+msgstr ""
+
+msgid "Update email notifications"
+msgstr ""
+
+msgid ""
+"Uncheck to stop WordPress from sending that type of update email to the site"
+" admin."
+msgstr ""
+
+msgid "Core — major version updates"
+msgstr ""
+
+msgid "e.g. 6.7 → 6.8 or 6.x → 7.x"
+msgstr ""
+
+msgid "Core — minor / security updates"
+msgstr ""
+
+msgid "e.g. 6.7.1 → 6.7.2"
+msgstr ""
+
+msgid "Core — failed or critical update alerts"
+msgstr ""
+
+msgid "Core — after manual update from dashboard"
+msgstr ""
+
+msgid "Plugin automatic updates"
+msgstr ""
+
+msgid "Theme automatic updates"
+msgstr ""
+
+msgid "Updates off"
+msgstr ""
+
+msgid "Updates managed"
+msgstr ""
+
+msgid "Block forbidden usernames"
+msgstr ""
+
+msgid ""
+"Instantly lock out IPs that try to log in with admin, administrador or "
+"administrator"
+msgstr ""
+
+msgid ""
+"Uses the lockout duration below. Whitelisted IPs are exempt. Works even when"
+" brute-force counting is disabled."
+msgstr ""
+
+msgid "Too many failed login attempts. Please try again later."
+msgstr ""
+
+msgid "TSO Link Inspector"
+msgstr ""
+
+msgid "From Tu Soporte Online"
+msgstr ""
+
+msgid ""
+"Find and fix broken links across your whole site without opening each post "
+"in the editor. A dedicated plugin for link maintenance, SEO hygiene and "
+"peace of mind."
+msgstr ""
+
+msgid "Installed & active"
+msgstr ""
+
+msgid "What it does"
+msgstr ""
+
+msgid ""
+"Scans posts, pages, custom post types, menus, comments and optional ACF "
+"fields for links."
+msgstr ""
+
+msgid ""
+"Checks each URL via HTTP: broken links, redirects, insecure HTTP and "
+"connection errors."
+msgstr ""
+
+msgid ""
+"Fix links inline from the dashboard — edit URL, smart suggestion, unlink or "
+"mark as OK."
+msgstr ""
+
+msgid ""
+"Bulk actions, CSV export, daily scan and hourly background checks via WP-"
+"Cron."
+msgstr ""
+
+msgid ""
+"Email alerts for hard-broken links and optional nofollow on broken links for"
+" SEO."
+msgstr ""
+
+msgid "Catalan and Spanish translations included."
+msgstr ""
+
+msgid "Open TSO Link Inspector"
+msgstr ""
+
+msgid "Install from WordPress.org"
+msgstr ""
+
+msgid "View on WordPress.org"
+msgstr ""
+
+msgid "Quick tip:"
+msgstr ""
+
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Link Inspector appears in "
+"the results — free on WordPress.org."
+msgstr ""
+
+msgid ""
+"Keep your WordPress database lean and fast. A dedicated plugin to clean "
+"wp_options, orphan metadata, revisions, and leftover tables — with SQL "
+"backups before you delete anything."
+msgstr ""
+
+msgid ""
+"Clean expired transients, revisions, auto-drafts, and trashed posts or "
+"comments safely."
+msgstr ""
+
+msgid ""
+"Browse and delete orphan wp_options grouped by plugin, with autoload "
+"management."
+msgstr ""
+
+msgid ""
+"Detect and remove tables left behind by uninstalled plugins — with review-"
+"only mode when confidence is low."
+msgstr ""
+
+msgid ""
+"Full database SQL backup: export, download, restore, or delete backups from "
+"uploads."
+msgstr ""
+
+msgid ""
+"OPTIMIZE fragmented tables to reclaim space and improve query performance."
+msgstr ""
+
+msgid "Catalan, Spanish, and English interface included."
+msgstr ""
+
+msgid "Open TSO Options & Tables Cleaner"
+msgstr ""
+
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Options & Tables Cleaner "
+"appears in the results — free on WordPress.org."
+msgstr ""
+
+msgid ""
+"Reduce common attack vectors from anonymous visitors and remote clients."
+msgstr ""
+
+msgid "Login protection →"
+msgstr ""
+
+msgid ""
+"Applied via WordPress hooks on the next request after saving. No server "
+"reload required. XML-RPC and RSS feeds are configured under Security Review;"
+" REST API under REST API."
+msgstr ""
+
+msgid ""
+"REST API access and namespace controls are configured in the REST API tab."
+msgstr ""
+
+msgid "Open REST API settings →"
+msgstr ""
+
+msgid ""
+"Enable logging and inspect error files on this site. Constants already "
+"defined in wp-config.php take precedence over the plugin config file."
+msgstr ""
+
+msgid ""
+"Recommended on staging: one click enables WP_DEBUG, debug.log, SAVEQUERIES "
+"and hides errors from visitors. Settings are saved to tsosk-config and only "
+"apply when those constants are not already set in wp-config.php."
+msgstr ""
+
+msgid ""
+"Current values for each constant. Use the buttons to add or change them "
+"directly in wp-config.php when you need full control."
+msgstr ""
+
+msgid "Advanced: write debug flags to wp-config.php"
+msgstr ""
+
+msgid ""
+"Use this only when you want the settings hard-coded in wp-config.php instead"
+" of tsosk-config. A backup is recommended before modifying wp-config.php."
+msgstr ""
+
+msgid "Enable debug.log in wp-config.php"
+msgstr ""
+
+msgid "View = scroll to preview below. Empty = delete entries, keep file."
+msgstr ""
+
+msgid "View content"
+msgstr ""
+
+msgid "Empty file"
+msgstr ""
+
+msgid "Log file emptied. The file was kept on disk."
+msgstr ""
+
+msgid "wp-admin error_log"
+msgstr ""
+
+msgid "wp-includes error_log"
+msgstr ""
+
+msgid "uploads error_log"
+msgstr ""
+
+msgid ""
+"Empty \"%s\"? All log entries will be deleted but the file will remain on "
+"disk. This cannot be undone."
+msgstr ""
+
+msgid "Support the project"
+msgstr ""
+
+msgid "Tools menu"
+msgstr ""
+
+msgid ""
+"Complete maintenance and developer toolkit: cron manager, debug mode, "
+"transients, database tools, hooks inspector, maintenance mode, plugin "
+"sandbox and more. %s"
+msgstr ""
+
+msgid "Reorder & Hide Sidebar"
+msgstr ""
+
+msgid ""
+"Choose which items appear in the WordPress admin sidebar, change their order"
+" by dragging, rename labels, and move submenus under another section. "
+"Changes apply to all admin users."
+msgstr ""
+
+msgid ""
+"Main sections (Posts, Media, Appearance…) are highlighted. Drag any row to "
+"change order, or use “Under” to move a submenu elsewhere. Leave custom "
+"labels empty to keep the original name. TSO Swiss Knife cannot be hidden."
+msgstr ""
+
+msgid "Sidebar menu items"
+msgstr ""
+
+msgid ""
+"Drag the handle to reorder. Use “Hide” to remove items from the sidebar. "
+"Submenus can be moved with the “Under” dropdown."
+msgstr ""
+
+msgid "Save sidebar menu"
+msgstr ""
+
+msgid "Reset the sidebar menu to WordPress defaults?"
+msgstr ""
+
+msgid "Sidebar menu saved. Reload any admin page to see changes."
+msgstr ""
+
+msgid "Could not read the admin menu. Reload this page and try again."
+msgstr ""
+
+msgid "Sidebar menu reset to WordPress defaults."
+msgstr ""
+
+msgid "Sidebar menu saved: %1$d hidden, %2$d renamed, %3$d relocated."
+msgstr ""
+
+msgid ""
+"Main sections are collapsed by default — click the arrow to show sub-items. "
+"Drag the handle to reorder. Use “Hide” to remove items from the sidebar."
+msgstr ""
+
+msgid "Expand all sections"
+msgstr ""
+
+msgid "Collapse all sections"
+msgstr ""
+
+msgid "Show %d hidden item"
+msgid_plural "Show %d hidden items"
+msgstr ""
+
+msgid ""
+"Hidden items are listed in the section below. Uncheck “Hide” and save to "
+"show them again in the sidebar."
+msgstr ""
+
+msgid "Hidden"
+msgstr ""
+
+msgid "Hidden items"
+msgstr ""
+
+msgid "Separator (position %d)"
+msgstr ""
+
+msgid "Separator (%s)"
+msgstr ""
+
+msgid "Separators cannot be renamed."
+msgstr ""
+
+msgid ""
+"Hidden items could not be loaded. Reload this page, or reset the menu to "
+"defaults if the problem persists."
+msgstr ""
+
+msgid "Show or hide sub-items"
+msgstr ""
+
+msgid "Toggle sub-items for %s"
+msgstr ""
+
+msgid "%d sub-item"
+msgid_plural "%d sub-items"
+msgstr ""
+
+msgid ""
+"Main sections (Posts, Media, Plugins…) are collapsed by default. Click the "
+"arrow on a section to show its sub-items. Drag any row to change order, or "
+"use “Under” to move a submenu elsewhere."
+msgstr ""
+
+msgid "Admin Menu"
+msgstr ""
+
+msgid ""
+"Simplify the WordPress admin sidebar: hide items you never use, rename "
+"confusing labels, and drag top-level menus to reorder them. Changes apply to"
+" all admin users."
+msgstr ""
+
+msgid ""
+"Only check “Hide” for items you want removed. Leave custom labels empty to "
+"keep the original name. This module cannot hide TSO Swiss Knife (so you can "
+"always return here)."
+msgstr ""
+
+msgid "Admin menu items"
+msgstr ""
+
+msgid "Drag top-level rows to reorder. Submenus stay under their parent."
+msgstr ""
+
+msgid "Menu item"
+msgstr ""
+
+msgid "Custom label (optional)"
+msgstr ""
+
+msgid "Drag to reorder"
+msgstr ""
+
+msgid "Hide this menu item"
+msgstr ""
+
+msgid "Save menu"
+msgstr ""
+
+msgid "Reset to defaults"
+msgstr ""
+
+msgid "Admin menu settings saved. Reload any admin page to see changes."
+msgstr ""
+
+msgid "Admin menu reset to WordPress defaults."
+msgstr ""
+
+msgid "Invalid menu data."
+msgstr ""
+
+msgid "Reset the admin menu to WordPress defaults?"
+msgstr ""
+
+msgid ""
+"Simplify the WordPress admin sidebar: hide items, rename labels, drag to "
+"reorder, and move submenus under a different section. Changes apply to all "
+"admin users."
+msgstr ""
+
+msgid ""
+"Main sections (Posts, Media, Appearance…) are highlighted. Drag any row to "
+"reorder, or use “Under” to move a submenu elsewhere. Leave custom labels "
+"empty to keep the original name. TSO Swiss Knife cannot be hidden."
+msgstr ""
+
+msgid ""
+"Drag the handle to reorder. Submenus can be moved to another main section "
+"with the dropdown."
+msgstr ""
+
+msgid "Under"
+msgstr ""
+
+msgid "Custom label"
+msgstr ""
+
+msgid "Main section"
+msgstr ""
+
+msgid "Move under section"
+msgstr ""
+
+msgid "Comments"
+msgstr ""
+
+msgid "Preview maintenance page"
+msgstr ""
+
+msgid "Preview only — maintenance mode is not active."
+msgstr ""
+
+msgid ""
+"Preview opens in a new tab using the message above (even if you have not "
+"saved yet). Maintenance mode stays off."
+msgstr ""
+
+msgid ""
+"Preview opens in a new tab using the settings above (even if you have not "
+"saved yet). Maintenance mode stays off."
+msgstr ""
+
+msgid "Logo (optional)"
+msgstr ""
+
+msgid "Select logo"
+msgstr ""
+
+msgid "Remove logo"
+msgstr ""
+
+msgid "Use this image"
+msgstr ""
+
+msgid ""
+"Shown above the site name on the maintenance page. Leave empty to use the "
+"default wrench icon."
+msgstr ""
+
+msgid "Activity History"
+msgstr ""
+
+msgid ""
+"All important changes made through TSO Swiss Knife are recorded here: "
+"options edited, database replacements, maintenance mode, admin menu, and "
+"more."
+msgstr ""
+
+msgid "%1$d / %2$d"
+msgstr ""
+
+msgid "Shows the last %d actions across all plugin tools."
+msgstr ""
+
+msgid ""
+"No changes recorded yet. When you save settings or edit data in any TSO "
+"Swiss Knife tool, it will appear here."
+msgstr ""
+
+msgid "Activity history cleared."
+msgstr ""
+
+msgid "Tool"
+msgstr ""
+
+msgid "Summary"
+msgstr ""
+
+msgid "Before:"
+msgstr ""
+
+msgid "After:"
+msgstr ""
+
+msgid "%1$d tables, %2$d rows, %3$d cells"
+msgstr ""
+
+msgid ""
+"Editing wp_options directly can break your site if critical values are "
+"changed incorrectly. All changes are logged in the %s tab."
+msgstr ""
+
+msgid "All replace operations are logged in the %s tab."
+msgstr ""
+
+msgid "Option %1$s: %2$s"
+msgstr ""
+
+msgid "Database replace: \"%1$s\" → \"%2$s\""
+msgstr ""
+
+msgid "Admin menu saved: %1$d hidden, %2$d renamed, %3$d relocated."
+msgstr ""
+
+msgid "Maintenance mode settings saved."
+msgstr ""
+
+msgid "Hidden WordPress profiles settings saved."
+msgstr ""
+
+msgid "Hidden WordPress profiles settings saved (no changes)."
+msgstr ""
+
+msgid "%1$s %2$s"
+msgstr ""
+
+msgid "%1$s enabled (%2$d)"
+msgstr ""
+
+msgid "%s disabled"
+msgstr ""
+
+msgid "%1$s changed from %2$d to %3$d"
+msgstr ""
+
+msgid "enabled"
+msgstr ""
+
+msgid "disabled"
+msgstr ""
+
+msgid "Clear all activity history? This cannot be undone."
+msgstr ""
+
+msgid "Server Files"
+msgstr ""
+
+msgid "Slow Queries"
+msgstr ""
+
+msgid "File Integrity"
+msgstr ""
+
+msgid "Health & Alerts"
+msgstr ""
+
+msgid "Flush"
+msgstr ""
+
+msgid "Import"
+msgstr ""
+
+msgid "Scan"
+msgstr ""
+
+msgid "Purge"
+msgstr ""
+
+msgid "%1$s → %2$s"
+msgstr ""
+
+msgid ""
+"Uncheck a size to stop WordPress from generating it on new uploads (saves "
+"disk space). Core sizes thumbnail, medium and large cannot be disabled here."
+" Existing files are not deleted."
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "core"
+msgstr ""
+
+msgid "Save image size settings"
+msgstr ""
+
+msgid "Image size settings saved. New uploads will skip disabled sizes."
+msgstr ""
+
+msgid "Page heading"
+msgstr ""
+
+msgid ""
+"Large title shown on the maintenance page (e.g. your brand name). Leave "
+"empty to use the site name."
+msgstr ""
+
+msgid "Leave empty for the default: “%s”"
+msgstr ""
+
+msgid "TSO config"
+msgstr ""
+
+msgid "Defined in wp-config.php — edit that file to change or remove it."
+msgstr ""
+
+msgid ""
+"Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO "
+"override filter (saved on this panel). To remove the wp-config line "
+"entirely, edit that file."
+msgstr ""
+
+msgid ""
+"This constant is set in wp-config.php. Remove or change that line there to "
+"manage it from this panel."
+msgstr ""
+
+msgid "Why use redirects?"
+msgstr ""
+
+msgid ""
+"Redirects tell browsers and search engines that a URL has moved. They "
+"preserve SEO value when you rename a post, merge content, or change "
+"permalink structure. A 301 permanent redirect passes most ranking signals to"
+" the new URL; 302/307 are for temporary moves. Use 410 when content is "
+"permanently removed. Google follows redirects when crawling — broken old "
+"URLs without redirects become 404s and may lose traffic."
+msgstr ""
+
+msgid "Open Pages and edit your selected 404 page."
+msgstr ""
+
+msgid ""
+"In the block editor: click + → search “URL causing 404 error” (TSO Swiss "
+"Knife) and insert the block where you want the link shown."
+msgstr ""
+
+msgid ""
+"Classic editor or a text/HTML block: paste a shortcode from the table below,"
+" e.g. [tsosk_404_url]."
+msgstr ""
+
+msgid ""
+"Save the page. On a real 404, visitors see the broken URL they requested."
+msgstr ""
+
+msgid "Shrink (keep last 500 lines)"
+msgstr ""
+
+msgid "Keep only the last 500 lines of %s? Older lines will be archived."
+msgstr ""
+
+msgid ""
+"Review and edit the server configuration files that control crawling, "
+"permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache"
+" may use a root .htaccess in public_html plus a separate one inside "
+"WordPress. Also shows all sitemap files detected on this installation."
+msgstr ""
+
+msgid ".htaccess (domain / document root)"
+msgstr ""
+
+msgid ".htaccess (WordPress subdirectory)"
+msgstr ""
+
+msgid "Document root .htaccess"
+msgstr ""
+
+msgid ""
+"This is the .htaccess at your hosting document root (e.g. public_html). It "
+"may contain site-wide redirects, security rules or PHP settings that apply "
+"before WordPress loads. The WordPress subdirectory has its own .htaccess "
+"below for permalinks."
+msgstr ""
+
+msgid "WordPress permalink .htaccess"
+msgstr ""
+
+msgid ""
+"This file only affects URLs inside the WordPress folder. Pretty permalinks "
+"and rewrite rules for posts/pages are stored here. Site-wide rules in "
+"public_html/.htaccess are shown separately above when detected."
+msgstr ""
+
+msgid "Hide WordPress Site Health notices"
+msgstr ""
+
+msgid ""
+"On staging or private test sites, WordPress may show heavy warnings on Tools"
+" › Site Health about search-engine visibility or debug.log being public. "
+"Enable the options below to hide those specific tests. This does not change "
+"your real settings — it only removes the notices from Site Health."
+msgstr ""
+
+msgid "Hide “site is not visible to search engines” test"
+msgstr ""
+
+msgid "Hide “debug.log may be publicly accessible” test"
+msgstr ""
+
+msgid "Save suppression settings"
+msgstr ""
+
+msgid "Settings saved. Refresh Site Health to see changes."
+msgstr ""
+
+msgid "Site Health suppression settings saved."
+msgstr ""
+
+msgid "0 options"
+msgstr ""
+
+msgid ""
+"Test plugin conflicts with real isolation: a must-use loader makes WordPress"
+" load only your selected plugins on the next request. Other visitors are not"
+" affected."
+msgstr ""
+
+msgid "Sandbox mode is active for your account."
+msgstr ""
+
+msgid "MU loader on"
+msgstr ""
+
+msgid "MU loader missing — limited mode"
+msgstr ""
+
+msgid "Select the plugins you want to test."
+msgstr ""
+
+msgid ""
+"Click Apply Sandbox — a must-use loader is installed and a secure session "
+"cookie is set."
+msgstr ""
+
+msgid ""
+"After reload, WordPress loads only those plugin files for you. Everyone else"
+" keeps the normal set."
+msgstr ""
+
+msgid ""
+"Click Exit Sandbox when finished. The loader is removed when no sessions "
+"remain."
+msgstr ""
+
+msgid ""
+"TSO Swiss Knife and other must-use plugins always stay loaded. The server "
+"must allow writing to wp-content/mu-plugins."
+msgstr ""
+
+msgid "Plugin sandbox applied (%d plugins)."
+msgstr ""
+
+msgid ""
+"Sandbox applied. The page will reload and only your selected plugins will "
+"load."
+msgstr ""
+
+msgid "Plugin sandbox exited."
+msgstr ""
+
+msgid "Sandbox exited. Reloading restores the normal plugin set."
+msgstr ""
+
+msgid "Select at least one plugin (this toolkit is always kept active)."
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Legacy user level 0 (subscriber). Deprecated — ignore."
+msgstr ""
+
+msgid "Legacy user level 1 (contributor). Deprecated — ignore."
+msgstr ""
+
+msgid ""
+"Legacy user level (deprecated). WordPress no longer uses levels for "
+"permissions."
+msgstr ""
+
+msgid "Log reduced to the last %1$d lines. Older entries archived to %2$s"
+msgstr ""
+
+msgid "Debug log shrunk to last %1$d lines (archive: %2$s)."
+msgstr ""
+
+msgid "Site Health notice suppression"
+msgstr ""
+
+msgid "Custom 404 page"
+msgstr ""
+
+msgid "Admin menu customizer"
+msgstr ""
+
+msgid "Admin menu manifest"
+msgstr ""
+
+msgid "Disabled image sizes"
+msgstr ""
+
+msgid "File integrity ignored files"
+msgstr ""
+
+msgid "Health email alerts"
+msgstr ""
+
+msgid ""
+"Paste JSON from a previous export or upload a .json file. You can choose "
+"which sections to restore."
+msgstr ""
+
+msgid "Sections in this file"
+msgstr ""
+
+msgid "Uncheck any section you do not want to overwrite."
+msgstr ""
+
+msgid "Status filter"
+msgstr ""
+
+msgid "Reschedule cron event"
+msgstr ""
+
+msgid ""
+"Change when the event runs next. For recurring events, pick the interval. "
+"Useful for orphaned events from deactivated plugins."
+msgstr ""
+
+msgid "Next run (local time)"
+msgstr ""
+
+msgid "Single event (run once)"
+msgstr ""
+
+msgid "Save schedule"
+msgstr ""
+
+msgid "Cron event rescheduled: %s."
+msgstr ""
+
+msgid "Event rescheduled."
+msgstr ""
+
+msgid "Could not reschedule the event."
+msgstr ""
+
+msgid "Invalid schedule interval."
+msgstr ""
+
+msgid "Theme: %s"
+msgstr ""
+
+msgid ""
+"Hook not registered on this request — often a deactivated plugin or a "
+"callback loaded only during cron."
+msgstr ""
+
+msgid "When and how to flush rewrite rules"
+msgstr ""
+
+msgid ""
+"WordPress stores URL routing rules in the database. Plugins and custom post "
+"types register rules when they load; those rules must be rebuilt after "
+"permalink or routing changes."
+msgstr ""
+
+msgid ""
+"Regenerates rules in the database only. Safer and usually enough after "
+"activating a plugin, changing slug settings, or fixing 404s on custom post "
+"types."
+msgstr ""
+
+msgid ""
+"Also rewrites .htaccess (Apache) or web.config (IIS). Use when soft flush "
+"does not fix front-end 404s, or after moving the site to a subdirectory. On "
+"nginx, server config must still be updated manually."
+msgstr ""
+
+msgid ""
+"Avoid flushing on every page load — it is expensive. Only flush when "
+"something actually changed. A hard flush can overwrite custom server rules "
+"if WordPress does not detect them; back up .htaccess first."
+msgstr ""
+
+msgid "Login maintenance"
+msgstr ""
+
+msgid "Block login page except for trusted IPs below"
+msgstr ""
+
+msgid "Email verification (2FA)"
+msgstr ""
+
+msgid "Send a one-time code by email after password validation"
+msgstr ""
+
+msgid "IP whitelist by role"
+msgstr ""
+
+msgid "Mass lockout alert"
+msgstr ""
+
+msgid "Login lockout log"
+msgstr ""
+
+msgid "Login attempt counters"
+msgstr ""
+
+msgid "Active Sessions"
+msgstr ""
+
+msgid "Force password change"
+msgstr ""
+
+msgid "Inactive Users (90+ days)"
+msgstr ""
+
+msgid "Login History"
+msgstr ""
+
+msgid "Compare roles"
+msgstr ""
+
+msgid "High risk"
+msgstr ""
+
+msgid ""
+"Inspect, compare, clone and edit WordPress role capabilities. Dangerous "
+"capabilities are blocked or flagged."
+msgstr ""
+
+msgid "Clone role"
+msgstr ""
+
+msgid "Create a new role with the same capabilities as an existing one."
+msgstr ""
+
+msgid "Clone selected role"
+msgstr ""
+
+msgid "Apply template"
+msgstr ""
+
+msgid "Content editor (posts + pages + media)"
+msgstr ""
+
+msgid "Media manager"
+msgstr ""
+
+msgid "Read only"
+msgstr ""
+
+msgid ""
+"Adds template capabilities to the role (does not remove existing caps)."
+msgstr ""
+
+msgid "Apply to selected role"
+msgstr ""
+
+msgid ""
+"View-only for the administrator role. Capabilities cannot be added or "
+"removed here."
+msgstr ""
+
+msgid "Administrator capabilities loaded (read-only)."
+msgstr ""
+
+msgid "Only in role A"
+msgstr ""
+
+msgid "Only in role B"
+msgstr ""
+
+msgid "In both roles"
+msgstr ""
+
+msgid "Cloning the administrator role is not allowed."
+msgstr ""
+
+msgid "Role cloned. Reload the page to see it in the dropdown."
+msgstr ""
+
+msgid "Unknown template."
+msgstr ""
+
+msgid "Source role, new slug and label are required."
+msgstr ""
+
+msgid "Edit content of type: %s"
+msgstr ""
+
+msgid "Publish content of type: %s"
+msgstr ""
+
+msgid "Delete content of type: %s"
+msgstr ""
+
+msgid "Login Maintenance & Advanced"
+msgstr ""
+
+msgid "Apply to roles:"
+msgstr ""
+
+msgid ""
+"One role per line: role_slug: ip1, ip2. Global whitelist IPs always bypass "
+"this rule."
+msgstr ""
+
+msgid "lockouts in"
+msgstr ""
+
+msgid "minutes (0 = disabled)"
+msgstr ""
+
+msgid ""
+"Inspect sessions, login history, inactive accounts and manage user security "
+"actions."
+msgstr ""
+
+msgid "Administrator Sessions"
+msgstr ""
+
+msgid ""
+"Session tokens stored by WordPress. Close individual sessions or all "
+"sessions for a user."
+msgstr ""
+
+msgid "Close all sessions"
+msgstr ""
+
+msgid "Last login:"
+msgstr ""
+
+msgid "User agent"
+msgstr ""
+
+msgid "Login time"
+msgstr ""
+
+msgid ""
+"Based on last successful login (or registration date if never logged in). "
+"Administrators are never deleted in bulk."
+msgstr ""
+
+msgid "Set selected to Subscriber"
+msgstr ""
+
+msgid "Delete selected"
+msgstr ""
+
+msgid "Last activity"
+msgstr ""
+
+msgid "Success"
+msgstr ""
+
+msgid "Login history entries"
+msgstr ""
+
+msgid "Select at least one user."
+msgstr ""
+
+msgid "Apply bulk action to selected inactive users?"
+msgstr ""
+
+msgid ""
+"Force this user to change their password on next login and close all "
+"sessions?"
+msgstr ""
+
+msgid "Login history cleared."
+msgstr ""
+
+msgid ""
+"Your administrator requires you to change your password. Update it on your "
+"profile page below."
+msgstr ""
+
+msgid ""
+"Risks when disabling sizes: broken images in old content, missing srcset "
+"variants, layout shifts in themes/plugins that expect those sizes, and "
+"WooCommerce or page builders that rely on specific dimensions. Test on "
+"staging after changing sizes."
+msgstr ""
+
+msgid "Defined in TSO flags file"
+msgstr ""
+
+msgid "Defined at runtime"
+msgstr ""
+
+msgid "Set via TSO Swiss Knife flags file"
+msgstr ""
+
+msgid "WordPress runtime default"
+msgstr ""
+
+msgid "Effective value (filter or core)"
+msgstr ""
+
+msgid "PHP ini / WordPress fallback"
+msgstr ""
+
+msgid "WordPress default when undefined"
+msgstr ""
+
+msgid "Enables WordPress debug mode."
+msgstr ""
+
+msgid "Writes debug messages to debug.log."
+msgstr ""
+
+msgid "Shows debug messages on screen."
+msgstr ""
+
+msgid "Visits"
+msgstr ""
+
+msgid "Last visit"
+msgstr ""
+
+msgid "Last visit: %s"
+msgstr ""
+
+msgid ""
+"Recent 404 visits are captured so you can create redirects from missing "
+"URLs."
+msgstr ""
+
+msgid "No 404 visits recorded yet."
+msgstr ""
+
+msgid ""
+"Visits counts how many times each missing URL was requested. Referrer shows "
+"the previous page (HTTP Referer) when the browser sent it — direct visits, "
+"bots and bookmarks usually leave it empty."
+msgstr ""
+
+msgid "Logging preferences"
+msgstr ""
+
+msgid "Log all tools (ignore checklist below)"
+msgstr ""
+
+msgid "Maximum entries"
+msgstr ""
+
+msgid "Save logging preferences"
+msgstr ""
+
+msgid "Activity log settings saved."
+msgstr ""
+
+msgid "Apply updates immediately when detected"
+msgstr ""
+
+msgid ""
+"Works with automatic updates enabled. Installs allowed updates as soon as "
+"WordPress detects them — only when pending updates exist, without forcing "
+"extra checks on every admin page."
+msgstr ""
+
+msgid "Remove [%s]"
+msgstr ""
+
+msgid "Remove all"
+msgstr ""
+
+msgid "Remove this broken shortcode from the post content?"
+msgstr ""
+
+msgid "Remove all broken shortcodes from this post?"
+msgstr ""
+
+msgid "Cancel this scheduled action?"
+msgstr ""
+
+msgid ""
+"Truncate the selected slugs and create redirects where enabled? This changes"
+" permalinks immediately."
+msgstr ""
+
+msgid "Open Options Editor"
+msgstr ""
+
+msgid ""
+"Choose which tools write to the history and how many entries to keep. Use "
+"“Log all tools” for the default, or uncheck it and select only the modules "
+"you want recorded."
+msgstr ""
+
+msgid ""
+"Tip: check only the modules you care about to reduce noise. Save, then "
+"uncheck modules you want to exclude — or clear history after changing "
+"filters."
+msgstr ""
+
+msgid "Shows the last %d actions across enabled plugin tools."
+msgstr ""
+
+msgid ""
+"%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped "
+"(already short enough or could not be changed)."
+msgstr ""
+
+msgid "301 redirects were created for updated slugs."
+msgstr ""
+
+msgid "%d error(s) occurred."
+msgstr ""
+
+msgid "Before"
+msgstr ""
+
+msgid "After"
+msgstr ""
+
+msgid "Removed broken shortcode [%1$s] from post #%2$d."
+msgstr ""
+
+msgid "Bulk slug fix: %1$d updated, %2$d skipped."
+msgstr ""
+
+msgid "Slug renamed: %1$s → %2$s."
+msgstr ""
+
+msgid "Update Manager settings saved (preset: %s)."
+msgstr ""
+
+msgid "Debug log shrunk to last 500 lines (archive: %s)."
+msgstr ""
+
+msgid "Expired transients purged: %d."
+msgstr ""
+
+msgid "File added to ignore list."
+msgstr ""
+
+msgid "File integrity scan completed (%d issue(s))."
+msgstr ""
+
+msgid "Manual update run finished (plugins pending: %1$d → %2$d)."
+msgstr ""
+
+msgid "Cron event executed: %s."
+msgstr ""
+
+msgid "Bulk slug fix preview"
+msgstr ""
+
+msgid "Confirm changes"
+msgstr ""
+
+msgid "Skipped"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "No slugs would change with the current selection and threshold."
+msgstr ""
+
+msgid ""
+"%1$d slug will be shortened to a maximum of %2$d characters. %3$d item will "
+"be skipped."
+msgid_plural ""
+"%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items "
+"will be skipped."
+msgstr ""
+
+msgid "301 redirects will be created from the old URLs."
+msgstr ""
+
+msgid "Already within the character limit."
+msgstr ""
+
+msgid "Could not shorten this slug."
+msgstr ""
+
+msgid "You do not have permission to edit this post."
+msgstr ""
+
+msgid "Permission denied."
+msgstr ""
+
+msgid "This option is marked as caution and cannot be edited here."
+msgstr ""
+
+msgid ""
+"Plugin sandbox requires AUTH_KEY in wp-config.php. Generate secure keys "
+"before using sandbox mode."
+msgstr ""
+
+msgid "You do not have permission to edit this attachment."
+msgstr ""
+
+msgid "Invalid file path. Only files from the latest scan can be ignored."
+msgstr ""
+
+msgid "Preview 404 page"
+msgstr ""
+
+msgid "Select a published page to preview."
+msgstr ""
+
+msgid "Invalid preview link."
+msgstr ""
+
+msgid "read-only"
+msgstr ""
+
+msgid "Donate"
+msgstr ""
+
+msgid "Administrators cannot be forced to change their password from here."
+msgstr ""
+
+msgid "Skipped invalid sections: %s"
+msgstr ""
+
+msgid "Section \"%s\" must be an object."
+msgstr ""
+
+msgid "Redirects section must be an object."
+msgstr ""
+
+msgid "Login protection section must be an object."
+msgstr ""
+
+msgid "Login lockout log must be an array."
+msgstr ""
+
+msgid "Login lockout log exceeds the maximum allowed entries."
+msgstr ""
+
+msgid "Login attempt counters must be an object."
+msgstr ""
+
+msgid "Login attempt counters exceed the maximum allowed entries."
+msgstr ""
+
+msgid "Expected a list of strings."
+msgstr ""
+
+msgid "List exceeds the maximum of %d items."
+msgstr ""
+
+msgid ""
+"Replaces the role capabilities with the template (caps not in the template "
+"are removed; blocked caps are never granted)."
+msgstr ""
+
+msgid "XML-RPC is still enabled."
+msgstr ""
+
+msgid ""
+"The custom login URL does not block authentication via "
+"<code>xmlrpc.php</code>. Disable XML-RPC in the <a href=\"%s\">Security</a> "
+"tab for stronger protection."
+msgstr ""
+
+msgid "Uploads directory was not found."
+msgstr ""
+
+msgid "Uploads scan completed."
+msgstr ""
+
+msgid ""
+"See how much disk space wp-content/uploads uses: totals by month and file "
+"type, largest files, and how much space thumbnails take compared to "
+"originals."
+msgstr ""
+
+msgid "Scan uploads folder"
+msgstr ""
+
+msgid ""
+"Scan results are cached for 10 minutes. Large sites may hit the file limit —"
+" review totals before deleting anything."
+msgstr ""
+
+msgid "Open Media Cleaner"
+msgstr ""
+
+msgid "Open Image Sizes Audit"
+msgstr ""
+
+msgid "Open Uploads Disk Footprint"
+msgstr ""
+
+msgid "No scan data yet. Click “Scan uploads folder” to analyze disk usage."
+msgstr ""
+
+msgid "Files scanned"
+msgstr ""
+
+msgid "Total disk usage"
+msgstr ""
+
+msgid "Original media (est.)"
+msgstr ""
+
+msgid "Thumbnails & derivatives"
+msgstr ""
+
+msgid "Other files"
+msgstr ""
+
+msgid "Last scan"
+msgstr ""
+
+msgid ""
+"Scan stopped at the file safety limit. Totals are partial — use for guidance"
+" only."
+msgstr ""
+
+msgid "Usage by month"
+msgstr ""
+
+msgid "Month"
+msgstr ""
+
+msgid "Usage by file type"
+msgstr ""
+
+msgid "Extension"
+msgstr ""
+
+msgid "Largest files (top 20)"
+msgstr ""
+
+msgid "Derivative"
+msgstr ""
+
+msgid "Original / other"
+msgstr ""
+
+msgid "Uploads Disk Footprint"
+msgstr ""
+
+msgid "Image Sizes Audit"
+msgstr ""
+
+msgid "Image sizes audit completed."
+msgstr ""
+
+msgid "Image size generation settings saved."
+msgstr ""
+
+msgid ""
+"Audit how much disk space each registered image size uses, estimate "
+"recoverable space from thumbnails, and disable sizes you do not need on new "
+"uploads."
+msgstr ""
+
+msgid "Run image sizes audit"
+msgstr ""
+
+msgid ""
+"Counts are based on attachment metadata and a disk scan for unmatched "
+"derivative files. Disabling a size only affects new uploads — existing files"
+" are not deleted."
+msgstr ""
+
+msgid ""
+"Risks when disabling sizes: broken images in old content, missing srcset "
+"variants, and layout issues in themes or page builders that expect specific "
+"dimensions. Test on staging first."
+msgstr ""
+
+msgid "Run the audit to see file counts and disk usage per size."
+msgstr ""
+
+msgid "Audit summary"
+msgstr ""
+
+msgid "Attachments with metadata"
+msgstr ""
+
+msgid "Full-size files on disk"
+msgstr ""
+
+msgid "%1$s files — %2$s"
+msgstr ""
+
+msgid "Unmatched derivatives"
+msgstr ""
+
+msgid "Last audit"
+msgstr ""
+
+msgid "Registered image sizes"
+msgstr ""
+
+msgid "Dimensions"
+msgstr ""
+
+msgid "Disk usage"
+msgstr ""
+
+msgid "If disabled (new uploads)"
+msgstr ""
+
+msgid "Always generated"
+msgstr ""
+
+msgid "Skipped on new uploads"
+msgstr ""
+
+msgid "Could save ~%s on future uploads"
+msgstr ""
+
+msgid "%1$d × %2$d — crop: %3$s"
+msgstr ""
+
+msgid ""
+"Drag tabs to reorder and move them between categories, drag into Favorites, "
+"and reorder favorites. Click ✕ on a tool to hide it or on a favorite to "
+"remove it."
+msgstr ""
+
+msgid ""
+"Limited scan of wp-content/uploads for files not registered as media "
+"attachments. Plugin-owned folders (TSO backups, cache, translations, config)"
+" are excluded — do not delete those manually."
+msgstr ""
+
+msgid ""
+"These files are in the Media Library but not attached to any post or page. "
+"Regenerate thumbnails only applies to image attachments."
+msgstr ""
+
+msgid "No thumbnails"
+msgstr ""
+
+msgid ""
+"Note: scans up to 100 recent posts/pages whose content contains a [ "
+"character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-"
+"plugins or late-registered plugins may still appear as false positives."
+msgstr ""

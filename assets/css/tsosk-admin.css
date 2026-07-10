@@ -1,0 +1,3348 @@
+/*
+ * TSO Swiss Knife – Admin CSS
+ * Version: 1.0.0
+ */
+
+/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+.tsosk-wrap {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tsosk-page-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    margin: 16px 0 0;
+}
+
+.tsosk-page-title .dashicons {
+    color: #2271b1;
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+}
+
+.tsosk-version {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888;
+    background: #f0f0f1;
+    padding: 2px 8px;
+    border-radius: 20px;
+    align-self: center;
+}
+
+.tsosk-page-title-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.tsosk-donate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    background: #fff8e6;
+    border: 1px solid #e0b070;
+    color: #8a4a00;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1.3;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+    box-shadow: 0 1px 3px rgba(138, 74, 0, 0.12);
+}
+
+.tsosk-donate-btn:hover,
+.tsosk-donate-btn:focus {
+    background: #ffefb8;
+    color: #6b3800;
+    border-color: #c07000;
+    box-shadow: 0 2px 6px rgba(138, 74, 0, 0.18);
+    outline: none;
+}
+
+.tsosk-language-switcher {
+    display: inline-flex;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.tsosk-language-switcher a {
+    padding: 3px 8px;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    background: #fff;
+    text-decoration: none;
+    color: #2271b1;
+}
+
+.tsosk-language-switcher a.is-active {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+}
+
+/* ── Global search ─────────────────────────────────────────────────────────── */
+.tsosk-global-search {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    min-width: 220px;
+    max-width: 340px;
+    flex: 0 1 280px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+    overflow: visible;
+}
+
+.tsosk-global-search:focus-within {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.tsosk-global-search .dashicons-search {
+    position: static;
+    flex: 0 0 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin: 0;
+    color: #787c82;
+    font-size: 18px;
+    width: 34px;
+    height: auto;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.tsosk-global-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    padding: 6px 10px 6px 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: none;
+}
+
+.tsosk-global-search-input:focus {
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+
+.tsosk-global-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin: 4px 0 0;
+    padding: 4px 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.tsosk-global-search-results li {
+    margin: 0;
+}
+
+.tsosk-search-no-results {
+    display: block;
+    padding: 8px 12px;
+    color: #646970;
+    font-size: 13px;
+}
+
+.tsosk-global-search-results a,
+.tsosk-global-search-results button.tsosk-search-result {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    color: #1d2327;
+    text-decoration: none;
+}
+
+.tsosk-global-search-results a:hover,
+.tsosk-global-search-results a:focus,
+.tsosk-global-search-results button.tsosk-search-result:hover,
+.tsosk-global-search-results button.tsosk-search-result:focus,
+.tsosk-global-search-results li.is-active a,
+.tsosk-global-search-results li.is-active button {
+    background: #f0f6fc;
+    color: #2271b1;
+    outline: none;
+}
+
+.tsosk-search-result-group {
+    display: block;
+    font-size: 11px;
+    color: #646970;
+    margin-top: 2px;
+}
+
+/* ── Site status bar ───────────────────────────────────────────────────────── */
+.tsosk-site-status-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 14px;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.tsosk-site-status-label {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.tsosk-site-status-ok {
+    color: #50575e;
+}
+
+.tsosk-site-status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.tsosk-site-status-badge:hover,
+.tsosk-site-status-badge:focus {
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+.tsosk-site-status-warn,
+.tsosk-site-status-debug {
+    background: #fcf0e4;
+    color: #8a4a00;
+    border: 1px solid #e0b070;
+}
+
+.tsosk-site-status-danger {
+    background: #fce8e8;
+    color: #8a2424;
+    border: 1px solid #e0a0a0;
+}
+
+.tsosk-site-status-info {
+    background: #e8f4fc;
+    color: #135e96;
+    border: 1px solid #9ec2e0;
+}
+
+.tsosk-site-status-success {
+    background: #edfaef;
+    color: #1e4620;
+    border: 1px solid #9dd4a5;
+}
+
+.tsosk-site-status-actions {
+    margin-left: auto;
+}
+
+/* ── Layout: sidebar + content ─────────────────────────────────────────────── */
+.tsosk-chrome {
+    display: flex;
+    align-items: stretch;
+    margin-top: 20px;
+    min-height: 600px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    border-radius: 6px;
+    overflow: visible;
+    min-width: 0;
+}
+
+.tsosk-layout {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 6px 0 0 6px;
+    overflow: visible;
+}
+
+.tsosk-chrome > .tsosk-layout {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.tsosk-chrome > .tsosk-sidebar-favorites {
+    order: 2;
+}
+
+.tsosk-chrome > .tsosk-mobile-nav-toggle {
+    order: 0;
+}
+
+/* ── Sidebars: tools column (left) ─────────────────────────────────────────── */
+.tsosk-sidebars {
+    display: flex;
+    flex-shrink: 0;
+    align-self: stretch;
+    overflow: visible;
+    border-radius: 6px 0 0 6px;
+}
+
+.tsosk-sidebar {
+    width: 280px;
+    min-width: 280px;
+    flex: 0 0 auto;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    background: #1e2327;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.tsosk-sidebar-tools {
+    border-radius: 6px 0 0 6px;
+}
+
+#tsosk-nav-list,
+#tsosk-favorites-list {
+    flex: 1 1 auto;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
+    width: 320px;
+    min-width: 320px;
+}
+
+.tsosk-sidebar-favorites {
+    width: 220px;
+    min-width: 220px;
+    flex: 0 0 auto;
+    align-self: stretch;
+    border-left: 1px solid #dcdcde;
+    border-right: none;
+    background: #161b1f;
+    border-radius: 0 6px 6px 0;
+}
+
+.tsosk-favorites-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 14px 12px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f0c14b;
+    border-bottom: 1px solid #3c434a;
+}
+
+.tsosk-favorites-title .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #f0c14b;
+}
+
+.tsosk-favorites-hint {
+    margin: 0;
+    padding: 8px 12px 10px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #6b7280;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-favorites-hint {
+    color: #9ca3af;
+}
+
+#tsosk-favorites-list {
+    min-height: 48px;
+    padding: 0 8px 12px;
+    box-sizing: border-box;
+}
+
+#tsosk-favorites-list.is-empty {
+    min-height: 120px;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing #tsosk-favorites-list {
+    min-height: 160px;
+    border: 2px dashed transparent;
+    border-radius: 4px;
+    margin: 0 6px 8px;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing #tsosk-favorites-list.is-drop-target {
+    border-color: #f0c14b;
+    background: rgba(240, 193, 75, 0.08);
+}
+
+.tsosk-sidebar-favorites .tsosk-nav-row {
+    border-bottom: 1px solid #2c3338;
+}
+
+.tsosk-sidebar-favorites .tsosk-drag-handle,
+.tsosk-sidebar-favorites .tsosk-remove-fav {
+    display: none;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-drag-handle,
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-remove-fav {
+    display: flex;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-nav-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 34px;
+    align-items: start;
+    padding: 4px 8px 4px 0;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-drag-handle {
+    grid-column: 1;
+    padding-top: 8px;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-nav-item {
+    grid-column: 2;
+    pointer-events: none;
+}
+
+.tsosk-sidebar-favorites.tsosk-editing .tsosk-remove-fav {
+    grid-column: 3;
+    align-self: start;
+    margin-top: 4px;
+}
+
+.tsosk-remove-fav {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #4a5568;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: inherit;
+}
+
+.tsosk-remove-fav:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.tsosk-toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.tsosk-toggle-row input {
+    margin-top: 3px;
+}
+
+.tsosk-toggle-row .tsosk-hint {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+.tsosk-status-list {
+    margin: 0 0 12px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.tsosk-status-list li {
+    margin: 6px 0;
+    font-size: 13px;
+}
+
+.tsosk-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: #c3c4c7;
+    text-decoration: none;
+    font-size: 12.5px;
+    line-height: 1.35;
+    border-left: 3px solid transparent;
+    transition: background .12s, color .12s, border-color .12s;
+    white-space: normal;
+    overflow: visible;
+}
+
+.tsosk-nav-item .dashicons {
+    flex-shrink: 0;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #a0aab4;
+    transition: color .12s;
+}
+
+.tsosk-nav-label {
+    overflow: visible;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.tsosk-nav-item:hover {
+    background: #2c3338;
+    color: #fff;
+    border-left-color: #a0aab4;
+}
+
+.tsosk-nav-item:hover .dashicons {
+    color: #fff;
+}
+
+.tsosk-nav-item.is-active,
+.tsosk-nav-item:focus {
+    background: #2c3338;
+    color: #fff;
+    border-left-color: #2271b1;
+    outline: none;
+}
+
+.tsosk-nav-item.is-active .dashicons {
+    color: #72aee6;
+}
+
+.tsosk-nav-group-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.42);
+    padding: 14px 16px 4px;
+    margin-top: 2px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.tsosk-nav-group-label:first-child {
+    padding-top: 10px;
+}
+
+.tsosk-hp-preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* ── Hidden profiles layout ─────────────────────────────────────────────────── */
+.tsosk-hp-section-desc {
+    margin: 0 0 16px;
+    line-height: 1.55;
+}
+
+.tsosk-hp-legend {
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-left: 3px solid #2271b1;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.tsosk-hp-legend p {
+    margin: 0 0 8px;
+}
+
+.tsosk-hp-legend-list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.tsosk-hp-legend-list li {
+    margin-bottom: 6px;
+}
+
+.tsosk-hp-legend-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Shared guide cards (Search & Replace, Meta Editor, etc.) ─────────────── */
+.tsosk-guide-card {
+    margin: 0 0 20px;
+    padding: 16px 18px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 4px;
+    line-height: 1.55;
+}
+
+.tsosk-guide-title {
+    margin: 0 0 8px;
+    font-size: 15px;
+}
+
+.tsosk-guide-lead {
+    margin: 0 0 14px;
+    max-width: 820px;
+}
+
+.tsosk-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px 24px;
+    margin-bottom: 14px;
+}
+
+.tsosk-guide-block h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+}
+
+.tsosk-guide-block ul,
+.tsosk-guide-block ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.tsosk-guide-block li {
+    margin-bottom: 6px;
+}
+
+.tsosk-guide-block li:last-child {
+    margin-bottom: 0;
+}
+
+.tsosk-guide-steps {
+    padding-left: 20px;
+}
+
+.tsosk-guide-example {
+    margin: 0;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.tsosk-guide-example p {
+    margin: 6px 0 0;
+}
+
+.tsosk-guide-example code {
+    margin: 0 4px;
+}
+
+.tsosk-field-help-list {
+    margin: 12px 0 16px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.tsosk-field-help-list p {
+    margin: 0 0 8px;
+}
+
+.tsosk-field-help-list p:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Search & Replace tab ───────────────────────────────────────────────────── */
+.tsosk-sr-form-table {
+    margin-bottom: 12px;
+}
+
+.tsosk-sr-tables-block {
+    margin: 16px 0;
+}
+
+.tsosk-sr-tables-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.tsosk-sr-tables-desc {
+    margin: 0 0 8px;
+}
+
+.tsosk-sr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.tsosk-sr-action-hint {
+    font-size: 12px;
+    color: #646970;
+    flex: 1 1 100%;
+    max-width: 640px;
+}
+
+@media (min-width: 782px) {
+    .tsosk-sr-action-hint {
+        flex: 0 1 auto;
+    }
+}
+
+.tsosk-sr-diff-before { background:#fff0f0; color:#9b2c2c; text-decoration:line-through; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
+.tsosk-sr-diff-after  { background:#f0fff4; color:#276749; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
+.tsosk-sr-table-section { margin-bottom:12px; border:1px solid #e2e4e7; border-radius:6px; overflow:hidden; }
+.tsosk-sr-table-header  { padding:8px 12px; background:#f6f7f7; font-weight:600; font-size:13px; display:flex; align-items:center; gap:10px; }
+.tsosk-sr-row           { padding:8px 12px; border-top:1px solid #f0f0f1; }
+.tsosk-sr-col-label     { font-size:11px; color:#646970; font-weight:600; margin-bottom:3px; }
+
+/* ── Meta Editor tab ────────────────────────────────────────────────────────── */
+.tsosk-me-search-card h3 {
+    margin-top: 0;
+}
+
+.tsosk-me-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.tsosk-me-toolbar label {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.tsosk-me-toolbar .tsosk-me-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tsosk-me-toolbar .tsosk-me-field-hint {
+    font-size: 11px;
+    color: #646970;
+    font-weight: 400;
+    max-width: 200px;
+    line-height: 1.4;
+}
+
+.tsosk-me-examples {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.tsosk-me-examples table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.tsosk-me-examples th,
+.tsosk-me-examples td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid #f0f0f1;
+    vertical-align: top;
+}
+
+.tsosk-me-examples th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #646970;
+}
+
+.tsosk-me-examples tr:last-child td {
+    border-bottom: none;
+}
+
+.tsosk-me-examples code {
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.tsosk-hp-field {
+    padding: 16px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.tsosk-hp-field:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.tsosk-hp-field-label {
+    display: block;
+    cursor: pointer;
+}
+
+.tsosk-hp-field-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+
+.tsosk-hp-field-desc {
+    margin: 10px 0 0 28px;
+    max-width: 760px;
+    line-height: 1.6;
+    color: #50575e;
+}
+
+.tsosk-hp-input-wrap,
+.tsosk-hp-live-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tsosk-hp-mini-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #646970;
+}
+
+.tsosk-hp-number-input {
+    width: 72px;
+    padding: 4px 8px;
+}
+
+/* ── Content area ───────────────────────────────────────────────────────────── */
+.tsosk-content {
+    flex: 1;
+    background: #f6f7f7;
+    border-left: none;
+    overflow: auto;
+    min-width: 0;
+    border-radius: 0;
+}
+
+.tsosk-content-inner {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+.tsosk-tab-header {
+    background: #fff;
+    border-bottom: 1px solid #dcdcde;
+    padding: 16px 24px 14px;
+}
+
+.tsosk-tab-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 18px;
+    color: #1d2327;
+}
+
+.tsosk-tab-header h2 .dashicons {
+    color: #2271b1;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.tsosk-tab-body {
+    padding: 20px 24px 32px;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
+.tsosk-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 0 20px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.tsosk-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+    padding: 14px 0 10px;
+    margin: 0 0 10px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+/* ── Description paragraph ─────────────────────────────────────────────────── */
+.tsosk-desc {
+    color: #646970;
+    font-size: 13px;
+    margin: 0 0 16px;
+    line-height: 1.6;
+}
+
+/* ── Badges ─────────────────────────────────────────────────────────────────── */
+.tsosk-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f0f0f1;
+    color: #50575e;
+    border: 1px solid #dcdcde;
+}
+
+.tsosk-badge-ok {
+    background: #edfaef;
+    color: #1a7e34;
+    border-color: #b2dfdb;
+}
+
+.tsosk-badge-warn {
+    background: #fff3cd;
+    color: #7a4100;
+    border-color: #f6c142;
+}
+
+.tsosk-badge-core {
+    background: #e7f0fa;
+    color: #1a5498;
+    border-color: #b4ceed;
+}
+
+.tsosk-badge-custom {
+    background: #f3e8ff;
+    color: #6a0dad;
+    border-color: #d4aaff;
+}
+
+.tsosk-badge-info {
+    background: #e5f5fb;
+    color: #145d7a;
+    border-color: #a8d8ea;
+}
+
+/* ── Notices ────────────────────────────────────────────────────────────────── */
+.tsosk-notice {
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    border-left: 4px solid;
+}
+
+.tsosk-notice-info {
+    background: #e5f5fb;
+    border-color: #2271b1;
+    color: #0a4b78;
+}
+
+.tsosk-notice-warn {
+    background: #fff8e1;
+    border-color: #f0b429;
+    color: #7a4100;
+}
+
+/* ── TSO companion plugin promos ───────────────────────────────────────────── */
+.tsosk-promo-link-inspector,
+.tsosk-promo-options-cleaner {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.tsosk-promo-hero {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f0f6fc 0%, #fff 55%, #f6f7f7 100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.tsosk-promo-hero-icon {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #2271b1;
+    color: #fff;
+}
+
+.tsosk-promo-hero-icon .dashicons {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+}
+
+.tsosk-promo-kicker {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2271b1;
+}
+
+.tsosk-promo-title {
+    margin: 0 0 10px;
+    font-size: 26px;
+    line-height: 1.2;
+    color: #1d2327;
+}
+
+.tsosk-promo-lead {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: #50575e;
+}
+
+.tsosk-promo-status {
+    display: inline-block;
+    margin-top: 12px;
+}
+
+.tsosk-promo-features-card h3 {
+    margin-top: 0;
+}
+
+.tsosk-promo-feature-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tsosk-promo-feature-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 12px;
+    line-height: 1.5;
+    color: #1d2327;
+}
+
+.tsosk-promo-feature-list li:last-child {
+    margin-bottom: 0;
+}
+
+.tsosk-promo-feature-list .dashicons {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #00a32a;
+}
+
+.tsosk-promo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0 20px;
+}
+
+.tsosk-promo-tip {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.tsosk-promo-tip .dashicons {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #2271b1;
+}
+
+.tsosk-promo-tip p {
+    margin: 0;
+}
+
+@media (max-width: 600px) {
+    .tsosk-promo-hero {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .tsosk-promo-actions .button-hero {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────────── */
+.tsosk-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 12px;
+}
+
+.tsosk-table {
+    font-size: 13px;
+}
+
+.tsosk-table th {
+    font-weight: 600;
+}
+
+.tsosk-table td,
+.tsosk-table th {
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.tsosk-row-warn td {
+    background: #fff8e1;
+}
+
+.tsosk-code {
+    font-family: monospace;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.tsosk-review-list {
+    margin: 8px 0 0;
+}
+
+.tsosk-review-list li {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin: 7px 0;
+}
+
+.tsosk-file-preview,
+.tsosk-log-preview {
+    max-height: 340px;
+    overflow: auto;
+    padding: 12px;
+    border: 1px solid #dcdcde;
+    background: #f6f7f7;
+    white-space: pre-wrap;
+}
+
+.tsosk-dev-mode-card {
+    margin-bottom: 16px;
+    border-left: 3px solid #2271b1;
+}
+
+.tsosk-dev-mode-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tsosk-debug-advanced {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #dcdcde;
+}
+
+.tsosk-debug-advanced summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.tsosk-log-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.tsosk-th-hint {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    color: #646970;
+    margin-top: 4px;
+}
+
+.tsosk-log-line {
+    padding: 2px 0 2px 8px;
+    border-left: 3px solid transparent;
+}
+
+.tsosk-log-line[data-level="error"] {
+    border-left-color: #d63638;
+}
+
+.tsosk-log-line[data-level="warning"] {
+    border-left-color: #dba617;
+}
+
+.tsosk-log-line[data-level="deprecated"],
+.tsosk-log-line[data-level="notice"] {
+    border-left-color: #72aee6;
+}
+
+.tsosk-truncate {
+    display: inline-block;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* ── KV Table ───────────────────────────────────────────────────────────────── */
+.tsosk-kv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.tsosk-kv-table th {
+    width: 200px;
+    font-weight: 600;
+    text-align: left;
+    padding: 6px 10px;
+    color: #50575e;
+    vertical-align: top;
+}
+
+.tsosk-kv-table td {
+    padding: 6px 10px;
+}
+
+.tsosk-kv-table tr + tr th,
+.tsosk-kv-table tr + tr td {
+    border-top: 1px solid #f0f0f1;
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────────── */
+.tsosk-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.tsosk-filter-pills {
+    display: inline-flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.tsosk-filter-pills .tsosk-filter-active {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+}
+
+#tsosk-transients-table th.tsosk-sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+#tsosk-transients-table th.tsosk-sortable:hover {
+    background: #f0f0f1;
+}
+
+#tsosk-transients-table th.tsosk-sort-asc::after {
+    content: " \2191";
+    opacity: 0.6;
+}
+
+#tsosk-transients-table th.tsosk-sort-desc::after {
+    content: " \2193";
+    opacity: 0.6;
+}
+
+/* ── Time display ───────────────────────────────────────────────────────────── */
+.tsosk-time {
+    cursor: help;
+    border-bottom: 1px dashed #ccc;
+}
+
+/* ── Actions column ─────────────────────────────────────────────────────────── */
+.tsosk-actions {
+    white-space: nowrap;
+}
+
+.tsosk-actions .button + .button {
+    margin-left: 4px;
+}
+
+/* Option Library preview */
+.tsosk-ol-preview-panel {
+    border-left: 4px solid #2271b1;
+    margin-bottom: 16px;
+}
+
+.tsosk-ol-preview-value {
+    max-height: 280px;
+    overflow: auto;
+    background: #f6f7f7;
+    padding: 12px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.tsosk-ol-option-row.is-preview-active {
+    background: #f0f6fc;
+}
+
+.tsosk-ol-option-row.is-preview-active td {
+    box-shadow: inset 0 0 0 1px #c5d9ed;
+}
+
+/* ── AJAX message span ──────────────────────────────────────────────────────── */
+.tsosk-ajax-msg {
+    font-size: 12px;
+    font-style: italic;
+    color: #2a9d2a;
+    margin-left: 8px;
+}
+
+.tsosk-ajax-msg.is-error {
+    color: #d63638;
+}
+
+/* ── Activity History details ─────────────────────────────────────────────── */
+.tsosk-history-count {
+    margin-left: 8px;
+    font-size: 12px;
+}
+
+.tsosk-history-empty {
+    color: #646970;
+    margin-top: 12px;
+}
+
+.tsosk-history-actions {
+    margin: 12px 0;
+}
+
+.tsosk-history-col-date {
+    width: 130px;
+}
+
+.tsosk-history-col-tool {
+    width: 16%;
+}
+
+.tsosk-history-col-action {
+    width: 90px;
+}
+
+.tsosk-history-col-user {
+    width: 80px;
+}
+
+.tsosk-history-date,
+.tsosk-history-user {
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.tsosk-history-summary {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.tsosk-history-details {
+    display: block;
+    margin-top: 4px;
+    color: #646970;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.tsosk-history-details code {
+    font-size: 11px;
+    word-break: break-all;
+}
+
+/* ── Debug flags ────────────────────────────────────────────────────────────── */
+.tsosk-flag-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+    flex-wrap: wrap;
+}
+
+.tsosk-flag-row:last-of-type {
+    border-bottom: none;
+}
+
+.tsosk-flag-label {
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.tsosk-flag-desc {
+    color: #646970;
+    font-size: 12px;
+    flex: 1;
+}
+
+.tsosk-flag-current {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+}
+
+/* ── Plugin list ────────────────────────────────────────────────────────────── */
+.tsosk-plugin-list {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.tsosk-plugin-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 13px;
+    transition: background .1s;
+}
+
+.tsosk-plugin-row:last-child {
+    border-bottom: none;
+}
+
+.tsosk-plugin-row:hover {
+    background: #f6f7f7;
+}
+
+.tsosk-plugin-row.is-active {
+    background: #f0f9f1;
+}
+
+.tsosk-plugin-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.tsosk-plugin-ver {
+    color: #888;
+    font-size: 11px;
+}
+
+/* ── Constants table ────────────────────────────────────────────────────────── */
+.tsosk-constants-table th code,
+.tsosk-constants-table td code {
+    background: transparent;
+    font-size: 12px;
+}
+
+/* ── Hooks table ────────────────────────────────────────────────────────────── */
+.tsosk-hooks-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.tsosk-hooks-search-input {
+    width: 260px;
+    max-width: 100%;
+}
+
+.tsosk-hooks-pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.tsosk-hooks-pagination-bottom {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.tsosk-hooks-table-wrap {
+    max-height: calc(100vh - 180px);
+    overflow: auto;
+    margin-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tsosk-hooks-table {
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.tsosk-hooks-table th,
+.tsosk-hooks-table td {
+    padding: 3px 8px;
+    vertical-align: top;
+    line-height: 1.35;
+}
+
+.tsosk-hooks-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f6f7f7;
+    box-shadow: 0 1px 0 #c3c4c7;
+}
+
+.tsosk-hooks-col-hook {
+    width: 26%;
+}
+
+.tsosk-hooks-col-priority {
+    width: 7%;
+    text-align: center;
+}
+
+.tsosk-hooks-col-args {
+    width: 5%;
+    text-align: center;
+}
+
+.tsosk-hook-name {
+    max-width: 280px;
+    font-size: 11px;
+    background: #fafafa;
+    border-right: 1px solid #e8e8e8;
+}
+
+.tsosk-hooks-priority,
+.tsosk-hooks-args {
+    text-align: center;
+    white-space: nowrap;
+    color: #646970;
+    font-size: 11px;
+}
+
+.tsosk-hooks-callback {
+    font-size: 11px;
+}
+
+.tsosk-hooks-empty {
+    color: #8c8f94;
+    font-size: 11px;
+}
+
+.tsosk-hooks-row-group-end td {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.tsosk-hooks-row-group-end .tsosk-hook-name {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.tsosk-cb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.tsosk-cb-table th {
+    font-weight: 600;
+    padding: 3px 6px;
+    border-bottom: 1px solid #eee;
+    color: #646970;
+}
+
+.tsosk-cb-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+/* ── Field rows ─────────────────────────────────────────────────────────────── */
+.tsosk-field-row {
+    margin-bottom: 14px;
+}
+
+.tsosk-field-row label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.tsosk-radio-row {
+    display: block;
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.tsosk-radio-row input {
+    margin-right: 6px;
+}
+
+.tsosk-check-row {
+    display: block;
+    padding: 6px 0;
+    cursor: pointer;
+}
+
+.tsosk-check-row input {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.tsosk-check-option {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.tsosk-check-option:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.tsosk-check-option-desc {
+    margin: 4px 0 0 26px;
+    max-width: 720px;
+    line-height: 1.5;
+}
+
+.tsosk-block-404-url-preview {
+    margin: 0;
+    padding: 12px;
+    background: #f6f7f7;
+    border: 1px dashed #c3c4c7;
+    border-radius: 4px;
+}
+
+/* ── DB result panel (legacy) ───────────────────────────────────────────────── */
+/* ── NS list ────────────────────────────────────────────────────────────────── */
+.tsosk-rest-ns-intro {
+    margin-bottom: 12px;
+}
+
+.tsosk-rest-ns-guide {
+    margin-bottom: 16px;
+}
+
+.tsosk-ns-legend {
+    margin: 0 0 14px;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.6;
+}
+
+.tsosk-ns-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.tsosk-ns-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.tsosk-ns-item:last-child {
+    border-bottom: none;
+}
+
+.tsosk-ns-item-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.tsosk-ns-item-label input[type="checkbox"] {
+    margin-top: 3px;
+}
+
+.tsosk-ns-item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    line-height: 1.5;
+}
+
+.tsosk-ns-item-desc {
+    margin: 8px 0 0 28px;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.55;
+    max-width: 720px;
+}
+
+.tsosk-ns-risk {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.tsosk-ns-risk-critical {
+    background: #fcf0f1;
+    color: #8a2424;
+    border: 1px solid #f1aeb5;
+}
+
+.tsosk-ns-risk-high {
+    background: #fff8e5;
+    color: #8a6116;
+    border: 1px solid #f0d599;
+}
+
+.tsosk-ns-risk-medium {
+    background: #f0f6fc;
+    color: #1d4ed8;
+    border: 1px solid #c3d9f7;
+}
+
+.tsosk-ns-risk-unknown {
+    background: #f6f7f7;
+    color: #50575e;
+    border: 1px solid #dcdcde;
+}
+
+.tsosk-um-plugin-table-wrap {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.tsosk-um-plugin-table-wrap .tsosk-um-plugin-row td {
+    vertical-align: middle;
+}
+
+.tsosk-ns-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 13px;
+}
+
+.tsosk-ns-list li:last-child {
+    border-bottom: none;
+}
+
+/* ── Args cell ──────────────────────────────────────────────────────────────── */
+.tsosk-args {
+    max-width: 140px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-size: 11px;
+}
+
+/* ── Mobile nav toggle (hidden on desktop) ─────────────────────────────────── */
+.tsosk-wrap .tsosk-mobile-nav-toggle {
+    display: none !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+.tsosk-mobile-nav-toggle .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* ── Responsive (hide sidebar labels on narrow screens) ────────────────────── */
+@media (max-width: 960px) and (min-width: 783px) {
+    .tsosk-sidebar {
+        width: 220px;
+        min-width: 220px;
+    }
+
+    .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
+        width: 320px;
+        min-width: 320px;
+    }
+
+    .tsosk-nav-label {
+        font-size: 11.5px;
+    }
+}
+
+@media (max-width: 782px) {
+    .tsosk-wrap {
+        max-width: none;
+    }
+
+    .tsosk-chrome {
+        flex-direction: column;
+        min-height: 0;
+        margin-top: 12px;
+        box-shadow: none;
+        border-radius: 0;
+        gap: 0;
+    }
+
+    .tsosk-wrap .tsosk-mobile-nav-toggle {
+        display: inline-flex !important;
+        order: 1;
+        margin-bottom: 0;
+        border-radius: 4px;
+    }
+
+    .tsosk-sidebar-favorites {
+        order: 2;
+        width: 100%;
+        min-width: 0;
+        margin: 8px 0 12px;
+        border: 1px solid #c3c4c7;
+        border-radius: 4px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    .tsosk-layout {
+        order: 3;
+        flex-direction: column;
+        width: 100%;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .tsosk-page-title {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 18px;
+        margin-top: 12px;
+    }
+
+    .tsosk-page-title-meta {
+        width: 100%;
+        margin-left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .tsosk-global-search {
+        min-width: 0;
+        max-width: none;
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .tsosk-donate-btn {
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .tsosk-language-switcher {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .tsosk-site-status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .tsosk-site-status-actions {
+        margin-left: 0;
+        width: auto;
+    }
+
+    .tsosk-site-status-actions:empty {
+        display: none;
+    }
+
+    .tsosk-site-status-actions .button {
+        width: auto;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .tsosk-sidebars {
+        display: none;
+        width: 100%;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+
+    .tsosk-wrap.tsosk-mobile-nav-open .tsosk-sidebars {
+        display: block;
+    }
+
+    .tsosk-sidebar-tools {
+        width: 100%;
+        min-width: 0;
+        max-height: min(70vh, 520px);
+        overflow: hidden;
+        border-radius: 6px;
+    }
+
+    .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
+        overflow: visible;
+        max-height: none;
+    }
+
+    #tsosk-nav-list {
+        max-height: min(70vh, 460px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tsosk-sidebar {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        overflow: visible;
+    }
+
+    .tsosk-nav-label {
+        display: inline;
+    }
+
+    .tsosk-nav-item {
+        justify-content: flex-start;
+        padding: 12px 16px;
+        border-left: 3px solid transparent;
+        border-bottom: none;
+        white-space: normal;
+    }
+
+    .tsosk-nav-item.is-active {
+        border-left-color: #2271b1;
+        border-bottom-color: transparent;
+    }
+
+    .tsosk-nav-group-label {
+        padding: 12px 16px 4px;
+    }
+
+    .tsosk-content {
+        border-radius: 6px;
+        width: 100%;
+    }
+
+    .tsosk-tab-header {
+        padding: 14px 16px 12px;
+    }
+
+    .tsosk-tab-header h2 {
+        font-size: 16px;
+        flex-wrap: wrap;
+    }
+
+    .tsosk-tab-body {
+        padding: 16px 14px 24px;
+    }
+
+    .tsosk-card {
+        padding: 0 14px 14px;
+        margin-bottom: 16px;
+    }
+
+    .tsosk-hp-field-desc {
+        margin-left: 0;
+    }
+
+    .tsosk-hp-preset-btns {
+        flex-direction: column;
+    }
+
+    .tsosk-hp-preset-btns .button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .tsosk-kv-table th,
+    .tsosk-kv-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+    }
+
+    .tsosk-kv-table th {
+        padding-bottom: 4px;
+        border-bottom: none;
+    }
+
+    .tsosk-kv-table td {
+        padding-top: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f1;
+    }
+
+    .tsosk-kv-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .tsosk-sidebar-favorites {
+        border-left: none;
+        border-top: none;
+        border-radius: 4px;
+        background: #fff;
+        margin-top: 0;
+    }
+
+    .tsosk-favorites-title {
+        color: #1d2327;
+        background: #f6f7f7;
+        border-bottom: 1px solid #dcdcde;
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    .tsosk-favorites-title .dashicons {
+        color: #dba617;
+    }
+
+    .tsosk-favorites-hint {
+        font-size: 11px;
+        padding: 8px 14px 0;
+        color: #646970;
+    }
+
+    #tsosk-favorites-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow-x: visible;
+        overflow-y: visible;
+        padding: 10px 14px 14px;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #tsosk-favorites-list.is-empty {
+        min-height: 0;
+        display: block;
+        padding: 4px 14px 12px;
+    }
+
+    .tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list.is-empty) .tsosk-favorites-hint {
+        display: block;
+    }
+
+    .tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list:not(.is-empty)) .tsosk-favorites-hint {
+        display: none;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-row {
+        flex: 0 1 auto;
+        max-width: 100%;
+        border-bottom: none;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-item {
+        flex: 0 1 auto;
+        max-width: 100%;
+        white-space: normal;
+        word-break: break-word;
+        background: #f6f7f7;
+        border: 1px solid #dcdcde;
+        border-radius: 999px;
+        padding: 8px 14px;
+        color: #1d2327;
+        border-left: 1px solid #dcdcde;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-item.is-active {
+        background: #f0f6fc;
+        border-color: #2271b1;
+        color: #135e96;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-item .dashicons {
+        color: #646970;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-item.is-active .dashicons {
+        color: #2271b1;
+    }
+
+    .tsosk-sidebar-favorites .tsosk-nav-label {
+        display: inline;
+    }
+
+    .tsosk-tab-body {
+        overflow-x: hidden;
+    }
+
+    .tsosk-card {
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .tsosk-table-wrap {
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tsosk-table-wrap > .widefat.tsosk-table,
+    .tsosk-sm-audit-table {
+        min-width: 640px;
+        table-layout: auto;
+    }
+
+    .tsosk-sm-audit-table .tsosk-sm-title-col,
+    .tsosk-sm-audit-table td.tsosk-sm-title-col,
+    .tsosk-sm-title-col {
+        min-width: 140px;
+        width: auto;
+    }
+
+    .tsosk-sm-audit-table .tsosk-sm-slug-col,
+    .tsosk-sm-slug-col {
+        min-width: 100px;
+        width: auto;
+        max-width: none;
+    }
+
+    .tsosk-fp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tsosk-fp-card-meta {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .tsosk-fp-oe-link {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .tsosk-fp-slug {
+        align-self: flex-start;
+        flex: 1 1 100%;
+        max-width: 100%;
+        word-break: break-all;
+        white-space: normal;
+    }
+
+    .tsosk-oe-tabs {
+        flex-wrap: wrap;
+    }
+
+    .tsosk-oe-tab-btn {
+        flex: 1 1 auto;
+        min-width: 0;
+        text-align: center;
+        margin-bottom: 4px !important;
+    }
+
+    .tsosk-me-toolbar,
+    .tsosk-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tsosk-me-toolbar .button,
+    .tsosk-toolbar .button {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+}
+
+/* ══ Sidebar organiser ═══════════════════════════════════════════════════════ */
+
+/* Organise button row (always visible, top of sidebar) */
+.tsosk-sidebar-actions {
+    padding: 12px 12px 14px;
+    border-bottom: 1px solid #3c4349;
+    background: #161b1f;
+}
+
+.tsosk-sidebar-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: color .12s, background .12s, box-shadow .12s, border-color .12s;
+    font-family: inherit;
+}
+.tsosk-sidebar-action-btn:hover {
+    color: #a0aab4;
+    background: #252b30;
+}
+.tsosk-sidebar-action-btn .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: inherit;
+    flex-shrink: 0;
+}
+
+/* Organise — primary call-to-action on dark sidebar */
+.tsosk-sidebar-organise-btn {
+    background: #2271b1;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #3582c4;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.tsosk-sidebar-organise-btn .dashicons,
+.tsosk-sidebar-organise-btn .tsosk-nav-label {
+    color: #fff;
+}
+.tsosk-sidebar-organise-btn:hover {
+    background: #135e96;
+    border-color: #2271b1;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+.tsosk-sidebar-organise-btn:hover .dashicons,
+.tsosk-sidebar-organise-btn:hover .tsosk-nav-label {
+    color: #fff;
+}
+.tsosk-sidebar-organise-btn:focus {
+    outline: 2px solid #72aee6;
+    outline-offset: 2px;
+    color: #fff;
+}
+
+/* Edit-mode top bar */
+.tsosk-sidebar-edit-bar {
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid #2c3338;
+    background: #161b1f;
+}
+.tsosk-sidebar-edit-hint {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    line-height: 1.45;
+    min-height: 2.8em;
+}
+.tsosk-sidebar-edit-btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.tsosk-sidebar-save-btn,
+.tsosk-sidebar-reset-btn,
+.tsosk-sidebar-cancel-btn {
+    flex: 1;
+    padding: 5px 4px;
+    font-size: 11px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background .12s, color .12s;
+}
+.tsosk-sidebar-save-btn {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+.tsosk-sidebar-save-btn:hover {
+    background: #135e96;
+}
+.tsosk-sidebar-reset-btn {
+    background: transparent;
+    color: #a0aab4;
+    border-color: #3c4349;
+}
+.tsosk-sidebar-reset-btn:hover {
+    background: #2c3338;
+    color: #fff;
+}
+.tsosk-sidebar-cancel-btn {
+    background: transparent;
+    color: #a0aab4;
+    border-color: #3c4349;
+}
+.tsosk-sidebar-cancel-btn:hover {
+    background: #2c3338;
+    color: #fff;
+}
+
+/* Nav row wrapper — wraps drag handle + link + hide button */
+.tsosk-nav-row {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+.tsosk-nav-row .tsosk-nav-item {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Drag handle — hidden by default, shown in edit mode */
+.tsosk-drag-handle {
+    display: none;
+    flex-shrink: 0;
+    width: 20px;
+    min-height: 20px;
+    font-size: 16px;
+    color: #4a5568;
+    cursor: grab;
+    padding-left: 8px;
+    align-items: flex-start;
+    padding-top: 4px;
+    justify-content: center;
+    transition: color .12s;
+}
+.tsosk-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Hide button — hidden by default, shown in edit mode */
+.tsosk-hide-tab {
+    display: none;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #4a5568;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin-right: 4px;
+    border-radius: 3px;
+    transition: color .12s, background .12s;
+    font-family: inherit;
+}
+.tsosk-hide-tab:hover {
+    color: #ef4444;
+    background: rgba(239,68,68,.1);
+}
+
+/* ── EDIT MODE — toggled by JS on .tsosk-sidebars ── */
+.tsosk-sidebars.tsosk-editing .tsosk-nav-group-label {
+    display: none;
+}
+
+.tsosk-nav-edit-section {
+    margin-bottom: 10px;
+}
+
+.tsosk-nav-edit-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ec5f0;
+    padding: 6px 10px 4px;
+    border-bottom: 1px solid #3c434a;
+}
+
+.tsosk-nav-edit-section-list {
+    min-height: 8px;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-nav-edit-section-list {
+    min-height: 28px;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-nav-edit-section-list.is-drop-hover {
+    background: rgba(34, 113, 177, 0.08);
+    outline: 1px dashed rgba(34, 113, 177, 0.45);
+    outline-offset: -1px;
+    border-radius: 3px;
+}
+
+.tsosk-sortable-placeholder {
+    visibility: visible !important;
+    background: rgba(34, 113, 177, 0.15);
+    border: 1px dashed #2271b1;
+    min-height: 36px;
+    margin: 2px 0;
+    box-sizing: border-box;
+}
+
+/* Drag ghost follows the pointer (appendTo body, outside sidebar CSS context) */
+body > .tsosk-nav-row.tsosk-nav-drag-ghost {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    padding: 4px 8px 4px 0;
+    background: #252b30;
+    border: 1px solid #2271b1;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+    pointer-events: none;
+    opacity: 0.96;
+}
+
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-drag-handle {
+    display: flex !important;
+    flex: 0 0 28px;
+    padding-top: 8px;
+}
+
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-nav-item {
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: 6px 8px 2px 4px;
+    color: #c3c4c7;
+    text-decoration: none;
+    pointer-events: none;
+}
+
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-nav-item > .dashicons {
+    display: none;
+}
+
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-nav-label {
+    display: block;
+    width: 100%;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-add-fav,
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-hide-tab,
+body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
+    display: none !important;
+}
+
+.tsosk-sidebars.tsosk-nav-dragging .tsosk-drag-handle {
+    touch-action: none;
+    cursor: grabbing;
+}
+
+.tsosk-nav-edit-section-list .tsosk-sortable-placeholder {
+    width: 100%;
+    display: block;
+}
+
+/* Edit mode: grid so title, star, and hide controls fit without clipping */
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 34px 34px;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 2px 0;
+    padding: 4px 8px 4px 0;
+    border-bottom: 1px solid #2c3338;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-drag-handle {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    padding-top: 8px;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-add-fav {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.tsosk-add-fav {
+    display: none;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: #f0c14b;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: inherit;
+    padding: 0;
+    overflow: visible;
+}
+.tsosk-add-fav .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+    color: #f0c14b;
+}
+
+.tsosk-add-fav:hover {
+    background: rgba(240, 193, 75, 0.15);
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-item {
+    grid-column: 2;
+    grid-row: 1;
+    flex: none;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 6px 8px 2px 4px;
+    border-left-width: 3px;
+    overflow: hidden;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-item > .dashicons {
+    display: none;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-label {
+    display: block;
+    width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+    line-height: 1.35;
+    white-space: normal;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-group-badge {
+    display: inline-block;
+    max-width: 100%;
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #9ec5f0;
+    background: rgba(34, 113, 177, 0.22);
+    padding: 2px 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-hide-tab {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: 4px;
+    margin-right: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.tsosk-nav-drop-line {
+    display: none;
+    flex: 0 0 100%;
+    width: calc(100% - 16px);
+    height: 3px;
+    margin: 3px 8px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #2271b1, #72aee6);
+    box-shadow: 0 0 8px rgba(34, 113, 177, 0.55);
+    pointer-events: none;
+}
+
+.tsosk-nav-drop-line.is-visible {
+    display: block;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-drag-handle {
+    display: flex;
+    touch-action: none;
+    cursor: grab;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-hide-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-item {
+    pointer-events: none;
+    opacity: .92;
+}
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-row:hover .tsosk-drag-handle {
+    color: #a0aab4;
+}
+/* Highlight the row being dragged */
+.tsosk-nav-row.tsosk-dragging {
+    opacity: .4;
+    background: #252b30;
+}
+/* Drop target indicator */
+.tsosk-nav-row.tsosk-drop-before {
+    border-top: 2px solid #2271b1;
+}
+.tsosk-nav-row.tsosk-drop-after {
+    border-bottom: 2px solid #2271b1;
+}
+
+/* Hidden tab in normal mode: completely invisible */
+.tsosk-nav-hidden {
+    display: none;
+}
+/* Hidden tab in edit mode: shown as faded so user can re-show it */
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden {
+    display: grid;
+    opacity: .45;
+}
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden .tsosk-hide-tab {
+    color: #22c55e;
+}
+.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden .tsosk-hide-tab:hover {
+    color: #16a34a;
+    background: rgba(34,197,94,.1);
+}
+
+/* Save confirmation flash */
+@keyframes tsosk-flash {
+    0%   { background: #1e3a5f; }
+    100% { background: #1e2327; }
+}
+.tsosk-sidebar.tsosk-saved {
+    animation: tsosk-flash .6s ease-out;
+}
+
+/* Responsive: hide drag handles on very small screens */
+@media (max-width: 480px) {
+    .tsosk-sidebar-action-btn .tsosk-nav-label,
+    .tsosk-sidebar-edit-hint { display: none; }
+    .tsosk-sidebar-organise-btn {
+        justify-content: center;
+        padding: 12px;
+    }
+    .tsosk-sidebar-organise-btn .dashicons {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+}
+/* ── Debug flag override indicator ─────────────────────────────────── */
+.tsosk-flag-mismatch {
+    border-left: 3px solid #d97706;
+    padding-left: 8px;
+    background: #fffbeb;
+    border-radius: 0 4px 4px 0;
+}
+.tsosk-val-true  { color: #16a34a; font-weight: 600; }
+.tsosk-val-false { color: #dc2626; font-weight: 600; }
+/* ── Debug: disabled checkbox label (controlled by wp-config.php) ─── */
+.tsosk-flag-label-disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+.tsosk-flag-label-disabled input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
+/* ── Admin Menu Editor ─────────────────────────────────────────────── */
+.tsosk-card .tsosk-am-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+#tsosk-am-table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 0;
+    box-sizing: border-box;
+    margin: 0;
+    border: 1px solid #dcdcde;
+}
+#tsosk-am-table th,
+#tsosk-am-table td {
+    box-sizing: border-box;
+}
+#tsosk-am-table thead th {
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+}
+#tsosk-am-table tbody td {
+    border-top: 1px solid #f0f0f1;
+}
+#tsosk-am-table .tsosk-am-col-drag,
+#tsosk-am-table .tsosk-am-drag {
+    width: 36px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+#tsosk-am-table .tsosk-am-col-parent,
+#tsosk-am-table .tsosk-am-parent-cell {
+    width: 17%;
+}
+#tsosk-am-table .tsosk-am-col-hide,
+#tsosk-am-table .tsosk-am-hide-cell {
+    width: 44px;
+    text-align: center;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+#tsosk-am-table .tsosk-am-col-label,
+#tsosk-am-table .tsosk-am-label-cell {
+    width: 22%;
+    padding-right: 12px;
+    overflow: visible;
+}
+#tsosk-am-table .tsosk-am-drag {
+    vertical-align: middle;
+    text-align: center;
+}
+.tsosk-am-handle {
+    cursor: grab;
+    color: #787c82;
+}
+.tsosk-am-handle:active {
+    cursor: grabbing;
+}
+.tsosk-am-row-top td {
+    background: #eef3f8;
+    border-top: 2px solid #2271b1;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    vertical-align: middle;
+}
+.tsosk-am-row-top:first-child td {
+    border-top-width: 0;
+}
+.tsosk-am-top-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1d2327;
+    letter-spacing: .01em;
+}
+.tsosk-am-section-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #2271b1;
+    background: #fff;
+    border: 1px solid #c3d9ed;
+    border-radius: 3px;
+    padding: 3px 8px;
+}
+.tsosk-am-row-sub td {
+    background: #fff;
+    vertical-align: middle;
+}
+.tsosk-am-row-sub + .tsosk-am-row-top td {
+    border-top: 2px solid #2271b1;
+}
+.tsosk-am-row-sub.is-am-collapsed,
+.tsosk-am-row-sub[hidden] {
+    display: none !important;
+}
+.tsosk-am-row-is-hidden td {
+    background: #fcf0f1;
+}
+.tsosk-am-row-is-hidden .tsosk-am-top-label,
+.tsosk-am-row-is-hidden .tsosk-am-sub-label {
+    opacity: .75;
+    text-decoration: line-through;
+}
+.tsosk-am-row-highlight td {
+    animation: tsosk-am-highlight 2s ease-out;
+}
+@keyframes tsosk-am-highlight {
+    0%   { background: #fff3cd; }
+    100% { background: transparent; }
+}
+.tsosk-am-hidden-hint {
+    margin: 0 0 12px;
+}
+.tsosk-am-hidden-section {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid #f0b8b8;
+    border-radius: 6px;
+    background: #fcf0f1;
+}
+.tsosk-am-hidden-section.is-highlighted {
+    box-shadow: 0 0 0 2px #d63638;
+}
+.tsosk-am-hidden-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #8a2424;
+}
+.tsosk-am-hidden-title .dashicons {
+    color: #d63638;
+}
+.tsosk-am-separator-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-style: italic;
+    color: #646970;
+}
+.tsosk-am-separator-label .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+.tsosk-am-separator-note {
+    margin: 0;
+}
+.tsosk-am-hidden-empty td {
+    padding: 16px !important;
+    color: #646970;
+    font-style: italic;
+    text-align: center;
+}
+.tsosk-am-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: #2271b1;
+    cursor: pointer;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.tsosk-am-toggle:hover,
+.tsosk-am-toggle:focus {
+    background: rgba(34, 113, 177, .12);
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+.tsosk-am-toggle .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+.tsosk-am-toggle-spacer {
+    display: inline-block;
+    width: 24px;
+    flex-shrink: 0;
+}
+.tsosk-am-sub-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: #646970;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+.tsosk-am-row-top.is-am-expanded .tsosk-am-sub-count {
+    color: #2271b1;
+    border-color: #c3d9ed;
+}
+.tsosk-am-title-cell {
+    padding-left: 12px !important;
+    padding-right: 8px !important;
+    min-width: 0;
+    overflow: hidden;
+    vertical-align: middle;
+}
+.tsosk-am-top-label,
+.tsosk-am-sub-label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tsosk-am-row-top .tsosk-am-top-label {
+    display: inline;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.tsosk-am-row-sub .tsosk-am-title-cell {
+    padding-left: 28px !important;
+}
+.tsosk-am-sub-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #50575e;
+}
+.tsosk-am-sub-label::before {
+    content: "›";
+    margin-right: 6px;
+    color: #a7aaad;
+}
+.tsosk-am-parent-cell select,
+#tsosk-am-table .tsosk-am-parent {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* ── Slug Manager ─────────────────────────────────────────────────────────── */
+.tsosk-sm-audit-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tsosk-sm-audit-table .tsosk-sm-title-col,
+.tsosk-sm-audit-table td.tsosk-sm-title-col {
+    width: 28%;
+    min-width: 200px;
+    max-width: none;
+    word-break: normal;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.tsosk-sm-audit-table .tsosk-sm-slug-col,
+.tsosk-sm-slug-col {
+    width: 22%;
+    min-width: 140px;
+    max-width: 260px;
+}
+
+.tsosk-sm-audit-table .tsosk-sm-slug-col a,
+.tsosk-sm-slug-col a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    font-size: 11px;
+}
+
+.tsosk-sm-title-col {
+    min-width: 200px;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.tsosk-sm-edit-link {
+    display: inline-block;
+    margin-left: 8px;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2271b1;
+    text-decoration: none;
+}
+
+.tsosk-sm-edit-link:hover,
+.tsosk-sm-edit-link:focus {
+    color: #135e96;
+    text-decoration: underline;
+}
+
+.tsosk-sm-bulk-preview-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    align-items: center;
+}
+
+#tsosk-sm-bulk-confirm {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tsosk-sm-bulk-summary-table {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 12px;
+    border-collapse: collapse;
+}
+
+.tsosk-sm-bulk-summary-table th,
+.tsosk-sm-bulk-summary-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e2e4e7;
+    text-align: left;
+    vertical-align: top;
+}
+
+.tsosk-sm-bulk-summary-table .tsosk-code {
+    word-break: break-all;
+}
+
+.tsosk-sm-rename-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* ── Redirects ────────────────────────────────────────────────────────────── */
+.tsosk-redirects-table-wrap {
+    overflow-x: hidden;
+}
+
+#tsosk-redirects-table,
+#tsosk-404-table {
+    table-layout: fixed;
+    width: 100%;
+    max-width: 100%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-source,
+#tsosk-redirects-table .tsosk-redirect-col-target {
+    width: 24%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-match {
+    width: 8%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-code {
+    width: 6%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-active {
+    width: 8%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-visits {
+    width: 10%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-actions {
+    width: 20%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-url-col,
+#tsosk-404-table .tsosk-redirect-url-col {
+    max-width: 0;
+    overflow: hidden;
+    line-height: 1.35;
+    vertical-align: middle;
+}
+
+#tsosk-redirects-table .tsosk-redirect-url-link,
+#tsosk-redirects-table .tsosk-redirect-url-text,
+#tsosk-404-table .tsosk-redirect-url-link,
+#tsosk-404-table .tsosk-redirect-url-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+#tsosk-redirects-table .tsosk-actions {
+    white-space: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+}
+
+#tsosk-redirects-table .tsosk-actions .button {
+    margin-left: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.tsosk-redirect-url-link {
+    color: #2271b1;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.tsosk-redirect-url-link:hover,
+.tsosk-redirect-url-link:focus {
+    color: #135e96;
+    text-decoration: underline;
+}
+
+.tsosk-redirect-url-text {
+    font-size: 12px;
+}
+
+.tsosk-sm-audit-table td,
+.tsosk-sm-audit-table th {
+    vertical-align: top;
+    padding: 6px 8px;
+}
+
+/* ── Security toggles spacing ─────────────────────────────────────────────── */
+.tsosk-security-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 8px;
+}
+
+.tsosk-security-toggle-row {
+    padding: 12px 14px;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.tsosk-security-toggle-desc {
+    margin: 8px 0 4px 20px;
+}
+
+.tsosk-security-toggle-rec {
+    margin: 0 0 0 20px;
+    color: #2271b1;
+    font-style: italic;
+}
+
+.tsosk-security-toggle-wpconfig {
+    margin: 6px 0 0 20px;
+    color: #646970;
+}
+
+#tsosk-am-table .tsosk-am-label {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+.tsosk-am-row.ui-sortable-helper {
+    display: table;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    z-index: 100100;
+    pointer-events: none;
+}
+.tsosk-am-row.ui-sortable-helper td {
+    background: #fff;
+}
+.tsosk-am-row.ui-sortable-placeholder {
+    visibility: visible !important;
+    background: #f0f6fc;
+    height: 44px;
+}
+.tsosk-am-row.ui-sortable-placeholder td {
+    background: #f0f6fc;
+    border: 1px dashed #72aee6;
+}
+.tsosk-am-label:disabled {
+    opacity: .5;
+}
+
+/* ── Maintenance logo picker ───────────────────────────────────────── */
+.tsosk-maint-logo-picker {
+    margin-top: 6px;
+}
+.tsosk-maint-logo-preview {
+    min-height: 0;
+    margin-bottom: 10px;
+}
+.tsosk-maint-logo-preview.has-logo {
+    padding: 12px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    display: inline-block;
+    max-width: 100%;
+}
+.tsosk-maint-logo-preview img {
+    display: block;
+    max-width: 320px;
+    max-height: 180px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+.tsosk-maint-logo-actions {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+@media (max-width: 782px) {
+    #tsosk-am-table .tsosk-am-col-parent,
+    #tsosk-am-table .tsosk-am-parent-cell {
+        width: 22%;
+    }
+    #tsosk-am-table .tsosk-am-col-label,
+    #tsosk-am-table .tsosk-am-label-cell {
+        width: 28%;
+    }
+    .tsosk-am-top-label,
+    .tsosk-am-sub-label {
+        white-space: normal;
+    }
+}
+
+/* ── Plugin Footprint ─────────────────────────────────────────────────────── */
+.tsosk-fp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.tsosk-fp-card {
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.tsosk-fp-card-inactive {
+    opacity: .75;
+    background: #fafafa;
+}
+
+.tsosk-fp-card-name {
+    font-size: 13px;
+    margin-bottom: 8px;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.tsosk-fp-version {
+    font-size: 11px;
+    color: #646970;
+    margin-left: 4px;
+}
+
+.tsosk-fp-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsosk-fp-options {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2271b1;
+    flex: 0 0 auto;
+}
+
+.tsosk-fp-heavy  { color: #d63638; }
+.tsosk-fp-medium { color: #d97706; }
+.tsosk-fp-warn   { color: #b45309; }
+
+.tsosk-fp-slug {
+    font-size: 11px;
+    color: #8c8f94;
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+
+.tsosk-fp-oe-link {
+    font-size: 11px !important;
+    line-height: 1.8 !important;
+    padding: 0 8px !important;
+    height: auto !important;
+    flex: 1 1 auto;
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+}
