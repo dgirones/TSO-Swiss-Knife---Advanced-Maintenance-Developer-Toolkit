@@ -394,8 +394,8 @@ class TSOSK_Mod_Comment_Antispam {
 			$this->form_silent_block = false;
 			$response['status']  = 'mail_sent';
 			$response['message'] = apply_filters(
-				'wpcf7_mail_sent_ok',
-				__( 'Thank you for your message. It has been sent.', 'contact-form-7' )
+				'tsosk_cf7_fake_success_message',
+				__( 'Thank you for your message. It has been sent.', 'tso-swiss-knife' )
 			);
 		}
 		return $response;
@@ -766,9 +766,10 @@ class TSOSK_Mod_Comment_Antispam {
 				continue;
 			}
 
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Gravity Forms validates submission.
-			$raw_value = class_exists( 'GFFormsModel' ) && method_exists( 'GFFormsModel', 'get_field_value' )
-				? GFFormsModel::get_field_value( $field, wp_unslash( $_POST ) )
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Gravity Forms validates the submission before this filter runs.
+			$posted_data = wp_unslash( $_POST );
+			$raw_value   = class_exists( 'GFFormsModel' ) && method_exists( 'GFFormsModel', 'get_field_value' )
+				? GFFormsModel::get_field_value( $field, $posted_data )
 				: null;
 
 			if ( null === $raw_value ) {
@@ -824,8 +825,8 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @return array<string, mixed>
 	 */
 	private function extract_fields_from_post( string $source ): array {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Provider validates nonce.
 		$raw = array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Form provider validates the submission before this hook runs.
 		foreach ( $_POST as $key => $value ) {
 			$raw[ (string) $key ] = is_array( $value )
 				? array_map( 'strval', wp_unslash( $value ) )

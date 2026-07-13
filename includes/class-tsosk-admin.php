@@ -99,6 +99,7 @@ class TSOSK_Admin {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect keyed off the admin page slug; value is sanitized with sanitize_key().
 		$page = sanitize_key( wp_unslash( (string) $_GET['page'] ) );
 		if ( 'tso-swiss-knife' !== $page ) {
 			return;
