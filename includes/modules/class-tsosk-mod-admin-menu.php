@@ -1680,10 +1680,53 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 
-			$menu[] = $entry;
+			// The entry came from $submenu (indices 0-3 only). Top-level $menu items
+			// must expose index 4 (CSS classes), 5 (hookname/id) and 6 (icon); pushing
+			// a submenu-shaped entry raises "Undefined array key 4" in core menu.php.
+			$menu[] = $this->submenu_entry_to_top_level( $entry, $slug );
 		}
 
 		return $menu;
+	}
+
+	/**
+	 * Build a complete top-level $menu entry from a submenu entry.
+	 *
+	 * WordPress submenu rows only carry indices 0-3 (title, capability, slug,
+	 * page title). Top-level menu rows are read by core with indices 4 (CSS
+	 * classes), 5 (hookname / element id) and 6 (icon) — see
+	 * wp-admin/includes/menu.php and wp-admin/menu-header.php. Restoring a
+	 * formerly nested item to the top level therefore has to normalise the row,
+	 * otherwise core emits "Undefined array key 4" and a stristr() null
+	 * deprecation on every admin page load.
+	 *
+	 * @param array<int, mixed> $entry Submenu entry (indices 0-3).
+	 * @param string            $slug  Top-level slug being restored.
+	 * @return array<int, mixed>
+	 */
+	private function submenu_entry_to_top_level( array $entry, string $slug ): array {
+		$menu_title = (string) ( $entry[0] ?? '' );
+		$capability = (string) ( $entry[1] ?? 'read' );
+		$menu_slug  = '' !== (string) ( $entry[2] ?? '' ) ? (string) $entry[2] : $slug;
+		$page_title = (string) ( $entry[3] ?? $menu_title );
+
+		$hookname = '';
+		if ( function_exists( 'get_plugin_page_hookname' ) ) {
+			$hookname = (string) get_plugin_page_hookname( $menu_slug, '' );
+		}
+		if ( '' === $hookname ) {
+			$hookname = 'toplevel_page_' . sanitize_title( $menu_slug );
+		}
+
+		return array(
+			$menu_title,               // 0: menu title.
+			$capability,               // 1: capability.
+			$menu_slug,                // 2: menu slug.
+			$page_title,               // 3: page title.
+			'menu-top',                // 4: CSS classes (must be a string for core's stristr()).
+			$hookname,                 // 5: hookname / element id.
+			'dashicons-admin-generic', // 6: icon.
+		);
 	}
 
 	/**
