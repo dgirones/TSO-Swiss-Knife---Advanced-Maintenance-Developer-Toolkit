@@ -63,7 +63,7 @@ class TSOSK_Mod_Slug_Manager {
 	public function ajax_rename(): void {
 		check_ajax_referer( 'tsosk_sm_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$post_id      = absint( $_POST['post_id'] ?? 0 );
@@ -71,25 +71,25 @@ class TSOSK_Mod_Slug_Manager {
 		$do_redirect  = ! empty( $_POST['auto_redirect'] );
 
 		if ( ! $post_id ) {
-			wp_send_json_error( __( 'Invalid post ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid post ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || ! in_array( $post->post_status, array( 'publish', 'draft', 'private', 'pending', 'future' ), true ) ) {
-			wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
-			wp_send_json_error( __( 'You do not have permission to edit this post.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'You do not have permission to edit this post.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$new_slug = $this->sanitize_slug( $new_slug_raw );
 		if ( '' === $new_slug ) {
-			wp_send_json_error( __( 'The slug cannot be empty. Use only letters, numbers and hyphens.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'The slug cannot be empty. Use only letters, numbers and hyphens.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$old_slug = $post->post_name;
 		if ( $old_slug === $new_slug ) {
-			wp_send_json_error( __( 'The new slug is identical to the current one.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'The new slug is identical to the current one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// Check for duplicates within the same post type.
@@ -98,7 +98,7 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error(
 				sprintf(
 					/* translators: %s: duplicate slug */
-					__( 'Slug "%s" is already used by another post of the same type.', 'tso-swiss-knife' ),
+					__( 'Slug "%s" is already used by another post of the same type.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$new_slug
 				)
 			);
@@ -133,8 +133,8 @@ class TSOSK_Mod_Slug_Manager {
 			'new_permalink'    => $new_permalink,
 			'redirect_created' => $redirect_created,
 			'message'          => $redirect_created
-				? __( 'Slug updated and 301 redirect created.', 'tso-swiss-knife' )
-				: __( 'Slug updated.', 'tso-swiss-knife' ),
+				? __( 'Slug updated and 301 redirect created.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Slug updated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		TSOSK_Activity_Log::log(
@@ -142,7 +142,7 @@ class TSOSK_Mod_Slug_Manager {
 			'update',
 			sprintf(
 				/* translators: 1: old slug, 2: new slug */
-				__( 'Slug renamed: %1$s → %2$s.', 'tso-swiss-knife' ),
+				__( 'Slug renamed: %1$s → %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$old_slug,
 				$new_slug
 			)
@@ -159,7 +159,7 @@ class TSOSK_Mod_Slug_Manager {
 	public function ajax_bulk_preview(): void {
 		check_ajax_referer( 'tsosk_sm_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$ids       = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
@@ -167,7 +167,7 @@ class TSOSK_Mod_Slug_Manager {
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
 		if ( empty( $ids ) ) {
-			wp_send_json_error( __( 'No posts selected.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'No posts selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$preview = $this->compute_bulk_changes( $ids, $threshold );
@@ -191,7 +191,7 @@ class TSOSK_Mod_Slug_Manager {
 	public function ajax_bulk_fix(): void {
 		check_ajax_referer( 'tsosk_sm_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$ids         = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
@@ -199,7 +199,7 @@ class TSOSK_Mod_Slug_Manager {
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
 		if ( empty( $ids ) ) {
-			wp_send_json_error( __( 'No posts selected.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'No posts selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$preview = $this->compute_bulk_changes( $ids, $threshold );
@@ -217,7 +217,7 @@ class TSOSK_Mod_Slug_Manager {
 				continue;
 			}
 			if ( ! current_user_can( 'edit_post', $post_id ) ) {
-				$errors[] = "#{$post_id}: " . __( 'Permission denied.', 'tso-swiss-knife' );
+				$errors[] = "#{$post_id}: " . __( 'Permission denied.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 				continue;
 			}
 
@@ -250,7 +250,7 @@ class TSOSK_Mod_Slug_Manager {
 		}
 
 		$redirect_note = $do_redirect && class_exists( 'TSOSK_Mod_Redirects' )
-			? __( '301 redirects were created for updated slugs.', 'tso-swiss-knife' )
+			? __( '301 redirects were created for updated slugs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			: '';
 
 		TSOSK_Activity_Log::log(
@@ -258,7 +258,7 @@ class TSOSK_Mod_Slug_Manager {
 			'update',
 			sprintf(
 				/* translators: 1: fixed count, 2: skipped count */
-				__( 'Bulk slug fix: %1$d updated, %2$d skipped.', 'tso-swiss-knife' ),
+				__( 'Bulk slug fix: %1$d updated, %2$d skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$fixed,
 				$skipped
 			)
@@ -266,7 +266,7 @@ class TSOSK_Mod_Slug_Manager {
 
 		$summary = sprintf(
 			/* translators: 1: fixed count, 2: skipped count, 3: threshold */
-			__( '%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped (already short enough or could not be changed).', 'tso-swiss-knife' ),
+			__( '%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped (already short enough or could not be changed).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$fixed,
 			$skipped,
 			$threshold
@@ -277,7 +277,7 @@ class TSOSK_Mod_Slug_Manager {
 		if ( ! empty( $errors ) ) {
 			$summary .= ' ' . sprintf(
 				/* translators: %d: number of errors */
-				__( '%d error(s) occurred.', 'tso-swiss-knife' ),
+				__( '%d error(s) occurred.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				count( $errors )
 			);
 		}
@@ -309,7 +309,7 @@ class TSOSK_Mod_Slug_Manager {
 				$skipped[] = array(
 					'id'     => $post_id,
 					'title'  => '#' . $post_id,
-					'reason' => __( 'Post not found.', 'tso-swiss-knife' ),
+					'reason' => __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 				continue;
 			}
@@ -319,7 +319,7 @@ class TSOSK_Mod_Slug_Manager {
 				$skipped[] = array(
 					'id'     => $post_id,
 					'title'  => (string) $post->post_title,
-					'reason' => __( 'Already within the character limit.', 'tso-swiss-knife' ),
+					'reason' => __( 'Already within the character limit.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 				continue;
 			}
@@ -329,7 +329,7 @@ class TSOSK_Mod_Slug_Manager {
 				$skipped[] = array(
 					'id'     => $post_id,
 					'title'  => (string) $post->post_title,
-					'reason' => __( 'Could not shorten this slug.', 'tso-swiss-knife' ),
+					'reason' => __( 'Could not shorten this slug.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 				continue;
 			}
@@ -365,7 +365,7 @@ class TSOSK_Mod_Slug_Manager {
 		$skipped_count = count( $preview['skipped'] );
 
 		if ( 0 === $change_count ) {
-			return __( 'No slugs would change with the current selection and threshold.', 'tso-swiss-knife' );
+			return __( 'No slugs would change with the current selection and threshold.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		$message = sprintf(
@@ -374,7 +374,7 @@ class TSOSK_Mod_Slug_Manager {
 				'%1$d slug will be shortened to a maximum of %2$d characters. %3$d item will be skipped.',
 				'%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items will be skipped.',
 				$change_count,
-				'tso-swiss-knife'
+				'tso-swiss-knife-advanced-maintenance-developer-toolkit'
 			),
 			$change_count,
 			$threshold,
@@ -382,7 +382,7 @@ class TSOSK_Mod_Slug_Manager {
 		);
 
 		if ( $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ) ) {
-			$message .= ' ' . __( '301 redirects will be created from the old URLs.', 'tso-swiss-knife' );
+			$message .= ' ' . __( '301 redirects will be created from the old URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		return $message;
@@ -396,7 +396,7 @@ class TSOSK_Mod_Slug_Manager {
 	public function ajax_search(): void {
 		check_ajax_referer( 'tsosk_sm_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
@@ -514,12 +514,12 @@ class TSOSK_Mod_Slug_Manager {
 		?>
 
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Audit and fix post slugs across all public post types. Rename any slug inline with an optional automatic 301 redirect — no broken links. Long slugs hurt SEO; duplicates confuse crawlers; special characters and uppercase letters cause encoding issues.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Audit and fix post slugs across all public post types. Rename any slug inline with an optional automatic 301 redirect — no broken links. Long slugs hurt SEO; duplicates confuse crawlers; special characters and uppercase letters cause encoding issues.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php if ( ! $has_redirects ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">
-			<?php esc_html_e( '⚠ The Redirects module is not active. Automatic 301 redirects will not be created when you rename slugs. Enable the Redirects module to avoid broken links.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( '⚠ The Redirects module is not active. Automatic 301 redirects will not be created when you rename slugs. Enable the Redirects module to avoid broken links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php endif; ?>
 
@@ -527,29 +527,29 @@ class TSOSK_Mod_Slug_Manager {
 		<div class="tsosk-card" style="padding:12px 16px;">
 			<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
 				<label style="display:flex;align-items:center;gap:6px;font-size:13px;">
-					<span><?php esc_html_e( 'Post type:', 'tso-swiss-knife' ); ?></span>
+					<span><?php esc_html_e( 'Post type:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<select id="tsosk-sm-post-type" style="min-width:140px;">
-						<option value=""><?php esc_html_e( 'All public types', 'tso-swiss-knife' ); ?></option>
+						<option value=""><?php esc_html_e( 'All public types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<?php foreach ( $post_types as $pt ) : ?>
 						<option value="<?php echo esc_attr( $pt ); ?>"><?php echo esc_html( $pt ); ?></option>
 						<?php endforeach; ?>
 					</select>
 				</label>
 				<label style="display:flex;align-items:center;gap:6px;font-size:13px;">
-					<span><?php esc_html_e( 'Long slug threshold:', 'tso-swiss-knife' ); ?></span>
+					<span><?php esc_html_e( 'Long slug threshold:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<input type="number" id="tsosk-sm-threshold"
 					       value="<?php echo esc_attr( (string) $threshold ); ?>"
 					       min="10" max="200" step="5" style="width:70px;">
-					<span class="description"><?php esc_html_e( 'characters', 'tso-swiss-knife' ); ?></span>
+					<span class="description"><?php esc_html_e( 'characters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</label>
 				<label style="display:flex;align-items:center;gap:6px;font-size:13px;">
 					<input type="checkbox" id="tsosk-sm-auto-redirect"
 					       <?php checked( $has_redirects ); ?>
 					       <?php disabled( ! $has_redirects ); ?>>
 					<span>
-						<?php esc_html_e( 'Auto-create 301 redirect on rename', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Auto-create 301 redirect on rename', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						<?php if ( ! $has_redirects ) : ?>
-						<em class="description">(<?php esc_html_e( 'Redirects module required', 'tso-swiss-knife' ); ?>)</em>
+						<em class="description">(<?php esc_html_e( 'Redirects module required', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>)</em>
 						<?php endif; ?>
 					</span>
 				</label>
@@ -560,10 +560,10 @@ class TSOSK_Mod_Slug_Manager {
 		<div class="tsosk-oe-tabs" style="margin-top:4px;">
 			<?php
 			$tabs = array(
-				'long'       => __( 'Long Slugs', 'tso-swiss-knife' ),
-				'duplicates' => __( 'Duplicates', 'tso-swiss-knife' ),
-				'issues'     => __( 'Character Issues', 'tso-swiss-knife' ),
-				'search'     => __( 'Search & Edit', 'tso-swiss-knife' ),
+				'long'       => __( 'Long Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'duplicates' => __( 'Duplicates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'issues'     => __( 'Character Issues', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'search'     => __( 'Search & Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 			foreach ( $tabs as $slug => $label ) :
 				$count = ( 'search' !== $slug ) ? count( $audit_data[ $slug ] ?? array() ) : null;
@@ -587,7 +587,7 @@ class TSOSK_Mod_Slug_Manager {
 		<?php if ( 'long' === $active_tab ) : ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Long Slugs', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Long Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
 					<?php echo esc_html( (string) count( $audit_data['long'] ) ); ?>
 				</span>
@@ -596,26 +596,26 @@ class TSOSK_Mod_Slug_Manager {
 				<?php
 				printf(
 					/* translators: %d: threshold */
-					esc_html__( 'Posts and pages whose slug exceeds %d characters. Long slugs are harder for users to share and may negatively affect SEO click-through rates. Recommended maximum: 50 characters. The Bulk Fix button truncates all selected slugs at the last word boundary and creates automatic 301 redirects.', 'tso-swiss-knife' ),
+					esc_html__( 'Posts and pages whose slug exceeds %d characters. Long slugs are harder for users to share and may negatively affect SEO click-through rates. Recommended maximum: 50 characters. The Bulk Fix button truncates all selected slugs at the last word boundary and creates automatic 301 redirects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $threshold
 				);
 				?>
 			</div>
 			<?php if ( empty( $audit_data['long'] ) ) : ?>
 				<p class="tsosk-badge tsosk-badge-ok" style="display:inline-block;">
-					<?php esc_html_e( '✓ No long slugs found.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( '✓ No long slugs found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			<?php else : ?>
 				<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
 					<button class="button button-small" id="tsosk-sm-select-all-long">
-						<?php esc_html_e( 'Select All', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Select All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button class="button button-small" id="tsosk-sm-deselect-all-long">
-						<?php esc_html_e( 'Deselect All', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Deselect All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button class="button button-primary button-small" id="tsosk-sm-bulk-fix"
 					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Bulk Fix Selected', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Bulk Fix Selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<span class="tsosk-ajax-msg" id="tsosk-sm-bulk-msg"></span>
 				</div>
@@ -629,17 +629,17 @@ class TSOSK_Mod_Slug_Manager {
 		<?php if ( 'duplicates' === $active_tab ) : ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Duplicate Slugs', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Duplicate Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
 					<?php echo esc_html( (string) count( $audit_data['duplicates'] ) ); ?>
 				</span>
 			</h3>
 			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'Posts that share the same slug within the same post type. WordPress appends a numeric suffix (-2, -3…) at runtime to avoid collisions, but the stored slug stays as-is. Duplicate slugs confuse search engines and can cause canonical URL issues.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Posts that share the same slug within the same post type. WordPress appends a numeric suffix (-2, -3…) at runtime to avoid collisions, but the stored slug stays as-is. Duplicate slugs confuse search engines and can cause canonical URL issues.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php if ( empty( $audit_data['duplicates'] ) ) : ?>
 				<p class="tsosk-badge tsosk-badge-ok" style="display:inline-block;">
-					<?php esc_html_e( '✓ No duplicate slugs found.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( '✓ No duplicate slugs found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			<?php else : ?>
 				<?php $this->render_slug_table( $audit_data['duplicates'], $nonce, 'dup', false ); ?>
@@ -651,17 +651,17 @@ class TSOSK_Mod_Slug_Manager {
 		<?php if ( 'issues' === $active_tab ) : ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Character Issues', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Character Issues', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
 					<?php echo esc_html( (string) count( $audit_data['issues'] ) ); ?>
 				</span>
 			</h3>
 			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'Slugs containing uppercase letters, spaces, accented characters, or other non-ASCII characters. These can cause URL encoding issues, browser inconsistencies and problems with caching layers. A clean slug uses only lowercase a–z, digits 0–9 and hyphens.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Slugs containing uppercase letters, spaces, accented characters, or other non-ASCII characters. These can cause URL encoding issues, browser inconsistencies and problems with caching layers. A clean slug uses only lowercase a–z, digits 0–9 and hyphens.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php if ( empty( $audit_data['issues'] ) ) : ?>
 				<p class="tsosk-badge tsosk-badge-ok" style="display:inline-block;">
-					<?php esc_html_e( '✓ No character issues found.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( '✓ No character issues found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			<?php else : ?>
 				<?php $this->render_slug_table( $audit_data['issues'], $nonce, 'iss', false ); ?>
@@ -672,21 +672,21 @@ class TSOSK_Mod_Slug_Manager {
 		<?php /* ══ TAB: Search & Edit ══ */ ?>
 		<?php if ( 'search' === $active_tab ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Search & Edit', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Search & Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Find any post or page by its slug and rename it inline. Leave the search box empty and click Load to browse all content.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Find any post or page by its slug and rename it inline. Leave the search box empty and click Load to browse all content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
 				<input type="text" id="tsosk-sm-search-input"
-				       placeholder="<?php esc_attr_e( 'Search slug…', 'tso-swiss-knife' ); ?>"
+				       placeholder="<?php esc_attr_e( 'Search slug…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 				       style="width:260px;" autocomplete="off">
 				<button class="button" id="tsosk-sm-search-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Search', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button class="button" id="tsosk-sm-load-all"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Load All', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Load All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sm-search-msg"></span>
 			</div>
@@ -695,12 +695,12 @@ class TSOSK_Mod_Slug_Manager {
 				<div class="tsosk-table-wrap">
 					<table class="widefat tsosk-table">
 						<thead><tr>
-							<th><?php esc_html_e( 'Title', 'tso-swiss-knife' ); ?></th>
-							<th style="width:12%"><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></th>
-							<th style="width:10%"><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-sm-slug-col"><?php esc_html_e( 'Slug', 'tso-swiss-knife' ); ?></th>
-							<th style="width:8%"><?php esc_html_e( 'Chars', 'tso-swiss-knife' ); ?></th>
-							<th style="width:130px"><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:12%"><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:10%"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-sm-slug-col"><?php esc_html_e( 'Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:8%"><?php esc_html_e( 'Chars', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:130px"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr></thead>
 						<tbody id="tsosk-sm-search-tbody"></tbody>
 					</table>
@@ -708,36 +708,36 @@ class TSOSK_Mod_Slug_Manager {
 				<div id="tsosk-sm-pagination-bottom" class="tsosk-oe-pagination"></div>
 			</div>
 			<div id="tsosk-sm-search-placeholder" style="color:#646970;">
-				<?php esc_html_e( 'Type a slug fragment or click Load All.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Type a slug fragment or click Load All.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 		</div>
 		<?php endif; ?>
 
 		<?php /* ── Inline rename panel (shared by all tabs) ── */ ?>
 		<div id="tsosk-sm-rename-panel" style="display:none;" class="tsosk-card">
-			<h3><?php esc_html_e( 'Rename Slug', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Rename Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<input type="hidden" id="tsosk-sm-rename-post-id">
 			<table class="tsosk-kv-table" style="width:100%;max-width:540px;">
 				<tr>
-					<th style="width:160px;"><?php esc_html_e( 'Post', 'tso-swiss-knife' ); ?></th>
+					<th style="width:160px;"><?php esc_html_e( 'Post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<div id="tsosk-sm-rename-title" class="tsosk-sm-rename-title"></div>
 						<a id="tsosk-sm-rename-edit-link" href="#" target="_blank" rel="noopener noreferrer"
 						   class="button button-small" style="margin-top:6px;">
-							<?php esc_html_e( 'Edit post ↗', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Edit post ↗', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Current slug', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Current slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td><code id="tsosk-sm-rename-current" style="word-break:break-all;"></code></td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Current length', 'tso-swiss-knife' ); ?></th>
-					<td><span id="tsosk-sm-rename-len"></span> <?php esc_html_e( 'characters', 'tso-swiss-knife' ); ?></td>
+					<th><?php esc_html_e( 'Current length', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td><span id="tsosk-sm-rename-len"></span> <?php esc_html_e( 'characters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'New slug', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'New slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sm-rename-new"
 						       style="width:100%;max-width:360px;font-family:monospace;"
@@ -746,18 +746,18 @@ class TSOSK_Mod_Slug_Manager {
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Auto-redirect', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Auto-redirect', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" id="tsosk-sm-rename-redirect"
 							       <?php checked( $has_redirects ); ?>
 							       <?php disabled( ! $has_redirects ); ?>>
-							<?php esc_html_e( 'Create 301 redirect from old URL to new URL', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Create 301 redirect from old URL to new URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<?php if ( $has_redirects ) : ?>
-						<p class="description"><?php esc_html_e( 'Redirect will be added to TSO Swiss Knife Redirects automatically.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Redirect will be added to TSO Swiss Knife Redirects automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php else : ?>
-						<p class="description"><?php esc_html_e( 'Redirects module is not active. Enable it to use this feature.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Redirects module is not active. Enable it to use this feature.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php endif; ?>
 					</td>
 				</tr>
@@ -765,10 +765,10 @@ class TSOSK_Mod_Slug_Manager {
 			<div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-sm-rename-save"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save New Slug', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Save New Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button class="button" id="tsosk-sm-rename-cancel">
-					<?php esc_html_e( 'Cancel', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sm-rename-msg"></span>
 			</div>
@@ -934,12 +934,12 @@ class TSOSK_Mod_Slug_Manager {
 					<th style="width:36px;"><input type="checkbox" class="tsosk-sm-check-all"
 					       data-prefix="<?php echo esc_attr( $cb_prefix ); ?>"></th>
 					<?php endif; ?>
-					<th class="tsosk-sm-title-col"><?php esc_html_e( 'Title', 'tso-swiss-knife' ); ?></th>
-					<th style="width:10%"><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></th>
-					<th style="width:8%"><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-					<th class="tsosk-sm-slug-col"><?php esc_html_e( 'Slug', 'tso-swiss-knife' ); ?></th>
-					<th style="width:8%"><?php esc_html_e( 'Chars', 'tso-swiss-knife' ); ?></th>
-					<th style="width:120px"><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+					<th class="tsosk-sm-title-col"><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:10%"><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:8%"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th class="tsosk-sm-slug-col"><?php esc_html_e( 'Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:8%"><?php esc_html_e( 'Chars', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:120px"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 				<?php foreach ( $rows as $row ) : ?>
@@ -953,12 +953,12 @@ class TSOSK_Mod_Slug_Manager {
 						</td>
 						<?php endif; ?>
 						<td class="tsosk-sm-title-col">
-							<strong><?php echo esc_html( $row['title'] ?: '(' . __( 'no title', 'tso-swiss-knife' ) . ')' ); ?></strong>
+							<strong><?php echo esc_html( $row['title'] ?: '(' . __( 'no title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ')' ); ?></strong>
 							<?php if ( $row['edit_link'] ) : ?>
 							<a href="<?php echo esc_url( $row['edit_link'] ); ?>"
 							   target="_blank" rel="noopener noreferrer"
 							   class="tsosk-sm-edit-link">
-								<?php esc_html_e( 'edit ↗', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'edit ↗', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</a>
 							<?php endif; ?>
 						</td>
@@ -989,7 +989,7 @@ class TSOSK_Mod_Slug_Manager {
 							        data-len="<?php echo esc_attr( (string) $row['len'] ); ?>"
 							        data-edit-link="<?php echo esc_attr( $row['edit_link'] ); ?>"
 							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Rename', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Rename', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
 					</tr>

@@ -318,7 +318,7 @@ class TSOSK_Mod_Comment_Antispam {
 		$html = '';
 		if ( ! empty( $this->settings['honeypot'] ) ) {
 			$html .= '<p class="tsosk-cas-trap" aria-hidden="true">';
-			$html .= '<label for="' . esc_attr( $field_id ) . '">' . esc_html__( 'Website', 'tso-swiss-knife' ) . '</label>';
+			$html .= '<label for="' . esc_attr( $field_id ) . '">' . esc_html__( 'Website', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</label>';
 			$html .= '<input type="text" name="' . esc_attr( self::HONEYPOT_FIELD ) . '" id="' . esc_attr( $field_id ) . '" value="" tabindex="-1" autocomplete="off" />';
 			$html .= '</p>';
 		}
@@ -361,7 +361,7 @@ class TSOSK_Mod_Comment_Antispam {
 			return '';
 		}
 		$html  = '<p class="tsosk-cas-trap" aria-hidden="true">';
-		$html .= '<label for="' . esc_attr( self::HONEYPOT_FIELD ) . '">' . esc_html__( 'Website', 'tso-swiss-knife' ) . '</label>';
+		$html .= '<label for="' . esc_attr( self::HONEYPOT_FIELD ) . '">' . esc_html__( 'Website', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</label>';
 		$html .= '<input type="text" name="' . esc_attr( self::HONEYPOT_FIELD ) . '" value="" tabindex="-1" autocomplete="off" />';
 		$html .= '</p>';
 		return $html;
@@ -475,7 +475,7 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( in_array( $field->type, array( 'textarea', 'text', 'email' ), true ) ) {
 				$field->failed_validation  = true;
 				$field->validation_message = $check['silent']
-					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife' )
+					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: $check['message'];
 				break;
 			}
@@ -545,7 +545,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( is_object( $ajax_handler ) && method_exists( $ajax_handler, 'add_error_message' ) ) {
 			$ajax_handler->add_error_message(
 				$check['silent']
-					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife' )
+					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: $check['message']
 			);
 		}
@@ -579,7 +579,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		$errors['tsosk_cas'] = array(
 			$check['silent']
-				? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife' )
+				? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 				: $check['message'],
 		);
 
@@ -624,7 +624,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function handle_form_block( array $data, array $check, string $provider, int $form_id = 0 ): void {
 		unset( $data );
 		$message = $check['silent']
-			? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife' )
+			? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			: $check['message'];
 
 		if ( 'wpforms' === $provider && function_exists( 'wpforms' ) && $form_id > 0 ) {
@@ -878,7 +878,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( 'discard' === $this->settings['spam_action'] ) {
 			wp_die(
 				esc_html( $check['message'] ),
-				esc_html__( 'Comment blocked', 'tso-swiss-knife' ),
+				esc_html__( 'Comment blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				array(
 					'response'  => 403,
 					'back_link' => true,
@@ -937,7 +937,7 @@ class TSOSK_Mod_Comment_Antispam {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form; honeypot must be empty.
 			$trap = isset( $_POST[ self::HONEYPOT_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::HONEYPOT_FIELD ] ) ) : '';
 			if ( '' !== $trap ) {
-				return $fail( 'honeypot', __( 'Honeypot triggered.', 'tso-swiss-knife' ), true );
+				return $fail( 'honeypot', __( 'Honeypot triggered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), true );
 			}
 		}
 
@@ -947,7 +947,7 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( '' !== $token && ! $this->verify_time_token( $token ) ) {
 				return $fail(
 					'time_trap',
-					__( 'Submitted too quickly or the form expired. Please wait a few seconds and try again.', 'tso-swiss-knife' )
+					__( 'Submitted too quickly or the form expired. Please wait a few seconds and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 				);
 			}
 		}
@@ -955,7 +955,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( ! empty( $this->settings['rate_limit'] ) && $this->is_rate_limited() ) {
 			return $fail(
 				'rate_limit',
-				__( 'Too many submissions from your IP address. Please try again later.', 'tso-swiss-knife' )
+				__( 'Too many submissions from your IP address. Please try again later.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
@@ -966,7 +966,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		$cloud = $this->check_cloud( $data );
 		if ( true === $cloud ) {
-			return $fail( 'cloud', __( 'Submission flagged as spam by cloud filter.', 'tso-swiss-knife' ) );
+			return $fail( 'cloud', __( 'Submission flagged as spam by cloud filter.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$content  = (string) ( $data['comment_content'] ?? '' );
@@ -978,21 +978,21 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( ! empty( $this->settings['max_links'] ) && $this->count_links( $content ) > (int) $this->settings['max_links'] ) {
 			return $fail(
 				'max_links',
-				__( 'Submission contains too many links.', 'tso-swiss-knife' )
+				__( 'Submission contains too many links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
 		if ( ! empty( $this->settings['block_disposable_email'] ) && $this->is_disposable_email( $email ) ) {
 			return $fail(
 				'disposable_email',
-				__( 'Disposable email addresses are not allowed.', 'tso-swiss-knife' )
+				__( 'Disposable email addresses are not allowed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
 		if ( ! empty( $this->settings['block_cyrillic'] ) && preg_match( '/[\x{0400}-\x{04FF}]/u', $content . $author ) ) {
 			return $fail(
 				'cyrillic',
-				__( 'Comment contains blocked characters.', 'tso-swiss-knife' )
+				__( 'Comment contains blocked characters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
@@ -1001,7 +1001,7 @@ class TSOSK_Mod_Comment_Antispam {
 			return $fail(
 				'keyword',
 				/* translators: %s: matched keyword */
-				sprintf( __( 'Submission blocked (keyword: %s).', 'tso-swiss-knife' ), $keyword )
+				sprintf( __( 'Submission blocked (keyword: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $keyword )
 			);
 		}
 
@@ -1010,14 +1010,14 @@ class TSOSK_Mod_Comment_Antispam {
 			return $fail(
 				'blocked_url',
 				/* translators: %s: matched URL fragment */
-				sprintf( __( 'Submission blocked (URL: %s).', 'tso-swiss-knife' ), $url_match )
+				sprintf( __( 'Submission blocked (URL: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $url_match )
 			);
 		}
 
 		if ( ! empty( $this->settings['duplicate_check'] ) && $this->is_duplicate_submission( $data ) ) {
 			return $fail(
 				'duplicate',
-				__( 'Duplicate submission detected.', 'tso-swiss-knife' )
+				__( 'Duplicate submission detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
@@ -1045,7 +1045,7 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( true === $sfs ) {
 				return array(
 					'reason'  => 'stopforumspam',
-					'message' => __( 'Submission blocked by Stop Forum Spam reputation list.', 'tso-swiss-knife' ),
+					'message' => __( 'Submission blocked by Stop Forum Spam reputation list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			}
 		}
@@ -1055,7 +1055,7 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( true === $abuse ) {
 				return array(
 					'reason'  => 'abuseipdb',
-					'message' => __( 'Submission blocked: IP address has a poor abuse reputation score.', 'tso-swiss-knife' ),
+					'message' => __( 'Submission blocked: IP address has a poor abuse reputation score.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			}
 		}
@@ -1065,7 +1065,7 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( true === $hp ) {
 				return array(
 					'reason'  => 'honeypot_httpbl',
-					'message' => __( 'Submission blocked by Project Honey Pot bot reputation list.', 'tso-swiss-knife' ),
+					'message' => __( 'Submission blocked by Project Honey Pot bot reputation list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			}
 		}
@@ -1781,7 +1781,7 @@ class TSOSK_Mod_Comment_Antispam {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$cloud_mode = isset( $_POST['cloud_mode'] ) ? sanitize_key( wp_unslash( $_POST['cloud_mode'] ) ) : 'off';
@@ -1866,7 +1866,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		if ( $new['enabled'] && empty( $new['protect_comments'] ) && empty( $new['protect_contact_forms'] ) ) {
 			wp_send_json_error(
-				__( 'Enable at least one protection target: comments or contact forms.', 'tso-swiss-knife' ),
+				__( 'Enable at least one protection target: comments or contact forms.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				400
 			);
 		}
@@ -1874,21 +1874,21 @@ class TSOSK_Mod_Comment_Antispam {
 		update_option( self::OPTION, $new, false );
 		$this->settings = $new;
 
-		TSOSK_Activity_Log::log( 'comment-antispam', 'save', __( 'Comment anti-spam settings saved.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'comment-antispam', 'save', __( 'Comment anti-spam settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
-		wp_send_json_success( __( 'Comment anti-spam settings saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Comment anti-spam settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/** AJAX: clear block log. */
 	public function ajax_clear_log(): void {
 		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		update_option( self::OPTION_LOG, array(), false );
-		TSOSK_Activity_Log::log( 'comment-antispam', 'clear', __( 'Comment anti-spam log cleared.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Block log cleared.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'comment-antispam', 'clear', __( 'Comment anti-spam log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Block log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -1903,7 +1903,7 @@ class TSOSK_Mod_Comment_Antispam {
 		$akismet_active = class_exists( 'Akismet' );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Multi-layer spam protection for WordPress comments and contact forms. Local rules catch most bots; optional Akismet or CleanTalk cloud checks add global reputation data when you need stronger filtering.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Multi-layer spam protection for WordPress comments and contact forms. Local rules catch most bots; optional Akismet or CleanTalk cloud checks add global reputation data when you need stronger filtering.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<form id="tsosk-cas-form" autocomplete="off">
@@ -1911,37 +1911,37 @@ class TSOSK_Mod_Comment_Antispam {
 		<div class="tsosk-card">
 			<h3>
 				<span class="dashicons dashicons-shield" aria-hidden="true"></span>
-				<?php esc_html_e( 'Protection status', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Protection status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge <?php echo ! empty( $s['enabled'] ) ? 'tsosk-badge-ok' : ''; ?>" style="margin-left:10px;font-size:12px;">
-					<?php echo ! empty( $s['enabled'] ) ? esc_html__( 'Active', 'tso-swiss-knife' ) : esc_html__( 'Inactive', 'tso-swiss-knife' ); ?>
+					<?php echo ! empty( $s['enabled'] ) ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</h3>
 
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-enabled" <?php checked( ! empty( $s['enabled'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Enable anti-spam protection', 'tso-swiss-knife' ); ?></strong>
+					<strong><?php esc_html_e( 'Enable anti-spam protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				</span>
 			</label>
 
 			<label class="tsosk-toggle-row" style="margin-left:24px;">
 				<input type="checkbox" id="tsosk-cas-protect-comments" <?php checked( ! empty( $s['protect_comments'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'WordPress comments', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Applies all rules to the native comment form on posts and pages.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'WordPress comments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Applies all rules to the native comment form on posts and pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 
 			<label class="tsosk-toggle-row" style="margin-left:24px;">
 				<input type="checkbox" id="tsosk-cas-protect-forms" <?php checked( ! empty( $s['protect_contact_forms'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Contact forms', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Applies the same rules to Contact Form 7, WPForms, Gravity Forms, Elementor Pro and Fluent Forms when those plugins are active.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Contact forms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Applies the same rules to Contact Form 7, WPForms, Gravity Forms, Elementor Pro and Fluent Forms when those plugins are active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 
 			<div class="tsosk-notice tsosk-notice-info" style="margin-top:12px;">
-				<strong><?php esc_html_e( 'Supported form plugins', 'tso-swiss-knife' ); ?>:</strong>
+				<strong><?php esc_html_e( 'Supported form plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
 				<?php
 				$labels = array(
 					'cf7'        => 'Contact Form 7',
@@ -1960,174 +1960,174 @@ class TSOSK_Mod_Comment_Antispam {
 
 			<div class="tsosk-kv-grid" style="margin-top:16px;">
 				<div class="tsosk-kv-item">
-					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (24 h)', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (24 h)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $stats['last_24h'] ); ?></span>
 				</div>
 				<div class="tsosk-kv-item">
-					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (log)', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $stats['total'] ); ?></span>
 				</div>
 			</div>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Local protection layers', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'These run on your server without external API calls. Together they block most automated spam.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Local protection layers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'These run on your server without external API calls. Together they block most automated spam.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-honeypot" <?php checked( ! empty( $s['honeypot'] ) ); ?>>
-				<span><strong><?php esc_html_e( 'Honeypot field', 'tso-swiss-knife' ); ?></strong> — <?php esc_html_e( 'Hidden field bots fill in; submission is silently rejected.', 'tso-swiss-knife' ); ?></span>
+				<span><strong><?php esc_html_e( 'Honeypot field', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> — <?php esc_html_e( 'Hidden field bots fill in; submission is silently rejected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-time-trap" <?php checked( ! empty( $s['time_trap'] ) ); ?>>
-				<span><strong><?php esc_html_e( 'Minimum submit time', 'tso-swiss-knife' ); ?></strong> — <?php esc_html_e( 'Rejects comments submitted faster than a human could type.', 'tso-swiss-knife' ); ?></span>
+				<span><strong><?php esc_html_e( 'Minimum submit time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> — <?php esc_html_e( 'Rejects comments submitted faster than a human could type.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-rate-limit" <?php checked( ! empty( $s['rate_limit'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Rate limit by IP', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Stops the same IP from sending too many comments or form submissions in a short period.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Rate limit by IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Stops the same IP from sending too many comments or form submissions in a short period.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-disposable" <?php checked( ! empty( $s['block_disposable_email'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Block disposable email domains', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Rejects temporary email services (e.g. Mailinator, Guerrilla Mail) often used by spammers.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Block disposable email domains', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Rejects temporary email services (e.g. Mailinator, Guerrilla Mail) often used by spammers.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-duplicate" <?php checked( ! empty( $s['duplicate_check'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Block duplicate comments', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Rejects the same text from the same IP within the duplicate window below.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Block duplicate comments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Rejects the same text from the same IP within the duplicate window below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-cyrillic" <?php checked( ! empty( $s['block_cyrillic'] ) ); ?>>
-				<span><strong><?php esc_html_e( 'Block Cyrillic characters', 'tso-swiss-knife' ); ?></strong> — <?php esc_html_e( 'Useful for sites that only expect Latin-script comments.', 'tso-swiss-knife' ); ?></span>
+				<span><strong><?php esc_html_e( 'Block Cyrillic characters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> — <?php esc_html_e( 'Useful for sites that only expect Latin-script comments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-skip-logged-in" <?php checked( ! empty( $s['skip_logged_in'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Skip checks for logged-in users', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Trusted visitors with an account bypass all anti-spam rules.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Skip checks for logged-in users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Trusted visitors with an account bypass all anti-spam rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-log-blocks" <?php checked( ! empty( $s['log_blocks'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Log blocked attempts', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Keeps a recent list at the bottom of this page so you can review what was blocked and why.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Log blocked attempts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Keeps a recent list at the bottom of this page so you can review what was blocked and why.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 
 			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin-top:14px;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Min. seconds before submit', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Min. seconds before submit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-min-seconds" min="1" max="60" value="<?php echo esc_attr( (string) $s['min_submit_seconds'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'How long the visitor must wait after the form loads before submitting. Instant submissions are treated as bots. Typical value: 3–5 seconds.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'How long the visitor must wait after the form loads before submitting. Instant submissions are treated as bots. Typical value: 3–5 seconds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Max. form age (seconds)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Max. form age (seconds)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-max-seconds" min="60" max="86400" value="<?php echo esc_attr( (string) $s['max_submit_seconds'] ); ?>" style="width:100px;">
-						<p class="description"><?php esc_html_e( 'Maximum time a form stays valid after it was opened. Older tokens are rejected (e.g. a tab left open overnight). Default: 7200 (2 hours).', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Maximum time a form stays valid after it was opened. Older tokens are rejected (e.g. a tab left open overnight). Default: 7200 (2 hours).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Max comments per IP', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Max comments per IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-rate-count" min="1" max="50" value="<?php echo esc_attr( (string) $s['rate_limit_count'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'Maximum allowed submissions from one IP address within the rate limit window. Example: 3 means the fourth attempt in that period is blocked.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Maximum allowed submissions from one IP address within the rate limit window. Example: 3 means the fourth attempt in that period is blocked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Rate limit window (minutes)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Rate limit window (minutes)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-rate-window" min="1" max="1440" value="<?php echo esc_attr( (string) $s['rate_limit_window'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'Time span used together with "Max comments per IP". Example: 3 submissions per 60 minutes.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Time span used together with "Max comments per IP". Example: 3 submissions per 60 minutes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Max links in comment', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Max links in comment', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-max-links" min="0" max="20" value="<?php echo esc_attr( (string) $s['max_links'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'Blocks submissions with more than this many http/https links in the text. Use 0 to disable. Spam often contains many URLs.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Blocks submissions with more than this many http/https links in the text. Use 0 to disable. Spam often contains many URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Duplicate window (minutes)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Duplicate window (minutes)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-dup-window" min="1" max="1440" value="<?php echo esc_attr( (string) $s['duplicate_window'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'How long to remember recent submissions when checking for duplicates from the same IP with identical content.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'How long to remember recent submissions when checking for duplicates from the same IP with identical content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Action on spam', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Action on spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<select id="tsosk-cas-spam-action">
-							<option value="spam" <?php selected( $s['spam_action'], 'spam' ); ?>><?php esc_html_e( 'Mark as spam', 'tso-swiss-knife' ); ?></option>
-							<option value="trash" <?php selected( $s['spam_action'], 'trash' ); ?>><?php esc_html_e( 'Move to trash', 'tso-swiss-knife' ); ?></option>
-							<option value="discard" <?php selected( $s['spam_action'], 'discard' ); ?>><?php esc_html_e( 'Reject with error (do not save)', 'tso-swiss-knife' ); ?></option>
+							<option value="spam" <?php selected( $s['spam_action'], 'spam' ); ?>><?php esc_html_e( 'Mark as spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="trash" <?php selected( $s['spam_action'], 'trash' ); ?>><?php esc_html_e( 'Move to trash', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="discard" <?php selected( $s['spam_action'], 'discard' ); ?>><?php esc_html_e( 'Reject with error (do not save)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						</select>
-						<p class="description"><?php esc_html_e( 'What happens to blocked WordPress comments. Contact forms always show an error and never store the message.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'What happens to blocked WordPress comments. Contact forms always show an error and never store the message.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Cloud filter (optional)', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'For effectiveness similar to dedicated anti-spam plugins, enable a cloud check. Local rules still run as a second layer.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Cloud filter (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'For effectiveness similar to dedicated anti-spam plugins, enable a cloud check. Local rules still run as a second layer.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<table class="tsosk-kv-table" style="width:100%;max-width:640px;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Cloud mode', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Cloud mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<select id="tsosk-cas-cloud-mode">
-							<option value="off" <?php selected( $s['cloud_mode'], 'off' ); ?>><?php esc_html_e( 'Off (local rules only)', 'tso-swiss-knife' ); ?></option>
-							<option value="akismet" <?php selected( $s['cloud_mode'], 'akismet' ); ?>><?php esc_html_e( 'Akismet (requires Akismet plugin + API key)', 'tso-swiss-knife' ); ?></option>
-							<option value="cleantalk" <?php selected( $s['cloud_mode'], 'cleantalk' ); ?>><?php esc_html_e( 'CleanTalk API (requires access key)', 'tso-swiss-knife' ); ?></option>
+							<option value="off" <?php selected( $s['cloud_mode'], 'off' ); ?>><?php esc_html_e( 'Off (local rules only)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="akismet" <?php selected( $s['cloud_mode'], 'akismet' ); ?>><?php esc_html_e( 'Akismet (requires Akismet plugin + API key)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="cleantalk" <?php selected( $s['cloud_mode'], 'cleantalk' ); ?>><?php esc_html_e( 'CleanTalk API (requires access key)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						</select>
-						<p class="description"><?php esc_html_e( 'Optional second opinion from a global spam database. Local rules always run first; the cloud check adds extra filtering when enabled.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Optional second opinion from a global spam database. Local rules always run first; the cloud check adds extra filtering when enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php if ( 'akismet' === $s['cloud_mode'] && ! $akismet_active ) : ?>
-						<p class="description" style="color:#b32d2e;margin-top:6px;"><?php esc_html_e( 'Akismet plugin is not active. Install and configure Akismet or choose another mode.', 'tso-swiss-knife' ); ?></p>
+						<p class="description" style="color:#b32d2e;margin-top:6px;"><?php esc_html_e( 'Akismet plugin is not active. Install and configure Akismet or choose another mode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php endif; ?>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'CleanTalk access key', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'CleanTalk access key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-cas-cleantalk-key" value="<?php echo esc_attr( (string) $s['cleantalk_key'] ); ?>" style="width:100%;max-width:360px;" autocomplete="off">
-						<p class="description"><?php esc_html_e( 'Only used when Cloud mode is CleanTalk. You can reuse your existing CleanTalk key without keeping their plugin active.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Only used when Cloud mode is CleanTalk. You can reuse your existing CleanTalk key without keeping their plugin active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Reputation blocklists', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Reputation blocklists', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Query community spam databases before accepting a submission. Results are cached for 6 hours per IP/email to respect API limits.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Query community spam databases before accepting a submission. Results are cached for 6 hours per IP/email to respect API limits.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-sfs" <?php checked( ! empty( $s['stopforumspam_enabled'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Stop Forum Spam', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Free API, no key required. Checks IP, email and username.', 'tso-swiss-knife' ); ?>
-					<a href="https://www.stopforumspam.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'stopforumspam.com', 'tso-swiss-knife' ); ?></a>
+					<strong><?php esc_html_e( 'Stop Forum Spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Free API, no key required. Checks IP, email and username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<a href="https://www.stopforumspam.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'stopforumspam.com', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</span>
 			</label>
 			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 16px 24px;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Min. confidence (%)', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Min. confidence (%)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-sfs-confidence" min="1" max="100" value="<?php echo esc_attr( (string) $s['sfs_min_confidence'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'When Stop Forum Spam finds a match, it returns how sure it is (0–100%). We only block if that value is equal to or above this threshold. Lower = stricter (more blocks, including uncertain matches). Higher = only block when the database is very confident. Recommended: 50.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'When Stop Forum Spam finds a match, it returns how sure it is (0–100%). We only block if that value is equal to or above this threshold. Lower = stricter (more blocks, including uncertain matches). Higher = only block when the database is very confident. Recommended: 50.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -2135,31 +2135,31 @@ class TSOSK_Mod_Comment_Antispam {
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-abuseipdb" <?php checked( ! empty( $s['abuseipdb_enabled'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'AbuseIPDB', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'Checks IP abuse score. Requires a free API key.', 'tso-swiss-knife' ); ?>
-					<a href="https://www.abuseipdb.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'abuseipdb.com', 'tso-swiss-knife' ); ?></a>
+					<strong><?php esc_html_e( 'AbuseIPDB', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Checks IP abuse score. Requires a free API key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<a href="https://www.abuseipdb.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'abuseipdb.com', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</span>
 			</label>
 			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 16px 24px;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'API key', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'API key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-cas-abuseipdb-key" value="<?php echo esc_attr( (string) $s['abuseipdb_key'] ); ?>" style="width:100%;max-width:360px;" autocomplete="off">
-						<p class="description"><?php esc_html_e( 'Create a free key at abuseipdb.com. The plugin sends the visitor IP to check whether other sites have reported it for abuse.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Create a free key at abuseipdb.com. The plugin sends the visitor IP to check whether other sites have reported it for abuse.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Min. abuse score (0–100)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Min. abuse score (0–100)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-abuseipdb-score" min="1" max="100" value="<?php echo esc_attr( (string) $s['abuseipdb_min_score'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'AbuseIPDB assigns each IP a score from 0 (clean) to 100 (widely reported). We block when the score is equal to or above this value. Lower = block sooner; higher = only block IPs with many abuse reports. Recommended: 75.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'AbuseIPDB assigns each IP a score from 0 (clean) to 100 (widely reported). We block when the score is equal to or above this value. Lower = block sooner; higher = only block IPs with many abuse reports. Recommended: 75.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Max. report age (days)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Max. report age (days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-abuseipdb-age" min="1" max="365" value="<?php echo esc_attr( (string) $s['abuseipdb_max_age_days'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'Ignore abuse reports older than this many days. Prevents blocking an IP because of a problem that happened long ago.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Ignore abuse reports older than this many days. Prevents blocking an IP because of a problem that happened long ago.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -2167,59 +2167,59 @@ class TSOSK_Mod_Comment_Antispam {
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" id="tsosk-cas-httpbl" <?php checked( ! empty( $s['honeypot_httpbl_enabled'] ) ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Project Honey Pot (HTTP:BL)', 'tso-swiss-knife' ); ?></strong>
-					— <?php esc_html_e( 'DNS bot reputation list. Requires a free access key. IPv4 only.', 'tso-swiss-knife' ); ?>
-					<a href="https://www.projecthoneypot.org/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'projecthoneypot.org', 'tso-swiss-knife' ); ?></a>
+					<strong><?php esc_html_e( 'Project Honey Pot (HTTP:BL)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'DNS bot reputation list. Requires a free access key. IPv4 only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<a href="https://www.projecthoneypot.org/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'projecthoneypot.org', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</span>
 			</label>
 			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 0 24px;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Access key', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Access key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-cas-httpbl-key" value="<?php echo esc_attr( (string) $s['honeypot_access_key'] ); ?>" style="width:100%;max-width:360px;" autocomplete="off">
-						<p class="description"><?php esc_html_e( 'Your personal key from projecthoneypot.org. Used to query their DNS blocklist for known bots and harvesters.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Your personal key from projecthoneypot.org. Used to query their DNS blocklist for known bots and harvesters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Min. threat score (suspicious IPs)', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Min. threat score (suspicious IPs)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-httpbl-threat" min="0" max="255" value="<?php echo esc_attr( (string) $s['honeypot_min_threat'] ); ?>" style="width:80px;">
-						<p class="description"><?php esc_html_e( 'For IPs marked only as "suspicious" (not confirmed spammers), block when their threat score is at or above this value (0-255). Confirmed comment spammers and email harvesters are always blocked regardless of this setting.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'For IPs marked only as "suspicious" (not confirmed spammers), block when their threat score is at or above this value (0-255). Confirmed comment spammers and email harvesters are always blocked regardless of this setting.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Blocklists & bypass', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Your own rules on top of automatic checks: block specific words or URLs, extend the disposable-email list, or whitelist trusted IPs that should never be filtered.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Blocklists & bypass', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Your own rules on top of automatic checks: block specific words or URLs, extend the disposable-email list, or whitelist trusted IPs that should never be filtered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<table class="tsosk-kv-table" style="width:100%;">
 				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Blocked keywords', 'tso-swiss-knife' ); ?></th>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Blocked keywords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea id="tsosk-cas-keywords" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_keywords'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One word or phrase per line. If any line appears in the comment text, author name, email or URL, the submission is blocked. Lines starting with # are ignored. Not case-sensitive.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'One word or phrase per line. If any line appears in the comment text, author name, email or URL, the submission is blocked. Lines starting with # are ignored. Not case-sensitive.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Blocked URL fragments', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Blocked URL fragments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea id="tsosk-cas-urls" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_urls'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). Matched anywhere in the submission content. Useful to stop recurring spam links.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). Matched anywhere in the submission content. Useful to stop recurring spam links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Extra disposable domains', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Extra disposable domains', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea id="tsosk-cas-domains" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['custom_disposable_domains'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'Add email domains to block in addition to the built-in list. One domain per line, with or without @ (e.g. tempmail.example). Only applies when "Block disposable email domains" is enabled above.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Add email domains to block in addition to the built-in list. One domain per line, with or without @ (e.g. tempmail.example). Only applies when "Block disposable email domains" is enabled above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Whitelist IPs', 'tso-swiss-knife' ); ?></th>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Whitelist IPs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea id="tsosk-cas-whitelist" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['whitelist_ips'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One IP address per line. These addresses skip every anti-spam rule (local, cloud and reputation). Use for your office, home or test machines — not for public visitors.', 'tso-swiss-knife' ); ?></p>
+						<p class="description"><?php esc_html_e( 'One IP address per line. These addresses skip every anti-spam rule (local, cloud and reputation). Use for your office, home or test machines — not for public visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -2227,17 +2227,17 @@ class TSOSK_Mod_Comment_Antispam {
 
 		<?php if ( ! empty( $log ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Recent blocks', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Recent blocks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat striped tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Time', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Source', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'IP', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Author', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Excerpt', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Author', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Excerpt', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -2256,7 +2256,7 @@ class TSOSK_Mod_Comment_Antispam {
 			</div>
 			<p style="margin-top:12px;">
 				<button type="button" class="button" id="tsosk-cas-clear-log" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Clear log', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Clear log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 			</p>
 		</div>
@@ -2264,7 +2264,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-cas-save" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Save settings', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span id="tsosk-cas-msg" class="tsosk-msg" aria-live="polite"></span>
 		</p>

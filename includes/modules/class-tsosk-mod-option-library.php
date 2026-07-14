@@ -31,16 +31,16 @@ class TSOSK_Mod_Option_Library {
 	public function ajax_preview(): void {
 		check_ajax_referer( 'tsosk_ol_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
 		if ( ! $name || ! $this->is_listed_option( $name ) ) {
-			wp_send_json_error( __( 'Unknown or undocumented option.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Unknown or undocumented option.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( in_array( $name, TSOSK_Mod_Options_Editor::get_protected_option_names(), true ) ) {
-			wp_send_json_error( __( 'This option is protected.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This option is protected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		global $wpdb;
@@ -54,7 +54,7 @@ class TSOSK_Mod_Option_Library {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( __( 'Option not found in the database.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Option not found in the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$value   = (string) $row['option_value'];
@@ -116,25 +116,25 @@ class TSOSK_Mod_Option_Library {
 		$libraries = TSOSK_Option_Library::get_active_libraries();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Documented wp_options for WordPress core and popular plugins detected on this site. Use Options Editor to change values; previews here are read-only.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Documented wp_options for WordPress core and popular plugins detected on this site. Use Options Editor to change values; previews here are read-only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card tsosk-ol-preview-panel" id="tsosk-ol-preview-box" style="display:none;">
-			<h3><?php esc_html_e( 'Option preview', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Option preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description" id="tsosk-ol-preview-hint">
-				<?php esc_html_e( 'Click Preview on any option below to load its value here.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Click Preview on any option below to load its value here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<p><code id="tsosk-ol-preview-name"></code> — <span id="tsosk-ol-preview-meta"></span></p>
 			<pre id="tsosk-ol-preview-value" class="tsosk-ol-preview-value"></pre>
 			<p>
-				<a id="tsosk-ol-preview-edit" class="button"><?php esc_html_e( 'Edit in Options Editor', 'tso-swiss-knife' ); ?></a>
+				<a id="tsosk-ol-preview-edit" class="button"><?php esc_html_e( 'Edit in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 			</p>
 		</div>
 		<p class="tsosk-ajax-msg" id="tsosk-ol-preview-msg" style="display:none;margin:0 0 12px;"></p>
 
 		<?php if ( empty( $libraries ) ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'No preset libraries matched the active plugins.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'No preset libraries matched the active plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php else : ?>
 			<?php foreach ( $libraries as $lib_id => $library ) : ?>
@@ -148,13 +148,13 @@ class TSOSK_Mod_Option_Library {
 					<?php
 					printf(
 						/* translators: %s: option name prefix */
-						esc_html__( 'Common prefix: %s', 'tso-swiss-knife' ),
+						esc_html__( 'Common prefix: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'<code>' . esc_html( $library['prefix'] ) . '</code>'
 					);
 					?>
 					<?php if ( class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
 					— <a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $library['prefix'] ) ); ?>">
-						<?php esc_html_e( 'Browse all matching options', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Browse all matching options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 					<?php endif; ?>
 				</p>
@@ -162,10 +162,10 @@ class TSOSK_Mod_Option_Library {
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Option', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Description', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Description', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -181,15 +181,15 @@ class TSOSK_Mod_Option_Library {
 							<td><?php echo esc_html( $option['desc'] ); ?></td>
 							<td>
 								<?php if ( $exists ) : ?>
-									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'In database', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'In database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php else : ?>
-									<span class="tsosk-badge"><?php esc_html_e( 'Not set', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge"><?php esc_html_e( 'Not set', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 								<?php if ( $caution ) : ?>
-									<span class="tsosk-badge tsosk-badge-warn" style="margin-left:4px;"><?php esc_html_e( 'Caution', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-warn" style="margin-left:4px;"><?php esc_html_e( 'Caution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 								<?php if ( $readonly ) : ?>
-									<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;"><?php esc_html_e( 'Read-only', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;"><?php esc_html_e( 'Read-only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
 							<td>
@@ -197,11 +197,11 @@ class TSOSK_Mod_Option_Library {
 								<button type="button" class="button button-small tsosk-ol-preview"
 								        data-name="<?php echo esc_attr( $option['name'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Preview', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php endif; ?>
 								<a class="button button-small" href="<?php echo esc_url( $edit_url ); ?>">
-									<?php esc_html_e( 'Open in Options Editor', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Open in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</a>
 							</td>
 						</tr>

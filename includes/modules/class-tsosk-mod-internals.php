@@ -65,7 +65,7 @@ class TSOSK_Mod_Internals {
 	public function ajax_save_image_sizes(): void {
 		check_ajax_referer( 'tsosk_internals_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$disabled = array();
@@ -79,8 +79,8 @@ class TSOSK_Mod_Internals {
 		}
 		$disabled = array_values( array_unique( $disabled ) );
 		update_option( self::OPTION_DISABLED_SIZES, $disabled, false );
-		TSOSK_Activity_Log::log( 'internals', 'save', __( 'Image size settings saved.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'internals', 'save', __( 'Image size settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -104,33 +104,33 @@ class TSOSK_Mod_Internals {
 		sort( $shortcodes );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, image sizes, query vars, rewrite tags and shortcodes.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, image sizes, query vars, rewrite tags and shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-toolbar">
-			<input type="text" id="tsosk-internals-search" class="regular-text" placeholder="<?php esc_attr_e( 'Filter internals...', 'tso-swiss-knife' ); ?>">
+			<input type="text" id="tsosk-internals-search" class="regular-text" placeholder="<?php esc_attr_e( 'Filter internals...', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 		</div>
 
-		<?php $this->render_object_table( __( 'Registered Post Types', 'tso-swiss-knife' ), $post_types, array( 'name', 'label', 'public', 'show_ui', 'rewrite' ) ); ?>
-		<?php $this->render_object_table( __( 'Registered Post Statuses', 'tso-swiss-knife' ), $post_status, array( 'name', 'label', 'public', 'internal', 'protected' ) ); ?>
-		<?php $this->render_object_table( __( 'Registered Taxonomies', 'tso-swiss-knife' ), $taxonomies, array( 'name', 'label', 'public', 'show_ui', 'hierarchical' ) ); ?>
+		<?php $this->render_object_table( __( 'Registered Post Types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $post_types, array( 'name', 'label', 'public', 'show_ui', 'rewrite' ) ); ?>
+		<?php $this->render_object_table( __( 'Registered Post Statuses', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $post_status, array( 'name', 'label', 'public', 'internal', 'protected' ) ); ?>
+		<?php $this->render_object_table( __( 'Registered Taxonomies', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $taxonomies, array( 'name', 'label', 'public', 'show_ui', 'hierarchical' ) ); ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Registered Image Sizes', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Registered Image Sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Uncheck a size to stop WordPress from generating it on new uploads (saves disk space). Core sizes thumbnail, medium and large cannot be disabled here. Existing files are not deleted.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Uncheck a size to stop WordPress from generating it on new uploads (saves disk space). Core sizes thumbnail, medium and large cannot be disabled here. Existing files are not deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-notice tsosk-notice-warn" style="margin-bottom:12px;">
-				<?php esc_html_e( 'Risks when disabling sizes: broken images in old content, missing srcset variants, layout shifts in themes/plugins that expect those sizes, and WooCommerce or page builders that rely on specific dimensions. Test on staging after changing sizes.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Risks when disabling sizes: broken images in old content, missing srcset variants, layout shifts in themes/plugins that expect those sizes, and WooCommerce or page builders that rely on specific dimensions. Test on staging after changing sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
-					<th style="width:40px;"><?php esc_html_e( 'On', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Name', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Width', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Height', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Crop', 'tso-swiss-knife' ); ?></th>
+					<th style="width:40px;"><?php esc_html_e( 'On', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Width', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Height', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Crop', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 				<?php
@@ -146,10 +146,10 @@ class TSOSK_Mod_Internals {
 							       <?php checked( $is_enabled ); ?>
 							       <?php disabled( $is_core ); ?>>
 						</td>
-						<td><code><?php echo esc_html( $name ); ?></code><?php if ( $is_core ) : ?> <span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife' ); ?></span><?php endif; ?></td>
+						<td><code><?php echo esc_html( $name ); ?></code><?php if ( $is_core ) : ?> <span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><?php endif; ?></td>
 						<td><?php echo esc_html( (string) ( $size['width'] ?? 0 ) ); ?></td>
 						<td><?php echo esc_html( (string) ( $size['height'] ?? 0 ) ); ?></td>
-						<td><?php echo ! empty( $size['crop'] ) ? esc_html__( 'Yes', 'tso-swiss-knife' ) : esc_html__( 'No', 'tso-swiss-knife' ); ?></td>
+						<td><?php echo ! empty( $size['crop'] ) ? esc_html__( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'No', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 				</tbody>
@@ -158,17 +158,17 @@ class TSOSK_Mod_Internals {
 			<p style="margin-top:10px;">
 				<button type="button" class="button button-primary" id="tsosk-internals-save-sizes"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save image size settings', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-internals-sizes-msg"></span>
 			</p>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Roles & Capabilities', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Roles & Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
-				<thead><tr><th><?php esc_html_e( 'Role', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Name', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Capabilities', 'tso-swiss-knife' ); ?></th></tr></thead>
+				<thead><tr><th><?php esc_html_e( 'Role', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th></tr></thead>
 				<tbody>
 				<?php foreach ( $roles as $role_key => $role ) : ?>
 					<tr class="tsosk-internals-row">
@@ -182,9 +182,9 @@ class TSOSK_Mod_Internals {
 			</div>
 		</div>
 
-		<?php $this->render_list_card( __( 'Query Vars', 'tso-swiss-knife' ), $query_vars ); ?>
-		<?php $this->render_list_card( __( 'Rewrite Tags', 'tso-swiss-knife' ), $rewrite_tags ); ?>
-		<?php $this->render_list_card( __( 'Registered Shortcodes', 'tso-swiss-knife' ), $shortcodes ); ?>
+		<?php $this->render_list_card( __( 'Query Vars', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $query_vars ); ?>
+		<?php $this->render_list_card( __( 'Rewrite Tags', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $rewrite_tags ); ?>
+		<?php $this->render_list_card( __( 'Registered Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $shortcodes ); ?>
 		<?php
 	}
 
@@ -246,7 +246,7 @@ class TSOSK_Mod_Internals {
 	 */
 	private function format_value( $value ): string {
 		if ( is_bool( $value ) ) {
-			return $value ? __( 'Yes', 'tso-swiss-knife' ) : __( 'No', 'tso-swiss-knife' );
+			return $value ? __( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 		if ( is_array( $value ) ) {
 			return wp_json_encode( $value );

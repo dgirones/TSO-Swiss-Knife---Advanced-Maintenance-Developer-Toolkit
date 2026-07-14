@@ -188,10 +188,10 @@ class TSOSK_Mod_Action_Scheduler {
 	public function ajax_list(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		if ( ! self::is_available() ) {
-			wp_send_json_error( __( 'Action Scheduler is not available on this site.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Action Scheduler is not available on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$status = isset( $_POST['status'] ) ? sanitize_key( wp_unslash( $_POST['status'] ) ) : 'pending';
@@ -214,11 +214,11 @@ class TSOSK_Mod_Action_Scheduler {
 	public function ajax_cancel(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$id = isset( $_POST['action_id'] ) ? absint( $_POST['action_id'] ) : 0;
 		if ( ! $id ) {
-			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( class_exists( 'ActionScheduler' ) && method_exists( 'ActionScheduler', 'store' ) ) {
 			ActionScheduler::store()->cancel_action( $id );
@@ -227,23 +227,23 @@ class TSOSK_Mod_Action_Scheduler {
 				'cancel',
 				sprintf(
 					/* translators: %d: action ID */
-					__( 'Action Scheduler action canceled (#%d).', 'tso-swiss-knife' ),
+					__( 'Action Scheduler action canceled (#%d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$id
 				)
 			);
-			wp_send_json_success( __( 'Action canceled.', 'tso-swiss-knife' ) );
+			wp_send_json_success( __( 'Action canceled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		wp_send_json_error( __( 'Could not cancel this action.', 'tso-swiss-knife' ) );
+		wp_send_json_error( __( 'Could not cancel this action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$id = isset( $_POST['action_id'] ) ? absint( $_POST['action_id'] ) : 0;
 		if ( ! $id ) {
-			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( class_exists( 'ActionScheduler' ) && method_exists( 'ActionScheduler', 'store' ) ) {
 			ActionScheduler::store()->delete_action( $id );
@@ -252,13 +252,13 @@ class TSOSK_Mod_Action_Scheduler {
 				'delete',
 				sprintf(
 					/* translators: %d: action ID */
-					__( 'Action Scheduler action deleted (#%d).', 'tso-swiss-knife' ),
+					__( 'Action Scheduler action deleted (#%d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$id
 				)
 			);
-			wp_send_json_success( __( 'Action deleted.', 'tso-swiss-knife' ) );
+			wp_send_json_success( __( 'Action deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		wp_send_json_error( __( 'Could not delete this action.', 'tso-swiss-knife' ) );
+		wp_send_json_error( __( 'Could not delete this action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function render(): void {
@@ -266,26 +266,26 @@ class TSOSK_Mod_Action_Scheduler {
 		$available = self::is_available();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Inspect background jobs queued by WooCommerce and other plugins that use Action Scheduler. Cancel pending or delete failed actions when you know they are safe to remove.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Inspect background jobs queued by WooCommerce and other plugins that use Action Scheduler. Cancel pending or delete failed actions when you know they are safe to remove.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php if ( ! $available ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">
-			<?php esc_html_e( 'Action Scheduler was not detected. Install WooCommerce or a plugin that bundles Action Scheduler to use this tool.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Action Scheduler was not detected. Install WooCommerce or a plugin that bundles Action Scheduler to use this tool.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php else : ?>
 		<div class="tsosk-toolbar">
 			<label>
-				<?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<select id="tsosk-asched-status">
-					<option value="pending"><?php esc_html_e( 'Pending', 'tso-swiss-knife' ); ?></option>
-					<option value="in-progress"><?php esc_html_e( 'In progress', 'tso-swiss-knife' ); ?></option>
-					<option value="failed"><?php esc_html_e( 'Failed', 'tso-swiss-knife' ); ?></option>
-					<option value="complete"><?php esc_html_e( 'Complete', 'tso-swiss-knife' ); ?></option>
-					<option value="canceled"><?php esc_html_e( 'Canceled', 'tso-swiss-knife' ); ?></option>
+					<option value="pending"><?php esc_html_e( 'Pending', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="in-progress"><?php esc_html_e( 'In progress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="failed"><?php esc_html_e( 'Failed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="complete"><?php esc_html_e( 'Complete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="canceled"><?php esc_html_e( 'Canceled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 				</select>
 			</label>
-			<button type="button" class="button" id="tsosk-asched-refresh"><?php esc_html_e( 'Refresh', 'tso-swiss-knife' ); ?></button>
+			<button type="button" class="button" id="tsosk-asched-refresh"><?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			<span class="tsosk-ajax-msg" id="tsosk-asched-msg"></span>
 		</div>
 
@@ -293,16 +293,16 @@ class TSOSK_Mod_Action_Scheduler {
 			<table class="widefat tsosk-table" id="tsosk-asched-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'ID', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Hook', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Group', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Schedule', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Group', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Schedule', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody id="tsosk-asched-tbody">
-					<tr><td colspan="6"><?php esc_html_e( 'Loading…', 'tso-swiss-knife' ); ?></td></tr>
+					<tr><td colspan="6"><?php esc_html_e( 'Loading…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td></tr>
 				</tbody>
 			</table>
 		</div>

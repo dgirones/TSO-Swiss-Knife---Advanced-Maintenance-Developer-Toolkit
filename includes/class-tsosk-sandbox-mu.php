@@ -51,33 +51,33 @@ class TSOSK_Sandbox_Mu {
 	 */
 	public static function install_loader() {
 		if ( ! defined( 'WPMU_PLUGIN_DIR' ) ) {
-			return new WP_Error( 'no_mu_dir', __( 'Must-use plugins directory is not available.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'no_mu_dir', __( 'Must-use plugins directory is not available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$source = TSOSK_PATH . 'mu-plugin/' . self::MU_FILENAME;
 		$dest   = trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILENAME;
 
 		if ( ! file_exists( $source ) ) {
-			return new WP_Error( 'missing_template', __( 'Sandbox loader template is missing from the plugin package.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'missing_template', __( 'Sandbox loader template is missing from the plugin package.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( ! wp_mkdir_p( WPMU_PLUGIN_DIR ) ) {
-			return new WP_Error( 'mu_not_writable', __( 'Could not create the must-use plugins directory.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'mu_not_writable', __( 'Could not create the must-use plugins directory.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( ! wp_is_writable( WPMU_PLUGIN_DIR ) ) {
-			return new WP_Error( 'mu_not_writable', __( 'The must-use plugins directory is not writable.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'mu_not_writable', __( 'The must-use plugins directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$content = file_get_contents( $source );
 		if ( false === $content ) {
-			return new WP_Error( 'read_failed', __( 'Could not read the sandbox loader template.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'read_failed', __( 'Could not read the sandbox loader template.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === file_put_contents( $dest, $content ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not install the sandbox loader in must-use plugins.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'write_failed', __( 'Could not install the sandbox loader in must-use plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		return true;
@@ -128,7 +128,7 @@ class TSOSK_Sandbox_Mu {
 		if ( ! defined( 'AUTH_KEY' ) || ! AUTH_KEY ) {
 			return new WP_Error(
 				'tsosk_no_auth_key',
-				__( 'Plugin sandbox requires AUTH_KEY in wp-config.php. Generate secure keys before using sandbox mode.', 'tso-swiss-knife' )
+				__( 'Plugin sandbox requires AUTH_KEY in wp-config.php. Generate secure keys before using sandbox mode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 

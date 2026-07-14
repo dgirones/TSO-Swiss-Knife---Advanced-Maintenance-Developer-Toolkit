@@ -61,18 +61,18 @@ class TSOSK_Mod_Footprint {
 		usort( $inactive_rows, fn( $a, $b ) => $b['options'] - $a['options'] );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Shows how many wp_options rows each plugin has created. This is a quick way to spot plugins that store a lot of data in the database. Matching is heuristic based on plugin slug.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Shows how many wp_options rows each plugin has created. This is a quick way to spot plugins that store a lot of data in the database. Matching is heuristic based on plugin slug.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=options-editor' ) ); ?>">
-				<?php esc_html_e( 'Open Options Editor', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 		</p>
 
 		<?php /* ── Active plugins ── */ ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Active Plugins', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Active Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-ok" style="margin-left:8px;font-size:12px;"><?php echo esc_html( (string) count( $active_rows ) ); ?></span>
 			</h3>
 			<div class="tsosk-fp-grid">
@@ -89,7 +89,7 @@ class TSOSK_Mod_Footprint {
 							<?php
 							printf(
 								/* translators: %d: number of options */
-								esc_html__( '%d options', 'tso-swiss-knife' ),
+								esc_html__( '%d options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								(int) $row['options']
 							);
 							?>
@@ -97,7 +97,7 @@ class TSOSK_Mod_Footprint {
 						<?php if ( $row['options'] > 0 && class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
 						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['prefixes'] ) ) ); ?>"
 						   class="button button-small tsosk-fp-oe-link">
-							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
 						<?php endif; ?>
 						<code class="tsosk-fp-slug"><?php echo esc_html( dirname( $row['file'] ) ); ?></code>
@@ -111,11 +111,11 @@ class TSOSK_Mod_Footprint {
 		<?php if ( ! empty( $inactive_rows ) ) : ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Inactive Plugins', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Inactive Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge" style="margin-left:8px;font-size:12px;"><?php echo esc_html( (string) count( $inactive_rows ) ); ?></span>
 			</h3>
 			<p class="description">
-				<?php esc_html_e( 'Inactive plugins may still leave options in the database. If an inactive plugin has many options you may want to uninstall it properly (Delete in the Plugins list) rather than just deactivating it.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Inactive plugins may still leave options in the database. If an inactive plugin has many options you may want to uninstall it properly (Delete in the Plugins list) rather than just deactivating it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-fp-grid">
 				<?php foreach ( $inactive_rows as $row ) : ?>
@@ -131,17 +131,17 @@ class TSOSK_Mod_Footprint {
 						<span class="tsosk-fp-options tsosk-fp-warn">
 							<?php
 							/* translators: %d: number of options remaining */
-							printf( esc_html__( '%d options remaining', 'tso-swiss-knife' ), (int) $row['options'] );
+							printf( esc_html__( '%d options remaining', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $row['options'] );
 							?>
 						</span>
 						<?php if ( class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
 						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['prefixes'] ) ) ); ?>"
 						   class="button button-small tsosk-fp-oe-link">
-							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
 						<?php endif; ?>
 						<?php else : ?>
-						<span class="tsosk-fp-options"><?php esc_html_e( '0 options', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-fp-options"><?php esc_html_e( '0 options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php endif; ?>
 						<code class="tsosk-fp-slug"><?php echo esc_html( dirname( $row['file'] ) ); ?></code>
 					</div>

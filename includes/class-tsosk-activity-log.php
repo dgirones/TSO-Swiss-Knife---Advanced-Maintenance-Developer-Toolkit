@@ -202,39 +202,39 @@ class TSOSK_Activity_Log {
 	 */
 	public static function module_label( string $module ): string {
 		$labels = array(
-			'options-editor'    => __( 'Options Editor', 'tso-swiss-knife' ),
-			'meta-editor'       => __( 'Meta Editor', 'tso-swiss-knife' ),
-			'search-replace'    => __( 'Search & Replace', 'tso-swiss-knife' ),
-			'admin-menu'        => __( 'Reorder & Hide Sidebar', 'tso-swiss-knife' ),
-			'maintenance'       => __( 'Maintenance Mode', 'tso-swiss-knife' ),
-			'hidden-profiles'   => __( 'Hidden WordPress Profiles', 'tso-swiss-knife' ),
-			'redirects'         => __( 'Redirects', 'tso-swiss-knife' ),
-			'custom-404'        => __( 'Custom 404 Page', 'tso-swiss-knife' ),
-			'update-manager'    => __( 'Update Manager', 'tso-swiss-knife' ),
-			'heartbeat'         => __( 'Heartbeat', 'tso-swiss-knife' ),
-			'rest-api'          => __( 'REST API', 'tso-swiss-knife' ),
-			'security'          => __( 'Security Review', 'tso-swiss-knife' ),
-			'debug'             => __( 'Debug Mode', 'tso-swiss-knife' ),
-			'login-protect'     => __( 'Login Protection', 'tso-swiss-knife' ),
-			'comment-antispam'  => __( 'Comment Anti-Spam', 'tso-swiss-knife' ),
-			'server-files'      => __( 'Server Files', 'tso-swiss-knife' ),
-			'slow-queries'      => __( 'Slow Queries', 'tso-swiss-knife' ),
-			'sandbox'           => __( 'Plugin Sandbox', 'tso-swiss-knife' ),
-			'cron'              => __( 'Cron Manager', 'tso-swiss-knife' ),
-			'database'          => __( 'TSO Options & Tables Cleaner', 'tso-swiss-knife' ),
-			'roles'             => __( 'Roles & Capabilities', 'tso-swiss-knife' ),
-			'slug-manager'      => __( 'Slug Manager', 'tso-swiss-knife' ),
-			'file-integrity'    => __( 'File Integrity', 'tso-swiss-knife' ),
-			'rewrite'           => __( 'Rewrite Rules', 'tso-swiss-knife' ),
-			'object-cache'      => __( 'Object Cache', 'tso-swiss-knife' ),
-			'transients'        => __( 'Transients', 'tso-swiss-knife' ),
-			'users'             => __( 'Users & Sessions', 'tso-swiss-knife' ),
-			'site-snapshot'     => __( 'Export/Import TSO Configuration', 'tso-swiss-knife' ),
-			'action-scheduler'  => __( 'Action Scheduler', 'tso-swiss-knife' ),
-			'health'            => __( 'Health & Alerts', 'tso-swiss-knife' ),
-			'content-audit'     => __( 'Content Audit', 'tso-swiss-knife' ),
-			'media-footprint'   => __( 'Uploads Disk Footprint', 'tso-swiss-knife' ),
-			'image-sizes-audit' => __( 'Image Sizes Audit', 'tso-swiss-knife' ),
+			'options-editor'    => __( 'Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'meta-editor'       => __( 'Meta Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'search-replace'    => __( 'Search & Replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'admin-menu'        => __( 'Reorder & Hide Sidebar', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'maintenance'       => __( 'Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'hidden-profiles'   => __( 'Hidden WordPress Profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'redirects'         => __( 'Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'custom-404'        => __( 'Custom 404 Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update-manager'    => __( 'Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'heartbeat'         => __( 'Heartbeat', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rest-api'          => __( 'REST API', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'security'          => __( 'Security Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'debug'             => __( 'Debug Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login-protect'     => __( 'Login Protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'comment-antispam'  => __( 'Comment Anti-Spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'server-files'      => __( 'Server Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'slow-queries'      => __( 'Slow Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'sandbox'           => __( 'Plugin Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'cron'              => __( 'Cron Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'database'          => __( 'TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'roles'             => __( 'Roles & Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'slug-manager'      => __( 'Slug Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'file-integrity'    => __( 'File Integrity', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rewrite'           => __( 'Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'object-cache'      => __( 'Object Cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'transients'        => __( 'Transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'users'             => __( 'Users & Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'site-snapshot'     => __( 'Export/Import TSO Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'action-scheduler'  => __( 'Action Scheduler', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'health'            => __( 'Health & Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'content-audit'     => __( 'Content Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'media-footprint'   => __( 'Uploads Disk Footprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'image-sizes-audit' => __( 'Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$module = sanitize_key( $module );
@@ -250,22 +250,22 @@ class TSOSK_Activity_Log {
 	 */
 	public static function action_label( string $action ): string {
 		$labels = array(
-			'add'     => __( 'Add', 'tso-swiss-knife' ),
-			'update'  => __( 'Update', 'tso-swiss-knife' ),
-			'delete'  => __( 'Delete', 'tso-swiss-knife' ),
-			'save'    => __( 'Save', 'tso-swiss-knife' ),
-			'reset'   => __( 'Reset', 'tso-swiss-knife' ),
-			'enable'  => __( 'Enable', 'tso-swiss-knife' ),
-			'disable' => __( 'Disable', 'tso-swiss-knife' ),
-			'execute' => __( 'Execute', 'tso-swiss-knife' ),
-			'toggle'  => __( 'Toggle', 'tso-swiss-knife' ),
-			'run'     => __( 'Run', 'tso-swiss-knife' ),
-			'flush'   => __( 'Flush', 'tso-swiss-knife' ),
-			'import'  => __( 'Import', 'tso-swiss-knife' ),
-			'export'  => __( 'Export', 'tso-swiss-knife' ),
-			'scan'    => __( 'Scan', 'tso-swiss-knife' ),
-			'purge'   => __( 'Purge', 'tso-swiss-knife' ),
-			'cancel'  => __( 'Cancel', 'tso-swiss-knife' ),
+			'add'     => __( 'Add', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update'  => __( 'Update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'delete'  => __( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'save'    => __( 'Save', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'reset'   => __( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'enable'  => __( 'Enable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable' => __( 'Disable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'execute' => __( 'Execute', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'toggle'  => __( 'Toggle', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'run'     => __( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'flush'   => __( 'Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'import'  => __( 'Import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'export'  => __( 'Export', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'scan'    => __( 'Scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'purge'   => __( 'Purge', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'cancel'  => __( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$action = sanitize_key( $action );
@@ -292,7 +292,7 @@ class TSOSK_Activity_Log {
 			'/^Removed broken shortcode \[(.+?)\] from post #(\d+)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: shortcode tag, 2: post ID */
-					__( 'Removed broken shortcode [%1$s] from post #%2$d.', 'tso-swiss-knife' ),
+					__( 'Removed broken shortcode [%1$s] from post #%2$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1],
 					(int) $m[2]
 				);
@@ -300,7 +300,7 @@ class TSOSK_Activity_Log {
 			'/^Bulk slug fix: (\d+) updated, (\d+) skipped\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: fixed count, 2: skipped count */
-					__( 'Bulk slug fix: %1$d updated, %2$d skipped.', 'tso-swiss-knife' ),
+					__( 'Bulk slug fix: %1$d updated, %2$d skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1],
 					(int) $m[2]
 				);
@@ -308,7 +308,7 @@ class TSOSK_Activity_Log {
 			'/^Slug renamed: (.+) → (.+)\.$/u' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: old slug, 2: new slug */
-					__( 'Slug renamed: %1$s → %2$s.', 'tso-swiss-knife' ),
+					__( 'Slug renamed: %1$s → %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1],
 					$m[2]
 				);
@@ -316,44 +316,44 @@ class TSOSK_Activity_Log {
 			'/^Update Manager settings saved \(preset: (.+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %s: preset slug */
-					__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife' ),
+					__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1]
 				);
 			},
 			'/^Site Health suppression settings saved\.$/' => static function (): string {
-				return __( 'Site Health suppression settings saved.', 'tso-swiss-knife' );
+				return __( 'Site Health suppression settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^Debug log shrunk to last 500 lines \(archive: (.+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %s: archive filename */
-					__( 'Debug log shrunk to last 500 lines (archive: %s).', 'tso-swiss-knife' ),
+					__( 'Debug log shrunk to last 500 lines (archive: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1]
 				);
 			},
 			'/^Expired transients purged: (\d+)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %d: number of transients */
-					__( 'Expired transients purged: %d.', 'tso-swiss-knife' ),
+					__( 'Expired transients purged: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1]
 				);
 			},
 			'/^File added to ignore list\.$/' => static function (): string {
-				return __( 'File added to ignore list.', 'tso-swiss-knife' );
+				return __( 'File added to ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^File removed from ignore list\.$/' => static function (): string {
-				return __( 'File removed from ignore list.', 'tso-swiss-knife' );
+				return __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^File integrity scan completed \((\d+) issue\(s\)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %d: number of issues */
-					__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife' ),
+					__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1]
 				);
 			},
 			'/^Manual update run finished \(plugins pending: (\d+) → (\d+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: plugins before, 2: plugins after */
-					__( 'Manual update run finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife' ),
+					__( 'Manual update run finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1],
 					(int) $m[2]
 				);
@@ -361,7 +361,7 @@ class TSOSK_Activity_Log {
 			'/^Option (.+): (.+)$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: action, 2: option name */
-					__( 'Option %1$s: %2$s', 'tso-swiss-knife' ),
+					__( 'Option %1$s: %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1],
 					$m[2]
 				);
@@ -369,7 +369,7 @@ class TSOSK_Activity_Log {
 			'/^Database replace: "(.+)" → "(.+)"$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: search string, 2: replace string */
-					__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife' ),
+					__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1],
 					$m[2]
 				);
@@ -377,12 +377,12 @@ class TSOSK_Activity_Log {
 			'/^Cron event executed: (.+)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %s: cron hook name */
-					__( 'Cron event executed: %s.', 'tso-swiss-knife' ),
+					__( 'Cron event executed: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1]
 				);
 			},
 			'/^Activity history cleared\.$/' => static function (): string {
-				return __( 'Activity history cleared.', 'tso-swiss-knife' );
+				return __( 'Activity history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 		);
 
@@ -396,7 +396,7 @@ class TSOSK_Activity_Log {
 		if ( 'update-manager' === $module && 'save' === $action && isset( $details['preset'] ) ) {
 			return sprintf(
 				/* translators: %s: preset slug */
-				__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife' ),
+				__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(string) $details['preset']
 			);
 		}
@@ -513,7 +513,7 @@ class TSOSK_Activity_Log {
 			'summary' => sanitize_text_field(
 				sprintf(
 					/* translators: 1: action, 2: option name */
-					__( 'Option %1$s: %2$s', 'tso-swiss-knife' ),
+					__( 'Option %1$s: %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					self::action_label( $action ),
 					$name
 				)
@@ -544,7 +544,7 @@ class TSOSK_Activity_Log {
 			'summary' => sanitize_text_field(
 				sprintf(
 					/* translators: 1: search string, 2: replace string */
-					__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife' ),
+					__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$search,
 					$replace
 				)

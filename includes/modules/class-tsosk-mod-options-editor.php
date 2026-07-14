@@ -214,7 +214,7 @@ class TSOSK_Mod_Options_Editor {
 				if ( '' === $raw || ! preg_match( '/^-?\d+$/', $raw ) ) {
 					return new WP_Error(
 						'invalid_integer',
-						__( 'Integer values must be whole numbers (for example: 0, 42, -3).', 'tso-swiss-knife' )
+						__( 'Integer values must be whole numbers (for example: 0, 42, -3).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				return (string) (int) $raw;
@@ -224,14 +224,14 @@ class TSOSK_Mod_Options_Editor {
 				if ( '' === $raw ) {
 					return new WP_Error(
 						'invalid_json',
-						__( 'JSON value cannot be empty.', 'tso-swiss-knife' )
+						__( 'JSON value cannot be empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				json_decode( $raw, true );
 				if ( JSON_ERROR_NONE !== json_last_error() ) {
 					return new WP_Error(
 						'invalid_json',
-						__( 'The value is not valid JSON.', 'tso-swiss-knife' )
+						__( 'The value is not valid JSON.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				return $raw;
@@ -241,13 +241,13 @@ class TSOSK_Mod_Options_Editor {
 				if ( '' === $raw ) {
 					return new WP_Error(
 						'invalid_serialized',
-						__( 'Serialized value cannot be empty.', 'tso-swiss-knife' )
+						__( 'Serialized value cannot be empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				if ( ! $this->looks_serialized( $raw ) ) {
 					return new WP_Error(
 						'invalid_serialized',
-						__( 'The value does not look like valid serialized PHP.', 'tso-swiss-knife' )
+						__( 'The value does not look like valid serialized PHP.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
@@ -255,7 +255,7 @@ class TSOSK_Mod_Options_Editor {
 				if ( false === $test && $raw !== serialize( false ) ) {
 					return new WP_Error(
 						'invalid_serialized',
-						__( 'The value looks like serialized PHP but is not valid.', 'tso-swiss-knife' )
+						__( 'The value looks like serialized PHP but is not valid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
 				return $raw;
@@ -269,7 +269,7 @@ class TSOSK_Mod_Options_Editor {
 	public function ajax_search(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
@@ -403,15 +403,15 @@ class TSOSK_Mod_Options_Editor {
 	public function ajax_get(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
 		if ( ! $name ) {
-			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_transient_option( $name ) ) {
-			wp_send_json_error( __( 'Transient options cannot be edited here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Transient options cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		global $wpdb;
@@ -425,7 +425,7 @@ class TSOSK_Mod_Options_Editor {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( __( 'Option not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Option not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$value = (string) $row['option_value'];
@@ -446,7 +446,7 @@ class TSOSK_Mod_Options_Editor {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$name     = isset( $_POST['name'] )     ? sanitize_text_field( wp_unslash( $_POST['name'] ) )     : '';
@@ -456,19 +456,19 @@ class TSOSK_Mod_Options_Editor {
 		$autoload = in_array( $autoload, array( 'yes', 'no', 'on', 'off', '1', '0', 'true', 'false' ), true ) ? $autoload : 'no';
 
 		if ( ! $name ) {
-			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_protected_core( $name ) ) {
-			wp_send_json_error( __( 'This option is protected and cannot be edited here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This option is protected and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_caution_option( $name ) ) {
-			wp_send_json_error( __( 'This option is marked as caution and cannot be edited here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This option is marked as caution and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->looks_serialized( $raw_val ) ) {
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 			$test = @unserialize( $raw_val );
 			if ( false === $test && $raw_val !== serialize( false ) ) {
-				wp_send_json_error( __( 'The value looks like serialized PHP but is not valid. Please fix the syntax or paste plain text instead.', 'tso-swiss-knife' ) );
+				wp_send_json_error( __( 'The value looks like serialized PHP but is not valid. Please fix the syntax or paste plain text instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 		}
 
@@ -486,13 +486,13 @@ class TSOSK_Mod_Options_Editor {
 			'user'     => wp_get_current_user()->user_login,
 		) );
 
-		wp_send_json_success( __( 'Option saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Option saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_add(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$name      = isset( $_POST['name'] )     ? sanitize_text_field( wp_unslash( $_POST['name'] ) )     : '';
@@ -507,13 +507,13 @@ class TSOSK_Mod_Options_Editor {
 		}
 
 		if ( ! $name || ! preg_match( '/^[a-z0-9_\-]+$/i', $name ) ) {
-			wp_send_json_error( __( 'Invalid option name. Use only letters, numbers, hyphens and underscores.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid option name. Use only letters, numbers, hyphens and underscores.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_hidden_option_name( $name ) ) {
-			wp_send_json_error( __( 'This option name is reserved.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This option name is reserved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->option_exists( $name ) ) {
-			wp_send_json_error( __( 'An option with this name already exists. Use the editor to update it.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'An option with this name already exists. Use the editor to update it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$prepared_value = $this->prepare_new_option_value( $raw_val, $value_type );
@@ -532,21 +532,21 @@ class TSOSK_Mod_Options_Editor {
 			'user'     => wp_get_current_user()->user_login,
 		) );
 
-		wp_send_json_success( __( 'Option added.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Option added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
 		if ( ! $name ) {
-			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_deletion_blocked( $name ) ) {
-			wp_send_json_error( __( 'This option is protected and cannot be deleted.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This option is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$old_value = get_option( $name );
@@ -563,7 +563,7 @@ class TSOSK_Mod_Options_Editor {
 			'user'     => wp_get_current_user()->user_login,
 		) );
 
-		wp_send_json_success( __( 'Option deleted.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Option deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	private function detect_type( string $value ): string {
@@ -644,7 +644,7 @@ class TSOSK_Mod_Options_Editor {
 			$action,
 			sprintf(
 				/* translators: 1: action, 2: option name */
-				__( 'Option %1$s: %2$s', 'tso-swiss-knife' ),
+				__( 'Option %1$s: %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				TSOSK_Activity_Log::action_label( $action ),
 				$name
 			),
@@ -664,24 +664,24 @@ class TSOSK_Mod_Options_Editor {
 		$total_options = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->options}" );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Browse and edit options stored in wp_options. The list loads automatically in alphabetical order. Protected core options and transients are hidden by default.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Browse and edit options stored in wp_options. The list loads automatically in alphabetical order. Protected core options and transients are hidden by default.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-warn">
-			<strong><?php esc_html_e( '⚠ Use with caution.', 'tso-swiss-knife' ); ?></strong>
-			<?php esc_html_e( 'Editing wp_options directly can break your site if critical values are changed incorrectly.', 'tso-swiss-knife' ); ?>
+			<strong><?php esc_html_e( '⚠ Use with caution.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php esc_html_e( 'Editing wp_options directly can break your site if critical values are changed incorrectly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<div class="tsosk-toolbar" style="gap:12px;margin-bottom:16px;">
 			<span class="tsosk-badge tsosk-badge-info">
 				<?php /* translators: %d: number of options in database */
-			printf( esc_html__( '%d options in database', 'tso-swiss-knife' ), (int) $total_options ); ?>
+			printf( esc_html__( '%d options in database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $total_options ); ?>
 			</span>
 		</div>
 
 		<div class="tsosk-oe-tabs" id="tsosk-oe-tabs">
-			<button class="button tsosk-oe-tab-btn is-active" data-tab="list"><?php esc_html_e( 'Browse & Edit', 'tso-swiss-knife' ); ?></button>
-			<button class="button tsosk-oe-tab-btn" data-tab="add"><?php esc_html_e( 'Add New Option', 'tso-swiss-knife' ); ?></button>
+			<button class="button tsosk-oe-tab-btn is-active" data-tab="list"><?php esc_html_e( 'Browse & Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+			<button class="button tsosk-oe-tab-btn" data-tab="add"><?php esc_html_e( 'Add New Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 		</div>
 
 		<?php /* ── Browse & Edit ── */ ?>
@@ -689,21 +689,21 @@ class TSOSK_Mod_Options_Editor {
 			<div class="tsosk-card">
 				<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
 					<input type="text" id="tsosk-oe-search"
-					       placeholder="<?php esc_attr_e( 'Filter by option name…', 'tso-swiss-knife' ); ?>"
+					       placeholder="<?php esc_attr_e( 'Filter by option name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 					       style="min-width:220px;" autocomplete="off">
 					<select id="tsosk-oe-filter-type" style="min-width:130px;">
-						<option value=""><?php esc_html_e( 'All types', 'tso-swiss-knife' ); ?></option>
-						<option value="serialized"><?php esc_html_e( 'Serialized PHP', 'tso-swiss-knife' ); ?></option>
-						<option value="json"><?php esc_html_e( 'JSON', 'tso-swiss-knife' ); ?></option>
-						<option value="integer"><?php esc_html_e( 'Integer', 'tso-swiss-knife' ); ?></option>
-						<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife' ); ?></option>
+						<option value=""><?php esc_html_e( 'All types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="serialized"><?php esc_html_e( 'Serialized PHP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="json"><?php esc_html_e( 'JSON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="integer"><?php esc_html_e( 'Integer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
-					<button class="button" id="tsosk-oe-do-search" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Search', 'tso-swiss-knife' ); ?></button>
-					<button type="button" class="button" id="tsosk-oe-toggle-protected" aria-pressed="false"><?php esc_html_e( 'Show protected options', 'tso-swiss-knife' ); ?></button>
-					<button class="button button-small" id="tsosk-oe-clear-filters" title="<?php esc_attr_e( 'Clear all filters', 'tso-swiss-knife' ); ?>">✕</button>
+					<button class="button" id="tsosk-oe-do-search" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button type="button" class="button" id="tsosk-oe-toggle-protected" aria-pressed="false"><?php esc_html_e( 'Show protected options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-small" id="tsosk-oe-clear-filters" title="<?php esc_attr_e( 'Clear all filters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">✕</button>
 					<span class="tsosk-ajax-msg" id="tsosk-oe-search-msg"></span>
 				</div>
-				<p class="description" style="margin-top:6px;"><?php esc_html_e( 'Options are sorted alphabetically by name. Filter by name or type. Click a column header to sort by size, autoload, or type.', 'tso-swiss-knife' ); ?></p>
+				<p class="description" style="margin-top:6px;"><?php esc_html_e( 'Options are sorted alphabetically by name. Filter by name or type. Click a column header to sort by size, autoload, or type.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			</div>
 
 			<div id="tsosk-oe-results">
@@ -713,23 +713,23 @@ class TSOSK_Mod_Options_Editor {
 						<thead>
 							<tr>
 								<th class="tsosk-oe-sortable" data-col="option_name" style="width:32%;cursor:pointer;">
-									<?php esc_html_e( 'Option Name', 'tso-swiss-knife' ); ?> <span class="tsosk-sort-icon">▲</span>
+									<?php esc_html_e( 'Option Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <span class="tsosk-sort-icon">▲</span>
 								</th>
 								<th class="tsosk-oe-sortable" data-col="size" style="width:7%;cursor:pointer;">
-									<?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?> <span class="tsosk-sort-icon"></span>
+									<?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <span class="tsosk-sort-icon"></span>
 								</th>
 								<th class="tsosk-oe-sortable" data-col="autoload" style="width:9%;cursor:pointer;">
-									<?php esc_html_e( 'Autoload', 'tso-swiss-knife' ); ?> <span class="tsosk-sort-icon"></span>
+									<?php esc_html_e( 'Autoload', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <span class="tsosk-sort-icon"></span>
 								</th>
-								<th class="tsosk-oe-sortable" data-col="type" style="width:9%;cursor:pointer;"><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?> <span class="tsosk-sort-icon"></span></th>
-								<th class="tsosk-oe-sortable" data-col="preview" style="cursor:pointer;"><?php esc_html_e( 'Preview', 'tso-swiss-knife' ); ?> <span class="tsosk-sort-icon"></span></th>
-								<th style="width:110px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+								<th class="tsosk-oe-sortable" data-col="type" style="width:9%;cursor:pointer;"><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <span class="tsosk-sort-icon"></span></th>
+								<th class="tsosk-oe-sortable" data-col="preview" style="cursor:pointer;"><?php esc_html_e( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <span class="tsosk-sort-icon"></span></th>
+								<th style="width:110px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							</tr>
 						</thead>
 						<tbody id="tsosk-oe-tbody">
 							<tr><td colspan="6" style="text-align:center;padding:16px;color:#666;">
 								<span class="spinner is-active" style="float:none;margin:0 8px 0 0;"></span>
-								<?php esc_html_e( 'Loading options…', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Loading options…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</td></tr>
 						</tbody>
 					</table>
@@ -740,40 +740,40 @@ class TSOSK_Mod_Options_Editor {
 
 		<?php /* ── Inline editor ── */ ?>
 		<div id="tsosk-oe-editor" style="display:none;" class="tsosk-card">
-			<h3 id="tsosk-oe-editor-title"><?php esc_html_e( 'Edit Option', 'tso-swiss-knife' ); ?></h3>
+			<h3 id="tsosk-oe-editor-title"><?php esc_html_e( 'Edit Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div id="tsosk-oe-caution-banner" class="tsosk-notice tsosk-notice-warn" style="display:none;">
-				<strong><?php esc_html_e( 'Caution:', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'This option affects core WordPress behavior. Edit carefully and test after saving.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'Caution:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'This option affects core WordPress behavior. Edit carefully and test after saving.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div id="tsosk-oe-protected-banner" class="tsosk-notice tsosk-notice-info" style="display:none;">
-				<strong><?php esc_html_e( 'Protected option.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'This option is protected. You can view it but not change or delete it.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'Protected option.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'This option is protected. You can view it but not change or delete it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div id="tsosk-oe-serialized-note" class="tsosk-notice tsosk-notice-info" style="display:none;">
-				<strong><?php esc_html_e( 'Serialized PHP detected.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'The editor always works with the raw serialized string — do not modify unless you know PHP serialization syntax exactly.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'Serialized PHP detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'The editor always works with the raw serialized string — do not modify unless you know PHP serialization syntax exactly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<div style="margin-top:8px;">
-					<button type="button" class="button button-small" id="tsosk-oe-toggle-view"><?php esc_html_e( 'Show raw value', 'tso-swiss-knife' ); ?></button>
+					<button type="button" class="button button-small" id="tsosk-oe-toggle-view"><?php esc_html_e( 'Show raw value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				</div>
 			</div>
 			<div id="tsosk-oe-json-note" class="tsosk-notice tsosk-notice-info" style="display:none;">
-				<strong><?php esc_html_e( 'JSON detected.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'Any change must remain valid JSON syntax.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'JSON detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'Any change must remain valid JSON syntax.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div style="margin-bottom:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
 				<label style="font-size:13px;">
-					<?php esc_html_e( 'Option:', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Option:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<strong id="tsosk-oe-editing-name" class="tsosk-code"></strong>
 				</label>
 				<label style="font-size:13px;">
-					<?php esc_html_e( 'Type:', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Type:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<span id="tsosk-oe-editing-type" class="tsosk-badge tsosk-badge-info" style="font-size:11px;"></span>
 				</label>
 				<label style="font-size:13px;">
-					<?php esc_html_e( 'Autoload:', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Autoload:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<select id="tsosk-oe-editing-autoload" style="margin-left:4px;">
-						<option value="yes"><?php esc_html_e( 'yes', 'tso-swiss-knife' ); ?></option>
-						<option value="no"><?php esc_html_e( 'no', 'tso-swiss-knife' ); ?></option>
+						<option value="yes"><?php esc_html_e( 'yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="no"><?php esc_html_e( 'no', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 				</label>
 			</div>
@@ -785,8 +785,8 @@ class TSOSK_Mod_Options_Editor {
 				     style="display:none;background:#f6f7f7;border:1px solid #ddd;border-radius:3px;padding:12px;font-family:monospace;font-size:11px;white-space:pre;overflow:auto;max-height:300px;margin-top:8px;color:#1d2327;"></div>
 			</div>
 			<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
-				<button class="button button-primary" id="tsosk-oe-save-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save Option', 'tso-swiss-knife' ); ?></button>
-				<button class="button" id="tsosk-oe-cancel-btn"><?php esc_html_e( 'Cancel', 'tso-swiss-knife' ); ?></button>
+				<button class="button button-primary" id="tsosk-oe-save-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button class="button" id="tsosk-oe-cancel-btn"><?php esc_html_e( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-oe-save-msg"></span>
 			</div>
 		</div>
@@ -794,48 +794,48 @@ class TSOSK_Mod_Options_Editor {
 		<?php /* ── Add New Option ── */ ?>
 		<div class="tsosk-oe-panel" id="tsosk-oe-panel-add" style="display:none;">
 			<div class="tsosk-card">
-				<h3><?php esc_html_e( 'Add New Option', 'tso-swiss-knife' ); ?></h3>
+				<h3><?php esc_html_e( 'Add New Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-notice tsosk-notice-info">
-					<?php esc_html_e( 'Adds a new row directly to wp_options. Use only for custom plugin options or development purposes.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Adds a new row directly to wp_options. Use only for custom plugin options or development purposes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</div>
 				<table class="tsosk-kv-table" style="width:100%;max-width:640px;">
 					<tr>
-						<th style="width:160px;"><?php esc_html_e( 'Option Name', 'tso-swiss-knife' ); ?></th>
+						<th style="width:160px;"><?php esc_html_e( 'Option Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<input type="text" id="tsosk-oe-new-name" placeholder="my_custom_option" style="width:100%;max-width:380px;" autocomplete="off">
-							<p class="description"><?php esc_html_e( 'Letters, numbers, hyphens and underscores only.', 'tso-swiss-knife' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Letters, numbers, hyphens and underscores only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th><?php esc_html_e( 'Value type', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'Value type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<select id="tsosk-oe-new-value-type">
-								<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife' ); ?></option>
-								<option value="integer"><?php esc_html_e( 'Integer', 'tso-swiss-knife' ); ?></option>
-								<option value="json"><?php esc_html_e( 'JSON', 'tso-swiss-knife' ); ?></option>
-								<option value="serialized"><?php esc_html_e( 'Serialized PHP', 'tso-swiss-knife' ); ?></option>
+								<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+								<option value="integer"><?php esc_html_e( 'Integer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+								<option value="json"><?php esc_html_e( 'JSON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+								<option value="serialized"><?php esc_html_e( 'Serialized PHP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 							</select>
-							<p class="description" id="tsosk-oe-new-value-hint"><?php esc_html_e( 'Plain text value.', 'tso-swiss-knife' ); ?></p>
+							<p class="description" id="tsosk-oe-new-value-hint"><?php esc_html_e( 'Plain text value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th style="vertical-align:top;padding-top:10px;"><?php esc_html_e( 'Value', 'tso-swiss-knife' ); ?></th>
+						<th style="vertical-align:top;padding-top:10px;"><?php esc_html_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<textarea id="tsosk-oe-new-value" rows="5" style="width:100%;font-family:monospace;font-size:12px;resize:vertical;" spellcheck="false"></textarea>
 						</td>
 					</tr>
 					<tr>
-						<th><?php esc_html_e( 'Autoload', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'Autoload', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<select id="tsosk-oe-new-autoload">
-								<option value="no"><?php esc_html_e( 'no (recommended for custom options)', 'tso-swiss-knife' ); ?></option>
-								<option value="yes"><?php esc_html_e( 'yes (loaded on every request)', 'tso-swiss-knife' ); ?></option>
+								<option value="no"><?php esc_html_e( 'no (recommended for custom options)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+								<option value="yes"><?php esc_html_e( 'yes (loaded on every request)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 							</select>
 						</td>
 					</tr>
 				</table>
 				<div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
-					<button class="button button-primary" id="tsosk-oe-add-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add Option', 'tso-swiss-knife' ); ?></button>
+					<button class="button button-primary" id="tsosk-oe-add-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<span class="tsosk-ajax-msg" id="tsosk-oe-add-msg"></span>
 				</div>
 			</div>

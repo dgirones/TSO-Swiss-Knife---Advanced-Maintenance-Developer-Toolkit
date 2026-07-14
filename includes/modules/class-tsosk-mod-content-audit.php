@@ -34,19 +34,19 @@ class TSOSK_Mod_Content_Audit {
 	public function ajax_remove_shortcode(): void {
 		check_ajax_referer( 'tsosk_ca_nonce', 'nonce' );
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$post_id   = absint( $_POST['post_id'] ?? 0 );
 		$shortcode = isset( $_POST['shortcode'] ) ? sanitize_key( wp_unslash( $_POST['shortcode'] ) ) : '';
 
 		if ( ! $post_id ) {
-			wp_send_json_error( __( 'Invalid post ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid post ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || ! current_user_can( 'edit_post', $post_id ) ) {
-			wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$content = (string) $post->post_content;
@@ -68,7 +68,7 @@ class TSOSK_Mod_Content_Audit {
 		}
 
 		if ( 0 === $removed || ! is_string( $new ) ) {
-			wp_send_json_error( __( 'No shortcode removed. It may have already been deleted.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'No shortcode removed. It may have already been deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$result = wp_update_post(
@@ -88,7 +88,7 @@ class TSOSK_Mod_Content_Audit {
 			'delete',
 			sprintf(
 				/* translators: 1: shortcode tag, 2: post ID */
-				__( 'Removed broken shortcode [%1$s] from post #%2$d.', 'tso-swiss-knife' ),
+				__( 'Removed broken shortcode [%1$s] from post #%2$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$shortcode ?: '*',
 				$post_id
 			)
@@ -99,7 +99,7 @@ class TSOSK_Mod_Content_Audit {
 				'removed' => $removed,
 				'message' => sprintf(
 					/* translators: %d: number of shortcodes removed */
-					_n( '%d shortcode removed.', '%d shortcodes removed.', $removed, 'tso-swiss-knife' ),
+					_n( '%d shortcode removed.', '%d shortcodes removed.', $removed, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$removed
 				),
 			)
@@ -118,32 +118,32 @@ class TSOSK_Mod_Content_Audit {
 		$broken_shortcodes = $this->get_broken_shortcodes();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Find hidden content problems: empty titles, missing featured images, old pending/private content, long slugs and broken shortcodes.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Find hidden content problems: empty titles, missing featured images, old pending/private content, long slugs and broken shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<?php $this->render_post_table( __( 'Posts Without Title', 'tso-swiss-knife' ), $empty_titles ); ?>
-		<?php $this->render_post_table( __( 'Published Posts Without Featured Image', 'tso-swiss-knife' ), $missing_featured ); ?>
-		<?php $this->render_post_table( __( 'Old Pending or Private Content', 'tso-swiss-knife' ), $old_pending ); ?>
-		<?php $this->render_post_table( __( 'Long Slugs', 'tso-swiss-knife' ), $long_slugs ); ?>
+		<?php $this->render_post_table( __( 'Posts Without Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $empty_titles ); ?>
+		<?php $this->render_post_table( __( 'Published Posts Without Featured Image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing_featured ); ?>
+		<?php $this->render_post_table( __( 'Old Pending or Private Content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $old_pending ); ?>
+		<?php $this->render_post_table( __( 'Long Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $long_slugs ); ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Broken Shortcodes', 'tso-swiss-knife' ); ?> (<?php echo esc_html( number_format_i18n( count( $broken_shortcodes ) ) ); ?>)</h3>
+			<h3><?php esc_html_e( 'Broken Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $broken_shortcodes ) ) ); ?>)</h3>
 			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( 'What are broken shortcodes?', 'tso-swiss-knife' ); ?></strong><br>
-				<?php esc_html_e( 'A broken shortcode is a [tag] found in post or page content whose plugin or theme is no longer active or installed. WordPress will not convert it into HTML — instead, the raw [shortcode] text appears on your page, which looks unprofessional and may confuse visitors.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'What are broken shortcodes?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong><br>
+				<?php esc_html_e( 'A broken shortcode is a [tag] found in post or page content whose plugin or theme is no longer active or installed. WordPress will not convert it into HTML — instead, the raw [shortcode] text appears on your page, which looks unprofessional and may confuse visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<br><br>
-				<?php esc_html_e( 'Common causes: a plugin was deactivated or uninstalled without cleaning up its shortcodes from content. To fix: re-install the plugin, replace the shortcode with equivalent HTML, or remove it entirely from the post.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Common causes: a plugin was deactivated or uninstalled without cleaning up its shortcodes from content. To fix: re-install the plugin, replace the shortcode with equivalent HTML, or remove it entirely from the post.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<br><br>
-				<em><?php esc_html_e( 'Note: scans up to 100 recent posts/pages whose content contains a [ character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-plugins or late-registered plugins may still appear as false positives.', 'tso-swiss-knife' ); ?></em>
+				<em><?php esc_html_e( 'Note: scans up to 100 recent posts/pages whose content contains a [ character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-plugins or late-registered plugins may still appear as false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></em>
 			</div>
 			<?php if ( empty( $broken_shortcodes ) ) : ?>
-				<p><?php esc_html_e( 'No broken shortcodes detected in the sampled content.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No broken shortcodes detected in the sampled content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<table class="widefat tsosk-table" id="tsosk-ca-shortcodes-table">
 					<thead><tr>
-						<th><?php esc_html_e( 'Post', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Shortcodes', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'Post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $broken_shortcodes as $item ) : ?>
@@ -159,7 +159,7 @@ class TSOSK_Mod_Content_Audit {
 									<?php
 									printf(
 										/* translators: %s: shortcode tag */
-										esc_html__( 'Remove [%s]', 'tso-swiss-knife' ),
+										esc_html__( 'Remove [%s]', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 										esc_html( $sc )
 									);
 									?>
@@ -168,7 +168,7 @@ class TSOSK_Mod_Content_Audit {
 								<button type="button" class="button button-small tsosk-ca-remove-all-sc"
 								        data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Remove all', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Remove all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
 						</tr>
@@ -339,16 +339,16 @@ class TSOSK_Mod_Content_Audit {
 		<div class="tsosk-card">
 			<h3><?php echo esc_html( $title ); ?> (<?php echo esc_html( number_format_i18n( count( $posts ) ) ); ?>)</h3>
 			<?php if ( empty( $posts ) ) : ?>
-				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
-					<thead><tr><th><?php esc_html_e( 'ID', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Title', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Slug', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Modified', 'tso-swiss-knife' ); ?></th></tr></thead>
+					<thead><tr><th><?php esc_html_e( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th></tr></thead>
 					<tbody>
 					<?php foreach ( $posts as $post ) : ?>
 						<tr>
 							<td><?php echo esc_html( (string) $post->ID ); ?></td>
-							<td><a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $post ) ?: __( '(no title)', 'tso-swiss-knife' ) ); ?></a></td>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $post ) ?: __( '(no title)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></a></td>
 							<td><?php echo esc_html( $post->post_status ); ?></td>
 							<td class="tsosk-code"><?php echo esc_html( $post->post_name ); ?></td>
 							<td><?php echo esc_html( get_the_modified_date( '', $post ) ); ?></td>

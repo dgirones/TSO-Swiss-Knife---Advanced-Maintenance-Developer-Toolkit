@@ -194,7 +194,7 @@ class TSOSK_Mod_Admin_Menu {
 		$plain = trim( $plain );
 
 		if ( '' === $plain && 'edit-comments.php' === $slug ) {
-			return __( 'Comments', 'tso-swiss-knife' );
+			return __( 'Comments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		return $plain;
@@ -266,13 +266,13 @@ class TSOSK_Mod_Admin_Menu {
 		if ( str_starts_with( $slug, 'sep:' ) ) {
 			return sprintf(
 				/* translators: %d: menu position number */
-				__( 'Separator (position %d)', 'tso-swiss-knife' ),
+				__( 'Separator (position %d)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$position
 			);
 		}
 		return sprintf(
 			/* translators: %s: separator slug */
-			__( 'Separator (%s)', 'tso-swiss-knife' ),
+			__( 'Separator (%s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$slug
 		);
 	}
@@ -1329,8 +1329,8 @@ class TSOSK_Mod_Admin_Menu {
 			if ( method_exists( $admin, 'render_page' ) ) {
 				add_submenu_page(
 					'tools.php',
-					__( 'TSO Swiss Knife', 'tso-swiss-knife' ),
-					__( 'TSO Swiss Knife', 'tso-swiss-knife' ),
+					__( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'manage_options',
 					self::PROTECTED_SLUG,
 					array( $admin, 'render_page' )
@@ -1365,10 +1365,10 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		$submenu['tools.php'][] = array(
-			__( 'TSO Swiss Knife', 'tso-swiss-knife' ),
+			__( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'manage_options',
 			self::PROTECTED_SLUG,
-			__( 'TSO Swiss Knife', 'tso-swiss-knife' ),
+			__( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -2674,19 +2674,19 @@ class TSOSK_Mod_Admin_Menu {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_am_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$raw = isset( $_POST['items'] ) ? json_decode( wp_unslash( (string) $_POST['items'] ), true ) : array();
 		if ( ! is_array( $raw ) ) {
-			wp_send_json_error( __( 'Invalid menu data.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid menu data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$known     = $this->get_known_menu_rows();
 		$known_ids = array_column( $known, 'id' );
 		if ( array() === $known_ids ) {
-			wp_send_json_error( __( 'Could not read the admin menu. Reload this page and try again.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not read the admin menu. Reload this page and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$top_slugs = array();
@@ -2876,7 +2876,7 @@ class TSOSK_Mod_Admin_Menu {
 			'save',
 			sprintf(
 				/* translators: 1: hidden items count, 2: renamed items count, 3: relocated items count */
-				__( 'Sidebar menu saved: %1$d hidden, %2$d renamed, %3$d relocated.', 'tso-swiss-knife' ),
+				__( 'Sidebar menu saved: %1$d hidden, %2$d renamed, %3$d relocated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				count( $hidden ),
 				count( $labels ),
 				count( $relocations )
@@ -2885,7 +2885,7 @@ class TSOSK_Mod_Admin_Menu {
 
 		wp_send_json_success(
 			array(
-				'message'         => __( 'Sidebar menu saved. Reloading…', 'tso-swiss-knife' ),
+				'message'         => __( 'Sidebar menu saved. Reloading…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'relocated'       => count( $relocations ),
 				'hidden'          => count( $hidden ),
 				'renamed'         => count( $labels ),
@@ -2903,15 +2903,15 @@ class TSOSK_Mod_Admin_Menu {
 	public function ajax_reset(): void {
 		check_ajax_referer( 'tsosk_am_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		delete_option( self::OPTION );
 		TSOSK_Activity_Log::log(
 			'admin-menu',
 			'reset',
-			__( 'Sidebar menu reset to WordPress defaults.', 'tso-swiss-knife' )
+			__( 'Sidebar menu reset to WordPress defaults.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
-		wp_send_json_success( __( 'Sidebar menu reset to WordPress defaults.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Sidebar menu reset to WordPress defaults.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -2971,7 +2971,7 @@ class TSOSK_Mod_Admin_Menu {
 			<td class="tsosk-am-drag">
 				<?php if ( ! $in_hidden_panel ) : ?>
 				<span class="dashicons dashicons-menu tsosk-am-handle"
-				      title="<?php esc_attr_e( 'Drag to reorder', 'tso-swiss-knife' ); ?>"></span>
+				      title="<?php esc_attr_e( 'Drag to reorder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></span>
 				<?php endif; ?>
 			</td>
 			<td class="tsosk-am-title-cell">
@@ -2981,13 +2981,13 @@ class TSOSK_Mod_Admin_Menu {
 					        class="tsosk-am-toggle"
 					        aria-expanded="false"
 					        aria-controls="tsosk-am-section-<?php echo esc_attr( $row['slug'] ); ?>"
-					        title="<?php esc_attr_e( 'Show or hide sub-items', 'tso-swiss-knife' ); ?>">
+					        title="<?php esc_attr_e( 'Show or hide sub-items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 						<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
 						<span class="screen-reader-text">
 							<?php
 							printf(
 								/* translators: %s: main menu section title */
-								esc_html__( 'Toggle sub-items for %s', 'tso-swiss-knife' ),
+								esc_html__( 'Toggle sub-items for %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								esc_html( $row['title'] )
 							);
 							?>
@@ -3009,7 +3009,7 @@ class TSOSK_Mod_Admin_Menu {
 						<?php
 						printf(
 							/* translators: %d: number of sub-items */
-							esc_html( _n( '%d sub-item', '%d sub-items', $sub_count, 'tso-swiss-knife' ) ),
+							esc_html( _n( '%d sub-item', '%d sub-items', $sub_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 							(int) $sub_count
 						);
 						?>
@@ -3019,21 +3019,21 @@ class TSOSK_Mod_Admin_Menu {
 					<span class="tsosk-am-sub-label">
 						<?php echo esc_html( $row['title'] ); ?>
 						<?php if ( $is_nested_top ) : ?>
-						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Plugin menu', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Plugin menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php endif; ?>
 					</span>
 				<?php endif; ?>
 				<?php if ( ! empty( $row['protected'] ) ) : ?>
-					<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Protected', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
 				<?php if ( $is_hidden || $in_hidden_panel ) : ?>
-					<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Hidden', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Hidden', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
 			</td>
 			<td class="tsosk-am-parent-cell">
 				<?php if ( $is_top && ! $is_separator ) : ?>
-					<select class="tsosk-am-top-nest" aria-label="<?php esc_attr_e( 'Show as main section or under another menu', 'tso-swiss-knife' ); ?>">
-						<option value=""><?php esc_html_e( 'Standalone (top level menu)', 'tso-swiss-knife' ); ?></option>
+					<select class="tsosk-am-top-nest" aria-label="<?php esc_attr_e( 'Show as main section or under another menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<option value=""><?php esc_html_e( 'Standalone (top level menu)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<?php foreach ( $top_choices as $parent_slug => $parent_title ) : ?>
 							<?php if ( $parent_slug === $row['slug'] ) : ?>
 								<?php continue; ?>
@@ -3044,8 +3044,8 @@ class TSOSK_Mod_Admin_Menu {
 						<?php endforeach; ?>
 					</select>
 				<?php elseif ( $is_nested_top ) : ?>
-					<select class="tsosk-am-top-nest" aria-label="<?php esc_attr_e( 'Show as main section or under another menu', 'tso-swiss-knife' ); ?>">
-						<option value=""><?php esc_html_e( 'Standalone (top level menu)', 'tso-swiss-knife' ); ?></option>
+					<select class="tsosk-am-top-nest" aria-label="<?php esc_attr_e( 'Show as main section or under another menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<option value=""><?php esc_html_e( 'Standalone (top level menu)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<?php foreach ( $top_choices as $parent_slug => $parent_title ) : ?>
 							<?php if ( $parent_slug === $row['slug'] ) : ?>
 								<?php continue; ?>
@@ -3056,9 +3056,9 @@ class TSOSK_Mod_Admin_Menu {
 						<?php endforeach; ?>
 					</select>
 				<?php elseif ( $is_top ) : ?>
-					<span class="tsosk-am-section-tag"><?php esc_html_e( 'Main section', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-am-section-tag"><?php esc_html_e( 'Main section', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
-					<select class="tsosk-am-parent" aria-label="<?php esc_attr_e( 'Move under section', 'tso-swiss-knife' ); ?>">
+					<select class="tsosk-am-parent" aria-label="<?php esc_attr_e( 'Move under section', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 						<?php foreach ( $top_choices as $parent_slug => $parent_title ) : ?>
 							<option value="<?php echo esc_attr( $parent_slug ); ?>" <?php selected( $effective_parent, $parent_slug ); ?>>
 								<?php echo esc_html( $parent_title ); ?>
@@ -3071,11 +3071,11 @@ class TSOSK_Mod_Admin_Menu {
 				<input type="checkbox" class="tsosk-am-hide"
 				       <?php checked( $is_hidden || $in_hidden_panel ); ?>
 				       <?php disabled( ! empty( $row['protected'] ) ); ?>
-				       aria-label="<?php esc_attr_e( 'Hide this menu item', 'tso-swiss-knife' ); ?>">
+				       aria-label="<?php esc_attr_e( 'Hide this menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 			</td>
 			<td class="tsosk-am-label-cell">
 				<?php if ( $is_separator ) : ?>
-					<span class="tsosk-am-separator-note description"><?php esc_html_e( 'Separators cannot be renamed.', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-am-separator-note description"><?php esc_html_e( 'Separators cannot be renamed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
 				<input type="text" class="tsosk-am-label"
 				       value="<?php echo esc_attr( $label ); ?>"
@@ -3124,25 +3124,25 @@ class TSOSK_Mod_Admin_Menu {
 
 		?>
 		<div class="tsosk-notice tsosk-notice-warning" style="margin:12px 0;padding:12px;border-left:4px solid #dba617;">
-			<p><strong><?php esc_html_e( 'TSO Admin Menu — debug mode', 'tso-swiss-knife' ); ?></strong></p>
+			<p><strong><?php esc_html_e( 'TSO Admin Menu — debug mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
 			<p>
 				<?php
 				printf(
 					/* translators: 1: matched slug count, 2: saved slug count, 3: live slug count */
-					esc_html__( 'Tools submenu: %1$d of %2$d saved slugs match the live sidebar (%3$d items live).', 'tso-swiss-knife' ),
+					esc_html__( 'Tools submenu: %1$d of %2$d saved slugs match the live sidebar (%3$d items live).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $matched,
 					count( $saved_tools ),
 					count( $live_tools )
 				);
 				?>
 			</p>
-			<p><strong><?php esc_html_e( 'Saved order (first 6):', 'tso-swiss-knife' ); ?></strong>
+			<p><strong><?php esc_html_e( 'Saved order (first 6):', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php echo esc_html( implode( ' | ', array_slice( $saved_tools, 0, 6 ) ) ); ?></p>
-			<p><strong><?php esc_html_e( 'Saved item ids (first 6):', 'tso-swiss-knife' ); ?></strong>
+			<p><strong><?php esc_html_e( 'Saved item ids (first 6):', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php echo esc_html( implode( ' | ', array_slice( $saved_ids, 0, 6 ) ) ); ?></p>
-			<p><strong><?php esc_html_e( 'Live sidebar (first 6):', 'tso-swiss-knife' ); ?></strong>
+			<p><strong><?php esc_html_e( 'Live sidebar (first 6):', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php echo esc_html( implode( ' | ', array_slice( $live_tools, 0, 6 ) ) ); ?></p>
-			<p class="description"><?php esc_html_e( 'Compare the sidebar on Dashboard or any admin page after saving. Reload this page with the same ?tsosk_am_debug=1 parameter to refresh these values.', 'tso-swiss-knife' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Compare the sidebar on Dashboard or any admin page after saving. Reload this page with the same ?tsosk_am_debug=1 parameter to refresh these values.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 		</div>
 		<?php
 	}
@@ -3170,25 +3170,25 @@ class TSOSK_Mod_Admin_Menu {
 		$hidden_panel_rows = $this->get_hidden_panel_rows( $settings['hidden'] ?? array(), $snapshot );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Choose which items appear in the WordPress admin sidebar, change their order by dragging, rename labels, and move submenus under another section. Changes apply to all admin users.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Choose which items appear in the WordPress admin sidebar, change their order by dragging, rename labels, and move submenus under another section. Changes apply to all admin users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'Main sections (Posts, Media, Plugins…) are collapsed by default. Click the arrow on a section to show its sub-items. Drag to reorder. Use “Under” to move a submenu, or choose a parent in “Main section (top level)” to place a plugin menu inside another section (e.g. a standalone plugin under Tools).', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Main sections (Posts, Media, Plugins…) are collapsed by default. Click the arrow on a section to show its sub-items. Drag to reorder. Use “Under” to move a submenu, or choose a parent in “Main section (top level)” to place a plugin menu inside another section (e.g. a standalone plugin under Tools).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<?php $this->maybe_render_debug_panel( $settings ); ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Sidebar menu items', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Main sections are collapsed by default — click the arrow to show sub-items. Drag the handle to reorder. Use “Hide” to remove items from the sidebar.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Sidebar menu items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Main sections are collapsed by default — click the arrow to show sub-items. Drag the handle to reorder. Use “Hide” to remove items from the sidebar.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<p class="tsosk-am-bulk-toggle" style="margin:0 0 12px;display:flex;gap:8px;flex-wrap:wrap;">
 				<button type="button" class="button button-small" id="tsosk-am-expand-all">
-					<?php esc_html_e( 'Expand all sections', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Expand all sections', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" class="button button-small" id="tsosk-am-collapse-all">
-					<?php esc_html_e( 'Collapse all sections', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Collapse all sections', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<?php if ( $hidden_count > 0 ) : ?>
 				<button type="button" class="button button-small" id="tsosk-am-show-hidden"
@@ -3196,7 +3196,7 @@ class TSOSK_Mod_Admin_Menu {
 					<?php
 					printf(
 						/* translators: %d: number of hidden menu items */
-						esc_html( _n( 'Show %d hidden item', 'Show %d hidden items', $hidden_count, 'tso-swiss-knife' ) ),
+						esc_html( _n( 'Show %d hidden item', 'Show %d hidden items', $hidden_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 						(int) $hidden_count
 					);
 					?>
@@ -3206,7 +3206,7 @@ class TSOSK_Mod_Admin_Menu {
 
 			<?php if ( $hidden_count > 0 ) : ?>
 			<p class="description tsosk-am-hidden-hint">
-				<?php esc_html_e( 'Hidden items are listed in the section below. Uncheck “Hide” and save to show them again in the sidebar.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Hidden items are listed in the section below. Uncheck “Hide” and save to show them again in the sidebar.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php endif; ?>
 
@@ -3215,10 +3215,10 @@ class TSOSK_Mod_Admin_Menu {
 					<thead>
 						<tr>
 							<th class="tsosk-am-col-drag" aria-hidden="true"></th>
-							<th class="tsosk-am-col-title"><?php esc_html_e( 'Menu item', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-am-col-parent"><?php esc_html_e( 'Under', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-am-col-hide"><?php esc_html_e( 'Hide', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-am-col-label"><?php esc_html_e( 'Custom label', 'tso-swiss-knife' ); ?></th>
+							<th class="tsosk-am-col-title"><?php esc_html_e( 'Menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-am-col-parent"><?php esc_html_e( 'Under', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-am-col-hide"><?php esc_html_e( 'Hide', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-am-col-label"><?php esc_html_e( 'Custom label', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody id="tsosk-am-tbody">
@@ -3257,24 +3257,24 @@ class TSOSK_Mod_Admin_Menu {
 			<div class="tsosk-am-hidden-section" id="tsosk-am-hidden-section">
 				<h4 class="tsosk-am-hidden-title">
 					<span class="dashicons dashicons-lock" aria-hidden="true"></span>
-					<?php esc_html_e( 'Hidden items', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Hidden items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</h4>
 				<div class="tsosk-table-wrap tsosk-am-wrap">
 					<table class="tsosk-table tsosk-am-table tsosk-am-hidden-table">
 						<thead>
 							<tr>
 								<th class="tsosk-am-col-drag" aria-hidden="true"></th>
-								<th class="tsosk-am-col-title"><?php esc_html_e( 'Menu item', 'tso-swiss-knife' ); ?></th>
-								<th class="tsosk-am-col-parent"><?php esc_html_e( 'Under', 'tso-swiss-knife' ); ?></th>
-								<th class="tsosk-am-col-hide"><?php esc_html_e( 'Hide', 'tso-swiss-knife' ); ?></th>
-								<th class="tsosk-am-col-label"><?php esc_html_e( 'Custom label', 'tso-swiss-knife' ); ?></th>
+								<th class="tsosk-am-col-title"><?php esc_html_e( 'Menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th class="tsosk-am-col-parent"><?php esc_html_e( 'Under', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th class="tsosk-am-col-hide"><?php esc_html_e( 'Hide', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th class="tsosk-am-col-label"><?php esc_html_e( 'Custom label', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							</tr>
 						</thead>
 						<tbody id="tsosk-am-hidden-tbody">
 							<?php if ( empty( $hidden_panel_rows ) ) : ?>
 							<tr class="tsosk-am-hidden-empty">
 								<td colspan="5">
-									<?php esc_html_e( 'Hidden items could not be loaded. Reload this page, or reset the menu to defaults if the problem persists.', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Hidden items could not be loaded. Reload this page, or reset the menu to defaults if the problem persists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</td>
 							</tr>
 							<?php else : ?>
@@ -3293,11 +3293,11 @@ class TSOSK_Mod_Admin_Menu {
 			<p style="margin-top:16px;">
 				<button type="button" class="button button-primary" id="tsosk-am-save"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save sidebar menu', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Save sidebar menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" class="button" id="tsosk-am-reset"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Reset to defaults', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Reset to defaults', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-am-msg"></span>
 			</p>

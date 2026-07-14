@@ -72,7 +72,7 @@ class TSOSK_Mod_Heartbeat {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_heartbeat_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$valid_modes = array( 'default', 'disable_frontend', 'disable_post', 'disable_all' );
@@ -91,12 +91,12 @@ class TSOSK_Mod_Heartbeat {
 			'save',
 			sprintf(
 				/* translators: %s: heartbeat mode */
-				__( 'Heartbeat settings saved (mode: %s).', 'tso-swiss-knife' ),
+				__( 'Heartbeat settings saved (mode: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$mode
 			),
 			array( 'mode' => $mode )
 		);
-		wp_send_json_success( __( 'Heartbeat settings saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Heartbeat settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function render(): void {
@@ -107,37 +107,37 @@ class TSOSK_Mod_Heartbeat {
 
 		$modes = array(
 			'default'          => array(
-				'label' => __( 'Default (WordPress standard)', 'tso-swiss-knife' ),
-				'desc'  => __( 'Heartbeat runs everywhere at the default interval (15–60 s). Auto-save, lock detection and login checks work normally. Recommended for most sites.', 'tso-swiss-knife' ),
+				'label' => __( 'Default (WordPress standard)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'  => __( 'Heartbeat runs everywhere at the default interval (15–60 s). Auto-save, lock detection and login checks work normally. Recommended for most sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'badge' => 'tsosk-badge-ok',
-				'rec'   => __( 'Recommended for production sites.', 'tso-swiss-knife' ),
+				'rec'   => __( 'Recommended for production sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
 			'disable_frontend' => array(
-				'label' => __( 'Disable on frontend only', 'tso-swiss-knife' ),
-				'desc'  => __( 'Stops the Heartbeat from running on public pages. Admin and editor still work normally. Reduces server load if you have many anonymous visitors.', 'tso-swiss-knife' ),
+				'label' => __( 'Disable on frontend only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'  => __( 'Stops the Heartbeat from running on public pages. Admin and editor still work normally. Reduces server load if you have many anonymous visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'badge' => 'tsosk-badge-info',
-				'rec'   => __( 'Good option for high-traffic sites that do not need real-time front-end features.', 'tso-swiss-knife' ),
+				'rec'   => __( 'Good option for high-traffic sites that do not need real-time front-end features.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
 			'disable_post'     => array(
-				'label' => __( 'Disable everywhere except the post editor', 'tso-swiss-knife' ),
-				'desc'  => __( 'Heartbeat only runs in the post/page editor to preserve auto-save and lock detection. Disabled on all other admin pages and the front end.', 'tso-swiss-knife' ),
+				'label' => __( 'Disable everywhere except the post editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'  => __( 'Heartbeat only runs in the post/page editor to preserve auto-save and lock detection. Disabled on all other admin pages and the front end.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'badge' => 'tsosk-badge-info',
-				'rec'   => __( 'Good balance: keeps editor features, removes unnecessary polling elsewhere.', 'tso-swiss-knife' ),
+				'rec'   => __( 'Good balance: keeps editor features, removes unnecessary polling elsewhere.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
 			'disable_all'      => array(
-				'label' => __( 'Disable completely (⚠ disables auto-save)', 'tso-swiss-knife' ),
-				'desc'  => __( 'Stops the Heartbeat script everywhere, including the editor. Auto-save, post lock detection and login-expiry warnings stop working. Use only on staging or maintenance environments, or if you have an alternative auto-save solution.', 'tso-swiss-knife' ),
+				'label' => __( 'Disable completely (⚠ disables auto-save)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'  => __( 'Stops the Heartbeat script everywhere, including the editor. Auto-save, post lock detection and login-expiry warnings stop working. Use only on staging or maintenance environments, or if you have an alternative auto-save solution.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'badge' => 'tsosk-badge-warn',
-				'rec'   => __( 'Not recommended for production. Disables auto-save completely.', 'tso-swiss-knife' ),
+				'rec'   => __( 'Not recommended for production. Disables auto-save completely.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'WordPress Heartbeat polls the server periodically for auto-save, post lock detection and login expiration. On busy sites this can increase server load. Adjust here without editing any file.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'WordPress Heartbeat polls the server periodically for auto-save, post lock detection and login expiration. On busy sites this can increase server load. Adjust here without editing any file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Heartbeat Mode', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Heartbeat Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-heartbeat-options">
 				<?php foreach ( $modes as $key => $opt ) : ?>
 				<label class="tsosk-heartbeat-option <?php echo $mode === $key ? 'is-selected' : ''; ?>">
@@ -146,7 +146,7 @@ class TSOSK_Mod_Heartbeat {
 						       <?php checked( $mode, $key ); ?>>
 						<strong><?php echo esc_html( $opt['label'] ); ?></strong>
 						<span class="tsosk-badge <?php echo esc_attr( $opt['badge'] ); ?>" style="margin-left:8px;">
-							<?php echo esc_html( 'tsosk-badge-ok' === $opt['badge'] ? __( 'OK', 'tso-swiss-knife' ) : ( 'tsosk-badge-warn' === $opt['badge'] ? __( 'Caution', 'tso-swiss-knife' ) : __( 'Info', 'tso-swiss-knife' ) ) ); ?>
+							<?php echo esc_html( 'tsosk-badge-ok' === $opt['badge'] ? __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : ( 'tsosk-badge-warn' === $opt['badge'] ? __( 'Caution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Info', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) ); ?>
 						</span>
 					</div>
 					<p class="description" style="margin:4px 0 4px 20px;"><?php echo esc_html( $opt['desc'] ); ?></p>
@@ -159,20 +159,20 @@ class TSOSK_Mod_Heartbeat {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Custom Interval (seconds)', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Custom Interval (seconds)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Override how often the Heartbeat polls. 0 = use the WordPress default (15 s). Range: 15–300 s.', 'tso-swiss-knife' ); ?><br>
-				<strong><?php esc_html_e( 'Recommended:', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( '60 s on shared hosting or low-traffic sites. 15–30 s only if real-time collaboration is needed.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Override how often the Heartbeat polls. 0 = use the WordPress default (15 s). Range: 15–300 s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?><br>
+				<strong><?php esc_html_e( 'Recommended:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( '60 s on shared hosting or low-traffic sites. 15–30 s only if real-time collaboration is needed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<input type="number" id="tsosk-heartbeat-interval" min="0" max="300" step="5"
 			       value="<?php echo esc_attr( (string) $interval ); ?>" style="width:100px;">
-			<span class="description">&nbsp;<?php esc_html_e( '0 = WordPress default (15 s)', 'tso-swiss-knife' ); ?></span>
+			<span class="description">&nbsp;<?php esc_html_e( '0 = WordPress default (15 s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 		</div>
 
 		<button class="button button-primary" id="tsosk-heartbeat-save"
 		        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:4px;">
-			<?php esc_html_e( 'Save Settings', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</button>
 		<span class="tsosk-ajax-msg" id="tsosk-heartbeat-msg"></span>
 		<?php

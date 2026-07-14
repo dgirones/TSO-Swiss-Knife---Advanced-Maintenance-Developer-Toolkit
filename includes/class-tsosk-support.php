@@ -36,7 +36,7 @@ class TSOSK_Support {
 	 * @return string
 	 */
 	public static function get_donate_link_label(): string {
-		return __( 'Donate', 'tso-swiss-knife' );
+		return __( 'Donate', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	/**
@@ -102,7 +102,7 @@ class TSOSK_Support {
 			return '☕ Apoya este plugin';
 		}
 
-		return __( '☕ Support this plugin', 'tso-swiss-knife' );
+		return __( '☕ Support this plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	/**

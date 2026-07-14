@@ -115,7 +115,7 @@ class TSOSK_Uploads_Scanner {
 
 		$base = wp_normalize_path( trailingslashit( $uploads['basedir'] ) );
 		if ( ! is_dir( $base ) ) {
-			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$stats = array(
@@ -253,7 +253,7 @@ class TSOSK_Uploads_Scanner {
 
 		$base = wp_normalize_path( trailingslashit( $uploads['basedir'] ) );
 		if ( ! is_dir( $base ) ) {
-			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$registered = function_exists( 'wp_get_registered_image_subsizes' )

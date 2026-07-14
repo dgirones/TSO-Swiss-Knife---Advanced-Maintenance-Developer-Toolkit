@@ -284,7 +284,7 @@ class TSOSK_Mod_Search_Replace {
 	public function ajax_get_tables(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		wp_send_json_success( $this->get_all_tables() );
 	}
@@ -293,7 +293,7 @@ class TSOSK_Mod_Search_Replace {
 	public function ajax_preview(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$params = $this->parse_request_params();
@@ -333,7 +333,7 @@ class TSOSK_Mod_Search_Replace {
 	public function ajax_execute(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$params = $this->parse_request_params();
@@ -342,7 +342,7 @@ class TSOSK_Mod_Search_Replace {
 		}
 
 		if ( ! $this->is_preview_approved( $params ) ) {
-			wp_send_json_error( __( 'Run Preview again before executing. The search settings changed or the preview expired.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Run Preview again before executing. The search settings changed or the preview expired.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		global $wpdb;
@@ -375,7 +375,7 @@ class TSOSK_Mod_Search_Replace {
 			'execute',
 			sprintf(
 				/* translators: 1: search string, 2: replace string */
-				__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife' ),
+				__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$params['search'],
 				$params['replace']
 			),
@@ -395,7 +395,7 @@ class TSOSK_Mod_Search_Replace {
 			'errors' => $stats['errors'],
 			'message' => sprintf(
 				/* translators: 1: tables, 2: rows, 3: cells */
-				__( 'Done. Replaced in %1$d table(s), %2$d row(s), %3$d cell(s).', 'tso-swiss-knife' ),
+				__( 'Done. Replaced in %1$d table(s), %2$d row(s), %3$d cell(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$stats['tables'],
 				$stats['rows'],
 				$stats['cells']
@@ -723,17 +723,17 @@ class TSOSK_Mod_Search_Replace {
 		$replace = (string) $replace;
 
 		if ( strlen( $search ) > 5000 || strlen( $replace ) > 5000 ) {
-			return new WP_Error( 'too_long', __( 'Search or replace text is too long.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'too_long', __( 'Search or replace text is too long.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( '' === $search ) {
-			return new WP_Error( 'empty_search', __( 'Search term cannot be empty.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'empty_search', __( 'Search term cannot be empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( $is_regex ) {
 			// Validate regex syntax.
 			if ( false === @preg_match( '/' . $search . '/u', '' ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-				return new WP_Error( 'invalid_regex', __( 'The search pattern is not a valid regular expression.', 'tso-swiss-knife' ) );
+				return new WP_Error( 'invalid_regex', __( 'The search pattern is not a valid regular expression.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 		}
 
@@ -746,7 +746,7 @@ class TSOSK_Mod_Search_Replace {
 			}
 		}
 		if ( empty( $valid_tables ) ) {
-			return new WP_Error( 'no_tables', __( 'No tables selected.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'no_tables', __( 'No tables selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		return array(
@@ -766,38 +766,38 @@ class TSOSK_Mod_Search_Replace {
 	private function render_guide(): void {
 		?>
 		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is this tool for?', 'tso-swiss-knife' ); ?></h3>
+			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is this tool for?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="tsosk-guide-lead">
-				<?php esc_html_e( 'It finds a piece of text inside your database and replaces it with another — across posts, options, meta, and other tables. Think of it as “Find & Replace” in a text editor, but for the whole WordPress database.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'It finds a piece of text inside your database and replaces it with another — across posts, options, meta, and other tables. Think of it as “Find & Replace” in a text editor, but for the whole WordPress database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<div class="tsosk-guide-grid">
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'Typical uses', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'Typical uses', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
-						<li><?php esc_html_e( 'Change the site URL after a migration (old domain → new domain).', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Switch http:// to https:// in stored content or options.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Fix a typo or wrong path that appears in many posts or plugin settings.', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Change the site URL after a migration (old domain → new domain).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Switch http:// to https:// in stored content or options.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Fix a typo or wrong path that appears in many posts or plugin settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'How to use it (recommended order)', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'How to use it (recommended order)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ol class="tsosk-guide-steps">
-						<li><?php esc_html_e( 'Make a full database backup.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Type the exact text to find and what to replace it with.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Choose which tables to scan (WordPress tables is enough for most URL changes).', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Click Preview — review every change before touching the database.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Only then click Execute replace.', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Make a full database backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Type the exact text to find and what to replace it with.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Choose which tables to scan (WordPress tables is enough for most URL changes).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Click Preview — review every change before touching the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Only then click Execute replace.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ol>
 				</div>
 			</div>
 
 			<div class="tsosk-guide-example">
-				<strong><?php esc_html_e( 'Example — change domain after moving the site:', 'tso-swiss-knife' ); ?></strong>
+				<strong><?php esc_html_e( 'Example — change domain after moving the site:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<p>
-					<?php esc_html_e( 'Search for:', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Search for:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<code>https://old-site.com</code>
-					<?php esc_html_e( 'Replace with:', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Replace with:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<code>https://new-site.com</code>
 				</p>
 			</div>
@@ -811,16 +811,16 @@ class TSOSK_Mod_Search_Replace {
 	private function render_field_help(): void {
 		?>
 		<div class="tsosk-field-help-list">
-			<p><strong><?php esc_html_e( 'Search for', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'The exact text you want to find. It is matched inside table cells (post content, options, meta, etc.).', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Replace with', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'The new text. Leave empty to delete the matched text.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Case-sensitive', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'When off, “Site” and “site” are treated the same. Turn on only if capital letters matter.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Regular expression', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Advanced mode for patterns (not plain text). Only enable if you know regex — wrong patterns can change too much.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Tables to search', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Which database tables to scan. For URL or content fixes, selecting WordPress tables (posts, postmeta, options…) is usually enough.', 'tso-swiss-knife' ); ?></p>
+			<p><strong><?php esc_html_e( 'Search for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'The exact text you want to find. It is matched inside table cells (post content, options, meta, etc.).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Replace with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'The new text. Leave empty to delete the matched text.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Case-sensitive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'When off, “Site” and “site” are treated the same. Turn on only if capital letters matter.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Regular expression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Advanced mode for patterns (not plain text). Only enable if you know regex — wrong patterns can change too much.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Tables to search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Which database tables to scan. For URL or content fixes, selecting WordPress tables (posts, postmeta, options…) is usually enough.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 		</div>
 		<?php
 	}
@@ -832,49 +832,49 @@ class TSOSK_Mod_Search_Replace {
 		?>
 
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Bulk find-and-replace inside your WordPress database — with a preview step so you see changes before they are written.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Bulk find-and-replace inside your WordPress database — with a preview step so you see changes before they are written.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php $this->render_guide(); ?>
 
 		<div class="tsosk-notice tsosk-notice-warn" style="border-left-color:#d63638;">
-			<strong><?php esc_html_e( '⚠ Always make a full database backup before running a replace operation.', 'tso-swiss-knife' ); ?></strong>
-			<?php esc_html_e( 'A wrong search term can alter hundreds of rows at once. Preview is mandatory — Execute only appears after a successful preview.', 'tso-swiss-knife' ); ?>
+			<strong><?php esc_html_e( '⚠ Always make a full database backup before running a replace operation.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php esc_html_e( 'A wrong search term can alter hundreds of rows at once. Preview is mandatory — Execute only appears after a successful preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<?php /* ── Search form ── */ ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Search & Replace', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Search & Replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<table class="tsosk-kv-table tsosk-sr-form-table">
 				<tr>
-					<th style="width:180px;"><?php esc_html_e( 'Search for', 'tso-swiss-knife' ); ?></th>
+					<th style="width:180px;"><?php esc_html_e( 'Search for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sr-search"
 						       style="width:100%;" autocomplete="off" spellcheck="false"
-						       placeholder="<?php esc_attr_e( 'Text or regex pattern to find…', 'tso-swiss-knife' ); ?>">
+						       placeholder="<?php esc_attr_e( 'Text or regex pattern to find…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Replace with', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Replace with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sr-replace"
 						       style="width:100%;" autocomplete="off" spellcheck="false"
-						       placeholder="<?php esc_attr_e( 'Replacement text (leave empty to delete matches)', 'tso-swiss-knife' ); ?>">
+						       placeholder="<?php esc_attr_e( 'Replacement text (leave empty to delete matches)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Options', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<label style="margin-right:20px;">
 							<input type="checkbox" id="tsosk-sr-case">
-							<?php esc_html_e( 'Case-sensitive', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Case-sensitive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<label>
 							<input type="checkbox" id="tsosk-sr-regex">
-							<?php esc_html_e( 'Regular expression', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Regular expression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							<span class="description" style="font-size:11px;">
-								(<?php esc_html_e( 'advanced — test carefully', 'tso-swiss-knife' ); ?>)
+								(<?php esc_html_e( 'advanced — test carefully', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>)
 							</span>
 						</label>
 					</td>
@@ -886,20 +886,20 @@ class TSOSK_Mod_Search_Replace {
 			<?php /* ── Table selection ── */ ?>
 			<div class="tsosk-sr-tables-block">
 				<label class="tsosk-sr-tables-label">
-					<?php esc_html_e( 'Tables to search', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Tables to search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-sr-tables-desc">
-					<?php esc_html_e( 'Tick the tables where the text might live. Unsure? Start with “Select WordPress tables”.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Tick the tables where the text might live. Unsure? Start with “Select WordPress tables”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 				<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
 					<button type="button" class="button button-small" id="tsosk-sr-select-wp">
-						<?php esc_html_e( 'Select WordPress tables', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Select WordPress tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button type="button" class="button button-small" id="tsosk-sr-select-all">
-						<?php esc_html_e( 'Select all', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button type="button" class="button button-small" id="tsosk-sr-select-none">
-						<?php esc_html_e( 'Deselect all', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Deselect all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				</div>
 				<div id="tsosk-sr-table-list"
@@ -921,17 +921,17 @@ class TSOSK_Mod_Search_Replace {
 			<div class="tsosk-sr-actions">
 				<button class="button" id="tsosk-sr-preview-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					🔍 <?php esc_html_e( 'Preview changes', 'tso-swiss-knife' ); ?>
+					🔍 <?php esc_html_e( 'Preview changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
-				<span class="description tsosk-sr-action-hint"><?php esc_html_e( 'Step 1 — shows what would change, without writing anything.', 'tso-swiss-knife' ); ?></span>
+				<span class="description tsosk-sr-action-hint"><?php esc_html_e( 'Step 1 — shows what would change, without writing anything.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<button class="button button-primary" id="tsosk-sr-execute-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 				        style="display:none;">
-					⚡ <?php esc_html_e( 'Execute replace', 'tso-swiss-knife' ); ?>
+					⚡ <?php esc_html_e( 'Execute replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
-				<span class="description tsosk-sr-action-hint tsosk-sr-execute-hint" style="display:none;"><?php esc_html_e( 'Step 2 — applies the replace to the database. Only available after preview.', 'tso-swiss-knife' ); ?></span>
+				<span class="description tsosk-sr-action-hint tsosk-sr-execute-hint" style="display:none;"><?php esc_html_e( 'Step 2 — applies the replace to the database. Only available after preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<button class="button" id="tsosk-sr-cancel-btn" style="display:none;">
-					<?php esc_html_e( 'Cancel', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sr-msg"></span>
 			</div>
@@ -939,7 +939,7 @@ class TSOSK_Mod_Search_Replace {
 
 		<?php /* ── Preview results ── */ ?>
 		<div id="tsosk-sr-preview-wrap" style="display:none;" class="tsosk-card">
-			<h3><?php esc_html_e( 'Preview — Changes to be made', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Preview — Changes to be made', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-notice tsosk-notice-warn" id="tsosk-sr-preview-notice"></div>
 			<div id="tsosk-sr-preview-body"></div>
 		</div>
@@ -949,12 +949,12 @@ class TSOSK_Mod_Search_Replace {
 			printf(
 				wp_kses(
 					/* translators: %s: link to Activity History tab */
-					__( 'All replace operations are logged in the %s tab.', 'tso-swiss-knife' ),
+					__( 'All replace operations are logged in the %s tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					array(
 						'a' => array( 'href' => array() ),
 					)
 				),
-				'<a href="' . esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=history' ) ) . '">' . esc_html__( 'Activity History', 'tso-swiss-knife' ) . '</a>'
+				'<a href="' . esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=history' ) ) . '">' . esc_html__( 'Activity History', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</a>'
 			);
 			?>
 		</p>

@@ -143,7 +143,7 @@ class TSOSK_I18n {
 			return;
 		}
 
-		$domain = 'tso-swiss-knife';
+		$domain = TSOSK_TEXT_DOMAIN;
 		unload_textdomain( $domain );
 		load_textdomain( $domain, $mofile, $locale );
 	}
@@ -182,7 +182,7 @@ class TSOSK_I18n {
 	 * @return string Readable .mo path or empty string.
 	 */
 	private function resolve_mo_file( string $suffix ): string {
-		$domain   = 'tso-swiss-knife';
+		$domain   = TSOSK_TEXT_DOMAIN;
 		$pofile   = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.po';
 		$bundled  = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.mo';
 		$cache    = WP_CONTENT_DIR . '/uploads/tsosk-l10n/' . $domain . '-' . $suffix . '.mo';

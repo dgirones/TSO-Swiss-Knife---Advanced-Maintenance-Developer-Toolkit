@@ -34,26 +34,26 @@ class TSOSK_Mod_Media_Cleaner {
 	public function ajax_regenerate(): void {
 		check_ajax_referer( 'tsosk_media_nonce', 'nonce' );
 		if ( ! current_user_can( 'upload_files' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$attachment_id = isset( $_POST['attachment_id'] ) ? absint( wp_unslash( $_POST['attachment_id'] ) ) : 0;
 		if ( ! $attachment_id || ! current_user_can( 'edit_post', $attachment_id ) ) {
-			wp_send_json_error( __( 'You do not have permission to edit this attachment.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'You do not have permission to edit this attachment.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$file = get_attached_file( $attachment_id );
 		if ( ! $file || ! file_exists( $file ) ) {
-			wp_send_json_error( __( 'Attachment file not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Attachment file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		$metadata = wp_generate_attachment_metadata( $attachment_id, $file );
 		if ( empty( $metadata ) || is_wp_error( $metadata ) ) {
-			wp_send_json_error( __( 'Could not regenerate attachment metadata.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not regenerate attachment metadata.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		wp_update_attachment_metadata( $attachment_id, $metadata );
-		wp_send_json_success( __( 'Attachment thumbnails regenerated.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Attachment thumbnails regenerated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -74,31 +74,31 @@ class TSOSK_Mod_Media_Cleaner {
 		$orphan_files = $this->get_orphan_upload_files();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Review media-library mismatches: unattached media, database attachments missing files, files in uploads not referenced by WordPress, and thumbnail metadata.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Review media-library mismatches: unattached media, database attachments missing files, files in uploads not referenced by WordPress, and thumbnail metadata.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=media-footprint' ) ); ?>">
-				<?php esc_html_e( 'Open Uploads Disk Footprint', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Uploads Disk Footprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=image-sizes-audit' ) ); ?>">
-				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 		</p>
 
-		<?php $this->render_attachment_table( __( 'Missing Attachment Files', 'tso-swiss-knife' ), $missing, $nonce, true ); ?>
-		<?php $this->render_attachment_table( __( 'Unattached Media', 'tso-swiss-knife' ), $unattached, $nonce, false, 'unattached' ); ?>
+		<?php $this->render_attachment_table( __( 'Missing Attachment Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing, $nonce, true ); ?>
+		<?php $this->render_attachment_table( __( 'Unattached Media', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $unattached, $nonce, false, 'unattached' ); ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Uploads Files Not Referenced in Database', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Uploads Files Not Referenced in Database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Limited scan of wp-content/uploads for files not registered as media attachments. Plugin-owned folders (TSO backups, cache, translations, config) are excluded — do not delete those manually.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Limited scan of wp-content/uploads for files not registered as media attachments. Plugin-owned folders (TSO backups, cache, translations, config) are excluded — do not delete those manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php if ( empty( $orphan_files ) ) : ?>
-				<p><?php esc_html_e( 'No unreferenced files found in the limited scan.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No unreferenced files found in the limited scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<table class="widefat tsosk-table">
-					<thead><tr><th><?php esc_html_e( 'Relative File', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th></tr></thead>
+					<thead><tr><th><?php esc_html_e( 'Relative File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th></tr></thead>
 					<tbody>
 					<?php foreach ( $orphan_files as $file ) : ?>
 						<tr><td class="tsosk-code"><?php echo esc_html( $file['relative'] ); ?></td><td><?php echo esc_html( size_format( $file['size'], 2 ) ); ?></td></tr>
@@ -233,29 +233,29 @@ class TSOSK_Mod_Media_Cleaner {
 			<h3><?php echo esc_html( $title ); ?> (<?php echo esc_html( number_format_i18n( count( $items ) ) ); ?>)</h3>
 			<?php if ( 'unattached' === $context ) : ?>
 				<p class="description">
-					<?php esc_html_e( 'These files are in the Media Library but not attached to any post or page. Regenerate thumbnails only applies to image attachments.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'These files are in the Media Library but not attached to any post or page. Regenerate thumbnails only applies to image attachments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			<?php endif; ?>
 			<?php if ( empty( $items ) ) : ?>
-				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<table class="widefat tsosk-table">
-					<thead><tr><th><?php esc_html_e( 'ID', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Title', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'File', 'tso-swiss-knife' ); ?></th><th><?php esc_html_e( 'Action', 'tso-swiss-knife' ); ?></th></tr></thead>
+					<thead><tr><th><?php esc_html_e( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th></tr></thead>
 					<tbody>
 					<?php foreach ( $items as $item ) : ?>
 						<?php $file = get_attached_file( $item->ID ); ?>
 						<tr>
 							<td><?php echo esc_html( (string) $item->ID ); ?></td>
 							<td><?php echo esc_html( get_the_title( $item ) ); ?></td>
-							<td class="tsosk-code"><?php echo esc_html( $file ?: __( 'Unknown', 'tso-swiss-knife' ) ); ?></td>
+							<td class="tsosk-code"><?php echo esc_html( $file ?: __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
 							<td>
 								<?php if ( ! $missing && $this->can_regenerate_thumbnails( $item, $file ) ) : ?>
-									<button class="button button-small tsosk-media-regenerate" data-attachment-id="<?php echo esc_attr( (string) $item->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Regenerate Thumbnails', 'tso-swiss-knife' ); ?></button>
+									<button class="button button-small tsosk-media-regenerate" data-attachment-id="<?php echo esc_attr( (string) $item->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 									<span class="tsosk-ajax-msg"></span>
 								<?php elseif ( ! $missing && $file && file_exists( $file ) ) : ?>
-									<span class="tsosk-badge"><?php esc_html_e( 'No thumbnails', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge"><?php esc_html_e( 'No thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php else : ?>
-									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
 						</tr>

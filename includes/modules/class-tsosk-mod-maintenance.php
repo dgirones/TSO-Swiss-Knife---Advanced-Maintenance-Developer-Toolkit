@@ -91,7 +91,7 @@ class TSOSK_Mod_Maintenance {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?php echo esc_html( get_bloginfo( 'name' ) ); ?> – <?php esc_html_e( 'Maintenance', 'tso-swiss-knife' ); ?></title>
+<title><?php echo esc_html( get_bloginfo( 'name' ) ); ?> – <?php esc_html_e( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></title>
 <style>
 body{margin:0;background:#1a1a2e;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center<?php echo $is_preview ? ';padding-top:48px;box-sizing:border-box' : ''; ?>}
 .box{max-width:560px;padding:40px 30px}
@@ -106,7 +106,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 </head>
 <body>
 <?php if ( $is_preview ) : ?>
-<div class="tsosk-maint-preview-bar"><?php esc_html_e( 'Preview only — maintenance mode is not active.', 'tso-swiss-knife' ); ?></div>
+<div class="tsosk-maint-preview-bar"><?php esc_html_e( 'Preview only — maintenance mode is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></div>
 <?php endif; ?>
 <div class="box">
 	<?php if ( $logo_url ) : ?>
@@ -127,7 +127,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 	 * Default visitor message.
 	 */
 	private function get_default_message(): string {
-		return __( 'We are performing scheduled maintenance. We will be back online shortly.', 'tso-swiss-knife' );
+		return __( 'We are performing scheduled maintenance. We will be back online shortly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	// ── Helpers ───────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 	public function ajax_toggle(): void {
 		check_ajax_referer( 'tsosk_maintenance_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$settings            = $this->get_settings();
 		$settings['enabled'] = ! $settings['enabled'];
@@ -206,16 +206,16 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 			'maintenance',
 			$settings['enabled'] ? 'enable' : 'disable',
 			$settings['enabled']
-				? __( 'Maintenance mode enabled.', 'tso-swiss-knife' )
-				: __( 'Maintenance mode disabled.', 'tso-swiss-knife' )
+				? __( 'Maintenance mode enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Maintenance mode disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
 		wp_send_json_success(
 			array(
 				'enabled' => $settings['enabled'],
 				'message' => $settings['enabled']
-					? __( 'Maintenance mode enabled.', 'tso-swiss-knife' )
-					: __( 'Maintenance mode disabled.', 'tso-swiss-knife' ),
+					? __( 'Maintenance mode enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Maintenance mode disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			)
 		);
 	}
@@ -223,7 +223,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_maintenance_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$settings                  = $this->get_settings();
@@ -242,10 +242,10 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 		TSOSK_Activity_Log::log(
 			'maintenance',
 			'save',
-			__( 'Maintenance mode settings saved.', 'tso-swiss-knife' )
+			__( 'Maintenance mode settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
-		wp_send_json_success( __( 'Settings saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -254,7 +254,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 	public function ajax_preview(): void {
 		check_ajax_referer( 'tsosk_maintenance_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '', array( 'response' => 403 ) );
 		}
 
 		$message = isset( $_POST['message'] )
@@ -280,29 +280,29 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 		$logo_url = $this->get_logo_url( $logo_id );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Put the site in maintenance mode. Logged-in administrators always see the site normally. All other visitors get a 503 page.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Put the site in maintenance mode. Logged-in administrators always see the site normally. All other visitors get a 503 page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Maintenance Mode Status', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Maintenance Mode Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<div class="tsosk-maintenance-toggle" style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
 				<span id="tsosk-maintenance-status" class="tsosk-badge <?php echo $enabled ? 'tsosk-badge-warn' : 'tsosk-badge-ok'; ?>">
-					<?php echo $enabled ? esc_html__( '⚠ MAINTENANCE MODE ON', 'tso-swiss-knife' ) : esc_html__( 'Off', 'tso-swiss-knife' ); ?>
+					<?php echo $enabled ? esc_html__( '⚠ MAINTENANCE MODE ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 				<button class="button button-<?php echo $enabled ? 'primary' : 'secondary'; ?>" id="tsosk-maintenance-toggle"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php echo $enabled ? esc_html__( 'Disable Maintenance Mode', 'tso-swiss-knife' ) : esc_html__( 'Enable Maintenance Mode', 'tso-swiss-knife' ); ?>
+					<?php echo $enabled ? esc_html__( 'Disable Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Enable Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-maintenance-toggle-msg"></span>
 			</div>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Maintenance Page Settings', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Maintenance Page Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<div class="tsosk-field-row">
-				<label><strong><?php esc_html_e( 'Logo (optional)', 'tso-swiss-knife' ); ?></strong></label>
+				<label><strong><?php esc_html_e( 'Logo (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<div class="tsosk-maint-logo-picker">
 					<input type="hidden" id="tsosk-m-logo-id" value="<?php echo esc_attr( (string) $logo_id ); ?>">
 					<div id="tsosk-m-logo-preview" class="tsosk-maint-logo-preview<?php echo $logo_url ? ' has-logo' : ''; ?>">
@@ -312,31 +312,31 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 					</div>
 					<p class="tsosk-maint-logo-actions">
 						<button type="button" class="button" id="tsosk-m-logo-select">
-							<?php esc_html_e( 'Select logo', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Select logo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</button>
 						<button type="button" class="button" id="tsosk-m-logo-remove"
 						        <?php disabled( ! $logo_id ); ?>>
-							<?php esc_html_e( 'Remove logo', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Remove logo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</button>
 					</p>
 				</div>
 				<p class="description">
-					<?php esc_html_e( 'Shown above the site name on the maintenance page. Leave empty to use the default wrench icon.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Shown above the site name on the maintenance page. Leave empty to use the default wrench icon.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-field-row" style="margin-top:12px;">
-				<label><strong><?php esc_html_e( 'Page heading', 'tso-swiss-knife' ); ?></strong></label>
+				<label><strong><?php esc_html_e( 'Page heading', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="text" id="tsosk-m-page-title" class="regular-text" style="width:100%;max-width:480px;"
 				       value="<?php echo esc_attr( $settings['page_title'] ?? '' ); ?>"
 				       placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 				<p class="description">
-					<?php esc_html_e( 'Large title shown on the maintenance page (e.g. your brand name). Leave empty to use the site name.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Large title shown on the maintenance page (e.g. your brand name). Leave empty to use the site name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-field-row" style="margin-top:12px;">
-				<label><strong><?php esc_html_e( 'Message to Visitors', 'tso-swiss-knife' ); ?></strong></label>
+				<label><strong><?php esc_html_e( 'Message to Visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<textarea name="tsosk_m_message" id="tsosk-m-message" rows="4" style="width:100%;"><?php
 					echo esc_textarea( $settings['message'] );
 				?></textarea>
@@ -344,7 +344,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 					<?php
 					printf(
 						/* translators: %s: default maintenance message */
-						esc_html__( 'Leave empty for the default: “%s”', 'tso-swiss-knife' ),
+						esc_html__( 'Leave empty for the default: “%s”', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						esc_html( $this->get_default_message() )
 					);
 					?>
@@ -352,7 +352,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 			</div>
 
 			<div class="tsosk-field-row" style="margin-top:12px;">
-				<label><strong><?php esc_html_e( 'Whitelisted IP Addresses (one per line)', 'tso-swiss-knife' ); ?></strong></label>
+				<label><strong><?php esc_html_e( 'Whitelisted IP Addresses (one per line)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<textarea name="tsosk_m_ips" id="tsosk-m-ips" rows="4" style="width:100%;font-family:monospace;"><?php
 					echo esc_textarea( $settings['whitelist_ips'] );
 				?></textarea>
@@ -360,7 +360,7 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 					<?php
 					printf(
 						/* translators: %s: current IP address */
-						esc_html__( 'Your current IP: %s', 'tso-swiss-knife' ),
+						esc_html__( 'Your current IP: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'<code>' . esc_html( $this->get_client_ip() ) . '</code>'
 					);
 					?>
@@ -369,14 +369,14 @@ p{font-size:1.1rem;line-height:1.6;color:#aaa}
 
 			<button class="button button-primary" id="tsosk-maintenance-save"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
-				<?php esc_html_e( 'Save Settings', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button type="button" class="button" id="tsosk-maintenance-preview"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
-				<?php esc_html_e( 'Preview maintenance page', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Preview maintenance page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<p class="description" style="margin-top:8px;">
-				<?php esc_html_e( 'Preview opens in a new tab using the settings above (even if you have not saved yet). Maintenance mode stays off.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Preview opens in a new tab using the settings above (even if you have not saved yet). Maintenance mode stays off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<span class="tsosk-ajax-msg" id="tsosk-maintenance-save-msg"></span>
 		</div>

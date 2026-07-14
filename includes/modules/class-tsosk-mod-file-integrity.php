@@ -70,7 +70,7 @@ class TSOSK_Mod_File_Integrity {
 	public function ajax_scan(): void {
 		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$force = ! empty( $_POST['force'] );
@@ -97,7 +97,7 @@ class TSOSK_Mod_File_Integrity {
 			'scan',
 			sprintf(
 				/* translators: %d: number of issues found */
-				__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife' ),
+				__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$n_issues
 			)
 		);
@@ -139,15 +139,15 @@ class TSOSK_Mod_File_Integrity {
 	public function ajax_ignore(): void {
 		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$file = isset( $_POST['file'] ) ? sanitize_text_field( wp_unslash( $_POST['file'] ) ) : '';
 		if ( '' === $file ) {
-			wp_send_json_error( __( 'No file specified.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'No file specified.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! $this->is_scannable_ignore_path( $file ) ) {
-			wp_send_json_error( __( 'Invalid file path. Only files from the latest scan can be ignored.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid file path. Only files from the latest scan can be ignored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$ignored   = $this->get_ignored();
@@ -160,11 +160,11 @@ class TSOSK_Mod_File_Integrity {
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'update',
-			__( 'File added to ignore list.', 'tso-swiss-knife' ),
+			__( 'File added to ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			array( 'file' => $file )
 		);
 
-		wp_send_json_success( __( 'File ignored. Re-scan to update results.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'File ignored. Re-scan to update results.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -173,7 +173,7 @@ class TSOSK_Mod_File_Integrity {
 	public function ajax_unignore(): void {
 		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$file    = isset( $_POST['file'] ) ? sanitize_text_field( wp_unslash( $_POST['file'] ) ) : '';
@@ -185,11 +185,11 @@ class TSOSK_Mod_File_Integrity {
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'delete',
-			__( 'File removed from ignore list.', 'tso-swiss-knife' ),
+			__( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			array( 'file' => $file )
 		);
 
-		wp_send_json_success( __( 'File removed from ignore list.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -198,14 +198,14 @@ class TSOSK_Mod_File_Integrity {
 	public function ajax_clear_cache(): void {
 		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		delete_transient( self::TRANSIENT_RESULTS );
 		delete_transient( self::TRANSIENT_CHECKSUMS );
 		delete_option( self::OPTION_RESULTS );
-		TSOSK_Activity_Log::log( 'file-integrity', 'delete', __( 'File integrity scan cache cleared.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Cache cleared. Next scan will fetch fresh checksums from WordPress.org.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'file-integrity', 'delete', __( 'File integrity scan cache cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Cache cleared. Next scan will fetch fresh checksums from WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	// ── Scan logic ────────────────────────────────────────────────────────────
@@ -377,7 +377,7 @@ class TSOSK_Mod_File_Integrity {
 				return new WP_Error(
 					'api_error',
 					/* translators: %s: error message */
-					sprintf( __( 'Could not reach WordPress.org checksums API: %s', 'tso-swiss-knife' ), $response->get_error_message() )
+					sprintf( __( 'Could not reach WordPress.org checksums API: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $response->get_error_message() )
 				);
 			}
 		}
@@ -387,7 +387,7 @@ class TSOSK_Mod_File_Integrity {
 			return new WP_Error(
 				'api_error',
 				/* translators: %d: HTTP status code */
-				sprintf( __( 'WordPress.org API returned HTTP %d.', 'tso-swiss-knife' ), $code )
+				sprintf( __( 'WordPress.org API returned HTTP %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $code )
 			);
 		}
 
@@ -395,7 +395,7 @@ class TSOSK_Mod_File_Integrity {
 		$data = json_decode( $body, true );
 
 		if ( ! isset( $data['checksums'] ) || ! is_array( $data['checksums'] ) ) {
-			return new WP_Error( 'api_error', __( 'Invalid response from WordPress.org API.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'api_error', __( 'Invalid response from WordPress.org API.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$checksums = $data['checksums'];
@@ -428,35 +428,35 @@ class TSOSK_Mod_File_Integrity {
 		$has_cache = is_array( $cached );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org. It reports differences — it never installs, deletes, restores or downloads any file on your server.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org. It reports differences — it never installs, deletes, restores or downloads any file on your server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What this tool does and does NOT do', 'tso-swiss-knife' ); ?></h3>
+			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What this tool does and does NOT do', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-guide-grid">
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'It does', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'It does', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
-						<li><?php esc_html_e( 'Fetch checksums from WordPress.org (cached 24 h).', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Compare hashes and list modified, missing or unexpected core files.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Let you ignore known false positives.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Remember the last scan when you leave and return to this tab.', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Fetch checksums from WordPress.org (cached 24 h).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Compare hashes and list modified, missing or unexpected core files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Let you ignore known false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Remember the last scan when you leave and return to this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'It does NOT', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'It does NOT', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
-						<li><?php esc_html_e( 'Replace a dedicated malware scanner — use a security plugin for deep malware analysis.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Scan, install or remove themes in wp-content/themes/.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Scan plugins, uploads or any wp-content/ folder.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Automatically restore or download files — you must fix issues manually.', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Replace a dedicated malware scanner — use a security plugin for deep malware analysis.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Scan, install or remove themes in wp-content/themes/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Scan plugins, uploads or any wp-content/ folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Automatically restore or download files — you must fix issues manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 			</div>
 		</div>
 
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'If you suddenly see many default WordPress themes (Twenty Twenty-*, etc.), this tool did not install them. They usually come from a WordPress core update (the release ZIP bundles default themes), a hosting installer, a staging sync, or another plugin — not from this scan.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'If you suddenly see many default WordPress themes (Twenty Twenty-*, etc.), this tool did not install them. They usually come from a WordPress core update (the release ZIP bundles default themes), a hosting installer, a staging sync, or another plugin — not from this scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<?php
@@ -469,7 +469,7 @@ class TSOSK_Mod_File_Integrity {
 			<?php
 			printf(
 				/* translators: %s: WordPress version */
-				esc_html__( 'You are running a pre-release version of WordPress (%s). The WordPress.org API may not have checksums for this version yet, which will cause the scan to fail. This is expected behaviour on alpha/beta/RC builds.', 'tso-swiss-knife' ),
+				esc_html__( 'You are running a pre-release version of WordPress (%s). The WordPress.org API may not have checksums for this version yet, which will cause the scan to fail. This is expected behaviour on alpha/beta/RC builds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				esc_html( $wp_ver )
 			);
 			?>
@@ -480,7 +480,7 @@ class TSOSK_Mod_File_Integrity {
 				<?php
 				printf(
 					/* translators: %s: WordPress version number */
-					esc_html__( 'WordPress %s', 'tso-swiss-knife' ),
+					esc_html__( 'WordPress %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					esc_html( $wp_ver )
 				);
 				?>
@@ -488,13 +488,13 @@ class TSOSK_Mod_File_Integrity {
 			<button class="button button-primary" id="tsosk-fi-scan"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 			        data-force="0">
-				<?php esc_html_e( 'Scan Core Files', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Scan Core Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button class="button" id="tsosk-fi-force-scan"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 			        data-force="1"
-			        title="<?php esc_attr_e( 'Force fresh scan — ignores the 24-hour cache', 'tso-swiss-knife' ); ?>">
-				<?php esc_html_e( 'Force Re-scan', 'tso-swiss-knife' ); ?>
+			        title="<?php esc_attr_e( 'Force fresh scan — ignores the 24-hour cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+				<?php esc_html_e( 'Force Re-scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-fi-msg"></span>
 		</div>
@@ -504,7 +504,7 @@ class TSOSK_Mod_File_Integrity {
 			<div style="background:var(--wp-admin-theme-color,#2271b1);height:4px;border-radius:2px;
 			            width:0;transition:width .3s;" id="tsosk-fi-bar"></div>
 			<p style="font-size:12px;color:#666;margin:4px 0 0;" id="tsosk-fi-progress-label">
-				<?php esc_html_e( 'Connecting to WordPress.org API…', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Connecting to WordPress.org API…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 		</div>
 
@@ -514,21 +514,21 @@ class TSOSK_Mod_File_Integrity {
 				<?php $this->render_results( $cached, $ignored, $nonce, true ); ?>
 			<?php else : ?>
 				<div class="tsosk-notice tsosk-notice-info" id="tsosk-fi-placeholder">
-					<?php esc_html_e( 'No scan has been run yet. Click «Scan Core Files» to begin.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'No scan has been run yet. Click «Scan Core Files» to begin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</div>
 			<?php endif; ?>
 		</div>
 
 		<?php if ( ! empty( $ignored ) ) : ?>
 		<div class="tsosk-card" id="tsosk-fi-ignored-card" style="margin-top:20px;">
-			<h3><?php esc_html_e( 'Ignored Files', 'tso-swiss-knife' ); ?> (<?php echo esc_html( (string) count( $ignored ) ); ?>)</h3>
+			<h3><?php esc_html_e( 'Ignored Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $ignored ) ); ?>)</h3>
 			<p class="description">
-				<?php esc_html_e( 'These files are excluded from scan results. Remove them from this list to include them again.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'These files are excluded from scan results. Remove them from this list to include them again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<table class="widefat tsosk-table" id="tsosk-fi-ignored-table">
 				<thead><tr>
-					<th><?php esc_html_e( 'File', 'tso-swiss-knife' ); ?></th>
-					<th style="width:100px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:100px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 					<?php foreach ( $ignored as $ign ) : ?>
@@ -538,7 +538,7 @@ class TSOSK_Mod_File_Integrity {
 							<button class="button button-small tsosk-fi-unignore"
 							        data-file="<?php echo esc_attr( $ign ); ?>"
 							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Remove', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Remove', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
 					</tr>
@@ -573,13 +573,13 @@ class TSOSK_Mod_File_Integrity {
 		ob_start();
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Scan Summary', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Scan Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:4px;">
 				<span>
 					<?php
 					printf(
 						/* translators: %d: total files checked */
-						esc_html__( '%d core files checked', 'tso-swiss-knife' ),
+						esc_html__( '%d core files checked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						(int) $total
 					);
 					?>
@@ -589,14 +589,14 @@ class TSOSK_Mod_File_Integrity {
 					<?php
 					printf(
 						/* translators: 1: date, 2: time */
-						esc_html__( 'Last scan: %1$s at %2$s', 'tso-swiss-knife' ),
+						esc_html__( 'Last scan: %1$s at %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						esc_html( gmdate( 'Y-m-d', $scanned ) ),
 						esc_html( gmdate( 'H:i', $scanned ) )
 					);
 					?>
 					<?php if ( $from_c ) : ?>
 					<span class="tsosk-badge tsosk-badge-info" style="font-size:11px;margin-left:6px;">
-						<?php esc_html_e( 'Cached', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Cached', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</span>
 					<?php endif; ?>
 				</span>
@@ -610,10 +610,10 @@ class TSOSK_Mod_File_Integrity {
 				<?php
 				$status_badge = $n_issues === 0 ? 'tsosk-badge-ok' : 'tsosk-badge-warn';
 				$status_label = $n_issues === 0
-					? __( 'All files match — no issues detected', 'tso-swiss-knife' )
+					? __( 'All files match — no issues detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: sprintf(
 						/* translators: %d: number of issues */
-						__( '%d issue(s) found', 'tso-swiss-knife' ),
+						__( '%d issue(s) found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						$n_issues
 					);
 				?>
@@ -625,7 +625,7 @@ class TSOSK_Mod_File_Integrity {
 					<?php
 					printf(
 						/* translators: %d: count */
-						esc_html__( '%d modified', 'tso-swiss-knife' ),
+						esc_html__( '%d modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						count( $modified )
 					);
 					?>
@@ -636,7 +636,7 @@ class TSOSK_Mod_File_Integrity {
 					<?php
 					printf(
 						/* translators: %d: count */
-						esc_html__( '%d missing', 'tso-swiss-knife' ),
+						esc_html__( '%d missing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						count( $missing )
 					);
 					?>
@@ -647,7 +647,7 @@ class TSOSK_Mod_File_Integrity {
 					<?php
 					printf(
 						/* translators: %d: count */
-						esc_html__( '%d unexpected', 'tso-swiss-knife' ),
+						esc_html__( '%d unexpected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						count( $added )
 					);
 					?>
@@ -658,30 +658,30 @@ class TSOSK_Mod_File_Integrity {
 
 		<?php if ( $n_issues === 0 ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<strong>✓ <?php esc_html_e( 'All WordPress core files are intact.', 'tso-swiss-knife' ); ?></strong>
-			<?php esc_html_e( 'No modified, missing or unexpected files were found in wp-admin/ or wp-includes/.', 'tso-swiss-knife' ); ?>
+			<strong>✓ <?php esc_html_e( 'All WordPress core files are intact.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php esc_html_e( 'No modified, missing or unexpected files were found in wp-admin/ or wp-includes/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php endif; ?>
 
 		<?php if ( ! empty( $modified ) ) : ?>
 		<div class="tsosk-card">
 			<h3 style="color:#b45309;">
-				⚠ <?php esc_html_e( 'Modified Files', 'tso-swiss-knife' ); ?> (<?php echo esc_html( (string) count( $modified ) ); ?>)
+				⚠ <?php esc_html_e( 'Modified Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $modified ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-warn">
-				<?php esc_html_e( 'These files exist on your server but their MD5 hash does not match the official WordPress release. This could mean the file was legitimately edited (e.g. by a plugin installer), infected by malware, or corrupted. Review each file before taking action.', 'tso-swiss-knife' ); ?>
-				<br><strong><?php esc_html_e( 'To restore:', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'Download the same WordPress version from wordpress.org/download/releases/ and replace the affected files via FTP/SFTP or the Hosting file manager.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'These files exist on your server but their MD5 hash does not match the official WordPress release. This could mean the file was legitimately edited (e.g. by a plugin installer), infected by malware, or corrupted. Review each file before taking action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<br><strong><?php esc_html_e( 'To restore:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'Download the same WordPress version from wordpress.org/download/releases/ and replace the affected files via FTP/SFTP or the Hosting file manager.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th><?php esc_html_e( 'File', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Modified', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Expected MD5', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actual MD5', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Expected MD5', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actual MD5', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $modified as $f ) : ?>
@@ -695,7 +695,7 @@ class TSOSK_Mod_File_Integrity {
 								<button class="button button-small tsosk-fi-ignore"
 								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Ignore', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
 						</tr>
@@ -709,17 +709,17 @@ class TSOSK_Mod_File_Integrity {
 		<?php if ( ! empty( $missing ) ) : ?>
 		<div class="tsosk-card">
 			<h3 style="color:#a32d2d;">
-				✕ <?php esc_html_e( 'Missing Files', 'tso-swiss-knife' ); ?> (<?php echo esc_html( (string) count( $missing ) ); ?>)
+				✕ <?php esc_html_e( 'Missing Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $missing ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-warn">
-				<?php esc_html_e( 'These files are listed in the official WordPress core checksums but were not found on your server. Only worry if the path is inside wp-admin/ or wp-includes/ and the site shows errors. This scan never downloads or restores missing files.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'These files are listed in the official WordPress core checksums but were not found on your server. Only worry if the path is inside wp-admin/ or wp-includes/ and the site shows errors. This scan never downloads or restores missing files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th><?php esc_html_e( 'File', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Expected MD5', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Expected MD5', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $missing as $f ) : ?>
@@ -730,7 +730,7 @@ class TSOSK_Mod_File_Integrity {
 								<button class="button button-small tsosk-fi-ignore"
 								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Ignore', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
 						</tr>
@@ -744,18 +744,18 @@ class TSOSK_Mod_File_Integrity {
 		<?php if ( ! empty( $added ) ) : ?>
 		<div class="tsosk-card">
 			<h3 style="color:#534ab7;">
-				+ <?php esc_html_e( 'Unexpected Files', 'tso-swiss-knife' ); ?> (<?php echo esc_html( (string) count( $added ) ); ?>)
+				+ <?php esc_html_e( 'Unexpected Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $added ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'These files exist inside wp-admin/ or wp-includes/ but are not listed in the official WordPress release checksums. This is usually harmless — some plugins and server environments add helper files to these directories. Only investigate files you do not recognise and that were added at an unexpected time.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'These files exist inside wp-admin/ or wp-includes/ but are not listed in the official WordPress release checksums. This is usually harmless — some plugins and server environments add helper files to these directories. Only investigate files you do not recognise and that were added at an unexpected time.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th><?php esc_html_e( 'File', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Modified', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $added as $f ) : ?>
@@ -767,7 +767,7 @@ class TSOSK_Mod_File_Integrity {
 								<button class="button button-small tsosk-fi-ignore"
 								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Ignore', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
 						</tr>

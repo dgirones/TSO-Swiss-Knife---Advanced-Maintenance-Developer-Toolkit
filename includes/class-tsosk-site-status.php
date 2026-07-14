@@ -63,14 +63,14 @@ class TSOSK_Site_Status {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			$badges[] = array(
-				'label' => __( 'Debug ON', 'tso-swiss-knife' ),
+				'label' => __( 'Debug ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
 				'tab'   => $tab_url( 'debug' ),
 			);
 		}
 		if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) {
 			$badges[] = array(
-				'label' => __( 'SAVEQUERIES', 'tso-swiss-knife' ),
+				'label' => __( 'SAVEQUERIES', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'info',
 				'tab'   => $tab_url( 'slow-queries' ),
 			);
@@ -79,7 +79,7 @@ class TSOSK_Site_Status {
 		$maintenance = get_option( 'tsosk_maintenance', array() );
 		if ( is_array( $maintenance ) && ! empty( $maintenance['enabled'] ) ) {
 			$badges[] = array(
-				'label' => __( 'Maintenance', 'tso-swiss-knife' ),
+				'label' => __( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
 				'tab'   => $tab_url( 'maintenance' ),
 			);
@@ -88,7 +88,7 @@ class TSOSK_Site_Status {
 		$uid = get_current_user_id();
 		if ( $uid && get_user_meta( $uid, 'tsosk_sandbox_plugins', true ) ) {
 			$badges[] = array(
-				'label' => __( 'Sandbox', 'tso-swiss-knife' ),
+				'label' => __( 'Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
 				'tab'   => $tab_url( 'sandbox' ),
 			);
@@ -96,7 +96,7 @@ class TSOSK_Site_Status {
 
 		if ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) {
 			$badges[] = array(
-				'label' => __( 'WP-Cron off', 'tso-swiss-knife' ),
+				'label' => __( 'WP-Cron off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'info',
 				'tab'   => $tab_url( 'hidden-profiles' ),
 			);
@@ -105,7 +105,7 @@ class TSOSK_Site_Status {
 		$rest = get_option( 'tsosk_rest_settings', array() );
 		if ( is_array( $rest ) && isset( $rest['mode'] ) && 'disabled' === $rest['mode'] ) {
 			$badges[] = array(
-				'label' => __( 'REST locked', 'tso-swiss-knife' ),
+				'label' => __( 'REST locked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'info',
 				'tab'   => $tab_url( 'security' ),
 			);
@@ -114,7 +114,7 @@ class TSOSK_Site_Status {
 		$profiles = get_option( 'tsosk_hidden_profiles', array() );
 		if ( is_array( $profiles ) && ! empty( $profiles['disable_xmlrpc'] ) ) {
 			$badges[] = array(
-				'label' => __( 'XML-RPC off', 'tso-swiss-knife' ),
+				'label' => __( 'XML-RPC off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'success',
 				'tab'   => $tab_url( 'security' ),
 			);
@@ -123,7 +123,7 @@ class TSOSK_Site_Status {
 		$lp = get_option( 'tsosk_login_protect', array() );
 		if ( is_array( $lp ) && ! empty( $lp['custom_url'] ) && ! empty( $lp['login_slug'] ) ) {
 			$badges[] = array(
-				'label' => __( 'Hidden login', 'tso-swiss-knife' ),
+				'label' => __( 'Hidden login', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'success',
 				'tab'   => $tab_url( 'login-protect' ),
 			);
@@ -131,7 +131,7 @@ class TSOSK_Site_Status {
 
 		if ( file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.php' ) ) {
 			$badges[] = array(
-				'label' => __( 'Hardened admin', 'tso-swiss-knife' ),
+				'label' => __( 'Hardened admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'success',
 				'tab'   => $tab_url( 'security' ),
 			);
@@ -141,8 +141,8 @@ class TSOSK_Site_Status {
 			$um = TSOSK_Mod_Update_Manager::get_settings();
 			$badges[] = array(
 				'label' => 'disable_all' === ( $um['preset'] ?? '' )
-					? __( 'Updates off', 'tso-swiss-knife' )
-					: __( 'Updates managed', 'tso-swiss-knife' ),
+					? __( 'Updates off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Updates managed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
 				'tab'   => $tab_url( 'update-manager' ),
 			);
@@ -150,7 +150,7 @@ class TSOSK_Site_Status {
 
 		if ( class_exists( 'TSOSK_Mod_Custom_404' ) && TSOSK_Mod_Custom_404::get_instance()->is_active() ) {
 			$badges[] = array(
-				'label' => __( 'Custom 404', 'tso-swiss-knife' ),
+				'label' => __( 'Custom 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'info',
 				'tab'   => $tab_url( 'custom-404' ),
 			);
