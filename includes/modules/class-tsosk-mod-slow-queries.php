@@ -607,36 +607,6 @@ class TSOSK_Mod_Slow_Queries {
 
 		<?php endif; ?>
 
-		<style>
-		.tsosk-sq-stat {
-			display:flex; flex-direction:column; align-items:center;
-			background:#f6f7f7; border:1px solid #e2e4e7; border-radius:8px;
-			padding:10px 20px; min-width:120px; text-align:center;
-		}
-		.tsosk-sq-stat-val { font-size:22px; font-weight:700; color:#1d2327; line-height:1.2; }
-		.tsosk-sq-stat-lbl { font-size:11px; color:#646970; margin-top:3px; }
-		.tsosk-sq-warn     { color:#d63638 !important; }
-		.tsosk-sq-batch {
-			border:1px solid #e2e4e7; border-radius:6px; margin-bottom:10px; overflow:hidden;
-		}
-		.tsosk-sq-batch-header {
-			display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-			padding:8px 12px; background:#f6f7f7; cursor:pointer;
-			border-bottom:1px solid #e2e4e7;
-		}
-		.tsosk-sq-batch-header:hover { background:#eef0f1; }
-		.tsosk-sq-batch-url  { font-family:monospace; font-size:12px; flex:1; min-width:0; word-break:break-all; color:#1d2327; }
-		.tsosk-sq-batch-body { display:none; padding:0; }
-		.tsosk-sq-batch-body.open { display:block; }
-		.tsosk-sq-query-row  { padding:8px 12px; border-bottom:1px solid #f0f0f0; }
-		.tsosk-sq-query-row:last-child { border-bottom:none; }
-		.tsosk-sq-query-sql  {
-			font-family:monospace; font-size:11px; color:#1d2327;
-			word-break:break-all; white-space:pre-wrap; margin:4px 0;
-			background:#f8f9fa; padding:6px 8px; border-radius:3px;
-		}
-		.tsosk-sq-query-caller { font-size:11px; color:#646970; margin-top:3px; }
-		</style>
 		<?php
 	}
 

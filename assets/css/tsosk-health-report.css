@@ -1,0 +1,41 @@
+/*
+ * TSO Swiss Knife – Standalone health report download
+ */
+
+body.tsosk-health-report {
+	font-family: system-ui, sans-serif;
+	margin: 24px;
+	color: #1d2327;
+}
+
+.tsosk-health-report table {
+	border-collapse: collapse;
+	width: 100%;
+	margin-top: 16px;
+}
+
+.tsosk-health-report th,
+.tsosk-health-report td {
+	border: 1px solid #c3c4c7;
+	padding: 8px 10px;
+	text-align: left;
+}
+
+.tsosk-health-report th {
+	background: #f6f7f7;
+}
+
+.tsosk-health-report .status-fail {
+	color: #b32d2e;
+	font-weight: 700;
+}
+
+.tsosk-health-report .status-warn {
+	color: #8a4a00;
+	font-weight: 700;
+}
+
+.tsosk-health-report .status-pass {
+	color: #1e4620;
+	font-weight: 700;
+}

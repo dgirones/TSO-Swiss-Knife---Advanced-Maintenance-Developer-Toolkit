@@ -124,6 +124,7 @@ class TSOSK_Mod_Health {
 		$site_url  = isset( $report['site']['url'] ) ? (string) $report['site']['url'] : '';
 		$generated = isset( $report['generated_at'] ) ? (string) $report['generated_at'] : '';
 		$checks    = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
+		$css_url   = TSOSK_URL . 'assets/css/tsosk-health-report.css';
 
 		ob_start();
 		?>
@@ -132,17 +133,9 @@ class TSOSK_Mod_Health {
 <head>
 	<meta charset="utf-8">
 	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife' ), $site_name ) ); ?></title>
-	<style>
-		body { font-family: system-ui, sans-serif; margin: 24px; color: #1d2327; }
-		table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-		th, td { border: 1px solid #c3c4c7; padding: 8px 10px; text-align: left; }
-		th { background: #f6f7f7; }
-		.status-fail { color: #b32d2e; font-weight: 700; }
-		.status-warn { color: #8a4a00; font-weight: 700; }
-		.status-pass { color: #1e4620; font-weight: 700; }
-	</style>
+	<link rel="stylesheet" href="<?php echo esc_url( $css_url ); ?>">
 </head>
-<body>
+<body class="tsosk-health-report">
 	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife' ); ?></h1>
 	<p><strong><?php esc_html_e( 'Site', 'tso-swiss-knife' ); ?>:</strong> <?php echo esc_html( $site_name ); ?>
 		(<a href="<?php echo esc_url( $site_url ); ?>"><?php echo esc_html( $site_url ); ?></a>)</p>

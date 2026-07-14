@@ -3346,3 +3346,204 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     white-space: normal;
     text-align: center;
 }
+
+/* ══ Slow Query Monitor ══════════════════════════════════════════════════════ */
+
+.tsosk-sq-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f6f7f7;
+    border: 1px solid #e2e4e7;
+    border-radius: 8px;
+    padding: 10px 20px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.tsosk-sq-stat-val {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1d2327;
+    line-height: 1.2;
+}
+
+.tsosk-sq-stat-lbl {
+    font-size: 11px;
+    color: #646970;
+    margin-top: 3px;
+}
+
+.tsosk-sq-warn {
+    color: #d63638 !important;
+}
+
+.tsosk-sq-batch {
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.tsosk-sq-batch-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    cursor: pointer;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.tsosk-sq-batch-header:hover {
+    background: #eef0f1;
+}
+
+.tsosk-sq-batch-url {
+    font-family: monospace;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    word-break: break-all;
+    color: #1d2327;
+}
+
+.tsosk-sq-batch-body {
+    display: none;
+    padding: 0;
+}
+
+.tsosk-sq-batch-body.open {
+    display: block;
+}
+
+.tsosk-sq-query-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tsosk-sq-query-row:last-child {
+    border-bottom: none;
+}
+
+.tsosk-sq-query-sql {
+    font-family: monospace;
+    font-size: 11px;
+    color: #1d2327;
+    word-break: break-all;
+    white-space: pre-wrap;
+    margin: 4px 0;
+    background: #f8f9fa;
+    padding: 6px 8px;
+    border-radius: 3px;
+}
+
+.tsosk-sq-query-caller {
+    font-size: 11px;
+    color: #646970;
+    margin-top: 3px;
+}
+
+.tsosk-sq-slow td {
+    background: #fff8f8 !important;
+}
+
+.tsosk-sq-dupe td {
+    background: #fffbeb !important;
+}
+
+.tsosk-sq-hidden {
+    display: none !important;
+}
+
+#tsosk-sq-filter {
+    font-size: 13px;
+}
+
+/* ══ Options Editor ══════════════════════════════════════════════════════════ */
+
+.tsosk-oe-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.tsosk-oe-tab-btn.is-active {
+    background: #1d2327;
+    color: #fff;
+    border-color: #1d2327;
+}
+
+.tsosk-oe-tab-btn.is-active:hover {
+    background: #2c3338;
+    border-color: #2c3338;
+}
+
+.tsosk-oe-pagination {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 8px 0;
+}
+
+.tsosk-oe-page-btn {
+    padding: 4px 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    color: #1d2327;
+}
+
+.tsosk-oe-page-btn.is-current {
+    background: #1d2327;
+    color: #fff;
+    border-color: #1d2327;
+    pointer-events: none;
+}
+
+.tsosk-oe-page-btn:hover:not(.is-current) {
+    border-color: #666;
+}
+
+.tsosk-oe-protected td {
+    opacity: .6;
+}
+
+#tsosk-oe-editor {
+    border-left: 4px solid #f0b849;
+}
+
+.tsosk-oe-sortable {
+    user-select: none;
+}
+
+.tsosk-oe-sortable:hover {
+    background: #f0f0f1;
+}
+
+.tsosk-sort-icon {
+    font-size: 10px;
+    color: #999;
+}
+
+#tsosk-oe-tbody td {
+    color: #1d2327;
+}
+
+#tsosk-oe-tbody .tsosk-code {
+    color: #1d2327;
+}
+
+/* ══ Activity History — module checklist ═════════════════════════════════════ */
+
+.tsosk-history-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px 16px;
+    margin-bottom: 12px;
+}

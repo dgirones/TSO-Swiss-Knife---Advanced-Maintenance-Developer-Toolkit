@@ -220,7 +220,7 @@
 	$( document ).on( 'click', '#tsosk-enable-wp-log', function () {
 		var $btn    = $( this );
 		var $msg    = $( '#tsosk-debug-msg' );
-		var nonce   = tsosk.debug_nonce || $( '#tsosk-debug-developer-on' ).data( 'nonce' );
+		var nonce   = $btn.data( 'nonce' ) || tsosk.wpconfig_nonce || tsosk.debug_nonce;
 		var setups  = [
 			{ constant: 'WP_DEBUG',         value: 'true'  },
 			{ constant: 'WP_DEBUG_LOG',      value: 'true'  },
@@ -3716,6 +3716,40 @@
 	$( document ).on( 'keydown', '#tsosk-sq-search', function ( e ) {
 		if ( e.key === 'Enter' ) { tsosk_sq_load( 1 ); }
 	} );
+
+	// Debug tab: live query table filters (duplicates / slow / search).
+	function tsosk_sq_apply_debug_filters() {
+		var $filter = $( '#tsosk-sq-filter' );
+		if ( ! $filter.length ) {
+			return;
+		}
+		var q      = $filter.val().toLowerCase();
+		var onlyDu = $( '#tsosk-sq-dupes-only' ).prop( 'checked' );
+		var onlySl = $( '#tsosk-sq-slow-only' ).prop( 'checked' );
+		var $rows  = $( '#tsosk-sq-table tbody .tsosk-sq-row' );
+		var shown  = 0;
+		$rows.each( function () {
+			var $row  = $( this );
+			var sql   = String( $row.data( 'sql' ) || $row.attr( 'data-sql' ) || '' ).toLowerCase();
+			var isDu  = String( $row.data( 'dupe' ) || $row.attr( 'data-dupe' ) ) === '1';
+			var isSl  = String( $row.data( 'slow' ) || $row.attr( 'data-slow' ) ) === '1';
+			var hide  = ( q && sql.indexOf( q ) === -1 )
+				|| ( onlyDu && ! isDu )
+				|| ( onlySl && ! isSl );
+			$row.toggleClass( 'tsosk-sq-hidden', hide );
+			if ( ! hide ) {
+				shown++;
+			}
+		} );
+		var $count = $( '#tsosk-sq-count-shown' );
+		if ( $count.length ) {
+			$count.text( shown + ' / ' + $rows.length );
+		}
+	}
+
+	$( document ).on( 'input', '#tsosk-sq-filter', tsosk_sq_apply_debug_filters );
+	$( document ).on( 'change', '#tsosk-sq-dupes-only, #tsosk-sq-slow-only', tsosk_sq_apply_debug_filters );
+	tsosk_sq_apply_debug_filters();
 
 
 	// ── Search & Replace ───────────────────────────────────────────────────────
