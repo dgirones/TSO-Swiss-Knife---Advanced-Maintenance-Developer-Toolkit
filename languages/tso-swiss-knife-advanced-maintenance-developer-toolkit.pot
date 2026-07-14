@@ -5608,10 +5608,13 @@ msgstr ""
 msgid "Tools menu"
 msgstr ""
 
+msgid "TSO Swiss Knife – Advanced Maintenance & Developer Toolkit"
+msgstr ""
+
 msgid ""
 "Complete maintenance and developer toolkit: cron manager, debug mode, "
 "transients, database tools, hooks inspector, maintenance mode, plugin "
-"sandbox and more. %s"
+"sandbox and more."
 msgstr ""
 
 msgid "Reorder & Hide Sidebar"
