@@ -1022,7 +1022,8 @@ class TSOSK_Mod_Debug {
 					<p class="description">
 						<?php esc_html_e( 'Use this only when you want the settings hard-coded in wp-config.php instead of tsosk-config. A backup is recommended before modifying wp-config.php.', 'tso-swiss-knife' ); ?>
 					</p>
-					<button class="button button-secondary" id="tsosk-enable-wp-log" type="button">
+					<button class="button button-secondary" id="tsosk-enable-wp-log" type="button"
+					        data-nonce="<?php echo esc_attr( $wpconfig_nonce ); ?>">
 						<?php esc_html_e( 'Enable debug.log in wp-config.php', 'tso-swiss-knife' ); ?>
 					</button>
 				</details>
@@ -1314,57 +1315,6 @@ class TSOSK_Mod_Debug {
 
 			<?php endif; ?>
 		</div>
-
-		<style>
-		.tsosk-sq-stat {
-			display: flex; flex-direction: column; align-items: center;
-			background: #f6f7f7; border: 1px solid #e2e4e7; border-radius: 8px;
-			padding: 10px 18px; min-width: 110px; text-align: center;
-		}
-		.tsosk-sq-stat-val { font-size: 22px; font-weight: 700; color: #1d2327; line-height: 1.2; }
-		.tsosk-sq-stat-lbl { font-size: 11px; color: #646970; margin-top: 3px; }
-		.tsosk-sq-warn     { color: #d63638 !important; }
-		.tsosk-sq-slow td  { background: #fff8f8 !important; }
-		.tsosk-sq-dupe td  { background: #fffbeb !important; }
-		.tsosk-sq-hidden   { display: none !important; }
-		#tsosk-sq-filter   { font-size: 13px; }
-		</style>
-
-		<script>
-		( function () {
-			var $filter  = document.getElementById( 'tsosk-sq-filter' );
-			var $dupes   = document.getElementById( 'tsosk-sq-dupes-only' );
-			var $slow    = document.getElementById( 'tsosk-sq-slow-only' );
-			var $count   = document.getElementById( 'tsosk-sq-count-shown' );
-			if ( ! $filter ) { return; }
-
-			function applyFilters() {
-				var q    = $filter.value.toLowerCase();
-				var od   = $dupes.checked;
-				var os   = $slow.checked;
-				var rows = document.querySelectorAll( '#tsosk-sq-table tbody .tsosk-sq-row' );
-				var shown = 0;
-				rows.forEach( function ( row ) {
-					var sql  = row.getAttribute( 'data-sql' ) || '';
-					var dupe = row.getAttribute( 'data-dupe' ) === '1';
-					var slow = row.getAttribute( 'data-slow' ) === '1';
-					var hide = ( q && sql.indexOf( q ) === -1 )
-					        || ( od && ! dupe )
-					        || ( os && ! slow );
-					row.classList.toggle( 'tsosk-sq-hidden', hide );
-					if ( ! hide ) { shown++; }
-				} );
-				if ( $count ) {
-					$count.textContent = shown + ' / ' + rows.length;
-				}
-			}
-
-			$filter.addEventListener( 'input', applyFilters );
-			$dupes.addEventListener(  'change', applyFilters );
-			$slow.addEventListener(   'change', applyFilters );
-			applyFilters();
-		} )();
-		</script>
 
 		<?php
 	}

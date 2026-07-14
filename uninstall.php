@@ -145,6 +145,7 @@ flush_rewrite_rules( false );
 $tsosk_legacy_mu_files = array(
 	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-debug-flags.php',
 	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-security-flags.php',
+	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-profiles-flags.php',
 	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-sandbox-loader.php',
 );
 
