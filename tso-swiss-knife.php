@@ -27,23 +27,19 @@ define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
 // Config directory inside wp-content/uploads (WP.org compliant location for writable files).
-define( 'TSOSK_CONFIG_DIR', WP_CONTENT_DIR . '/uploads/tsosk-config' );
-
-// ── Early-load config overrides ───────────────────────────────────────────────
-// These files define constants (WP_DEBUG, DISALLOW_FILE_EDIT, etc.) that must be
-// loaded before plugins_loaded to have any effect. They are stored in uploads per
-// WordPress.org plugin guidelines (no writing outside uploads is allowed).
-foreach ( array( 'tsosk-debug-flags.php', 'tsosk-security-flags.php', 'tsosk-profiles-flags.php' ) as $tsosk_early_f ) {
-	$tsosk_early_p = TSOSK_CONFIG_DIR . '/' . $tsosk_early_f;
-	if ( file_exists( $tsosk_early_p ) ) {
-		// phpcs:ignore WordPressVIPMinimum.Files.IncludingNonPHPFile.IncludingNonPHPFile
-		require_once $tsosk_early_p;
+$tsosk_uploads_dir = WP_CONTENT_DIR . '/uploads';
+if ( function_exists( 'wp_upload_dir' ) ) {
+	$tsosk_uploads = wp_upload_dir();
+	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
+		$tsosk_uploads_dir = $tsosk_uploads['basedir'];
 	}
 }
-unset( $tsosk_early_f, $tsosk_early_p );
+define( 'TSOSK_CONFIG_DIR', trailingslashit( wp_normalize_path( $tsosk_uploads_dir ) ) . 'tsosk-config' );
+unset( $tsosk_uploads_dir, $tsosk_uploads );
 
 // ── Autoload includes ─────────────────────────────────────────────────────────
 $tsosk_includes = array(
+	'includes/class-tsosk-config-storage',
 	'includes/class-tsosk-i18n',
 	'includes/class-tsosk-support',
 	'includes/class-tsosk-sandbox-mu',
@@ -101,6 +97,11 @@ foreach ( $tsosk_includes as $tsosk_file ) {
 }
 unset( $tsosk_includes, $tsosk_file );
 
+// ── Early-load config overrides (JSON in uploads/tsosk-config) ────────────────
+if ( class_exists( 'TSOSK_Config_Storage' ) ) {
+	TSOSK_Config_Storage::apply_early_constants();
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
 add_action( 'plugins_loaded', 'tsosk_init' );
@@ -120,6 +121,10 @@ function tsosk_bootstrap_sandbox(): void {
  */
 function tsosk_init() {
 	TSOSK_I18n::get_instance()->init();
+
+	if ( class_exists( 'TSOSK_Config_Storage' ) ) {
+		TSOSK_Config_Storage::apply_runtime_hooks();
+	}
 
 	$tsosk_runtime_modules = array(
 		'TSOSK_Mod_Hidden_Profiles',

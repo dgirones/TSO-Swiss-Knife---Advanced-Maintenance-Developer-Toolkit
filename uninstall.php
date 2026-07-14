@@ -88,7 +88,17 @@ $wpdb->query(
 // ── Config files (uploads/tsosk-config) ────────────────────────────────────
 
 $tsosk_config_dir = WP_CONTENT_DIR . '/uploads/tsosk-config';
+if ( function_exists( 'wp_upload_dir' ) ) {
+	$tsosk_uploads = wp_upload_dir();
+	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
+		$tsosk_config_dir = trailingslashit( wp_normalize_path( $tsosk_uploads['basedir'] ) ) . 'tsosk-config';
+	}
+}
+
 $tsosk_config_files = array(
+	'tsosk-debug-flags.json',
+	'tsosk-security-flags.json',
+	'tsosk-profiles-flags.json',
 	'tsosk-debug-flags.php',
 	'tsosk-security-flags.php',
 	'tsosk-profiles-flags.php',
@@ -103,6 +113,20 @@ foreach ( $tsosk_config_files as $tsosk_config_file ) {
 	}
 }
 
+$tsosk_log_archive_dir = $tsosk_config_dir . '/log-archives';
+if ( is_dir( $tsosk_log_archive_dir ) ) {
+	$tsosk_archive_files = glob( $tsosk_log_archive_dir . '/*' );
+	if ( is_array( $tsosk_archive_files ) ) {
+		foreach ( $tsosk_archive_files as $tsosk_archive_file ) {
+			if ( is_file( $tsosk_archive_file ) ) {
+				wp_delete_file( $tsosk_archive_file );
+			}
+		}
+	}
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	@rmdir( $tsosk_log_archive_dir );
+}
+
 foreach ( $tsosk_config_guard_files as $tsosk_guard_file ) {
 	$tsosk_path = $tsosk_config_dir . '/' . $tsosk_guard_file;
 	if ( file_exists( $tsosk_path ) ) {
@@ -115,9 +139,40 @@ if ( is_dir( $tsosk_config_dir ) ) {
 	@rmdir( $tsosk_config_dir );
 }
 
+// ── Plugin log directory (uploads/tsosk-logs) ──────────────────────────────
+
+$tsosk_logs_dir = trailingslashit( dirname( $tsosk_config_dir ) ) . 'tsosk-logs';
+if ( is_dir( $tsosk_logs_dir ) ) {
+	$tsosk_log_files = glob( $tsosk_logs_dir . '/*' );
+	if ( is_array( $tsosk_log_files ) ) {
+		foreach ( $tsosk_log_files as $tsosk_log_path ) {
+			if ( is_file( $tsosk_log_path ) ) {
+				wp_delete_file( $tsosk_log_path );
+			}
+		}
+	}
+	$tsosk_log_subdirs = glob( $tsosk_logs_dir . '/*', GLOB_ONLYDIR );
+	if ( is_array( $tsosk_log_subdirs ) ) {
+		foreach ( $tsosk_log_subdirs as $tsosk_log_subdir ) {
+			$tsosk_nested = glob( $tsosk_log_subdir . '/*' );
+			if ( is_array( $tsosk_nested ) ) {
+				foreach ( $tsosk_nested as $tsosk_nested_file ) {
+					if ( is_file( $tsosk_nested_file ) ) {
+						wp_delete_file( $tsosk_nested_file );
+					}
+				}
+			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+			@rmdir( $tsosk_log_subdir );
+		}
+	}
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	@rmdir( $tsosk_logs_dir );
+}
+
 // ── Compiled translation cache (uploads/tsosk-l10n) ───────────────────────
 
-$tsosk_l10n_dir = WP_CONTENT_DIR . '/uploads/tsosk-l10n';
+$tsosk_l10n_dir = trailingslashit( dirname( $tsosk_config_dir ) ) . 'tsosk-l10n';
 if ( is_dir( $tsosk_l10n_dir ) ) {
 	$tsosk_l10n_files = glob( $tsosk_l10n_dir . '/*.mo' );
 	if ( is_array( $tsosk_l10n_files ) ) {
