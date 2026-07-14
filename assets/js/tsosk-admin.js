@@ -220,7 +220,7 @@
 	$( document ).on( 'click', '#tsosk-enable-wp-log', function () {
 		var $btn    = $( this );
 		var $msg    = $( '#tsosk-debug-msg' );
-		var nonce   = tsosk.debug_nonce || $( '#tsosk-debug-developer-on' ).data( 'nonce' );
+		var nonce   = $btn.data( 'nonce' ) || tsosk.wpconfig_nonce || tsosk.debug_nonce;
 		var setups  = [
 			{ constant: 'WP_DEBUG',         value: 'true'  },
 			{ constant: 'WP_DEBUG_LOG',      value: 'true'  },
