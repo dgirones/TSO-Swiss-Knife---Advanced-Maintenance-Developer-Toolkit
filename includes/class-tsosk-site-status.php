@@ -129,7 +129,8 @@ class TSOSK_Site_Status {
 			);
 		}
 
-		if ( file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.php' ) ) {
+		if ( file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.php' )
+			|| file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.json' ) ) {
 			$badges[] = array(
 				'label' => __( 'Hardened admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'success',

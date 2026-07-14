@@ -375,6 +375,10 @@ class TSOSK_Mod_Hidden_Profiles {
 			if ( file_exists( $path ) ) {
 				wp_delete_file( $path );
 			}
+			$legacy_mu = trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE;
+			if ( file_exists( $legacy_mu ) ) {
+				wp_delete_file( $legacy_mu );
+			}
 			return true;
 		}
 
@@ -406,6 +410,12 @@ class TSOSK_Mod_Hidden_Profiles {
 		if ( false === $result ) {
 			return new WP_Error( 'write_failed', __( 'Could not write the profiles config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+
+		$legacy_mu = trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE;
+		if ( file_exists( $legacy_mu ) ) {
+			wp_delete_file( $legacy_mu );
+		}
+
 		return true;
 	}
 
@@ -475,6 +485,30 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Whether a constant is defined in plugin config (uploads or legacy MU), not wp-config.
+	 *
+	 * @param string $constant Constant name.
+	 * @return bool
+	 */
+	private function constant_defined_in_plugin_config( string $constant ): bool {
+		$paths = array(
+			trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE,
+			trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE,
+		);
+		foreach ( $paths as $path ) {
+			if ( ! is_readable( $path ) ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$src = (string) file_get_contents( $path );
+			if ( preg_match( "/define\(\s*'" . preg_quote( $constant, '/' ) . "'\s*,/", $src ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Whether a constant is locked by wp-config.php (already defined before our file).
 	 *
 	 * @param string $constant Constant name.
@@ -484,16 +518,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		if ( ! defined( $constant ) ) {
 			return false;
 		}
-		$path = trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE;
-		if ( ! file_exists( $path ) ) {
-			return true;
-		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $path );
-		return ! preg_match(
-			"/define\(\s*'" . preg_quote( $constant, '/' ) . "'\s*,/",
-			$src
-		);
+		return ! $this->constant_defined_in_plugin_config( $constant );
 	}
 
 	/**
@@ -504,6 +529,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		$constants = $this->get_saved_constants();
 		$runtime   = $this->get_saved_runtime();
 		$config_ok     = file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE );
+		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE );
 		$constants_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=constants' );
 		?>
 		<div id="tsosk-hp-panel">
@@ -529,6 +555,18 @@ class TSOSK_Mod_Hidden_Profiles {
 				/* translators: %s: file path */
 				esc_html__( 'Active profiles config: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE ) . '</code>'
+			);
+			?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( $legacy_exists ) : ?>
+		<div class="tsosk-notice tsosk-notice-warn">
+			<?php
+			printf(
+				/* translators: %s: legacy file path */
+				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife' ),
+				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE ) . '</code>'
 			);
 			?>
 		</div>

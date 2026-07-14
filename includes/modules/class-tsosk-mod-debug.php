@@ -1022,7 +1022,8 @@ class TSOSK_Mod_Debug {
 					<p class="description">
 						<?php esc_html_e( 'Use this only when you want the settings hard-coded in wp-config.php instead of tsosk-config. A backup is recommended before modifying wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</p>
-					<button class="button button-secondary" id="tsosk-enable-wp-log" type="button">
+					<button class="button button-secondary" id="tsosk-enable-wp-log" type="button"
+					        data-nonce="<?php echo esc_attr( $wpconfig_nonce ); ?>">
 						<?php esc_html_e( 'Enable debug.log in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				</details>

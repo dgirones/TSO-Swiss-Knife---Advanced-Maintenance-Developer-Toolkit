@@ -32,7 +32,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, image sizes, and shortcodes.
 * **REST API Controls** — Disable anonymous REST API access or block individual namespaces.
 * **Heartbeat Controls** — Set Heartbeat mode (default / disable frontend / disable editor / disable all) and interval.
-* **Update Manager** — Review pending core, plugin, and theme updates and control automatic update policies.
+* **Update Manager** — Review pending core, plugin, and theme updates, optionally block update checks (staging), and control update email notifications.
 * **TSO Options & Tables Cleaner** — In-plugin promo for the free [TSO Options & Tables Cleaner](https://wordpress.org/plugins/tso-options-tables-cleaner/) companion plugin (database cleanup, orphan options, backups, and table optimization on WordPress.org).
 * **Slow Query Monitor** — Surface slow database queries logged when SAVEQUERIES is enabled.
 * **Search & Replace** — Run dry-run or live serialized-safe search and replace across database tables.

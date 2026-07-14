@@ -165,6 +165,7 @@ class TSOSK_Admin {
 				),
 				'dev_mode_active'     => TSOSK_Site_Status::is_developer_mode_active(),
 				'debug_nonce'         => wp_create_nonce( 'tsosk_debug_nonce' ),
+				'wpconfig_nonce'      => wp_create_nonce( 'tsosk_debug_wpconfig_nonce' ),
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

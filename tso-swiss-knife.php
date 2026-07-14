@@ -28,7 +28,15 @@ define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
 define( 'TSOSK_TEXT_DOMAIN', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 // Config directory inside wp-content/uploads (WP.org compliant location for writable files).
-define( 'TSOSK_CONFIG_DIR', WP_CONTENT_DIR . '/uploads/tsosk-config' );
+$tsosk_uploads_dir = WP_CONTENT_DIR . '/uploads';
+if ( function_exists( 'wp_upload_dir' ) ) {
+	$tsosk_uploads = wp_upload_dir();
+	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
+		$tsosk_uploads_dir = $tsosk_uploads['basedir'];
+	}
+}
+define( 'TSOSK_CONFIG_DIR', trailingslashit( wp_normalize_path( $tsosk_uploads_dir ) ) . 'tsosk-config' );
+unset( $tsosk_uploads_dir, $tsosk_uploads );
 
 // ── Early-load config overrides ───────────────────────────────────────────────
 // These files define constants (WP_DEBUG, DISALLOW_FILE_EDIT, etc.) that must be
