@@ -74,9 +74,11 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 == Installation ==
 
-1. Upload the `tso-swiss-knife-advanced-maintenance-developer-toolkit` folder to `/wp-content/plugins/`.
-2. Activate the plugin via **Plugins › Installed Plugins**.
-3. Navigate to **Tools › TSO Swiss Knife**.
+1. Build or obtain a ZIP whose **root folder** is exactly `tso-swiss-knife-advanced-maintenance-developer-toolkit` (all lowercase). From the repository root run `bash scripts/tsosk-build-zip.sh` (Unix) or `.\scripts\tsosk-build-zip.ps1` (Windows). The file is written to `dist/tso-swiss-knife-advanced-maintenance-developer-toolkit.zip`.
+2. Do **not** upload the GitHub “Download ZIP” archive (`…-main.zip`); that folder name does not match the plugin slug and WordPress will install a duplicate instead of updating.
+3. Upload the `tso-swiss-knife-advanced-maintenance-developer-toolkit` folder to `/wp-content/plugins/`, or use **Plugins › Add New › Upload Plugin** with the ZIP from step 1.
+4. Activate the plugin via **Plugins › Installed Plugins**.
+5. Navigate to **Tools › TSO Swiss Knife**.
 
 == Frequently Asked Questions ==
 
