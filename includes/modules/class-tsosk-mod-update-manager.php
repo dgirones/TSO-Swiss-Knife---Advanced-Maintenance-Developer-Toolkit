@@ -122,6 +122,9 @@ class TSOSK_Mod_Update_Manager {
 		if ( 'disable_all' === $s['preset'] ) {
 			return true;
 		}
+		if ( self::has_blocked_plugin_rules( $s ) ) {
+			return true;
+		}
 		if ( 'custom' !== $s['preset'] ) {
 			return false;
 		}
@@ -129,7 +132,7 @@ class TSOSK_Mod_Update_Manager {
 			|| ! empty( $s['block_plugins'] )
 			|| ! empty( $s['block_themes'] )
 			|| ! empty( $s['block_translations'] )
-			|| self::has_blocked_plugin_rules( $s );
+			|| ! empty( $s['hide_update_nags'] );
 	}
 
 	/**
@@ -744,10 +747,13 @@ class TSOSK_Mod_Update_Manager {
 			</p>
 			<p class="description" style="margin:0 0 12px;">
 				<?php
-				printf(
-					/* translators: %s: Dashboard → Updates admin screen link */
-					wp_kses_post( __( 'Automatic updates are configured in WordPress itself — go to %s to enable or disable auto-updates per component.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Dashboard → Updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</a>'
+				$updates_link = '<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Dashboard → Updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</a>';
+				echo wp_kses_post(
+					sprintf(
+						/* translators: %s: Dashboard → Updates admin screen link */
+						__( 'Automatic updates are configured in WordPress itself — go to %s to enable or disable auto-updates per component.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$updates_link
+					)
 				);
 				?>
 			</p>
