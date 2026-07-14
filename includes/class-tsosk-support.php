@@ -118,6 +118,23 @@ class TSOSK_Support {
 		</a>
 		<?php
 	}
+
+	/**
+	 * Read a plugin CSS asset for standalone HTML pages (no wp_enqueue on exit).
+	 *
+	 * @param string $relative_path Path relative to TSOSK_PATH.
+	 * @return string
+	 */
+	public static function read_asset_css( string $relative_path ): string {
+		$path = TSOSK_PATH . ltrim( $relative_path, '/' );
+		if ( ! is_readable( $path ) ) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$css = file_get_contents( $path );
+		return is_string( $css ) ? $css : '';
+	}
 }
 
 add_filter( 'plugin_row_meta', array( 'TSOSK_Support', 'filter_plugin_row_meta' ), 10, 2 );

@@ -393,9 +393,10 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( $this->form_silent_block && 'spam' === $status ) {
 			$this->form_silent_block = false;
 			$response['status']  = 'mail_sent';
+			$default_message     = __( 'Thank you for your message. It has been sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			$response['message'] = apply_filters(
-				'wpcf7_mail_sent_ok',
-				__( 'Thank you for your message. It has been sent.', 'contact-form-7' )
+				'wpcf7_mail_sent_ok', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Contact Form 7 filter.
+				$default_message
 			);
 		}
 		return $response;
@@ -766,10 +767,11 @@ class TSOSK_Mod_Comment_Antispam {
 				continue;
 			}
 
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Gravity Forms validates submission.
+			// phpcs:disable WordPress.Security.NonceVerification.Missing -- Gravity Forms validates submission.
 			$raw_value = class_exists( 'GFFormsModel' ) && method_exists( 'GFFormsModel', 'get_field_value' )
 				? GFFormsModel::get_field_value( $field, wp_unslash( $_POST ) )
 				: null;
+			// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 			if ( null === $raw_value ) {
 				$input_key = 'input_' . (string) $field->id;
@@ -824,13 +826,14 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @return array<string, mixed>
 	 */
 	private function extract_fields_from_post( string $source ): array {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Provider validates nonce.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Provider validates nonce.
 		$raw = array();
 		foreach ( $_POST as $key => $value ) {
 			$raw[ (string) $key ] = is_array( $value )
 				? array_map( 'strval', wp_unslash( $value ) )
 				: wp_unslash( $value );
 		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 		return $this->extract_fields_from_array( $raw, $source );
 	}
 

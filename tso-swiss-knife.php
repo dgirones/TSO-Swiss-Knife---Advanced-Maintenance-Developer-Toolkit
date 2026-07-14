@@ -116,6 +116,8 @@ function tsosk_load_textdomain(): void {
 		return;
 	}
 
+	// Bundled CA/ES catalogs ship in languages/ until translate.wordpress.org packs exist.
+	// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
 	load_plugin_textdomain(
 		TSOSK_TEXT_DOMAIN,
 		false,
