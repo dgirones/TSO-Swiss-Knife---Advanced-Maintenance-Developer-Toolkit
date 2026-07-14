@@ -141,8 +141,8 @@ class TSOSK_Site_Status {
 			$um = TSOSK_Mod_Update_Manager::get_settings();
 			$badges[] = array(
 				'label' => 'disable_all' === ( $um['preset'] ?? '' )
-					? __( 'Updates off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-					: __( 'Updates managed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					? __( 'Updates blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Update checks limited', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
 				'tab'   => $tab_url( 'update-manager' ),
 			);
