@@ -405,10 +405,10 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		foreach ( $data['flags'] as $const_name => $value ) {
-			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
+			if ( ! is_string( $const_name ) ) {
 				continue;
 			}
-			define( $const_name, (bool) $value );
+			self::define_wp_constant_if_absent( $const_name, (bool) $value );
 		}
 	}
 
@@ -418,12 +418,10 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		foreach ( $data['constants'] as $const_name => $value ) {
-			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
+			if ( ! is_string( $const_name ) || ! $value ) {
 				continue;
 			}
-			if ( $value ) {
-				define( $const_name, true );
-			}
+			self::define_wp_constant_if_absent( $const_name, true );
 		}
 	}
 
@@ -433,15 +431,30 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		foreach ( $data['constants'] as $const_name => $value ) {
-			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
+			if ( ! is_string( $const_name ) ) {
 				continue;
 			}
 			if ( is_bool( $value ) && $value ) {
-				define( $const_name, true );
+				self::define_wp_constant_if_absent( $const_name, true );
 			} elseif ( is_int( $value ) || ( is_string( $value ) && is_numeric( $value ) ) ) {
-				define( $const_name, (int) $value );
+				self::define_wp_constant_if_absent( $const_name, (int) $value );
 			}
 		}
+	}
+
+	/**
+	 * Define a WordPress/PHP constant from saved JSON when not already set.
+	 *
+	 * @param string $constant_name Constant identifier (e.g. WP_DEBUG).
+	 * @param mixed  $value         Constant value.
+	 */
+	private static function define_wp_constant_if_absent( string $constant_name, $value ): void {
+		if ( defined( $constant_name ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound -- Applies WP core constant names from JSON config.
+		define( $constant_name, $value );
 	}
 
 	private static function maybe_migrate_legacy_configs(): void {
