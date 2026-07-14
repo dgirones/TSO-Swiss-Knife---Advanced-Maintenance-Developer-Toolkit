@@ -351,14 +351,19 @@ class TSOSK_Mod_Constants {
 				return __( 'Defined in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 		}
-		foreach ( array( 'tsosk-debug-flags.php', 'tsosk-security-flags.php', 'tsosk-profiles-flags.php' ) as $file ) {
-			$path = TSOSK_CONFIG_DIR . '/' . $file;
-			if ( ! is_readable( $path ) ) {
-				continue;
+		foreach ( array(
+			TSOSK_Config_Storage::DEBUG_JSON,
+			TSOSK_Config_Storage::SECURITY_JSON,
+			TSOSK_Config_Storage::PROFILES_JSON,
+		) as $file ) {
+			$data = TSOSK_Config_Storage::read_json( $file );
+			if ( ! empty( $data['flags'][ $constant ] ) ) {
+				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$src = (string) file_get_contents( $path );
-			if ( preg_match( '/define\s*\(\s*[\'"]' . preg_quote( $constant, '/' ) . '[\'"]/i', $src ) ) {
+			if ( isset( $data['constants'][ $constant ] ) && ( false !== $data['constants'][ $constant ] && null !== $data['constants'][ $constant ] ) ) {
+				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( 'FORCE_SSL_ADMIN' === $constant && ! empty( $data['force_ssl_admin_override_off'] ) ) {
 				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 		}
@@ -409,21 +414,23 @@ class TSOSK_Mod_Constants {
 	 * @return string|null
 	 */
 	private function read_constant_from_tsosk_flags( string $constant ): ?string {
-		foreach ( array( 'tsosk-debug-flags.php', 'tsosk-security-flags.php', 'tsosk-profiles-flags.php' ) as $file ) {
-			$path = TSOSK_CONFIG_DIR . '/' . $file;
-			if ( ! is_readable( $path ) ) {
-				continue;
+		foreach ( array(
+			TSOSK_Config_Storage::DEBUG_JSON,
+			TSOSK_Config_Storage::SECURITY_JSON,
+			TSOSK_Config_Storage::PROFILES_JSON,
+		) as $file ) {
+			$data = TSOSK_Config_Storage::read_json( $file );
+			if ( ! empty( $data['flags'][ $constant ] ) ) {
+				return $data['flags'][ $constant ] ? 'true' : 'false';
 			}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$src = (string) file_get_contents( $path );
-			if ( preg_match(
-				'/define\s*\(\s*[\'"]' . preg_quote( $constant, '/' ) . '[\'"]\s*,\s*([^)]+)\)/i',
-				$src,
-				$m
-			) ) {
-				return trim( $m[1], " \t\n\r\0\x0B'\"" );
+			if ( isset( $data['constants'][ $constant ] ) ) {
+				$value = $data['constants'][ $constant ];
+				if ( is_bool( $value ) ) {
+					return $value ? 'true' : 'false';
+				}
+				return (string) $value;
 			}
-			if ( 'FORCE_SSL_ADMIN' === $constant && preg_match( "/add_filter\s*\(\s*'force_ssl_admin'/", $src ) ) {
+			if ( 'FORCE_SSL_ADMIN' === $constant && ! empty( $data['force_ssl_admin_override_off'] ) ) {
 				return 'false';
 			}
 		}

@@ -16,7 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Security {
 
-	/** MU-plugin file managed by this module. */
+	/** JSON config filename (stored under uploads/tsosk-config). */
+	private const CONFIG_FILE = 'tsosk-security-flags.json';
+
+	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
 	private const MU_FILE = 'tsosk-security-flags.php';
 
 	/** @var TSOSK_Mod_Security|null */
@@ -99,80 +102,21 @@ class TSOSK_Mod_Security {
 	 * @return true|WP_Error
 	 */
 	private function write_mu_plugin( array $flags ) {
-		$dir  = TSOSK_CONFIG_DIR;
-		$path = trailingslashit( $dir ) . self::MU_FILE;
-
 		$needs_ssl_override = empty( $flags['FORCE_SSL_ADMIN'] )
 			&& $this->is_defined_in_wp_config( 'FORCE_SSL_ADMIN' )
 			&& defined( 'FORCE_SSL_ADMIN' )
 			&& FORCE_SSL_ADMIN;
 
-		$any_on = in_array( true, array_values( $flags ), true ) || $needs_ssl_override;
-
-		if ( ! $any_on ) {
-			if ( file_exists( $path ) ) {
-				wp_delete_file( $path );
-			}
-			$legacy = trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE;
-			if ( file_exists( $legacy ) ) {
-				wp_delete_file( $legacy );
-			}
-			return true;
-		}
-
-		if ( ! is_dir( $dir ) ) {
-			wp_mkdir_p( $dir );
-			$this->protect_config_dir( $dir );
-		}
-		if ( ! wp_is_writable( $dir ) ) {
-			return new WP_Error( 'not_writable', __( 'The config directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-		$legacy = trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE;
-		if ( file_exists( $legacy ) ) {
-			wp_delete_file( $legacy );
-		}
-
-		$content  = "<?php\n";
-		$content .= "/**\n * TSO Swiss Knife – Security Flags (auto-generated).\n * tsosk\n */\n";
-		foreach ( $flags as $constant => $enabled ) {
-			if ( $enabled ) {
-				$content .= "if ( ! defined( '" . $constant . "' ) ) { define( '" . $constant . "', true ); }\n";
-			}
-		}
-		if ( $needs_ssl_override ) {
-			$content .= "add_filter( 'force_ssl_admin', '__return_false', 99 );\n";
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		$result = file_put_contents( $path, $content );
-		if ( false === $result ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the MU-plugin file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-		return true;
+		return TSOSK_Config_Storage::save_security_flags( $flags, $needs_ssl_override );
 	}
 
 	/**
-	 * Read current values of the managed constants from the MU-plugin.
+	 * Read current values of the managed constants from JSON config.
 	 *
 	 * @return array<string,bool>
 	 */
 	private function get_mu_settings(): array {
-		$path     = trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE;
-		$defaults = array( 'DISALLOW_FILE_EDIT' => false, 'DISALLOW_FILE_MODS' => false, 'FORCE_SSL_ADMIN' => false );
-		if ( ! file_exists( $path ) ) {
-			return $defaults;
-		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $path );
-		$out = array();
-		foreach ( $defaults as $c => $d ) {
-			if ( 'FORCE_SSL_ADMIN' === $c && preg_match( "/add_filter\s*\(\s*'force_ssl_admin'/", $src ) ) {
-				$out[ $c ] = false;
-			} else {
-				$out[ $c ] = (bool) preg_match( "/define\(\s*'" . preg_quote( $c, '/' ) . "'\s*,\s*true\s*\)/", $src );
-			}
-		}
-		return $out;
+		return TSOSK_Config_Storage::get_security_flags()['constants'];
 	}
 
 	/**
@@ -181,13 +125,7 @@ class TSOSK_Mod_Security {
 	 * @return bool
 	 */
 	private function is_force_ssl_overridden_off(): bool {
-		$path = trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE;
-		if ( ! file_exists( $path ) ) {
-			return false;
-		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $path );
-		return (bool) preg_match( "/add_filter\s*\(\s*'force_ssl_admin'/", $src );
+		return TSOSK_Config_Storage::get_security_flags()['force_ssl_admin_override_off'];
 	}
 
 	/**
@@ -224,7 +162,7 @@ class TSOSK_Mod_Security {
 		$checks    = $this->get_checks();
 		$mu        = $this->get_mu_settings();
 		$remote    = $this->get_remote_access_flags();
-		$mu_exists     = file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE );
+		$mu_exists     = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::SECURITY_JSON );
 		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE );
 
 		$toggles = array(
@@ -249,7 +187,7 @@ class TSOSK_Mod_Security {
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles write a config file to wp-content/uploads/tsosk-config/ that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config to wp-content/uploads/tsosk-config/ that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
@@ -293,7 +231,7 @@ class TSOSK_Mod_Security {
 				printf(
 					/* translators: %s: file path */
 					esc_html__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE ) . '</code>'
+					'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
 				);
 				?>
 			</div>
@@ -428,23 +366,5 @@ class TSOSK_Mod_Security {
 		}
 		$parent = dirname( untrailingslashit( ABSPATH ) ) . '/wp-config.php';
 		return file_exists( $parent ) ? $parent : '';
-	}
-
-	/**
-	 * Create .htaccess + index.php in the config dir to prevent direct web access.
-	 *
-	 * @param string $dir Absolute path to the config directory.
-	 */
-	private function protect_config_dir( string $dir ): void {
-		$htaccess = $dir . '/.htaccess';
-		if ( ! file_exists( $htaccess ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
-		}
-		$index = $dir . '/index.php';
-		if ( ! file_exists( $index ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $index, "<?php // Silence is golden.\n" );
-		}
 	}
 }

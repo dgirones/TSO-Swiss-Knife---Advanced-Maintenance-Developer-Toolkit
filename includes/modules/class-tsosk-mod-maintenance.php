@@ -80,6 +80,8 @@ class TSOSK_Mod_Maintenance {
 
 		$logo_url = $this->get_logo_url( $logo_id );
 		$heading  = '' !== trim( $page_title ) ? $page_title : get_bloginfo( 'name' );
+		$body_cls = 'tsosk-maint' . ( $is_preview ? ' tsosk-maint-preview' : '' );
+		$css_url  = TSOSK_URL . 'assets/css/tsosk-maintenance.css';
 
 		http_response_code( 503 );
 		header( 'Retry-After: 3600' );
@@ -92,27 +94,17 @@ class TSOSK_Mod_Maintenance {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html( get_bloginfo( 'name' ) ); ?> – <?php esc_html_e( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></title>
-<style>
-body{margin:0;background:#1a1a2e;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center<?php echo $is_preview ? ';padding-top:48px;box-sizing:border-box' : ''; ?>}
-.box{max-width:560px;padding:40px 30px}
-h1{font-size:2rem;margin:0 0 16px;color:#fff}
-p{font-size:1.1rem;line-height:1.6;color:#aaa}
-.icon{font-size:3.5rem;margin-bottom:24px}
-.logo{max-width:min(400px,90vw);max-height:220px;width:auto;height:auto;margin:0 auto 28px;display:block;object-fit:contain}
-<?php if ( $is_preview ) : ?>
-.tsosk-maint-preview-bar{position:fixed;top:0;left:0;right:0;background:#f0c14b;color:#1d2327;padding:10px 16px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-<?php endif; ?>
-</style>
+<link rel="stylesheet" href="<?php echo esc_url( $css_url ); ?>">
 </head>
-<body>
+<body class="<?php echo esc_attr( $body_cls ); ?>">
 <?php if ( $is_preview ) : ?>
 <div class="tsosk-maint-preview-bar"><?php esc_html_e( 'Preview only — maintenance mode is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></div>
 <?php endif; ?>
-<div class="box">
+<div class="tsosk-maint-box">
 	<?php if ( $logo_url ) : ?>
-		<img class="logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+		<img class="tsosk-maint-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 	<?php else : ?>
-		<div class="icon" aria-hidden="true">🔧</div>
+		<div class="tsosk-maint-icon" aria-hidden="true">🔧</div>
 	<?php endif; ?>
 	<h1><?php echo esc_html( $heading ); ?></h1>
 	<p><?php echo wp_kses_post( nl2br( esc_html( $message ) ) ); ?></p>

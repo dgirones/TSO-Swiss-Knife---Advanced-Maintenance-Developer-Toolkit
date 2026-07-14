@@ -173,14 +173,6 @@ class TSOSK_Mod_History {
 				</label>
 				<?php endforeach; ?>
 			</div>
-			<style>
-			.tsosk-history-modules {
-				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-				gap: 6px 16px;
-				margin-bottom: 12px;
-			}
-			</style>
 			<p class="description" style="margin-top:0;">
 				<?php esc_html_e( 'Tip: check only the modules you care about to reduce noise. Save, then uncheck modules you want to exclude — or clear history after changing filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>

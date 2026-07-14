@@ -16,8 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Hidden_Profiles {
 
-	/** Config file written under uploads/tsosk-config. */
-	private const CONFIG_FILE = 'tsosk-profiles-flags.php';
+	/** JSON config filename (stored under uploads/tsosk-config). */
+	private const CONFIG_FILE = 'tsosk-profiles-flags.json';
+
+	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
+	private const LEGACY_CONFIG_FILE = 'tsosk-profiles-flags.php';
 
 	/** Runtime toggles stored in wp_options. */
 	private const OPTION_KEY = 'tsosk_hidden_profiles';
@@ -362,105 +365,14 @@ class TSOSK_Mod_Hidden_Profiles {
 	 * @return true|WP_Error
 	 */
 	private function write_config_file( array $constants ) {
-		$path   = trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE;
-		$any_on = false;
-		foreach ( $constants as $value ) {
-			if ( null !== $value && false !== $value ) {
-				$any_on = true;
-				break;
-			}
-		}
-
-		if ( ! $any_on ) {
-			if ( file_exists( $path ) ) {
-				wp_delete_file( $path );
-			}
-			$legacy_mu = trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE;
-			if ( file_exists( $legacy_mu ) ) {
-				wp_delete_file( $legacy_mu );
-			}
-			return true;
-		}
-
-		$dir = TSOSK_CONFIG_DIR;
-		if ( ! is_dir( $dir ) ) {
-			wp_mkdir_p( $dir );
-			$this->protect_config_dir( $dir );
-		}
-		if ( ! wp_is_writable( $dir ) ) {
-			return new WP_Error( 'not_writable', __( 'The config directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$content  = "<?php\n";
-		$content .= "/**\n * TSO Swiss Knife – Hidden WordPress Profiles (auto-generated).\n * tsosk\n */\n";
-
-		foreach ( $constants as $constant => $value ) {
-			if ( null === $value || false === $value ) {
-				continue;
-			}
-			if ( is_bool( $value ) && $value ) {
-				$content .= "if ( ! defined( '" . $constant . "' ) ) { define( '" . $constant . "', true ); }\n";
-			} elseif ( is_int( $value ) ) {
-				$content .= "if ( ! defined( '" . $constant . "' ) ) { define( '" . $constant . "', " . (int) $value . " ); }\n";
-			}
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		$result = file_put_contents( $path, $content );
-		if ( false === $result ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the profiles config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$legacy_mu = trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE;
-		if ( file_exists( $legacy_mu ) ) {
-			wp_delete_file( $legacy_mu );
-		}
-
-		return true;
+		return TSOSK_Config_Storage::save_profiles_constants( $constants );
 	}
 
 	/**
 	 * @return array<string, mixed>
 	 */
 	private function get_saved_constants(): array {
-		$defaults = array(
-			'DISABLE_WP_CRON'     => false,
-			'CONCATENATE_SCRIPTS' => false,
-			'COMPRESS_SCRIPTS'    => false,
-			'WP_POST_REVISIONS'   => null,
-			'AUTOSAVE_INTERVAL'   => null,
-			'EMPTY_TRASH_DAYS'    => null,
-		);
-
-		$path = trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE;
-		if ( ! file_exists( $path ) ) {
-			return $defaults;
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $path );
-		if ( '' === $src ) {
-			return $defaults;
-		}
-
-		foreach ( array( 'DISABLE_WP_CRON', 'CONCATENATE_SCRIPTS', 'COMPRESS_SCRIPTS' ) as $bool_const ) {
-			$defaults[ $bool_const ] = (bool) preg_match(
-				"/define\(\s*'" . preg_quote( $bool_const, '/' ) . "'\s*,\s*true\s*\)/",
-				$src
-			);
-		}
-
-		foreach ( array( 'WP_POST_REVISIONS', 'AUTOSAVE_INTERVAL', 'EMPTY_TRASH_DAYS' ) as $num_const ) {
-			if ( preg_match(
-				"/define\(\s*'" . preg_quote( $num_const, '/' ) . "'\s*,\s*(\d+)\s*\)/",
-				$src,
-				$m
-			) ) {
-				$defaults[ $num_const ] = (int) $m[1];
-			}
-		}
-
-		return $defaults;
+		return TSOSK_Config_Storage::get_profiles_constants();
 	}
 
 	/**
@@ -485,30 +397,6 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
-	 * Whether a constant is defined in plugin config (uploads or legacy MU), not wp-config.
-	 *
-	 * @param string $constant Constant name.
-	 * @return bool
-	 */
-	private function constant_defined_in_plugin_config( string $constant ): bool {
-		$paths = array(
-			trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE,
-			trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE,
-		);
-		foreach ( $paths as $path ) {
-			if ( ! is_readable( $path ) ) {
-				continue;
-			}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-			$src = (string) file_get_contents( $path );
-			if ( preg_match( "/define\(\s*'" . preg_quote( $constant, '/' ) . "'\s*,/", $src ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Whether a constant is locked by wp-config.php (already defined before our file).
 	 *
 	 * @param string $constant Constant name.
@@ -518,7 +406,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		if ( ! defined( $constant ) ) {
 			return false;
 		}
-		return ! $this->constant_defined_in_plugin_config( $constant );
+		return ! TSOSK_Config_Storage::constant_defined_in_tsosk_config( $constant );
 	}
 
 	/**
@@ -528,13 +416,13 @@ class TSOSK_Mod_Hidden_Profiles {
 		$nonce     = wp_create_nonce( 'tsosk_hidden_profiles_nonce' );
 		$constants = $this->get_saved_constants();
 		$runtime   = $this->get_saved_runtime();
-		$config_ok     = file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE );
-		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE );
+		$config_ok     = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::PROFILES_JSON );
+		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES );
 		$constants_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=constants' );
 		?>
 		<div id="tsosk-hp-panel">
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are written to wp-content/uploads/tsosk-config/ and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON in wp-content/uploads/tsosk-config/ and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-info">
@@ -554,7 +442,7 @@ class TSOSK_Mod_Hidden_Profiles {
 			printf(
 				/* translators: %s: file path */
 				esc_html__( 'Active profiles config: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . self::CONFIG_FILE ) . '</code>'
+				'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::PROFILES_JSON ) . '</code>'
 			);
 			?>
 		</div>
@@ -565,8 +453,8 @@ class TSOSK_Mod_Hidden_Profiles {
 			<?php
 			printf(
 				/* translators: %s: legacy file path */
-				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife' ),
-				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::CONFIG_FILE ) . '</code>'
+				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES ) . '</code>'
 			);
 			?>
 		</div>
@@ -787,21 +675,5 @@ class TSOSK_Mod_Hidden_Profiles {
 			</label>
 		</div>
 		<?php
-	}
-
-	/**
-	 * @param string $dir Config directory.
-	 */
-	private function protect_config_dir( string $dir ): void {
-		$htaccess = $dir . '/.htaccess';
-		if ( ! file_exists( $htaccess ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
-		}
-		$index = $dir . '/index.php';
-		if ( ! file_exists( $index ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $index, "<?php // Silence is golden.\n" );
-		}
 	}
 }
