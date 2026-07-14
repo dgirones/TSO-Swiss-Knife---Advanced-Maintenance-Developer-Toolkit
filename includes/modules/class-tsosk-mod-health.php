@@ -124,7 +124,7 @@ class TSOSK_Mod_Health {
 		$site_url  = isset( $report['site']['url'] ) ? (string) $report['site']['url'] : '';
 		$generated = isset( $report['generated_at'] ) ? (string) $report['generated_at'] : '';
 		$checks    = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
-		$css_url   = TSOSK_URL . 'assets/css/tsosk-health-report.css';
+		$css       = TSOSK_Support::read_asset_css( 'assets/css/tsosk-health-report.css' );
 
 		ob_start();
 		?>
@@ -133,7 +133,12 @@ class TSOSK_Mod_Health {
 <head>
 	<meta charset="utf-8">
 	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site_name ) ); ?></title>
-	<link rel="stylesheet" href="<?php echo esc_url( $css_url ); ?>">
+	<style id="tsosk-health-report-style">
+	<?php
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static plugin CSS asset.
+	echo $css;
+	?>
+	</style>
 </head>
 <body class="tsosk-health-report">
 	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h1>

@@ -99,6 +99,7 @@ class TSOSK_Admin {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only legacy page slug redirect.
 		$page = sanitize_key( wp_unslash( (string) $_GET['page'] ) );
 		if ( 'tso-swiss-knife' !== $page ) {
 			return;

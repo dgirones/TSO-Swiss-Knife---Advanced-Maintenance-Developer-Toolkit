@@ -404,11 +404,11 @@ class TSOSK_Config_Storage {
 		if ( empty( $data['flags'] ) || ! is_array( $data['flags'] ) ) {
 			return;
 		}
-		foreach ( $data['flags'] as $constant => $value ) {
-			if ( ! is_string( $constant ) || defined( $constant ) ) {
+		foreach ( $data['flags'] as $const_name => $value ) {
+			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
 				continue;
 			}
-			define( $constant, (bool) $value );
+			define( $const_name, (bool) $value );
 		}
 	}
 
@@ -417,12 +417,12 @@ class TSOSK_Config_Storage {
 		if ( empty( $data['constants'] ) || ! is_array( $data['constants'] ) ) {
 			return;
 		}
-		foreach ( $data['constants'] as $constant => $value ) {
-			if ( ! is_string( $constant ) || defined( $constant ) ) {
+		foreach ( $data['constants'] as $const_name => $value ) {
+			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
 				continue;
 			}
 			if ( $value ) {
-				define( $constant, true );
+				define( $const_name, true );
 			}
 		}
 	}
@@ -432,14 +432,14 @@ class TSOSK_Config_Storage {
 		if ( empty( $data['constants'] ) || ! is_array( $data['constants'] ) ) {
 			return;
 		}
-		foreach ( $data['constants'] as $constant => $value ) {
-			if ( ! is_string( $constant ) || defined( $constant ) ) {
+		foreach ( $data['constants'] as $const_name => $value ) {
+			if ( ! is_string( $const_name ) || defined( $const_name ) ) {
 				continue;
 			}
 			if ( is_bool( $value ) && $value ) {
-				define( $constant, true );
+				define( $const_name, true );
 			} elseif ( is_int( $value ) || ( is_string( $value ) && is_numeric( $value ) ) ) {
-				define( $constant, (int) $value );
+				define( $const_name, (int) $value );
 			}
 		}
 	}
