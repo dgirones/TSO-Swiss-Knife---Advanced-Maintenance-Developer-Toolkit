@@ -27,7 +27,15 @@ define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
 // Config directory inside wp-content/uploads (WP.org compliant location for writable files).
-define( 'TSOSK_CONFIG_DIR', WP_CONTENT_DIR . '/uploads/tsosk-config' );
+$tsosk_uploads_dir = WP_CONTENT_DIR . '/uploads';
+if ( function_exists( 'wp_upload_dir' ) ) {
+	$tsosk_uploads = wp_upload_dir();
+	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
+		$tsosk_uploads_dir = $tsosk_uploads['basedir'];
+	}
+}
+define( 'TSOSK_CONFIG_DIR', trailingslashit( wp_normalize_path( $tsosk_uploads_dir ) ) . 'tsosk-config' );
+unset( $tsosk_uploads_dir, $tsosk_uploads );
 
 // ── Autoload includes ─────────────────────────────────────────────────────────
 $tsosk_includes = array(

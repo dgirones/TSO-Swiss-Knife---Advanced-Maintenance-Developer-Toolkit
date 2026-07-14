@@ -417,6 +417,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		$constants = $this->get_saved_constants();
 		$runtime   = $this->get_saved_runtime();
 		$config_ok     = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::PROFILES_JSON );
+		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES );
 		$constants_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=constants' );
 		?>
 		<div id="tsosk-hp-panel">
@@ -442,6 +443,18 @@ class TSOSK_Mod_Hidden_Profiles {
 				/* translators: %s: file path */
 				esc_html__( 'Active profiles config: %s', 'tso-swiss-knife' ),
 				'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::PROFILES_JSON ) . '</code>'
+			);
+			?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( $legacy_exists ) : ?>
+		<div class="tsosk-notice tsosk-notice-warn">
+			<?php
+			printf(
+				/* translators: %s: legacy file path */
+				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife' ),
+				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES ) . '</code>'
 			);
 			?>
 		</div>

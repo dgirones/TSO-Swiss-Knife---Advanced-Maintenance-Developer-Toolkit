@@ -450,11 +450,20 @@ class TSOSK_Config_Storage {
 		self::migrate_legacy_profiles();
 	}
 
+	private static function legacy_path( string $legacy_filename ): string {
+		$uploads = self::path_for( $legacy_filename );
+		if ( is_readable( $uploads ) ) {
+			return $uploads;
+		}
+		$mu = trailingslashit( WPMU_PLUGIN_DIR ) . $legacy_filename;
+		return is_readable( $mu ) ? $mu : $uploads;
+	}
+
 	private static function migrate_legacy_debug(): void {
 		if ( self::json_exists( self::DEBUG_JSON ) ) {
 			return;
 		}
-		$legacy = self::path_for( self::LEGACY_DEBUG );
+		$legacy = self::legacy_path( self::LEGACY_DEBUG );
 		if ( ! is_readable( $legacy ) ) {
 			return;
 		}
@@ -487,7 +496,7 @@ class TSOSK_Config_Storage {
 		if ( self::json_exists( self::SECURITY_JSON ) ) {
 			return;
 		}
-		$legacy = self::path_for( self::LEGACY_SECURITY );
+		$legacy = self::legacy_path( self::LEGACY_SECURITY );
 		if ( ! is_readable( $legacy ) ) {
 			return;
 		}
@@ -510,7 +519,7 @@ class TSOSK_Config_Storage {
 		if ( self::json_exists( self::PROFILES_JSON ) ) {
 			return;
 		}
-		$legacy = self::path_for( self::LEGACY_PROFILES );
+		$legacy = self::legacy_path( self::LEGACY_PROFILES );
 		if ( ! is_readable( $legacy ) ) {
 			return;
 		}
