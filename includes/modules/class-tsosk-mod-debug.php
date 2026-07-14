@@ -21,7 +21,10 @@ class TSOSK_Mod_Debug {
 	/** @var TSOSK_Mod_Debug|null */
 	private static $instance = null;
 
-	/** Path to the MU-plugin file this module manages. */
+	/** JSON config filename (stored under uploads/tsosk-config). */
+	private const CONFIG_FILE = 'tsosk-debug-flags.json';
+
+	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
 	private const MU_FILE = 'tsosk-debug-flags.php';
 
 	public static function get_instance(): self {
@@ -36,7 +39,6 @@ class TSOSK_Mod_Debug {
 		add_action( 'wp_ajax_tsosk_debug_clear_log', array( $this, 'ajax_clear_log' ) );
 		add_action( 'wp_ajax_tsosk_debug_shrink_log', array( $this, 'ajax_shrink_log' ) );
 		add_action( 'admin_post_tsosk_debug_download_log', array( $this, 'download_log' ) );
-		add_action( 'wp_ajax_tsosk_debug_wpconfig_save',   array( $this, 'ajax_wpconfig_save' ) );
 		add_action( 'wp_ajax_tsosk_debug_developer_mode', array( $this, 'ajax_developer_mode' ) );
 	}
 
@@ -54,7 +56,7 @@ class TSOSK_Mod_Debug {
 	 * @return string
 	 */
 	private function config_path(): string {
-		return trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE;
+		return trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::DEBUG_JSON;
 	}
 
 	/**
@@ -114,7 +116,7 @@ class TSOSK_Mod_Debug {
 				'path'     => $path,
 				'exists'   => $exists,
 				'readable' => $exists && is_readable( $path ),
-				'writable' => $exists && wp_is_writable( $path ),
+				'writable' => $exists && wp_is_writable( $path ) && TSOSK_Config_Storage::is_managed_log_path( $path ),
 				'size'     => $size,
 				'modified' => $exists ? (int) filemtime( $path ) : 0,
 				'preview'  => $exists && is_readable( $path ) ? $this->read_log_preview( $path ) : '',
@@ -225,6 +227,20 @@ class TSOSK_Mod_Debug {
 	}
 
 	/**
+	 * Whether a validated log path may be truncated or rewritten.
+	 *
+	 * @param string $path Raw log path.
+	 * @return string Normalized path or empty when not allowed.
+	 */
+	private function validate_log_writable_path( string $path ): string {
+		$path = $this->validate_log_path( $path );
+		if ( '' === $path || ! TSOSK_Config_Storage::is_managed_log_path( $path ) ) {
+			return '';
+		}
+		return $path;
+	}
+
+	/**
 	 * Download a validated log file.
 	 */
 	public function download_log(): void {
@@ -276,122 +292,20 @@ class TSOSK_Mod_Debug {
 	 * @return array{debug:bool,log:bool,display:bool,script:bool,queries:bool}
 	 */
 	private function get_settings(): array {
-		$defaults = array(
-			'debug'   => defined( 'WP_DEBUG' ) && WP_DEBUG,
-			'log'     => defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG,
-			'display' => defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY,
-			'script'  => defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG,
-			'queries' => defined( 'SAVEQUERIES' ) && SAVEQUERIES,
-		);
-
-		$path = $this->config_path();
-		if ( ! file_exists( $path ) ) {
-			return $defaults;
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local MU-plugin file.
-		$src = file_get_contents( $path );
-		if ( ! $src ) {
-			return $defaults;
-		}
-
-		// Parse booleans written by write_mu_plugin().
-		$map = array(
-			'debug'   => 'WP_DEBUG',
-			'log'     => 'WP_DEBUG_LOG',
-			'display' => 'WP_DEBUG_DISPLAY',
-			'script'  => 'SCRIPT_DEBUG',
-			'queries' => 'SAVEQUERIES',
-		);
-		$out = array();
-		foreach ( $map as $key => $constant ) {
-			if ( preg_match( "/define\(\s*'" . preg_quote( $constant, '/' ) . "'\s*,\s*(true|false)\s*\)/i", $src, $m ) ) {
-				$out[ $key ] = ( 'true' === strtolower( $m[1] ) );
-			} else {
-				$out[ $key ] = $defaults[ $key ];
-			}
-		}
-		return $out;
+		return TSOSK_Config_Storage::get_debug_flags();
 	}
 
 	/**
-	 * Writes or removes the MU-plugin file according to the given settings.
+	 * Writes or removes the JSON config according to the given settings.
 	 *
 	 * @param array $s Settings array.
 	 * @return true|WP_Error
 	 */
 	private function write_mu_plugin( array $s ) {
-		// If all flags are off, remove the file so we leave no trace.
-		$any_on = $s['debug'] || $s['log'] || $s['display'] || $s['script'] || $s['queries'];
-
-		$path = $this->config_path();
-
-		if ( ! $any_on ) {
-			if ( file_exists( $path ) ) {
-				wp_delete_file( $path );
-			}
-			return true;
-		}
-
-		$bool = static function ( bool $v ): string {
-			return $v ? 'true' : 'false';
-		};
-
-		$content  = "<?php\n";
-		$content .= "/**\n";
-		$content .= " * TSO Swiss Knife – Debug Flags (auto-generated, do not edit).\n";
-		$content .= " * tsosw\n";
-		$content .= " */\n";
-		$content .= "if ( ! defined( 'WP_DEBUG' ) )         { define( 'WP_DEBUG',         " . $bool( $s['debug'] )   . " ); }\n";
-		$content .= "if ( ! defined( 'WP_DEBUG_LOG' ) )     { define( 'WP_DEBUG_LOG',     " . $bool( $s['log'] )     . " ); }\n";
-		$content .= "if ( ! defined( 'WP_DEBUG_DISPLAY' ) ) { define( 'WP_DEBUG_DISPLAY', " . $bool( $s['display'] ) . " ); }\n";
-		$content .= "if ( ! defined( 'SCRIPT_DEBUG' ) )     { define( 'SCRIPT_DEBUG',     " . $bool( $s['script'] )  . " ); }\n";
-		$content .= "if ( ! defined( 'SAVEQUERIES' ) )      { define( 'SAVEQUERIES',      " . $bool( $s['queries'] ) . " ); }\n";
-
-		// Ensure the config directory exists and is web-access protected.
-		$dir = TSOSK_CONFIG_DIR;
-		if ( ! is_dir( $dir ) ) {
-			wp_mkdir_p( $dir );
-			$this->protect_config_dir( $dir );
-		}
-
-		if ( ! wp_is_writable( $dir ) ) {
-			return new WP_Error( 'not_writable', __( 'The config directory is not writable.', 'tso-swiss-knife' ) );
-		}
-
-		// Remove legacy mu-plugins file if still present (migration).
-		$legacy = trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE;
-		if ( file_exists( $legacy ) ) {
-			wp_delete_file( $legacy );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- WP_Filesystem not available this early; TSOSK_CONFIG_DIR is inside wp-content/uploads.
-		$result = file_put_contents( $path, $content );
-		if ( false === $result ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife' ) );
-		}
-		return true;
+		return TSOSK_Config_Storage::save_debug_flags( $s );
 	}
 
-	/**
-	 * Create .htaccess + index.php in the config dir to prevent direct web access.
-	 *
-	 * @param string $dir Absolute path to the config directory.
-	 */
-	private function protect_config_dir( string $dir ): void {
-		$htaccess = $dir . '/.htaccess';
-		if ( ! file_exists( $htaccess ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
-		}
-		$index = $dir . '/index.php';
-		if ( ! file_exists( $index ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $index, "<?php // Silence is golden.\n" );
-		}
-	}
-
-	// ── wp-config.php helpers ────────────────────────────────────────────────
+	// ── wp-config.php helpers (read-only) ────────────────────────────────────
 
 	/**
 	 * Constants this module can safely modify in wp-config.php.
@@ -482,114 +396,6 @@ class TSOSK_Mod_Debug {
 		}
 
 		return $result;
-	}
-
-	/**
-	 * AJAX: save one constant to wp-config.php.
-	 *
-	 * Changes an existing define() line, or appends a new one before "stop editing".
-	 */
-	public function ajax_wpconfig_save(): void {
-		check_ajax_referer( 'tsosk_debug_wpconfig_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
-		}
-
-		$constant = isset( $_POST['constant'] ) ? sanitize_text_field( wp_unslash( $_POST['constant'] ) ) : '';
-		$value    = isset( $_POST['value'] )    ? sanitize_text_field( wp_unslash( $_POST['value'] ) )    : '';
-
-		// Whitelist: only our managed constants, only true/false.
-		if ( ! array_key_exists( $constant, $this->managed_constants() ) ) {
-			wp_send_json_error( __( 'Unknown constant.', 'tso-swiss-knife' ) );
-		}
-		if ( ! in_array( $value, array( 'true', 'false' ), true ) ) {
-			wp_send_json_error( __( 'Invalid value. Only true or false are accepted.', 'tso-swiss-knife' ) );
-		}
-
-		$path = $this->wpconfig_path();
-		if ( '' === $path ) {
-			wp_send_json_error( __( 'wp-config.php not found.', 'tso-swiss-knife' ) );
-		}
-		if ( ! wp_is_writable( $path ) ) {
-			wp_send_json_error( __( 'wp-config.php is not writable. Change file permissions to 644 temporarily, save, then restore to 440 or 400.', 'tso-swiss-knife' ) );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_file -- reading local config file.
-		$lines = file( $path );
-		if ( ! is_array( $lines ) ) {
-			wp_send_json_error( __( 'Could not read wp-config.php.', 'tso-swiss-knife' ) );
-		}
-
-		$new_define = "define( '{$constant}', {$value} );
-";
-		$replaced   = false;
-
-		foreach ( $lines as $i => $line ) {
-			if ( preg_match( '/^\s*define\s*\(\s*[\'\"]{1}' . preg_quote( $constant, '/' ) . '[\'\"]{1}\s*,\s*(true|false)\s*\)/i', $line ) ) {
-				// Preserve any inline comment after the closing ).
-				$comment = '';
-				if ( preg_match( '/(\s*\/\/[^\n]*)$/m', $line, $cm ) ) {
-					$comment = $cm[1];
-				}
-				$lines[ $i ] = "define( '{$constant}', {$value} );{$comment}
-";
-				$replaced    = true;
-				break;
-			}
-		}
-
-		if ( ! $replaced ) {
-			// Append before the "stop editing" marker or at the end.
-			$insert_before = array( "/* That's all, stop editing!", "/** That's all, stop editing", 'require_once' );
-			foreach ( $lines as $i => $line ) {
-				foreach ( $insert_before as $marker ) {
-					if ( false !== strpos( $line, $marker ) ) {
-						array_splice( $lines, $i, 0, array( $new_define ) );
-						$replaced = true;
-						break 2;
-					}
-				}
-			}
-			if ( ! $replaced ) {
-				$lines[] = $new_define;
-			}
-		}
-
-		$new_content = implode( '', $lines );
-
-		// Sanity check: result must still open with <?php.
-		if ( 0 !== strpos( ltrim( $new_content ), '<?php' ) ) {
-			wp_send_json_error( __( 'Safety check failed: modified content does not start with <?php. Changes were NOT saved.', 'tso-swiss-knife' ) );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- direct write required for wp-config.php.
-		$result = file_put_contents( $path, $new_content );
-		if ( false === $result ) {
-			wp_send_json_error( __( 'Could not write wp-config.php.', 'tso-swiss-knife' ) );
-		}
-
-		TSOSK_Activity_Log::log(
-			'debug',
-			'update',
-			sprintf(
-				/* translators: 1: constant name, 2: value */
-				__( 'wp-config.php: %1$s set to %2$s.', 'tso-swiss-knife' ),
-				$constant,
-				$value
-			),
-			array( 'constant' => $constant )
-		);
-
-		wp_send_json_success( array(
-			'message'  => sprintf(
-				/* translators: 1: constant name, 2: value */
-				__( '%1$s set to %2$s in wp-config.php. Reload the page to see the new actual value.', 'tso-swiss-knife' ),
-				$constant,
-				$value
-			),
-			'constant' => $constant,
-			'value'    => $value,
-		) );
 	}
 
 	// ── AJAX ──────────────────────────────────────────────────────────────────
@@ -722,9 +528,9 @@ class TSOSK_Mod_Debug {
 		}
 
 		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : $this->log_path();
-		$log = $this->validate_log_path( $posted_log );
+		$log = $this->validate_log_writable_path( $posted_log );
 		if ( '' === $log ) {
-			wp_send_json_error( __( 'Invalid log file.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This log file cannot be modified from the plugin. Only wp-content/debug.log and files under uploads/tsosk-logs may be emptied or shrunk.', 'tso-swiss-knife' ) );
 		}
 		if ( ! file_exists( $log ) ) {
 			wp_send_json_error( __( 'Log file not found.', 'tso-swiss-knife' ) );
@@ -753,9 +559,9 @@ class TSOSK_Mod_Debug {
 
 		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : $this->log_path();
 		$keep_lines = isset( $_POST['keep_lines'] ) ? max( 100, min( 5000, absint( wp_unslash( $_POST['keep_lines'] ) ) ) ) : 500;
-		$log        = $this->validate_log_path( $posted_log );
+		$log        = $this->validate_log_writable_path( $posted_log );
 		if ( '' === $log || ! file_exists( $log ) || ! is_readable( $log ) ) {
-			wp_send_json_error( __( 'Log file not found or not readable.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This log file cannot be modified from the plugin, or the file was not found.', 'tso-swiss-knife' ) );
 		}
 		if ( ! wp_is_writable( $log ) ) {
 			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife' ) );
@@ -783,10 +589,7 @@ class TSOSK_Mod_Debug {
 			);
 		}
 
-		$archive_dir = trailingslashit( TSOSK_CONFIG_DIR ) . 'log-archives';
-		if ( ! is_dir( $archive_dir ) ) {
-			wp_mkdir_p( $archive_dir );
-		}
+		$archive_dir = TSOSK_Config_Storage::get_log_archive_dir();
 		$archive_name = basename( $log ) . '.' . gmdate( 'Y-m-d-His' ) . '.bak';
 		$archive_path = $archive_dir . '/' . $archive_name;
 		$removed      = array_slice( $lines, 0, $total - $keep_lines );
@@ -832,8 +635,8 @@ class TSOSK_Mod_Debug {
 		$settings = $this->get_settings();
 		$log_path = $this->log_path();
 		$log_size = file_exists( $log_path ) ? size_format( filesize( $log_path ), 2 ) : false;
-		$mu_exists        = file_exists( $this->config_path() );
-		$legacy_exists    = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE );
+		$mu_exists        = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::DEBUG_JSON );
+		$legacy_exists    = file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . self::MU_FILE );
 		$logs             = $this->get_log_files();
 		$wpconfig_path    = $this->wpconfig_path();
 		$wpconfig_state   = $this->read_wpconfig_constants();
@@ -842,10 +645,7 @@ class TSOSK_Mod_Debug {
 			$wpconfig_path = $this->wpconfig_path(); // retry with all strategies.
 		}
 		$wpconfig_exists  = '' !== $wpconfig_path;
-		// If path wasn't found above but constants were read from somewhere, re-check after state.
-		// (read_wpconfig_constants already verified readability internally.)
-		$wpconfig_write   = $wpconfig_exists && wp_is_writable( $wpconfig_path );
-		$wpconfig_nonce   = wp_create_nonce( 'tsosk_debug_wpconfig_nonce' );
+		$wpconfig_write   = false;
 
 		$dev_active = class_exists( 'TSOSK_Site_Status' ) && TSOSK_Site_Status::is_developer_mode_active();
 		?>
@@ -903,7 +703,7 @@ class TSOSK_Mod_Debug {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Debug Constants', 'tso-swiss-knife' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Current values for each constant. Use the buttons to add or change them directly in wp-config.php when you need full control.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Current runtime values. Constants already defined in wp-config.php take precedence over the plugin JSON config in uploads/tsosk-config.', 'tso-swiss-knife' ); ?>
 			</p>
 
 			<div class="tsosk-debug-flags" id="tsosk-debug-form">
@@ -936,17 +736,12 @@ class TSOSK_Mod_Debug {
 					),
 				);
 				foreach ( $flags as $key => $flag ) :
-					$actual_on    = in_array( $flag['current'], array( 'true', '1' ), true );
+					$actual_on     = in_array( $flag['current'], array( 'true', '1' ), true );
 					$flag_constant = $flag['label'];
 					$wc_state      = $wpconfig_state[ $flag_constant ] ?? array( 'defined' => false, 'value' => null, 'line' => 0 );
 					$in_wpconfig   = $wc_state['defined'];
-					$wc_val        = $wc_state['value']; // 'true'|'false'|null
-					$toggle_to     = $in_wpconfig
-						? ( ( 'true' === $wc_val ) ? 'false' : 'true' )
-						: ( $actual_on ? 'false' : 'true' );
+					$wc_val        = $wc_state['value'];
 					$wc_mismatch   = $in_wpconfig && $wc_val !== ( $actual_on ? 'true' : 'false' );
-					$show_wpconfig_ctrl = $wpconfig_exists || $in_wpconfig;
-					$eff_write          = $wpconfig_write || ( $wpconfig_exists && wp_is_writable( $wpconfig_path ) );
 				?>
 				<div class="tsosk-flag-row<?php echo $wc_mismatch ? ' tsosk-flag-mismatch' : ''; ?>">
 
@@ -966,66 +761,18 @@ class TSOSK_Mod_Debug {
 						</code>
 					</span>
 
-					<?php /* ── wp-config.php control ── */ ?>
-					<?php if ( $show_wpconfig_ctrl ) : ?>
-					<div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;">
-						<?php if ( $in_wpconfig ) : ?>
-						<span class="tsosk-badge tsosk-badge-<?php echo $wc_mismatch ? 'warn' : 'info'; ?>"
-						      style="font-size:11px;">
-							<?php
-							/* translators: %s: constant value in wp-config.php */
-							printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
-							?>
-						</span>
-						<?php endif; ?>
-						<?php if ( $eff_write ) : ?>
-						<button type="button"
-						        class="button button-small tsosk-debug-wpconfig-btn"
-						        data-constant="<?php echo esc_attr( $flag_constant ); ?>"
-						        data-value="<?php echo esc_attr( $toggle_to ); ?>"
-						        data-nonce="<?php echo esc_attr( $wpconfig_nonce ); ?>"
-						        style="font-size:11px;height:24px;line-height:22px;padding:0 8px;">
-							<?php
-							if ( $in_wpconfig ) {
-								// Toggle existing value
-								$btn_icon = ( 'true' === $wc_val ) ? '✕' : '✓';
-								printf(
-									/* translators: 1: icon, 2: true or false */
-									esc_html__( '%1$s Set to %2$s in wp-config.php', 'tso-swiss-knife' ),
-									esc_html( (string) $btn_icon ),
-									esc_html( (string) $toggle_to )
-								);
-							} else {
-								// Add new define
-								printf(
-									/* translators: 1: constant name, 2: true or false */
-									esc_html__( '+ Add %1$s = %2$s to wp-config.php', 'tso-swiss-knife' ),
-									esc_html( (string) $flag_constant ),
-									esc_html( (string) $toggle_to )
-								);
-							}
-							?>
-						</button>
-						<?php else : ?>
-						<span class="description" style="font-size:11px;">
-							<?php esc_html_e( '(wp-config.php is read-only)', 'tso-swiss-knife' ); ?>
-						</span>
-						<?php endif; ?>
-					</div>
+					<?php if ( $in_wpconfig ) : ?>
+					<span class="tsosk-badge tsosk-badge-<?php echo $wc_mismatch ? 'warn' : 'info'; ?>"
+					      style="font-size:11px;">
+						<?php
+						/* translators: %s: constant value in wp-config.php */
+						printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
+						?>
+					</span>
 					<?php endif; ?>
 
 				</div>
 				<?php endforeach; ?>
-
-				<details class="tsosk-debug-advanced">
-					<summary><?php esc_html_e( 'Advanced: write debug flags to wp-config.php', 'tso-swiss-knife' ); ?></summary>
-					<p class="description">
-						<?php esc_html_e( 'Use this only when you want the settings hard-coded in wp-config.php instead of tsosk-config. A backup is recommended before modifying wp-config.php.', 'tso-swiss-knife' ); ?>
-					</p>
-					<button class="button button-secondary" id="tsosk-enable-wp-log" type="button">
-						<?php esc_html_e( 'Enable debug.log in wp-config.php', 'tso-swiss-knife' ); ?>
-					</button>
-				</details>
 			</div>
 		</div>
 
@@ -1039,7 +786,7 @@ class TSOSK_Mod_Debug {
 				<?php esc_html_e( 'Created by WordPress when WP_DEBUG=true and WP_DEBUG_LOG=true. Use the constants above to enable it.', 'tso-swiss-knife' ); ?>
 				<br>
 				<strong><?php esc_html_e( 'error_log', 'tso-swiss-knife' ); ?></strong> —
-				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. This plugin can read and clear it, but cannot enable it (that requires server/php.ini configuration).', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files; only wp-content/debug.log can be emptied or shrunk from here.', 'tso-swiss-knife' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">

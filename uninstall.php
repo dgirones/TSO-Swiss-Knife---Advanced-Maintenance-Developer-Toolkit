@@ -89,6 +89,9 @@ $wpdb->query(
 
 $tsosk_config_dir = WP_CONTENT_DIR . '/uploads/tsosk-config';
 $tsosk_config_files = array(
+	'tsosk-debug-flags.json',
+	'tsosk-security-flags.json',
+	'tsosk-profiles-flags.json',
 	'tsosk-debug-flags.php',
 	'tsosk-security-flags.php',
 	'tsosk-profiles-flags.php',
