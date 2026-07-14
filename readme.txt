@@ -64,21 +64,11 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language. This only affects that admin screen.
 * Further locales can be contributed via [Translate WordPress](https://translate.wordpress.org/) once the plugin is published.
 
-= Design principles =
-
-* Strictly follows WordPress Coding Standards.
-* All outputs escaped; all inputs sanitised and nonce-verified.
-* No options autoloaded unnecessarily.
-* Writable config flags stored under `wp-content/uploads/tsosk-config/` (WordPress.org compliant).
-* No external HTTP requests on the front-end.
-
 == Installation ==
 
-1. Build or obtain a ZIP whose **root folder** is exactly `tso-swiss-knife-advanced-maintenance-developer-toolkit` (all lowercase). From the repository root run `bash scripts/tsosk-build-zip.sh` (Unix) or `.\scripts\tsosk-build-zip.ps1` (Windows). The file is written to `dist/tso-swiss-knife-advanced-maintenance-developer-toolkit.zip`.
-2. Do **not** upload the GitHub “Download ZIP” archive (`…-main.zip`); that folder name does not match the plugin slug and WordPress will install a duplicate instead of updating.
-3. Upload the `tso-swiss-knife-advanced-maintenance-developer-toolkit` folder to `/wp-content/plugins/`, or use **Plugins › Add New › Upload Plugin** with the ZIP from step 1.
-4. Activate the plugin via **Plugins › Installed Plugins**.
-5. Navigate to **Tools › TSO Swiss Knife**.
+1. Upload the `tso-swiss-knife-advanced-maintenance-developer-toolkit` folder to `/wp-content/plugins/`, or use **Plugins › Add New › Upload Plugin** with the ZIP.
+2. Activate the plugin via **Plugins › Installed Plugins**.
+3. Navigate to **Tools › TSO Swiss Knife**.
 
 == Frequently Asked Questions ==
 
