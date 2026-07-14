@@ -104,8 +104,24 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
+add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
 add_action( 'plugins_loaded', 'tsosk_init' );
+
+/**
+ * Load bundled translations (plugin list headers, admin UI, etc.).
+ */
+function tsosk_load_textdomain(): void {
+	if ( is_textdomain_loaded( TSOSK_TEXT_DOMAIN ) ) {
+		return;
+	}
+
+	load_plugin_textdomain(
+		TSOSK_TEXT_DOMAIN,
+		false,
+		dirname( TSOSK_BASENAME ) . '/languages'
+	);
+}
 
 /**
  * Fallback sandbox filters when the MU loader is not installed.
