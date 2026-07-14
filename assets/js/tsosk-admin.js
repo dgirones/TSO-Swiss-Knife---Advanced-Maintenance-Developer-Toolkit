@@ -823,16 +823,6 @@
 		} );
 	} );
 
-	$( document ).on( 'change', '.tsosk-um-plugin-block', function () {
-		var $row  = $( this ).closest( '.tsosk-um-plugin-row' );
-		var $auto = $row.find( '.tsosk-um-plugin-auto' );
-		if ( $( this ).is( ':checked' ) ) {
-			$auto.prop( 'checked', false ).prop( 'disabled', true );
-		} else {
-			$auto.prop( 'disabled', false );
-		}
-	} );
-
 	$( document ).on( 'click', '#tsosk-um-run-updates', function () {
 		var $btn  = $( this );
 		var nonce = $btn.data( 'nonce' );
@@ -874,8 +864,7 @@
 				return;
 			}
 			pluginRules[ file ] = {
-				block: $( this ).find( '.tsosk-um-plugin-block' ).is( ':checked' ) ? 1 : 0,
-				auto : $( this ).find( '.tsosk-um-plugin-auto' ).is( ':checked' ) ? 1 : 0
+				block: $( this ).find( '.tsosk-um-plugin-block' ).is( ':checked' ) ? 1 : 0
 			};
 		} );
 
@@ -888,8 +877,7 @@
 			email_core_fail    : $( '#tsosk-um-email-core-fail' ).is( ':checked' ) ? 1 : 0,
 			email_manual_core  : $( '#tsosk-um-email-manual-core' ).is( ':checked' ) ? 1 : 0,
 			email_plugin       : $( '#tsosk-um-email-plugin' ).is( ':checked' ) ? 1 : 0,
-			email_theme        : $( '#tsosk-um-email-theme' ).is( ':checked' ) ? 1 : 0,
-			apply_immediately  : $( '#tsosk-um-apply-immediately' ).is( ':checked' ) ? 1 : 0
+			email_theme        : $( '#tsosk-um-email-theme' ).is( ':checked' ) ? 1 : 0
 		};
 
 		if ( preset === 'custom' ) {
@@ -898,10 +886,6 @@
 			data.block_themes       = $( '#tsosk-um-block-themes' ).is( ':checked' ) ? 1 : 0;
 			data.block_translations = $( '#tsosk-um-block-translations' ).is( ':checked' ) ? 1 : 0;
 			data.hide_update_nags   = $( '#tsosk-um-hide-nags' ).is( ':checked' ) ? 1 : 0;
-			data.core_auto          = $( '#tsosk-um-core-auto' ).val();
-			data.plugin_auto        = $( '#tsosk-um-plugin-auto' ).val();
-			data.theme_auto         = $( '#tsosk-um-theme-auto' ).val();
-			data.translation_auto   = $( '#tsosk-um-translation-auto' ).val();
 		}
 
 		$btn.prop( 'disabled', true );
