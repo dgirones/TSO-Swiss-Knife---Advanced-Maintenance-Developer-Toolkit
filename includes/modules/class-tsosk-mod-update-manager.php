@@ -43,6 +43,7 @@ class TSOSK_Mod_Update_Manager {
 	 * Apply update and email filters early.
 	 */
 	public function init(): void {
+		self::maybe_migrate_retired_settings();
 		$this->settings = self::get_settings();
 
 		if ( 'disable_all' === $this->settings['preset'] ) {
@@ -94,6 +95,48 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		return $s;
+	}
+
+	/**
+	 * One-time cleanup of retired auto-update settings in the database.
+	 */
+	private static function maybe_migrate_retired_settings(): void {
+		$raw = get_option( self::OPTION, array() );
+		if ( ! is_array( $raw ) || empty( $raw ) ) {
+			return;
+		}
+
+		$dirty = false;
+		if ( 'auto_all' === ( $raw['preset'] ?? '' ) ) {
+			$raw['preset'] = 'default';
+			$dirty         = true;
+		}
+
+		foreach ( array( 'core_auto', 'plugin_auto', 'theme_auto', 'translation_auto', 'apply_immediately' ) as $retired_key ) {
+			if ( array_key_exists( $retired_key, $raw ) ) {
+				unset( $raw[ $retired_key ] );
+				$dirty = true;
+			}
+		}
+
+		if ( ! empty( $raw['plugin_rules'] ) && is_array( $raw['plugin_rules'] ) ) {
+			foreach ( $raw['plugin_rules'] as $file => $rule ) {
+				if ( ! is_array( $rule ) ) {
+					continue;
+				}
+				if ( array_key_exists( 'auto', $rule ) ) {
+					unset( $raw['plugin_rules'][ $file ]['auto'] );
+					if ( empty( $rule['block'] ) ) {
+						unset( $raw['plugin_rules'][ $file ] );
+					}
+					$dirty = true;
+				}
+			}
+		}
+
+		if ( $dirty ) {
+			update_option( self::OPTION, wp_parse_args( $raw, self::get_defaults() ), false );
+		}
 	}
 
 	/**
