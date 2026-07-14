@@ -1,0 +1,66 @@
+/*
+ * TSO Swiss Knife – Maintenance mode visitor page
+ */
+
+body.tsosk-maint {
+	margin: 0;
+	background: #1a1a2e;
+	color: #e0e0e0;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	text-align: center;
+}
+
+body.tsosk-maint.tsosk-maint-preview {
+	padding-top: 48px;
+	box-sizing: border-box;
+}
+
+.tsosk-maint-box {
+	max-width: 560px;
+	padding: 40px 30px;
+}
+
+.tsosk-maint-box h1 {
+	font-size: 2rem;
+	margin: 0 0 16px;
+	color: #fff;
+}
+
+.tsosk-maint-box p {
+	font-size: 1.1rem;
+	line-height: 1.6;
+	color: #aaa;
+}
+
+.tsosk-maint-icon {
+	font-size: 3.5rem;
+	margin-bottom: 24px;
+}
+
+.tsosk-maint-logo {
+	max-width: min(400px, 90vw);
+	max-height: 220px;
+	width: auto;
+	height: auto;
+	margin: 0 auto 28px;
+	display: block;
+	object-fit: contain;
+}
+
+.tsosk-maint-preview-bar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: #f0c14b;
+	color: #1d2327;
+	padding: 10px 16px;
+	font-size: 13px;
+	font-weight: 600;
+	z-index: 9999;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}

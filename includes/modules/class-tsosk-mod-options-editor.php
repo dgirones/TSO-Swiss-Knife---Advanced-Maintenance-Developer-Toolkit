@@ -841,23 +841,6 @@ class TSOSK_Mod_Options_Editor {
 			</div>
 		</div>
 
-		<style>
-		.tsosk-oe-tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; }
-		.tsosk-oe-tab-btn.is-active { background:#1d2327; color:#fff; border-color:#1d2327; }
-		.tsosk-oe-tab-btn.is-active:hover { background:#2c3338; border-color:#2c3338; }
-		.tsosk-oe-pagination { display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:8px 0; }
-		.tsosk-oe-page-btn { padding:4px 10px; border:1px solid #c3c4c7; border-radius:3px; background:#fff; cursor:pointer; font-size:12px; color:#1d2327; }
-		.tsosk-oe-page-btn.is-current { background:#1d2327; color:#fff; border-color:#1d2327; pointer-events:none; }
-		.tsosk-oe-page-btn:hover:not(.is-current) { border-color:#666; }
-		.tsosk-oe-protected td { opacity:.6; }
-		#tsosk-oe-editor { border-left:4px solid #f0b849; }
-		.tsosk-oe-sortable { user-select:none; }
-		.tsosk-oe-sortable:hover { background:#f0f0f1; }
-		.tsosk-sort-icon { font-size:10px; color:#999; }
-		/* Fix preview text color */
-		#tsosk-oe-tbody td { color:#1d2327; }
-		#tsosk-oe-tbody .tsosk-code { color:#1d2327; }
-		</style>
 		<?php
 	}
 }
