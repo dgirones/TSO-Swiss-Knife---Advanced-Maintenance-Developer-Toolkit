@@ -42,6 +42,9 @@ class TSOSK_Mod_Admin_Menu {
 	/** @var TSOSK_Mod_Admin_Menu|null */
 	private static $instance = null;
 
+	/** @var array<string, mixed>|null Cached manifest rows (null = not loaded). */
+	private static $manifest_cache = null;
+
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -290,10 +293,7 @@ class TSOSK_Mod_Admin_Menu {
 			$by_id[ (string) $row['id'] ] = $row;
 		}
 
-		$manifest = get_option( self::MANIFEST_OPTION, array() );
-		if ( ! is_array( $manifest ) ) {
-			$manifest = array();
-		}
+		$manifest = $this->get_manifest();
 
 		$rows  = array();
 		$added = array();
@@ -512,7 +512,7 @@ class TSOSK_Mod_Admin_Menu {
 
 		$settings   = self::get_settings();
 		$referenced = $this->get_settings_referenced_ids( $settings );
-		$previous   = get_option( self::MANIFEST_OPTION, array() );
+		$previous   = $this->get_manifest();
 		if ( is_array( $previous ) ) {
 			foreach ( $referenced as $item_id ) {
 				if ( isset( $manifest[ $item_id ] ) || ! isset( $previous[ $item_id ] ) || ! is_array( $previous[ $item_id ] ) ) {
@@ -538,6 +538,7 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		update_option( self::MANIFEST_OPTION, $manifest, false );
+		self::$manifest_cache = $manifest;
 	}
 
 	/**
@@ -578,6 +579,80 @@ class TSOSK_Mod_Admin_Menu {
 	}
 
 	/**
+	 * Read the admin menu manifest without triggering WordPress maybe_unserialize() warnings.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function get_manifest(): array {
+		if ( null !== self::$manifest_cache ) {
+			return self::$manifest_cache;
+		}
+
+		$raw = $this->get_manifest_option_raw();
+		if ( '' === $raw ) {
+			self::$manifest_cache = array();
+			return self::$manifest_cache;
+		}
+
+		$manifest = $this->decode_manifest_option_value( $raw );
+		if ( null === $manifest ) {
+			$this->repair_corrupt_manifest_option();
+			self::$manifest_cache = array();
+			return self::$manifest_cache;
+		}
+
+		self::$manifest_cache = $manifest;
+		return self::$manifest_cache;
+	}
+
+	/**
+	 * Fetch the raw manifest option_value from the database.
+	 *
+	 * @return string
+	 */
+	private function get_manifest_option_raw(): string {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+				self::MANIFEST_OPTION
+			)
+		);
+
+		return is_string( $value ) ? $value : '';
+	}
+
+	/**
+	 * Decode a manifest option_value string into an array.
+	 *
+	 * @param string $raw Raw option_value.
+	 * @return array<string, mixed>|null Decoded array, or null when serialized data is corrupt.
+	 */
+	private function decode_manifest_option_value( string $raw ): ?array {
+		if ( is_serialized( $raw ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			$decoded = @unserialize( $raw, array( 'allowed_classes' => false ) );
+			if ( false === $decoded && 'b:0;' !== $raw ) {
+				return null;
+			}
+			return is_array( $decoded ) ? $decoded : array();
+		}
+
+		return array();
+	}
+
+	/**
+	 * Remove a corrupt manifest option so it can be rebuilt on the next save.
+	 */
+	private function repair_corrupt_manifest_option(): void {
+		delete_option( self::MANIFEST_OPTION );
+		wp_cache_delete( self::MANIFEST_OPTION, 'options' );
+		self::$manifest_cache = array();
+	}
+
+	/**
 	 * Full menu list for the editor (live menu + hidden items kept in manifest).
 	 *
 	 * @return array<int, array<string, mixed>>
@@ -588,8 +663,8 @@ class TSOSK_Mod_Admin_Menu {
 			return $live;
 		}
 
-		$manifest = get_option( self::MANIFEST_OPTION, array() );
-		if ( ! is_array( $manifest ) || array() === $manifest ) {
+		$manifest = $this->get_manifest();
+		if ( array() === $manifest ) {
 			return array();
 		}
 
@@ -783,8 +858,8 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
-		$manifest = get_option( self::MANIFEST_OPTION, array() );
-		if ( is_array( $manifest ) && array() !== $manifest ) {
+		$manifest = $this->get_manifest();
+		if ( array() !== $manifest ) {
 			$rows = array_values( $manifest );
 			return $this->augment_known_rows_with_nested_tops( $rows );
 		}
@@ -853,8 +928,8 @@ class TSOSK_Mod_Admin_Menu {
 			}
 
 			if ( null === $row ) {
-				$manifest = get_option( self::MANIFEST_OPTION, array() );
-				if ( is_array( $manifest ) && isset( $manifest[ $item_id ] ) && is_array( $manifest[ $item_id ] ) ) {
+				$manifest = $this->get_manifest();
+				if ( isset( $manifest[ $item_id ] ) && is_array( $manifest[ $item_id ] ) ) {
 					$row = $this->normalize_manifest_row( $manifest[ $item_id ] );
 					$row['id']    = $item_id;
 					$row['level'] = 0;
@@ -1605,10 +1680,53 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 
-			$menu[] = $entry;
+			// The entry came from $submenu (indices 0-3 only). Top-level $menu items
+			// must expose index 4 (CSS classes), 5 (hookname/id) and 6 (icon); pushing
+			// a submenu-shaped entry raises "Undefined array key 4" in core menu.php.
+			$menu[] = $this->submenu_entry_to_top_level( $entry, $slug );
 		}
 
 		return $menu;
+	}
+
+	/**
+	 * Build a complete top-level $menu entry from a submenu entry.
+	 *
+	 * WordPress submenu rows only carry indices 0-3 (title, capability, slug,
+	 * page title). Top-level menu rows are read by core with indices 4 (CSS
+	 * classes), 5 (hookname / element id) and 6 (icon) — see
+	 * wp-admin/includes/menu.php and wp-admin/menu-header.php. Restoring a
+	 * formerly nested item to the top level therefore has to normalise the row,
+	 * otherwise core emits "Undefined array key 4" and a stristr() null
+	 * deprecation on every admin page load.
+	 *
+	 * @param array<int, mixed> $entry Submenu entry (indices 0-3).
+	 * @param string            $slug  Top-level slug being restored.
+	 * @return array<int, mixed>
+	 */
+	private function submenu_entry_to_top_level( array $entry, string $slug ): array {
+		$menu_title = (string) ( $entry[0] ?? '' );
+		$capability = (string) ( $entry[1] ?? 'read' );
+		$menu_slug  = '' !== (string) ( $entry[2] ?? '' ) ? (string) $entry[2] : $slug;
+		$page_title = (string) ( $entry[3] ?? $menu_title );
+
+		$hookname = '';
+		if ( function_exists( 'get_plugin_page_hookname' ) ) {
+			$hookname = (string) get_plugin_page_hookname( $menu_slug, '' );
+		}
+		if ( '' === $hookname ) {
+			$hookname = 'toplevel_page_' . sanitize_title( $menu_slug );
+		}
+
+		return array(
+			$menu_title,               // 0: menu title.
+			$capability,               // 1: capability.
+			$menu_slug,                // 2: menu slug.
+			$page_title,               // 3: page title.
+			'menu-top',                // 4: CSS classes (must be a string for core's stristr()).
+			$hookname,                 // 5: hookname / element id.
+			'dashicons-admin-generic', // 6: icon.
+		);
 	}
 
 	/**
@@ -1945,8 +2063,8 @@ class TSOSK_Mod_Admin_Menu {
 	 */
 	private function get_manifest_slug_map(): array {
 		$map      = array();
-		$manifest = get_option( self::MANIFEST_OPTION, array() );
-		if ( ! is_array( $manifest ) ) {
+		$manifest = $this->get_manifest();
+		if ( array() === $manifest ) {
 			return $map;
 		}
 		foreach ( $manifest as $item_id => $row ) {
