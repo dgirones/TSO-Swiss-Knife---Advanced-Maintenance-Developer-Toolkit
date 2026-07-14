@@ -45,7 +45,7 @@ class TSOSK_Mod_Health {
 	public function ajax_save_alerts(): void {
 		check_ajax_referer( 'tsosk_health_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$settings = array(
@@ -55,12 +55,12 @@ class TSOSK_Mod_Health {
 		);
 
 		if ( '' === $settings['email'] || ! is_email( $settings['email'] ) ) {
-			wp_send_json_error( __( 'Enter a valid email address.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Enter a valid email address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		update_option( self::OPTION, $settings, false );
-		TSOSK_Activity_Log::log( 'health', 'save', __( 'Health alert settings saved.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Alert settings saved.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'health', 'save', __( 'Health alert settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Alert settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -69,7 +69,7 @@ class TSOSK_Mod_Health {
 	public function ajax_save_suppress(): void {
 		check_ajax_referer( 'tsosk_health_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$suppress = array(
@@ -77,8 +77,8 @@ class TSOSK_Mod_Health {
 			'debug_enabled' => ! empty( $_POST['suppress_debug_enabled'] ),
 		);
 		update_option( 'tsosk_health_suppress', $suppress, false );
-		TSOSK_Activity_Log::log( 'health', 'save', __( 'Site Health suppression settings saved.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Settings saved. Refresh Site Health to see changes.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'health', 'save', __( 'Site Health suppression settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Settings saved. Refresh Site Health to see changes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -132,20 +132,20 @@ class TSOSK_Mod_Health {
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife' ), $site_name ) ); ?></title>
+	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site_name ) ); ?></title>
 	<link rel="stylesheet" href="<?php echo esc_url( $css_url ); ?>">
 </head>
 <body class="tsosk-health-report">
-	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife' ); ?></h1>
-	<p><strong><?php esc_html_e( 'Site', 'tso-swiss-knife' ); ?>:</strong> <?php echo esc_html( $site_name ); ?>
+	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h1>
+	<p><strong><?php esc_html_e( 'Site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong> <?php echo esc_html( $site_name ); ?>
 		(<a href="<?php echo esc_url( $site_url ); ?>"><?php echo esc_html( $site_url ); ?></a>)</p>
-	<p><strong><?php esc_html_e( 'Generated', 'tso-swiss-knife' ); ?>:</strong> <?php echo esc_html( $generated ); ?></p>
+	<p><strong><?php esc_html_e( 'Generated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong> <?php echo esc_html( $generated ); ?></p>
 	<table>
 		<thead>
 			<tr>
-				<th><?php esc_html_e( 'Check', 'tso-swiss-knife' ); ?></th>
-				<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-				<th><?php esc_html_e( 'Details', 'tso-swiss-knife' ); ?></th>
+				<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				<th><?php esc_html_e( 'Details', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -173,7 +173,7 @@ class TSOSK_Mod_Health {
 	 */
 	public function download_report(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		check_admin_referer( 'tsosk_health_download_report' );
 
@@ -217,26 +217,26 @@ class TSOSK_Mod_Health {
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'A compact health report with checks that help detect risky settings, noisy logs, broken links and maintenance issues.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'A compact health report with checks that help detect risky settings, noisy logs, broken links and maintenance issues.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Health Report', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p>
 				<a class="button button-secondary" href="<?php echo esc_url( $download_url ); ?>">
-					<?php esc_html_e( 'Download JSON Report', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Download JSON Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 				<a class="button button-secondary" href="<?php echo esc_url( $download_html ); ?>">
-					<?php esc_html_e( 'Download HTML Report', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Download HTML Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 			</p>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Check', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Details', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Details', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -257,43 +257,43 @@ class TSOSK_Mod_Health {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Email Alerts', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Email Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Alerts are intentionally small and actionable. The current alert sends an email when the 404 monitor exceeds the configured hourly threshold.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Alerts are intentionally small and actionable. The current alert sends an email when the 404 monitor exceeds the configured hourly threshold.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<label class="tsosk-radio-row">
 				<input type="checkbox" id="tsosk-alerts-enabled" <?php checked( ! empty( $settings['enabled'] ) ); ?>>
-				<?php esc_html_e( 'Enable email alerts', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Enable email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
 			<div class="tsosk-field-row">
-				<label for="tsosk-alerts-email"><strong><?php esc_html_e( 'Alert Email', 'tso-swiss-knife' ); ?></strong></label>
+				<label for="tsosk-alerts-email"><strong><?php esc_html_e( 'Alert Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="email" id="tsosk-alerts-email" class="regular-text" value="<?php echo esc_attr( $settings['email'] ); ?>">
 			</div>
 			<div class="tsosk-field-row">
-				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( '404 hourly threshold', 'tso-swiss-knife' ); ?></strong></label>
+				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( '404 hourly threshold', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="number" id="tsosk-alerts-404-threshold" min="1" value="<?php echo esc_attr( (string) $settings['not_found_threshold'] ); ?>">
 			</div>
 			<button class="button button-primary" id="tsosk-health-save-alerts" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-health-msg"></span>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Hide WordPress Site Health notices', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Hide WordPress Site Health notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'On staging or private test sites, WordPress may show heavy warnings on Tools › Site Health about search-engine visibility or debug.log being public. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'On staging or private test sites, WordPress may show heavy warnings on Tools › Site Health about search-engine visibility or debug.log being public. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<label class="tsosk-radio-row">
 				<input type="checkbox" id="tsosk-health-suppress-blog-public" <?php checked( ! empty( $suppress['blog_public'] ) ); ?>>
-				<?php esc_html_e( 'Hide “site is not visible to search engines” test', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Hide “site is not visible to search engines” test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
 			<label class="tsosk-radio-row">
 				<input type="checkbox" id="tsosk-health-suppress-debug" <?php checked( ! empty( $suppress['debug_enabled'] ) ); ?>>
-				<?php esc_html_e( 'Hide “debug.log may be publicly accessible” test', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Hide “debug.log may be publicly accessible” test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
 			<button class="button button-primary" id="tsosk-health-save-suppress" data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:10px;">
-				<?php esc_html_e( 'Save suppression settings', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save suppression settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-health-suppress-msg"></span>
 		</div>
@@ -326,29 +326,29 @@ class TSOSK_Mod_Health {
 	private function get_checks(): array {
 		$checks = array();
 		$checks[] = array(
-			'label'   => __( 'WordPress version', 'tso-swiss-knife' ),
+			'label'   => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => is_wp_version_compatible( '6.0' ) ? 'ok' : 'warn',
 			'details' => get_bloginfo( 'version' ),
 		);
 		$checks[] = array(
-			'label'   => __( 'PHP version', 'tso-swiss-knife' ),
+			'label'   => __( 'PHP version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => version_compare( PHP_VERSION, '8.0', '>=' ) ? 'ok' : 'warn',
 			'details' => PHP_VERSION,
 		);
 		$checks[] = array(
-			'label'   => __( 'HTTPS', 'tso-swiss-knife' ),
+			'label'   => __( 'HTTPS', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => is_ssl() || 0 === strpos( home_url(), 'https://' ) ? 'ok' : 'warn',
 			'details' => home_url(),
 		);
 		$checks[] = array(
-			'label'   => __( 'WP_DEBUG_DISPLAY', 'tso-swiss-knife' ),
+			'label'   => __( 'WP_DEBUG_DISPLAY', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? 'warn' : 'ok',
-			'details' => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? __( 'Enabled', 'tso-swiss-knife' ) : __( 'Disabled', 'tso-swiss-knife' ) ) : __( 'Not defined', 'tso-swiss-knife' ),
+			'details' => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? __( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) : __( 'Not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 		$checks[] = array(
-			'label'   => __( 'Object cache', 'tso-swiss-knife' ),
+			'label'   => __( 'Object cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => wp_using_ext_object_cache() ? 'ok' : 'info',
-			'details' => wp_using_ext_object_cache() ? __( 'Persistent object cache detected.', 'tso-swiss-knife' ) : __( 'No persistent object cache detected.', 'tso-swiss-knife' ),
+			'details' => wp_using_ext_object_cache() ? __( 'Persistent object cache detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No persistent object cache detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 		$checks[] = $this->cron_check();
 		$checks[] = $this->debug_log_check();
@@ -375,11 +375,11 @@ class TSOSK_Mod_Health {
 		}
 
 		return array(
-			'label'   => __( 'Overdue cron events', 'tso-swiss-knife' ),
+			'label'   => __( 'Overdue cron events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $overdue > 0 ? 'warn' : 'ok',
 			'details' => sprintf(
 				/* translators: %d: overdue events */
-				__( '%d overdue events.', 'tso-swiss-knife' ),
+				__( '%d overdue events.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$overdue
 			),
 		);
@@ -395,9 +395,9 @@ class TSOSK_Mod_Health {
 		$size = file_exists( $path ) ? (int) filesize( $path ) : 0;
 
 		return array(
-			'label'   => __( 'debug.log size', 'tso-swiss-knife' ),
+			'label'   => __( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $size > 5 * MB_IN_BYTES ? 'warn' : 'ok',
-			'details' => file_exists( $path ) ? size_format( $size, 2 ) : __( 'Not found', 'tso-swiss-knife' ),
+			'details' => file_exists( $path ) ? size_format( $size, 2 ) : __( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -411,11 +411,11 @@ class TSOSK_Mod_Health {
 		$count = is_array( $logs ) ? count( $logs ) : 0;
 
 		return array(
-			'label'   => __( '404 monitor', 'tso-swiss-knife' ),
+			'label'   => __( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $count > 25 ? 'warn' : ( $count > 0 ? 'info' : 'ok' ),
 			'details' => sprintf(
 				/* translators: %d: recorded 404 URLs */
-				__( '%d recorded missing URLs.', 'tso-swiss-knife' ),
+				__( '%d recorded missing URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			),
 		);
@@ -433,7 +433,7 @@ class TSOSK_Mod_Health {
 		$size = (int) $wpdb->get_var( "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload = 'yes'" );
 
 		return array(
-			'label'   => __( 'Autoloaded options', 'tso-swiss-knife' ),
+			'label'   => __( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $size > 2 * MB_IN_BYTES ? 'warn' : 'ok',
 			'details' => size_format( $size, 2 ),
 		);

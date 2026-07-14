@@ -40,7 +40,7 @@ class TSOSK_Mod_Security {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_security_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$flags   = array();
@@ -64,9 +64,9 @@ class TSOSK_Mod_Security {
 		$profiles['disable_feeds']  = ! empty( $_POST['tsosk_security_disable_feeds'] );
 		update_option( 'tsosk_hidden_profiles', $profiles, false );
 
-		TSOSK_Activity_Log::log( 'security', 'save', __( 'Security settings saved.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'security', 'save', __( 'Security settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
-		wp_send_json_success( __( 'Security settings saved. Reload the page to see the new values.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Security settings saved. Reload the page to see the new values.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -168,60 +168,60 @@ class TSOSK_Mod_Security {
 		$toggles = array(
 			'DISALLOW_FILE_EDIT' => array(
 				'label' => 'DISALLOW_FILE_EDIT',
-				'desc'  => __( 'Hides the built-in plugin and theme code editors from the WordPress admin (Appearance › Editor, Plugins › Editor). Strongly recommended on production sites to prevent accidental or malicious code injection via the dashboard.', 'tso-swiss-knife' ),
-				'rec'   => __( 'Recommended: ON on all production sites.', 'tso-swiss-knife' ),
+				'desc'  => __( 'Hides the built-in plugin and theme code editors from the WordPress admin (Appearance › Editor, Plugins › Editor). Strongly recommended on production sites to prevent accidental or malicious code injection via the dashboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'rec'   => __( 'Recommended: ON on all production sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_edit',
 			),
 			'DISALLOW_FILE_MODS' => array(
 				'label' => 'DISALLOW_FILE_MODS',
-				'desc'  => __( 'Prevents any plugin or theme from being installed, updated or deleted from the WordPress admin. Also disables the WordPress auto-updater. Use on hardened servers where all deploys are done via version control. Note: this also blocks WordPress core auto-updates.', 'tso-swiss-knife' ),
-				'rec'   => __( 'Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if you rely on the admin for updates.', 'tso-swiss-knife' ),
+				'desc'  => __( 'Prevents any plugin or theme from being installed, updated or deleted from the WordPress admin. Also disables the WordPress auto-updater. Use on hardened servers where all deploys are done via version control. Note: this also blocks WordPress core auto-updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'rec'   => __( 'Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if you rely on the admin for updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_mods',
 			),
 			'FORCE_SSL_ADMIN'    => array(
 				'label' => 'FORCE_SSL_ADMIN',
-				'desc'  => __( 'Forces the WordPress login page and admin area to always use HTTPS, even if the front end runs on HTTP. Only enable this if you have a valid SSL certificate. If you do not have SSL, this will lock you out of the admin.', 'tso-swiss-knife' ),
-				'rec'   => __( 'Recommended: ON if you have SSL. Never enable without a working SSL certificate.', 'tso-swiss-knife' ),
+				'desc'  => __( 'Forces the WordPress login page and admin area to always use HTTPS, even if the front end runs on HTTP. Only enable this if you have a valid SSL certificate. If you do not have SSL, this will lock you out of the admin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'rec'   => __( 'Recommended: ON if you have SSL. Never enable without a working SSL certificate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'force_ssl_admin',
 			),
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config to wp-content/uploads/tsosk-config/ that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config to wp-content/uploads/tsosk-config/ that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Remote access', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Reduce common attack vectors from anonymous visitors and remote clients.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Remote access', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Reduce common attack vectors from anonymous visitors and remote clients.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" name="tsosk_security_disable_xmlrpc" id="tsosk-sec-disable-xmlrpc" value="1" <?php checked( $remote['disable_xmlrpc'] ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Disable XML-RPC', 'tso-swiss-knife' ); ?></strong>
-					<span class="tsosk-hint"><?php esc_html_e( 'Blocks pingbacks and remote publishing via xmlrpc.php.', 'tso-swiss-knife' ); ?></span>
+					<strong><?php esc_html_e( 'Disable XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					<span class="tsosk-hint"><?php esc_html_e( 'Blocks pingbacks and remote publishing via xmlrpc.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</span>
 			</label>
 			<label class="tsosk-toggle-row">
 				<input type="checkbox" name="tsosk_security_disable_feeds" id="tsosk-sec-disable-feeds" value="1" <?php checked( $remote['disable_feeds'] ); ?>>
 				<span>
-					<strong><?php esc_html_e( 'Disable RSS feeds', 'tso-swiss-knife' ); ?></strong>
-					<span class="tsosk-hint"><?php esc_html_e( 'Redirects feed URLs; reduces discovery surface.', 'tso-swiss-knife' ); ?></span>
+					<strong><?php esc_html_e( 'Disable RSS feeds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					<span class="tsosk-hint"><?php esc_html_e( 'Redirects feed URLs; reduces discovery surface.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</span>
 			</label>
 			<p class="description" style="margin-top:12px;">
-				<?php esc_html_e( 'REST API access and namespace controls are configured in the REST API tab.', 'tso-swiss-knife' ); ?>
-				<a href="<?php echo esc_url( $this->tab_url( 'rest-api' ) ); ?>"><?php esc_html_e( 'Open REST API settings →', 'tso-swiss-knife' ); ?></a>
+				<?php esc_html_e( 'REST API access and namespace controls are configured in the REST API tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<a href="<?php echo esc_url( $this->tab_url( 'rest-api' ) ); ?>"><?php esc_html_e( 'Open REST API settings →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				&nbsp;·&nbsp;
-				<a href="<?php echo esc_url( $this->tab_url( 'login-protect' ) ); ?>"><?php esc_html_e( 'Login protection →', 'tso-swiss-knife' ); ?></a>
+				<a href="<?php echo esc_url( $this->tab_url( 'login-protect' ) ); ?>"><?php esc_html_e( 'Login protection →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 			</p>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Toggleable Security Constants', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Toggleable Security Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<?php if ( ! empty( $legacy_exists ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-warn">
 				<?php
 				/* translators: %s: legacy file path */
-				printf( esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife' ), '<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>' );
+				printf( esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>' );
 				?>
 			</div>
 		<?php endif; ?>
@@ -230,7 +230,7 @@ class TSOSK_Mod_Security {
 				<?php
 				printf(
 					/* translators: %s: file path */
-					esc_html__( 'Active config file: %s', 'tso-swiss-knife' ),
+					esc_html__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
 				);
 				?>
@@ -260,20 +260,20 @@ class TSOSK_Mod_Security {
 							<code><strong><?php echo esc_html( $toggle['label'] ); ?></strong></code>
 							<?php if ( $is_on ) : ?>
 								<span class="tsosk-badge tsosk-badge-ok" style="margin-left:6px;">
-									<?php esc_html_e( 'Currently ON', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Currently ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</span>
 							<?php else : ?>
 								<span class="tsosk-badge" style="margin-left:6px;">
-									<?php esc_html_e( 'Currently OFF', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Currently OFF', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</span>
 							<?php endif; ?>
 							<?php if ( $wp_config_locked ) : ?>
-								<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;" title="<?php esc_attr_e( 'Defined in wp-config.php — edit that file to change or remove it.', 'tso-swiss-knife' ); ?>">
-									<?php esc_html_e( 'wp-config.php', 'tso-swiss-knife' ); ?>
+								<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;" title="<?php esc_attr_e( 'Defined in wp-config.php — edit that file to change or remove it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+									<?php esc_html_e( 'wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</span>
 							<?php elseif ( $mu_on ) : ?>
 								<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;">
-									<?php esc_html_e( 'TSO config', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'TSO config', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</span>
 							<?php endif; ?>
 						</div>
@@ -281,11 +281,11 @@ class TSOSK_Mod_Security {
 						<p class="description tsosk-security-toggle-rec"><?php echo esc_html( $toggle['rec'] ); ?></p>
 						<?php if ( $wp_config_locked && 'FORCE_SSL_ADMIN' === $const ) : ?>
 						<p class="description tsosk-security-toggle-wpconfig">
-							<?php esc_html_e( 'Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO override filter (saved on this panel). To remove the wp-config line entirely, edit that file.', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO override filter (saved on this panel). To remove the wp-config line entirely, edit that file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</p>
 						<?php elseif ( $wp_config_locked ) : ?>
 						<p class="description tsosk-security-toggle-wpconfig">
-							<?php esc_html_e( 'This constant is set in wp-config.php. Remove or change that line there to manage it from this panel.', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'This constant is set in wp-config.php. Remove or change that line there to manage it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</p>
 						<?php endif; ?>
 					</label>
@@ -297,20 +297,20 @@ class TSOSK_Mod_Security {
 		<p style="margin-top:12px;">
 			<button class="button button-primary" id="tsosk-security-save"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-			        data-save-label="<?php echo esc_attr__( 'Save Security Settings', 'tso-swiss-knife' ); ?>">
-				<?php esc_html_e( 'Save Security Settings', 'tso-swiss-knife' ); ?>
+			        data-save-label="<?php echo esc_attr__( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+				<?php esc_html_e( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-security-msg"></span>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Security Checks', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Read-only overview of common security settings. This does not replace a firewall or security scanner.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Security Checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Read-only overview of common security settings. This does not replace a firewall or security scanner.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<table class="widefat tsosk-table">
 				<thead><tr>
-					<th><?php esc_html_e( 'Check', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Details', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Details', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 				<?php foreach ( $checks as $check ) : ?>
@@ -336,28 +336,28 @@ class TSOSK_Mod_Security {
 		$theme_updates  = function_exists( 'get_theme_updates' )  ? get_theme_updates()  : array();
 
 		return array(
-			$this->check_item( __( 'File editor disabled', 'tso-swiss-knife' ),     defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT,   __( 'DISALLOW_FILE_EDIT is enabled.', 'tso-swiss-knife' ),                                                               __( 'Enable DISALLOW_FILE_EDIT to hide plugin/theme editors.', 'tso-swiss-knife' ) ),
-			$this->check_item( __( 'Force SSL admin', 'tso-swiss-knife' ),          is_ssl() || ( defined( 'FORCE_SSL_ADMIN' ) && FORCE_SSL_ADMIN ), __( 'Admin is using SSL.', 'tso-swiss-knife' ),                                                               __( 'Admin may not be forced through SSL.', 'tso-swiss-knife' ) ),
-			$this->check_item( __( 'XML-RPC', 'tso-swiss-knife' ),                  ! $xmlrpc_enabled,                                           __( 'XML-RPC is disabled by filters.', 'tso-swiss-knife' ),                                                      __( 'XML-RPC appears enabled. It can be a brute-force vector if not needed.', 'tso-swiss-knife' ), 'warn' ),
-			$this->check_item( __( 'Default admin username', 'tso-swiss-knife' ),   ! $admin_user,                                              __( 'No user named admin found.', 'tso-swiss-knife' ),                                                               __( 'A user named admin exists. Rename it to a non-obvious username.', 'tso-swiss-knife' ) ),
-			$this->check_item( __( 'Plugin updates', 'tso-swiss-knife' ),           empty( $plugin_updates ),                                   __( 'No plugin updates detected.', 'tso-swiss-knife' ),                                                              sprintf( /* translators: %d: number of plugin updates */ __( '%d plugin updates detected.', 'tso-swiss-knife' ), count( $plugin_updates ) ) ),
-			$this->check_item( __( 'Theme updates', 'tso-swiss-knife' ),            empty( $theme_updates ),                                    __( 'No theme updates detected.', 'tso-swiss-knife' ),                                                               sprintf( /* translators: %d: number of theme updates */ __( '%d theme updates detected.', 'tso-swiss-knife' ), count( $theme_updates ) ) ),
-			$this->file_permission_check( __( '.htaccess permissions', 'tso-swiss-knife' ), ABSPATH . '.htaccess' ),
-			$this->file_permission_check( __( 'wp-config.php permissions', 'tso-swiss-knife' ), $wp_config ?: ABSPATH . 'wp-config.php' ),
+			$this->check_item( __( 'File editor disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),     defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT,   __( 'DISALLOW_FILE_EDIT is enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               __( 'Enable DISALLOW_FILE_EDIT to hide plugin/theme editors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'Force SSL admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),          is_ssl() || ( defined( 'FORCE_SSL_ADMIN' ) && FORCE_SSL_ADMIN ), __( 'Admin is using SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               __( 'Admin may not be forced through SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                  ! $xmlrpc_enabled,                                           __( 'XML-RPC is disabled by filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                      __( 'XML-RPC appears enabled. It can be a brute-force vector if not needed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'warn' ),
+			$this->check_item( __( 'Default admin username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),   ! $admin_user,                                              __( 'No user named admin found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               __( 'A user named admin exists. Rename it to a non-obvious username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'Plugin updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),           empty( $plugin_updates ),                                   __( 'No plugin updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                              sprintf( /* translators: %d: number of plugin updates */ __( '%d plugin updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $plugin_updates ) ) ),
+			$this->check_item( __( 'Theme updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),            empty( $theme_updates ),                                    __( 'No theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               sprintf( /* translators: %d: number of theme updates */ __( '%d theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $theme_updates ) ) ),
+			$this->file_permission_check( __( '.htaccess permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), ABSPATH . '.htaccess' ),
+			$this->file_permission_check( __( 'wp-config.php permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $wp_config ?: ABSPATH . 'wp-config.php' ),
 		);
 	}
 
 	private function check_item( string $label, bool $ok, string $ok_details, string $warn_details, string $warn_badge = 'warn' ): array {
-		return array( 'label' => $label, 'status' => $ok ? __( 'OK', 'tso-swiss-knife' ) : __( 'Review', 'tso-swiss-knife' ), 'badge' => $ok ? 'tsosk-badge-ok' : 'tsosk-badge-' . $warn_badge, 'details' => $ok ? $ok_details : $warn_details );
+		return array( 'label' => $label, 'status' => $ok ? __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $ok ? 'tsosk-badge-ok' : 'tsosk-badge-' . $warn_badge, 'details' => $ok ? $ok_details : $warn_details );
 	}
 
 	private function file_permission_check( string $label, string $path ): array {
 		if ( ! $path || ! file_exists( $path ) ) {
-			return array( 'label' => $label, 'status' => __( 'Info', 'tso-swiss-knife' ), 'badge' => 'tsosk-badge-info', 'details' => __( 'File not found.', 'tso-swiss-knife' ) );
+			return array( 'label' => $label, 'status' => __( 'Info', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => 'tsosk-badge-info', 'details' => __( 'File not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		$perms       = substr( sprintf( '%o', fileperms( $path ) ), -4 );
 		$is_writable = wp_is_writable( $path );
-		return array( 'label' => $label, 'status' => $is_writable ? __( 'Review', 'tso-swiss-knife' ) : __( 'OK', 'tso-swiss-knife' ), 'badge' => $is_writable ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => sprintf( /* translators: %s: file permission octal */ __( 'Permissions: %s.', 'tso-swiss-knife' ), $perms ) );
+		return array( 'label' => $label, 'status' => $is_writable ? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $is_writable ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => sprintf( /* translators: %s: file permission octal */ __( 'Permissions: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $perms ) );
 	}
 
 	private function find_wp_config(): string {

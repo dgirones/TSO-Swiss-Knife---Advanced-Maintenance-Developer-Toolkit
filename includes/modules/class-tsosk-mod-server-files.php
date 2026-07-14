@@ -31,7 +31,7 @@ class TSOSK_Mod_Server_Files {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_sf_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$key     = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
@@ -40,7 +40,7 @@ class TSOSK_Mod_Server_Files {
 
 		$allowed_keys = array( 'robots', 'robots_local', 'htaccess', 'htaccess_root' );
 		if ( ! in_array( $key, $allowed_keys, true ) ) {
-			wp_send_json_error( __( 'Invalid file key.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid file key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- robots.txt and .htaccess are server-root files that must be written at ABSPATH; wp_upload_dir() is not appropriate for these.
@@ -56,13 +56,13 @@ class TSOSK_Mod_Server_Files {
 		}
 
 		if ( ! wp_is_writable( $path ) && ! wp_is_writable( dirname( $path ) ) ) {
-			wp_send_json_error( __( 'File is not writable.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'File is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- robots.txt and .htaccess must be written at the server root; wp_upload_dir() is not appropriate for these system files.
 		$result = file_put_contents( $path, $content );
 		if ( false === $result ) {
-			wp_send_json_error( __( 'Could not save the file.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not save the file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		TSOSK_Activity_Log::log(
@@ -70,13 +70,13 @@ class TSOSK_Mod_Server_Files {
 			'save',
 			sprintf(
 				/* translators: %s: file key */
-				__( 'Server file saved: %s.', 'tso-swiss-knife' ),
+				__( 'Server file saved: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
 			array( 'file' => $key )
 		);
 
-		wp_send_json_success( __( 'File saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'File saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/** Detect the robots.txt path (may be in public_html parent or ABSPATH). */
@@ -539,7 +539,7 @@ class TSOSK_Mod_Server_Files {
 			}
 		}
 
-		return __( 'Unknown plugin', 'tso-swiss-knife' );
+		return __( 'Unknown plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	public function render(): void {
@@ -570,13 +570,13 @@ class TSOSK_Mod_Server_Files {
 		$same_htaccess  = realpath( dirname( $root_htaccess ) ) === realpath( ABSPATH );
 
 		if ( ! $same_htaccess ) {
-			$reports['htaccess_root'] = $this->get_report( __( '.htaccess (domain / document root)', 'tso-swiss-knife' ), $root_htaccess, 'htaccess_root' );
+			$reports['htaccess_root'] = $this->get_report( __( '.htaccess (domain / document root)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $root_htaccess, 'htaccess_root' );
 			$reports['htaccess_root']['is_root']   = true;
 			$reports['htaccess_root']['is_htaccess'] = true;
 		}
 
 		$reports['htaccess'] = $this->get_report(
-			$same_htaccess ? __( '.htaccess', 'tso-swiss-knife' ) : __( '.htaccess (WordPress subdirectory)', 'tso-swiss-knife' ),
+			$same_htaccess ? __( '.htaccess', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( '.htaccess (WordPress subdirectory)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$local_htaccess,
 			'htaccess'
 		);
@@ -588,7 +588,7 @@ class TSOSK_Mod_Server_Files {
 		$sitemaps = $this->detect_sitemaps();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Review and edit the server configuration files that control crawling, permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache may use a root .htaccess in public_html plus a separate one inside WordPress. Also shows all sitemap files detected on this installation.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Review and edit the server configuration files that control crawling, permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache may use a root .htaccess in public_html plus a separate one inside WordPress. Also shows all sitemap files detected on this installation.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php foreach ( $reports as $key => $report ) : ?>
@@ -597,16 +597,16 @@ class TSOSK_Mod_Server_Files {
 
 		<?php /* ── Sitemaps ── */ ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Sitemaps', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Sitemaps', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Sitemaps are files that list all the pages on your website so that search engines like Google can find them more easily. This panel detects sitemaps generated by popular SEO plugins.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Sitemaps are files that list all the pages on your website so that search engines like Google can find them more easily. This panel detects sitemaps generated by popular SEO plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<table class="widefat tsosk-table">
 				<thead><tr>
-					<th><?php esc_html_e( 'Sitemap', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Plugin', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'URL', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Sitemap', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 				<?php foreach ( $sitemaps as $s ) :
@@ -618,9 +618,9 @@ class TSOSK_Mod_Server_Files {
 						<td><?php echo esc_html( $s['plugin'] ); ?></td>
 						<td>
 							<?php if ( 'physical' === $s['type'] ) : ?>
-								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Physical file', 'tso-swiss-knife' ); ?></span>
+								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Physical file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php else : ?>
-								<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Virtual (plugin)', 'tso-swiss-knife' ); ?></span>
+								<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Virtual (plugin)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php endif; ?>
 						</td>
 						<td>
@@ -634,7 +634,7 @@ class TSOSK_Mod_Server_Files {
 							<?php else : ?>
 								<span style="color:#8c8f94;text-decoration:line-through;font-size:12px;"><?php echo esc_html( $s['url'] ); ?></span>
 								<span class="tsosk-badge tsosk-badge-warn" style="font-size:10px;margin-left:6px;">
-									HTTP <?php echo $http > 0 ? esc_html( (string) $http ) : esc_html__( 'error', 'tso-swiss-knife' ); ?>
+									HTTP <?php echo $http > 0 ? esc_html( (string) $http ) : esc_html__( 'error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</span>
 							<?php endif; ?>
 						</td>
@@ -665,18 +665,18 @@ class TSOSK_Mod_Server_Files {
 			return $report;
 		}
 		if ( ! $report['readable'] ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file exists but is not readable by WordPress.', 'tso-swiss-knife' ) );
+			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file exists but is not readable by WordPress.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			return $report;
 		}
 		if ( $report['size'] > 512 * 1024 ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file is larger than expected, so only metadata is reviewed.', 'tso-swiss-knife' ) );
+			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file is larger than expected, so only metadata is reviewed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			return $report;
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$content = file_get_contents( $path );
 		if ( false === $content ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file could not be read.', 'tso-swiss-knife' ) );
+			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file could not be read.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			return $report;
 		}
 
@@ -687,11 +687,11 @@ class TSOSK_Mod_Server_Files {
 		);
 
 		if ( $report['writable'] ) {
-			$report['notices'][] = array( 'type' => 'info', 'message' => __( 'The file is writable by WordPress. You can edit it from this panel.', 'tso-swiss-knife' ) );
+			$report['notices'][] = array( 'type' => 'info', 'message' => __( 'The file is writable by WordPress. You can edit it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( empty( array_filter( $report['notices'], fn( $n ) => in_array( $n['type'], array( 'warn', 'error' ), true ) ) ) ) {
-			$report['notices'][] = array( 'type' => 'ok', 'message' => __( 'No obvious issues were detected.', 'tso-swiss-knife' ) );
+			$report['notices'][] = array( 'type' => 'ok', 'message' => __( 'No obvious issues were detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		return $report;
@@ -699,9 +699,9 @@ class TSOSK_Mod_Server_Files {
 
 	private function missing_message( string $key ): string {
 		if ( str_starts_with( $key, 'robots' ) ) {
-			return __( 'No robots.txt file was found. WordPress may serve a default virtual robots.txt. You can create one here.', 'tso-swiss-knife' );
+			return __( 'No robots.txt file was found. WordPress may serve a default virtual robots.txt. You can create one here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
-		return __( 'No .htaccess file was found at the WordPress root. This is normal on Nginx servers. On Apache, it is required for pretty permalinks.', 'tso-swiss-knife' );
+		return __( 'No .htaccess file was found at the WordPress root. This is normal on Nginx servers. On Apache, it is required for pretty permalinks.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	private function review_robots( string $content ): array {
@@ -710,20 +710,20 @@ class TSOSK_Mod_Server_Files {
 		$text    = implode( "\n", $lines );
 
 		if ( '' === trim( $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'robots.txt has no active directives.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'warn', 'message' => __( 'robots.txt has no active directives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			return $notices;
 		}
 		if ( ! preg_match( '/^User-agent\s*:/im', $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'No User-agent directive was found.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'warn', 'message' => __( 'No User-agent directive was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( preg_match( '/^Disallow\s*:\s*\/\s*$/im', $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'A Disallow: / rule blocks crawling for the matching user agent.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'warn', 'message' => __( 'A Disallow: / rule blocks crawling for the matching user agent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! preg_match( '/^Sitemap\s*:/im', $text ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'No Sitemap directive was found. Consider adding one so search engines can discover your sitemap directly.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'info', 'message' => __( 'No Sitemap directive was found. Consider adding one so search engines can discover your sitemap directly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( preg_match( '/^Disallow\s*:\s*\/wp-content\/uploads/im', $text ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'Uploads are blocked for crawlers. Confirm this is intentional if media files should rank in search.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'info', 'message' => __( 'Uploads are blocked for crawlers. Confirm this is intentional if media files should rank in search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		return $notices;
 	}
@@ -731,18 +731,18 @@ class TSOSK_Mod_Server_Files {
 	private function review_htaccess( string $content ): array {
 		$notices = array();
 		if ( false === strpos( $content, '# BEGIN WordPress' ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'The standard WordPress block was not found. This is normal with custom server rules.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'info', 'message' => __( 'The standard WordPress block was not found. This is normal with custom server rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! preg_match( '/^\s*RewriteEngine\s+On/im', $content ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'RewriteEngine On was not found. Pretty permalinks may not work on Apache.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'warn', 'message' => __( 'RewriteEngine On was not found. Pretty permalinks may not work on Apache.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( preg_match( '/^\s*Options\s+\+Indexes/im', $content ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'warn', 'message' => __( 'Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( preg_match( '/wp-config\.php/im', $content ) ) {
-			$notices[] = array( 'type' => 'ok', 'message' => __( 'A wp-config.php protection rule was found.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'ok', 'message' => __( 'A wp-config.php protection rule was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		} else {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'No explicit wp-config.php protection rule was found in this file.', 'tso-swiss-knife' ) );
+			$notices[] = array( 'type' => 'info', 'message' => __( 'No explicit wp-config.php protection rule was found in this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		return $notices;
 	}
@@ -763,46 +763,46 @@ class TSOSK_Mod_Server_Files {
 		<div class="tsosk-card">
 			<h3><?php echo esc_html( $report['label'] ); ?>
 				<?php if ( $report['exists'] ) : ?>
-				<span class="tsosk-badge tsosk-badge-ok" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Found', 'tso-swiss-knife' ); ?></span>
+				<span class="tsosk-badge tsosk-badge-ok" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
-				<span class="tsosk-badge tsosk-badge-info" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Not found', 'tso-swiss-knife' ); ?></span>
+				<span class="tsosk-badge tsosk-badge-info" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
 			</h3>
 
 			<?php if ( $is_root && ! $is_htaccess ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( '🌐 This is the file Google reads.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'Search engines (Google, Bing, etc.) always look for robots.txt at the domain root — for example https://example.com/robots.txt. If your WordPress is installed in a subdirectory like /blog/ or /pruebas/, the search engines still only read the one at the root domain. Rules in this file apply to the entire domain and all its subdirectories.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( '🌐 This is the file Google reads.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'Search engines (Google, Bing, etc.) always look for robots.txt at the domain root — for example https://example.com/robots.txt. If your WordPress is installed in a subdirectory like /blog/ or /pruebas/, the search engines still only read the one at the root domain. Rules in this file apply to the entire domain and all its subdirectories.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php elseif ( $is_root && $is_htaccess ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( 'Document root .htaccess', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'This is the .htaccess at your hosting document root (e.g. public_html). It may contain site-wide redirects, security rules or PHP settings that apply before WordPress loads. The WordPress subdirectory has its own .htaccess below for permalinks.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'Document root .htaccess', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'This is the .htaccess at your hosting document root (e.g. public_html). It may contain site-wide redirects, security rules or PHP settings that apply before WordPress loads. The WordPress subdirectory has its own .htaccess below for permalinks.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php elseif ( $root_note && $is_htaccess ) : ?>
 			<div class="tsosk-notice tsosk-notice-warn">
-				<strong><?php esc_html_e( 'WordPress permalink .htaccess', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'This file only affects URLs inside the WordPress folder. Pretty permalinks and rewrite rules for posts/pages are stored here. Site-wide rules in public_html/.htaccess are shown separately above when detected.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'WordPress permalink .htaccess', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'This file only affects URLs inside the WordPress folder. Pretty permalinks and rewrite rules for posts/pages are stored here. Site-wide rules in public_html/.htaccess are shown separately above when detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php elseif ( $root_note ) : ?>
 			<div class="tsosk-notice tsosk-notice-warn">
-				<strong><?php esc_html_e( '⚠ Google does not read this file.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'This robots.txt is inside a WordPress subdirectory. Search engines ignore it — they only read the one at the domain root. You can edit it here for your own reference, but it has no effect on how crawlers index your site.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( '⚠ Google does not read this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'This robots.txt is inside a WordPress subdirectory. Search engines ignore it — they only read the one at the domain root. You can edit it here for your own reference, but it has no effect on how crawlers index your site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php endif; ?>
 
 			<table class="tsosk-kv-table" style="margin-bottom:12px;">
 				<tr>
-					<th style="width:120px;"><?php esc_html_e( 'Path', 'tso-swiss-knife' ); ?></th>
+					<th style="width:120px;"><?php esc_html_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td><code><?php echo esc_html( $report['path'] ); ?></code></td>
 				</tr>
 				<?php if ( $report['exists'] ) : ?>
 				<tr>
-					<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td><?php echo esc_html( size_format( (int) $report['size'], 2 ) ); ?></td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Modified', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td><?php echo $report['modified'] ? esc_html( date_i18n( 'Y-m-d H:i', (int) $report['modified'] ) ) : '—'; ?></td>
 				</tr>
 				<?php endif; ?>
@@ -820,9 +820,9 @@ class TSOSK_Mod_Server_Files {
 			<?php if ( '' !== $report['content'] || ! $report['exists'] ) : ?>
 			<details open style="margin-top:12px;">
 				<summary style="cursor:pointer;font-weight:600;margin-bottom:8px;">
-					<?php esc_html_e( 'File contents', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'File contents', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<?php if ( $report['writable'] || ( ! $report['exists'] && wp_is_writable( dirname( $report['path'] ) ) ) ) : ?>
-					<span class="tsosk-badge tsosk-badge-info" style="font-size:11px;margin-left:6px;"><?php esc_html_e( 'Editable', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-info" style="font-size:11px;margin-left:6px;"><?php esc_html_e( 'Editable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php endif; ?>
 				</summary>
 				<textarea id="tsosk-sf-content-<?php echo esc_attr( $key ); ?>"
@@ -833,12 +833,12 @@ class TSOSK_Mod_Server_Files {
 					<button class="button button-primary tsosk-sf-save"
 					        data-key="<?php echo esc_attr( $key ); ?>"
 					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Save Changes', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Save Changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<span class="tsosk-ajax-msg tsosk-sf-msg-<?php echo esc_attr( $key ); ?>"></span>
 				</div>
 				<?php else : ?>
-				<p class="description"><?php esc_html_e( 'File is read-only. To edit it, make it writable via FTP or your hosting control panel.', 'tso-swiss-knife' ); ?></p>
+				<p class="description"><?php esc_html_e( 'File is read-only. To edit it, make it writable via FTP or your hosting control panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 				<?php endif; ?>
 			</details>
 			<?php endif; ?>

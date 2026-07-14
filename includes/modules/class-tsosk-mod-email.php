@@ -37,12 +37,12 @@ class TSOSK_Mod_Email {
 	public function ajax_send_test(): void {
 		check_ajax_referer( 'tsosk_email_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
 		if ( ! is_email( $email ) ) {
-			wp_send_json_error( __( 'Enter a valid email address.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Enter a valid email address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$error = null;
@@ -57,17 +57,17 @@ class TSOSK_Mod_Email {
 			$email,
 			sprintf(
 				/* translators: %s: site name */
-				__( '[%s] TSO Swiss Knife email test', 'tso-swiss-knife' ),
+				__( '[%s] TSO Swiss Knife email test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
 			),
-			__( 'This is a test email sent from TSO Swiss Knife Email Diagnostics.', 'tso-swiss-knife' )
+			__( 'This is a test email sent from TSO Swiss Knife Email Diagnostics.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
 		$result = array(
 			'email'   => $email,
 			'sent'    => (bool) $sent,
 			'time'    => time(),
-			'message' => $error instanceof WP_Error ? $error->get_error_message() : ( $sent ? __( 'Test email sent.', 'tso-swiss-knife' ) : __( 'wp_mail returned false.', 'tso-swiss-knife' ) ),
+			'message' => $error instanceof WP_Error ? $error->get_error_message() : ( $sent ? __( 'Test email sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'wp_mail returned false.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 		);
 		update_option( self::OPTION, $result, false );
 
@@ -90,38 +90,38 @@ class TSOSK_Mod_Email {
 		$smtp_plugins = $this->detect_smtp_plugins();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP plugins and delivery result.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP plugins and delivery result.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Mail Configuration', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Mail Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
-				<tr><th><?php esc_html_e( 'wp_mail From Email', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( $from_email ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'wp_mail From Name', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( $from_name ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Detected SMTP plugins', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( empty( $smtp_plugins ) ? __( 'None detected', 'tso-swiss-knife' ) : implode( ', ', $smtp_plugins ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'PHP mail function', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( function_exists( 'mail' ) ? __( 'Available', 'tso-swiss-knife' ) : __( 'Disabled', 'tso-swiss-knife' ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'wp_mail From Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( $from_email ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'wp_mail From Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( $from_name ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Detected SMTP plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( empty( $smtp_plugins ) ? __( 'None detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : implode( ', ', $smtp_plugins ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'PHP mail function', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( function_exists( 'mail' ) ? __( 'Available', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></code></td></tr>
 			</table>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Send Test Email', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Send Test Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<input type="email" id="tsosk-email-test-address" class="regular-text" value="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
 			<button class="button button-primary" id="tsosk-email-send-test" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Send Test', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Send Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-email-msg"></span>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Last Test Result', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Last Test Result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<?php if ( empty( $last ) || ! is_array( $last ) ) : ?>
-				<p><?php esc_html_e( 'No test email has been sent yet.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No test email has been sent yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<table class="tsosk-kv-table">
-					<tr><th><?php esc_html_e( 'Email', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( $last['email'] ?? '' ); ?></code></td></tr>
-					<tr><th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th><td><?php echo ! empty( $last['sent'] ) ? esc_html__( 'Sent', 'tso-swiss-knife' ) : esc_html__( 'Failed', 'tso-swiss-knife' ); ?></td></tr>
-					<tr><th><?php esc_html_e( 'Message', 'tso-swiss-knife' ); ?></th><td><?php echo esc_html( $last['message'] ?? '' ); ?></td></tr>
-					<tr><th><?php esc_html_e( 'Time', 'tso-swiss-knife' ); ?></th><td><?php echo ! empty( $last['time'] ) ? esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $last['time'] ) ) ) : ''; ?></td></tr>
+					<tr><th><?php esc_html_e( 'Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( $last['email'] ?? '' ); ?></code></td></tr>
+					<tr><th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><?php echo ! empty( $last['sent'] ) ? esc_html__( 'Sent', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Failed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td></tr>
+					<tr><th><?php esc_html_e( 'Message', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><?php echo esc_html( $last['message'] ?? '' ); ?></td></tr>
+					<tr><th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><?php echo ! empty( $last['time'] ) ? esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $last['time'] ) ) ) : ''; ?></td></tr>
 				</table>
 			<?php endif; ?>
 		</div>

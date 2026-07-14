@@ -283,7 +283,7 @@ class TSOSK_Mod_Custom_404 {
 	 */
 	public function display_post_state( array $states, WP_Post $post ): array {
 		if ( (int) $post->ID === $this->get_page_id() ) {
-			$states['tsosk_404'] = __( '404 Page', 'tso-swiss-knife' );
+			$states['tsosk_404'] = __( '404 Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 		return $states;
 	}
@@ -383,22 +383,22 @@ class TSOSK_Mod_Custom_404 {
 		}
 
 		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife' ), esc_html__( 'Preview', 'tso-swiss-knife' ), array( 'response' => 403 ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 403 ) );
 		}
 
 		$nonce = isset( $_GET['preview_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['preview_nonce'] ) ) : '';
 		if ( ! wp_verify_nonce( $nonce, 'tsosk_custom_404_preview' ) ) {
-			wp_die( esc_html__( 'Invalid preview link.', 'tso-swiss-knife' ), esc_html__( 'Preview', 'tso-swiss-knife' ), array( 'response' => 403 ) );
+			wp_die( esc_html__( 'Invalid preview link.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 403 ) );
 		}
 
 		$page_id = isset( $_GET['page_id'] ) ? absint( wp_unslash( $_GET['page_id'] ) ) : 0;
 		if ( $page_id <= 0 || 'page' !== get_post_type( $page_id ) || 'publish' !== get_post_status( $page_id ) ) {
-			wp_die( esc_html__( 'Select a valid published page to preview.', 'tso-swiss-knife' ), esc_html__( 'Preview', 'tso-swiss-knife' ), array( 'response' => 400 ) );
+			wp_die( esc_html__( 'Select a valid published page to preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 400 ) );
 		}
 
 		$post = get_post( $page_id );
 		if ( ! $post instanceof WP_Post ) {
-			wp_die( esc_html__( 'Page not found.', 'tso-swiss-knife' ), esc_html__( 'Preview', 'tso-swiss-knife' ), array( 'response' => 404 ) );
+			wp_die( esc_html__( 'Page not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 404 ) );
 		}
 
 		self::$failed_url = home_url( '/tsosk-404-preview-example/' );
@@ -539,15 +539,15 @@ class TSOSK_Mod_Custom_404 {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_custom_404_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$page_id = isset( $_POST['page_id'] ) ? absint( wp_unslash( $_POST['page_id'] ) ) : 0;
 		if ( $page_id > 0 && 'page' !== get_post_type( $page_id ) ) {
-			wp_send_json_error( __( 'Select a valid page.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Select a valid page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $page_id > 0 && 'publish' !== get_post_status( $page_id ) ) {
-			wp_send_json_error( __( 'The selected page must be published.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'The selected page must be published.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$settings = array(
@@ -566,14 +566,14 @@ class TSOSK_Mod_Custom_404 {
 			$page_id > 0
 				? sprintf(
 					/* translators: %d: page ID */
-					__( 'Custom 404 page set (page ID %d).', 'tso-swiss-knife' ),
+					__( 'Custom 404 page set (page ID %d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$page_id
 				)
-				: __( 'Custom 404 page cleared (theme default).', 'tso-swiss-knife' )
+				: __( 'Custom 404 page cleared (theme default).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 		wp_send_json_success(
 			array(
-				'message' => __( 'Custom 404 settings saved.', 'tso-swiss-knife' ),
+				'message' => __( 'Custom 404 settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'active'  => $page_id > 0 && 'publish' === get_post_status( $page_id ),
 			)
 		);
@@ -593,24 +593,24 @@ class TSOSK_Mod_Custom_404 {
 		$preview_nonce  = wp_create_nonce( 'tsosk_custom_404_preview' );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Create a custom 404 page like any normal page, then select it here. Visitors see your page content while the server still returns a real 404 code (no redirect). Search engines are told the URL does not exist.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Create a custom 404 page like any normal page, then select it here. Visitors see your page content while the server still returns a real 404 code (no redirect). Search engines are told the URL does not exist.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( '404 Page', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( '404 Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<p>
 				<span class="tsosk-badge <?php echo $active ? 'tsosk-badge-ok' : 'tsosk-badge-info'; ?>" id="tsosk-custom-404-status">
 					<?php
 					echo $active
-						? esc_html__( 'Custom 404 active', 'tso-swiss-knife' )
-						: esc_html__( 'Using theme default 404', 'tso-swiss-knife' );
+						? esc_html__( 'Custom 404 active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+						: esc_html__( 'Using theme default 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					?>
 				</span>
 			</p>
 
 			<div class="tsosk-field-row">
-				<label for="tsosk-custom-404-page"><strong><?php esc_html_e( 'Select page', 'tso-swiss-knife' ); ?></strong></label>
+				<label for="tsosk-custom-404-page"><strong><?php esc_html_e( 'Select page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<?php
 				wp_dropdown_pages(
 					array(
@@ -618,7 +618,7 @@ class TSOSK_Mod_Custom_404 {
 						'id'                => 'tsosk-custom-404-page',
 						'selected'          => (int) $page_id,
 						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by wp_dropdown_pages().
-						'show_option_none'  => __( '— None (theme default) —', 'tso-swiss-knife' ),
+						'show_option_none'  => __( '— None (theme default) —', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'option_none_value' => '0',
 						'post_status'       => array( 'publish' ),
 					)
@@ -627,134 +627,134 @@ class TSOSK_Mod_Custom_404 {
 			</div>
 
 			<p class="description">
-				<?php esc_html_e( 'Create the page under Pages → Add New, then pick it here. Permalinks must not be set to “Plain”.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Create the page under Pages → Add New, then pick it here. Permalinks must not be set to “Plain”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<?php if ( $page_id && $edit_url ) : ?>
 			<p>
 				<a class="button button-secondary" href="<?php echo esc_url( $edit_url ); ?>">
-					<?php esc_html_e( 'Edit page', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Edit page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 				<?php if ( $view_url ) : ?>
 				<a class="button button-secondary" href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'View page', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'View page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 				<?php endif; ?>
 				<a class="button button-secondary" href="<?php echo esc_url( $test_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Test 404 response', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Test 404 response', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 			</p>
 			<?php endif; ?>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Options', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description" style="margin-top:0;">
-				<?php esc_html_e( 'Each option below is optional. The short explanations tell you what changes on your site when you tick the box.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Each option below is optional. The short explanations tell you what changes on your site when you tick the box.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<div class="tsosk-check-option">
 				<label class="tsosk-check-row">
 					<input type="checkbox" id="tsosk-custom-404-hide-search" <?php checked( ! empty( $settings['hide_from_search'] ) ); ?>>
-					<?php esc_html_e( 'Hide 404 page from front-end search results', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Hide 404 page from front-end search results', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-check-option-desc">
-					<?php esc_html_e( 'When a visitor searches your site, this page will not appear in the results. That way people only see it when they hit a broken link, not when they look for normal content.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'When a visitor searches your site, this page will not appear in the results. That way people only see it when they hit a broken link, not when they look for normal content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-check-option">
 				<label class="tsosk-check-row">
 					<input type="checkbox" id="tsosk-custom-404-hide-admin" <?php checked( ! empty( $settings['hide_from_admin'] ) ); ?>>
-					<?php esc_html_e( 'Hide 404 page from the Pages list in admin', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Hide 404 page from the Pages list in admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-check-option-desc">
-					<?php esc_html_e( 'The page still exists and works as your 404, but it disappears from Pages → All Pages so you are less likely to delete or edit it by mistake.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'The page still exists and works as your 404, but it disappears from Pages → All Pages so you are less likely to delete or edit it by mistake.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-check-option">
 				<label class="tsosk-check-row">
 					<input type="checkbox" id="tsosk-custom-404-force-direct" <?php checked( ! empty( $settings['force_direct_404'] ) ); ?>>
-					<?php esc_html_e( 'Return 404 when the 404 page URL is opened directly', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Return 404 when the 404 page URL is opened directly', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-check-option-desc">
-					<?php esc_html_e( 'If someone types the 404 page address in the browser (instead of landing on it from a bad link), they still get a “not found” response. Recommended: leave this on.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'If someone types the 404 page address in the browser (instead of landing on it from a bad link), they still get a “not found” response. Recommended: leave this on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-check-option">
 				<label class="tsosk-check-row">
 					<input type="checkbox" id="tsosk-custom-404-disable-guess" <?php checked( ! empty( $settings['disable_url_guess'] ) ); ?>>
-					<?php esc_html_e( 'Disable WordPress URL autocorrection guessing on 404', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Disable WordPress URL autocorrection guessing on 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-check-option-desc">
-					<?php esc_html_e( 'WordPress can redirect a wrong URL to a similar page it thinks you meant. Enable this to turn off that guess and always show your custom 404 page instead.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'WordPress can redirect a wrong URL to a similar page it thinks you meant. Enable this to turn off that guess and always show your custom 404 page instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 
 			<div class="tsosk-check-option">
 				<label class="tsosk-check-row">
 					<input type="checkbox" id="tsosk-custom-404-send-410" <?php checked( ! empty( $settings['send_410'] ) ); ?>>
-					<?php esc_html_e( 'Send HTTP 410 (Gone) instead of 404', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Send HTTP 410 (Gone) instead of 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<p class="description tsosk-check-option-desc">
-					<?php esc_html_e( 'Your custom 404 page still appears exactly the same for visitors. Only the hidden HTTP code changes: 410 instead of 404. Use 410 when you removed content on purpose and want search engines to drop those URLs faster. For normal broken links, leave this off and keep 404.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Your custom 404 page still appears exactly the same for visitors. Only the hidden HTTP code changes: 410 instead of 404. Use 410 when you removed content on purpose and want search engines to drop those URLs faster. For normal broken links, leave this off and keep 404.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Show the failed URL on the page', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Show the failed URL on the page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Add one of these inside your 404 page content to display the URL that caused the error.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Add one of these inside your 404 page content to display the URL that caused the error.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<ol class="description" style="margin:0 0 12px 18px;">
-				<li><?php esc_html_e( 'Open Pages and edit your selected 404 page.', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'In the block editor: click + → search “URL causing 404 error” (TSO Swiss Knife) and insert the block where you want the link shown.', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url].', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'Save the page. On a real 404, visitors see the broken URL they requested.', 'tso-swiss-knife' ); ?></li>
+				<li><?php esc_html_e( 'Open Pages and edit your selected 404 page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'In the block editor: click + → search “URL causing 404 error” (TSO Swiss Knife) and insert the block where you want the link shown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url].', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'Save the page. On a real 404, visitors see the broken URL they requested.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 			</ol>
 			<table class="widefat tsosk-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Shortcode', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Example output', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Shortcode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Example output', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td><?php esc_html_e( 'Full URL', 'tso-swiss-knife' ); ?></td>
-						<td><code>[tsosk_404_url]</code> <?php esc_html_e( 'or', 'tso-swiss-knife' ); ?> <code>[tsosk_404_url display="full"]</code></td>
+						<td><?php esc_html_e( 'Full URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+						<td><code>[tsosk_404_url]</code> <?php esc_html_e( 'or', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <code>[tsosk_404_url display="full"]</code></td>
 						<td><code>https://example.com/missing?x=1</code></td>
 					</tr>
 					<tr>
-						<td><?php esc_html_e( 'Path only', 'tso-swiss-knife' ); ?></td>
+						<td><?php esc_html_e( 'Path only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						<td><code>[tsosk_404_url display="page"]</code></td>
 						<td><code>missing/page</code></td>
 					</tr>
 					<tr>
-						<td><?php esc_html_e( 'Domain + path', 'tso-swiss-knife' ); ?></td>
+						<td><?php esc_html_e( 'Domain + path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						<td><code>[tsosk_404_url display="domainpath"]</code></td>
 						<td><code>example.com/missing/page</code></td>
 					</tr>
 				</tbody>
 			</table>
 			<p class="description" style="margin-top:10px;">
-				<?php esc_html_e( 'Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife).', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 		</div>
 
 		<div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
 			<button type="button" class="button button-primary" id="tsosk-custom-404-save"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Save settings', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button type="button" class="button" id="tsosk-custom-404-preview"
 			        data-preview-nonce="<?php echo esc_attr( $preview_nonce ); ?>"
 			        data-home-url="<?php echo esc_url( home_url( '/' ) ); ?>">
-				<?php esc_html_e( 'Preview 404 page', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Preview 404 page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-custom-404-msg"></span>
 		</div>

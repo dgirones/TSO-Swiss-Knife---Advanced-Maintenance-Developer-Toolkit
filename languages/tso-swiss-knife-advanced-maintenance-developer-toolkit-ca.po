@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Domain: tso-swiss-knife\n"
+"X-Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
 
 msgid "%d events are more than one hour overdue."
 msgstr "%d esdeveniments porten més d'una hora de retard."

@@ -182,7 +182,7 @@ class TSOSK_Mod_Hidden_Profiles {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_hidden_profiles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$old_constants = $this->get_saved_constants();
@@ -209,7 +209,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		);
 
 		wp_send_json_success(
-			__( 'Hidden WordPress profiles saved. Reload the page if constant values do not update immediately.', 'tso-swiss-knife' )
+			__( 'Hidden WordPress profiles saved. Reload the page if constant values do not update immediately.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 	}
 
@@ -220,9 +220,9 @@ class TSOSK_Mod_Hidden_Profiles {
 	 */
 	private function get_runtime_toggle_labels(): array {
 		return array(
-			'disable_emojis' => __( 'Disable emojis', 'tso-swiss-knife' ),
-			'disable_embeds' => __( 'Disable oEmbed / embeds', 'tso-swiss-knife' ),
-			'close_comments' => __( 'Close new comments & pings', 'tso-swiss-knife' ),
+			'disable_emojis' => __( 'Disable emojis', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable_embeds' => __( 'Disable oEmbed / embeds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'close_comments' => __( 'Close new comments & pings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -251,9 +251,9 @@ class TSOSK_Mod_Hidden_Profiles {
 			}
 			$changes[] = sprintf(
 				/* translators: 1: constant name, 2: enabled or disabled */
-				__( '%1$s %2$s', 'tso-swiss-knife' ),
+				__( '%1$s %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$constant,
-				$is_on ? __( 'enabled', 'tso-swiss-knife' ) : __( 'disabled', 'tso-swiss-knife' )
+				$is_on ? __( 'enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
@@ -272,20 +272,20 @@ class TSOSK_Mod_Hidden_Profiles {
 			if ( ! $was_on && $is_on ) {
 				$changes[] = sprintf(
 					/* translators: 1: constant name, 2: numeric value */
-					__( '%1$s enabled (%2$d)', 'tso-swiss-knife' ),
+					__( '%1$s enabled (%2$d)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$constant,
 					$new_int
 				);
 			} elseif ( $was_on && ! $is_on ) {
 				$changes[] = sprintf(
 					/* translators: %s: constant name */
-					__( '%s disabled', 'tso-swiss-knife' ),
+					__( '%s disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$constant
 				);
 			} else {
 				$changes[] = sprintf(
 					/* translators: 1: constant name, 2: old value, 3: new value */
-					__( '%1$s changed from %2$d to %3$d', 'tso-swiss-knife' ),
+					__( '%1$s changed from %2$d to %3$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$constant,
 					$old_int,
 					$new_int
@@ -301,14 +301,14 @@ class TSOSK_Mod_Hidden_Profiles {
 			}
 			$changes[] = sprintf(
 				/* translators: 1: option label, 2: enabled or disabled */
-				__( '%1$s %2$s', 'tso-swiss-knife' ),
+				__( '%1$s %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$label,
-				$is_on ? __( 'enabled', 'tso-swiss-knife' ) : __( 'disabled', 'tso-swiss-knife' )
+				$is_on ? __( 'enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 
 		if ( empty( $changes ) ) {
-			return __( 'Hidden WordPress profiles settings saved (no changes).', 'tso-swiss-knife' );
+			return __( 'Hidden WordPress profiles settings saved (no changes).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		return implode( '; ', $changes ) . '.';
@@ -422,14 +422,14 @@ class TSOSK_Mod_Hidden_Profiles {
 		?>
 		<div id="tsosk-hp-panel">
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON in wp-content/uploads/tsosk-config/ and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON in wp-content/uploads/tsosk-config/ and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-info">
 			<?php
 			printf(
 				/* translators: 1: constants tab link open, 2: link close */
-				esc_html__( 'For a full read-only list of defined constants, open %1$sWP Constants%2$s.', 'tso-swiss-knife' ),
+				esc_html__( 'For a full read-only list of defined constants, open %1$sWP Constants%2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<a href="' . esc_url( $constants_url ) . '">',
 				'</a>'
 			);
@@ -441,7 +441,7 @@ class TSOSK_Mod_Hidden_Profiles {
 			<?php
 			printf(
 				/* translators: %s: file path */
-				esc_html__( 'Active profiles config: %s', 'tso-swiss-knife' ),
+				esc_html__( 'Active profiles config: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::PROFILES_JSON ) . '</code>'
 			);
 			?>
@@ -453,7 +453,7 @@ class TSOSK_Mod_Hidden_Profiles {
 			<?php
 			printf(
 				/* translators: %s: legacy file path */
-				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife' ),
+				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES ) . '</code>'
 			);
 			?>
@@ -461,48 +461,48 @@ class TSOSK_Mod_Hidden_Profiles {
 		<?php endif; ?>
 
 		<div class="tsosk-card tsosk-hp-presets">
-			<h3><?php esc_html_e( 'Quick presets', 'tso-swiss-knife' ); ?></h3>
-			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Check the boxes below, then click Save. Presets only select options — nothing is applied until you save.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Quick presets', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Check the boxes below, then click Save. Presets only select options — nothing is applied until you save.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<div class="tsosk-hp-preset-btns">
-				<button type="button" class="button" data-tsosk-hp-preset="performance"><?php esc_html_e( 'Performance', 'tso-swiss-knife' ); ?></button>
-				<button type="button" class="button" data-tsosk-hp-preset="content"><?php esc_html_e( 'Content & trash', 'tso-swiss-knife' ); ?></button>
-				<button type="button" class="button" data-tsosk-hp-preset="privacy"><?php esc_html_e( 'Privacy & surface', 'tso-swiss-knife' ); ?></button>
-				<button type="button" class="button" data-tsosk-hp-preset="clear"><?php esc_html_e( 'Clear selection', 'tso-swiss-knife' ); ?></button>
+				<button type="button" class="button" data-tsosk-hp-preset="performance"><?php esc_html_e( 'Performance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button" data-tsosk-hp-preset="content"><?php esc_html_e( 'Content & trash', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button" data-tsosk-hp-preset="privacy"><?php esc_html_e( 'Privacy & surface', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button" data-tsosk-hp-preset="clear"><?php esc_html_e( 'Clear selection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</div>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Constants (uploads config)', 'tso-swiss-knife' ); ?></h3>
-			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Requires a full page reload (or new request) after saving for constant values to take effect. Values already set in wp-config.php cannot be overridden here.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Constants (uploads config)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Requires a full page reload (or new request) after saving for constant values to take effect. Values already set in wp-config.php cannot be overridden here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<div class="tsosk-hp-legend">
-				<p><strong><?php esc_html_e( 'How to read each row', 'tso-swiss-knife' ); ?></strong></p>
+				<p><strong><?php esc_html_e( 'How to read each row', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
 				<ul class="tsosk-hp-legend-list">
-					<li><?php esc_html_e( 'Tick the box to enable that constant in the plugin config file.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'For numbers: the input box is the new value that will be saved when you click Save.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'The green badge is the value active on your site right now (from wp-config.php or WordPress default) — not the value in the input box.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'The blue “wp-config.php” badge means that constant is locked in wp-config.php and cannot be changed from here.', 'tso-swiss-knife' ); ?></li>
+					<li><?php esc_html_e( 'Tick the box to enable that constant in the plugin config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'For numbers: the input box is the new value that will be saved when you click Save.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'The green badge is the value active on your site right now (from wp-config.php or WordPress default) — not the value in the input box.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'The blue “wp-config.php” badge means that constant is locked in wp-config.php and cannot be changed from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 				</ul>
 			</div>
 			<?php
 			$this->render_bool_toggle(
 				'disable_wp_cron',
 				'DISABLE_WP_CRON',
-				__( 'Disable WordPress pseudo-cron on page visits. Use a real server cron calling wp-cron.php instead.', 'tso-swiss-knife' ),
+				__( 'Disable WordPress pseudo-cron on page visits. Use a real server cron calling wp-cron.php instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$constants['DISABLE_WP_CRON'],
 				$this->constant_locked_in_wpconfig( 'DISABLE_WP_CRON' )
 			);
 			$this->render_bool_toggle(
 				'concatenate_scripts',
 				'CONCATENATE_SCRIPTS',
-				__( 'Concatenate admin scripts (legacy optimization; may conflict with some plugins).', 'tso-swiss-knife' ),
+				__( 'Concatenate admin scripts (legacy optimization; may conflict with some plugins).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$constants['CONCATENATE_SCRIPTS'],
 				$this->constant_locked_in_wpconfig( 'CONCATENATE_SCRIPTS' )
 			);
 			$this->render_bool_toggle(
 				'compress_scripts',
 				'COMPRESS_SCRIPTS',
-				__( 'Compress admin scripts (deprecated in modern WordPress; use only if you know you need it).', 'tso-swiss-knife' ),
+				__( 'Compress admin scripts (deprecated in modern WordPress; use only if you know you need it).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$constants['COMPRESS_SCRIPTS'],
 				$this->constant_locked_in_wpconfig( 'COMPRESS_SCRIPTS' )
 			);
@@ -511,7 +511,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				'limit_revisions',
 				'WP_POST_REVISIONS',
 				'revisions_count',
-				__( 'Limit post revisions stored in the database.', 'tso-swiss-knife' ),
+				__( 'Limit post revisions stored in the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				null !== $constants['WP_POST_REVISIONS'],
 				$constants['WP_POST_REVISIONS'] ?? 5,
 				$this->constant_locked_in_wpconfig( 'WP_POST_REVISIONS' )
@@ -521,7 +521,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				'slow_autosave',
 				'AUTOSAVE_INTERVAL',
 				'autosave_seconds',
-				__( 'Increase autosave interval (seconds) to reduce editor autosave load.', 'tso-swiss-knife' ),
+				__( 'Increase autosave interval (seconds) to reduce editor autosave load.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				null !== $constants['AUTOSAVE_INTERVAL'],
 				$constants['AUTOSAVE_INTERVAL'] ?? 300,
 				$this->constant_locked_in_wpconfig( 'AUTOSAVE_INTERVAL' )
@@ -531,7 +531,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				'empty_trash',
 				'EMPTY_TRASH_DAYS',
 				'trash_days',
-				__( 'Automatically empty trash after N days (0 = disable trash expiry).', 'tso-swiss-knife' ),
+				__( 'Automatically empty trash after N days (0 = disable trash expiry).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				null !== $constants['EMPTY_TRASH_DAYS'],
 				$constants['EMPTY_TRASH_DAYS'] ?? 7,
 				$this->constant_locked_in_wpconfig( 'EMPTY_TRASH_DAYS' )
@@ -540,14 +540,14 @@ class TSOSK_Mod_Hidden_Profiles {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Runtime filters', 'tso-swiss-knife' ); ?></h3>
-			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Applied via WordPress hooks on the next request after saving. No server reload required. XML-RPC and RSS feeds are configured under Security Review; REST API under REST API.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Runtime filters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Applied via WordPress hooks on the next request after saving. No server reload required. XML-RPC and RSS feeds are configured under Security Review; REST API under REST API.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<?php
 			$runtime_descs = array(
-				'disable_emojis' => __( 'Removes emoji scripts and styles from the front end and admin.', 'tso-swiss-knife' ),
-				'disable_embeds' => __( 'Stops WordPress from embedding external content and related discovery tags.', 'tso-swiss-knife' ),
-				'close_comments' => __( 'Sets default comment and ping status to closed for new content (does not change existing posts).', 'tso-swiss-knife' ),
+				'disable_emojis' => __( 'Removes emoji scripts and styles from the front end and admin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'disable_embeds' => __( 'Stops WordPress from embedding external content and related discovery tags.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'close_comments' => __( 'Sets default comment and ping status to closed for new content (does not change existing posts).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 			$runtime_toggles = array();
 			foreach ( $this->get_runtime_toggle_labels() as $key => $label ) {
@@ -568,7 +568,7 @@ class TSOSK_Mod_Hidden_Profiles {
 							       <?php checked( $runtime[ $key ] ); ?>>
 							<strong><?php echo esc_html( $toggle['label'] ); ?></strong>
 							<?php if ( $runtime[ $key ] ) : ?>
-								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Active', 'tso-swiss-knife' ); ?></span>
+								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php endif; ?>
 						</div>
 						<p class="description tsosk-hp-field-desc"><?php echo esc_html( $toggle['desc'] ); ?></p>
@@ -582,8 +582,8 @@ class TSOSK_Mod_Hidden_Profiles {
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-hp-save"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-			        data-save-label="<?php esc_attr_e( 'Save profiles', 'tso-swiss-knife' ); ?>">
-				<?php esc_html_e( 'Save profiles', 'tso-swiss-knife' ); ?>
+			        data-save-label="<?php esc_attr_e( 'Save profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+				<?php esc_html_e( 'Save profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-hp-msg"></span>
 		</p>
@@ -611,12 +611,12 @@ class TSOSK_Mod_Hidden_Profiles {
 					       <?php disabled( $locked ); ?>>
 					<code><strong><?php echo esc_html( $constant ); ?></strong></code>
 					<?php if ( defined( $constant ) && constant( $constant ) ) : ?>
-						<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'ON', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php else : ?>
-						<span class="tsosk-badge"><?php esc_html_e( 'OFF', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-badge"><?php esc_html_e( 'OFF', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php endif; ?>
 					<?php if ( $locked ) : ?>
-						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'wp-config.php', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php endif; ?>
 				</div>
 				<p class="description tsosk-hp-field-desc"><?php echo esc_html( $desc ); ?></p>
@@ -648,7 +648,7 @@ class TSOSK_Mod_Hidden_Profiles {
 					       <?php disabled( $locked ); ?>>
 					<code><strong><?php echo esc_html( $constant ); ?></strong></code>
 					<span class="tsosk-hp-input-wrap">
-						<span class="tsosk-hp-mini-label"><?php esc_html_e( 'New value if saved', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-hp-mini-label"><?php esc_html_e( 'New value if saved', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<input type="number"
 						       name="tsosk_hp_<?php echo esc_attr( $number_field ); ?>"
 						       id="tsosk-hp-<?php echo esc_attr( $number_field ); ?>"
@@ -661,14 +661,14 @@ class TSOSK_Mod_Hidden_Profiles {
 					</span>
 					<?php if ( null !== $live_value && '' !== (string) $live_value ) : ?>
 						<span class="tsosk-hp-live-value">
-							<span class="tsosk-hp-mini-label"><?php esc_html_e( 'Current on site', 'tso-swiss-knife' ); ?></span>
-							<span class="tsosk-badge tsosk-badge-ok" title="<?php esc_attr_e( 'Value active right now on this site', 'tso-swiss-knife' ); ?>">
+							<span class="tsosk-hp-mini-label"><?php esc_html_e( 'Current on site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<span class="tsosk-badge tsosk-badge-ok" title="<?php esc_attr_e( 'Value active right now on this site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php echo esc_html( is_bool( $live_value ) ? ( $live_value ? 'true' : 'false' ) : (string) $live_value ); ?>
 							</span>
 						</span>
 					<?php endif; ?>
 					<?php if ( $locked ) : ?>
-						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'wp-config.php', 'tso-swiss-knife' ); ?></span>
+						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php endif; ?>
 				</div>
 				<p class="description tsosk-hp-field-desc"><?php echo esc_html( $desc ); ?></p>

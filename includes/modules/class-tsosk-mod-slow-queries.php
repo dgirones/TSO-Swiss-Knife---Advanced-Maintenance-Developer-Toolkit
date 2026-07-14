@@ -256,7 +256,7 @@ class TSOSK_Mod_Slow_Queries {
 	public function ajax_save_settings(): void {
 		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$new = array(
@@ -270,7 +270,7 @@ class TSOSK_Mod_Slow_Queries {
 		update_option( self::SETTINGS_OPTION, $new, false );
 
 		$warn_savequeries = false;
-		$message          = __( 'Settings saved.', 'tso-swiss-knife' );
+		$message          = __( 'Settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
 		if ( $new['enabled'] && ! ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) ) {
 			if ( class_exists( 'TSOSK_Mod_Debug' ) ) {
@@ -278,10 +278,10 @@ class TSOSK_Mod_Slow_Queries {
 				if ( is_wp_error( $result ) ) {
 					wp_send_json_error( $result->get_error_message() );
 				}
-				$message          = __( 'Settings saved. SAVEQUERIES was enabled in the debug config — reload the page to start capturing queries.', 'tso-swiss-knife' );
+				$message          = __( 'Settings saved. SAVEQUERIES was enabled in the debug config — reload the page to start capturing queries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 				$warn_savequeries = true;
 			} else {
-				$message          = __( 'Settings saved. SAVEQUERIES is not active — enable it in Debug Mode so queries are captured.', 'tso-swiss-knife' );
+				$message          = __( 'Settings saved. SAVEQUERIES is not active — enable it in Debug Mode so queries are captured.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 				$warn_savequeries = true;
 			}
 		}
@@ -290,8 +290,8 @@ class TSOSK_Mod_Slow_Queries {
 			'slow-queries',
 			'save',
 			$new['enabled']
-				? __( 'Slow query logging enabled.', 'tso-swiss-knife' )
-				: __( 'Slow query logging disabled.', 'tso-swiss-knife' )
+				? __( 'Slow query logging enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Slow query logging disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
 		wp_send_json_success( array(
@@ -304,18 +304,18 @@ class TSOSK_Mod_Slow_Queries {
 	public function ajax_clear_log(): void {
 		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		delete_option( self::LOG_OPTION );
-		TSOSK_Activity_Log::log( 'slow-queries', 'delete', __( 'Slow query log cleared.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Log cleared.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'slow-queries', 'delete', __( 'Slow query log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/** AJAX: delete one batch entry from the log. */
 	public function ajax_delete_entry(): void {
 		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$idx = absint( wp_unslash( $_POST['idx'] ?? -1 ) );
 		$log = $this->get_log();
@@ -323,14 +323,14 @@ class TSOSK_Mod_Slow_Queries {
 			array_splice( $log, $idx, 1 );
 			update_option( self::LOG_OPTION, $log, false );
 		}
-		wp_send_json_success( __( 'Entry deleted.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Entry deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/** AJAX: get log page (for JS pagination). */
 	public function ajax_get_log(): void {
 		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$page     = max( 1, absint( wp_unslash( $_POST['page']   ?? 1 ) ) );
@@ -397,26 +397,26 @@ class TSOSK_Mod_Slow_Queries {
 		?>
 
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Captures and logs database queries that take longer than a configurable threshold. Helps identify performance bottlenecks caused by slow or repeated queries.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Captures and logs database queries that take longer than a configurable threshold. Helps identify performance bottlenecks caused by slow or repeated queries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php /* ── SAVEQUERIES warning ── */ ?>
 		<?php if ( $s['enabled'] && ! $savequeries_on ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">
-			<strong><?php esc_html_e( '⚠ SAVEQUERIES is not active.', 'tso-swiss-knife' ); ?></strong>
-			<?php esc_html_e( 'The monitor is enabled but cannot capture queries because SAVEQUERIES is false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-config.php.', 'tso-swiss-knife' ); ?>
+			<strong><?php esc_html_e( '⚠ SAVEQUERIES is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php esc_html_e( 'The monitor is enabled but cannot capture queries because SAVEQUERIES is false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php elseif ( ! $s['enabled'] ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'The monitor is disabled. Enable it below to start capturing slow queries. SAVEQUERIES must also be active.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'The monitor is disabled. Enable it below to start capturing slow queries. SAVEQUERIES must also be active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php else : ?>
 		<div class="tsosk-notice tsosk-notice-ok" style="border-left-color:#46b450;background:#f0fff0;">
-			<strong style="color:#1a5c1a;"><?php esc_html_e( '✓ Monitor active.', 'tso-swiss-knife' ); ?></strong>
+			<strong style="color:#1a5c1a;"><?php esc_html_e( '✓ Monitor active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 			<?php
 			printf(
 				/* translators: %d: threshold in milliseconds */
-				esc_html__( 'Capturing queries slower than %d ms on every page request.', 'tso-swiss-knife' ),
+				esc_html__( 'Capturing queries slower than %d ms on every page request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(int) $s['threshold_ms']
 			);
 			?>
@@ -425,52 +425,52 @@ class TSOSK_Mod_Slow_Queries {
 
 		<?php /* ── Settings card ── */ ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Monitor Settings', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Monitor Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table" style="width:100%;max-width:600px;">
 				<tr>
-					<th style="width:200px;"><?php esc_html_e( 'Enable monitor', 'tso-swiss-knife' ); ?></th>
+					<th style="width:200px;"><?php esc_html_e( 'Enable monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" id="tsosk-sq-enabled" value="1"
 							       <?php checked( $s['enabled'] ); ?>>
-							<?php esc_html_e( 'Capture slow queries on every request', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Capture slow queries on every request', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Slow threshold', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Slow threshold', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-sq-threshold"
 						       value="<?php echo esc_attr( (string) $s['threshold_ms'] ); ?>"
 						       min="1" max="10000" step="1" style="width:90px;">
 						<span class="description">
-							<?php esc_html_e( 'ms — queries slower than this are logged (recommended: 100)', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'ms — queries slower than this are logged (recommended: 100)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Max log entries', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Max log entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-sq-max-entries"
 						       value="<?php echo esc_attr( (string) $s['max_entries'] ); ?>"
 						       min="50" max="2000" step="50" style="width:90px;">
 						<span class="description">
-							<?php esc_html_e( 'request batches (oldest are removed when limit is reached)', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'request batches (oldest are removed when limit is reached)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Exclude', 'tso-swiss-knife' ); ?></th>
+					<th><?php esc_html_e( 'Exclude', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<label style="display:block;margin-bottom:4px;">
 							<input type="checkbox" id="tsosk-sq-exclude-ajax" value="1"
 							       <?php checked( $s['exclude_ajax'] ); ?>>
-							<?php esc_html_e( 'AJAX requests', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'AJAX requests', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<label>
 							<input type="checkbox" id="tsosk-sq-exclude-cron" value="1"
 							       <?php checked( $s['exclude_cron'] ); ?>>
-							<?php esc_html_e( 'WP-Cron requests', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'WP-Cron requests', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 					</td>
 				</tr>
@@ -478,7 +478,7 @@ class TSOSK_Mod_Slow_Queries {
 			<div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-sq-save"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save Settings', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sq-settings-msg"></span>
 			</div>
@@ -491,17 +491,17 @@ class TSOSK_Mod_Slow_Queries {
 			$stat_cards = array(
 				array(
 					'val'   => $stats['total_slow'],
-					'lbl'   => __( 'Slow queries logged', 'tso-swiss-knife' ),
+					'lbl'   => __( 'Slow queries logged', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'warn'  => $stats['total_slow'] > 50,
 				),
 				array(
 					'val'   => $stats['total_batches'],
-					'lbl'   => __( 'Requests captured', 'tso-swiss-knife' ),
+					'lbl'   => __( 'Requests captured', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'warn'  => false,
 				),
 				array(
 					'val'   => number_format( $stats['slowest_ms'], 2 ) . ' ms',
-					'lbl'   => __( 'Slowest query', 'tso-swiss-knife' ),
+					'lbl'   => __( 'Slowest query', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'warn'  => $stats['slowest_ms'] > 500,
 				),
 			);
@@ -519,16 +519,16 @@ class TSOSK_Mod_Slow_Queries {
 		<?php /* ── Top offenders ── */ ?>
 		<?php if ( ! empty( $stats['top_sqls'] ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Top Slow Queries', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Top Slow Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Queries grouped by normalised SQL pattern (numbers replaced with ?). Those appearing most often or taking longest are listed first.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Queries grouped by normalised SQL pattern (numbers replaced with ?). Those appearing most often or taking longest are listed first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th style="width:8%;"><?php esc_html_e( 'Count', 'tso-swiss-knife' ); ?></th>
-						<th style="width:12%;"><?php esc_html_e( 'Max time', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'SQL pattern', 'tso-swiss-knife' ); ?></th>
+						<th style="width:8%;"><?php esc_html_e( 'Count', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:12%;"><?php esc_html_e( 'Max time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'SQL pattern', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $stats['top_sqls'] as $entry ) : ?>
@@ -564,7 +564,7 @@ class TSOSK_Mod_Slow_Queries {
 		<?php /* ── Log table ── */ ?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Slow Query Log', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Slow Query Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
 					<?php echo esc_html( (string) count( $log ) ); ?> / <?php echo esc_html( (string) $s['max_entries'] ); ?>
 				</span>
@@ -572,15 +572,15 @@ class TSOSK_Mod_Slow_Queries {
 
 			<div class="tsosk-toolbar" style="gap:8px;margin-bottom:12px;">
 				<input type="text" id="tsosk-sq-search"
-				       placeholder="<?php esc_attr_e( 'Filter by SQL, URL or caller…', 'tso-swiss-knife' ); ?>"
+				       placeholder="<?php esc_attr_e( 'Filter by SQL, URL or caller…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 				       style="min-width:260px;" autocomplete="off">
 				<button class="button" id="tsosk-sq-search-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Search', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button class="button button-link-delete" id="tsosk-sq-clear-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Clear Log', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Clear Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sq-log-msg"></span>
 			</div>
@@ -598,9 +598,9 @@ class TSOSK_Mod_Slow_Queries {
 		<div class="tsosk-card">
 			<p style="color:#646970;">
 				<?php if ( $monitoring_active ) : ?>
-					<?php esc_html_e( 'No slow queries have been recorded yet. The monitor is active — entries will appear here after page requests that contain queries exceeding the threshold.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'No slow queries have been recorded yet. The monitor is active — entries will appear here after page requests that contain queries exceeding the threshold.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<?php else : ?>
-					<?php esc_html_e( 'No data. Enable the monitor and activate SAVEQUERIES to start capturing slow queries.', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'No data. Enable the monitor and activate SAVEQUERIES to start capturing slow queries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<?php endif; ?>
 			</p>
 		</div>
@@ -643,7 +643,7 @@ class TSOSK_Mod_Slow_Queries {
 				esc_html(
 					sprintf(
 						/* translators: 1: per page, 2: total */
-						__( 'Showing %1$d of %2$d batches. Use search or pagination to view more.', 'tso-swiss-knife' ),
+						__( 'Showing %1$d of %2$d batches. Use search or pagination to view more.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						$per_page,
 						$total
 					)
@@ -676,7 +676,7 @@ class TSOSK_Mod_Slow_Queries {
 					<?php
 					printf(
 						/* translators: %d: number of slow queries */
-						esc_html__( '%d slow', 'tso-swiss-knife' ),
+						esc_html__( '%d slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						(int) $slow_count
 					);
 					?>
@@ -690,7 +690,7 @@ class TSOSK_Mod_Slow_Queries {
 					<?php
 					printf(
 						/* translators: %s: page load time */
-						esc_html__( 'Page: %s ms', 'tso-swiss-knife' ),
+						esc_html__( 'Page: %s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						esc_html( number_format( $load, 1 ) )
 					);
 					?>
@@ -700,7 +700,7 @@ class TSOSK_Mod_Slow_Queries {
 					<?php
 					printf(
 						/* translators: %s: milliseconds */
-						esc_html__( 'Worst: %s ms', 'tso-swiss-knife' ),
+						esc_html__( 'Worst: %s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						esc_html( number_format( $max_time, 2 ) )
 					);
 					?>
@@ -708,7 +708,7 @@ class TSOSK_Mod_Slow_Queries {
 				<button class="button button-small tsosk-sq-delete-batch" style="margin-left:auto;flex-shrink:0;"
 				        data-idx="<?php echo esc_attr( (string) $orig_idx ); ?>"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Delete', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-sq-toggle-icon" style="font-size:12px;flex-shrink:0;color:#646970;">▼</span>
 			</div>

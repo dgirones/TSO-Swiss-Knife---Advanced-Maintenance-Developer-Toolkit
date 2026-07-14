@@ -100,7 +100,7 @@ class TSOSK_Mod_Meta_Editor {
 	public function ajax_search(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
@@ -180,14 +180,14 @@ class TSOSK_Mod_Meta_Editor {
 	public function ajax_get(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
 		$context = $this->sanitize_context();
 		$meta_id = absint( $_POST['meta_id'] ?? 0 );
 		if ( ! $meta_id ) {
-			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( 'user' === $context ) {
@@ -211,7 +211,7 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		if ( ! $row ) {
-			wp_send_json_error( __( 'Meta row not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Meta row not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$key = (string) $row['meta_key'];
@@ -229,7 +229,7 @@ class TSOSK_Mod_Meta_Editor {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$context = $this->sanitize_context();
@@ -238,7 +238,7 @@ class TSOSK_Mod_Meta_Editor {
 		$value   = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
 
 		if ( ! $meta_id ) {
-			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		global $wpdb;
@@ -263,12 +263,12 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		if ( ! $row ) {
-			wp_send_json_error( __( 'Meta row not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Meta row not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$key = (string) $row['meta_key'];
 		if ( self::is_protected_key( $key, $context ) ) {
-			wp_send_json_error( __( 'This meta key is protected and cannot be edited.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This meta key is protected and cannot be edited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( 'user' === $context ) {
@@ -282,25 +282,25 @@ class TSOSK_Mod_Meta_Editor {
 			'update',
 			sprintf(
 				/* translators: %s: meta key */
-				__( 'Meta updated: %s.', 'tso-swiss-knife' ),
+				__( 'Meta updated: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
 			array( 'key' => $key )
 		);
 
-		wp_send_json_success( __( 'Meta value saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Meta value saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$context = $this->sanitize_context();
 		$meta_id = absint( $_POST['meta_id'] ?? 0 );
 		if ( ! $meta_id ) {
-			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		global $wpdb;
@@ -313,7 +313,7 @@ class TSOSK_Mod_Meta_Editor {
 				)
 			);
 			if ( ! $key || self::is_protected_key( (string) $key, $context ) ) {
-				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife' ) );
+				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->delete( $wpdb->usermeta, array( 'umeta_id' => $meta_id ), array( '%d' ) );
@@ -326,7 +326,7 @@ class TSOSK_Mod_Meta_Editor {
 				)
 			);
 			if ( ! $key || self::is_protected_key( (string) $key, $context ) ) {
-				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife' ) );
+				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->delete( $wpdb->postmeta, array( 'meta_id' => $meta_id ), array( '%d' ) );
@@ -337,19 +337,19 @@ class TSOSK_Mod_Meta_Editor {
 			'delete',
 			sprintf(
 				/* translators: %s: meta key */
-				__( 'Meta deleted: %s.', 'tso-swiss-knife' ),
+				__( 'Meta deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(string) $key
 			),
 			array( 'key' => (string) $key )
 		);
 
-		wp_send_json_success( __( 'Meta row deleted.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Meta row deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_add(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$context   = $this->sanitize_context();
@@ -359,20 +359,20 @@ class TSOSK_Mod_Meta_Editor {
 		$value     = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
 
 		if ( ! $object_id || ! $key ) {
-			wp_send_json_error( __( 'Object ID and meta key are required.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Object ID and meta key are required.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( self::is_protected_key( $key, $context ) ) {
-			wp_send_json_error( __( 'This meta key cannot be added (protected pattern).', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This meta key cannot be added (protected pattern).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		if ( 'user' === $context ) {
 			if ( ! get_userdata( $object_id ) ) {
-				wp_send_json_error( __( 'User not found.', 'tso-swiss-knife' ) );
+				wp_send_json_error( __( 'User not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 			add_user_meta( $object_id, $key, $value, false );
 		} else {
 			if ( ! get_post( $object_id ) ) {
-				wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife' ) );
+				wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 			add_post_meta( $object_id, $key, $value, false );
 		}
@@ -382,13 +382,13 @@ class TSOSK_Mod_Meta_Editor {
 			'add',
 			sprintf(
 				/* translators: %s: meta key */
-				__( 'Meta added: %s.', 'tso-swiss-knife' ),
+				__( 'Meta added: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
 			array( 'key' => $key )
 		);
 
-		wp_send_json_success( __( 'Meta row added.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Meta row added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -408,66 +408,66 @@ class TSOSK_Mod_Meta_Editor {
 	private function render_guide(): void {
 		?>
 		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is meta data?', 'tso-swiss-knife' ); ?></h3>
+			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is meta data?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="tsosk-guide-lead">
-				<?php esc_html_e( 'Meta is extra information stored in the database for each post or user — not visible in the normal editor. Plugins and themes use it for settings, layout data, SEO fields, featured images, and much more.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Meta is extra information stored in the database for each post or user — not visible in the normal editor. Plugins and themes use it for settings, layout data, SEO fields, featured images, and much more.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<div class="tsosk-guide-grid">
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'Post meta vs user meta', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'Post meta vs user meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
-						<li><?php esc_html_e( 'Post meta — attached to a post, page, or custom post type (ID = post ID).', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'User meta — attached to a WordPress user account (ID = user ID).', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Post meta — attached to a post, page, or custom post type (ID = post ID).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'User meta — attached to a WordPress user account (ID = user ID).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 				<div class="tsosk-guide-block">
-					<h4><?php esc_html_e( 'When to use this tool', 'tso-swiss-knife' ); ?></h4>
+					<h4><?php esc_html_e( 'When to use this tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
-						<li><?php esc_html_e( 'Inspect what a plugin stored for a specific post or user.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Fix a wrong value (e.g. featured image ID) when you know exactly what to change.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Remove leftover meta from an uninstalled plugin.', 'tso-swiss-knife' ); ?></li>
-						<li><?php esc_html_e( 'Debug issues with page builders (Elementor), ACF, or SEO plugins.', 'tso-swiss-knife' ); ?></li>
+						<li><?php esc_html_e( 'Inspect what a plugin stored for a specific post or user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Fix a wrong value (e.g. featured image ID) when you know exactly what to change.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Remove leftover meta from an uninstalled plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Debug issues with page builders (Elementor), ACF, or SEO plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 			</div>
 
 			<div class="tsosk-guide-block">
-				<h4><?php esc_html_e( 'How to use it (recommended order)', 'tso-swiss-knife' ); ?></h4>
+				<h4><?php esc_html_e( 'How to use it (recommended order)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 				<ol class="tsosk-guide-steps">
-					<li><?php esc_html_e( 'Choose Post meta or User meta.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'Optional: enter a Post/User ID to limit results to one item.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'Optional: filter by meta key or part of the value.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'Click Search, then Edit on a row to view or change the full value.', 'tso-swiss-knife' ); ?></li>
-					<li><?php esc_html_e( 'Use Add meta row only when you know the exact key and value a plugin expects.', 'tso-swiss-knife' ); ?></li>
+					<li><?php esc_html_e( 'Choose Post meta or User meta.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'Optional: enter a Post/User ID to limit results to one item.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'Optional: filter by meta key or part of the value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'Click Search, then Edit on a row to view or change the full value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+					<li><?php esc_html_e( 'Use Add meta row only when you know the exact key and value a plugin expects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 				</ol>
 			</div>
 
 			<div class="tsosk-me-examples">
-				<strong><?php esc_html_e( 'Common meta keys (examples)', 'tso-swiss-knife' ); ?></strong>
+				<strong><?php esc_html_e( 'Common meta keys (examples)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<table>
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Key', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Used for', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Used for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
 							<td><code>_thumbnail_id</code></td>
-							<td><?php esc_html_e( 'Featured image — value is the attachment post ID.', 'tso-swiss-knife' ); ?></td>
+							<td><?php esc_html_e( 'Featured image — value is the attachment post ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						</tr>
 						<tr>
 							<td><code>_elementor_data</code></td>
-							<td><?php esc_html_e( 'Elementor page layout (serialized JSON — edit with extreme care).', 'tso-swiss-knife' ); ?></td>
+							<td><?php esc_html_e( 'Elementor page layout (serialized JSON — edit with extreme care).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						</tr>
 						<tr>
 							<td><code>_yoast_wpseo_title</code></td>
-							<td><?php esc_html_e( 'Yoast SEO custom title for the post.', 'tso-swiss-knife' ); ?></td>
+							<td><?php esc_html_e( 'Yoast SEO custom title for the post.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						</tr>
 						<tr>
 							<td><code>nickname</code></td>
-							<td><?php esc_html_e( 'User display nickname (user meta).', 'tso-swiss-knife' ); ?></td>
+							<td><?php esc_html_e( 'User display nickname (user meta).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 						</tr>
 					</tbody>
 				</table>
@@ -482,14 +482,14 @@ class TSOSK_Mod_Meta_Editor {
 	private function render_field_help(): void {
 		?>
 		<div class="tsosk-field-help-list">
-			<p><strong><?php esc_html_e( 'Post meta / User meta', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Which table to search — postmeta for content, usermeta for accounts.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Leave empty to search across the whole site, or enter one ID to see only that post or user.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Filter', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Search in meta key names and values — e.g. “elementor” or “_thumbnail”.', 'tso-swiss-knife' ); ?></p>
-			<p><strong><?php esc_html_e( 'Protected keys', 'tso-swiss-knife' ); ?>:</strong>
-				<?php esc_html_e( 'Session tokens, capabilities, and keys containing “license” or “api_key” cannot be edited — this prevents breaking logins or licenses.', 'tso-swiss-knife' ); ?></p>
+			<p><strong><?php esc_html_e( 'Post meta / User meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Which table to search — postmeta for content, usermeta for accounts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Leave empty to search across the whole site, or enter one ID to see only that post or user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Search in meta key names and values — e.g. “elementor” or “_thumbnail”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p><strong><?php esc_html_e( 'Protected keys', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php esc_html_e( 'Session tokens, capabilities, and keys containing “license” or “api_key” cannot be edited — this prevents breaking logins or licenses.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 		</div>
 		<?php
 	}
@@ -498,44 +498,44 @@ class TSOSK_Mod_Meta_Editor {
 		$nonce = wp_create_nonce( 'tsosk_me_nonce' );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'View and edit hidden post and user data (meta) stored in the database — useful for debugging plugins and fixing specific values.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'View and edit hidden post and user data (meta) stored in the database — useful for debugging plugins and fixing specific values.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php $this->render_guide(); ?>
 
 		<div class="tsosk-notice tsosk-notice-warn" style="border-left-color:#d63638;">
-			<strong><?php esc_html_e( 'Advanced tool — proceed with caution.', 'tso-swiss-knife' ); ?></strong>
-			<?php esc_html_e( 'Wrong values can break a page, user account, or page builder layout. Make a backup before editing. Prefer each plugin’s own settings screen when possible.', 'tso-swiss-knife' ); ?>
+			<strong><?php esc_html_e( 'Advanced tool — proceed with caution.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php esc_html_e( 'Wrong values can break a page, user account, or page builder layout. Make a backup before editing. Prefer each plugin’s own settings screen when possible.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<div class="tsosk-card tsosk-me-search-card">
-			<h3><?php esc_html_e( 'Search meta rows', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Search meta rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<div class="tsosk-me-toolbar">
 				<div class="tsosk-me-field">
-					<label for="tsosk-me-context"><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></label>
+					<label for="tsosk-me-context"><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 					<select id="tsosk-me-context">
-						<option value="post"><?php esc_html_e( 'Post meta', 'tso-swiss-knife' ); ?></option>
-						<option value="user"><?php esc_html_e( 'User meta', 'tso-swiss-knife' ); ?></option>
+						<option value="post"><?php esc_html_e( 'Post meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="user"><?php esc_html_e( 'User meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 				</div>
 				<div class="tsosk-me-field">
-					<label for="tsosk-me-object-id"><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife' ); ?></label>
+					<label for="tsosk-me-object-id"><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 					<input type="number" id="tsosk-me-object-id" min="0" step="1"
-					       placeholder="<?php esc_attr_e( 'All (optional)', 'tso-swiss-knife' ); ?>"
+					       placeholder="<?php esc_attr_e( 'All (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 					       style="width:140px;">
-					<span class="tsosk-me-field-hint"><?php esc_html_e( 'One post or user only', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-me-field-hint"><?php esc_html_e( 'One post or user only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-me-field" style="flex:1;min-width:200px;">
-					<label for="tsosk-me-search"><?php esc_html_e( 'Filter', 'tso-swiss-knife' ); ?></label>
+					<label for="tsosk-me-search"><?php esc_html_e( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 					<input type="text" id="tsosk-me-search"
-					       placeholder="<?php esc_attr_e( 'Key or value contains…', 'tso-swiss-knife' ); ?>"
+					       placeholder="<?php esc_attr_e( 'Key or value contains…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 					       style="width:100%;" autocomplete="off">
 				</div>
 				<div class="tsosk-me-field" style="align-self:flex-end;">
 					<button type="button" class="button button-primary" id="tsosk-me-search-btn"
 					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Search', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				</div>
 				<span class="tsosk-ajax-msg" id="tsosk-me-search-msg"></span>
@@ -548,50 +548,50 @@ class TSOSK_Mod_Meta_Editor {
 			<table class="widefat tsosk-table" id="tsosk-me-table">
 				<thead>
 					<tr>
-						<th style="width:8%;"><?php esc_html_e( 'Meta ID', 'tso-swiss-knife' ); ?></th>
-						<th style="width:10%;"><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife' ); ?></th>
-						<th style="width:28%;"><?php esc_html_e( 'Meta key', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Value preview', 'tso-swiss-knife' ); ?></th>
-						<th style="width:12%;"><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?></th>
+						<th style="width:8%;"><?php esc_html_e( 'Meta ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:10%;"><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:28%;"><?php esc_html_e( 'Meta key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Value preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:12%;"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody id="tsosk-me-tbody">
-					<tr><td colspan="5" style="text-align:center;color:#646970;"><?php esc_html_e( 'Use Search above to load meta rows from the database.', 'tso-swiss-knife' ); ?></td></tr>
+					<tr><td colspan="5" style="text-align:center;color:#646970;"><?php esc_html_e( 'Use Search above to load meta rows from the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td></tr>
 				</tbody>
 			</table>
 		</div>
 		<div id="tsosk-me-pagination" class="tsosk-oe-pagination"></div>
 
 		<div class="tsosk-card" id="tsosk-me-editor" style="display:none;margin-top:16px;">
-			<h3><?php esc_html_e( 'Edit meta value', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Edit meta value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'You are editing the raw value stored in the database. Save only if you are sure the new value is correct.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'You are editing the raw value stored in the database. Save only if you are sure the new value is correct.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
-			<p><code id="tsosk-me-edit-key"></code> — <?php esc_html_e( 'Post/User ID', 'tso-swiss-knife' ); ?>: <strong id="tsosk-me-edit-object"></strong></p>
+			<p><code id="tsosk-me-edit-key"></code> — <?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>: <strong id="tsosk-me-edit-object"></strong></p>
 			<textarea id="tsosk-me-edit-value" rows="8" style="width:100%;font-family:monospace;"></textarea>
 			<p style="margin-top:10px;">
 				<button type="button" class="button button-primary" id="tsosk-me-save"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save meta', 'tso-swiss-knife' ); ?></button>
+				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<button type="button" class="button" id="tsosk-me-delete"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Delete row', 'tso-swiss-knife' ); ?></button>
+				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Delete row', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-me-edit-msg"></span>
 			</p>
 		</div>
 
 		<div class="tsosk-card" style="margin-top:16px;">
-			<h3><?php esc_html_e( 'Add meta row', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Add meta row', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Creates a new meta entry for a post or user. The key must match what the plugin or theme expects.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Creates a new meta entry for a post or user. The key must match what the plugin or theme expects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-toolbar" style="flex-wrap:wrap;gap:8px;">
 				<input type="number" id="tsosk-me-add-object" min="1" step="1"
-				       placeholder="<?php esc_attr_e( 'Post/User ID', 'tso-swiss-knife' ); ?>" style="width:120px;">
+				       placeholder="<?php esc_attr_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="width:120px;">
 				<input type="text" id="tsosk-me-add-key"
-				       placeholder="<?php esc_attr_e( 'Meta key', 'tso-swiss-knife' ); ?>" style="min-width:180px;">
+				       placeholder="<?php esc_attr_e( 'Meta key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:180px;">
 				<input type="text" id="tsosk-me-add-value"
-				       placeholder="<?php esc_attr_e( 'Value', 'tso-swiss-knife' ); ?>" style="min-width:220px;">
+				       placeholder="<?php esc_attr_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:220px;">
 				<button type="button" class="button" id="tsosk-me-add-btn"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add meta', 'tso-swiss-knife' ); ?></button>
+				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-me-add-msg"></span>
 			</div>
 		</div>

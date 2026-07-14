@@ -37,7 +37,7 @@ class TSOSK_Mod_Media_Footprint {
 	public function ajax_scan(): void {
 		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$result = TSOSK_Uploads_Scanner::scan_footprint();
@@ -49,7 +49,7 @@ class TSOSK_Mod_Media_Footprint {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Uploads scan completed.', 'tso-swiss-knife' ),
+				'message' => __( 'Uploads scan completed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'html'    => $this->render_stats_html( $result ),
 			)
 		);
@@ -66,24 +66,24 @@ class TSOSK_Mod_Media_Footprint {
 		}
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'See how much disk space wp-content/uploads uses: totals by month and file type, largest files, and how much space thumbnails take compared to originals.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'See how much disk space wp-content/uploads uses: totals by month and file type, largest files, and how much space thumbnails take compared to originals.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-media-footprint-scan"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Scan uploads folder', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-media-footprint-msg"></span>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'Scan results are cached for 10 minutes. Large sites may hit the file limit — review totals before deleting anything.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Scan results are cached for 10 minutes. Large sites may hit the file limit — review totals before deleting anything.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=media-cleaner' ) ); ?>">
-				<?php esc_html_e( 'Open Media Cleaner', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Media Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=image-sizes-audit' ) ); ?>">
-				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 		</p>
 
@@ -105,7 +105,7 @@ class TSOSK_Mod_Media_Footprint {
 	private function render_empty_state(): void {
 		?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'No scan data yet. Click “Scan uploads folder” to analyze disk usage.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'No scan data yet. Click “Scan uploads folder” to analyze disk usage.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php
 	}
@@ -125,32 +125,32 @@ class TSOSK_Mod_Media_Footprint {
 		$scanned_at = (int) ( $stats['scanned_at'] ?? 0 );
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Summary', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="widefat tsosk-kv-table">
 				<tbody>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Files scanned', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Files scanned', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( number_format_i18n( $scanned ) ); ?></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Total disk usage', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Total disk usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><strong><?php echo esc_html( size_format( $total, 2 ) ); ?></strong></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Original media (est.)', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Original media (est.)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( size_format( $original, 2 ) ); ?></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Thumbnails & derivatives', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Thumbnails & derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( size_format( $derivative, 2 ) ); ?></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Other files', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Other files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( size_format( $other, 2 ) ); ?></td>
 					</tr>
 					<?php if ( $scanned_at > 0 ) : ?>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Last scan', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Last scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( wp_date( 'Y-m-d H:i', $scanned_at ) ); ?></td>
 					</tr>
 					<?php endif; ?>
@@ -158,21 +158,21 @@ class TSOSK_Mod_Media_Footprint {
 			</table>
 			<?php if ( ! empty( $stats['truncated'] ) ) : ?>
 			<p class="tsosk-notice tsosk-notice-warn" style="margin-top:12px;">
-				<?php esc_html_e( 'Scan stopped at the file safety limit. Totals are partial — use for guidance only.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Scan stopped at the file safety limit. Totals are partial — use for guidance only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php endif; ?>
 		</div>
 
 		<?php if ( ! empty( $stats['by_month'] ) && is_array( $stats['by_month'] ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Usage by month', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Usage by month', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Month', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Files', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Month', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -191,14 +191,14 @@ class TSOSK_Mod_Media_Footprint {
 
 		<?php if ( ! empty( $stats['by_extension'] ) && is_array( $stats['by_extension'] ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Usage by file type', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Usage by file type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Extension', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Files', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Extension', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -217,14 +217,14 @@ class TSOSK_Mod_Media_Footprint {
 
 		<?php if ( ! empty( $stats['largest'] ) && is_array( $stats['largest'] ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Largest files (top 20)', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Largest files (top 20)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Path', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Type', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -235,8 +235,8 @@ class TSOSK_Mod_Media_Footprint {
 							<td>
 								<?php
 								echo ! empty( $file['is_derivative'] )
-									? esc_html__( 'Derivative', 'tso-swiss-knife' )
-									: esc_html__( 'Original / other', 'tso-swiss-knife' );
+									? esc_html__( 'Derivative', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+									: esc_html__( 'Original / other', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 								?>
 							</td>
 						</tr>

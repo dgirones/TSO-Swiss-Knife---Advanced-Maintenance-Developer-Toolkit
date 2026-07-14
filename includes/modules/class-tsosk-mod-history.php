@@ -40,10 +40,10 @@ class TSOSK_Mod_History {
 	public function ajax_clear(): void {
 		check_ajax_referer( 'tsosk_history_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		TSOSK_Activity_Log::clear();
-		wp_send_json_success( __( 'Activity history cleared.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Activity history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -52,7 +52,7 @@ class TSOSK_Mod_History {
 	public function ajax_save_settings(): void {
 		check_ajax_referer( 'tsosk_history_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$modules = array();
@@ -69,7 +69,7 @@ class TSOSK_Mod_History {
 			)
 		);
 
-		wp_send_json_success( __( 'Activity log settings saved.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Activity log settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -84,18 +84,18 @@ class TSOSK_Mod_History {
 		$log_all         = empty( $enabled_modules );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'All important changes made through TSO Swiss Knife are recorded here: options edited, database replacements, maintenance mode, admin menu, and more.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'All important changes made through TSO Swiss Knife are recorded here: options edited, database replacements, maintenance mode, admin menu, and more.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Activity History', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Activity History', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<?php if ( ! empty( $entries ) ) : ?>
 				<span class="tsosk-badge tsosk-badge-info tsosk-history-count">
 					<?php
 					printf(
 						/* translators: 1: current count, 2: max entries */
-						esc_html__( '%1$d / %2$d', 'tso-swiss-knife' ),
+						esc_html__( '%1$d / %2$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						absint( count( $entries ) ),
 						absint( $limit )
 					);
@@ -108,7 +108,7 @@ class TSOSK_Mod_History {
 				<?php
 				printf(
 					/* translators: %d: maximum number of history entries */
-					esc_html__( 'Shows the last %d actions across enabled plugin tools.', 'tso-swiss-knife' ),
+					esc_html__( 'Shows the last %d actions across enabled plugin tools.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					absint( $limit )
 				);
 				?>
@@ -116,13 +116,13 @@ class TSOSK_Mod_History {
 
 			<?php if ( empty( $entries ) ) : ?>
 			<p class="tsosk-history-empty">
-				<?php esc_html_e( 'No changes recorded yet. When you save settings or edit data in any TSO Swiss Knife tool, it will appear here.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'No changes recorded yet. When you save settings or edit data in any TSO Swiss Knife tool, it will appear here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php else : ?>
 			<p class="tsosk-history-actions">
 				<button type="button" class="button button-link-delete" id="tsosk-history-clear"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Clear history', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Clear history', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-history-msg"></span>
 			</p>
@@ -130,11 +130,11 @@ class TSOSK_Mod_History {
 				<table class="widefat tsosk-table" id="tsosk-history-table">
 					<thead>
 						<tr>
-							<th class="tsosk-history-col-date"><?php esc_html_e( 'Date', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-history-col-tool"><?php esc_html_e( 'Tool', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-history-col-action"><?php esc_html_e( 'Action', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Summary', 'tso-swiss-knife' ); ?></th>
-							<th class="tsosk-history-col-user"><?php esc_html_e( 'User', 'tso-swiss-knife' ); ?></th>
+							<th class="tsosk-history-col-date"><?php esc_html_e( 'Date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-history-col-tool"><?php esc_html_e( 'Tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-history-col-action"><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-history-col-user"><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -148,16 +148,16 @@ class TSOSK_Mod_History {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Logging preferences', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Logging preferences', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Choose which tools write to the history and how many entries to keep. Use “Log all tools” for the default, or uncheck it and select only the modules you want recorded.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Choose which tools write to the history and how many entries to keep. Use “Log all tools” for the default, or uncheck it and select only the modules you want recorded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<label style="display:block;margin-bottom:12px;">
 				<input type="checkbox" id="tsosk-history-log-all" <?php checked( $log_all ); ?>>
-				<?php esc_html_e( 'Log all tools (ignore checklist below)', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Log all tools (ignore checklist below)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
 			<label style="display:block;margin-bottom:12px;">
-				<?php esc_html_e( 'Maximum entries', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Maximum entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<input type="number" id="tsosk-history-limit" min="25" max="500" step="25"
 				       value="<?php echo esc_attr( (string) $limit ); ?>" style="width:80px;margin-left:8px;">
 			</label>
@@ -174,11 +174,11 @@ class TSOSK_Mod_History {
 				<?php endforeach; ?>
 			</div>
 			<p class="description" style="margin-top:0;">
-				<?php esc_html_e( 'Tip: check only the modules you care about to reduce noise. Save, then uncheck modules you want to exclude — or clear history after changing filters.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Tip: check only the modules you care about to reduce noise. Save, then uncheck modules you want to exclude — or clear history after changing filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<button type="button" class="button button-primary" id="tsosk-history-save-settings"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Save logging preferences', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Save logging preferences', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-history-settings-msg"></span>
 		</div>
@@ -229,8 +229,8 @@ class TSOSK_Mod_History {
 			$new   = (string) ( $details['new'] ?? '' );
 			$parts = array( '<code>' . esc_html( (string) $details['name'] ) . '</code>' );
 			if ( '' !== $old || '' !== $new ) {
-				$parts[] = esc_html__( 'Before:', 'tso-swiss-knife' ) . ' <code>' . esc_html( $old ? $old : __( '(empty)', 'tso-swiss-knife' ) ) . '</code>';
-				$parts[] = esc_html__( 'After:', 'tso-swiss-knife' ) . ' <code>' . esc_html( $new ? $new : __( '(empty)', 'tso-swiss-knife' ) ) . '</code>';
+				$parts[] = esc_html__( 'Before:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( $old ? $old : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
+				$parts[] = esc_html__( 'After:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( $new ? $new : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
 			}
 			return implode( ' · ', $parts );
 		}
@@ -238,7 +238,7 @@ class TSOSK_Mod_History {
 		if ( isset( $details['rows'] ) ) {
 			return sprintf(
 				/* translators: 1: tables, 2: rows, 3: cells */
-				esc_html__( '%1$d tables, %2$d rows, %3$d cells', 'tso-swiss-knife' ),
+				esc_html__( '%1$d tables, %2$d rows, %3$d cells', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(int) ( $details['tables'] ?? 0 ),
 				(int) ( $details['rows'] ?? 0 ),
 				(int) ( $details['cells'] ?? 0 )
@@ -268,7 +268,7 @@ class TSOSK_Mod_History {
 		if ( isset( $details['role'] ) && isset( $details['cap'] ) ) {
 			return sprintf(
 				/* translators: 1: role slug, 2: capability */
-				esc_html__( '%1$s → %2$s', 'tso-swiss-knife' ),
+				esc_html__( '%1$s → %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(string) $details['role'],
 				(string) $details['cap']
 			);

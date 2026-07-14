@@ -111,11 +111,11 @@ class TSOSK_Mod_Transients {
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$key = isset( $_POST['key'] ) ? sanitize_text_field( wp_unslash( $_POST['key'] ) ) : '';
 		if ( ! $key ) {
-			wp_send_json_error( __( 'Invalid key.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		delete_transient( $key );
 		TSOSK_Activity_Log::log(
@@ -123,18 +123,18 @@ class TSOSK_Mod_Transients {
 			'delete',
 			sprintf(
 				/* translators: %s: transient key */
-				__( 'Transient deleted: %s.', 'tso-swiss-knife' ),
+				__( 'Transient deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
 			array( 'key' => $key )
 		);
-		wp_send_json_success( __( 'Transient deleted.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Transient deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_purge_expired(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
@@ -163,7 +163,7 @@ class TSOSK_Mod_Transients {
 			'purge',
 			sprintf(
 				/* translators: %d: number of transients */
-				__( 'Expired transients purged: %d.', 'tso-swiss-knife' ),
+				__( 'Expired transients purged: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			)
 		);
@@ -171,7 +171,7 @@ class TSOSK_Mod_Transients {
 		wp_send_json_success(
 			sprintf(
 				/* translators: %d: number of deleted transients */
-				__( '%d expired transients deleted.', 'tso-swiss-knife' ),
+				__( '%d expired transients deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			)
 		);
@@ -180,7 +180,7 @@ class TSOSK_Mod_Transients {
 	public function ajax_purge_all(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		global $wpdb;
@@ -204,14 +204,14 @@ class TSOSK_Mod_Transients {
 			'purge',
 			sprintf(
 				/* translators: %d: number of transients */
-				__( 'All transients purged: %d.', 'tso-swiss-knife' ),
+				__( 'All transients purged: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			)
 		);
 		wp_send_json_success(
 			sprintf(
 				/* translators: %d: number of deleted transients */
-				__( '%d transients deleted.', 'tso-swiss-knife' ),
+				__( '%d transients deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			)
 		);
@@ -230,7 +230,7 @@ class TSOSK_Mod_Transients {
 		$items = $this->get_transients( $search, $filter );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Manage WordPress transients stored in the options table. This view works on sites without an external object cache.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Manage WordPress transients stored in the options table. This view works on sites without an external object cache.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-toolbar">
@@ -238,27 +238,27 @@ class TSOSK_Mod_Transients {
 				<input type="hidden" name="page" value="tso-swiss-knife">
 				<input type="hidden" name="tab"  value="transients">
 				<input type="text" id="tsosk-transients-search" name="tsosk_ts_search" value="<?php echo esc_attr( $search ); ?>"
-				       placeholder="<?php esc_attr_e( 'Search transients…', 'tso-swiss-knife' ); ?>"
+				       placeholder="<?php esc_attr_e( 'Search transients…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 				       style="width:220px;">
 				<select name="tsosk_ts_filter" id="tsosk-transients-filter-select" style="display:none;">
-					<option value="all"     <?php selected( $filter, 'all' ); ?>><?php esc_html_e( 'All', 'tso-swiss-knife' ); ?></option>
-					<option value="expired" <?php selected( $filter, 'expired' ); ?>><?php esc_html_e( 'Expired', 'tso-swiss-knife' ); ?></option>
-					<option value="active"  <?php selected( $filter, 'active' ); ?>><?php esc_html_e( 'Active', 'tso-swiss-knife' ); ?></option>
+					<option value="all"     <?php selected( $filter, 'all' ); ?>><?php esc_html_e( 'All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="expired" <?php selected( $filter, 'expired' ); ?>><?php esc_html_e( 'Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="active"  <?php selected( $filter, 'active' ); ?>><?php esc_html_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 				</select>
-				<?php submit_button( __( 'Filter', 'tso-swiss-knife' ), 'secondary', '', false ); ?>
+				<?php submit_button( __( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'secondary', '', false ); ?>
 			</form>
 
-			<span class="tsosk-filter-pills" role="group" aria-label="<?php esc_attr_e( 'Status filter', 'tso-swiss-knife' ); ?>" data-active-filter="<?php echo esc_attr( $filter ); ?>">
-				<button type="button" class="button button-small tsosk-transients-filter tsosk-filter-active" data-filter="all"><?php esc_html_e( 'All', 'tso-swiss-knife' ); ?></button>
-				<button type="button" class="button button-small tsosk-transients-filter" data-filter="active"><?php esc_html_e( 'Active', 'tso-swiss-knife' ); ?></button>
-				<button type="button" class="button button-small tsosk-transients-filter" data-filter="expired"><?php esc_html_e( 'Expired', 'tso-swiss-knife' ); ?></button>
+			<span class="tsosk-filter-pills" role="group" aria-label="<?php esc_attr_e( 'Status filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" data-active-filter="<?php echo esc_attr( $filter ); ?>">
+				<button type="button" class="button button-small tsosk-transients-filter tsosk-filter-active" data-filter="all"><?php esc_html_e( 'All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button button-small tsosk-transients-filter" data-filter="active"><?php esc_html_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button button-small tsosk-transients-filter" data-filter="expired"><?php esc_html_e( 'Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</span>
 
 			<button class="button button-secondary" id="tsosk-purge-expired" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				🧹 <?php esc_html_e( 'Purge Expired', 'tso-swiss-knife' ); ?>
+				🧹 <?php esc_html_e( 'Purge Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button class="button button-link-delete" id="tsosk-purge-all" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Delete All', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Delete All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-transient-bulk-msg"></span>
 		</div>
@@ -267,16 +267,16 @@ class TSOSK_Mod_Transients {
 			<table class="widefat tsosk-table" id="tsosk-transients-table">
 				<thead>
 					<tr>
-						<th class="tsosk-sortable" data-sort="key" scope="col"><?php esc_html_e( 'Key', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-sortable" data-sort="size" scope="col"><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-sortable" data-sort="timeout" scope="col"><?php esc_html_e( 'Expires', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-sortable" data-sort="status" scope="col"><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Action', 'tso-swiss-knife' ); ?></th>
+						<th class="tsosk-sortable" data-sort="key" scope="col"><?php esc_html_e( 'Key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sortable" data-sort="size" scope="col"><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sortable" data-sort="timeout" scope="col"><?php esc_html_e( 'Expires', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sortable" data-sort="status" scope="col"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php if ( empty( $items ) ) : ?>
-					<tr><td colspan="5"><?php esc_html_e( 'No transients found.', 'tso-swiss-knife' ); ?></td></tr>
+					<tr><td colspan="5"><?php esc_html_e( 'No transients found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td></tr>
 					<?php else : ?>
 					<?php foreach ( $items as $item ) : ?>
 					<tr id="tsosk-tr-<?php echo esc_attr( md5( $item['key'] ) ); ?>"
@@ -290,28 +290,28 @@ class TSOSK_Mod_Transients {
 						<td>
 							<?php
 							if ( ! $item['timeout'] ) {
-								esc_html_e( 'No expiry', 'tso-swiss-knife' );
+								esc_html_e( 'No expiry', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 							} elseif ( $item['expired'] ) {
 								echo '<span title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $item['timeout'] ) ) . ' UTC">'
-								     . esc_html( human_time_diff( $item['timeout'] ) ) . ' ' . esc_html__( 'ago', 'tso-swiss-knife' ) . '</span>';
+								     . esc_html( human_time_diff( $item['timeout'] ) ) . ' ' . esc_html__( 'ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
 							} else {
 								echo '<span title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $item['timeout'] ) ) . ' UTC">'
-								     . esc_html__( 'In', 'tso-swiss-knife' ) . ' ' . esc_html( human_time_diff( $item['timeout'] ) ) . '</span>';
+								     . esc_html__( 'In', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' ' . esc_html( human_time_diff( $item['timeout'] ) ) . '</span>';
 							}
 							?>
 						</td>
 						<td>
 							<?php if ( $item['expired'] ) : ?>
-								<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Expired', 'tso-swiss-knife' ); ?></span>
+								<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php else : ?>
-								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Active', 'tso-swiss-knife' ); ?></span>
+								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php endif; ?>
 						</td>
 						<td>
 							<button class="button button-small button-link-delete tsosk-transient-delete"
 							        data-key="<?php echo esc_attr( $item['key'] ); ?>"
 							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Delete', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
 					</tr>

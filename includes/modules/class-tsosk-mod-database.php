@@ -70,12 +70,12 @@ class TSOSK_Mod_Database {
 		$tool_url  = $this->cleaner_admin_url();
 
 		$features = array(
-			__( 'Clean expired transients, revisions, auto-drafts, and trashed posts or comments safely.', 'tso-swiss-knife' ),
-			__( 'Browse and delete orphan wp_options grouped by plugin, with autoload management.', 'tso-swiss-knife' ),
-			__( 'Detect and remove tables left behind by uninstalled plugins — with review-only mode when confidence is low.', 'tso-swiss-knife' ),
-			__( 'Full database SQL backup: export, download, restore, or delete backups from uploads.', 'tso-swiss-knife' ),
-			__( 'OPTIMIZE fragmented tables to reclaim space and improve query performance.', 'tso-swiss-knife' ),
-			__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife' ),
+			__( 'Clean expired transients, revisions, auto-drafts, and trashed posts or comments safely.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Browse and delete orphan wp_options grouped by plugin, with autoload management.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Detect and remove tables left behind by uninstalled plugins — with review-only mode when confidence is low.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Full database SQL backup: export, download, restore, or delete backups from uploads.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'OPTIMIZE fragmented tables to reclaim space and improve query performance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 		?>
 		<div class="tsosk-promo-options-cleaner">
@@ -84,21 +84,21 @@ class TSOSK_Mod_Database {
 					<span class="dashicons dashicons-database-view"></span>
 				</div>
 				<div class="tsosk-promo-hero-body">
-					<p class="tsosk-promo-kicker"><?php esc_html_e( 'From Tu Soporte Online', 'tso-swiss-knife' ); ?></p>
-					<h2 class="tsosk-promo-title"><?php esc_html_e( 'TSO Options & Tables Cleaner', 'tso-swiss-knife' ); ?></h2>
+					<p class="tsosk-promo-kicker"><?php esc_html_e( 'From Tu Soporte Online', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<h2 class="tsosk-promo-title"><?php esc_html_e( 'TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
 					<p class="tsosk-promo-lead">
-						<?php esc_html_e( 'Keep your WordPress database lean and fast. A dedicated plugin to clean wp_options, orphan metadata, revisions, and leftover tables — with SQL backups before you delete anything.', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Keep your WordPress database lean and fast. A dedicated plugin to clean wp_options, orphan metadata, revisions, and leftover tables — with SQL backups before you delete anything.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</p>
 					<?php if ( $is_active ) : ?>
 						<span class="tsosk-badge tsosk-badge-ok tsosk-promo-status">
-							<?php esc_html_e( 'Installed & active', 'tso-swiss-knife' ); ?>
+							<?php esc_html_e( 'Installed & active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
 					<?php endif; ?>
 				</div>
 			</div>
 
 			<div class="tsosk-card tsosk-promo-features-card">
-				<h3><?php esc_html_e( 'What it does', 'tso-swiss-knife' ); ?></h3>
+				<h3><?php esc_html_e( 'What it does', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<ul class="tsosk-promo-feature-list">
 					<?php foreach ( $features as $feature ) : ?>
 					<li>
@@ -112,23 +112,23 @@ class TSOSK_Mod_Database {
 			<div class="tsosk-promo-actions">
 				<?php if ( $is_active ) : ?>
 					<a class="button button-primary button-hero" href="<?php echo esc_url( $tool_url ); ?>">
-						<?php esc_html_e( 'Open TSO Options & Tables Cleaner', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Open TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 				<?php else : ?>
 					<a class="button button-primary button-hero" href="<?php echo esc_url( $install ); ?>">
-						<?php esc_html_e( 'Install from WordPress.org', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Install from WordPress.org', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 				<?php endif; ?>
 				<a class="button button-secondary button-hero" href="<?php echo esc_url( $org_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'View on WordPress.org', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'View on WordPress.org', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 			</div>
 
 			<div class="tsosk-notice tsosk-notice-info tsosk-promo-tip">
 				<span class="dashicons dashicons-search" aria-hidden="true"></span>
 				<p>
-					<strong><?php esc_html_e( 'Quick tip:', 'tso-swiss-knife' ); ?></strong>
-					<?php esc_html_e( 'Go to Plugins → Add New, search for “TSO” and TSO Options & Tables Cleaner appears in the results — free on WordPress.org.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Quick tip:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					<?php esc_html_e( 'Go to Plugins → Add New, search for “TSO” and TSO Options & Tables Cleaner appears in the results — free on WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</div>
 		</div>

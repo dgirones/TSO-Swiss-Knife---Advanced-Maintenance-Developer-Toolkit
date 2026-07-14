@@ -70,7 +70,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	public function ajax_scan(): void {
 		check_ajax_referer( 'tsosk_image_sizes_audit_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$result = TSOSK_Uploads_Scanner::scan_image_sizes();
@@ -82,7 +82,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Image sizes audit completed.', 'tso-swiss-knife' ),
+				'message' => __( 'Image sizes audit completed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'html'    => $this->render_audit_html( $result, $this->get_disabled_sizes() ),
 			)
 		);
@@ -94,7 +94,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	public function ajax_save_disabled(): void {
 		check_ajax_referer( 'tsosk_image_sizes_audit_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$disabled = array();
@@ -113,10 +113,10 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		TSOSK_Activity_Log::log(
 			'image-sizes-audit',
 			'save',
-			__( 'Image size generation settings saved.', 'tso-swiss-knife' )
+			__( 'Image size generation settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
-		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -131,21 +131,21 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		}
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Audit how much disk space each registered image size uses, estimate recoverable space from thumbnails, and disable sizes you do not need on new uploads.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Audit how much disk space each registered image size uses, estimate recoverable space from thumbnails, and disable sizes you do not need on new uploads.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-image-sizes-scan"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Run image sizes audit', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Run image sizes audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-image-sizes-scan-msg"></span>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'Counts are based on attachment metadata and a disk scan for unmatched derivative files. Disabling a size only affects new uploads — existing files are not deleted.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Counts are based on attachment metadata and a disk scan for unmatched derivative files. Disabling a size only affects new uploads — existing files are not deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=media-footprint' ) ); ?>">
-				<?php esc_html_e( 'Open Uploads Disk Footprint', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Open Uploads Disk Footprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 		</p>
 
@@ -173,7 +173,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			: array();
 		?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'Run the audit to see file counts and disk usage per size.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Run the audit to see file counts and disk usage per size.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php
 		$this->render_sizes_controls( $registered, array(), $disabled, $nonce );
@@ -194,20 +194,20 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		ob_start();
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Audit summary', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Audit summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="widefat tsosk-kv-table">
 				<tbody>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( number_format_i18n( (int) ( $audit['attachments_scanned'] ?? 0 ) ) ); ?></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<?php
 							printf(
 								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife' ),
+								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								esc_html( number_format_i18n( (int) ( $full['files'] ?? 0 ) ) ),
 								esc_html( size_format( (int) ( $full['bytes'] ?? 0 ), 2 ) )
 							);
@@ -215,12 +215,12 @@ class TSOSK_Mod_Image_Sizes_Audit {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Unmatched derivatives', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Unmatched derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td>
 							<?php
 							printf(
 								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife' ),
+								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								esc_html( number_format_i18n( (int) ( $unmatched['files'] ?? 0 ) ) ),
 								esc_html( size_format( (int) ( $unmatched['bytes'] ?? 0 ), 2 ) )
 							);
@@ -229,7 +229,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 					</tr>
 					<?php if ( ! empty( $audit['scanned_at'] ) ) : ?>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Last audit', 'tso-swiss-knife' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Last audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $audit['scanned_at'] ) ); ?></td>
 					</tr>
 					<?php endif; ?>
@@ -252,19 +252,19 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		?>
 		<div class="tsosk-card">
 			<div class="tsosk-notice tsosk-notice-warn" style="margin-bottom:12px;">
-				<?php esc_html_e( 'Risks when disabling sizes: broken images in old content, missing srcset variants, and layout issues in themes or page builders that expect specific dimensions. Test on staging first.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Risks when disabling sizes: broken images in old content, missing srcset variants, and layout issues in themes or page builders that expect specific dimensions. Test on staging first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
-			<h3><?php esc_html_e( 'Registered image sizes', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Registered image sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-image-sizes-table">
 					<thead>
 						<tr>
-							<th style="width:40px;"><?php esc_html_e( 'On', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Name', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Dimensions', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Files', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Disk usage', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'If disabled (new uploads)', 'tso-swiss-knife' ); ?></th>
+							<th style="width:40px;"><?php esc_html_e( 'On', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Dimensions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Disk usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'If disabled (new uploads)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -287,7 +287,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 							<td>
 								<code><?php echo esc_html( $name ); ?></code>
 								<?php if ( $is_core ) : ?>
-									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
 							<td>
@@ -295,10 +295,10 @@ class TSOSK_Mod_Image_Sizes_Audit {
 								echo esc_html(
 									sprintf(
 										/* translators: 1: width, 2: height, 3: crop yes/no */
-										__( '%1$d × %2$d — crop: %3$s', 'tso-swiss-knife' ),
+										__( '%1$d × %2$d — crop: %3$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 										$width,
 										$height,
-										$crop ? __( 'yes', 'tso-swiss-knife' ) : __( 'no', 'tso-swiss-knife' )
+										$crop ? __( 'yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'no', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 									)
 								);
 								?>
@@ -307,14 +307,14 @@ class TSOSK_Mod_Image_Sizes_Audit {
 							<td><?php echo esc_html( size_format( (int) ( $stats['bytes'] ?? 0 ), 2 ) ); ?></td>
 							<td>
 								<?php if ( $is_core ) : ?>
-									<?php esc_html_e( 'Always generated', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Always generated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								<?php elseif ( ! $is_enabled ) : ?>
-									<?php esc_html_e( 'Skipped on new uploads', 'tso-swiss-knife' ); ?>
+									<?php esc_html_e( 'Skipped on new uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								<?php else : ?>
 									<?php
 									printf(
 										/* translators: %s: formatted disk size */
-										esc_html__( 'Could save ~%s on future uploads', 'tso-swiss-knife' ),
+										esc_html__( 'Could save ~%s on future uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 										esc_html( size_format( (int) ( $stats['bytes'] ?? 0 ), 2 ) )
 									);
 									?>
@@ -328,7 +328,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			<p style="margin-top:10px;">
 				<button type="button" class="button button-primary" id="tsosk-image-sizes-save"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save image size settings', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-image-sizes-save-msg"></span>
 			</p>

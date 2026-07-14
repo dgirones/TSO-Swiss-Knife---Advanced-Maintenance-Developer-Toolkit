@@ -122,7 +122,7 @@ class TSOSK_Mod_Sandbox {
 	public function ajax_apply(): void {
 		check_ajax_referer( 'tsosk_sandbox_nonce', 'nonce' );
 		if ( ! current_user_can( 'activate_plugins' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$plugins = array();
@@ -134,7 +134,7 @@ class TSOSK_Mod_Sandbox {
 		$plugins = $this->normalize_plugin_list( $plugins );
 
 		if ( count( $plugins ) < 1 ) {
-			wp_send_json_error( __( 'Select at least one plugin (this toolkit is always kept active).', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Select at least one plugin (this toolkit is always kept active).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$result = TSOSK_Sandbox_Mu::start_session( get_current_user_id(), $plugins );
@@ -147,13 +147,13 @@ class TSOSK_Mod_Sandbox {
 			'enable',
 			sprintf(
 				/* translators: %d: number of plugins */
-				__( 'Plugin sandbox applied (%d plugins).', 'tso-swiss-knife' ),
+				__( 'Plugin sandbox applied (%d plugins).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				count( $plugins )
 			)
 		);
 
 		wp_send_json_success(
-			__( 'Sandbox applied. The page will reload and only your selected plugins will load.', 'tso-swiss-knife' )
+			__( 'Sandbox applied. The page will reload and only your selected plugins will load.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 	}
 
@@ -163,14 +163,14 @@ class TSOSK_Mod_Sandbox {
 	public function ajax_reset(): void {
 		check_ajax_referer( 'tsosk_sandbox_nonce', 'nonce' );
 		if ( ! current_user_can( 'activate_plugins' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		TSOSK_Sandbox_Mu::end_session( get_current_user_id() );
 
-		TSOSK_Activity_Log::log( 'sandbox', 'disable', __( 'Plugin sandbox exited.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'sandbox', 'disable', __( 'Plugin sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
-		wp_send_json_success( __( 'Sandbox exited. Reloading restores the normal plugin set.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Sandbox exited. Reloading restores the normal plugin set.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	// ── Render ────────────────────────────────────────────────────────────────
@@ -190,37 +190,37 @@ class TSOSK_Mod_Sandbox {
 		$mu_active  = TSOSK_Sandbox_Mu::is_loader_installed();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Test plugin conflicts with real isolation: a must-use loader makes WordPress load only your selected plugins on the next request. Other visitors are not affected.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Test plugin conflicts with real isolation: a must-use loader makes WordPress load only your selected plugins on the next request. Other visitors are not affected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php if ( $in_sandbox ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
 			<span>
-				<?php esc_html_e( 'Sandbox mode is active for your account.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Sandbox mode is active for your account.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<?php if ( $mu_active ) : ?>
-					<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'MU loader on', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'MU loader on', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
-					<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'MU loader missing — limited mode', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'MU loader missing — limited mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
 			</span>
 			<button class="button button-secondary" id="tsosk-sandbox-reset" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Exit Sandbox', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Exit Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 		</div>
 		<?php endif; ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Select Active Plugins for Sandbox', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Select Active Plugins for Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
 			<div style="margin-bottom:10px;">
 				<button type="button" id="tsosk-sb-select-all" class="button button-small">
-					<?php esc_html_e( 'Select All', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Select All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" id="tsosk-sb-select-active" class="button button-small">
-					<?php esc_html_e( 'Select Currently Active', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Select Currently Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" id="tsosk-sb-select-none" class="button button-small">
-					<?php esc_html_e( 'Deselect All', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Deselect All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 			</div>
 
@@ -238,7 +238,7 @@ class TSOSK_Mod_Sandbox {
 					<span class="tsosk-plugin-name"><?php echo esc_html( $data['Name'] ); ?></span>
 					<span class="tsosk-plugin-ver">v<?php echo esc_html( $data['Version'] ); ?></span>
 					<?php if ( $is_normal ) : ?>
-					<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Normally Active', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Normally Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<?php endif; ?>
 				</label>
 				<?php endforeach; ?>
@@ -246,23 +246,23 @@ class TSOSK_Mod_Sandbox {
 
 			<div style="margin-top:16px;">
 				<button class="button button-primary" id="tsosk-sandbox-apply" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Apply Sandbox', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Apply Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sandbox-msg"></span>
 			</div>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'How Sandbox Works', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'How Sandbox Works', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<ol>
-				<li><?php esc_html_e( 'Select the plugins you want to test.', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'Click Apply Sandbox — a must-use loader is installed and a secure session cookie is set.', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'After reload, WordPress loads only those plugin files for you. Everyone else keeps the normal set.', 'tso-swiss-knife' ); ?></li>
-				<li><?php esc_html_e( 'Click Exit Sandbox when finished. The loader is removed when no sessions remain.', 'tso-swiss-knife' ); ?></li>
+				<li><?php esc_html_e( 'Select the plugins you want to test.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'Click Apply Sandbox — a must-use loader is installed and a secure session cookie is set.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'After reload, WordPress loads only those plugin files for you. Everyone else keeps the normal set.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'Click Exit Sandbox when finished. The loader is removed when no sessions remain.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 			</ol>
 			<p class="description">
-				<strong><?php esc_html_e( 'Note:', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'TSO Swiss Knife and other must-use plugins always stay loaded. The server must allow writing to wp-content/mu-plugins.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'Note:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'TSO Swiss Knife and other must-use plugins always stay loaded. The server must allow writing to wp-content/mu-plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 		</div>
 		<?php

@@ -64,7 +64,7 @@ class TSOSK_Mod_Users {
 			return;
 		}
 		echo '<div class="notice notice-warning"><p>';
-		esc_html_e( 'Your administrator requires you to change your password. Update it on your profile page below.', 'tso-swiss-knife' );
+		esc_html_e( 'Your administrator requires you to change your password. Update it on your profile page below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		echo '</p></div>';
 	}
 
@@ -233,15 +233,15 @@ class TSOSK_Mod_Users {
 	public function ajax_destroy_sessions(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? absint( wp_unslash( $_POST['user_id'] ) ) : 0;
 		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
-			wp_send_json_error( __( 'Invalid user.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( get_current_user_id() === $user_id ) {
-			wp_send_json_error( __( 'You cannot close your own sessions from here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'You cannot close your own sessions from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		WP_Session_Tokens::get_instance( $user_id )->destroy_all();
@@ -250,40 +250,40 @@ class TSOSK_Mod_Users {
 			'delete',
 			sprintf(
 				/* translators: %d: user ID */
-				__( 'Sessions closed for user #%d.', 'tso-swiss-knife' ),
+				__( 'Sessions closed for user #%d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$user_id
 			)
 		);
-		wp_send_json_success( __( 'User sessions closed.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'User sessions closed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_destroy_one_session(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? absint( wp_unslash( $_POST['user_id'] ) ) : 0;
 		$token   = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
 		if ( ! $user_id || '' === $token || ! get_user_by( 'id', $user_id ) ) {
-			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( get_current_user_id() === $user_id ) {
-			wp_send_json_error( __( 'You cannot close your own sessions from here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'You cannot close your own sessions from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$manager = WP_Session_Tokens::get_instance( $user_id );
 		if ( ! $manager->verify( $token ) ) {
-			wp_send_json_error( __( 'Session not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Session not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		$manager->destroy( $token );
-		wp_send_json_success( __( 'Session closed.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Session closed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_bulk_inactive(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$action = isset( $_POST['bulk_action'] ) ? sanitize_key( wp_unslash( $_POST['bulk_action'] ) ) : '';
@@ -296,10 +296,10 @@ class TSOSK_Mod_Users {
 		}
 		$ids = array_filter( array_unique( $ids ) );
 		if ( empty( $ids ) ) {
-			wp_send_json_error( __( 'Select at least one user.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Select at least one user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! in_array( $action, array( 'subscriber', 'delete' ), true ) ) {
-			wp_send_json_error( __( 'Invalid bulk action.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid bulk action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$count = 0;
@@ -339,7 +339,7 @@ class TSOSK_Mod_Users {
 			'bulk',
 			sprintf(
 				/* translators: 1: action, 2: count */
-				__( 'Bulk inactive user action (%1$s): %2$d users affected.', 'tso-swiss-knife' ),
+				__( 'Bulk inactive user action (%1$s): %2$d users affected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$action,
 				$count
 			)
@@ -347,7 +347,7 @@ class TSOSK_Mod_Users {
 		wp_send_json_success(
 			sprintf(
 				/* translators: %d: number of users */
-				__( '%d users processed.', 'tso-swiss-knife' ),
+				__( '%d users processed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count
 			)
 		);
@@ -356,18 +356,18 @@ class TSOSK_Mod_Users {
 	public function ajax_force_password(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$user_id = isset( $_POST['user_id'] ) ? absint( wp_unslash( $_POST['user_id'] ) ) : 0;
 		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
-			wp_send_json_error( __( 'Invalid user.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( get_current_user_id() === $user_id ) {
-			wp_send_json_error( __( 'You cannot force a password change on your own account from here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'You cannot force a password change on your own account from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( user_can( $user_id, 'manage_options' ) || is_super_admin( $user_id ) ) {
-			wp_send_json_error( __( 'Administrators cannot be forced to change their password from here.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Administrators cannot be forced to change their password from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		update_user_meta( $user_id, self::META_FORCE_PASSWORD, '1' );
@@ -377,20 +377,20 @@ class TSOSK_Mod_Users {
 			'update',
 			sprintf(
 				/* translators: %d: user ID */
-				__( 'Password change forced for user #%d.', 'tso-swiss-knife' ),
+				__( 'Password change forced for user #%d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$user_id
 			)
 		);
-		wp_send_json_success( __( 'User must change password on next login.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'User must change password on next login.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function ajax_clear_history(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		delete_option( self::OPTION_LOGIN_HISTORY );
-		wp_send_json_success( __( 'Login history cleared.', 'tso-swiss-knife' ) );
+		wp_send_json_success( __( 'Login history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	public function render(): void {
@@ -407,16 +407,16 @@ class TSOSK_Mod_Users {
 		$total_users     = count_users()['total_users'] ?? 0;
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Inspect sessions, login history, inactive accounts and manage user security actions.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Inspect sessions, login history, inactive accounts and manage user security actions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'User Summary', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'User Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
-				<tr><th><?php esc_html_e( 'Total Users', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( (string) $total_users ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Administrators', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( (string) count( $admin_users ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Inactive (90+ days)', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( (string) count( $inactive_users ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Login history entries', 'tso-swiss-knife' ); ?></th><td><code><?php echo esc_html( (string) count( $this->get_login_history() ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Total Users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) $total_users ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Administrators', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $admin_users ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Inactive (90+ days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $inactive_users ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Login history entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $this->get_login_history() ) ); ?></code></td></tr>
 			</table>
 		</div>
 
@@ -433,10 +433,10 @@ class TSOSK_Mod_Users {
 	private function render_sessions_card( array $users, string $nonce ): void {
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Administrator Sessions', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Session tokens stored by WordPress. Close individual sessions or all sessions for a user.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Administrator Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Session tokens stored by WordPress. Close individual sessions or all sessions for a user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php if ( empty( $users ) ) : ?>
-				<p><?php esc_html_e( 'No users found.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No users found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<?php foreach ( $users as $user ) : ?>
 					<?php
@@ -447,28 +447,28 @@ class TSOSK_Mod_Users {
 						<p style="margin:0 0 8px;">
 							<strong><code><?php echo esc_html( $user->user_login ); ?></code></strong>
 							<?php if ( $last ) : ?>
-								<span class="description"> — <?php esc_html_e( 'Last login:', 'tso-swiss-knife' ); ?> <?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last ) ); ?></span>
+								<span class="description"> — <?php esc_html_e( 'Last login:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last ) ); ?></span>
 							<?php endif; ?>
 							<button type="button" class="button button-small tsosk-user-close-sessions" style="margin-left:8px;"
 							        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Close all sessions', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Close all sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 							<button type="button" class="button button-small tsosk-user-force-pwd"
 							        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Force password change', 'tso-swiss-knife' ); ?>
+								<?php esc_html_e( 'Force password change', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 							<span class="tsosk-ajax-msg"></span>
 						</p>
 						<?php if ( empty( $sessions ) ) : ?>
-							<p class="description"><?php esc_html_e( 'No active sessions.', 'tso-swiss-knife' ); ?></p>
+							<p class="description"><?php esc_html_e( 'No active sessions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php else : ?>
 							<table class="widefat tsosk-table">
 								<thead><tr>
-									<th><?php esc_html_e( 'IP', 'tso-swiss-knife' ); ?></th>
-									<th><?php esc_html_e( 'User agent', 'tso-swiss-knife' ); ?></th>
-									<th><?php esc_html_e( 'Login time', 'tso-swiss-knife' ); ?></th>
-									<th><?php esc_html_e( 'Expires', 'tso-swiss-knife' ); ?></th>
-									<th><?php esc_html_e( 'Action', 'tso-swiss-knife' ); ?></th>
+									<th><?php esc_html_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+									<th><?php esc_html_e( 'User agent', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+									<th><?php esc_html_e( 'Login time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+									<th><?php esc_html_e( 'Expires', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+									<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 								</tr></thead>
 								<tbody>
 									<?php foreach ( $sessions as $token => $session ) : ?>
@@ -483,7 +483,7 @@ class TSOSK_Mod_Users {
 											        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>"
 											        data-token="<?php echo esc_attr( (string) $token ); ?>"
 											        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-												<?php esc_html_e( 'Close', 'tso-swiss-knife' ); ?>
+												<?php esc_html_e( 'Close', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 											</button>
 											<?php else : ?>
 												—
@@ -508,27 +508,27 @@ class TSOSK_Mod_Users {
 	private function render_inactive_card( array $users, string $nonce ): void {
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Inactive Users (90+ days)', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Based on last successful login (or registration date if never logged in). Administrators are never deleted in bulk.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Inactive Users (90+ days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Based on last successful login (or registration date if never logged in). Administrators are never deleted in bulk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php if ( empty( $users ) ) : ?>
-				<p><?php esc_html_e( 'No inactive users found.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No inactive users found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<div class="tsosk-toolbar">
 					<input type="hidden" id="tsosk-users-bulk-nonce" value="<?php echo esc_attr( $nonce ); ?>">
 					<button type="button" class="button" id="tsosk-users-bulk-subscriber">
-						<?php esc_html_e( 'Set selected to Subscriber', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Set selected to Subscriber', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button type="button" class="button button-link-delete" id="tsosk-users-bulk-delete">
-						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<span class="tsosk-ajax-msg" id="tsosk-users-bulk-msg"></span>
 				</div>
 				<table class="widefat tsosk-table" id="tsosk-users-inactive-table">
 					<thead><tr>
 						<th><input type="checkbox" id="tsosk-users-select-all"></th>
-						<th><?php esc_html_e( 'User', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Email', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Last activity', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Last activity', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 						<?php foreach ( $users as $user ) : ?>
@@ -559,22 +559,22 @@ class TSOSK_Mod_Users {
 	private function render_history_card( array $history, string $nonce ): void {
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Login History', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Login History', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-toolbar">
 				<button type="button" class="button button-link-delete" id="tsosk-users-clear-history" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Clear history', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Clear history', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-users-history-msg"></span>
 			</div>
 			<?php if ( empty( $history ) ) : ?>
-				<p><?php esc_html_e( 'No login events recorded yet.', 'tso-swiss-knife' ); ?></p>
+				<p><?php esc_html_e( 'No login events recorded yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th><?php esc_html_e( 'Time', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Username', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'IP', 'tso-swiss-knife' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'tso-swiss-knife' ); ?></th>
+						<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
 						<?php foreach ( $history as $row ) : ?>
@@ -584,9 +584,9 @@ class TSOSK_Mod_Users {
 							<td class="tsosk-code"><?php echo esc_html( (string) ( $row['ip'] ?? '' ) ); ?></td>
 							<td>
 								<?php if ( 'success' === ( $row['status'] ?? '' ) ) : ?>
-									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Success', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Success', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php else : ?>
-									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Failed', 'tso-swiss-knife' ); ?></span>
+									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Failed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
 						</tr>

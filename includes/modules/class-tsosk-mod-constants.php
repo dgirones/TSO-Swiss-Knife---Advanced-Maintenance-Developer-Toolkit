@@ -28,50 +28,50 @@ class TSOSK_Mod_Constants {
 
 		// Groups of WP constants to display with descriptions.
 		$groups = array(
-			__( 'Paths & URLs', 'tso-swiss-knife' ) => array(
+			__( 'Paths & URLs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'ABSPATH', 'WPINC', 'WP_CONTENT_DIR', 'WP_CONTENT_URL',
 				'WP_PLUGIN_DIR', 'WP_PLUGIN_URL', 'WPMU_PLUGIN_DIR', 'WPMU_PLUGIN_URL',
 				'TEMPLATEPATH', 'STYLESHEETPATH',
 			),
-			__( 'Database', 'tso-swiss-knife' ) => array(
+			__( 'Database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'DB_NAME', 'DB_HOST', 'DB_CHARSET', 'DB_COLLATE',
 			),
-			__( 'Debug', 'tso-swiss-knife' ) => array(
+			__( 'Debug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'WP_DEBUG', 'WP_DEBUG_LOG', 'WP_DEBUG_DISPLAY', 'SCRIPT_DEBUG', 'SAVEQUERIES',
 			),
-			__( 'Performance', 'tso-swiss-knife' ) => array(
+			__( 'Performance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'WP_CACHE', 'CONCATENATE_SCRIPTS', 'COMPRESS_SCRIPTS', 'COMPRESS_CSS',
 				'ENFORCE_GZIP',
 			),
-			__( 'Security', 'tso-swiss-knife' ) => array(
+			__( 'Security', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'DISALLOW_FILE_EDIT', 'DISALLOW_FILE_MODS', 'FORCE_SSL_ADMIN',
 				'COOKIEPATH', 'SITECOOKIEPATH',
 			),
-			__( 'Memory', 'tso-swiss-knife' ) => array(
+			__( 'Memory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'WP_MEMORY_LIMIT', 'WP_MAX_MEMORY_LIMIT',
 			),
-			__( 'Autosave & Revisions', 'tso-swiss-knife' ) => array(
+			__( 'Autosave & Revisions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'AUTOSAVE_INTERVAL', 'WP_POST_REVISIONS', 'EMPTY_TRASH_DAYS',
 			),
-			__( 'Multisite', 'tso-swiss-knife' ) => array(
+			__( 'Multisite', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'MULTISITE', 'SUBDOMAIN_INSTALL', 'DOMAIN_CURRENT_SITE', 'PATH_CURRENT_SITE',
 				'SITE_ID_CURRENT_SITE', 'BLOG_ID_CURRENT_SITE',
 			),
-			__( 'Cron', 'tso-swiss-knife' ) => array(
+			__( 'Cron', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
 				'DISABLE_WP_CRON', 'ALTERNATE_WP_CRON', 'WP_CRON_LOCK_TIMEOUT',
 			),
 		);
 		$profiles_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=hidden-profiles' );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only view of the most relevant WordPress constants. Sensitive values (DB_USER, DB_PASSWORD, auth keys) are intentionally omitted.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Read-only view of the most relevant WordPress constants. Sensitive values (DB_USER, DB_PASSWORD, auth keys) are intentionally omitted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-info">
 			<?php
 			printf(
 				/* translators: 1: link open, 2: link close */
-				esc_html__( 'To toggle common performance and privacy constants safely, use %1$sHidden WordPress Profiles%2$s.', 'tso-swiss-knife' ),
+				esc_html__( 'To toggle common performance and privacy constants safely, use %1$sHidden WordPress Profiles%2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<a href="' . esc_url( $profiles_url ) . '">',
 				'</a>'
 			);
@@ -79,7 +79,7 @@ class TSOSK_Mod_Constants {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Useful System Information', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Useful System Information', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table tsosk-constants-table">
 				<?php foreach ( $system_info as $label => $value ) : ?>
 					<tr class="tsosk-constant-row">
@@ -91,15 +91,15 @@ class TSOSK_Mod_Constants {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Environment Overrides', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Hidden constants that change WordPress behavior for updates, file editing, trash, revisions, autosaves, SSL and environments.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Environment Overrides', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Hidden constants that change WordPress behavior for updates, file editing, trash, revisions, autosaves, SSL and environments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Constant', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Value', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Impact', 'tso-swiss-knife' ); ?></th>
+							<th><?php esc_html_e( 'Constant', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Impact', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -120,7 +120,7 @@ class TSOSK_Mod_Constants {
 			</div>
 		</div>
 
-		<input type="text" id="tsosk-constants-search" placeholder="<?php esc_attr_e( 'Filter constants…', 'tso-swiss-knife' ); ?>"
+		<input type="text" id="tsosk-constants-search" placeholder="<?php esc_attr_e( 'Filter constants…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 		       style="width:260px;margin-bottom:16px;">
 
 		<?php foreach ( $groups as $group_label => $constants ) :
@@ -174,38 +174,38 @@ class TSOSK_Mod_Constants {
 
 		$server_software = isset( $_SERVER['SERVER_SOFTWARE'] )
 			? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) )
-			: __( 'Unknown', 'tso-swiss-knife' );
+			: __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
 		$document_root = isset( $_SERVER['DOCUMENT_ROOT'] )
 			? sanitize_text_field( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) )
-			: __( 'Unknown', 'tso-swiss-knife' );
+			: __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
 		return array(
-			__( 'WordPress Version', 'tso-swiss-knife' )        => get_bloginfo( 'version' ),
-			__( 'WordPress Locale', 'tso-swiss-knife' )         => determine_locale(),
-			__( 'Site URL', 'tso-swiss-knife' )                 => site_url(),
-			__( 'Home URL', 'tso-swiss-knife' )                 => home_url(),
-			__( 'Multisite', 'tso-swiss-knife' )                => is_multisite() ? __( 'Yes', 'tso-swiss-knife' ) : __( 'No', 'tso-swiss-knife' ),
-			__( 'Active Theme', 'tso-swiss-knife' )             => $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ),
-			__( 'Active Plugins', 'tso-swiss-knife' )           => (string) count( $active_plugins ),
-			__( 'Network Active Plugins', 'tso-swiss-knife' )   => (string) count( $sitewide_plugins ),
-			__( 'PHP Version', 'tso-swiss-knife' )              => PHP_VERSION,
-			__( 'PHP SAPI', 'tso-swiss-knife' )                 => PHP_SAPI,
-			__( 'PHP Memory Limit', 'tso-swiss-knife' )         => (string) ini_get( 'memory_limit' ),
-			__( 'PHP Max Execution Time', 'tso-swiss-knife' )   => (string) ini_get( 'max_execution_time' ) . 's',
-			__( 'PHP Upload Max Filesize', 'tso-swiss-knife' )  => (string) ini_get( 'upload_max_filesize' ),
-			__( 'PHP Post Max Size', 'tso-swiss-knife' )        => (string) ini_get( 'post_max_size' ),
-			__( 'PHP Max Input Vars', 'tso-swiss-knife' )       => (string) ini_get( 'max_input_vars' ),
-			__( 'Database Version', 'tso-swiss-knife' )         => method_exists( $wpdb, 'db_version' ) ? (string) $wpdb->db_version() : __( 'Unknown', 'tso-swiss-knife' ),
-			__( 'Database Charset', 'tso-swiss-knife' )         => defined( 'DB_CHARSET' ) ? DB_CHARSET : __( 'Unknown', 'tso-swiss-knife' ),
-			__( 'Table Prefix', 'tso-swiss-knife' )             => $wpdb->prefix,
-			__( 'Server Software', 'tso-swiss-knife' )          => $server_software,
-			__( 'Operating System', 'tso-swiss-knife' )         => PHP_OS_FAMILY,
-			__( 'Document Root', 'tso-swiss-knife' )            => $document_root,
-			__( 'ABSPATH', 'tso-swiss-knife' )                  => ABSPATH,
-			__( 'WP Content Directory', 'tso-swiss-knife' )     => WP_CONTENT_DIR,
-			__( 'Timezone', 'tso-swiss-knife' )                 => wp_timezone_string(),
-			__( 'Current Admin Time', 'tso-swiss-knife' )       => date_i18n( 'Y-m-d H:i:s' ),
+			__( 'WordPress Version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )        => get_bloginfo( 'version' ),
+			__( 'WordPress Locale', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )         => determine_locale(),
+			__( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                 => site_url(),
+			__( 'Home URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                 => home_url(),
+			__( 'Multisite', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                => is_multisite() ? __( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Active Theme', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ),
+			__( 'Active Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )           => (string) count( $active_plugins ),
+			__( 'Network Active Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => (string) count( $sitewide_plugins ),
+			__( 'PHP Version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )              => PHP_VERSION,
+			__( 'PHP SAPI', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                 => PHP_SAPI,
+			__( 'PHP Memory Limit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )         => (string) ini_get( 'memory_limit' ),
+			__( 'PHP Max Execution Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => (string) ini_get( 'max_execution_time' ) . 's',
+			__( 'PHP Upload Max Filesize', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )  => (string) ini_get( 'upload_max_filesize' ),
+			__( 'PHP Post Max Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )        => (string) ini_get( 'post_max_size' ),
+			__( 'PHP Max Input Vars', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )       => (string) ini_get( 'max_input_vars' ),
+			__( 'Database Version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )         => method_exists( $wpdb, 'db_version' ) ? (string) $wpdb->db_version() : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Database Charset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )         => defined( 'DB_CHARSET' ) ? DB_CHARSET : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			__( 'Table Prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => $wpdb->prefix,
+			__( 'Server Software', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => $server_software,
+			__( 'Operating System', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )         => PHP_OS_FAMILY,
+			__( 'Document Root', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => $document_root,
+			__( 'ABSPATH', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                  => ABSPATH,
+			__( 'WP Content Directory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )     => WP_CONTENT_DIR,
+			__( 'Timezone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                 => wp_timezone_string(),
+			__( 'Current Admin Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )       => date_i18n( 'Y-m-d H:i:s' ),
 		);
 	}
 
@@ -216,22 +216,22 @@ class TSOSK_Mod_Constants {
 	 */
 	private function get_environment_overrides(): array {
 		$constants = array(
-			'WP_ENVIRONMENT_TYPE'        => __( 'Defines whether the site runs as production, staging, development or local.', 'tso-swiss-knife' ),
-			'WP_MEMORY_LIMIT'            => __( 'Controls normal WordPress memory limit.', 'tso-swiss-knife' ),
-			'WP_MAX_MEMORY_LIMIT'        => __( 'Controls elevated admin/image processing memory limit.', 'tso-swiss-knife' ),
-			'AUTOMATIC_UPDATER_DISABLED' => __( 'Disables automatic background updates when true.', 'tso-swiss-knife' ),
-			'DISALLOW_FILE_MODS'         => __( 'Disables plugin/theme installation, updates and file modifications.', 'tso-swiss-knife' ),
-			'DISALLOW_FILE_EDIT'         => __( 'Disables the built-in plugin and theme editors.', 'tso-swiss-knife' ),
-			'WP_AUTO_UPDATE_CORE'        => __( 'Controls automatic WordPress core updates.', 'tso-swiss-knife' ),
-			'EMPTY_TRASH_DAYS'           => __( 'Controls how long trashed content is kept.', 'tso-swiss-knife' ),
-			'WP_POST_REVISIONS'          => __( 'Controls how many post revisions WordPress keeps.', 'tso-swiss-knife' ),
-			'AUTOSAVE_INTERVAL'          => __( 'Controls editor autosave frequency in seconds.', 'tso-swiss-knife' ),
-			'FORCE_SSL_ADMIN'            => __( 'Forces SSL for admin screens and logins.', 'tso-swiss-knife' ),
-			'ALTERNATE_WP_CRON'          => __( 'Changes how WordPress spawns cron requests.', 'tso-swiss-knife' ),
-			'DISABLE_WP_CRON'            => __( 'Disables traffic-based WP-Cron and expects a real server cron.', 'tso-swiss-knife' ),
-			'WP_DEBUG'                   => __( 'Enables WordPress debug mode.', 'tso-swiss-knife' ),
-			'WP_DEBUG_LOG'               => __( 'Writes debug messages to debug.log.', 'tso-swiss-knife' ),
-			'WP_DEBUG_DISPLAY'           => __( 'Shows debug messages on screen.', 'tso-swiss-knife' ),
+			'WP_ENVIRONMENT_TYPE'        => __( 'Defines whether the site runs as production, staging, development or local.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_MEMORY_LIMIT'            => __( 'Controls normal WordPress memory limit.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_MAX_MEMORY_LIMIT'        => __( 'Controls elevated admin/image processing memory limit.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'AUTOMATIC_UPDATER_DISABLED' => __( 'Disables automatic background updates when true.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'DISALLOW_FILE_MODS'         => __( 'Disables plugin/theme installation, updates and file modifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'DISALLOW_FILE_EDIT'         => __( 'Disables the built-in plugin and theme editors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_AUTO_UPDATE_CORE'        => __( 'Controls automatic WordPress core updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'EMPTY_TRASH_DAYS'           => __( 'Controls how long trashed content is kept.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_POST_REVISIONS'          => __( 'Controls how many post revisions WordPress keeps.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'AUTOSAVE_INTERVAL'          => __( 'Controls editor autosave frequency in seconds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'FORCE_SSL_ADMIN'            => __( 'Forces SSL for admin screens and logins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'ALTERNATE_WP_CRON'          => __( 'Changes how WordPress spawns cron requests.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'DISABLE_WP_CRON'            => __( 'Disables traffic-based WP-Cron and expects a real server cron.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_DEBUG'                   => __( 'Enables WordPress debug mode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_DEBUG_LOG'               => __( 'Writes debug messages to debug.log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'WP_DEBUG_DISPLAY'           => __( 'Shows debug messages on screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$out = array();
@@ -266,7 +266,7 @@ class TSOSK_Mod_Constants {
 		if ( null !== $wp_config ) {
 			return array(
 				'value'  => $wp_config,
-				'source' => __( 'Set in wp-config.php', 'tso-swiss-knife' ),
+				'source' => __( 'Set in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -274,7 +274,7 @@ class TSOSK_Mod_Constants {
 		if ( null !== $tsosk ) {
 			return array(
 				'value'  => $tsosk,
-				'source' => __( 'Set via TSO Swiss Knife flags file', 'tso-swiss-knife' ),
+				'source' => __( 'Set via TSO Swiss Knife flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -282,42 +282,42 @@ class TSOSK_Mod_Constants {
 			case 'WP_ENVIRONMENT_TYPE':
 				return array(
 					'value'  => function_exists( 'wp_get_environment_type' ) ? wp_get_environment_type() : 'production',
-					'source' => __( 'WordPress runtime default', 'tso-swiss-knife' ),
+					'source' => __( 'WordPress runtime default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'FORCE_SSL_ADMIN':
 				return array(
 					'value'  => ( function_exists( 'force_ssl_admin' ) && force_ssl_admin() ) ? 'true' : 'false',
-					'source' => __( 'Effective value (filter or core)', 'tso-swiss-knife' ),
+					'source' => __( 'Effective value (filter or core)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'WP_MEMORY_LIMIT':
 				return array(
 					'value'  => ini_get( 'memory_limit' ) ?: '40M',
-					'source' => __( 'PHP ini / WordPress fallback', 'tso-swiss-knife' ),
+					'source' => __( 'PHP ini / WordPress fallback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'WP_MAX_MEMORY_LIMIT':
 				return array(
 					'value'  => '512M',
-					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife' ),
+					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'EMPTY_TRASH_DAYS':
 				return array(
 					'value'  => '30',
-					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife' ),
+					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'WP_POST_REVISIONS':
 				return array(
 					'value'  => 'true',
-					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife' ),
+					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 			case 'AUTOSAVE_INTERVAL':
 				return array(
 					'value'  => '60',
-					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife' ),
+					'source' => __( 'WordPress default when undefined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
 		}
 
 		return array(
-			'value'  => __( 'Not defined', 'tso-swiss-knife' ),
+			'value'  => __( 'Not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'source' => '',
 		);
 	}
@@ -348,7 +348,7 @@ class TSOSK_Mod_Constants {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$src = (string) file_get_contents( $wp_config );
 			if ( preg_match( '/define\s*\(\s*[\'"]' . preg_quote( $constant, '/' ) . '[\'"]/i', $src ) ) {
-				return __( 'Defined in wp-config.php', 'tso-swiss-knife' );
+				return __( 'Defined in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 		}
 		foreach ( array(
@@ -358,16 +358,16 @@ class TSOSK_Mod_Constants {
 		) as $file ) {
 			$data = TSOSK_Config_Storage::read_json( $file );
 			if ( ! empty( $data['flags'][ $constant ] ) ) {
-				return __( 'Defined in TSO flags file', 'tso-swiss-knife' );
+				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 			if ( isset( $data['constants'][ $constant ] ) && ( false !== $data['constants'][ $constant ] && null !== $data['constants'][ $constant ] ) ) {
-				return __( 'Defined in TSO flags file', 'tso-swiss-knife' );
+				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 			if ( 'FORCE_SSL_ADMIN' === $constant && ! empty( $data['force_ssl_admin_override_off'] ) ) {
-				return __( 'Defined in TSO flags file', 'tso-swiss-knife' );
+				return __( 'Defined in TSO flags file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 		}
-		return __( 'Defined at runtime', 'tso-swiss-knife' );
+		return __( 'Defined at runtime', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
 	/**

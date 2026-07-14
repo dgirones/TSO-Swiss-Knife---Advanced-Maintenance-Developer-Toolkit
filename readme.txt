@@ -59,8 +59,8 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 = Translations =
 
-* All user-facing strings use the `tso-swiss-knife` text domain and standard WordPress gettext functions (`__()`, `_e()`, `esc_html__()`, etc.).
-* Bundled translations ship in `/languages` as `.po` and `.mo` files (Catalan and Spanish), plus the template `languages/tso-swiss-knife.pot`. After editing `.po` files, compile `.mo` with `py scripts/tsosk-compile-mo.py`. If a bundled `.mo` is missing and the `.po` is newer, the plugin may recompile a cached copy under `wp-content/uploads/tsosk-l10n/`.
+* All user-facing strings use the `tso-swiss-knife-advanced-maintenance-developer-toolkit` text domain and standard WordPress gettext functions (`__()`, `_e()`, `esc_html__()`, etc.).
+* Bundled translations ship in `/languages` as `.po` and `.mo` files (Catalan and Spanish), plus the template `languages/tso-swiss-knife-advanced-maintenance-developer-toolkit.pot`. After editing `.po` files, compile `.mo` with `py scripts/tsosk-compile-mo.py`. If a bundled `.mo` is missing and the `.po` is newer, the plugin may recompile a cached copy under `wp-content/uploads/tsosk-l10n/`.
 * On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language. This only affects that admin screen.
 * Further locales can be contributed via [Translate WordPress](https://translate.wordpress.org/) once the plugin is published.
 
@@ -74,7 +74,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 == Installation ==
 
-1. Upload the `tso-swiss-knife` folder to `/wp-content/plugins/`.
+1. Upload the `tso-swiss-knife-advanced-maintenance-developer-toolkit` folder to `/wp-content/plugins/`.
 2. Activate the plugin via **Plugins › Installed Plugins**.
 3. Navigate to **Tools › TSO Swiss Knife**.
 

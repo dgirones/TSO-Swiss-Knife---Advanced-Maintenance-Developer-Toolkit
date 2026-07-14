@@ -75,22 +75,22 @@ class TSOSK_Mod_Debug {
 	 */
 	private function get_log_files(): array {
 		$candidates = array(
-			__( 'WordPress debug.log', 'tso-swiss-knife' ) => $this->log_path(),
-			__( 'WordPress root error_log', 'tso-swiss-knife' ) => ABSPATH . 'error_log',
-			__( 'wp-admin error_log', 'tso-swiss-knife' ) => ABSPATH . 'wp-admin/error_log',
-			__( 'wp-includes error_log', 'tso-swiss-knife' ) => ABSPATH . 'wp-includes/error_log',
-			__( 'wp-content error_log', 'tso-swiss-knife' ) => WP_CONTENT_DIR . '/error_log',
-			__( 'uploads error_log', 'tso-swiss-knife' ) => WP_CONTENT_DIR . '/uploads/error_log',
-			__( 'plugins error_log', 'tso-swiss-knife' ) => WP_PLUGIN_DIR . '/error_log',
+			__( 'WordPress debug.log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => $this->log_path(),
+			__( 'WordPress root error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => ABSPATH . 'error_log',
+			__( 'wp-admin error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => ABSPATH . 'wp-admin/error_log',
+			__( 'wp-includes error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => ABSPATH . 'wp-includes/error_log',
+			__( 'wp-content error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => WP_CONTENT_DIR . '/error_log',
+			__( 'uploads error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => WP_CONTENT_DIR . '/uploads/error_log',
+			__( 'plugins error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => WP_PLUGIN_DIR . '/error_log',
 		);
 
 		if ( function_exists( 'get_theme_root' ) ) {
-			$candidates[ __( 'themes error_log', 'tso-swiss-knife' ) ] = trailingslashit( get_theme_root() ) . 'error_log';
+			$candidates[ __( 'themes error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ] = trailingslashit( get_theme_root() ) . 'error_log';
 		}
 
 		$php_error_log = ini_get( 'error_log' );
 		if ( is_string( $php_error_log ) && '' !== $php_error_log ) {
-			$candidates[ __( 'PHP error_log setting', 'tso-swiss-knife' ) ] = $php_error_log;
+			$candidates[ __( 'PHP error_log setting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ] = $php_error_log;
 		}
 
 		$logs = array();
@@ -245,14 +245,14 @@ class TSOSK_Mod_Debug {
 	 */
 	public function download_log(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		check_admin_referer( 'tsosk_debug_download_log' );
 
 		$posted_log = isset( $_GET['log_path'] ) ? sanitize_text_field( wp_unslash( $_GET['log_path'] ) ) : '';
 		$log = $this->validate_log_path( $posted_log );
 		if ( '' === $log || ! file_exists( $log ) || ! is_readable( $log ) ) {
-			wp_die( esc_html__( 'Log file not found.', 'tso-swiss-knife' ) );
+			wp_die( esc_html__( 'Log file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		nocache_headers();
@@ -447,7 +447,7 @@ class TSOSK_Mod_Debug {
 	public function ajax_developer_mode(): void {
 		check_ajax_referer( 'tsosk_debug_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$enable = ! empty( $_POST['enable'] );
 		$result = $this->apply_developer_preset( $enable );
@@ -458,14 +458,14 @@ class TSOSK_Mod_Debug {
 			'debug',
 			$enable ? 'enable' : 'disable',
 			$enable
-				? __( 'Developer mode enabled.', 'tso-swiss-knife' )
-				: __( 'Developer mode disabled.', 'tso-swiss-knife' )
+				? __( 'Developer mode enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Developer mode disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 		wp_send_json_success(
 			array(
 				'message' => $enable
-					? __( 'Developer mode enabled. Reload the page to apply.', 'tso-swiss-knife' )
-					: __( 'Developer mode disabled. Reload the page to apply.', 'tso-swiss-knife' ),
+					? __( 'Developer mode enabled. Reload the page to apply.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Developer mode disabled. Reload the page to apply.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'active'  => $enable,
 			)
 		);
@@ -477,7 +477,7 @@ class TSOSK_Mod_Debug {
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_debug_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$raw_flags = array();
@@ -497,8 +497,8 @@ class TSOSK_Mod_Debug {
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( $result->get_error_message() );
 		}
-		TSOSK_Activity_Log::log( 'debug', 'save', __( 'Debug flags saved.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Debug settings saved. Reload the page to see the new constants.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'debug', 'save', __( 'Debug flags saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Debug settings saved. Reload the page to see the new constants.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -524,28 +524,28 @@ class TSOSK_Mod_Debug {
 	public function ajax_clear_log(): void {
 		check_ajax_referer( 'tsosk_debug_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : $this->log_path();
 		$log = $this->validate_log_writable_path( $posted_log );
 		if ( '' === $log ) {
-			wp_send_json_error( __( 'This log file cannot be modified from the plugin. Only wp-content/debug.log and files under uploads/tsosk-logs may be emptied or shrunk.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This log file cannot be modified from the plugin. Only wp-content/debug.log and files under uploads/tsosk-logs may be emptied or shrunk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! file_exists( $log ) ) {
-			wp_send_json_error( __( 'Log file not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Log file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! wp_is_writable( $log ) ) {
-			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- truncate local file.
 		$result = file_put_contents( $log, '' );
 		if ( false === $result ) {
-			wp_send_json_error( __( 'Could not clear the log file.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not clear the log file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		TSOSK_Activity_Log::log( 'debug', 'delete', __( 'Debug log file cleared.', 'tso-swiss-knife' ) );
-		wp_send_json_success( __( 'Log file emptied. The file was kept on disk.', 'tso-swiss-knife' ) );
+		TSOSK_Activity_Log::log( 'debug', 'delete', __( 'Debug log file cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Log file emptied. The file was kept on disk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -554,23 +554,23 @@ class TSOSK_Mod_Debug {
 	public function ajax_shrink_log(): void {
 		check_ajax_referer( 'tsosk_debug_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : $this->log_path();
 		$keep_lines = isset( $_POST['keep_lines'] ) ? max( 100, min( 5000, absint( wp_unslash( $_POST['keep_lines'] ) ) ) ) : 500;
 		$log        = $this->validate_log_writable_path( $posted_log );
 		if ( '' === $log || ! file_exists( $log ) || ! is_readable( $log ) ) {
-			wp_send_json_error( __( 'This log file cannot be modified from the plugin, or the file was not found.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'This log file cannot be modified from the plugin, or the file was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ! wp_is_writable( $log ) ) {
-			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$content = (string) file_get_contents( $log );
 		if ( '' === $content ) {
-			wp_send_json_success( __( 'Log file is already empty.', 'tso-swiss-knife' ) );
+			wp_send_json_success( __( 'Log file is already empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$lines = preg_split( '/\R/', $content );
@@ -582,7 +582,7 @@ class TSOSK_Mod_Debug {
 			wp_send_json_success(
 				sprintf(
 					/* translators: 1: line count, 2: max lines */
-					__( 'No shrink needed — file has %1$d lines (limit %2$d).', 'tso-swiss-knife' ),
+					__( 'No shrink needed — file has %1$d lines (limit %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$total,
 					$keep_lines
 				)
@@ -597,11 +597,11 @@ class TSOSK_Mod_Debug {
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === file_put_contents( $archive_path, implode( "\n", $removed ) . "\n" ) ) {
-			wp_send_json_error( __( 'Could not write archive file.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not write archive file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === file_put_contents( $log, implode( "\n", $kept ) . "\n" ) ) {
-			wp_send_json_error( __( 'Could not rewrite log file.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Could not rewrite log file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		TSOSK_Activity_Log::log(
@@ -609,7 +609,7 @@ class TSOSK_Mod_Debug {
 			'update',
 			sprintf(
 				/* translators: 1: lines kept, 2: archive filename */
-				__( 'Debug log shrunk to last %1$d lines (archive: %2$s).', 'tso-swiss-knife' ),
+				__( 'Debug log shrunk to last %1$d lines (archive: %2$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$keep_lines,
 				$archive_name
 			)
@@ -618,7 +618,7 @@ class TSOSK_Mod_Debug {
 		wp_send_json_success(
 			sprintf(
 				/* translators: 1: lines kept, 2: archive path */
-				__( 'Log reduced to the last %1$d lines. Older entries archived to %2$s', 'tso-swiss-knife' ),
+				__( 'Log reduced to the last %1$d lines. Older entries archived to %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$keep_lines,
 				$archive_path
 			)
@@ -650,27 +650,27 @@ class TSOSK_Mod_Debug {
 		$dev_active = class_exists( 'TSOSK_Site_Status' ) && TSOSK_Site_Status::is_developer_mode_active();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Enable logging and inspect error files on this site. Constants already defined in wp-config.php take precedence over the plugin config file.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Enable logging and inspect error files on this site. Constants already defined in wp-config.php take precedence over the plugin config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card tsosk-dev-mode-card">
-			<h3><?php esc_html_e( 'Developer mode', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Recommended on staging: one click enables WP_DEBUG, debug.log, SAVEQUERIES and hides errors from visitors. Settings are saved to tsosk-config and only apply when those constants are not already set in wp-config.php.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Recommended on staging: one click enables WP_DEBUG, debug.log, SAVEQUERIES and hides errors from visitors. Settings are saved to tsosk-config and only apply when those constants are not already set in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-dev-mode-actions">
 				<button type="button" class="button button-primary" id="tsosk-debug-developer-on"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 				        <?php disabled( $dev_active ); ?>>
-					<?php esc_html_e( 'Enable developer mode', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Enable developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" class="button button-secondary" id="tsosk-debug-developer-off"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 				        <?php disabled( ! $dev_active ); ?>>
-					<?php esc_html_e( 'Disable developer mode', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Disable developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-badge <?php echo $dev_active ? 'tsosk-badge-warn' : 'tsosk-badge-info'; ?>" id="tsosk-dev-mode-badge">
-					<?php echo $dev_active ? esc_html__( 'Active', 'tso-swiss-knife' ) : esc_html__( 'Inactive', 'tso-swiss-knife' ); ?>
+					<?php echo $dev_active ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</div>
 			<span class="tsosk-ajax-msg" id="tsosk-debug-msg"></span>
@@ -681,7 +681,7 @@ class TSOSK_Mod_Debug {
 			<?php
 			printf(
 				/* translators: %s: legacy file path */
-				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it to the correct location and delete the old file.', 'tso-swiss-knife' ),
+				esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it to the correct location and delete the old file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>'
 			);
 			?>
@@ -693,7 +693,7 @@ class TSOSK_Mod_Debug {
 			printf(
 				/* translators: %s: file path */
 				/* translators: %s: file path */
-			esc_html__( 'Active config file: %s', 'tso-swiss-knife' ),
+			esc_html__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'<code>' . esc_html( $this->config_path() ) . '</code>'
 			);
 			?>
@@ -701,9 +701,9 @@ class TSOSK_Mod_Debug {
 		<?php endif; ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Debug Constants', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Debug Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Current runtime values. Constants already defined in wp-config.php take precedence over the plugin JSON config in uploads/tsosk-config.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Current runtime values. Constants already defined in wp-config.php take precedence over the plugin JSON config in uploads/tsosk-config.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<div class="tsosk-debug-flags" id="tsosk-debug-form">
@@ -711,28 +711,28 @@ class TSOSK_Mod_Debug {
 				$flags = array(
 					'debug'   => array(
 						'label'   => 'WP_DEBUG',
-						'desc'    => __( 'Enables PHP error reporting and additional debug information.', 'tso-swiss-knife' ),
-						'current' => defined( 'WP_DEBUG' ) ? ( WP_DEBUG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife' ),
+						'desc'    => __( 'Enables PHP error reporting and additional debug information.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'current' => defined( 'WP_DEBUG' ) ? ( WP_DEBUG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					'log'     => array(
 						'label'   => 'WP_DEBUG_LOG',
-						'desc'    => __( 'Saves errors to wp-content/debug.log.', 'tso-swiss-knife' ),
-						'current' => defined( 'WP_DEBUG_LOG' ) ? ( WP_DEBUG_LOG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife' ),
+						'desc'    => __( 'Saves errors to wp-content/debug.log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'current' => defined( 'WP_DEBUG_LOG' ) ? ( WP_DEBUG_LOG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					'display' => array(
 						'label'   => 'WP_DEBUG_DISPLAY',
-						'desc'    => __( 'Shows PHP errors on screen (disable on production).', 'tso-swiss-knife' ),
-						'current' => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife' ),
+						'desc'    => __( 'Shows PHP errors on screen (disable on production).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'current' => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					'script'  => array(
 						'label'   => 'SCRIPT_DEBUG',
-						'desc'    => __( 'Loads unminified CSS/JS from WordPress core.', 'tso-swiss-knife' ),
-						'current' => defined( 'SCRIPT_DEBUG' ) ? ( SCRIPT_DEBUG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife' ),
+						'desc'    => __( 'Loads unminified CSS/JS from WordPress core.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'current' => defined( 'SCRIPT_DEBUG' ) ? ( SCRIPT_DEBUG ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					'queries' => array(
 						'label'   => 'SAVEQUERIES',
-						'desc'    => __( 'Saves all DB queries to $wpdb->queries array.', 'tso-swiss-knife' ),
-						'current' => defined( 'SAVEQUERIES' ) ? ( SAVEQUERIES ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife' ),
+						'desc'    => __( 'Saves all DB queries to $wpdb->queries array.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'current' => defined( 'SAVEQUERIES' ) ? ( SAVEQUERIES ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 				);
 				foreach ( $flags as $key => $flag ) :
@@ -755,7 +755,7 @@ class TSOSK_Mod_Debug {
 
 					<?php /* ── Current value badge ── */ ?>
 					<span class="tsosk-flag-current">
-						<?php esc_html_e( 'Actual:', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Actual:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						<code class="<?php echo $actual_on ? 'tsosk-val-true' : 'tsosk-val-false'; ?>">
 							<?php echo esc_html( $flag['current'] ); ?>
 						</code>
@@ -766,7 +766,7 @@ class TSOSK_Mod_Debug {
 					      style="font-size:11px;">
 						<?php
 						/* translators: %s: constant value in wp-config.php */
-						printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
+						printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
 						?>
 					</span>
 					<?php endif; ?>
@@ -777,27 +777,27 @@ class TSOSK_Mod_Debug {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Available Error Logs', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Available Error Logs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Shows readable WordPress/PHP error logs detected inside this WordPress installation. Previews are limited to the end of each file.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Shows readable WordPress/PHP error logs detected inside this WordPress installation. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( 'debug.log', 'tso-swiss-knife' ); ?></strong> —
-				<?php esc_html_e( 'Created by WordPress when WP_DEBUG=true and WP_DEBUG_LOG=true. Use the constants above to enable it.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'debug.log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
+				<?php esc_html_e( 'Created by WordPress when WP_DEBUG=true and WP_DEBUG_LOG=true. Use the constants above to enable it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<br>
-				<strong><?php esc_html_e( 'error_log', 'tso-swiss-knife' ); ?></strong> —
-				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files; only wp-content/debug.log can be emptied or shrunk from here.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
+				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files; only wp-content/debug.log can be emptied or shrunk from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Log', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Path', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Size', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Modified', 'tso-swiss-knife' ); ?></th>
-							<th><?php esc_html_e( 'Actions', 'tso-swiss-knife' ); ?>
-								<span class="tsosk-th-hint"><?php esc_html_e( 'View = scroll to preview below. Empty = delete entries, keep file.', 'tso-swiss-knife' ); ?></span>
+							<th><?php esc_html_e( 'Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<span class="tsosk-th-hint"><?php esc_html_e( 'View = scroll to preview below. Empty = delete entries, keep file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							</th>
 						</tr>
 					</thead>
@@ -806,13 +806,13 @@ class TSOSK_Mod_Debug {
 						<tr>
 							<td><?php echo esc_html( $log['label'] ); ?></td>
 							<td class="tsosk-code"><?php echo esc_html( $log['path'] ); ?></td>
-							<td><?php echo $log['exists'] ? esc_html( size_format( $log['size'], 2 ) ) : esc_html__( 'Not found', 'tso-swiss-knife' ); ?></td>
-							<td><?php echo $log['modified'] ? esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife' ); ?></td>
+							<td><?php echo $log['exists'] ? esc_html( size_format( $log['size'], 2 ) ) : esc_html__( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+							<td><?php echo $log['modified'] ? esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 							<td class="tsosk-log-actions-cell">
 								<div class="tsosk-log-actions">
 									<?php if ( $log['exists'] && $log['readable'] ) : ?>
 										<a href="#tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>" class="button button-small">
-											<?php esc_html_e( 'View content', 'tso-swiss-knife' ); ?>
+											<?php esc_html_e( 'View content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</a>
 									<?php endif; ?>
 									<?php if ( $log['exists'] && $log['writable'] ) : ?>
@@ -820,13 +820,13 @@ class TSOSK_Mod_Debug {
 										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
 										        data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
-											<?php esc_html_e( 'Shrink (keep last 500 lines)', 'tso-swiss-knife' ); ?>
+											<?php esc_html_e( 'Shrink (keep last 500 lines)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
 										<button type="button" class="button button-small button-link-delete tsosk-clear-log"
 										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
 										        data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
-											<?php esc_html_e( 'Empty file', 'tso-swiss-knife' ); ?>
+											<?php esc_html_e( 'Empty file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
 									<?php endif; ?>
 								</div>
@@ -851,16 +851,16 @@ class TSOSK_Mod_Debug {
 					<strong><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></strong>
 				</p>
 				<div class="tsosk-toolbar">
-					<input type="text" class="tsosk-log-search" placeholder="<?php esc_attr_e( 'Search this log...', 'tso-swiss-knife' ); ?>">
+					<input type="text" class="tsosk-log-search" placeholder="<?php esc_attr_e( 'Search this log...', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					<select class="tsosk-log-level">
-						<option value="all"><?php esc_html_e( 'All levels', 'tso-swiss-knife' ); ?></option>
-						<option value="error"><?php esc_html_e( 'Errors', 'tso-swiss-knife' ); ?></option>
-						<option value="warning"><?php esc_html_e( 'Warnings', 'tso-swiss-knife' ); ?></option>
-						<option value="notice"><?php esc_html_e( 'Notices', 'tso-swiss-knife' ); ?></option>
-						<option value="deprecated"><?php esc_html_e( 'Deprecated', 'tso-swiss-knife' ); ?></option>
+						<option value="all"><?php esc_html_e( 'All levels', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="error"><?php esc_html_e( 'Errors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="warning"><?php esc_html_e( 'Warnings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="notice"><?php esc_html_e( 'Notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="deprecated"><?php esc_html_e( 'Deprecated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 					<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'tsosk_debug_download_log', 'log_path' => $log['path'] ), admin_url( 'admin-post.php' ) ), 'tsosk_debug_download_log' ) ); ?>">
-						<?php esc_html_e( 'Download Log', 'tso-swiss-knife' ); ?>
+						<?php esc_html_e( 'Download Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 				</div>
 				<div class="tsosk-log-preview" id="tsosk-debug-log-content-<?php echo esc_attr( md5( $log['path'] ) ); ?>">
@@ -902,7 +902,7 @@ class TSOSK_Mod_Debug {
 		<div class="tsosk-card">
 			<h3>
 				<span class="dashicons dashicons-database" aria-hidden="true"></span>
-				<?php esc_html_e( 'Database Queries (SAVEQUERIES)', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'Database Queries (SAVEQUERIES)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<?php if ( $sq_enabled && $sq_count ) : ?>
 				<span class="tsosk-badge <?php echo $sq_count > 100 ? 'tsosk-badge-warn' : 'tsosk-badge-info'; ?>"
 				      style="margin-left:8px;font-size:12px;">
@@ -913,12 +913,12 @@ class TSOSK_Mod_Debug {
 
 			<?php if ( ! $sq_enabled ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( 'SAVEQUERIES is not active.', 'tso-swiss-knife' ); ?></strong>
-				<?php esc_html_e( 'Enable it above, save and reload this page to see the full list of database queries executed on this page load. Only use this while debugging — it has a memory overhead on every request.', 'tso-swiss-knife' ); ?>
+				<strong><?php esc_html_e( 'SAVEQUERIES is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'Enable it above, save and reload this page to see the full list of database queries executed on this page load. Only use this while debugging — it has a memory overhead on every request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php elseif ( ! $sq_count ) : ?>
 			<p class="description">
-				<?php esc_html_e( 'SAVEQUERIES is active but no queries were recorded yet. Reload the page.', 'tso-swiss-knife' ); ?>
+				<?php esc_html_e( 'SAVEQUERIES is active but no queries were recorded yet. Reload the page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php else : ?>
 
@@ -928,37 +928,37 @@ class TSOSK_Mod_Debug {
 					<span class="tsosk-sq-stat-val <?php echo $sq_count > 100 ? 'tsosk-sq-warn' : ''; ?>">
 						<?php echo esc_html( (string) $sq_count ); ?>
 					</span>
-					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total queries', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-sq-stat">
 					<span class="tsosk-sq-stat-val <?php echo $sq_total > 0.5 ? 'tsosk-sq-warn' : ''; ?>">
 						<?php echo esc_html( number_format( $sq_total * 1000, 2 ) ); ?> ms
 					</span>
-					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total time', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-sq-stat">
 					<span class="tsosk-sq-stat-val <?php echo $sq_max > 0.1 ? 'tsosk-sq-warn' : ''; ?>">
 						<?php echo esc_html( number_format( $sq_max * 1000, 2 ) ); ?> ms
 					</span>
-					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Slowest query', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Slowest query', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<?php if ( ! empty( $sq_dupes ) ) : ?>
 				<div class="tsosk-sq-stat">
 					<span class="tsosk-sq-stat-val tsosk-sq-warn">
 						<?php echo esc_html( (string) count( $sq_dupes ) ); ?>
 					</span>
-					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Duplicate queries', 'tso-swiss-knife' ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Duplicate queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<?php endif; ?>
 			</div>
 
 			<?php if ( ! empty( $sq_dupes ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-warn" style="margin-bottom:12px;">
-				<strong><?php esc_html_e( '⚠ Duplicate queries detected.', 'tso-swiss-knife' ); ?></strong>
+				<strong><?php esc_html_e( '⚠ Duplicate queries detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php
 				printf(
 					/* translators: %d: number of distinct duplicate queries */
-					esc_html__( '%d distinct queries are executed more than once. This often indicates a plugin calling get_option(), get_post_meta() or similar in a loop without caching.', 'tso-swiss-knife' ),
+					esc_html__( '%d distinct queries are executed more than once. This often indicates a plugin calling get_option(), get_post_meta() or similar in a loop without caching.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) count( $sq_dupes )
 				);
 				?>
@@ -968,15 +968,15 @@ class TSOSK_Mod_Debug {
 			<?php /* Filter bar */ ?>
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
 				<input type="text" id="tsosk-sq-filter"
-				       placeholder="<?php esc_attr_e( 'Filter queries…', 'tso-swiss-knife' ); ?>"
+				       placeholder="<?php esc_attr_e( 'Filter queries…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 				       style="min-width:220px;" autocomplete="off">
 				<label style="font-size:13px;">
 					<input type="checkbox" id="tsosk-sq-dupes-only">
-					<?php esc_html_e( 'Show duplicates only', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Show duplicates only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<label style="font-size:13px;">
 					<input type="checkbox" id="tsosk-sq-slow-only">
-					<?php esc_html_e( 'Show slow only (>5 ms)', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Show slow only (>5 ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</label>
 				<span id="tsosk-sq-count-shown" style="font-size:12px;color:#646970;"></span>
 			</div>
@@ -985,9 +985,9 @@ class TSOSK_Mod_Debug {
 			<table class="widefat tsosk-table" id="tsosk-sq-table">
 				<thead><tr>
 					<th style="width:44px;">#</th>
-					<th style="width:70px;"><?php esc_html_e( 'Time', 'tso-swiss-knife' ); ?></th>
-					<th><?php esc_html_e( 'SQL', 'tso-swiss-knife' ); ?></th>
-					<th style="width:30%;"><?php esc_html_e( 'Called by', 'tso-swiss-knife' ); ?></th>
+					<th style="width:70px;"><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'SQL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:30%;"><?php esc_html_e( 'Called by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
 				<tbody>
 				<?php
@@ -1029,7 +1029,7 @@ class TSOSK_Mod_Debug {
 							<?php
 							printf(
 								/* translators: %d: number of times query ran */
-								esc_html__( '×%d', 'tso-swiss-knife' ),
+								esc_html__( '×%d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								(int) $sq_sql_map[ $sql_clean ]
 							);
 							?>

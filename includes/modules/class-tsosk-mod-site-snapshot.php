@@ -63,23 +63,23 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	public static function get_section_labels(): array {
 		return array(
-			'redirects'            => __( 'Redirects', 'tso-swiss-knife' ),
-			'heartbeat'            => __( 'Heartbeat settings', 'tso-swiss-knife' ),
-			'update_manager'       => __( 'Update Manager settings', 'tso-swiss-knife' ),
-			'rest_api'             => __( 'REST API settings', 'tso-swiss-knife' ),
-			'maintenance'          => __( 'Maintenance mode', 'tso-swiss-knife' ),
-			'hidden_profiles'      => __( 'Hidden WordPress profiles', 'tso-swiss-knife' ),
-			'alert_settings'       => __( 'Health email alerts', 'tso-swiss-knife' ),
-			'health_suppress'      => __( 'Site Health notice suppression', 'tso-swiss-knife' ),
-			'login_protect'        => __( 'Login protection', 'tso-swiss-knife' ),
-			'login_lockouts'       => __( 'Login lockout log', 'tso-swiss-knife' ),
-			'login_attempts'       => __( 'Login attempt counters', 'tso-swiss-knife' ),
-			'slow_queries'         => __( 'Slow query monitor', 'tso-swiss-knife' ),
-			'custom_404'           => __( 'Custom 404 page', 'tso-swiss-knife' ),
-			'admin_menu'           => __( 'Admin menu customizer', 'tso-swiss-knife' ),
-			'admin_menu_manifest'  => __( 'Admin menu manifest', 'tso-swiss-knife' ),
-			'disabled_image_sizes' => __( 'Disabled image sizes', 'tso-swiss-knife' ),
-			'fi_ignored'           => __( 'File integrity ignored files', 'tso-swiss-knife' ),
+			'redirects'            => __( 'Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'heartbeat'            => __( 'Heartbeat settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update_manager'       => __( 'Update Manager settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rest_api'             => __( 'REST API settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'maintenance'          => __( 'Maintenance mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'hidden_profiles'      => __( 'Hidden WordPress profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'alert_settings'       => __( 'Health email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'health_suppress'      => __( 'Site Health notice suppression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_protect'        => __( 'Login protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_lockouts'       => __( 'Login lockout log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_attempts'       => __( 'Login attempt counters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'slow_queries'         => __( 'Slow query monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'custom_404'           => __( 'Custom 404 page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'admin_menu'           => __( 'Admin menu customizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'admin_menu_manifest'  => __( 'Admin menu manifest', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disabled_image_sizes' => __( 'Disabled image sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'fi_ignored'           => __( 'File integrity ignored files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -121,7 +121,7 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	public function handle_export(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife' ) );
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		check_admin_referer( 'tsosk_snapshot_export' );
 
@@ -133,8 +133,8 @@ class TSOSK_Mod_Site_Snapshot {
 		}
 		if ( isset( $_POST['tsosk_snapshot_export'] ) && empty( $sections ) ) {
 			wp_die(
-				esc_html__( 'Select at least one section to export.', 'tso-swiss-knife' ),
-				esc_html__( 'Export/Import TSO Configuration', 'tso-swiss-knife' ),
+				esc_html__( 'Select at least one section to export.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				esc_html__( 'Export/Import TSO Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				array( 'response' => 400, 'back_link' => true )
 			);
 		}
@@ -145,7 +145,7 @@ class TSOSK_Mod_Site_Snapshot {
 		$data = $this->build_snapshot( $sections );
 		$json = wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		if ( ! is_string( $json ) ) {
-			wp_die( esc_html__( 'Could not encode snapshot.', 'tso-swiss-knife' ) );
+			wp_die( esc_html__( 'Could not encode snapshot.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$exported_sections = array_keys( $data['sections'] ?? array() );
@@ -155,7 +155,7 @@ class TSOSK_Mod_Site_Snapshot {
 				'export',
 				sprintf(
 					/* translators: %s: comma-separated section labels */
-					__( 'Site snapshot exported: %s.', 'tso-swiss-knife' ),
+					__( 'Site snapshot exported: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$this->format_section_list( $exported_sections )
 				)
 			);
@@ -177,26 +177,26 @@ class TSOSK_Mod_Site_Snapshot {
 	public function ajax_import(): void {
 		check_ajax_referer( 'tsosk_snapshot_import_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON file body.
 		$raw = isset( $_POST['snapshot'] ) ? wp_unslash( $_POST['snapshot'] ) : '';
 		if ( '' === $raw ) {
-			wp_send_json_error( __( 'No snapshot data received.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'No snapshot data received.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$data = json_decode( $raw, true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
-			wp_send_json_error( __( 'The snapshot JSON could not be parsed.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'The snapshot JSON could not be parsed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( ( $data['format'] ?? '' ) !== 'tsosk-site-snapshot' ) {
-			wp_send_json_error( __( 'Invalid snapshot file format.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Invalid snapshot file format.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$sections = $data['sections'] ?? array();
 		if ( ! is_array( $sections ) || empty( $sections ) ) {
-			wp_send_json_error( __( 'Snapshot contains no sections to import.', 'tso-swiss-knife' ) );
+			wp_send_json_error( __( 'Snapshot contains no sections to import.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$sections_filter = array();
@@ -236,7 +236,7 @@ class TSOSK_Mod_Site_Snapshot {
 		if ( empty( $imported ) ) {
 			$message = ! empty( $skipped )
 				? implode( ' ', $skipped )
-				: __( 'No recognised sections were imported.', 'tso-swiss-knife' );
+				: __( 'No recognised sections were imported.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			wp_send_json_error( $message );
 		}
 
@@ -245,20 +245,20 @@ class TSOSK_Mod_Site_Snapshot {
 			'import',
 			sprintf(
 				/* translators: %s: comma-separated section labels */
-				__( 'Site snapshot imported: %s.', 'tso-swiss-knife' ),
+				__( 'Site snapshot imported: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$this->format_section_list( $imported )
 			)
 		);
 
 		$response = sprintf(
 			/* translators: %s: comma-separated section labels */
-			__( 'Imported sections: %s. Reload affected tabs to verify settings.', 'tso-swiss-knife' ),
+			__( 'Imported sections: %s. Reload affected tabs to verify settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$this->format_section_list( $imported )
 		);
 		if ( ! empty( $skipped ) ) {
 			$response .= ' ' . sprintf(
 				/* translators: %s: skipped section errors */
-				__( 'Skipped invalid sections: %s', 'tso-swiss-knife' ),
+				__( 'Skipped invalid sections: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				implode( '; ', $skipped )
 			);
 		}
@@ -292,7 +292,7 @@ class TSOSK_Mod_Site_Snapshot {
 						'invalid_section',
 						sprintf(
 							/* translators: %s: section id */
-							__( 'Section "%s" must be an object.', 'tso-swiss-knife' ),
+							__( 'Section "%s" must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 							$section
 						)
 					);
@@ -307,7 +307,7 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	private function sanitize_redirects_import( $value ) {
 		if ( ! is_array( $value ) ) {
-			return new WP_Error( 'invalid_redirects', __( 'Redirects section must be an object.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_redirects', __( 'Redirects section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$out = array();
@@ -349,7 +349,7 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	private function sanitize_login_protect_import( $value ) {
 		if ( ! is_array( $value ) ) {
-			return new WP_Error( 'invalid_login_protect', __( 'Login protection section must be an object.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_login_protect', __( 'Login protection section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$roles = array();
@@ -389,10 +389,10 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	private function sanitize_lockout_log_import( $value ) {
 		if ( ! is_array( $value ) ) {
-			return new WP_Error( 'invalid_lockouts', __( 'Login lockout log must be an array.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_lockouts', __( 'Login lockout log must be an array.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( count( $value ) > 200 ) {
-			return new WP_Error( 'invalid_lockouts', __( 'Login lockout log exceeds the maximum allowed entries.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_lockouts', __( 'Login lockout log exceeds the maximum allowed entries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$out = array();
@@ -419,10 +419,10 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	private function sanitize_attempts_import( $value ) {
 		if ( ! is_array( $value ) ) {
-			return new WP_Error( 'invalid_attempts', __( 'Login attempt counters must be an object.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_attempts', __( 'Login attempt counters must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( count( $value ) > 500 ) {
-			return new WP_Error( 'invalid_attempts', __( 'Login attempt counters exceed the maximum allowed entries.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_attempts', __( 'Login attempt counters exceed the maximum allowed entries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$out = array();
@@ -450,14 +450,14 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	private function sanitize_string_list_import( $value, int $max ) {
 		if ( ! is_array( $value ) ) {
-			return new WP_Error( 'invalid_list', __( 'Expected a list of strings.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'invalid_list', __( 'Expected a list of strings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( count( $value ) > $max ) {
 			return new WP_Error(
 				'invalid_list',
 				sprintf(
 					/* translators: %d: maximum items */
-					__( 'List exceeds the maximum of %d items.', 'tso-swiss-knife' ),
+					__( 'List exceeds the maximum of %d items.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$max
 				)
 			);
@@ -501,19 +501,19 @@ class TSOSK_Mod_Site_Snapshot {
 		$labels       = self::get_section_labels();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Save and restore site snapshots of selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Only plugin-owned settings are included — never wp-config or license keys.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Save and restore site snapshots of selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Only plugin-owned settings are included — never wp-config or license keys.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-warn">
-			<?php esc_html_e( 'Import overwrites existing settings for the selected sections. Always export a backup first and test on staging.', 'tso-swiss-knife' ); ?>
+			<?php esc_html_e( 'Import overwrites existing settings for the selected sections. Always export a backup first and test on staging.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Export snapshot', 'tso-swiss-knife' ); ?></h3>
+			<h3><?php esc_html_e( 'Export snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<form method="post" action="<?php echo esc_url( $export_url ); ?>" id="tsosk-snapshot-export-form">
 				<?php wp_nonce_field( 'tsosk_snapshot_export' ); ?>
 				<input type="hidden" name="tsosk_snapshot_export" value="1">
-				<p class="description"><?php esc_html_e( 'Select sections to include in the JSON file:', 'tso-swiss-knife' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Select sections to include in the JSON file:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 				<ul style="list-style:none;margin:12px 0;padding:0;">
 					<?php foreach ( $labels as $id => $label ) : ?>
 					<li style="margin-bottom:6px;">
@@ -524,29 +524,29 @@ class TSOSK_Mod_Site_Snapshot {
 					</li>
 					<?php endforeach; ?>
 				</ul>
-				<button type="submit" class="button button-primary"><?php esc_html_e( 'Download JSON snapshot', 'tso-swiss-knife' ); ?></button>
+				<button type="submit" class="button button-primary"><?php esc_html_e( 'Download JSON snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</form>
 		</div>
 
 		<div class="tsosk-card" style="margin-top:16px;">
-			<h3><?php esc_html_e( 'Import snapshot', 'tso-swiss-knife' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Paste JSON from a previous export or upload a .json file. You can choose which sections to restore.', 'tso-swiss-knife' ); ?></p>
+			<h3><?php esc_html_e( 'Import snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Paste JSON from a previous export or upload a .json file. You can choose which sections to restore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<p>
 				<input type="file" id="tsosk-snapshot-file" accept=".json,application/json">
 			</p>
 			<textarea id="tsosk-snapshot-json" rows="10" style="width:100%;font-family:monospace;"
-			          placeholder="<?php esc_attr_e( '{ "format": "tsosk-site-snapshot", ... }', 'tso-swiss-knife' ); ?>"></textarea>
+			          placeholder="<?php esc_attr_e( '{ "format": "tsosk-site-snapshot", ... }', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></textarea>
 			<div id="tsosk-snapshot-import-sections" class="tsosk-card" style="margin-top:12px;display:none;padding:12px;">
 				<p class="description" style="margin-top:0;">
-					<strong><?php esc_html_e( 'Sections in this file', 'tso-swiss-knife' ); ?>:</strong>
-					<?php esc_html_e( 'Uncheck any section you do not want to overwrite.', 'tso-swiss-knife' ); ?>
+					<strong><?php esc_html_e( 'Sections in this file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+					<?php esc_html_e( 'Uncheck any section you do not want to overwrite.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 				<ul id="tsosk-snapshot-import-list" style="list-style:none;margin:8px 0;padding:0;"></ul>
 			</div>
 			<p style="margin-top:10px;">
 				<button type="button" class="button button-primary" id="tsosk-snapshot-import"
 				        data-nonce="<?php echo esc_attr( $import_nonce ); ?>">
-					<?php esc_html_e( 'Import snapshot', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Import snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-snapshot-msg"></span>
 			</p>

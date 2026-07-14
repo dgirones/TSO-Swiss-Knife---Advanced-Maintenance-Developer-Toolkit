@@ -63,7 +63,7 @@ class TSOSK_Mod_Hooks {
 			<?php
 			printf(
 				/* translators: %d: number of registered hooks */
-				esc_html__( '%d hooks are currently registered. This view is a snapshot at page load. Results are paginated to prevent server timeouts.', 'tso-swiss-knife' ),
+				esc_html__( '%d hooks are currently registered. This view is a snapshot at page load. Results are paginated to prevent server timeouts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(int) $total
 			);
 			?>
@@ -73,12 +73,12 @@ class TSOSK_Mod_Hooks {
 			<input type="hidden" name="page" value="tso-swiss-knife">
 			<input type="hidden" name="tab"  value="hooks">
 			<input type="text" name="tsosk_hook_search" value="<?php echo esc_attr( $search ); ?>"
-			       placeholder="<?php esc_attr_e( 'Filter hook name…', 'tso-swiss-knife' ); ?>"
+			       placeholder="<?php esc_attr_e( 'Filter hook name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 			       class="tsosk-hooks-search-input">
-			<?php submit_button( __( 'Filter', 'tso-swiss-knife' ), 'secondary', '', false ); ?>
+			<?php submit_button( __( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'secondary', '', false ); ?>
 			<?php if ( $search ) : ?>
 				<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'tso-swiss-knife', 'tab' => 'hooks' ), admin_url( 'tools.php' ) ) ); ?>" class="button">
-					<?php esc_html_e( 'Clear', 'tso-swiss-knife' ); ?>
+					<?php esc_html_e( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 			<?php endif; ?>
 		</form>
@@ -86,20 +86,20 @@ class TSOSK_Mod_Hooks {
 		<?php if ( $total_pages > 1 ) : ?>
 		<div class="tsosk-pagination tsosk-hooks-pagination">
 			<?php if ( $paged > 1 ) : ?>
-				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged - 1, $base_url ) ); ?>">&#8592; <?php esc_html_e( 'Previous', 'tso-swiss-knife' ); ?></a>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged - 1, $base_url ) ); ?>">&#8592; <?php esc_html_e( 'Previous', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 			<?php endif; ?>
 			<span style="margin:0 8px;">
 				<?php
 				printf(
 					/* translators: 1: current page, 2: total pages */
-					esc_html__( 'Page %1$d of %2$d', 'tso-swiss-knife' ),
+					esc_html__( 'Page %1$d of %2$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $paged,
 					(int) $total_pages
 				);
 				?>
 			</span>
 			<?php if ( $paged < $total_pages ) : ?>
-				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged + 1, $base_url ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife' ); ?> &#8594;</a>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged + 1, $base_url ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> &#8594;</a>
 			<?php endif; ?>
 		</div>
 		<?php endif; ?>
@@ -108,10 +108,10 @@ class TSOSK_Mod_Hooks {
 			<table class="widefat tsosk-table tsosk-hooks-table" id="tsosk-hooks-table">
 				<thead>
 					<tr>
-						<th class="tsosk-hooks-col-hook"><?php esc_html_e( 'Hook', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-hooks-col-priority"><?php esc_html_e( 'Priority', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-hooks-col-callback"><?php esc_html_e( 'Callback', 'tso-swiss-knife' ); ?></th>
-						<th class="tsosk-hooks-col-args"><?php esc_html_e( 'Args', 'tso-swiss-knife' ); ?></th>
+						<th class="tsosk-hooks-col-hook"><?php esc_html_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-hooks-col-priority"><?php esc_html_e( 'Priority', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-hooks-col-callback"><?php esc_html_e( 'Callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-hooks-col-args"><?php esc_html_e( 'Args', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -152,20 +152,20 @@ class TSOSK_Mod_Hooks {
 		<?php if ( $total_pages > 1 ) : ?>
 		<div class="tsosk-pagination tsosk-hooks-pagination tsosk-hooks-pagination-bottom">
 			<?php if ( $paged > 1 ) : ?>
-				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged - 1, $base_url ) ); ?>">&#8592; <?php esc_html_e( 'Previous', 'tso-swiss-knife' ); ?></a>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged - 1, $base_url ) ); ?>">&#8592; <?php esc_html_e( 'Previous', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 			<?php endif; ?>
 			<span>
 				<?php
 				printf(
 					/* translators: 1: current page, 2: total pages */
-					esc_html__( 'Page %1$d of %2$d', 'tso-swiss-knife' ),
+					esc_html__( 'Page %1$d of %2$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $paged,
 					(int) $total_pages
 				);
 				?>
 			</span>
 			<?php if ( $paged < $total_pages ) : ?>
-				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged + 1, $base_url ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife' ); ?> &#8594;</a>
+				<a class="button" href="<?php echo esc_url( add_query_arg( 'tsosk_hooks_page', $paged + 1, $base_url ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> &#8594;</a>
 			<?php endif; ?>
 		</div>
 		<?php endif; ?>

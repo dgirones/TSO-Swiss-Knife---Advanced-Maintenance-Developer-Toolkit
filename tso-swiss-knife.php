@@ -5,7 +5,7 @@
  * Version:     1.0.0
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
- * Text Domain: tso-swiss-knife
+ * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
  * Domain Path: /languages
  * Requires at least: 5.9
  * Requires PHP: 8.0
@@ -26,6 +26,7 @@ define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
+define( 'TSOSK_TEXT_DOMAIN', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 // Config directory inside wp-content/uploads (WP.org compliant location for writable files).
 $tsosk_uploads_dir = WP_CONTENT_DIR . '/uploads';
 if ( function_exists( 'wp_upload_dir' ) ) {

@@ -87,18 +87,18 @@ class TSOSK_Config_Storage {
 	public static function write_json( string $filename, array $data ) {
 		$dir = self::get_dir();
 		if ( ! self::ensure_dir( $dir ) ) {
-			return new WP_Error( 'not_writable', __( 'The config directory is not writable.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'not_writable', __( 'The config directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$json = wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 		if ( ! is_string( $json ) ) {
-			return new WP_Error( 'encode_failed', __( 'Could not encode config data.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'encode_failed', __( 'Could not encode config data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$path = self::path_for( $filename );
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- non-executable JSON in uploads.
 		if ( false === file_put_contents( $path, $json . "\n" ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife' ) );
+			return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		return true;
 	}
