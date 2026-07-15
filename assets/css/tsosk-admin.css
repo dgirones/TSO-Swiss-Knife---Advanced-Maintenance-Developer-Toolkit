@@ -1191,6 +1191,14 @@
     flex-wrap: wrap;
 }
 
+.tsosk-dev-mode-desc {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    max-width: none;
+    line-height: 1.6;
+}
+
 .tsosk-debug-advanced {
     margin-top: 16px;
     padding-top: 12px;

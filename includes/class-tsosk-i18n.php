@@ -48,6 +48,7 @@ class TSOSK_I18n {
 		add_filter( 'locale', array( $this, 'filter_locale' ), 10, 1 );
 		add_filter( 'determine_locale', array( $this, 'filter_locale' ), 10, 1 );
 		add_action( 'init', array( $this, 'load_bundled_translations' ), 20 );
+		add_action( 'admin_init', array( $this, 'load_bundled_translations' ), 1 );
 	}
 
 	/**
@@ -182,21 +183,26 @@ class TSOSK_I18n {
 	 * @return string Readable .mo path or empty string.
 	 */
 	private function resolve_mo_file( string $suffix ): string {
-		$domain   = TSOSK_TEXT_DOMAIN;
-		$pofile   = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.po';
-		$bundled  = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.mo';
-		$cache    = WP_CONTENT_DIR . '/uploads/tsosk-l10n/' . $domain . '-' . $suffix . '.mo';
-
-		// Bundled .mo shipped with the plugin always wins over uploads cache (avoids stale runtime copies).
-		if ( is_readable( $bundled ) ) {
-			return $bundled;
-		}
+		$domain  = TSOSK_TEXT_DOMAIN;
+		$pofile  = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.po';
+		$bundled = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.mo';
+		$cache   = WP_CONTENT_DIR . '/uploads/tsosk-l10n/' . $domain . '-' . $suffix . '.mo';
 
 		if ( ! is_readable( $pofile ) ) {
+			if ( is_readable( $bundled ) ) {
+				return $bundled;
+			}
 			return is_readable( $cache ) ? $cache : '';
 		}
 
-		if ( is_readable( $cache ) && filemtime( $cache ) >= filemtime( $pofile ) ) {
+		$po_mtime = (int) filemtime( $pofile );
+
+		// Bundled .mo is used only when it is at least as new as the source .po.
+		if ( is_readable( $bundled ) && (int) filemtime( $bundled ) >= $po_mtime ) {
+			return $bundled;
+		}
+
+		if ( is_readable( $cache ) && (int) filemtime( $cache ) >= $po_mtime ) {
 			return $cache;
 		}
 
@@ -205,7 +211,8 @@ class TSOSK_I18n {
 			return $compiled;
 		}
 
-		return '';
+		// Fall back to bundled .mo even if stale (better than no catalog).
+		return is_readable( $bundled ) ? $bundled : '';
 	}
 
 	/**

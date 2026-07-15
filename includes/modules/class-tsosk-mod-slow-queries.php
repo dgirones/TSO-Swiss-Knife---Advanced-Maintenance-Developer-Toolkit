@@ -404,7 +404,7 @@ class TSOSK_Mod_Slow_Queries {
 		<?php if ( $s['enabled'] && ! $savequeries_on ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">
 			<strong><?php esc_html_e( '⚠ SAVEQUERIES is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-			<?php esc_html_e( 'The monitor is enabled but cannot capture queries because SAVEQUERIES is false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'The monitor is enabled but cannot capture queries because SAVEQUERIES is false. Enable Developer mode in Debug Mode, or set SAVEQUERIES in wp-config.php manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php elseif ( ! $s['enabled'] ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">

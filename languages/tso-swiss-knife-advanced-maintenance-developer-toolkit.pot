@@ -3341,6 +3341,15 @@ msgstr ""
 msgid "Deprecated"
 msgstr ""
 
+msgid "Refresh"
+msgstr ""
+
+msgid "Log preview updated."
+msgstr ""
+
+msgid "Log is already up to date."
+msgstr ""
+
 msgid "Download Log"
 msgstr ""
 
@@ -3798,8 +3807,8 @@ msgstr ""
 
 msgid ""
 "The monitor is enabled but cannot capture queries because SAVEQUERIES is "
-"false. Go to Debug Mode → Constants and add SAVEQUERIES = true to wp-"
-"config.php."
+"false. Enable Developer mode in Debug Mode, or set SAVEQUERIES in wp-config.php "
+"manually."
 msgstr ""
 
 msgid ""
@@ -5550,30 +5559,26 @@ msgid "Open REST API settings →"
 msgstr ""
 
 msgid ""
-"Enable logging and inspect error files on this site. Constants already "
-"defined in wp-config.php take precedence over the plugin config file."
+"Inspect error logs and manage debug settings from this tab. Constants already "
+"defined in wp-config.php cannot be changed from the plugin."
 msgstr ""
 
 msgid ""
-"Recommended on staging: one click enables WP_DEBUG, debug.log, SAVEQUERIES "
-"and hides errors from visitors. Settings are saved to tsosk-config and only "
-"apply when those constants are not already set in wp-config.php."
+"Recommended on staging: one click saves a debug preset (WP_DEBUG, debug.log, "
+"SAVEQUERIES; errors hidden from visitors) as JSON in your uploads folder. "
+"Reload the page to apply. Does not override constants already set in "
+"wp-config.php."
 msgstr ""
 
 msgid ""
-"Current values for each constant. Use the buttons to add or change them "
-"directly in wp-config.php when you need full control."
-msgstr ""
-
-msgid "Advanced: write debug flags to wp-config.php"
+"Values active on this page load. Use Developer mode above to toggle the debug "
+"preset. Constants locked in wp-config.php are labelled below and cannot be "
+"overridden here."
 msgstr ""
 
 msgid ""
-"Use this only when you want the settings hard-coded in wp-config.php instead"
-" of tsosk-config. A backup is recommended before modifying wp-config.php."
-msgstr ""
-
-msgid "Enable debug.log in wp-config.php"
+"Created by WordPress when WP_DEBUG and WP_DEBUG_LOG are true. Enable them "
+"with Developer mode above."
 msgstr ""
 
 msgid "View = scroll to preview below. Empty = delete entries, keep file."

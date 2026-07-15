@@ -38,6 +38,7 @@ class TSOSK_Mod_Debug {
 		add_action( 'wp_ajax_tsosk_debug_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_debug_clear_log', array( $this, 'ajax_clear_log' ) );
 		add_action( 'wp_ajax_tsosk_debug_shrink_log', array( $this, 'ajax_shrink_log' ) );
+		add_action( 'wp_ajax_tsosk_debug_refresh_log', array( $this, 'ajax_refresh_log' ) );
 		add_action( 'admin_post_tsosk_debug_download_log', array( $this, 'download_log' ) );
 		add_action( 'wp_ajax_tsosk_debug_developer_mode', array( $this, 'ajax_developer_mode' ) );
 	}
@@ -284,6 +285,79 @@ class TSOSK_Mod_Debug {
 			return 'notice';
 		}
 		return 'info';
+	}
+
+	/**
+	 * Build preview markup for a readable log file.
+	 *
+	 * @param string $path Log file path.
+	 * @return string
+	 */
+	private function render_log_preview_html( string $path ): string {
+		$preview = $this->read_log_preview( $path );
+		$lines   = preg_split( '/\R/', $preview );
+		if ( ! is_array( $lines ) ) {
+			return '';
+		}
+
+		$html = '';
+		foreach ( $lines as $line ) {
+			if ( '' === $line ) {
+				continue;
+			}
+			$html .= '<div class="tsosk-log-line" data-level="' . esc_attr( $this->classify_log_line( $line ) ) . '">'
+				. esc_html( $line ) . '</div>';
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Format a log file modified timestamp for admin display.
+	 *
+	 * @param int $timestamp Unix timestamp.
+	 * @return string
+	 */
+	private function format_log_modified( int $timestamp ): string {
+		if ( $timestamp <= 0 ) {
+			return __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		return (string) date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp );
+	}
+
+	/**
+	 * AJAX: reload the tail preview for a detected log file.
+	 */
+	public function ajax_refresh_log(): void {
+		check_ajax_referer( 'tsosk_debug_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : '';
+		$last_mtime = isset( $_POST['last_modified'] ) ? absint( wp_unslash( $_POST['last_modified'] ) ) : 0;
+		$log        = $this->validate_log_path( $posted_log );
+
+		if ( '' === $log || ! file_exists( $log ) || ! is_readable( $log ) ) {
+			wp_send_json_error( __( 'Log file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$mtime     = (int) filemtime( $log );
+		$size      = (int) filesize( $log );
+		$unchanged = $last_mtime > 0 && $mtime === $last_mtime;
+
+		wp_send_json_success(
+			array(
+				'html'            => $unchanged ? '' : $this->render_log_preview_html( $log ),
+				'size'            => size_format( $size, 2 ),
+				'modified'        => $mtime,
+				'modified_label'  => $this->format_log_modified( $mtime ),
+				'unchanged'       => $unchanged,
+				'message'         => $unchanged
+					? __( 'Log is already up to date.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Log preview updated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			)
+		);
 	}
 
 	/**
@@ -650,13 +724,13 @@ class TSOSK_Mod_Debug {
 		$dev_active = class_exists( 'TSOSK_Site_Status' ) && TSOSK_Site_Status::is_developer_mode_active();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Enable logging and inspect error files on this site. Constants already defined in wp-config.php take precedence over the plugin config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Inspect error logs and manage debug settings from this tab. Constants already defined in wp-config.php cannot be changed from the plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card tsosk-dev-mode-card">
 			<h3><?php esc_html_e( 'Developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description">
-				<?php esc_html_e( 'Recommended on staging: one click enables WP_DEBUG, debug.log, SAVEQUERIES and hides errors from visitors. Settings are saved to tsosk-config and only apply when those constants are not already set in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<p class="description tsosk-dev-mode-desc">
+				<?php esc_html_e( 'Recommended on staging: one click saves a debug preset (WP_DEBUG, debug.log, SAVEQUERIES; errors hidden from visitors) as JSON in your uploads folder. Reload the page to apply. Does not override constants already set in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-dev-mode-actions">
 				<button type="button" class="button button-primary" id="tsosk-debug-developer-on"
@@ -703,7 +777,7 @@ class TSOSK_Mod_Debug {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Debug Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Current runtime values. Constants already defined in wp-config.php take precedence over the plugin JSON config in uploads/tsosk-config.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Values active on this page load. Use Developer mode above to toggle the debug preset. Constants locked in wp-config.php are labelled below and cannot be overridden here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<div class="tsosk-debug-flags" id="tsosk-debug-form">
@@ -783,7 +857,7 @@ class TSOSK_Mod_Debug {
 			</p>
 			<div class="tsosk-notice tsosk-notice-info">
 				<strong><?php esc_html_e( 'debug.log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
-				<?php esc_html_e( 'Created by WordPress when WP_DEBUG=true and WP_DEBUG_LOG=true. Use the constants above to enable it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Created by WordPress when WP_DEBUG and WP_DEBUG_LOG are true. Enable them with Developer mode above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<br>
 				<strong><?php esc_html_e( 'error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
 				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files; only wp-content/debug.log can be emptied or shrunk from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -803,17 +877,22 @@ class TSOSK_Mod_Debug {
 					</thead>
 					<tbody>
 						<?php foreach ( $logs as $log ) : ?>
-						<tr>
+						<tr class="tsosk-log-row" data-log-path="<?php echo esc_attr( $log['path'] ); ?>" data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
 							<td><?php echo esc_html( $log['label'] ); ?></td>
 							<td class="tsosk-code"><?php echo esc_html( $log['path'] ); ?></td>
-							<td><?php echo $log['exists'] ? esc_html( size_format( $log['size'], 2 ) ) : esc_html__( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-							<td><?php echo $log['modified'] ? esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+							<td class="tsosk-log-size-cell"><?php echo $log['exists'] ? esc_html( size_format( $log['size'], 2 ) ) : esc_html__( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+							<td class="tsosk-log-modified-cell"><?php echo $log['modified'] ? esc_html( $this->format_log_modified( $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 							<td class="tsosk-log-actions-cell">
 								<div class="tsosk-log-actions">
 									<?php if ( $log['exists'] && $log['readable'] ) : ?>
 										<a href="#tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'View content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</a>
+										<button type="button" class="button button-small tsosk-refresh-log"
+										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
+											<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+										</button>
 									<?php endif; ?>
 									<?php if ( $log['exists'] && $log['writable'] ) : ?>
 										<button type="button" class="button button-small tsosk-shrink-log"
@@ -843,12 +922,14 @@ class TSOSK_Mod_Debug {
 			<?php if ( ! $log['exists'] || ! $log['readable'] ) : ?>
 				<?php continue; ?>
 			<?php endif; ?>
-			<div class="tsosk-card" id="tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>">
+			<div class="tsosk-card tsosk-log-card" id="tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>"
+			     data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
+			     data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
 				<h3><?php echo esc_html( $log['label'] ); ?></h3>
-				<p>
+				<p class="tsosk-log-meta">
 					<code><?php echo esc_html( $log['path'] ); ?></code>
 					-
-					<strong><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></strong>
+					<strong class="tsosk-log-size"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></strong>
 				</p>
 				<div class="tsosk-toolbar">
 					<input type="text" class="tsosk-log-search" placeholder="<?php esc_attr_e( 'Search this log...', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
@@ -859,24 +940,17 @@ class TSOSK_Mod_Debug {
 						<option value="notice"><?php esc_html_e( 'Notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<option value="deprecated"><?php esc_html_e( 'Deprecated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
+					<button type="button" class="button button-secondary tsosk-refresh-log"
+					        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+					        data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
+						<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
 					<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'tsosk_debug_download_log', 'log_path' => $log['path'] ), admin_url( 'admin-post.php' ) ), 'tsosk_debug_download_log' ) ); ?>">
 						<?php esc_html_e( 'Download Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 				</div>
 				<div class="tsosk-log-preview" id="tsosk-debug-log-content-<?php echo esc_attr( md5( $log['path'] ) ); ?>">
-					<?php
-					$lines = preg_split( '/\R/', $log['preview'] );
-					if ( is_array( $lines ) ) :
-						foreach ( $lines as $line ) :
-							if ( '' === $line ) {
-								continue;
-							}
-							?>
-							<div class="tsosk-log-line" data-level="<?php echo esc_attr( $this->classify_log_line( $line ) ); ?>"><?php echo esc_html( $line ); ?></div>
-							<?php
-						endforeach;
-					endif;
-					?>
+					<?php echo $this->render_log_preview_html( $log['path'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in helper. ?>
 				</div>
 			</div>
 		<?php endforeach; ?>

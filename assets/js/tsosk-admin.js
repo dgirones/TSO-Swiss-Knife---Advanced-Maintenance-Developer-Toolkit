@@ -185,80 +185,6 @@
 
 	// ── Debug Mode ─────────────────────────────────────────────────────────
 
-	$( document ).on( 'click', '#tsosk-debug-save', function () {
-		var $btn   = $( this );
-		var nonce  = $btn.data( 'nonce' );
-		var $msg   = $( '#tsosk-debug-msg' );
-		var flags  = {};
-
-		$( '.tsosk-debug-cb' ).each( function () {
-			flags[ $( this ).data( 'key' ) ] = $( this ).prop( 'checked' ) ? 1 : 0;
-		} );
-
-		$btn.prop( 'disabled', true );
-
-		ajaxPost( {
-			action : 'tsosk_debug_save',
-			data   : { nonce: nonce, flags: flags },
-			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-					// Reload after 800ms so "Actual" badges reflect the new values.
-					setTimeout( function () { window.location.reload(); }, 900 );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false );
-				}
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false );
-			}
-		} );
-	} );
-
-	$( document ).on( 'click', '#tsosk-enable-wp-log', function () {
-		var $btn    = $( this );
-		var $msg    = $( '#tsosk-debug-msg' );
-		var nonce   = $btn.data( 'nonce' ) || tsosk.wpconfig_nonce || tsosk.debug_nonce;
-		var setups  = [
-			{ constant: 'WP_DEBUG',         value: 'true'  },
-			{ constant: 'WP_DEBUG_LOG',      value: 'true'  },
-			{ constant: 'WP_DEBUG_DISPLAY',  value: 'false' },
-		];
-		var msg = tsosk.i18n.wpconfig_confirm;
-		if ( ! confirm( msg ) ) { return; }
-
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
-
-		function runNext( index ) {
-			if ( index >= setups.length ) {
-				showMsg( $msg, tsosk.i18n.done + ' — WP_DEBUG=true, WP_DEBUG_LOG=true, WP_DEBUG_DISPLAY=false', 'ok' );
-				setTimeout( function () { window.location.reload(); }, 1200 );
-				return;
-			}
-			var item = setups[ index ];
-			ajaxPost( {
-				action : 'tsosk_debug_wpconfig_save',
-				data   : { nonce: nonce, constant: item.constant, value: item.value },
-				success: function ( r ) {
-					if ( ! r.success ) {
-						showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-						$btn.prop( 'disabled', false ).text( tsosk.i18n.wpconfig_set );
-						return;
-					}
-					runNext( index + 1 );
-				},
-				error: function () {
-					showMsg( $msg, tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false ).text( tsosk.i18n.wpconfig_set );
-				}
-			} );
-		}
-
-		runNext( 0 );
-	} );
-
 	$( document ).on( 'click', '.tsosk-clear-log', function () {
 		var $btn  = $( this );
 		var nonce = $btn.data( 'nonce' );
@@ -322,6 +248,72 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	function tsoskFindLogTargets( path ) {
+		return {
+			card: $( '.tsosk-log-card' ).filter( function () {
+				return $( this ).attr( 'data-log-path' ) === path;
+			} ),
+			row: $( '.tsosk-log-row' ).filter( function () {
+				return $( this ).attr( 'data-log-path' ) === path;
+			} ),
+			buttons: $( '.tsosk-refresh-log' ).filter( function () {
+				return $( this ).attr( 'data-log-path' ) === path;
+			} )
+		};
+	}
+
+	function tsoskApplyLogRefresh( path, data ) {
+		var targets = tsoskFindLogTargets( path );
+
+		if ( ! data.unchanged && data.html && targets.card.length ) {
+			targets.card.find( '.tsosk-log-preview' ).html( data.html );
+			targets.card.find( '.tsosk-log-size' ).text( data.size );
+			targets.card.attr( 'data-log-modified', data.modified );
+			targets.card.find( '.tsosk-log-search' ).trigger( 'input' );
+		}
+
+		if ( targets.row.length ) {
+			targets.row.find( '.tsosk-log-size-cell' ).text( data.size );
+			targets.row.find( '.tsosk-log-modified-cell' ).text( data.modified_label || '' );
+			targets.row.attr( 'data-log-modified', data.modified );
+		}
+	}
+
+	$( document ).on( 'click', '.tsosk-refresh-log', function () {
+		var $btn   = $( this );
+		var nonce  = $btn.data( 'nonce' );
+		var path   = $btn.attr( 'data-log-path' ) || '';
+		var $msg   = $( '#tsosk-log-msg' );
+		var targets = tsoskFindLogTargets( path );
+		var source = targets.card.length ? targets.card : targets.row;
+		var lastModified = parseInt( source.attr( 'data-log-modified' ) || '0', 10 );
+		var label = tsosk.i18n.refresh_log || 'Refresh';
+
+		if ( ! path ) {
+			return;
+		}
+
+		targets.buttons.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_debug_refresh_log',
+			data   : { nonce: nonce, log_path: path, last_modified: lastModified },
+			success: function ( r ) {
+				if ( r.success && r.data ) {
+					tsoskApplyLogRefresh( path, r.data );
+					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				targets.buttons.prop( 'disabled', false ).text( label );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				targets.buttons.prop( 'disabled', false ).text( label );
 			}
 		} );
 	} );
@@ -3444,54 +3436,6 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false );
-			}
-		} );
-	} );
-
-
-	// ── Debug: wp-config.php constant editor ──────────────────────────────────
-
-	$( document ).on( 'click', '.tsosk-debug-wpconfig-btn', function () {
-		var $btn      = $( this );
-		var constant  = $btn.data( 'constant' );
-		var value     = $btn.data( 'value' );
-		var nonce     = $btn.data( 'nonce' );
-		var $row      = $btn.closest( '.tsosk-flag-row' );
-		var $msg      = $( '#tsosk-debug-msg' );
-
-		var confirmMsg = constant + ' = ' + value + ' → wp-config.php\n\n'
-			+ tsosk.i18n.wpconfig_confirm;
-
-		if ( ! confirm( confirmMsg ) ) { return; }
-
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
-
-		ajaxPost( {
-			action : 'tsosk_debug_wpconfig_save',
-			data   : { nonce: nonce, constant: constant, value: value },
-			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data.message, 'ok' );
-					// Update the Actual badge in the row
-					var $code = $row.find( '.tsosk-val-true, .tsosk-val-false' );
-					$code.text( value )
-						.removeClass( 'tsosk-val-true tsosk-val-false' )
-						.addClass( value === 'true' ? 'tsosk-val-true' : 'tsosk-val-false' );
-					// Remove mismatch highlight and update button
-					$row.removeClass( 'tsosk-flag-mismatch' );
-					$btn.text( tsosk.i18n.wpconfig_done )
-						.removeClass( 'button-primary' )
-						.prop( 'disabled', true );
-					// Auto reload after 1.5s so actual values refresh
-					setTimeout( function () { window.location.reload(); }, 1500 );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false ).text( '✏ ' + tsosk.i18n.wpconfig_set );
-				}
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( '✏ ' + tsosk.i18n.wpconfig_set );
 			}
 		} );
 	} );

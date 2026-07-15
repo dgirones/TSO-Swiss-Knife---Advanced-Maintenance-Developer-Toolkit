@@ -2,9 +2,8 @@
 /**
  * TSO Swiss Knife – Module: Update Manager.
  *
- * Monitors WordPress update status, optional update-check blocking (staging),
- * per-plugin update hiding, and update email notifications.
- * Automatic update policy is left to WordPress core (Dashboard → Updates).
+ * Controls WordPress core, plugin, theme and translation updates,
+ * automatic update behaviour, and update email notifications.
  *
  * @package TSO_Swiss_Knife
  */
@@ -27,6 +26,12 @@ class TSOSK_Mod_Update_Manager {
 	/** @var array<string, mixed> */
 	private array $settings = array();
 
+	/** Prevent recursive immediate update runs. */
+	private static bool $immediate_update_scheduled = false;
+
+	/** Prevent multiple auto-update runs in the same HTTP request. */
+	private static bool $immediate_update_ran = false;
+
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -43,17 +48,19 @@ class TSOSK_Mod_Update_Manager {
 	 * Apply update and email filters early.
 	 */
 	public function init(): void {
-		self::maybe_migrate_retired_settings();
 		$this->settings = self::get_settings();
 
 		if ( 'disable_all' === $this->settings['preset'] ) {
 			$this->apply_disable_all();
+		} elseif ( 'auto_all' === $this->settings['preset'] ) {
+			$this->apply_auto_all();
 		} elseif ( 'custom' === $this->settings['preset'] ) {
-			$this->apply_custom_block_rules();
+			$this->apply_custom_update_rules();
 		}
 
 		$this->apply_email_rules();
-		$this->apply_per_plugin_block_rules();
+		$this->apply_per_plugin_rules();
+		$this->maybe_hook_immediate_updates();
 	}
 
 	/**
@@ -63,19 +70,24 @@ class TSOSK_Mod_Update_Manager {
 	 */
 	public static function get_defaults(): array {
 		return array(
-			'preset'             => 'default',
-			'block_core'         => false,
-			'block_plugins'      => false,
-			'block_themes'       => false,
-			'block_translations' => false,
-			'hide_update_nags'   => false,
-			'email_core_major'   => true,
-			'email_core_minor'   => true,
-			'email_core_fail'    => true,
-			'email_plugin'       => true,
-			'email_theme'        => true,
-			'email_manual_core'  => true,
-			'plugin_rules'       => array(),
+			'preset'                  => 'default',
+			'block_core'              => false,
+			'block_plugins'           => false,
+			'block_themes'            => false,
+			'block_translations'      => false,
+			'hide_update_nags'        => false,
+			'core_auto'               => 'default',
+			'plugin_auto'             => 'default',
+			'theme_auto'              => 'default',
+			'translation_auto'        => 'default',
+			'email_core_major'        => true,
+			'email_core_minor'        => true,
+			'email_core_fail'         => true,
+			'email_plugin'            => true,
+			'email_theme'             => true,
+			'email_manual_core'       => true,
+			'plugin_rules'            => array(),
+			'apply_immediately'       => false,
 		);
 	}
 
@@ -87,56 +99,7 @@ class TSOSK_Mod_Update_Manager {
 		if ( ! is_array( $s ) ) {
 			$s = array();
 		}
-		$s = wp_parse_args( $s, self::get_defaults() );
-
-		// Legacy preset: auto-update overrides are no longer applied (WordPress.org policy).
-		if ( 'auto_all' === $s['preset'] ) {
-			$s['preset'] = 'default';
-		}
-
-		return $s;
-	}
-
-	/**
-	 * One-time cleanup of retired auto-update settings in the database.
-	 */
-	private static function maybe_migrate_retired_settings(): void {
-		$raw = get_option( self::OPTION, array() );
-		if ( ! is_array( $raw ) || empty( $raw ) ) {
-			return;
-		}
-
-		$dirty = false;
-		if ( 'auto_all' === ( $raw['preset'] ?? '' ) ) {
-			$raw['preset'] = 'default';
-			$dirty         = true;
-		}
-
-		foreach ( array( 'core_auto', 'plugin_auto', 'theme_auto', 'translation_auto', 'apply_immediately' ) as $retired_key ) {
-			if ( array_key_exists( $retired_key, $raw ) ) {
-				unset( $raw[ $retired_key ] );
-				$dirty = true;
-			}
-		}
-
-		if ( ! empty( $raw['plugin_rules'] ) && is_array( $raw['plugin_rules'] ) ) {
-			foreach ( $raw['plugin_rules'] as $file => $rule ) {
-				if ( ! is_array( $rule ) ) {
-					continue;
-				}
-				if ( array_key_exists( 'auto', $rule ) ) {
-					unset( $raw['plugin_rules'][ $file ]['auto'] );
-					if ( empty( $rule['block'] ) ) {
-						unset( $raw['plugin_rules'][ $file ] );
-					}
-					$dirty = true;
-				}
-			}
-		}
-
-		if ( $dirty ) {
-			update_option( self::OPTION, wp_parse_args( $raw, self::get_defaults() ), false );
-		}
+		return wp_parse_args( $s, self::get_defaults() );
 	}
 
 	/**
@@ -158,40 +121,48 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
-	 * Whether any update-check blocking is active.
+	 * @param string $type plugins|themes|core.
+	 * @return string
+	 */
+	private static function tsosk_um_build_update_action( string $type ): string {
+		return 'set_' . self::tsosk_um_build_update_filter( $type );
+	}
+
+	/**
+	 * @param string $type core|plugin|theme|translation.
+	 * @return string
+	 */
+	private static function auto_update_hook( string $type ): string {
+		return 'auto_update_' . $type;
+	}
+
+	/**
+	 * WordPress core filter that disables the automatic updater globally.
+	 *
+	 * @return bool
+	 */
+	private static function is_automatic_updater_disabled(): bool {
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter.
+		return (bool) apply_filters( 'automatic_updater_disabled', false );
+	}
+
+	/**
+	 * Whether any update restriction is active.
 	 */
 	public static function is_restricting_updates(): bool {
 		$s = self::get_settings();
-		if ( 'disable_all' === $s['preset'] ) {
-			return true;
-		}
-		if ( self::has_blocked_plugin_rules( $s ) ) {
-			return true;
-		}
-		if ( 'custom' !== $s['preset'] ) {
-			return false;
+		if ( in_array( $s['preset'], array( 'disable_all', 'auto_all' ), true ) ) {
+			return 'disable_all' === $s['preset'];
 		}
 		return ! empty( $s['block_core'] )
 			|| ! empty( $s['block_plugins'] )
 			|| ! empty( $s['block_themes'] )
 			|| ! empty( $s['block_translations'] )
-			|| ! empty( $s['hide_update_nags'] );
-	}
-
-	/**
-	 * @param array<string, mixed> $settings Settings array.
-	 */
-	private static function has_blocked_plugin_rules( array $settings ): bool {
-		$rules = $settings['plugin_rules'] ?? array();
-		if ( ! is_array( $rules ) ) {
-			return false;
-		}
-		foreach ( $rules as $rule ) {
-			if ( is_array( $rule ) && ! empty( $rule['block'] ) ) {
-				return true;
-			}
-		}
-		return false;
+			|| 'off' !== $s['core_auto']
+			|| 'default' !== $s['plugin_auto']
+			|| 'default' !== $s['theme_auto']
+			|| 'default' !== $s['translation_auto']
+			|| ! empty( $s['plugin_rules'] );
 	}
 
 	/** AJAX: save settings. */
@@ -202,7 +173,7 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		$preset = isset( $_POST['preset'] ) ? sanitize_key( wp_unslash( $_POST['preset'] ) ) : 'default';
-		if ( ! in_array( $preset, array( 'default', 'disable_all', 'custom' ), true ) ) {
+		if ( ! in_array( $preset, array( 'default', 'disable_all', 'auto_all', 'custom' ), true ) ) {
 			$preset = 'default';
 		}
 
@@ -215,12 +186,35 @@ class TSOSK_Mod_Update_Manager {
 			$settings['block_themes']       = true;
 			$settings['block_translations'] = true;
 			$settings['hide_update_nags']   = true;
+			$settings['core_auto']          = 'off';
+			$settings['plugin_auto']        = 'off';
+			$settings['theme_auto']         = 'off';
+			$settings['translation_auto']   = 'off';
+		} elseif ( 'auto_all' === $preset ) {
+			$settings['core_auto']        = 'all';
+			$settings['plugin_auto']      = 'on';
+			$settings['theme_auto']       = 'on';
+			$settings['translation_auto'] = 'on';
 		} elseif ( 'custom' === $preset ) {
 			$settings['block_core']         = ! empty( $_POST['block_core'] );
 			$settings['block_plugins']      = ! empty( $_POST['block_plugins'] );
 			$settings['block_themes']       = ! empty( $_POST['block_themes'] );
 			$settings['block_translations'] = ! empty( $_POST['block_translations'] );
 			$settings['hide_update_nags']   = ! empty( $_POST['hide_update_nags'] );
+
+			$core_auto = isset( $_POST['core_auto'] ) ? sanitize_key( wp_unslash( $_POST['core_auto'] ) ) : 'default';
+			if ( ! in_array( $core_auto, array( 'default', 'off', 'minor', 'all' ), true ) ) {
+				$core_auto = 'default';
+			}
+			$settings['core_auto'] = $core_auto;
+
+			foreach ( array( 'plugin_auto', 'theme_auto', 'translation_auto' ) as $auto_key ) {
+				$val = isset( $_POST[ $auto_key ] ) ? sanitize_key( wp_unslash( $_POST[ $auto_key ] ) ) : 'default';
+				if ( ! in_array( $val, array( 'default', 'off', 'on' ), true ) ) {
+					$val = 'default';
+				}
+				$settings[ $auto_key ] = $val;
+			}
 		}
 
 		$email_keys = array(
@@ -236,6 +230,7 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		$settings['plugin_rules'] = $this->sanitize_plugin_rules_from_post();
+		$settings['apply_immediately'] = ! empty( $_POST['apply_immediately'] );
 
 		update_option( self::OPTION, $settings, false );
 		TSOSK_Activity_Log::log(
@@ -252,21 +247,40 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
-	 * Disable all update checks (staging / external patching workflows).
+	 * Disable all update checks and automatic updates.
 	 */
 	private function apply_disable_all(): void {
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter.
+		add_filter( 'automatic_updater_disabled', '__return_true' );
+
 		add_filter( self::tsosk_um_build_pre_update_filter( 'core' ), array( $this, 'block_core_transient' ), 999 );
 		add_filter( self::tsosk_um_build_pre_update_filter( 'plugins' ), array( $this, 'block_plugin_transient' ), 999 );
 		add_filter( self::tsosk_um_build_pre_update_filter( 'themes' ), array( $this, 'block_theme_transient' ), 999 );
-		add_filter( 'translations_api', array( $this, 'block_translations_api' ), 999, 3 );
+
+		add_filter( self::auto_update_hook( 'core' ), '__return_false' );
+		add_filter( self::auto_update_hook( 'plugin' ), '__return_false' );
+		add_filter( self::auto_update_hook( 'theme' ), '__return_false' );
+		add_filter( self::auto_update_hook( 'translation' ), '__return_false' );
 
 		$this->remove_update_nags();
 	}
 
 	/**
-	 * Apply per-component custom update-check blocking.
+	 * Enable automatic updates for core (major+minor), plugins, themes and translations.
 	 */
-	private function apply_custom_block_rules(): void {
+	private function apply_auto_all(): void {
+		add_filter( self::auto_update_hook( 'core' ), '__return_true' );
+		add_filter( 'allow_major_auto_core_updates', '__return_true' );
+		add_filter( 'allow_minor_auto_core_updates', '__return_true' );
+		add_filter( self::auto_update_hook( 'plugin' ), '__return_true' );
+		add_filter( self::auto_update_hook( 'theme' ), '__return_true' );
+		add_filter( self::auto_update_hook( 'translation' ), '__return_true' );
+	}
+
+	/**
+	 * Apply per-component custom update rules.
+	 */
+	private function apply_custom_update_rules(): void {
 		if ( ! empty( $this->settings['block_core'] ) ) {
 			add_filter( self::tsosk_um_build_pre_update_filter( 'core' ), array( $this, 'block_core_transient' ), 999 );
 		}
@@ -277,18 +291,36 @@ class TSOSK_Mod_Update_Manager {
 			add_filter( self::tsosk_um_build_pre_update_filter( 'themes' ), array( $this, 'block_theme_transient' ), 999 );
 		}
 		if ( ! empty( $this->settings['block_translations'] ) ) {
+			add_filter( self::auto_update_hook( 'translation' ), '__return_false' );
 			add_filter( 'translations_api', array( $this, 'block_translations_api' ), 999, 3 );
 		}
 
 		if ( ! empty( $this->settings['hide_update_nags'] ) ) {
 			$this->remove_update_nags();
 		}
+
+		$core_auto = $this->settings['core_auto'];
+		if ( 'off' === $core_auto ) {
+			add_filter( self::auto_update_hook( 'core' ), '__return_false' );
+		} elseif ( 'minor' === $core_auto ) {
+			add_filter( 'allow_major_auto_core_updates', '__return_false' );
+			add_filter( 'allow_minor_auto_core_updates', '__return_true' );
+			add_filter( self::auto_update_hook( 'core' ), '__return_true' );
+		} elseif ( 'all' === $core_auto ) {
+			add_filter( 'allow_major_auto_core_updates', '__return_true' );
+			add_filter( 'allow_minor_auto_core_updates', '__return_true' );
+			add_filter( self::auto_update_hook( 'core' ), '__return_true' );
+		}
+
+		$this->apply_auto_toggle( 'plugin_auto', 'plugin' );
+		$this->apply_auto_toggle( 'theme_auto', 'theme' );
+		$this->apply_auto_toggle( 'translation_auto', 'translation' );
 	}
 
 	/**
-	 * Per-plugin update hiding (does not alter WordPress auto-update policy).
+	 * Per-plugin block / auto-update overrides.
 	 */
-	private function apply_per_plugin_block_rules(): void {
+	private function apply_per_plugin_rules(): void {
 		if ( 'disable_all' === $this->settings['preset'] ) {
 			return;
 		}
@@ -320,12 +352,229 @@ class TSOSK_Mod_Update_Manager {
 				999
 			);
 		}
+
+		add_filter( self::auto_update_hook( 'plugin' ), array( $this, 'filter_per_plugin_autoupdate' ), 20, 2 );
+	}
+
+	/**
+	 * @param bool        $update Whether to auto-update.
+	 * @param object|null $item   Plugin update offer.
+	 * @return bool
+	 */
+	public function filter_per_plugin_autoupdate( $update, $item ) {
+		if ( ! is_object( $item ) || empty( $item->plugin ) ) {
+			return $update;
+		}
+
+		$file  = (string) $item->plugin;
+		$rules = $this->settings['plugin_rules'][ $file ] ?? null;
+		if ( ! is_array( $rules ) ) {
+			return $update;
+		}
+		if ( ! empty( $rules['block'] ) ) {
+			return false;
+		}
+		if ( ! empty( $rules['auto'] ) ) {
+			return true;
+		}
+		return $update;
+	}
+
+	/**
+	 * When enabled, run allowed automatic updates as soon as WordPress detects them.
+	 */
+	private function maybe_hook_immediate_updates(): void {
+		if ( empty( $this->settings['apply_immediately'] ) || 'disable_all' === $this->settings['preset'] ) {
+			return;
+		}
+
+		add_action( self::tsosk_um_build_update_action( 'plugins' ), array( $this, 'schedule_immediate_plugin_update' ), 99, 1 );
+		add_action( self::tsosk_um_build_update_action( 'themes' ), array( $this, 'schedule_immediate_theme_update' ), 99, 1 );
+		add_action( self::tsosk_um_build_update_action( 'core' ), array( $this, 'schedule_immediate_core_update' ), 99, 1 );
+		add_action( 'admin_init', array( $this, 'maybe_run_immediate_on_admin' ), 99 );
+	}
+
+	/**
+	 * Queue auto-update at shutdown when plugin updates are detected.
+	 *
+	 * @param mixed $value Transient value.
+	 * @return mixed
+	 */
+	public function schedule_immediate_plugin_update( $value ) {
+		if ( ! $this->is_component_auto_enabled( 'plugin' ) || ! $this->transient_has_plugin_updates( $value ) ) {
+			return $value;
+		}
+		return $this->queue_immediate_auto_update( $value );
+	}
+
+	/**
+	 * Queue auto-update at shutdown when theme updates are detected.
+	 *
+	 * @param mixed $value Transient value.
+	 * @return mixed
+	 */
+	public function schedule_immediate_theme_update( $value ) {
+		if ( ! $this->is_component_auto_enabled( 'theme' ) || ! $this->transient_has_theme_updates( $value ) ) {
+			return $value;
+		}
+		return $this->queue_immediate_auto_update( $value );
+	}
+
+	/**
+	 * Queue auto-update at shutdown when core updates are detected.
+	 *
+	 * @param mixed $value Transient value.
+	 * @return mixed
+	 */
+	public function schedule_immediate_core_update( $value ) {
+		if ( ! $this->is_component_auto_enabled( 'core' ) || ! $this->transient_has_core_updates( $value ) ) {
+			return $value;
+		}
+		return $this->queue_immediate_auto_update( $value );
+	}
+
+	/**
+	 * Schedule a single wp_maybe_auto_update() run at shutdown.
+	 *
+	 * @param mixed $value Passthrough transient value.
+	 * @return mixed
+	 */
+	private function queue_immediate_auto_update( $value ) {
+		if ( self::$immediate_update_scheduled ) {
+			return $value;
+		}
+		self::$immediate_update_scheduled = true;
+		add_action( 'shutdown', array( $this, 'run_immediate_auto_update' ), 1 );
+		return $value;
+	}
+
+	/**
+	 * Whether a plugin update transient contains pending upgrades.
+	 *
+	 * @param mixed $value Transient value.
+	 */
+	private function transient_has_plugin_updates( $value ): bool {
+		return is_object( $value )
+			&& isset( $value->response )
+			&& is_array( $value->response )
+			&& ! empty( $value->response );
+	}
+
+	/**
+	 * Whether a theme update transient contains pending upgrades.
+	 *
+	 * @param mixed $value Transient value.
+	 */
+	private function transient_has_theme_updates( $value ): bool {
+		return is_object( $value )
+			&& isset( $value->response )
+			&& is_array( $value->response )
+			&& ! empty( $value->response );
+	}
+
+	/**
+	 * Whether a core update transient contains a pending upgrade.
+	 *
+	 * @param mixed $value Transient value.
+	 */
+	private function transient_has_core_updates( $value ): bool {
+		if ( ! is_object( $value ) || empty( $value->updates ) || ! is_array( $value->updates ) ) {
+			return false;
+		}
+		foreach ( $value->updates as $update ) {
+			if ( is_object( $update ) && ! empty( $update->response ) && 'upgrade' === $update->response ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether cached update data shows pending items for enabled auto-update components.
+	 *
+	 * Reads existing transients only — does not contact WordPress.org.
+	 */
+	private function has_cached_pending_auto_updates(): bool {
+		$pending = $this->count_pending_updates();
+
+		if ( $this->is_component_auto_enabled( 'plugin' ) && $pending['plugins'] > 0 ) {
+			return true;
+		}
+		if ( $this->is_component_auto_enabled( 'theme' ) && $pending['themes'] > 0 ) {
+			return true;
+		}
+		if ( $this->is_component_auto_enabled( 'translation' ) && $pending['translations'] > 0 ) {
+			return true;
+		}
+		if ( $this->is_component_auto_enabled( 'core' ) && $pending['core'] > 0 ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * On admin load, apply cached pending updates once (no forced update check).
+	 */
+	public function maybe_run_immediate_on_admin(): void {
+		if ( ! is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+		if ( ! $this->has_auto_update_enabled() ) {
+			return;
+		}
+		if ( ! $this->has_cached_pending_auto_updates() ) {
+			return;
+		}
+		$this->queue_immediate_auto_update( null );
+	}
+
+	/**
+	 * Whether any automatic update component is enabled by current settings.
+	 */
+	private function has_auto_update_enabled(): bool {
+		return $this->is_component_auto_enabled( 'plugin' )
+			|| $this->is_component_auto_enabled( 'theme' )
+			|| $this->is_component_auto_enabled( 'translation' )
+			|| $this->is_component_auto_enabled( 'core' );
+	}
+
+	/**
+	 * Apply pending automatic updates already known to WordPress (no API re-check).
+	 */
+	public function run_immediate_auto_update(): void {
+		if ( self::$immediate_update_ran ) {
+			return;
+		}
+		if ( 'disable_all' === $this->settings['preset'] ) {
+			return;
+		}
+		if ( ! wp_is_file_mod_allowed( 'auto_updater' ) ) {
+			return;
+		}
+		if ( self::is_automatic_updater_disabled() ) {
+			return;
+		}
+		if ( ! $this->has_cached_pending_auto_updates() ) {
+			return;
+		}
+
+		self::$immediate_update_ran = true;
+
+		require_once ABSPATH . 'wp-admin/includes/update.php';
+		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/translation-install.php';
+		}
+
+		if ( function_exists( 'wp_maybe_auto_update' ) ) {
+			wp_maybe_auto_update();
+		}
 	}
 
 	/**
 	 * Parse plugin_rules from AJAX POST JSON.
 	 *
-	 * @return array<string, array{block:bool}>
+	 * @return array<string, array{block:bool, auto:bool}>
 	 */
 	private function sanitize_plugin_rules_from_post(): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save().
@@ -352,11 +601,13 @@ class TSOSK_Mod_Update_Manager {
 				continue;
 			}
 			$block = ! empty( $rule['block'] );
-			if ( ! $block ) {
+			$auto  = ! empty( $rule['auto'] );
+			if ( ! $block && ! $auto ) {
 				continue;
 			}
 			$rules[ $file ] = array(
-				'block' => true,
+				'block' => $block,
+				'auto'  => $auto && ! $block,
 			);
 		}
 
@@ -394,6 +645,16 @@ class TSOSK_Mod_Update_Manager {
 		);
 
 		return $list;
+	}
+
+	private function apply_auto_toggle( string $setting_key, string $component ): void {
+		$val = $this->settings[ $setting_key ] ?? 'default';
+		$filter = self::auto_update_hook( $component );
+		if ( 'off' === $val ) {
+			add_filter( $filter, '__return_false' );
+		} elseif ( 'on' === $val ) {
+			add_filter( $filter, '__return_true' );
+		}
 	}
 
 	/**
@@ -550,6 +811,46 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Whether automatic updates are enabled for a component per current settings.
+	 *
+	 * @param string $component plugin|theme|translation|core.
+	 * @return bool
+	 */
+	public function is_component_auto_enabled( string $component ): bool {
+		if ( 'disable_all' === $this->settings['preset'] ) {
+			return false;
+		}
+		if ( 'auto_all' === $this->settings['preset'] ) {
+			return true;
+		}
+		if ( 'default' === $this->settings['preset'] ) {
+			if ( 'translation' === $component ) {
+				return true;
+			}
+			if ( 'core' === $component ) {
+				return true;
+			}
+			return false;
+		}
+
+		$key_map = array(
+			'plugin'      => 'plugin_auto',
+			'theme'       => 'theme_auto',
+			'translation' => 'translation_auto',
+			'core'        => 'core_auto',
+		);
+		if ( ! isset( $key_map[ $component ] ) ) {
+			return false;
+		}
+
+		$val = $this->settings[ $key_map[ $component ] ] ?? 'default';
+		if ( 'core' === $component ) {
+			return in_array( $val, array( 'minor', 'all' ), true );
+		}
+		return 'on' === $val;
+	}
+
+	/**
 	 * Count pending updates from current transients.
 	 *
 	 * @return array{plugins:int,themes:int,translations:int,core:int}
@@ -640,14 +941,33 @@ class TSOSK_Mod_Update_Manager {
 			$module_status = __( 'All blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			$module_badge  = 'tsosk-badge-warn';
 			$module_detail = __( 'Update Manager preset “Disable all updates” is active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-		} elseif ( self::is_restricting_updates() ) {
-			$module_status = __( 'Partially blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-			$module_badge  = 'tsosk-badge-warn';
-			$module_detail = __( 'Custom rules hide some update checks. Automatic updates are managed by WordPress (Dashboard → Updates).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		} else {
-			$module_status = __( 'Not blocking', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-			$module_badge  = 'tsosk-badge-ok';
-			$module_detail = __( 'This module is not blocking update checks. Configure automatic updates in Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$enabled       = array();
+			if ( $this->is_component_auto_enabled( 'plugin' ) ) {
+				$enabled[] = __( 'plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( $this->is_component_auto_enabled( 'theme' ) ) {
+				$enabled[] = __( 'themes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( $this->is_component_auto_enabled( 'translation' ) ) {
+				$enabled[] = __( 'translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( $this->is_component_auto_enabled( 'core' ) ) {
+				$enabled[] = __( 'core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( empty( $enabled ) ) {
+				$module_status = __( 'None enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				$module_badge  = 'tsosk-badge-warn';
+				$module_detail = __( 'This module is not enabling any automatic updates. Use “Enable all automatic updates” or turn components on in Custom.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			} else {
+				$module_status = __( 'Configured', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				$module_badge  = 'tsosk-badge-ok';
+				$module_detail = sprintf(
+					/* translators: %s: comma-separated list of components */
+					__( 'Auto-update enabled here for: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $enabled )
+				);
+			}
 		}
 		$items[] = array(
 			'label'   => __( 'Update Manager policy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -708,7 +1028,7 @@ class TSOSK_Mod_Update_Manager {
 		return $next;
 	}
 
-	/** AJAX: refresh update transients from wordpress.org (does not install updates). */
+	/** AJAX: refresh update transients and run the automatic updater now. */
 	public function ajax_run_updates(): void {
 		check_ajax_referer( 'tsosk_um_nonce', 'nonce' );
 		if ( ! current_user_can( 'update_core' ) ) {
@@ -717,6 +1037,14 @@ class TSOSK_Mod_Update_Manager {
 
 		if ( 'disable_all' === $this->settings['preset'] ) {
 			wp_send_json_error( __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! wp_is_file_mod_allowed( 'auto_updater' ) ) {
+			wp_send_json_error( __( 'Automatic updates are blocked on this site (file modifications not allowed).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( self::is_automatic_updater_disabled() ) {
+			wp_send_json_error( __( 'Automatic updates are disabled by a WordPress filter or constant.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
@@ -730,6 +1058,8 @@ class TSOSK_Mod_Update_Manager {
 		wp_version_check( array(), true );
 		wp_update_plugins();
 		wp_update_themes();
+
+		wp_maybe_auto_update();
 
 		wp_clean_plugins_cache( true );
 		wp_clean_themes_cache( true );
@@ -745,7 +1075,7 @@ class TSOSK_Mod_Update_Manager {
 			'run',
 			sprintf(
 				/* translators: 1: plugins before, 2: plugins after */
-				__( 'Manual update check finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				__( 'Manual update run finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$before['plugins'],
 				$after['plugins']
 			),
@@ -759,7 +1089,7 @@ class TSOSK_Mod_Update_Manager {
 			array(
 				'message' => sprintf(
 					/* translators: 1: plugins before, 2: themes before, 3: translations before, 4: plugins after, 5: themes after, 6: translations after */
-					__( 'Update check finished. Pending before — plugins: %1$d, themes: %2$d, translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations: %6$d. Install updates from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Update run finished. Pending before — plugins: %1$d, themes: %2$d, translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations: %6$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$before['plugins'],
 					$before['themes'],
 					$before['translations'],
@@ -780,25 +1110,16 @@ class TSOSK_Mod_Update_Manager {
 		$environment = $this->get_update_environment();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Monitor WordPress update status, optionally block update checks (staging), hide specific plugin updates, and control update email notifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Control WordPress update checks, automatic updates, and update email notifications from one place.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-guide-card">
 			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What does this module do?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="tsosk-guide-lead">
-				<?php esc_html_e( 'WordPress checks wordpress.org for core, plugin, theme and translation updates, can install some automatically, and sends email when updates happen. This module helps you troubleshoot update issues, block update checks when needed, and manage notification emails.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'WordPress checks wordpress.org for core, plugin, theme and translation updates, can install some automatically, and sends email when updates happen. Here you choose what is allowed and which emails you receive.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<p class="description" style="margin:0 0 12px;">
-				<?php
-				$updates_link = '<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Dashboard → Updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</a>';
-				echo wp_kses_post(
-					sprintf(
-						/* translators: %s: Dashboard → Updates admin screen link */
-						__( 'Automatic updates are configured in WordPress itself — go to %s to enable or disable auto-updates per component.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						$updates_link
-					)
-				);
-				?>
+				<?php esc_html_e( 'Important: enabling automatic updates here only tells WordPress they are allowed. By default installation still waits for WP-Cron (usually twice per day). Enable “Apply updates immediately” below to install as soon as updates are detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-notice tsosk-notice-warn" style="margin:0;">
 				<strong><?php esc_html_e( 'Security note:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
@@ -808,7 +1129,7 @@ class TSOSK_Mod_Update_Manager {
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Update status & troubleshooting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. Use the button to contact wordpress.org and refresh the pending update list (does not install updates).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. Use the button to check wordpress.org and apply allowed automatic updates immediately.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -828,7 +1149,7 @@ class TSOSK_Mod_Update_Manager {
 			<p style="margin-top:14px;margin-bottom:0;">
 				<button type="button" class="button button-primary" id="tsosk-um-run-updates"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Check for updates now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php esc_html_e( 'Check and apply updates now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-um-run-msg"></span>
 			</p>
@@ -842,15 +1163,19 @@ class TSOSK_Mod_Update_Manager {
 			$presets = array(
 				'default'     => array(
 					'label' => __( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'desc'  => __( 'No overrides — WordPress handles update checks and emails as usual.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'desc'  => __( 'No overrides — WordPress decides update checks, auto-updates and emails as usual.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 				'disable_all' => array(
 					'label' => __( 'Disable all updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'desc'  => __( 'Stop update checks for core, plugins, themes and translations. Hide dashboard nags.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'desc'  => __( 'Stop update checks for core, plugins, themes and translations. Disable automatic updates and hide dashboard nags.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				),
+				'auto_all'    => array(
+					'label' => __( 'Enable all automatic updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'desc'  => __( 'Allow automatic core (major + minor), plugin, theme and translation updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 				'custom'      => array(
 					'label' => __( 'Custom', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'desc'  => __( 'Configure update-check blocking and email options individually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'desc'  => __( 'Configure each component and email option individually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			);
 			foreach ( $presets as $key => $opt ) :
@@ -863,6 +1188,13 @@ class TSOSK_Mod_Update_Manager {
 				</span>
 			</label>
 			<?php endforeach; ?>
+			<label class="tsosk-toggle-row" style="margin-top:14px;">
+				<input type="checkbox" id="tsosk-um-apply-immediately" <?php checked( ! empty( $settings['apply_immediately'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'Apply updates immediately when detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong><br>
+					<span class="description"><?php esc_html_e( 'Works with automatic updates enabled. Installs allowed updates as soon as WordPress detects them — only when pending updates exist, without forcing extra checks on every admin page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</span>
+			</label>
 		</div>
 
 		<div class="tsosk-card tsosk-um-custom-panel" <?php echo 'custom' === $preset ? '' : 'style="display:none;"'; ?>>
@@ -889,12 +1221,49 @@ class TSOSK_Mod_Update_Manager {
 				<input type="checkbox" id="tsosk-um-hide-nags" <?php checked( $settings['hide_update_nags'] ); ?>>
 				<span><strong><?php esc_html_e( 'Hide update nags in the admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></span>
 			</label>
+
+			<h3 style="margin-top:20px;"><?php esc_html_e( 'Automatic updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Control what WordPress installs automatically in the background.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+
+			<table class="tsosk-kv-table">
+				<tr>
+					<th style="width:200px;"><?php esc_html_e( 'WordPress core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<select id="tsosk-um-core-auto">
+							<option value="default" <?php selected( $settings['core_auto'], 'default' ); ?>><?php esc_html_e( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="off" <?php selected( $settings['core_auto'], 'off' ); ?>><?php esc_html_e( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="minor" <?php selected( $settings['core_auto'], 'minor' ); ?>><?php esc_html_e( 'Minor / security only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="all" <?php selected( $settings['core_auto'], 'all' ); ?>><?php esc_html_e( 'Major and minor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<?php
+				foreach (
+					array(
+						'plugin_auto'      => __( 'Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'theme_auto'       => __( 'Themes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'translation_auto' => __( 'Translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					) as $auto_id => $auto_label
+				) :
+					?>
+				<tr>
+					<th><?php echo esc_html( $auto_label ); ?></th>
+					<td>
+						<select id="tsosk-um-<?php echo esc_attr( str_replace( '_', '-', $auto_id ) ); ?>">
+							<option value="default" <?php selected( $settings[ $auto_id ], 'default' ); ?>><?php esc_html_e( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="off" <?php selected( $settings[ $auto_id ], 'off' ); ?>><?php esc_html_e( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+							<option value="on" <?php selected( $settings[ $auto_id ], 'on' ); ?>><?php esc_html_e( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
 		</div>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Individual plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Hide available updates for specific plugins in the dashboard. Does not change WordPress auto-update settings — use Dashboard → Updates for that.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Override update behaviour for specific plugins. Leave both boxes unchecked to follow the global settings above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<p style="margin:0 0 10px;">
 				<input type="search" id="tsosk-um-plugin-filter" class="regular-text"
@@ -909,6 +1278,7 @@ class TSOSK_Mod_Update_Manager {
 							<th style="width:90px;"><?php esc_html_e( 'Version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th style="width:90px;"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th style="width:120px;text-align:center;"><?php esc_html_e( 'Block updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:120px;text-align:center;"><?php esc_html_e( 'Auto-update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -918,7 +1288,7 @@ class TSOSK_Mod_Update_Manager {
 						if ( empty( $plugins_ui ) ) :
 							?>
 						<tr>
-							<td colspan="4" style="text-align:center;color:#646970;">
+							<td colspan="5" style="text-align:center;color:#646970;">
 								<?php esc_html_e( 'No plugins installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</td>
 						</tr>
@@ -927,6 +1297,7 @@ class TSOSK_Mod_Update_Manager {
 							foreach ( $plugins_ui as $plugin ) :
 								$rule  = $plugin_rules[ $plugin['file'] ] ?? array();
 								$block = ! empty( $rule['block'] );
+								$auto  = ! empty( $rule['auto'] );
 								?>
 						<tr class="tsosk-um-plugin-row" data-plugin="<?php echo esc_attr( $plugin['file'] ); ?>"
 						    data-search="<?php echo esc_attr( strtolower( $plugin['name'] . ' ' . $plugin['file'] ) ); ?>">
@@ -945,6 +1316,11 @@ class TSOSK_Mod_Update_Manager {
 							<td style="text-align:center;">
 								<input type="checkbox" class="tsosk-um-plugin-block" <?php checked( $block ); ?>
 								       aria-label="<?php esc_attr_e( 'Block updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							</td>
+							<td style="text-align:center;">
+								<input type="checkbox" class="tsosk-um-plugin-auto" <?php checked( $auto ); ?>
+								       <?php disabled( $block ); ?>
+								       aria-label="<?php esc_attr_e( 'Auto-update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							</td>
 						</tr>
 								<?php

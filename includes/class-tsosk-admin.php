@@ -166,7 +166,6 @@ class TSOSK_Admin {
 				),
 				'dev_mode_active'     => TSOSK_Site_Status::is_developer_mode_active(),
 				'debug_nonce'         => wp_create_nonce( 'tsosk_debug_nonce' ),
-				'wpconfig_nonce'      => wp_create_nonce( 'tsosk_debug_wpconfig_nonce' ),
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -320,13 +319,11 @@ class TSOSK_Admin {
 					'maint_use_logo'     => __( 'Use this image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'ol_preview_loaded'   => __( 'Preview loaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'expired'         => __( 'Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'wpconfig_confirm' => __( 'This will modify wp-config.php directly. A backup is recommended before proceeding. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'wpconfig_set'    => __( 'Set in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'wpconfig_done'   => __( '✓ Saved in wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %s: log file label shown in the confirmation dialog. */
 					'debug_empty_log_confirm' => __( 'Empty "%s"? All log entries will be deleted but the file will remain on disk. This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %s: log file label shown in the confirmation dialog. */
 					'debug_shrink_log_confirm' => __( 'Keep only the last 500 lines of %s? Older lines will be archived.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'refresh_log'              => __( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			)
 		);
