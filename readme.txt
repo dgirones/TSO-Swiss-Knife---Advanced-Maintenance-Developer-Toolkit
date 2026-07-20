@@ -112,6 +112,30 @@ No. Automatic updates are managed only by WordPress core (**Dashboard → Update
 
 Runtime config and managed logs go under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/`. The Plugin Sandbox may install a must-use loader under `mu-plugins` (via the WordPress Filesystem API) so early plugin filtering can run; that loader is removed when no sandbox sessions remain. The plugin does not write `wp-content/debug.log` or edit `wp-config.php`.
 
+= Does this plugin edit wp-config.php? =
+
+No. Debug flags, security constants, and hidden-profile toggles are saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/` and applied at runtime. Constants already defined in `wp-config.php` always take precedence and cannot be overridden from the plugin.
+
+= Does Debug Mode create or manage wp-content/debug.log? =
+
+Debug Mode only stores JSON flags (for example `WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`) in the plugin uploads config folder. It does not create, truncate, or rotate `wp-content/debug.log`. If logging is enabled, WordPress or your server writes that file as usual. The Debug tab can list and preview common log paths when they already exist.
+
+= Can Server Files write robots.txt or .htaccess? =
+
+Yes, but only when you explicitly save from the **Server Files Review** module. It can write `robots.txt` and `.htaccess` at the site or WordPress root — not under `wp-content/uploads/`. Always review the generated content before saving on production.
+
+= Who should use Search & Replace or the Options Editor? =
+
+These tools are intended for experienced administrators and developers. Always run **Search & Replace** as a dry-run first and keep a database backup. In **Options Editor**, core options are protected, but deleting or editing third-party options can break plugins or themes. When in doubt, export a snapshot or test on staging.
+
+= Does Comment Antispam send data to third parties? =
+
+Only when you enable reputation or cloud checks and, where required, provide API keys. See the **External services** section above for each provider, what data is sent, and links to their terms and privacy policies. With all cloud features off, checks run locally (honeypot, rate limits, keyword rules, and similar).
+
+= Why do I see two copies of this plugin after installing? =
+
+That usually means the ZIP folder name was wrong (for example `…-main` from a GitHub download instead of `tso-swiss-knife-advanced-maintenance-developer-toolkit`). Remove the duplicate folder under `wp-content/plugins/`, keep only the folder whose name matches the plugin slug, and reactivate.
+
 == Screenshots ==
 
 1. Cron Manager — list of scheduled events with manual-run and delete actions.
