@@ -227,7 +227,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$ignored           = $this->get_ignored();
-		$abspath           = wp_normalize_path( ABSPATH );
+		$abspath           = wp_normalize_path( untrailingslashit( tsosk_get_wp_root_dir() ) );
 		$modified          = array();
 		$missing           = array();
 		$missing_optional  = array();

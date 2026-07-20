@@ -129,7 +129,8 @@ class TSOSK_Site_Status {
 			);
 		}
 
-		if ( TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::SECURITY_JSON ) ) {
+		if ( file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.php' )
+			|| file_exists( trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-security-flags.json' ) ) {
 			$badges[] = array(
 				'label' => __( 'Hardened admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'success',
@@ -163,14 +164,19 @@ class TSOSK_Site_Status {
 	 * Whether developer preset is active (debug+log+queries, no display).
 	 */
 	public static function is_developer_mode_active(): bool {
-		$flags = TSOSK_Config_Storage::get_debug_flags();
-		if ( TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::DEBUG_JSON ) ) {
-			return $flags['debug'] && $flags['log'] && ! $flags['display'] && $flags['queries'];
-		}
-		return defined( 'WP_DEBUG' ) && WP_DEBUG
+		$path = trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-debug-flags.php';
+		if ( ! file_exists( $path ) ) {
+			return defined( 'WP_DEBUG' ) && WP_DEBUG
 				&& defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG
 				&& ( ! defined( 'WP_DEBUG_DISPLAY' ) || ! WP_DEBUG_DISPLAY )
 				&& defined( 'SAVEQUERIES' ) && SAVEQUERIES;
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$src = (string) file_get_contents( $path );
+		return (bool) preg_match( "/define\(\s*'WP_DEBUG'\s*,\s*true\s*\)/i", $src )
+			&& (bool) preg_match( "/define\(\s*'WP_DEBUG_LOG'\s*,\s*true\s*\)/i", $src )
+			&& (bool) preg_match( "/define\(\s*'WP_DEBUG_DISPLAY'\s*,\s*false\s*\)/i", $src )
+			&& (bool) preg_match( "/define\(\s*'SAVEQUERIES'\s*,\s*true\s*\)/i", $src );
 	}
 
 	/**

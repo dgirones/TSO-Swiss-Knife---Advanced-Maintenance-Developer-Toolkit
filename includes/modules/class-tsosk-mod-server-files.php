@@ -47,11 +47,11 @@ class TSOSK_Mod_Server_Files {
 		if ( 'robots' === $key ) {
 			$path = $this->root_robots_path();
 		} elseif ( 'robots_local' === $key ) {
-			$path = ABSPATH . 'robots.txt';
+			$path = tsosk_join_wp_root( 'robots.txt' );
 		} elseif ( 'htaccess_root' === $key ) {
 			$path = $this->root_htaccess_path();
 		} else {
-			$path = ABSPATH . '.htaccess';
+			$path = tsosk_join_wp_root( '.htaccess' );
 		}
 
 		if ( ! wp_is_writable( $path ) && ! wp_is_writable( dirname( $path ) ) ) {
@@ -99,7 +99,7 @@ class TSOSK_Mod_Server_Files {
 		}
 
 		// 2. Walk up from ABSPATH (max 5 levels) looking for robots.txt.
-		$dir    = untrailingslashit( ABSPATH );
+		$dir    = untrailingslashit( tsosk_get_wp_root_dir() );
 		$levels = 0;
 		while ( $levels < 5 ) {
 			if ( file_exists( $dir . '/robots.txt' ) ) {
@@ -119,7 +119,7 @@ class TSOSK_Mod_Server_Files {
 		}
 
 		// 4. Last fallback.
-		return ABSPATH . 'robots.txt';
+		return tsosk_join_wp_root( 'robots.txt' );
 	}
 
 	/**
@@ -130,10 +130,10 @@ class TSOSK_Mod_Server_Files {
 	 */
 	private function local_robots_path(): string {
 		$root_path  = $this->root_robots_path();
-		$local_path = ABSPATH . 'robots.txt';
+		$local_path = tsosk_join_wp_root( 'robots.txt' );
 
 		// If they resolve to the same directory, there's no separate "local" file.
-		if ( realpath( dirname( $root_path ) ) === realpath( ABSPATH ) ) {
+		if ( realpath( dirname( $root_path ) ) === realpath( untrailingslashit( tsosk_get_wp_root_dir() ) ) ) {
 			return '';
 		}
 
@@ -155,21 +155,21 @@ class TSOSK_Mod_Server_Files {
 			return $doc_root . '/.htaccess';
 		}
 
-		$dir    = untrailingslashit( ABSPATH );
+		$dir    = untrailingslashit( tsosk_get_wp_root_dir() );
 		$levels = 0;
 		while ( $levels < 5 ) {
 			$parent = dirname( $dir );
 			if ( $parent === $dir ) {
 				break;
 			}
-			if ( file_exists( $parent . '/.htaccess' ) && realpath( $parent ) !== realpath( ABSPATH ) ) {
+			if ( file_exists( $parent . '/.htaccess' ) && realpath( $parent ) !== realpath( untrailingslashit( tsosk_get_wp_root_dir() ) ) ) {
 				return $parent . '/.htaccess';
 			}
 			$dir = $parent;
 			$levels++;
 		}
 
-		return ABSPATH . '.htaccess';
+		return tsosk_join_wp_root( '.htaccess' );
 	}
 
 	/**
@@ -178,7 +178,7 @@ class TSOSK_Mod_Server_Files {
 	 * @return string
 	 */
 	private function local_htaccess_path(): string {
-		return ABSPATH . '.htaccess';
+		return tsosk_join_wp_root( '.htaccess' );
 	}
 
 	/**
@@ -188,7 +188,7 @@ class TSOSK_Mod_Server_Files {
 	 */
 	private function wp_is_subdirectory_install(): bool {
 		$root_dir  = realpath( dirname( $this->root_htaccess_path() ) );
-		$local_dir = realpath( ABSPATH );
+		$local_dir = realpath( untrailingslashit( tsosk_get_wp_root_dir() ) );
 		return $root_dir && $local_dir && $root_dir !== $local_dir;
 	}
 
@@ -204,7 +204,7 @@ class TSOSK_Mod_Server_Files {
 	/** Detect sitemap files from popular plugins. */
 	private function detect_sitemaps(): array {
 		$sitemaps = array();
-		$abspath  = trailingslashit( ABSPATH );
+		$abspath  = tsosk_get_wp_root_dir();
 
 		// Build a helper: known plugin slug → plugin name + sitemap URL pattern
 		$known_plugins = array(
@@ -395,7 +395,7 @@ class TSOSK_Mod_Server_Files {
 				$rel       = ( '/' === $site_path )
 					? $u_path
 					: str_replace( rtrim( $site_path, '/' ), '', $u_path );
-				$local     = ABSPATH . ltrim( $rel, '/' );
+				$local     = tsosk_join_wp_root( $rel );
 				$physical  = file_exists( $local );
 				$add( array(
 					'label'  => basename( $u_path ) . ' (robots.txt)',
@@ -484,7 +484,7 @@ class TSOSK_Mod_Server_Files {
 		// Strip the WP site path prefix from the URL path to get a server-root-relative path.
 		$site_path   = trailingslashit( (string) wp_parse_url( site_url(), PHP_URL_PATH ) );
 		$rel_path    = '/' === $site_path ? $path : str_replace( rtrim( $site_path, '/' ), '', $path );
-		$local_check = ABSPATH . ltrim( $rel_path, '/' );
+		$local_check = tsosk_join_wp_root( $rel_path );
 		$file_exists = file_exists( $local_check );
 
 		// ── Generic sitemap.xml / sitemap-*.xml matching ──────────────────────
@@ -547,7 +547,7 @@ class TSOSK_Mod_Server_Files {
 		$root_robots  = $this->root_robots_path();
 		$local_robots = $this->local_robots_path();
 		$wp_is_subdir = $this->wp_is_subdirectory_install() || (
-			'' !== $local_robots || realpath( dirname( $root_robots ) ) !== realpath( ABSPATH )
+			'' !== $local_robots || realpath( dirname( $root_robots ) ) !== realpath( untrailingslashit( tsosk_get_wp_root_dir() ) )
 		);
 
 		$reports = array();
@@ -566,7 +566,7 @@ class TSOSK_Mod_Server_Files {
 
 		$root_htaccess  = $this->root_htaccess_path();
 		$local_htaccess = $this->local_htaccess_path();
-		$same_htaccess  = realpath( dirname( $root_htaccess ) ) === realpath( ABSPATH );
+		$same_htaccess  = realpath( dirname( $root_htaccess ) ) === realpath( untrailingslashit( tsosk_get_wp_root_dir() ) );
 
 		if ( ! $same_htaccess ) {
 			$reports['htaccess_root'] = $this->get_report( __( '.htaccess (domain / document root)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $root_htaccess, 'htaccess_root' );

@@ -432,8 +432,8 @@ class TSOSK_Mod_Cron {
 					continue;
 				}
 				// Check if it's a WP core file.
-				$wp_includes = wp_normalize_path( ABSPATH . 'wp-includes' );
-				$wp_admin    = wp_normalize_path( ABSPATH . 'wp-admin' );
+				$wp_includes = wp_normalize_path( tsosk_get_wp_includes_dir() );
+				$wp_admin    = wp_normalize_path( tsosk_get_wp_admin_dir() );
 				$norm        = wp_normalize_path( $file );
 				if ( str_starts_with( $norm, $wp_includes ) || str_starts_with( $norm, $wp_admin ) ) {
 					return array( 'type' => 'wordpress', 'name' => 'WordPress', 'file' => $file );
@@ -446,7 +446,7 @@ class TSOSK_Mod_Cron {
 					$slug  = $parts[0];
 					// Get plugin display name.
 					if ( ! function_exists( 'get_plugins' ) ) {
-						require_once ABSPATH . 'wp-admin/includes/plugin.php';
+						tsosk_require_wp_admin( 'includes/plugin.php' );
 					}
 					$plugins = get_plugins();
 					$name    = $slug;
@@ -484,7 +484,7 @@ class TSOSK_Mod_Cron {
 	 */
 	private function match_hook_to_plugin( string $hook ): ?array {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		$plugins = get_plugins();
 		$files   = array_merge(
@@ -622,7 +622,7 @@ class TSOSK_Mod_Cron {
 	 */
 	private function resolve_plugin_folder_source( string $folder, string $label ): ?array {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		$plugins = get_plugins();
 		foreach ( $plugins as $file => $data ) {
@@ -649,7 +649,7 @@ class TSOSK_Mod_Cron {
 	 */
 	private function scan_installed_plugins_for_hook( string $hook ): ?array {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 
 		static $cache = array();

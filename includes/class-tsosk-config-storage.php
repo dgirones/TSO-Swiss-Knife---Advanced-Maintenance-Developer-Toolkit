@@ -528,15 +528,12 @@ class TSOSK_Config_Storage {
 			self::DEBUG_JSON,
 			self::SECURITY_JSON,
 			self::PROFILES_JSON,
-			self::LEGACY_DEBUG,
-			self::LEGACY_SECURITY,
-			self::LEGACY_PROFILES,
 		);
 		foreach ( $names as $name ) {
 			$from = trailingslashit( $old ) . $name;
 			$to   = trailingslashit( $new_dir ) . $name;
 			if ( is_readable( $from ) && ! file_exists( $to ) ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- local uploads migration.
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- JSON-only uploads migration.
 				@rename( $from, $to );
 			}
 		}

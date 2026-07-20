@@ -87,6 +87,89 @@ function tsosk_get_uploads_subdir( string $subdir ): string {
 	return trailingslashit( $root ) . $subdir;
 }
 
+/**
+ * WordPress installation root directory (trailing slash).
+ *
+ * Centralizes reads of ABSPATH for diagnostics modules (Plugin Check compliance).
+ *
+ * @return string
+ */
+function tsosk_get_wp_root_dir(): string {
+	static $cached = null;
+	if ( null !== $cached ) {
+		return $cached;
+	}
+
+	if ( function_exists( 'get_home_path' ) ) {
+		$home = get_home_path();
+		if ( is_string( $home ) && '' !== $home ) {
+			$cached = trailingslashit( wp_normalize_path( $home ) );
+			return $cached;
+		}
+	}
+
+	$cached = trailingslashit( wp_normalize_path( ABSPATH ) );
+	return $cached;
+}
+
+/**
+ * Absolute path under the WordPress root (e.g. wp-config.php, robots.txt).
+ *
+ * @param string $relative Path relative to the install root.
+ * @return string
+ */
+function tsosk_join_wp_root( string $relative ): string {
+	$relative = ltrim( str_replace( '\\', '/', $relative ), '/' );
+	if ( '' === $relative || false !== strpos( $relative, '..' ) ) {
+		return tsosk_get_wp_root_dir();
+	}
+	return tsosk_get_wp_root_dir() . $relative;
+}
+
+/**
+ * wp-admin directory (trailing slash).
+ *
+ * @return string
+ */
+function tsosk_get_wp_admin_dir(): string {
+	return tsosk_get_wp_root_dir() . 'wp-admin/';
+}
+
+/**
+ * wp-includes directory (trailing slash).
+ *
+ * @return string
+ */
+function tsosk_get_wp_includes_dir(): string {
+	return tsosk_get_wp_root_dir() . 'wp-includes/';
+}
+
+/**
+ * Require a file from wp-admin/includes when available.
+ *
+ * @param string $relative Path relative to wp-admin/ (e.g. includes/plugin.php).
+ */
+function tsosk_require_wp_admin( string $relative ): void {
+	$path = tsosk_get_wp_admin_dir() . ltrim( str_replace( '\\', '/', $relative ), '/' );
+	if ( is_readable( $path ) ) {
+		require_once $path;
+	}
+}
+
+/**
+ * Locate wp-config.php (install root or one level above).
+ *
+ * @return string Absolute path or empty string.
+ */
+function tsosk_locate_wp_config_path(): string {
+	$root = untrailingslashit( tsosk_get_wp_root_dir() );
+	if ( file_exists( $root . '/wp-config.php' ) ) {
+		return $root . '/wp-config.php';
+	}
+	$parent = dirname( $root ) . '/wp-config.php';
+	return file_exists( $parent ) ? $parent : '';
+}
+
 define( 'TSOSK_CONFIG_DIR', tsosk_get_uploads_subdir( 'config' ) );
 
 // ── Autoload includes ─────────────────────────────────────────────────────────

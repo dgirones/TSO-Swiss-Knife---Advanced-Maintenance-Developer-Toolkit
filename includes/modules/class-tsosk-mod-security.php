@@ -342,8 +342,8 @@ class TSOSK_Mod_Security {
 			$this->check_item( __( 'Default admin username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),   ! $admin_user,                                              __( 'No user named admin found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               __( 'A user named admin exists. Rename it to a non-obvious username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 			$this->check_item( __( 'Plugin updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),           empty( $plugin_updates ),                                   __( 'No plugin updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                              sprintf( /* translators: %d: number of plugin updates */ __( '%d plugin updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $plugin_updates ) ) ),
 			$this->check_item( __( 'Theme updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),            empty( $theme_updates ),                                    __( 'No theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                               sprintf( /* translators: %d: number of theme updates */ __( '%d theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $theme_updates ) ) ),
-			$this->file_permission_check( __( '.htaccess permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), ABSPATH . '.htaccess' ),
-			$this->file_permission_check( __( 'wp-config.php permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $wp_config ?: ABSPATH . 'wp-config.php' ),
+			$this->file_permission_check( __( '.htaccess permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), tsosk_join_wp_root( '.htaccess' ) ),
+			$this->file_permission_check( __( 'wp-config.php permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $wp_config ?: tsosk_join_wp_root( 'wp-config.php' ) ),
 		);
 	}
 
@@ -361,10 +361,6 @@ class TSOSK_Mod_Security {
 	}
 
 	private function find_wp_config(): string {
-		if ( file_exists( ABSPATH . 'wp-config.php' ) ) {
-			return ABSPATH . 'wp-config.php';
-		}
-		$parent = dirname( untrailingslashit( ABSPATH ) ) . '/wp-config.php';
-		return file_exists( $parent ) ? $parent : '';
+		return tsosk_locate_wp_config_path();
 	}
 }
