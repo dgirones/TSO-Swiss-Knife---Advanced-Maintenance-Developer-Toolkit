@@ -143,7 +143,60 @@ class TSOSK_Mod_Options_Editor {
 	 * @return bool
 	 */
 	private function is_hidden_option_name( string $name ): bool {
-		return $this->is_protected_core( $name ) || $this->is_transient_option( $name );
+		return $this->is_protected_core( $name ) || $this->is_transient_option( $name ) || $this->is_secret_option( $name );
+	}
+
+	/**
+	 * Whether an option name likely stores credentials or secrets.
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	private function is_secret_option( string $name ): bool {
+		$lower = strtolower( $name );
+		$needles = array(
+			'password',
+			'passwd',
+			'secret',
+			'api_key',
+			'apikey',
+			'private_key',
+			'auth_key',
+			'auth_salt',
+			'secure_auth',
+			'logged_in_key',
+			'nonce_key',
+			'nonce_salt',
+			'token',
+			'credential',
+			'oauth',
+			'jwt',
+			'license_key',
+		);
+		foreach ( $needles as $needle ) {
+			if ( str_contains( $lower, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Read a single option value from the database (after access checks).
+	 *
+	 * @param string $name Option name.
+	 * @return string Raw option_value or empty string.
+	 */
+	private function fetch_option_value_from_db( string $name ): string {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+				$name
+			)
+		);
+		return is_string( $value ) ? $value : '';
 	}
 
 	/**
@@ -420,6 +473,9 @@ class TSOSK_Mod_Options_Editor {
 		if ( $this->is_transient_option( $name ) ) {
 			wp_send_json_error( __( 'Transient options cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( $this->is_secret_option( $name ) ) {
+			wp_send_json_error( __( 'This option cannot be viewed in the editor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -467,6 +523,9 @@ class TSOSK_Mod_Options_Editor {
 		if ( $this->is_protected_core( $name ) ) {
 			wp_send_json_error( __( 'This option is protected and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( $this->is_secret_option( $name ) ) {
+			wp_send_json_error( __( 'This option cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		if ( $this->is_caution_option( $name ) ) {
 			wp_send_json_error( __( 'This option is marked as caution and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -478,8 +537,7 @@ class TSOSK_Mod_Options_Editor {
 			}
 		}
 
-		$old_value = get_option( $name );
-		$old_raw   = is_string( $old_value ) ? $old_value : serialize( $old_value );
+		$old_raw = $this->fetch_option_value_from_db( $name );
 
 		update_option( $name, $raw_val, $autoload );
 		$this->log_activity( array(
@@ -553,9 +611,11 @@ class TSOSK_Mod_Options_Editor {
 		if ( $this->is_deletion_blocked( $name ) ) {
 			wp_send_json_error( __( 'This option is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( $this->is_secret_option( $name ) ) {
+			wp_send_json_error( __( 'This option cannot be deleted here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 
-		$old_value = get_option( $name );
-		$old_raw   = is_string( $old_value ) ? $old_value : maybe_serialize( $old_value );
+		$old_raw = $this->fetch_option_value_from_db( $name );
 
 		delete_option( $name );
 		$this->log_activity( array(
