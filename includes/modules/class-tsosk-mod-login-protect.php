@@ -172,8 +172,11 @@ class TSOSK_Mod_Login_Protect {
 			// Correct secret slug — serve the login page.
 			// Prevent browsers and proxies from caching the login page.
 			nocache_headers();
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			require_once ABSPATH . 'wp-login.php';
+			$login = tsosk_join_wp_root( 'wp-login.php' );
+			if ( is_readable( $login ) ) {
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				require_once $login;
+			}
 			exit;
 		}
 	}

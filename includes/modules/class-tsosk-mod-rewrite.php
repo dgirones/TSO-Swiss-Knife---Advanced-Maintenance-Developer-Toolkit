@@ -328,7 +328,7 @@ class TSOSK_Mod_Object_Cache {
 	 */
 	private function detect_all_cache_plugins(): array {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		$active  = (array) get_option( 'active_plugins', array() );
 		$plugins = get_plugins();

@@ -59,7 +59,7 @@ class TSOSK_Mod_Media_Cleaner {
 			wp_send_json_error( __( 'Attachment file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/image.php';
+		tsosk_require_wp_admin( 'includes/image.php' );
 		$metadata = wp_generate_attachment_metadata( $attachment_id, $file );
 		if ( empty( $metadata ) || is_wp_error( $metadata ) ) {
 			wp_send_json_error( __( 'Could not regenerate attachment metadata.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );

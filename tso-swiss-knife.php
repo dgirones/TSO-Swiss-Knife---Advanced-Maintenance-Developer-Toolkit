@@ -166,8 +166,32 @@ function tsosk_locate_wp_config_path(): string {
 	if ( file_exists( $root . '/wp-config.php' ) ) {
 		return $root . '/wp-config.php';
 	}
+
 	$parent = dirname( $root ) . '/wp-config.php';
-	return file_exists( $parent ) ? $parent : '';
+	if ( file_exists( $parent ) ) {
+		return $parent;
+	}
+
+	if ( isset( $_SERVER['DOCUMENT_ROOT'] ) ) {
+		$doc_root = rtrim( sanitize_text_field( wp_unslash( (string) $_SERVER['DOCUMENT_ROOT'] ) ), '/' );
+		if ( '' !== $doc_root && file_exists( $doc_root . '/wp-config.php' ) ) {
+			return $doc_root . '/wp-config.php';
+		}
+	}
+
+	$dir = $root;
+	for ( $i = 0; $i < 4; $i++ ) {
+		$up = dirname( $dir );
+		if ( $up === $dir ) {
+			break;
+		}
+		if ( file_exists( $up . '/wp-config.php' ) ) {
+			return $up . '/wp-config.php';
+		}
+		$dir = $up;
+	}
+
+	return '';
 }
 
 define( 'TSOSK_CONFIG_DIR', tsosk_get_uploads_subdir( 'config' ) );

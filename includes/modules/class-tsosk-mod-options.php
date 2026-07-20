@@ -38,7 +38,7 @@ class TSOSK_Mod_Options {
 	 */
 	private function is_link_inspector_active(): bool {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		return is_plugin_active( self::LINK_INSPECTOR_SLUG . '/tso-link-inspector.php' );
 	}

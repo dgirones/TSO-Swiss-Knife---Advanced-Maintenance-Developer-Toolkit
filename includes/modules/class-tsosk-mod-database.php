@@ -38,7 +38,7 @@ class TSOSK_Mod_Database {
 	 */
 	private function is_cleaner_active(): bool {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		return is_plugin_active( self::CLEANER_SLUG . '/tso-options-tables-cleaner.php' );
 	}

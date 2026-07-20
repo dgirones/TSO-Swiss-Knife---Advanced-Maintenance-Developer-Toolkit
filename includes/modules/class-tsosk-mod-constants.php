@@ -374,14 +374,7 @@ class TSOSK_Mod_Constants {
 	 * @return string Absolute wp-config.php path or empty.
 	 */
 	private function find_wp_config_path(): string {
-		if ( file_exists( ABSPATH . 'wp-config.php' ) ) {
-			return ABSPATH . 'wp-config.php';
-		}
-		$parent = dirname( ABSPATH );
-		if ( file_exists( $parent . '/wp-config.php' ) ) {
-			return $parent . '/wp-config.php';
-		}
-		return '';
+		return function_exists( 'tsosk_locate_wp_config_path' ) ? tsosk_locate_wp_config_path() : '';
 	}
 
 	/**

@@ -74,7 +74,7 @@ class TSOSK_Mod_Debug {
 	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int,preview:string}>
 	 */
 	private function get_log_files(): array {
-		$wp_root = function_exists( 'get_home_path' ) ? get_home_path() : ABSPATH;
+		$wp_root = tsosk_get_wp_root_dir();
 		$uploads     = wp_upload_dir( null, false );
 		$uploads_dir = ( ! empty( $uploads['basedir'] ) && empty( $uploads['error'] ) )
 			? wp_normalize_path( (string) $uploads['basedir'] )
@@ -162,12 +162,12 @@ class TSOSK_Mod_Debug {
 		}
 
 		if ( ! preg_match( '#^([A-Za-z]:)?[\\\\/]#', $path ) ) {
-			$path = ABSPATH . ltrim( $path, '/\\' );
+			$path = tsosk_get_wp_root_dir() . ltrim( $path, '/\\' );
 		}
 
 		$path = wp_normalize_path( $path );
 		$allowed_roots = array(
-			wp_normalize_path( ABSPATH ),
+			tsosk_get_wp_root_dir(),
 			wp_normalize_path( WP_CONTENT_DIR ),
 		);
 
@@ -411,34 +411,7 @@ class TSOSK_Mod_Debug {
 	 * @return string Absolute path, or empty string if not found.
 	 */
 	private function wpconfig_path(): string {
-		// 1. Standard: wp-config.php at ABSPATH.
-		if ( file_exists( ABSPATH . 'wp-config.php' ) ) {
-			return ABSPATH . 'wp-config.php';
-		}
-		// 2. WordPress installed in a subdirectory: wp-config.php is one level up
-		//    (documented WordPress layout — sits alongside wp-settings.php).
-		$parent = dirname( untrailingslashit( ABSPATH ) ) . '/wp-config.php';
-		if ( file_exists( $parent ) ) {
-			return $parent;
-		}
-		// 3. Try document root (e.g. cPanel installs where DOCUMENT_ROOT differs from ABSPATH).
-		$doc_root = isset( $_SERVER['DOCUMENT_ROOT'] )
-			? rtrim( sanitize_text_field( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ), '/' )
-			: '';
-		if ( $doc_root && file_exists( $doc_root . '/wp-config.php' ) ) {
-			return $doc_root . '/wp-config.php';
-		}
-		// 4. Walk up from ABSPATH (max 4 levels).
-		$dir = untrailingslashit( ABSPATH );
-		for ( $i = 0; $i < 4; $i++ ) {
-			$up = dirname( $dir );
-			if ( $up === $dir ) { break; }
-			if ( file_exists( $up . '/wp-config.php' ) ) {
-				return $up . '/wp-config.php';
-			}
-			$dir = $up;
-		}
-		return '';
+		return function_exists( 'tsosk_locate_wp_config_path' ) ? tsosk_locate_wp_config_path() : '';
 	}
 
 	/**

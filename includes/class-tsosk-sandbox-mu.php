@@ -64,7 +64,7 @@ class TSOSK_Sandbox_Mu {
 		}
 
 		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
+			tsosk_require_wp_admin( 'includes/file.php' );
 		}
 
 		global $wp_filesystem;

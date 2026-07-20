@@ -454,7 +454,8 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	public function gravity_validate( array $validation_result ): array {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Validated by Gravity Forms.
-		if ( empty( $_POST['gform_submit'] ) ) {
+		$form_id = isset( $_POST['gform_submit'] ) ? absint( wp_unslash( $_POST['gform_submit'] ) ) : 0;
+		if ( $form_id <= 0 ) {
 			return $validation_result;
 		}
 
@@ -829,21 +830,38 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	private function sanitize_provider_post( $post ) {
 		if ( ! is_array( $post ) ) {
-			return sanitize_text_field( (string) $post );
+			return sanitize_textarea_field( (string) $post );
 		}
 
 		$sanitized = array();
 		foreach ( $post as $key => $value ) {
-			$key = sanitize_key( (string) $key );
+			$key = $this->sanitize_provider_post_key( (string) $key );
 			if ( '' === $key ) {
 				continue;
 			}
 			$sanitized[ $key ] = is_array( $value )
 				? $this->sanitize_provider_post( $value )
-				: sanitize_text_field( (string) $value );
+				: sanitize_textarea_field( (string) $value );
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Sanitize a third-party form POST key without stripping Gravity Forms dots/brackets.
+	 *
+	 * @param string $key Raw POST key.
+	 * @return string
+	 */
+	private function sanitize_provider_post_key( string $key ): string {
+		$key = preg_replace( '/[^a-zA-Z0-9_\-\[\]\.]/', '', $key );
+		if ( ! is_string( $key ) || '' === $key ) {
+			return '';
+		}
+		if ( strlen( $key ) > 191 ) {
+			$key = substr( $key, 0, 191 );
+		}
+		return $key;
 	}
 
 	/**

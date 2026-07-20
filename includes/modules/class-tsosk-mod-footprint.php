@@ -96,7 +96,7 @@ class TSOSK_Mod_Footprint {
 	 */
 	public function render(): void {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		$plugins = get_plugins();
 		$active  = array_fill_keys( (array) get_option( 'active_plugins', array() ), true );
