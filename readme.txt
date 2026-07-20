@@ -106,7 +106,7 @@ Use only the **Plugin Sandbox** in this plugin. Combining it with other per-user
 
 = Does Update Manager change WordPress auto-updates? =
 
-Yes, only when an administrator with `manage_options` chooses a preset. Enabling auto-updates writes the native WordPress site options (`auto_update_plugins` / `auto_update_themes`). Disabling updates for staging uses documented filters so update checks and automatic updates can be paused on non-production sites. Leave the preset on **Default** for production.
+No. Automatic updates are managed only by WordPress core (**Dashboard → Updates**). Update Manager can block update checks on staging sites, hide specific plugin updates, and control update email notifications — it does not write `auto_update_*` site options or hook `auto_update_*` filters.
 
 = Where does the plugin write files? =
 
