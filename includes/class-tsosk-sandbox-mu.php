@@ -47,6 +47,8 @@ class TSOSK_Sandbox_Mu {
 	/**
 	 * Install or refresh the MU-plugin loader from the bundled template.
 	 *
+	 * Uses the WordPress Filesystem API for writes outside uploads.
+	 *
 	 * @return true|WP_Error
 	 */
 	public static function install_loader() {
@@ -61,22 +63,26 @@ class TSOSK_Sandbox_Mu {
 			return new WP_Error( 'missing_template', __( 'Sandbox loader template is missing from the plugin package.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( ! wp_mkdir_p( WPMU_PLUGIN_DIR ) ) {
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		global $wp_filesystem;
+		if ( ! WP_Filesystem() || ! $wp_filesystem ) {
+			return new WP_Error( 'fs_unavailable', __( 'Could not initialise the WordPress filesystem.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! $wp_filesystem->is_dir( WPMU_PLUGIN_DIR ) && ! $wp_filesystem->mkdir( WPMU_PLUGIN_DIR ) ) {
 			return new WP_Error( 'mu_not_writable', __( 'Could not create the must-use plugins directory.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( ! wp_is_writable( WPMU_PLUGIN_DIR ) ) {
-			return new WP_Error( 'mu_not_writable', __( 'The must-use plugins directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- read bundled template before FS write.
 		$content = file_get_contents( $source );
 		if ( false === $content ) {
 			return new WP_Error( 'read_failed', __( 'Could not read the sandbox loader template.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		if ( false === file_put_contents( $dest, $content ) ) {
+		if ( ! $wp_filesystem->put_contents( $dest, $content, FS_CHMOD_FILE ) ) {
 			return new WP_Error( 'write_failed', __( 'Could not install the sandbox loader in must-use plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 

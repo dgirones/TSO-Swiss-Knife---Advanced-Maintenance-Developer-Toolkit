@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Security {
 
-	/** JSON config filename (stored under uploads/tsosk-config). */
+	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
 	private const CONFIG_FILE = 'tsosk-security-flags.json';
 
 	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
@@ -187,7 +187,7 @@ class TSOSK_Mod_Security {
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config to wp-content/uploads/tsosk-config/ that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config under the plugin uploads folder that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">

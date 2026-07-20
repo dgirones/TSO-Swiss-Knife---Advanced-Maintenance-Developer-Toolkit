@@ -81,7 +81,14 @@ class TSOSK_Mod_Maintenance {
 		$logo_url = $this->get_logo_url( $logo_id );
 		$heading  = '' !== trim( $page_title ) ? $page_title : get_bloginfo( 'name' );
 		$body_cls = 'tsosk-maint' . ( $is_preview ? ' tsosk-maint-preview' : '' );
-		$css      = TSOSK_Support::read_asset_css( 'assets/css/tsosk-maintenance.css' );
+
+		wp_register_style(
+			'tsosk-maintenance',
+			TSOSK_URL . 'assets/css/tsosk-maintenance.css',
+			array(),
+			TSOSK_VERSION
+		);
+		wp_enqueue_style( 'tsosk-maintenance' );
 
 		http_response_code( 503 );
 		header( 'Retry-After: 3600' );
@@ -94,12 +101,7 @@ class TSOSK_Mod_Maintenance {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html( get_bloginfo( 'name' ) ); ?> – <?php esc_html_e( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></title>
-<style id="tsosk-maint-style">
-<?php
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static plugin CSS asset.
-echo $css;
-?>
-</style>
+<?php wp_print_styles( 'tsosk-maintenance' ); ?>
 </head>
 <body class="<?php echo esc_attr( $body_cls ); ?>">
 <?php if ( $is_preview ) : ?>

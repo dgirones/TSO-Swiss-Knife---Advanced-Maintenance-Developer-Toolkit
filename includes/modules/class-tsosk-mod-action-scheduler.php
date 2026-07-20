@@ -198,7 +198,7 @@ class TSOSK_Mod_Action_Scheduler {
 		if ( ! array_key_exists( $status, $this->get_status_choices() ) ) {
 			$status = 'pending';
 		}
-		$page = max( 1, absint( $_POST['page'] ?? 1 ) );
+		$page = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
 		$data = $this->fetch_actions( $status, $page );
 
 		wp_send_json_success(
@@ -216,7 +216,7 @@ class TSOSK_Mod_Action_Scheduler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
-		$id = isset( $_POST['action_id'] ) ? absint( $_POST['action_id'] ) : 0;
+		$id = isset( $_POST['action_id'] ) ? absint( wp_unslash( $_POST['action_id'] ) ) : 0;
 		if ( ! $id ) {
 			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -241,7 +241,7 @@ class TSOSK_Mod_Action_Scheduler {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
-		$id = isset( $_POST['action_id'] ) ? absint( $_POST['action_id'] ) : 0;
+		$id = isset( $_POST['action_id'] ) ? absint( wp_unslash( $_POST['action_id'] ) ) : 0;
 		if ( ! $id ) {
 			wp_send_json_error( __( 'Invalid action ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}

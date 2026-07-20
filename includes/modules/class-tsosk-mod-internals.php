@@ -14,9 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Internals {
 
-	/** Option key for disabled image size names. */
-	private const OPTION_DISABLED_SIZES = 'tsosk_disabled_image_sizes';
-
 	/** @var TSOSK_Mod_Internals|null */
 	private static $instance = null;
 
@@ -32,56 +29,7 @@ class TSOSK_Mod_Internals {
 		return self::$instance;
 	}
 
-	private function __construct() {
-		add_action( 'wp_ajax_tsosk_internals_image_sizes', array( $this, 'ajax_save_image_sizes' ) );
-		add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_disabled_image_sizes' ), 99 );
-	}
-
-	/**
-	 * Prevent WordPress from generating disabled intermediate sizes.
-	 *
-	 * @param array<string,array> $sizes Registered sizes.
-	 * @return array<string,array>
-	 */
-	public function filter_disabled_image_sizes( array $sizes ): array {
-		$disabled = $this->get_disabled_sizes();
-		foreach ( $disabled as $name ) {
-			unset( $sizes[ $name ] );
-		}
-		return $sizes;
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function get_disabled_sizes(): array {
-		$stored = get_option( self::OPTION_DISABLED_SIZES, array() );
-		return is_array( $stored ) ? array_values( array_filter( array_map( 'sanitize_key', $stored ) ) ) : array();
-	}
-
-	/**
-	 * AJAX: save which image sizes are disabled.
-	 */
-	public function ajax_save_image_sizes(): void {
-		check_ajax_referer( 'tsosk_internals_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
-		}
-
-		$disabled = array();
-		if ( isset( $_POST['disabled'] ) && is_array( $_POST['disabled'] ) ) {
-			foreach ( wp_unslash( $_POST['disabled'] ) as $name ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$name = sanitize_key( (string) $name );
-				if ( '' !== $name ) {
-					$disabled[] = $name;
-				}
-			}
-		}
-		$disabled = array_values( array_unique( $disabled ) );
-		update_option( self::OPTION_DISABLED_SIZES, $disabled, false );
-		TSOSK_Activity_Log::log( 'internals', 'save', __( 'Image size settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-	}
+	private function __construct() {}
 
 	/**
 	 * Render hidden WordPress internals.
@@ -89,22 +37,24 @@ class TSOSK_Mod_Internals {
 	public function render(): void {
 		global $wp, $wp_rewrite, $shortcode_tags;
 
-		$nonce           = wp_create_nonce( 'tsosk_internals_nonce' );
-		$disabled_sizes  = $this->get_disabled_sizes();
-		$post_types  = get_post_types( array(), 'objects' );
-		$post_status = get_post_stati( array(), 'objects' );
-		$taxonomies  = get_taxonomies( array(), 'objects' );
-		$image_sizes = function_exists( 'wp_get_registered_image_subsizes' ) ? wp_get_registered_image_subsizes() : array();
-		$roles       = function_exists( 'wp_roles' ) ? wp_roles()->roles : array();
-		$query_vars  = array_merge( (array) $wp->public_query_vars, (array) $wp->private_query_vars );
+		$post_types   = get_post_types( array(), 'objects' );
+		$post_status  = get_post_stati( array(), 'objects' );
+		$taxonomies   = get_taxonomies( array(), 'objects' );
+		$roles        = function_exists( 'wp_roles' ) ? wp_roles()->roles : array();
+		$query_vars   = array_merge( (array) $wp->public_query_vars, (array) $wp->private_query_vars );
 		$rewrite_tags = is_object( $wp_rewrite ) ? (array) $wp_rewrite->rewritecode : array();
-		$shortcodes  = is_array( $shortcode_tags ) ? array_keys( $shortcode_tags ) : array();
+		$shortcodes   = is_array( $shortcode_tags ) ? array_keys( $shortcode_tags ) : array();
 		sort( $query_vars );
 		sort( $rewrite_tags );
 		sort( $shortcodes );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, image sizes, query vars, rewrite tags and shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, query vars, rewrite tags and shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</p>
+		<p>
+			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=image-sizes-audit' ) ); ?>">
+				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</a>
 		</p>
 
 		<div class="tsosk-toolbar">
@@ -114,55 +64,6 @@ class TSOSK_Mod_Internals {
 		<?php $this->render_object_table( __( 'Registered Post Types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $post_types, array( 'name', 'label', 'public', 'show_ui', 'rewrite' ) ); ?>
 		<?php $this->render_object_table( __( 'Registered Post Statuses', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $post_status, array( 'name', 'label', 'public', 'internal', 'protected' ) ); ?>
 		<?php $this->render_object_table( __( 'Registered Taxonomies', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $taxonomies, array( 'name', 'label', 'public', 'show_ui', 'hierarchical' ) ); ?>
-
-		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Registered Image Sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description">
-				<?php esc_html_e( 'Uncheck a size to stop WordPress from generating it on new uploads (saves disk space). Core sizes thumbnail, medium and large cannot be disabled here. Existing files are not deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</p>
-			<div class="tsosk-notice tsosk-notice-warn" style="margin-bottom:12px;">
-				<?php esc_html_e( 'Risks when disabling sizes: broken images in old content, missing srcset variants, layout shifts in themes/plugins that expect those sizes, and WooCommerce or page builders that rely on specific dimensions. Test on staging after changing sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</div>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
-				<thead><tr>
-					<th style="width:40px;"><?php esc_html_e( 'On', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Width', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Height', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Crop', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-				</tr></thead>
-				<tbody>
-				<?php
-				$core_sizes = array( 'thumbnail', 'medium', 'medium_large', 'large' );
-				foreach ( $image_sizes as $name => $size ) :
-					$is_core    = in_array( $name, $core_sizes, true );
-					$is_enabled = ! in_array( $name, $disabled_sizes, true );
-				?>
-					<tr class="tsosk-internals-row">
-						<td>
-							<input type="checkbox" class="tsosk-img-size-toggle"
-							       data-name="<?php echo esc_attr( $name ); ?>"
-							       <?php checked( $is_enabled ); ?>
-							       <?php disabled( $is_core ); ?>>
-						</td>
-						<td><code><?php echo esc_html( $name ); ?></code><?php if ( $is_core ) : ?> <span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><?php endif; ?></td>
-						<td><?php echo esc_html( (string) ( $size['width'] ?? 0 ) ); ?></td>
-						<td><?php echo esc_html( (string) ( $size['height'] ?? 0 ) ); ?></td>
-						<td><?php echo ! empty( $size['crop'] ) ? esc_html__( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'No', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-			</div>
-			<p style="margin-top:10px;">
-				<button type="button" class="button button-primary" id="tsosk-internals-save-sizes"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<span class="tsosk-ajax-msg" id="tsosk-internals-sizes-msg"></span>
-			</p>
-		</div>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Roles & Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>

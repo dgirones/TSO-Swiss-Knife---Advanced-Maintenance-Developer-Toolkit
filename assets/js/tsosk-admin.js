@@ -371,32 +371,6 @@
 		} );
 	} );
 
-	$( document ).on( 'click', '#tsosk-internals-save-sizes', function () {
-		var $btn   = $( this );
-		var nonce  = $btn.data( 'nonce' );
-		var $msg   = $( '#tsosk-internals-sizes-msg' );
-		var disabled = [];
-		$( '.tsosk-img-size-toggle' ).each( function () {
-			var $cb = $( this );
-			if ( ! $cb.is( ':checked' ) && ! $cb.is( ':disabled' ) ) {
-				disabled.push( $cb.data( 'name' ) );
-			}
-		} );
-		$btn.prop( 'disabled', true );
-		ajaxPost( {
-			action : 'tsosk_internals_image_sizes',
-			data   : { nonce: nonce, disabled: disabled },
-			success: function ( r ) {
-				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
-				$btn.prop( 'disabled', false );
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false );
-			}
-		} );
-	} );
-
 	// ── Users & Sessions ───────────────────────────────────────────────────
 
 	$( document ).on( 'click', '.tsosk-user-close-sessions', function () {
@@ -507,6 +481,54 @@
 	} );
 
 	// ── Media Cleaner ──────────────────────────────────────────────────────
+
+	$( document ).on( 'click', '#tsosk-media-full-review', function () {
+		var $btn  = $( this );
+		var $msg  = $( '#tsosk-media-full-review-msg' );
+		var $prog = $( '#tsosk-media-full-review-progress' );
+		var nonce = $btn.data( 'nonce' );
+		var label = tsosk.i18n.media_full_review || 'Run full media review';
+
+		function tick( start ) {
+			ajaxPost( {
+				action : 'tsosk_media_full_review',
+				data   : { nonce: nonce, start: start ? 1 : 0 },
+				success: function ( r ) {
+					if ( ! r.success ) {
+						showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+						$btn.prop( 'disabled', false ).text( label );
+						return;
+					}
+					if ( r.data.progress ) {
+						$prog.text( r.data.progress );
+					}
+					if ( r.data.done ) {
+						if ( r.data.html ) {
+							if ( r.data.html.missing ) {
+								$( '#tsosk-media-missing-wrap' ).html( r.data.html.missing );
+							}
+							if ( r.data.html.orphans ) {
+								$( '#tsosk-media-orphans-wrap' ).html( r.data.html.orphans );
+							}
+						}
+						showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+						$btn.prop( 'disabled', false ).text( label );
+						return;
+					}
+					tick( false );
+				},
+				error: function () {
+					showMsg( $msg, tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( label );
+				}
+			} );
+		}
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		showMsg( $msg, '', '' );
+		$prog.text( tsosk.i18n.media_full_review_starting || 'Starting full media review…' );
+		tick( true );
+	} );
 
 	$( document ).on( 'click', '.tsosk-media-regenerate', function () {
 		var $btn = $( this );
@@ -1407,7 +1429,9 @@
 
 				if ( r.success ) {
 					$res.html( r.data.html || tsosk.i18n.fi_no_html );
-					var issues = ( r.data.modified || [] ).length + ( r.data.missing || [] ).length + ( r.data.added || [] ).length;
+					var issues = ( typeof r.data.n_issues === 'number' )
+						? r.data.n_issues
+						: ( ( r.data.modified || [] ).length + ( r.data.missing || [] ).length );
 					if ( issues === 0 ) {
 						showMsg( $msg, tsosk.i18n.fi_clean, 'ok' );
 					} else {
@@ -3645,7 +3669,7 @@
 		if ( e.key === 'Enter' ) { tsosk_sq_load( 1 ); }
 	} );
 
-	// Debug tab: live query table filters (duplicates / slow / search).
+	// Slow Query Monitor: live SAVEQUERIES table filters (duplicates / slow / search).
 	function tsosk_sq_apply_debug_filters() {
 		var $filter = $( '#tsosk-sq-filter' );
 		if ( ! $filter.length ) {
@@ -4188,11 +4212,9 @@
 		var $box    = $( '#tsosk-snapshot-import-sections' );
 		var $list   = $( '#tsosk-snapshot-import-list' );
 		var json    = $( '#tsosk-snapshot-json' ).val().trim();
-		var labelsEl = document.getElementById( 'tsosk-snapshot-labels' );
-		var labels  = {};
-		if ( labelsEl ) {
-			try { labels = JSON.parse( labelsEl.textContent || '{}' ); } catch ( e ) { labels = {}; }
-		}
+		var labels = ( typeof tsosk !== 'undefined' && tsosk.snapshot_section_labels )
+			? tsosk.snapshot_section_labels
+			: {};
 
 		$list.empty();
 		if ( ! json ) {

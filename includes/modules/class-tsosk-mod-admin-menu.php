@@ -2795,8 +2795,11 @@ class TSOSK_Mod_Admin_Menu {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$raw = isset( $_POST['items'] ) ? json_decode( wp_unslash( (string) $_POST['items'] ), true ) : array();
+		if ( ! isset( $_POST['items'] ) ) {
+			wp_send_json_error( __( 'Invalid menu data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$items_json = TSOSK_Support::get_post_scalar( 'items' );
+		$raw        = json_decode( $items_json, true );
 		if ( ! is_array( $raw ) ) {
 			wp_send_json_error( __( 'Invalid menu data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -2862,7 +2865,9 @@ class TSOSK_Mod_Admin_Menu {
 		usort(
 			$raw,
 			static function ( $a, $b ) {
-				return (int) ( $a['sort'] ?? 0 ) <=> (int) ( $b['sort'] ?? 0 );
+				$a_sort = is_array( $a ) ? (int) ( $a['sort'] ?? 0 ) : 0;
+				$b_sort = is_array( $b ) ? (int) ( $b['sort'] ?? 0 ) : 0;
+				return $a_sort <=> $b_sort;
 			}
 		);
 
@@ -2913,9 +2918,10 @@ class TSOSK_Mod_Admin_Menu {
 			$this->append_sub_order_id( $sub_order_ids, $parent_slug, $id );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$posted_sub_order_ids = isset( $_POST['sub_order_ids'] ) ? json_decode( wp_unslash( (string) $_POST['sub_order_ids'] ), true ) : null;
-		if ( is_array( $posted_sub_order_ids ) && array() !== $posted_sub_order_ids ) {
+		$posted_sub_order_ids = isset( $_POST['sub_order_ids'] )
+			? TSOSK_Support::get_post_json_array( 'sub_order_ids' )
+			: array();
+		if ( array() !== $posted_sub_order_ids ) {
 			$validated_ids = $this->sanitize_posted_sub_order_ids( $posted_sub_order_ids, $known );
 			if ( array() !== $validated_ids['ids'] ) {
 				$sub_order_ids = $validated_ids['ids'];
@@ -2927,9 +2933,10 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$posted_sub_order = isset( $_POST['sub_order'] ) ? json_decode( wp_unslash( (string) $_POST['sub_order'] ), true ) : null;
-		if ( is_array( $posted_sub_order ) && array() !== $posted_sub_order ) {
+		$posted_sub_order = isset( $_POST['sub_order'] )
+			? TSOSK_Support::get_post_json_array( 'sub_order' )
+			: array();
+		if ( array() !== $posted_sub_order ) {
 			$validated = $this->sanitize_posted_sub_order( $posted_sub_order, $known );
 			if ( array() !== $validated ) {
 				foreach ( $validated as $parent => $slugs ) {
@@ -2941,9 +2948,10 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$posted_top_order = isset( $_POST['top_order'] ) ? json_decode( wp_unslash( (string) $_POST['top_order'] ), true ) : null;
-		if ( is_array( $posted_top_order ) && array() !== $posted_top_order ) {
+		$posted_top_order = isset( $_POST['top_order'] )
+			? TSOSK_Support::get_post_json_array( 'top_order' )
+			: array();
+		if ( array() !== $posted_top_order ) {
 			$validated_top = array();
 			foreach ( $posted_top_order as $slug ) {
 				$slug = $this->sanitize_menu_slug( (string) $slug );

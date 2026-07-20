@@ -21,7 +21,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Hidden WordPress Profiles** — Switch between curated admin UI profiles that show or hide module groups for cleaner workflows.
 * **Cron Manager** — List, manually run, or delete scheduled WP-Cron events. Core hooks are protected from accidental deletion.
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
-* **Debug Mode** — Toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, and SAVEQUERIES via auto-generated flags in `wp-content/uploads/tsosk-config/` — no wp-config.php editing required.
+* **Debug Mode** — Toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, and SAVEQUERIES via JSON flags stored under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/` — no wp-config.php editing required.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
 * **Meta Editor** — Browse and edit post, user, term, and comment meta with type-aware validation.
 * **Option Library** — Save named option presets and re-apply them across environments.
@@ -29,7 +29,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **TSO Link Inspector** — In-plugin promo for the free [TSO Link Inspector](https://wordpress.org/plugins/tso-link-inspector/) companion plugin (broken-link scanner and fixer on WordPress.org).
 * **Transients** — Filter by status and purge expired or all transients in bulk.
 * **WP Constants** — Read-only overview of relevant constants grouped by category.
-* **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, image sizes, and shortcodes.
+* **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, and shortcodes.
 * **REST API Controls** — Disable anonymous REST API access or block individual namespaces.
 * **Heartbeat Controls** — Set Heartbeat mode (default / disable frontend / disable editor / disable all) and interval.
 * **Update Manager** — Review pending core, plugin, and theme updates, optionally block update checks (staging), and control update email notifications.
@@ -59,9 +59,28 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 = Translations =
 
-* Bundled translations ship in `/languages` as `.po` and `.mo` files (Catalan and Spanish), plus the template `languages/tso-swiss-knife-advanced-maintenance-developer-toolkit.pot`. After editing `.po` files, compile `.mo` with `py scripts/tsosk-compile-mo.py`. If a bundled `.mo` is missing and the `.po` is newer, the plugin may recompile a cached copy under `wp-content/uploads/tsosk-l10n/`.
-* On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language.
+* All user-facing strings use the `tso-swiss-knife-advanced-maintenance-developer-toolkit` text domain and standard WordPress gettext functions (`__()`, `_e()`, `esc_html__()`, etc.).
+* Bundled translations ship in `/languages` as `.po` and `.mo` files (Catalan and Spanish), plus the template `languages/tso-swiss-knife-advanced-maintenance-developer-toolkit.pot`. After editing `.po` files, compile `.mo` with `py scripts/tsosk-compile-mo.py` before shipping. The plugin loads the bundled `.mo` files only (no runtime PO compilation).
+* On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language. This only affects that admin screen.
 * Further locales can be contributed via [Translate WordPress](https://translate.wordpress.org/) once the plugin is published.
+
+== External services ==
+
+This plugin can optionally contact third-party services. None of these calls run unless a site administrator enables the related feature and, where required, provides an API key.
+
+= Comment Antispam (optional) =
+
+When **Comment Antispam** reputation or cloud checks are enabled, visitor data from comments or protected contact forms may be sent as follows:
+
+* **Stop Forum Spam** (`https://api.stopforumspam.org/api`) — Used to look up whether an IP, email address, or username has been reported as spam. Sent on each checked submission (results may be cached briefly). Service: [Stop Forum Spam](https://www.stopforumspam.com/). [Terms of use](https://www.stopforumspam.com/legal) · [Privacy policy](https://www.stopforumspam.com/privacy).
+* **AbuseIPDB** (`https://api.abuseipdb.com/api/v2/check`) — Used to check IP reputation. Sends the visitor IP and your AbuseIPDB API key (request header). Service: [AbuseIPDB](https://www.abuseipdb.com/). [Terms of use](https://www.abuseipdb.com/legal) · [Privacy policy](https://www.abuseipdb.com/privacy).
+* **CleanTalk** (`https://moderate.cleantalk.org/api2.0`) — Used for cloud spam filtering when CleanTalk mode is selected. Sends your CleanTalk access key plus sender email, IP, nickname, URL, message content, and post/page context. Service: [CleanTalk](https://cleantalk.org/). [Terms of use and privacy policy](https://cleantalk.org/publicoffer).
+* **Project Honey Pot (HTTP:BL)** — Optional DNS-based IP reputation lookup using your HTTP:BL access key and the visitor IPv4 address. Service: [Project Honey Pot](https://www.projecthoneypot.org/). [Terms of use](https://www.projecthoneypot.org/terms_of_use.php) · [Privacy policy](https://www.projecthoneypot.org/privacy_policy.php).
+* **Akismet** — When cloud mode is set to Akismet and the Akismet plugin is active, spam checks are handled by Akismet according to its own settings and policies. Service: [Akismet](https://akismet.com/). [Terms of service](https://akismet.com/tos/) · [Privacy policy](https://automattic.com/privacy/).
+
+= Core File Integrity (optional) =
+
+When you run a core integrity scan, the plugin requests official WordPress core checksums from `https://api.wordpress.org/core/checksums/1.0/`. Only the WordPress version and locale are sent (no personal data). Service: [WordPress.org](https://wordpress.org/). [Privacy policy](https://wordpress.org/about/privacy/).
 
 == Installation ==
 
@@ -86,6 +105,14 @@ No. Logged-in administrators are always bypassed, regardless of IP whitelist set
 = Can I run multiple plugin-testing tools at once? =
 
 Use only the **Plugin Sandbox** in this plugin. Combining it with other per-user plugin override tools may produce unpredictable results.
+
+= Does Update Manager change WordPress auto-updates? =
+
+Yes, only when an administrator with `manage_options` chooses a preset. Enabling auto-updates writes the native WordPress site options (`auto_update_plugins` / `auto_update_themes`). Disabling updates for staging uses documented filters so update checks and automatic updates can be paused on non-production sites. Leave the preset on **Default** for production.
+
+= Where does the plugin write files? =
+
+Runtime config and managed logs go under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/`. The Plugin Sandbox may install a must-use loader under `mu-plugins` (via the WordPress Filesystem API) so early plugin filtering can run; that loader is removed when no sandbox sessions remain. The plugin does not write `wp-content/debug.log` or edit `wp-config.php`.
 
 == Screenshots ==
 

@@ -50,6 +50,38 @@ class TSOSK_Mod_Search_Replace {
 	// ── Table / column discovery ──────────────────────────────────────────────
 
 	/**
+	 * Quote a SQL identifier after strict validation (letters, digits, underscore).
+	 *
+	 * @param string $name Table or column name.
+	 * @return string Backtick-quoted identifier, or empty when invalid.
+	 */
+	private function sql_ident( string $name ): string {
+		// Allow leading digits (some $wpdb->prefix values start with numbers).
+		if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $name ) ) {
+			return '';
+		}
+		return '`' . $name . '`';
+	}
+
+	/**
+	 * Quote a list of SQL identifiers.
+	 *
+	 * @param string[] $names Column names.
+	 * @return string Comma-separated quoted list, or empty when any name is invalid.
+	 */
+	private function sql_ident_list( array $names ): string {
+		$parts = array();
+		foreach ( $names as $name ) {
+			$quoted = $this->sql_ident( (string) $name );
+			if ( '' === $quoted ) {
+				return '';
+			}
+			$parts[] = $quoted;
+		}
+		return implode( ', ', $parts );
+	}
+
+	/**
 	 * List all database tables in the current DB.
 	 *
 	 * @return array<int,array{name:string,rows:int,size:string,is_wp:bool}>
@@ -98,20 +130,34 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	private function get_text_columns( string $table ): array {
 		global $wpdb;
-		$safe = '`' . str_replace( '`', '', $table ) . '`';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name validated before quoting.
-		$cols = $wpdb->get_results( "SHOW COLUMNS FROM {$safe}", ARRAY_A );
+
+		if ( '' === $this->sql_ident( $table ) || ! $this->table_exists( $table ) ) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$cols = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT COLUMN_NAME AS Field, DATA_TYPE AS Type
+				   FROM information_schema.COLUMNS
+				  WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s',
+				DB_NAME,
+				$table
+			),
+			ARRAY_A
+		);
 		if ( ! is_array( $cols ) ) {
 			return array();
 		}
 		$text_types = array( 'text', 'tinytext', 'mediumtext', 'longtext', 'varchar', 'char', 'blob', 'tinyblob', 'mediumblob', 'longblob' );
 		$result     = array();
 		foreach ( $cols as $col ) {
-			$col_type = strtolower( (string) $col['Type'] );
-			// Extract base type (strip length/charset).
-			$base_type = strtok( $col_type, '(' );
-			if ( in_array( (string) $base_type, $text_types, true ) ) {
-				$result[] = (string) $col['Field'];
+			$base_type = strtolower( (string) ( $col['Type'] ?? '' ) );
+			if ( in_array( $base_type, $text_types, true ) ) {
+				$field = (string) ( $col['Field'] ?? '' );
+				if ( '' !== $this->sql_ident( $field ) ) {
+					$result[] = $field;
+				}
 			}
 		}
 		return $result;
@@ -422,38 +468,33 @@ class TSOSK_Mod_Search_Replace {
 		$case     = $params['case_sensitive'];
 		$is_regex = $params['is_regex'];
 
-		$safe_table = '`' . str_replace( '`', '', $table ) . '`';
-		$safe_pk    = '`' . str_replace( '`', '', $pk ) . '`';
-		$safe_cols  = implode( ', ', array_map( static fn( $c ) => '`' . str_replace( '`', '', $c ) . '`', $cols ) );
-		$limit      = $preview ? self::PREVIEW_LIMIT : 10000;
-
-		// Build LIKE clauses per column for the initial filter.
-		$like_parts = array();
-		foreach ( $cols as $col ) {
-			$safe_col     = '`' . str_replace( '`', '', $col ) . '`';
-			$like_parts[] = "{$safe_col} LIKE %s";
+		$safe_table = $this->sql_ident( $table );
+		$safe_pk    = $this->sql_ident( $pk );
+		$safe_cols  = $this->sql_ident_list( $cols );
+		if ( '' === $safe_table || '' === $safe_pk || '' === $safe_cols ) {
+			return array();
 		}
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
-		$like_term = '%' . $wpdb->esc_like( $is_regex ? '' : $search ) . '%';
-		$where     = $is_regex ? '1=1' : '(' . implode( ' OR ', $like_parts ) . ')';
 
+		$limit = $preview ? self::PREVIEW_LIMIT : 10000;
+
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); values use prepare placeholders.
 		if ( $is_regex ) {
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT {$safe_pk}, {$safe_cols} FROM {$safe_table} LIMIT %d",
-					$limit
-				),
-				ARRAY_A
-			);
+			$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' LIMIT %d';
+			$rows = $wpdb->get_results( $wpdb->prepare( $sql, $limit ), ARRAY_A );
 		} else {
-			$args = array_fill( 0, count( $cols ), $like_term );
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT {$safe_pk}, {$safe_cols} FROM {$safe_table} WHERE {$where} LIMIT %d",
-					...array_merge( $args, array( $limit ) )
-				),
-				ARRAY_A
-			);
+			$like_parts = array();
+			foreach ( $cols as $col ) {
+				$col_sql = $this->sql_ident( (string) $col );
+				if ( '' === $col_sql ) {
+					return array();
+				}
+				$like_parts[] = $col_sql . ' LIKE %s';
+			}
+			$like_term = '%' . $wpdb->esc_like( $search ) . '%';
+			$where     = '(' . implode( ' OR ', $like_parts ) . ')';
+			$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
+			$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $limit ) );
+			$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 		}
 		// phpcs:enable
 
@@ -500,9 +541,12 @@ class TSOSK_Mod_Search_Replace {
 		$case     = $params['case_sensitive'];
 		$is_regex = $params['is_regex'];
 
-		$safe_table = '`' . str_replace( '`', '', $table ) . '`';
-		$safe_pk    = '`' . str_replace( '`', '', $pk ) . '`';
-		$safe_cols  = implode( ', ', array_map( static fn( $c ) => '`' . str_replace( '`', '', $c ) . '`', $cols ) );
+		$safe_table = $this->sql_ident( $table );
+		$safe_pk    = $this->sql_ident( $pk );
+		$safe_cols  = $this->sql_ident_list( $cols );
+		if ( '' === $safe_table || '' === $safe_pk || '' === $safe_cols ) {
+			return array( 'rows' => 0, 'cells' => 0, 'errors' => array( __( 'Invalid table or column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) );
+		}
 
 		$stats = array( 'rows' => 0, 'cells' => 0, 'errors' => array() );
 
@@ -512,16 +556,10 @@ class TSOSK_Mod_Search_Replace {
 			$offset = 0;
 			$batch  = 500;
 
-			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident().
 			do {
-				$rows = $wpdb->get_results(
-					$wpdb->prepare(
-						"SELECT {$safe_pk}, {$safe_cols} FROM {$safe_table} WHERE 1=1 LIMIT %d OFFSET %d",
-						$batch,
-						$offset
-					),
-					ARRAY_A
-				);
+				$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' LIMIT %d OFFSET %d';
+				$rows = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
 
 				if ( ! $rows ) {
 					break;
@@ -537,22 +575,22 @@ class TSOSK_Mod_Search_Replace {
 
 		$batch = 500;
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); LIKE values use prepare placeholders.
 		do {
+			$like_parts = array();
+			foreach ( $cols as $col ) {
+				$col_sql = $this->sql_ident( (string) $col );
+				if ( '' === $col_sql ) {
+					$stats['errors'][] = __( 'Invalid column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+					return $stats;
+				}
+				$like_parts[] = $col_sql . ' LIKE %s';
+			}
 			$like_term = '%' . $wpdb->esc_like( $search ) . '%';
-			$like_cols = implode( ' OR ', array_map(
-				static fn( $c ) => '`' . str_replace( '`', '', $c ) . '` LIKE %s',
-				$cols
-			) );
+			$where     = '(' . implode( ' OR ', $like_parts ) . ')';
+			$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
 			$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $batch ) );
-			$where     = "({$like_cols})";
-			$rows      = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT {$safe_pk}, {$safe_cols} FROM {$safe_table} WHERE {$where} LIMIT %d",
-					...$args
-				),
-				ARRAY_A
-			);
+			$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 			// phpcs:enable
 
 			if ( ! $rows ) {
@@ -687,19 +725,34 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	private function get_primary_key( string $table ): string {
 		global $wpdb;
-		$safe = '`' . str_replace( '`', '', $table ) . '`';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name validated before quoting.
-		$cols = $wpdb->get_results( "SHOW COLUMNS FROM {$safe}", ARRAY_A );
-		if ( ! is_array( $cols ) ) {
+
+		if ( '' === $this->sql_ident( $table ) || ! $this->table_exists( $table ) ) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$cols = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT COLUMN_NAME AS Field, COLUMN_KEY AS `Key`
+				   FROM information_schema.COLUMNS
+				  WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+				  ORDER BY ORDINAL_POSITION ASC',
+				DB_NAME,
+				$table
+			),
+			ARRAY_A
+		);
+		if ( ! is_array( $cols ) || array() === $cols ) {
 			return '';
 		}
 		foreach ( $cols as $col ) {
 			if ( 'PRI' === ( $col['Key'] ?? '' ) ) {
-				return (string) $col['Field'];
+				$field = (string) ( $col['Field'] ?? '' );
+				return ( '' !== $this->sql_ident( $field ) ) ? $field : '';
 			}
 		}
-		// Fallback: first column.
-		return $cols ? (string) $cols[0]['Field'] : '';
+		$field = (string) ( $cols[0]['Field'] ?? '' );
+		return ( '' !== $this->sql_ident( $field ) ) ? $field : '';
 	}
 
 	// ── Request parsing ───────────────────────────────────────────────────────

@@ -26,8 +26,10 @@ class TSOSK_Uploads_Scanner {
 
 	/** Directory names under uploads to skip (plugin-owned, not media). */
 	private const SKIP_DIRS = array(
+		'tso-swiss-knife-advanced-maintenance-developer-toolkit',
 		'tsosk-config',
 		'tsosk-l10n',
+		'tsosk-logs',
 		'tso-backups',
 		'tso-options-tables-cleaner-backups',
 		'tso-options-tables-cleaner-options-tab-cache',

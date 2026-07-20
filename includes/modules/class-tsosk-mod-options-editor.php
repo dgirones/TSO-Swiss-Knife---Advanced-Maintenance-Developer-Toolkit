@@ -147,35 +147,91 @@ class TSOSK_Mod_Options_Editor {
 	}
 
 	/**
-	 * SQL AND clause for list queries.
+	 * Whitelisted ORDER BY clause for the options list (no user input in SQL).
 	 *
-	 * @param bool $show_protected Include protected core options when true.
-	 * @return string
+	 * @param string $sort_col Column key.
+	 * @param string $sort_dir ASC|DESC.
+	 * @return string Full ORDER BY … clause.
 	 */
-	private function get_list_exclusion_where_sql( bool $show_protected ): string {
-		$transient_where = " AND option_name NOT LIKE '\_transient\_%' AND option_name NOT LIKE '\_site\_transient\_%'";
+	private function get_options_list_order_by_sql( string $sort_col, string $sort_dir ): string {
+		$dir = ( 'DESC' === $sort_dir ) ? 'DESC' : 'ASC';
 
-		if ( $show_protected ) {
-			return $transient_where;
+		if ( 'type' === $sort_col ) {
+			return "ORDER BY CASE
+				WHEN option_value REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)' THEN 'serialized'
+				WHEN option_value REGEXP '^[{\\[]' THEN 'json'
+				WHEN option_value REGEXP '^[0-9]+\$' THEN 'integer'
+				ELSE 'text'
+			END {$dir}, option_name ASC";
 		}
 
-		return $this->get_hidden_options_where_sql();
+		if ( 'size' === $sort_col || 'preview' === $sort_col ) {
+			return "ORDER BY LENGTH(option_value) {$dir}, option_name ASC";
+		}
+
+		if ( 'autoload' === $sort_col ) {
+			return "ORDER BY autoload {$dir}, option_name ASC";
+		}
+
+		return "ORDER BY option_name {$dir}";
 	}
 
 	/**
-	 * SQL AND clause excluding protected options and transients from browse queries.
+	 * Append type-filter SQL fragments and prepare args for the options list.
 	 *
-	 * @return string
+	 * @param string            $filter_type Filter key.
+	 * @param string            $where       WHERE clause (by ref).
+	 * @param array<int, mixed> $args        Prepare args (by ref).
 	 */
-	private function get_hidden_options_where_sql(): string {
-		$protected_names = array_map(
-			static fn( string $name ): string => "'" . esc_sql( $name ) . "'",
-			$this->get_protected()
-		);
-		$protected_in_sql = implode( ',', $protected_names );
+	private function append_options_type_filter_sql( string $filter_type, string &$where, array &$args ): void {
+		$serialized = '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)';
+		$json       = '^[{\\[]';
+		$integer    = '^[0-9]+$';
+		$text_skip  = '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:|[{\\[])';
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- names are esc_sql'd from a fixed whitelist.
-		return " AND option_name NOT IN ({$protected_in_sql}) AND option_name NOT LIKE '\_transient\_%' AND option_name NOT LIKE '\_site\_transient\_%'";
+		if ( 'serialized' === $filter_type ) {
+			$where .= ' AND option_value REGEXP %s';
+			$args[] = $serialized;
+		} elseif ( 'json' === $filter_type ) {
+			$where .= ' AND option_value REGEXP %s';
+			$args[] = $json;
+		} elseif ( 'integer' === $filter_type ) {
+			$where .= ' AND option_value REGEXP %s AND LENGTH(option_value) < 20';
+			$args[] = $integer;
+		} elseif ( 'text' === $filter_type ) {
+			$where .= ' AND option_value NOT REGEXP %s AND NOT (option_value REGEXP %s AND LENGTH(option_value) < 20)';
+			$args[] = $text_skip;
+			$args[] = $integer;
+		}
+	}
+
+	/**
+	 * Append transient / protected-option exclusions with prepare placeholders.
+	 *
+	 * @param bool              $show_protected Include protected names.
+	 * @param string            $where          WHERE clause (by ref).
+	 * @param array<int, mixed> $args           Prepare args (by ref).
+	 */
+	private function append_options_exclusion_sql( bool $show_protected, string &$where, array &$args ): void {
+		global $wpdb;
+
+		$where .= ' AND option_name NOT LIKE %s AND option_name NOT LIKE %s';
+		$args[] = $wpdb->esc_like( '_transient_' ) . '%';
+		$args[] = $wpdb->esc_like( '_site_transient_' ) . '%';
+
+		if ( $show_protected ) {
+			return;
+		}
+
+		$protected = $this->get_protected();
+		if ( array() === $protected ) {
+			return;
+		}
+
+		$where .= ' AND option_name NOT IN (' . implode( ',', array_fill( 0, count( $protected ), '%s' ) ) . ')';
+		foreach ( $protected as $name ) {
+			$args[] = $name;
+		}
 	}
 
 	/**
@@ -275,7 +331,7 @@ class TSOSK_Mod_Options_Editor {
 		global $wpdb;
 
 		$search           = isset( $_POST['search'] )        ? sanitize_text_field( wp_unslash( $_POST['search'] ) )        : '';
-		$page             = max( 1, absint( $_POST['page']     ?? 1 ) );
+		$page             = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
 		$sort_col    = sanitize_key( wp_unslash( $_POST['sort_col']  ?? 'option_name' ) );
 		$sort_dir    = strtoupper( sanitize_key( wp_unslash( $_POST['sort_dir']  ?? 'ASC' ) ) ) === 'DESC' ? 'DESC' : 'ASC';
 		$filter_type = sanitize_key( wp_unslash( $_POST['filter_type'] ?? '' ) );
@@ -287,86 +343,37 @@ class TSOSK_Mod_Options_Editor {
 			$sort_col = 'option_name';
 		}
 
-		// ORDER BY: type uses a CASE WHEN expression on the raw value.
-		if ( 'type' === $sort_col ) {
-			$order_sql = "CASE
-				WHEN option_value REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)' THEN 'serialized'
-				WHEN option_value REGEXP '^[{\\[]' THEN 'json'
-				WHEN option_value REGEXP '^[0-9]+\$' THEN 'integer'
-				ELSE 'text'
-			END {$sort_dir}";
-		} elseif ( 'size' === $sort_col || 'preview' === $sort_col ) {
-			// Preview order = by value length (bigger values are usually more interesting).
-			$order_sql = "LENGTH(option_value) {$sort_dir}";
-		} else {
-			$order_sql = esc_sql( $sort_col ) . " {$sort_dir}";
-		}
+		$caution = $this->get_caution();
+		$where   = 'WHERE 1=1';
+		$args    = array();
 
-		if ( 'option_name' !== $sort_col ) {
-			$order_sql .= ', option_name ASC';
-		}
-
-		// WHERE extra clause for type filter.
-		$type_where = '';
-		if ( 'serialized' === $filter_type ) {
-			$type_where = "AND option_value REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)'";
-		} elseif ( 'json' === $filter_type ) {
-			$type_where = "AND option_value REGEXP '^[{\\[]'";
-		} elseif ( 'integer' === $filter_type ) {
-			$type_where = "AND option_value REGEXP '^[0-9]+\$' AND LENGTH(option_value) < 20";
-		} elseif ( 'text' === $filter_type ) {
-			$type_where = "AND option_value NOT REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:|[{\\[])' AND NOT (option_value REGEXP '^[0-9]+\$' AND LENGTH(option_value) < 20)";
-		}
-
-		// Protected core options are hidden by default; transients are always excluded.
-		$hidden_where = $this->get_list_exclusion_where_sql( $show_protected );
-		$caution      = $this->get_caution();
-
-		// $type_where, $hidden_where: built from hardcoded REGEXP / esc_sql whitelist values.
-		// $order_sql: validated against allowed_cols whitelist + ASC|DESC only.
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		if ( $search ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s {$type_where} {$hidden_where}",
-					'%' . $wpdb->esc_like( $search ) . '%'
-				)
-			);
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT option_name, option_value, autoload
-					   FROM {$wpdb->options}
-					  WHERE option_name LIKE %s {$type_where} {$hidden_where}
-					  ORDER BY {$order_sql}
-					  LIMIT %d OFFSET %d",
-					'%' . $wpdb->esc_like( $search ) . '%',
-					self::PER_PAGE,
-					$offset
-				),
-				ARRAY_A
-			);
-		} else {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var(
-				"SELECT COUNT(*) FROM {$wpdb->options} WHERE 1=1 {$type_where} {$hidden_where}"
-			);
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT option_name, option_value, autoload
-					   FROM {$wpdb->options}
-					  WHERE 1=1 {$type_where} {$hidden_where}
-					  ORDER BY {$order_sql}
-					  LIMIT %d OFFSET %d",
-					self::PER_PAGE,
-					$offset
-				),
-				ARRAY_A
-			);
+			$where .= ' AND option_name LIKE %s';
+			$args[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		$this->append_options_type_filter_sql( $filter_type, $where, $args );
+		$this->append_options_exclusion_sql( $show_protected, $where, $args );
+
+		$orderby = $this->get_options_list_order_by_sql( $sort_col, $sort_dir );
+
+		// $where / $orderby: whitelist SQL fragments; values use %s/%d via prepare().
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->options} {$where}", ...$args ) );
+
+		$list_args   = $args;
+		$list_args[] = self::PER_PAGE;
+		$list_args[] = $offset;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, option_value, autoload FROM {$wpdb->options} {$where} {$orderby} LIMIT %d OFFSET %d",
+				...$list_args
+			),
+			ARRAY_A
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		if ( ! is_array( $rows ) ) {
 			$rows = array();
@@ -449,10 +456,9 @@ class TSOSK_Mod_Options_Editor {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$name     = isset( $_POST['name'] )     ? sanitize_text_field( wp_unslash( $_POST['name'] ) )     : '';
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- option values must be stored raw; sanitizing would corrupt serialized PHP, JSON or binary data.
-		$raw_val  = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
-		$autoload = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) )         : 'no';
+		$name    = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$raw_val = TSOSK_Support::get_post_scalar( 'value' );
+		$autoload = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) ) : 'no';
 		$autoload = in_array( $autoload, array( 'yes', 'no', 'on', 'off', '1', '0', 'true', 'false' ), true ) ? $autoload : 'no';
 
 		if ( ! $name ) {
@@ -479,7 +485,7 @@ class TSOSK_Mod_Options_Editor {
 		$this->log_activity( array(
 			'action'   => 'update',
 			'name'     => $name,
-			'old'      => mb_substr( $old_raw, 0, 200 ),
+			'old'      => mb_substr( TSOSK_Support::sanitize_stored_scalar( $old_raw ), 0, 200 ),
 			'new'      => mb_substr( $raw_val, 0, 200 ),
 			'autoload' => $autoload,
 			'time'     => time(),
@@ -495,9 +501,8 @@ class TSOSK_Mod_Options_Editor {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$name      = isset( $_POST['name'] )     ? sanitize_text_field( wp_unslash( $_POST['name'] ) )     : '';
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- option values must be stored raw; sanitizing would corrupt serialized PHP, JSON or binary data.
-		$raw_val   = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
+		$name      = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$raw_val   = TSOSK_Support::get_post_scalar( 'value' );
 		$value_type = sanitize_key( wp_unslash( $_POST['value_type'] ?? 'text' ) );
 		$autoload  = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) )         : 'no';
 		$autoload  = in_array( $autoload, array( 'yes', 'no' ), true ) ? $autoload : 'no';

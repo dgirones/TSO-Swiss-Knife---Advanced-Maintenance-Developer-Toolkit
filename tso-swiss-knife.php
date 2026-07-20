@@ -27,16 +27,67 @@ define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
 define( 'TSOSK_TEXT_DOMAIN', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-// Config directory inside wp-content/uploads (WP.org compliant location for writable files).
-$tsosk_uploads_dir = WP_CONTENT_DIR . '/uploads';
-if ( function_exists( 'wp_upload_dir' ) ) {
-	$tsosk_uploads = wp_upload_dir();
-	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
-		$tsosk_uploads_dir = $tsosk_uploads['basedir'];
-	}
+// Writable data lives under uploads/{plugin-slug}/ (WordPress.org guideline).
+define( 'TSOSK_UPLOADS_SLUG', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+
+/**
+ * Absolute path to the WordPress plugins directory (derived from this plugin's __FILE__).
+ *
+ * @return string Trailing-slash path.
+ */
+function tsosk_get_plugins_dir(): string {
+	return trailingslashit( wp_normalize_path( dirname( TSOSK_PATH ) ) );
 }
-define( 'TSOSK_CONFIG_DIR', trailingslashit( wp_normalize_path( $tsosk_uploads_dir ) ) . 'tsosk-config' );
-unset( $tsosk_uploads_dir, $tsosk_uploads );
+
+/**
+ * Absolute path to a plugin file under wp-content/plugins.
+ *
+ * @param string $plugin_file Relative basename path (e.g. akismet/akismet.php).
+ * @return string Absolute path (may not exist).
+ */
+function tsosk_get_plugin_file_path( string $plugin_file ): string {
+	$plugin_file = ltrim( str_replace( '\\', '/', $plugin_file ), '/' );
+	if ( '' === $plugin_file || false !== strpos( $plugin_file, '..' ) ) {
+		return '';
+	}
+	return tsosk_get_plugins_dir() . $plugin_file;
+}
+
+/**
+ * Absolute path to this plugin's uploads root (basedir/slug).
+ *
+ * @return string Empty when uploads are unavailable.
+ */
+function tsosk_get_uploads_root_dir(): string {
+	if ( ! function_exists( 'wp_upload_dir' ) ) {
+		return '';
+	}
+	$uploads = wp_upload_dir( null, false );
+	if ( empty( $uploads['basedir'] ) || ! empty( $uploads['error'] ) ) {
+		return '';
+	}
+	return trailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . TSOSK_UPLOADS_SLUG;
+}
+
+/**
+ * Absolute path to a subdirectory under the plugin uploads root.
+ *
+ * @param string $subdir Relative subdirectory (e.g. config, logs).
+ * @return string Empty when uploads are unavailable.
+ */
+function tsosk_get_uploads_subdir( string $subdir ): string {
+	$root = tsosk_get_uploads_root_dir();
+	if ( '' === $root ) {
+		return '';
+	}
+	$subdir = trim( str_replace( '\\', '/', $subdir ), '/' );
+	if ( '' === $subdir || false !== strpos( $subdir, '..' ) ) {
+		return $root;
+	}
+	return trailingslashit( $root ) . $subdir;
+}
+
+define( 'TSOSK_CONFIG_DIR', tsosk_get_uploads_subdir( 'config' ) );
 
 // ── Autoload includes ─────────────────────────────────────────────────────────
 $tsosk_includes = array(
@@ -98,7 +149,7 @@ foreach ( $tsosk_includes as $tsosk_file ) {
 }
 unset( $tsosk_includes, $tsosk_file );
 
-// ── Early-load config overrides (JSON in uploads/tsosk-config) ────────────────
+// ── Early-load config overrides (JSON in uploads/{plugin-slug}/config) ────────
 if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 	TSOSK_Config_Storage::apply_early_constants();
 }
@@ -110,19 +161,24 @@ add_action( 'plugins_loaded', 'tsosk_init' );
 
 /**
  * Load bundled translations (plugin list headers, admin UI, etc.).
+ *
+ * Uses load_textdomain() only — not load_plugin_textdomain() (discouraged on WordPress.org).
  */
 function tsosk_load_textdomain(): void {
-	if ( is_textdomain_loaded( TSOSK_TEXT_DOMAIN ) ) {
+	if ( is_textdomain_loaded( TSOSK_TEXT_DOMAIN ) || ! class_exists( 'TSOSK_I18n' ) ) {
 		return;
 	}
 
-	// Bundled CA/ES catalogs ship in languages/ until translate.wordpress.org packs exist.
-	// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
-	load_plugin_textdomain(
-		TSOSK_TEXT_DOMAIN,
-		false,
-		dirname( TSOSK_BASENAME ) . '/languages'
-	);
+	$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+	$suffix = TSOSK_I18n::locale_file_suffix( (string) $locale );
+	if ( '' === $suffix ) {
+		return;
+	}
+
+	$mofile = TSOSK_PATH . 'languages/' . TSOSK_TEXT_DOMAIN . '-' . $suffix . '.mo';
+	if ( is_readable( $mofile ) ) {
+		load_textdomain( TSOSK_TEXT_DOMAIN, $mofile, $locale );
+	}
 }
 
 /**

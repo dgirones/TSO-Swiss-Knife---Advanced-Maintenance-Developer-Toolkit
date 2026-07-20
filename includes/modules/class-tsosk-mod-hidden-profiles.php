@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Hidden_Profiles {
 
-	/** JSON config filename (stored under uploads/tsosk-config). */
+	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
 	private const CONFIG_FILE = 'tsosk-profiles-flags.json';
 
 	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
@@ -320,13 +320,13 @@ class TSOSK_Mod_Hidden_Profiles {
 	private function parse_constants_from_post(): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save().
 		$revisions_count = isset( $_POST['tsosk_hp_revisions_count'] )
-			? max( 0, min( 100, absint( $_POST['tsosk_hp_revisions_count'] ) ) )
+			? max( 0, min( 100, absint( wp_unslash( $_POST['tsosk_hp_revisions_count'] ) ) ) )
 			: 5;
 		$autosave_secs   = isset( $_POST['tsosk_hp_autosave_seconds'] )
-			? max( 60, min( 3600, absint( $_POST['tsosk_hp_autosave_seconds'] ) ) )
+			? max( 60, min( 3600, absint( wp_unslash( $_POST['tsosk_hp_autosave_seconds'] ) ) ) )
 			: 300;
 		$trash_days      = isset( $_POST['tsosk_hp_trash_days'] )
-			? max( 0, min( 365, absint( $_POST['tsosk_hp_trash_days'] ) ) )
+			? max( 0, min( 365, absint( wp_unslash( $_POST['tsosk_hp_trash_days'] ) ) ) )
 			: 7;
 
 		$constants = array(
@@ -422,7 +422,7 @@ class TSOSK_Mod_Hidden_Profiles {
 		?>
 		<div id="tsosk-hp-panel">
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON in wp-content/uploads/tsosk-config/ and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON under the plugin uploads folder and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-info">

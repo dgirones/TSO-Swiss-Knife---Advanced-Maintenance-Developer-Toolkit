@@ -439,7 +439,7 @@ class TSOSK_Mod_Cron {
 					return array( 'type' => 'wordpress', 'name' => 'WordPress', 'file' => $file );
 				}
 				// Try to extract plugin name from path.
-				$plugins_dir = wp_normalize_path( WP_PLUGIN_DIR . '/' );
+				$plugins_dir = tsosk_get_plugins_dir();
 				if ( str_starts_with( $norm, $plugins_dir ) ) {
 					$rel   = substr( $norm, strlen( $plugins_dir ) );
 					$parts = explode( '/', $rel );
@@ -661,11 +661,12 @@ class TSOSK_Mod_Cron {
 		$plugins = get_plugins();
 
 		foreach ( $plugins as $file => $data ) {
-			$dir = dirname( WP_PLUGIN_DIR . '/' . $file );
-			if ( ! is_dir( $dir ) ) {
+			$plugin_file = tsosk_get_plugin_file_path( $file );
+			$dir         = '' !== $plugin_file ? dirname( $plugin_file ) : '';
+			if ( '' === $dir || ! is_dir( $dir ) ) {
 				continue;
 			}
-			$paths = array( WP_PLUGIN_DIR . '/' . $file );
+			$paths = array( $plugin_file );
 			foreach ( array( 'includes', 'src', 'admin', 'classes' ) as $sub ) {
 				foreach ( glob( $dir . '/' . $sub . '/*.php' ) ?: array() as $php ) {
 					$paths[] = $php;

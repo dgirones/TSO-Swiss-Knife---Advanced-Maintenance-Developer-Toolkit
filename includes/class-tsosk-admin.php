@@ -105,7 +105,20 @@ class TSOSK_Admin {
 			return;
 		}
 
-		$target = add_query_arg( wp_unslash( $_GET ), admin_url( 'tools.php' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$args = array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only legacy URL redirect; values sanitized below.
+		foreach ( $_GET as $key => $value ) {
+			$key = sanitize_key( wp_unslash( (string) $key ) );
+			if ( '' === $key ) {
+				continue;
+			}
+			if ( is_array( $value ) ) {
+				$args[ $key ] = map_deep( wp_unslash( $value ), 'sanitize_text_field' );
+			} else {
+				$args[ $key ] = sanitize_text_field( wp_unslash( (string) $value ) );
+			}
+		}
+		$target = add_query_arg( $args, admin_url( 'tools.php' ) );
 		wp_safe_redirect( $target );
 		exit;
 	}
@@ -166,6 +179,9 @@ class TSOSK_Admin {
 				),
 				'dev_mode_active'     => TSOSK_Site_Status::is_developer_mode_active(),
 				'debug_nonce'         => wp_create_nonce( 'tsosk_debug_nonce' ),
+				'snapshot_section_labels' => class_exists( 'TSOSK_Mod_Site_Snapshot' )
+					? TSOSK_Mod_Site_Snapshot::get_section_labels()
+					: array(),
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -206,6 +222,8 @@ class TSOSK_Admin {
 					'roles_both'        => __( 'In both roles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_admin_readonly' => __( 'Administrator capabilities loaded (read-only).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'regenerate'           => __( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_full_review'    => __( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_full_review_starting' => __( 'Starting full media review…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_footprint_scan' => __( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_scan'     => __( 'Run image sizes audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_save'     => __( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -462,9 +480,13 @@ class TSOSK_Admin {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save_order().
 		if ( isset( $_POST['groups_json'] ) ) {
-			$decoded = json_decode( wp_unslash( (string) $_POST['groups_json'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			if ( is_array( $decoded ) ) {
-				$groups = $decoded;
+			$decoded = TSOSK_Support::get_post_json_array( 'groups_json' );
+			foreach ( $decoded as $slug => $group ) {
+				$slug  = sanitize_key( (string) $slug );
+				$group = sanitize_key( (string) $group );
+				if ( '' !== $slug && '' !== $group ) {
+					$groups[ $slug ] = $group;
+				}
 			}
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
@@ -482,16 +504,13 @@ class TSOSK_Admin {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save_order().
 		if ( isset( $_POST['order_json'] ) ) {
-			$decoded = json_decode( wp_unslash( (string) $_POST['order_json'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			if ( is_array( $decoded ) ) {
-				$order = $decoded;
-			}
+			$order = TSOSK_Support::get_post_json_array( 'order_json' );
 		} elseif ( isset( $_POST['order'] ) && is_array( $_POST['order'] ) ) {
-			$order = wp_unslash( $_POST['order'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$order = map_deep( wp_unslash( $_POST['order'] ), 'sanitize_key' );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		return $order;
+		return $this->normalize_favorites_list( is_array( $order ) ? $order : array() );
 	}
 
 	/**
@@ -504,16 +523,13 @@ class TSOSK_Admin {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save_order().
 		if ( isset( $_POST['hidden_json'] ) ) {
-			$decoded = json_decode( wp_unslash( (string) $_POST['hidden_json'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			if ( is_array( $decoded ) ) {
-				$hidden = $decoded;
-			}
+			$hidden = TSOSK_Support::get_post_json_array( 'hidden_json' );
 		} elseif ( isset( $_POST['hidden'] ) && is_array( $_POST['hidden'] ) ) {
-			$hidden = wp_unslash( $_POST['hidden'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$hidden = map_deep( wp_unslash( $_POST['hidden'] ), 'sanitize_key' );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		return $hidden;
+		return $this->normalize_favorites_list( is_array( $hidden ) ? $hidden : array() );
 	}
 
 	/**
@@ -526,16 +542,13 @@ class TSOSK_Admin {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save_order().
 		if ( isset( $_POST['favorites_json'] ) ) {
-			$decoded = json_decode( wp_unslash( (string) $_POST['favorites_json'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			if ( is_array( $decoded ) ) {
-				$favorites = $decoded;
-			}
+			$favorites = TSOSK_Support::get_post_json_array( 'favorites_json' );
 		} elseif ( isset( $_POST['favorites'] ) && is_array( $_POST['favorites'] ) ) {
-			$favorites = wp_unslash( $_POST['favorites'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$favorites = map_deep( wp_unslash( $_POST['favorites'] ), 'sanitize_key' );
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		return $favorites;
+		return $this->normalize_favorites_list( is_array( $favorites ) ? $favorites : array() );
 	}
 
 	/**

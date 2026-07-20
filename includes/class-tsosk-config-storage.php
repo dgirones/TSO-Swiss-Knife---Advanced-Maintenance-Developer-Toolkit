@@ -26,19 +26,44 @@ class TSOSK_Config_Storage {
 	public const LEGACY_PROFILES = 'tsosk-profiles-flags.php';
 
 	/**
-	 * Absolute path to the writable config directory under uploads.
+	 * Absolute path to the writable config directory under uploads/{plugin-slug}/config.
 	 *
 	 * @return string
 	 */
 	public static function get_dir(): string {
-		if ( defined( 'TSOSK_CONFIG_DIR' ) ) {
+		if ( defined( 'TSOSK_CONFIG_DIR' ) && '' !== TSOSK_CONFIG_DIR ) {
 			return TSOSK_CONFIG_DIR;
 		}
-		$uploads = wp_upload_dir();
-		if ( ! empty( $uploads['basedir'] ) ) {
-			return trailingslashit( $uploads['basedir'] ) . 'tsosk-config';
+		if ( function_exists( 'tsosk_get_uploads_subdir' ) ) {
+			$dir = tsosk_get_uploads_subdir( 'config' );
+			if ( '' !== $dir ) {
+				return $dir;
+			}
 		}
-		return trailingslashit( WP_CONTENT_DIR ) . 'uploads/tsosk-config';
+		$uploads = wp_upload_dir( null, false );
+		if ( ! empty( $uploads['basedir'] ) && empty( $uploads['error'] ) ) {
+			$slug = defined( 'TSOSK_UPLOADS_SLUG' ) ? TSOSK_UPLOADS_SLUG : 'tso-swiss-knife-advanced-maintenance-developer-toolkit';
+			return trailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) ) . $slug . '/config';
+		}
+		return '';
+	}
+
+	/**
+	 * Legacy short uploads folders used before the plugin-slug layout.
+	 *
+	 * @return string[] Absolute paths that may still contain data.
+	 */
+	public static function get_legacy_upload_dirs(): array {
+		$uploads = wp_upload_dir( null, false );
+		if ( empty( $uploads['basedir'] ) || ! empty( $uploads['error'] ) ) {
+			return array();
+		}
+		$base = trailingslashit( wp_normalize_path( (string) $uploads['basedir'] ) );
+		return array(
+			'config' => $base . 'tsosk-config',
+			'logs'   => $base . 'tsosk-logs',
+			'l10n'   => $base . 'tsosk-l10n',
+		);
 	}
 
 	/**
@@ -312,10 +337,17 @@ class TSOSK_Config_Storage {
 	 * @return string
 	 */
 	public static function get_log_archive_dir(): string {
-		$uploads = wp_upload_dir();
-		$base    = ! empty( $uploads['basedir'] )
-			? trailingslashit( $uploads['basedir'] ) . 'tsosk-logs/archives'
-			: trailingslashit( self::get_dir() ) . 'log-archives';
+		$base = '';
+		if ( function_exists( 'tsosk_get_uploads_subdir' ) ) {
+			$base = tsosk_get_uploads_subdir( 'logs/archives' );
+		}
+		if ( '' === $base ) {
+			$config = self::get_dir();
+			$base   = '' !== $config ? trailingslashit( dirname( $config ) ) . 'logs/archives' : '';
+		}
+		if ( '' === $base ) {
+			return '';
+		}
 		if ( ! is_dir( $base ) ) {
 			wp_mkdir_p( $base );
 			self::protect_dir( $base );
@@ -329,14 +361,20 @@ class TSOSK_Config_Storage {
 	 * @return string[]
 	 */
 	public static function get_writable_log_roots(): array {
-		$uploads = wp_upload_dir();
-		$roots   = array(
-			wp_normalize_path( WP_CONTENT_DIR . '/debug.log' ),
-		);
-		if ( ! empty( $uploads['basedir'] ) ) {
-			$roots[] = wp_normalize_path( trailingslashit( $uploads['basedir'] ) . 'tsosk-logs' );
+		$roots = array();
+
+		// Only plugin-owned uploads logs may be truncated/rewritten (WordPress.org write policy).
+		$logs_dir = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'logs' ) : '';
+		if ( '' !== $logs_dir ) {
+			$roots[] = wp_normalize_path( $logs_dir );
 		}
-		return $roots;
+
+		$legacy = self::get_legacy_upload_dirs();
+		if ( ! empty( $legacy['logs'] ) ) {
+			$roots[] = wp_normalize_path( $legacy['logs'] );
+		}
+
+		return array_values( array_unique( array_filter( $roots ) ) );
 	}
 
 	/**
@@ -376,11 +414,14 @@ class TSOSK_Config_Storage {
 	 * @return bool
 	 */
 	private static function ensure_dir( string $dir ): bool {
+		if ( '' === $dir ) {
+			return false;
+		}
 		if ( ! is_dir( $dir ) ) {
 			wp_mkdir_p( $dir );
 			self::protect_dir( $dir );
 		}
-		return wp_is_writable( $dir );
+		return is_dir( $dir ) && wp_is_writable( $dir );
 	}
 
 	/**
@@ -458,15 +499,60 @@ class TSOSK_Config_Storage {
 	}
 
 	private static function maybe_migrate_legacy_configs(): void {
+		self::maybe_migrate_legacy_upload_folders();
 		self::migrate_legacy_debug();
 		self::migrate_legacy_security();
 		self::migrate_legacy_profiles();
+	}
+
+	/**
+	 * Move JSON/config files from uploads/tsosk-config into uploads/{slug}/config.
+	 */
+	private static function maybe_migrate_legacy_upload_folders(): void {
+		$new_dir = self::get_dir();
+		if ( '' === $new_dir ) {
+			return;
+		}
+
+		$legacy = self::get_legacy_upload_dirs();
+		$old    = $legacy['config'] ?? '';
+		if ( '' === $old || ! is_dir( $old ) || wp_normalize_path( $old ) === wp_normalize_path( $new_dir ) ) {
+			return;
+		}
+
+		if ( ! self::ensure_dir( $new_dir ) ) {
+			return;
+		}
+
+		$names = array(
+			self::DEBUG_JSON,
+			self::SECURITY_JSON,
+			self::PROFILES_JSON,
+			self::LEGACY_DEBUG,
+			self::LEGACY_SECURITY,
+			self::LEGACY_PROFILES,
+		);
+		foreach ( $names as $name ) {
+			$from = trailingslashit( $old ) . $name;
+			$to   = trailingslashit( $new_dir ) . $name;
+			if ( is_readable( $from ) && ! file_exists( $to ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- local uploads migration.
+				@rename( $from, $to );
+			}
+		}
 	}
 
 	private static function legacy_path( string $legacy_filename ): string {
 		$uploads = self::path_for( $legacy_filename );
 		if ( is_readable( $uploads ) ) {
 			return $uploads;
+		}
+		$legacy_dirs = self::get_legacy_upload_dirs();
+		if ( ! empty( $legacy_dirs['config'] ) ) {
+			$legacy_uploads = trailingslashit( $legacy_dirs['config'] ) . $legacy_filename;
+			if ( is_readable( $legacy_uploads ) ) {
+				return $legacy_uploads;
+			}
 		}
 		$mu = trailingslashit( WPMU_PLUGIN_DIR ) . $legacy_filename;
 		return is_readable( $mu ) ? $mu : $uploads;

@@ -37,7 +37,7 @@ class TSOSK_Mod_Content_Audit {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$post_id   = absint( $_POST['post_id'] ?? 0 );
+		$post_id   = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
 		$shortcode = isset( $_POST['shortcode'] ) ? sanitize_key( wp_unslash( $_POST['shortcode'] ) ) : '';
 
 		if ( ! $post_id ) {
@@ -136,6 +136,9 @@ class TSOSK_Mod_Content_Audit {
 				<br><br>
 				<em><?php esc_html_e( 'Note: scans up to 100 recent posts/pages whose content contains a [ character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-plugins or late-registered plugins may still appear as false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></em>
 			</div>
+			<p class="description">
+				<?php esc_html_e( 'Each row is one post or page. If it contains several broken shortcodes, you can remove one tag at a time or all broken tags in that post.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
 			<?php if ( empty( $broken_shortcodes ) ) : ?>
 				<p><?php esc_html_e( 'No broken shortcodes detected in the sampled content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
@@ -147,6 +150,7 @@ class TSOSK_Mod_Content_Audit {
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $broken_shortcodes as $item ) : ?>
+						<?php $sc_count = count( $item['shortcodes'] ); ?>
 						<tr id="tsosk-ca-row-<?php echo esc_attr( (string) $item['id'] ); ?>">
 							<td><a href="<?php echo esc_url( get_edit_post_link( $item['id'] ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $item['id'] ) ?: '#' . $item['id'] ); ?></a></td>
 							<td class="tsosk-code"><?php echo esc_html( implode( ', ', $item['shortcodes'] ) ); ?></td>
@@ -165,11 +169,13 @@ class TSOSK_Mod_Content_Audit {
 									?>
 								</button>
 								<?php endforeach; ?>
+								<?php if ( $sc_count > 1 ) : ?>
 								<button type="button" class="button button-small tsosk-ca-remove-all-sc"
 								        data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
-									<?php esc_html_e( 'Remove all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									<?php esc_html_e( 'Remove all in this post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
+								<?php endif; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>

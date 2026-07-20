@@ -78,6 +78,7 @@ class TSOSK_Mod_File_Integrity {
 		if ( ! $force ) {
 			$cached = $this->get_stored_results();
 			if ( is_array( $cached ) ) {
+				$cached               = $this->normalize_scan_result( $cached );
 				$cached['from_cache'] = true;
 				$cached['html']       = $this->render_results( $cached, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
 				wp_send_json_success( $cached );
@@ -91,12 +92,12 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$result['html'] = $this->render_results( $result, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
-		$n_issues         = count( $result['modified'] ?? array() ) + count( $result['missing'] ?? array() ) + count( $result['added'] ?? array() );
+		$n_issues         = (int) ( $result['n_issues'] ?? 0 );
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'scan',
 			sprintf(
-				/* translators: %d: number of issues found */
+				/* translators: %d: number of real core issues (modified + missing core files) */
 				__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$n_issues
 			)
@@ -122,7 +123,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$known = array();
-		foreach ( array( 'modified', 'missing', 'added' ) as $bucket ) {
+		foreach ( array( 'modified', 'missing', 'missing_optional', 'added' ) as $bucket ) {
 			foreach ( $cached[ $bucket ] ?? array() as $row ) {
 				if ( ! empty( $row['file'] ) ) {
 					$known[] = (string) $row['file'];
@@ -225,11 +226,12 @@ class TSOSK_Mod_File_Integrity {
 			return $checksums;
 		}
 
-		$ignored  = $this->get_ignored();
-		$abspath  = wp_normalize_path( ABSPATH );
-		$modified = array();
-		$missing  = array();
-		$added    = array();
+		$ignored           = $this->get_ignored();
+		$abspath           = wp_normalize_path( ABSPATH );
+		$modified          = array();
+		$missing           = array();
+		$missing_optional  = array();
+		$added             = array();
 
 		// ── Check every file listed in the official checksums ──────────────
 		foreach ( $checksums as $rel_path => $expected_md5 ) {
@@ -245,11 +247,17 @@ class TSOSK_Mod_File_Integrity {
 			$abs = $abspath . $rel_path;
 
 			if ( ! file_exists( $abs ) ) {
-				$missing[] = array(
+				$row = array(
 					'file'     => $rel_path,
 					'expected' => $expected_md5,
 					'actual'   => '',
 				);
+				// Default themes/plugins shipped in the release ZIP are often removed on purpose.
+				if ( $this->is_bundled_content_path( $rel_path ) ) {
+					$missing_optional[] = $row;
+				} else {
+					$missing[] = $row;
+				}
 				continue;
 			}
 
@@ -308,18 +316,70 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$result = array(
-			'modified'   => $modified,
-			'missing'    => $missing,
-			'added'      => $added,
-			'total'      => count( $checksums ),
-			'scanned_at' => time(),
-			'wp_version' => get_bloginfo( 'version' ),
-			'from_cache' => false,
+			'modified'          => $modified,
+			'missing'           => $missing,
+			'missing_optional'  => $missing_optional,
+			'added'             => $added,
+			'total'             => count( $checksums ),
+			'n_issues'          => count( $modified ) + count( $missing ),
+			'scanned_at'        => time(),
+			'wp_version'        => get_bloginfo( 'version' ),
+			'from_cache'        => false,
 		);
 
 		$this->store_results( $result );
 
 		return $result;
+	}
+
+	/**
+	 * Paths for default themes/plugins often bundled in the WordPress release ZIP checksums.
+	 * Missing these is normal when they were never installed or were removed on purpose.
+	 *
+	 * @param string $rel_path Relative path from ABSPATH.
+	 * @return bool
+	 */
+	private function is_bundled_content_path( string $rel_path ): bool {
+		$rel_path = ltrim( str_replace( '\\', '/', $rel_path ), '/' );
+		return ( 0 === strpos( $rel_path, 'wp-content/plugins/' ) )
+			|| ( 0 === strpos( $rel_path, 'wp-content/themes/' ) );
+	}
+
+	/**
+	 * Normalize scan payload (legacy caches without missing_optional / n_issues).
+	 *
+	 * @param array<string,mixed> $data Scan result.
+	 * @return array<string,mixed>
+	 */
+	private function normalize_scan_result( array $data ): array {
+		$missing          = is_array( $data['missing'] ?? null ) ? $data['missing'] : array();
+		$missing_optional = is_array( $data['missing_optional'] ?? null ) ? $data['missing_optional'] : array();
+
+		// Legacy scans stored bundled theme/plugin paths inside "missing".
+		if ( empty( $missing_optional ) && ! empty( $missing ) ) {
+			$core_missing = array();
+			foreach ( $missing as $row ) {
+				$file = isset( $row['file'] ) ? (string) $row['file'] : '';
+				if ( '' !== $file && $this->is_bundled_content_path( $file ) ) {
+					$missing_optional[] = $row;
+				} else {
+					$core_missing[] = $row;
+				}
+			}
+			$missing = $core_missing;
+		}
+
+		$modified = is_array( $data['modified'] ?? null ) ? $data['modified'] : array();
+		$added    = is_array( $data['added'] ?? null ) ? $data['added'] : array();
+
+		$data['missing']          = $missing;
+		$data['missing_optional'] = $missing_optional;
+		$data['modified']         = $modified;
+		$data['added']            = $added;
+		// Real issues: modified core + missing core only (not optional removals, not extra files).
+		$data['n_issues'] = count( $modified ) + count( $missing );
+
+		return $data;
 	}
 
 	/**
@@ -426,6 +486,9 @@ class TSOSK_Mod_File_Integrity {
 		// Check for a cached scan so we can display it immediately.
 		$cached    = $this->get_stored_results();
 		$has_cache = is_array( $cached );
+		if ( $has_cache ) {
+			$cached = $this->normalize_scan_result( $cached );
+		}
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org. It reports differences — it never installs, deletes, restores or downloads any file on your server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -438,7 +501,7 @@ class TSOSK_Mod_File_Integrity {
 					<h4><?php esc_html_e( 'It does', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
 						<li><?php esc_html_e( 'Fetch checksums from WordPress.org (cached 24 h).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-						<li><?php esc_html_e( 'Compare hashes and list modified, missing or unexpected core files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Compare hashes and list modified or missing core files, plus files not in the official release.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Let you ignore known false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Remember the last scan when you leave and return to this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
@@ -447,8 +510,8 @@ class TSOSK_Mod_File_Integrity {
 					<h4><?php esc_html_e( 'It does NOT', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
 						<li><?php esc_html_e( 'Replace a dedicated malware scanner — use a security plugin for deep malware analysis.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-						<li><?php esc_html_e( 'Scan, install or remove themes in wp-content/themes/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-						<li><?php esc_html_e( 'Scan plugins, uploads or any wp-content/ folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Treat removed default themes/plugins from the release ZIP as problems — those are listed separately as informational.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Scan custom plugins, uploads or other wp-content/ folders beyond the official checksum list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Automatically restore or download files — you must fix issues manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
@@ -456,7 +519,7 @@ class TSOSK_Mod_File_Integrity {
 		</div>
 
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'If you suddenly see many default WordPress themes (Twenty Twenty-*, etc.), this tool did not install them. They usually come from a WordPress core update (the release ZIP bundles default themes), a hosting installer, a staging sync, or another plugin — not from this scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Default WordPress themes and plugins listed in the release checksums (Hello Dolly, Akismet, Twenty Twenty-*, etc.) are often removed on purpose. Missing those files is not counted as an issue. Only modified core files and missing files under wp-admin/, wp-includes/, or the WordPress root count as real problems.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<?php
@@ -560,15 +623,17 @@ class TSOSK_Mod_File_Integrity {
 	 * @return string HTML if $echo is false.
 	 */
 	public function render_results( array $data, array $ignored, string $nonce, bool $echo = false ): string {
-		$modified = $data['modified'] ?? array();
-		$missing  = $data['missing']  ?? array();
-		$added    = $data['added']    ?? array();
-		$total    = (int) ( $data['total']      ?? 0 );
-		$scanned  = (int) ( $data['scanned_at'] ?? 0 );
-		$from_c   = ! empty( $data['from_cache'] );
-		$wp_ver   = sanitize_text_field( $data['wp_version'] ?? '' );
-
-		$n_issues = count( $modified ) + count( $missing ) + count( $added );
+		$data              = $this->normalize_scan_result( $data );
+		$modified          = $data['modified'];
+		$missing           = $data['missing'];
+		$missing_optional  = $data['missing_optional'];
+		$added             = $data['added'];
+		$total             = (int) ( $data['total'] ?? 0 );
+		$scanned           = (int) ( $data['scanned_at'] ?? 0 );
+		$from_c            = ! empty( $data['from_cache'] );
+		$wp_ver            = sanitize_text_field( $data['wp_version'] ?? '' );
+		$n_issues          = (int) $data['n_issues'];
+		$n_info            = count( $missing_optional ) + count( $added );
 
 		ob_start();
 		?>
@@ -610,9 +675,9 @@ class TSOSK_Mod_File_Integrity {
 				<?php
 				$status_badge = $n_issues === 0 ? 'tsosk-badge-ok' : 'tsosk-badge-warn';
 				$status_label = $n_issues === 0
-					? __( 'All files match — no issues detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					? __( 'No core integrity issues', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: sprintf(
-						/* translators: %d: number of issues */
+						/* translators: %d: number of real issues (modified + missing core) */
 						__( '%d issue(s) found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						$n_issues
 					);
@@ -635,9 +700,20 @@ class TSOSK_Mod_File_Integrity {
 				<span class="tsosk-badge" style="background:#fcebeb;color:#a32d2d;">
 					<?php
 					printf(
-						/* translators: %d: count */
-						esc_html__( '%d missing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						/* translators: %d: count of missing core files */
+						esc_html__( '%d missing (core)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						count( $missing )
+					);
+					?>
+				</span>
+				<?php endif; ?>
+				<?php if ( count( $missing_optional ) > 0 ) : ?>
+				<span class="tsosk-badge tsosk-badge-info">
+					<?php
+					printf(
+						/* translators: %d: count of removed default plugins/themes */
+						esc_html__( '%d removed defaults (OK)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						count( $missing_optional )
 					);
 					?>
 				</span>
@@ -646,20 +722,25 @@ class TSOSK_Mod_File_Integrity {
 				<span class="tsosk-badge" style="background:#eeedfe;color:#3c3489;">
 					<?php
 					printf(
-						/* translators: %d: count */
-						esc_html__( '%d unexpected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						/* translators: %d: count of files not in official release */
+						esc_html__( '%d not in official release', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						count( $added )
 					);
 					?>
 				</span>
 				<?php endif; ?>
 			</div>
+			<?php if ( 0 === $n_issues && $n_info > 0 ) : ?>
+			<p class="description" style="margin:10px 0 0;">
+				<?php esc_html_e( 'Informational findings (removed default themes/plugins, or files not in the official release) are listed below but are not counted as problems.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<?php endif; ?>
 		</div>
 
-		<?php if ( $n_issues === 0 ) : ?>
+		<?php if ( 0 === $n_issues && 0 === $n_info ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
 			<strong>✓ <?php esc_html_e( 'All WordPress core files are intact.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-			<?php esc_html_e( 'No modified, missing or unexpected files were found in wp-admin/ or wp-includes/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'No modified or missing core files were found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php endif; ?>
 
@@ -671,7 +752,22 @@ class TSOSK_Mod_File_Integrity {
 			<div class="tsosk-notice tsosk-notice-warn">
 				<?php esc_html_e( 'These files exist on your server but their MD5 hash does not match the official WordPress release. This could mean the file was legitimately edited (e.g. by a plugin installer), infected by malware, or corrupted. Review each file before taking action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<br><strong><?php esc_html_e( 'To restore:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-				<?php esc_html_e( 'Download the same WordPress version from wordpress.org/download/releases/ and replace the affected files via FTP/SFTP or the Hosting file manager.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: %s: URL to WordPress.org release archive (opens in a new tab). */
+						__( 'Download the same WordPress version from <a href="%s" target="_blank" rel="noopener noreferrer nofollow">wordpress.org/download/releases/</a> and replace the affected files via FTP/SFTP or the Hosting file manager.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						esc_url( 'https://wordpress.org/download/releases/' )
+					),
+					array(
+						'a' => array(
+							'href'   => true,
+							'target' => true,
+							'rel'    => true,
+						),
+					)
+				);
+				?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
@@ -709,10 +805,10 @@ class TSOSK_Mod_File_Integrity {
 		<?php if ( ! empty( $missing ) ) : ?>
 		<div class="tsosk-card">
 			<h3 style="color:#a32d2d;">
-				✕ <?php esc_html_e( 'Missing Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $missing ) ); ?>)
+				✕ <?php esc_html_e( 'Missing Core Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $missing ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-warn">
-				<?php esc_html_e( 'These files are listed in the official WordPress core checksums but were not found on your server. Only worry if the path is inside wp-admin/ or wp-includes/ and the site shows errors. This scan never downloads or restores missing files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'These core files are listed in the official WordPress checksums but were not found on your server (typically under wp-admin/, wp-includes/, or the WordPress root). This scan never downloads or restores missing files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
@@ -741,13 +837,53 @@ class TSOSK_Mod_File_Integrity {
 		</div>
 		<?php endif; ?>
 
+		<?php if ( ! empty( $missing_optional ) ) : ?>
+		<div class="tsosk-card">
+			<h3>
+				<?php esc_html_e( 'Removed default plugins/themes (not an issue)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				(<?php echo esc_html( (string) count( $missing_optional ) ); ?>)
+			</h3>
+			<div class="tsosk-notice tsosk-notice-info">
+				<?php esc_html_e( 'These paths belong to default plugins or themes that ship in the WordPress release ZIP (e.g. Akismet, Hello Dolly, Twenty Twenty-*). They are often deleted because they are unused. This is normal and is not counted as a problem.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+			<details>
+				<summary style="cursor:pointer;margin-bottom:8px;">
+					<?php esc_html_e( 'Show list', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</summary>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead><tr>
+							<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $missing_optional as $f ) : ?>
+							<tr>
+								<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
+								<td>
+									<button class="button button-small tsosk-fi-ignore"
+									        data-file="<?php echo esc_attr( $f['file'] ); ?>"
+									        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</button>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</details>
+		</div>
+		<?php endif; ?>
+
 		<?php if ( ! empty( $added ) ) : ?>
 		<div class="tsosk-card">
 			<h3 style="color:#534ab7;">
-				+ <?php esc_html_e( 'Unexpected Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $added ) ); ?>)
+				+ <?php esc_html_e( 'Files not in the official WordPress release', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				(<?php echo esc_html( (string) count( $added ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'These files exist inside wp-admin/ or wp-includes/ but are not listed in the official WordPress release checksums. This is usually harmless — some plugins and server environments add helper files to these directories. Only investigate files you do not recognise and that were added at an unexpected time.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'These files exist inside wp-admin/ or wp-includes/ but are not part of the official WordPress release checksums. This is usually harmless — some plugins and server environments add helper files here. Only investigate files you do not recognise.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">

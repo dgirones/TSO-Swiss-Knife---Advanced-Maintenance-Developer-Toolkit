@@ -180,8 +180,7 @@ class TSOSK_Mod_Site_Snapshot {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON file body.
-		$raw = isset( $_POST['snapshot'] ) ? wp_unslash( $_POST['snapshot'] ) : '';
+		$raw = TSOSK_Support::get_post_scalar( 'snapshot' );
 		if ( '' === $raw ) {
 			wp_send_json_error( __( 'No snapshot data received.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -551,7 +550,6 @@ class TSOSK_Mod_Site_Snapshot {
 				<span class="tsosk-ajax-msg" id="tsosk-snapshot-msg"></span>
 			</p>
 		</div>
-		<script type="application/json" id="tsosk-snapshot-labels"><?php echo wp_json_encode( $labels ); ?></script>
 		<?php
 	}
 }

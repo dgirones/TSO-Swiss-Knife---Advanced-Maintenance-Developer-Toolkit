@@ -393,10 +393,9 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( $this->form_silent_block && 'spam' === $status ) {
 			$this->form_silent_block = false;
 			$response['status']  = 'mail_sent';
-			$default_message     = __( 'Thank you for your message. It has been sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			$response['message'] = apply_filters(
-				'wpcf7_mail_sent_ok', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Contact Form 7 filter.
-				$default_message
+				'tsosk_cf7_silent_block_success_message',
+				__( 'Thank you for your message. It has been sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
 		return $response;

@@ -35,8 +35,7 @@ class TSOSK_Mod_Server_Files {
 		}
 
 		$key     = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- server config file content must not be sanitized; any alteration could corrupt .htaccess or robots.txt directives.
-		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
+		$content = TSOSK_Support::get_post_scalar( 'content' );
 
 		$allowed_keys = array( 'robots', 'robots_local', 'htaccess', 'htaccess_root' );
 		if ( ! in_array( $key, $allowed_keys, true ) ) {

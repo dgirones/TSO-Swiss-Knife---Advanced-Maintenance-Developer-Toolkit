@@ -3,7 +3,8 @@
  * TSO Swiss Knife – Module: Plugin Footprint.
  *
  * Shows each plugin as a card with its option count.
- * Removed noisy Cron/Shortcodes/REST columns.
+ * Option→plugin matching uses exclusive longest-prefix assignment
+ * so short/ambiguous prefixes cannot steal unrelated keys.
  *
  * @package TSO_Swiss_Knife
  */
@@ -12,10 +13,75 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Class TSOSK_Mod_Footprint
+ */
 class TSOSK_Mod_Footprint {
 
+	/** Minimum length for a LIKE prefix (without forcing a separator). */
+	private const MIN_PREFIX_LEN = 4;
+
+	/** Stems never used as option prefixes (too generic / shared). */
+	private const PREFIX_DENYLIST = array(
+		'wp',
+		'wordpress',
+		'the',
+		'and',
+		'for',
+		'get',
+		'set',
+		'add',
+		'del',
+		'admin',
+		'site',
+		'user',
+		'post',
+		'page',
+		'core',
+		'data',
+		'meta',
+		'option',
+		'settings',
+		'config',
+		'cache',
+		'mail',
+		'form',
+		'block',
+		'widget',
+		'theme',
+		'plugin',
+		'index',
+		'main',
+		'init',
+		'load',
+		'tso',
+		'tsosk',
+		'wc',
+		'kb',
+		'sg',
+		'gf',
+		'wf',
+		'rg',
+		'it',
+		'my',
+		'app',
+		'api',
+		'db',
+		'id',
+		'url',
+		'css',
+		'js',
+	);
+
+	/** @var TSOSK_Mod_Footprint|null */
 	private static $instance = null;
 
+	/** @var string[]|null */
+	private $all_option_names = null;
+
+	/**
+	 * @return TSOSK_Mod_Footprint
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -25,6 +91,9 @@ class TSOSK_Mod_Footprint {
 
 	private function __construct() {}
 
+	/**
+	 * Render plugin footprint cards.
+	 */
 	public function render(): void {
 		if ( ! function_exists( 'get_plugins' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -32,23 +101,30 @@ class TSOSK_Mod_Footprint {
 		$plugins = get_plugins();
 		$active  = array_fill_keys( (array) get_option( 'active_plugins', array() ), true );
 
+		$candidates = array();
+		foreach ( $plugins as $file => $plugin ) {
+			$slug    = $this->plugin_slug( $file );
+			$matchers = $this->matchers_for_plugin( $file, $slug, $plugin );
+			$candidates[ $file ] = array(
+				'name'     => $plugin['Name'] ?? $file,
+				'version'  => $plugin['Version'] ?? '',
+				'author'   => $plugin['Author'] ?? '',
+				'file'     => $file,
+				'slug'     => $slug,
+				'matchers' => $matchers,
+				'active'   => isset( $active[ $file ] ),
+			);
+		}
+
+		$assigned = $this->assign_options_exclusively( $candidates );
+
 		$active_rows   = array();
 		$inactive_rows = array();
 
-		foreach ( $plugins as $file => $plugin ) {
-			$slug    = $this->plugin_slug( $file );
-			$prefixes = $this->option_prefixes_for_plugin( $file, $slug, $plugin );
-			$options = $this->count_options_by_prefixes( $prefixes );
-			$row     = array(
-				'name'     => $plugin['Name']        ?? $file,
-				'version'  => $plugin['Version']     ?? '',
-				'author'   => $plugin['Author']      ?? '',
-				'file'     => $file,
-				'slug'     => $slug,
-				'prefixes' => $prefixes,
-				'active'   => isset( $active[ $file ] ),
-				'options'  => $options,
-			);
+		foreach ( $candidates as $file => $row ) {
+			$row['options']  = isset( $assigned[ $file ] ) ? count( $assigned[ $file ] ) : 0;
+			$row['prefixes'] = $this->display_prefixes( $row['matchers'] );
+			$row['samples']  = isset( $assigned[ $file ] ) ? array_slice( $assigned[ $file ], 0, 8 ) : array();
 			if ( $row['active'] ) {
 				$active_rows[] = $row;
 			} else {
@@ -56,12 +132,11 @@ class TSOSK_Mod_Footprint {
 			}
 		}
 
-		// Sort by options descending so heaviest plugins appear first.
-		usort( $active_rows,   fn( $a, $b ) => $b['options'] - $a['options'] );
-		usort( $inactive_rows, fn( $a, $b ) => $b['options'] - $a['options'] );
+		usort( $active_rows, static fn( $a, $b ) => $b['options'] - $a['options'] );
+		usort( $inactive_rows, static fn( $a, $b ) => $b['options'] - $a['options'] );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Shows how many wp_options rows each plugin has created. This is a quick way to spot plugins that store a lot of data in the database. Matching is heuristic based on plugin slug.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Shows how many wp_options rows are attributed to each plugin. Each option key is assigned to at most one plugin (longest matching prefix / exact name from plugin source). Short generic prefixes are ignored so keys are not mis-attributed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=options-editor' ) ); ?>">
@@ -69,57 +144,34 @@ class TSOSK_Mod_Footprint {
 			</a>
 		</p>
 
-		<?php /* ── Active plugins ── */ ?>
-		<div class="tsosk-card">
-			<h3>
-				<?php esc_html_e( 'Active Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<span class="tsosk-badge tsosk-badge-ok" style="margin-left:8px;font-size:12px;"><?php echo esc_html( (string) count( $active_rows ) ); ?></span>
-			</h3>
-			<div class="tsosk-fp-grid">
-				<?php foreach ( $active_rows as $row ) : ?>
-				<div class="tsosk-fp-card">
-					<div class="tsosk-fp-card-name">
-						<strong><?php echo esc_html( $row['name'] ); ?></strong>
-						<?php if ( $row['version'] ) : ?>
-						<span class="tsosk-fp-version">v<?php echo esc_html( $row['version'] ); ?></span>
-						<?php endif; ?>
-					</div>
-					<div class="tsosk-fp-card-meta">
-						<span class="tsosk-fp-options <?php echo $row['options'] > 20 ? 'tsosk-fp-heavy' : ( $row['options'] > 5 ? 'tsosk-fp-medium' : '' ); ?>">
-							<?php
-							printf(
-								/* translators: %d: number of options */
-								esc_html__( '%d options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								(int) $row['options']
-							);
-							?>
-						</span>
-						<?php if ( $row['options'] > 0 && class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
-						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['prefixes'] ) ) ); ?>"
-						   class="button button-small tsosk-fp-oe-link">
-							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-						</a>
-						<?php endif; ?>
-						<code class="tsosk-fp-slug"><?php echo esc_html( dirname( $row['file'] ) ); ?></code>
-					</div>
-				</div>
-				<?php endforeach; ?>
-			</div>
-		</div>
+		<?php $this->render_plugin_grid( __( 'Active Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $active_rows, true ); ?>
 
-		<?php /* ── Inactive plugins ── */ ?>
 		<?php if ( ! empty( $inactive_rows ) ) : ?>
+			<?php $this->render_plugin_grid( __( 'Inactive Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $inactive_rows, false ); ?>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * @param string               $title Section title.
+	 * @param array<int,array>     $rows  Plugin rows.
+	 * @param bool                 $active Whether these are active plugins.
+	 */
+	private function render_plugin_grid( string $title, array $rows, bool $active ): void {
+		?>
 		<div class="tsosk-card">
 			<h3>
-				<?php esc_html_e( 'Inactive Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<span class="tsosk-badge" style="margin-left:8px;font-size:12px;"><?php echo esc_html( (string) count( $inactive_rows ) ); ?></span>
+				<?php echo esc_html( $title ); ?>
+				<span class="tsosk-badge <?php echo $active ? 'tsosk-badge-ok' : ''; ?>" style="margin-left:8px;font-size:12px;"><?php echo esc_html( (string) count( $rows ) ); ?></span>
 			</h3>
+			<?php if ( ! $active ) : ?>
 			<p class="description">
 				<?php esc_html_e( 'Inactive plugins may still leave options in the database. If an inactive plugin has many options you may want to uninstall it properly (Delete in the Plugins list) rather than just deactivating it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<?php endif; ?>
 			<div class="tsosk-fp-grid">
-				<?php foreach ( $inactive_rows as $row ) : ?>
-				<div class="tsosk-fp-card tsosk-fp-card-inactive">
+				<?php foreach ( $rows as $row ) : ?>
+				<div class="tsosk-fp-card <?php echo $active ? '' : 'tsosk-fp-card-inactive'; ?>">
 					<div class="tsosk-fp-card-name">
 						<strong><?php echo esc_html( $row['name'] ); ?></strong>
 						<?php if ( $row['version'] ) : ?>
@@ -128,14 +180,25 @@ class TSOSK_Mod_Footprint {
 					</div>
 					<div class="tsosk-fp-card-meta">
 						<?php if ( $row['options'] > 0 ) : ?>
-						<span class="tsosk-fp-options tsosk-fp-warn">
+						<span class="tsosk-fp-options <?php echo ! $active ? 'tsosk-fp-warn' : ( $row['options'] > 20 ? 'tsosk-fp-heavy' : ( $row['options'] > 5 ? 'tsosk-fp-medium' : '' ) ); ?>">
 							<?php
-							/* translators: %d: number of options remaining */
-							printf( esc_html__( '%d options remaining', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $row['options'] );
+							if ( $active ) {
+								printf(
+									/* translators: %d: number of options */
+									esc_html__( '%d options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									(int) $row['options']
+								);
+							} else {
+								printf(
+									/* translators: %d: number of options remaining */
+									esc_html__( '%d options remaining', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									(int) $row['options']
+								);
+							}
 							?>
 						</span>
 						<?php if ( class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
-						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['prefixes'] ) ) ); ?>"
+						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['matchers'], $row['samples'] ) ) ); ?>"
 						   class="button button-small tsosk-fp-oe-link">
 							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
@@ -145,15 +208,29 @@ class TSOSK_Mod_Footprint {
 						<?php endif; ?>
 						<code class="tsosk-fp-slug"><?php echo esc_html( dirname( $row['file'] ) ); ?></code>
 					</div>
+					<?php if ( ! empty( $row['prefixes'] ) ) : ?>
+					<p class="description" style="margin:8px 0 0;word-break:break-word;">
+						<strong><?php esc_html_e( 'Matched by:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<code><?php echo esc_html( implode( ', ', array_slice( $row['prefixes'], 0, 6 ) ) ); ?></code>
+					</p>
+					<?php endif; ?>
+					<?php if ( ! empty( $row['samples'] ) ) : ?>
+					<p class="description" style="margin:4px 0 0;word-break:break-word;">
+						<strong><?php esc_html_e( 'Example keys:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<code><?php echo esc_html( implode( ', ', $row['samples'] ) ); ?></code>
+					</p>
+					<?php endif; ?>
 				</div>
 				<?php endforeach; ?>
 			</div>
 		</div>
-		<?php endif; ?>
-
 		<?php
 	}
 
+	/**
+	 * @param string $file Plugin basename path.
+	 * @return string
+	 */
 	private function plugin_slug( string $file ): string {
 		$parts = explode( '/', $file );
 		$slug  = count( $parts ) > 1 ? $parts[0] : preg_replace( '/\.php$/', '', $file );
@@ -161,90 +238,160 @@ class TSOSK_Mod_Footprint {
 	}
 
 	/**
-	 * Build option-name prefixes for a plugin (folder slug, text domain, source scan).
+	 * Build matchers for a plugin: exact option names + strict prefixes.
 	 *
 	 * @param string               $file   Plugin basename path.
 	 * @param string               $slug   Sanitized slug.
 	 * @param array<string,string> $plugin Plugin header data.
-	 * @return string[]
+	 * @return array{exact:string[],prefixes:string[]}
 	 */
-	private function option_prefixes_for_plugin( string $file, string $slug, array $plugin = array() ): array {
+	private function matchers_for_plugin( string $file, string $slug, array $plugin = array() ): array {
+		$exact    = array();
 		$prefixes = array();
 		$parts    = explode( '/', $file );
-		if ( count( $parts ) > 1 && '.' !== $parts[0] ) {
-			$folder     = $parts[0];
-			$folder_key = sanitize_key( $folder );
-			$prefixes[] = $folder_key;
-			$prefixes[] = str_replace( '-', '_', $folder_key );
+		$folder   = ( count( $parts ) > 1 && '.' !== $parts[0] ) ? $parts[0] : '';
+
+		if ( '' !== $folder ) {
+			$this->add_prefix_candidate( $prefixes, $folder );
+			$this->add_prefix_candidate( $prefixes, str_replace( '-', '_', $folder ) );
 		}
-		$prefixes[] = $slug;
-		$prefixes[] = str_replace( '_', '-', $slug );
+
+		$this->add_prefix_candidate( $prefixes, $slug );
+		$this->add_prefix_candidate( $prefixes, str_replace( '_', '-', $slug ) );
 
 		if ( ! empty( $plugin['TextDomain'] ) ) {
-			$td = sanitize_key( (string) $plugin['TextDomain'] );
-			$prefixes[] = $td;
-			$prefixes[] = str_replace( '-', '_', $td );
+			$td = (string) $plugin['TextDomain'];
+			$this->add_prefix_candidate( $prefixes, $td );
+			$this->add_prefix_candidate( $prefixes, str_replace( '-', '_', $td ) );
 		}
 
-		$base = preg_replace( '/\.php$/', '', basename( $file ) );
-		if ( is_string( $base ) && strlen( $base ) > 2 && 'index' !== $base ) {
-			$prefixes[] = sanitize_key( $base );
+		foreach ( $this->known_prefixes_for_folder( $folder !== '' ? $folder : $slug ) as $known ) {
+			$this->add_prefix_candidate( $prefixes, $known, true );
 		}
 
-		$prefixes = array_merge( $prefixes, $this->known_prefixes_for_folder( $parts[0] ?? $slug ) );
-		$prefixes = array_merge( $prefixes, $this->scan_plugin_option_prefixes( $file ) );
+		$scanned = $this->scan_plugin_option_keys( $file );
+		foreach ( $scanned['exact'] as $name ) {
+			$exact[] = $name;
+		}
+		foreach ( $scanned['prefixes'] as $prefix ) {
+			$this->add_prefix_candidate( $prefixes, $prefix );
+		}
 
-		return array_values( array_unique( array_filter( $prefixes ) ) );
+		$exact    = array_values( array_unique( array_filter( $exact ) ) );
+		$prefixes = array_values( array_unique( array_filter( $prefixes ) ) );
+
+		// Prefer longer prefixes first for display / search.
+		usort(
+			$prefixes,
+			static function ( string $a, string $b ): int {
+				return strlen( $b ) <=> strlen( $a );
+			}
+		);
+
+		return array(
+			'exact'    => $exact,
+			'prefixes' => $prefixes,
+		);
 	}
 
 	/**
-	 * Known option prefixes for popular plugins whose folder slug differs from DB keys.
+	 * Add a prefix if it is specific enough.
+	 *
+	 * @param string[] $prefixes Prefix list (by ref).
+	 * @param string   $raw      Raw candidate.
+	 * @param bool     $known    From known-plugin map (allows slightly shorter with separator).
+	 */
+	private function add_prefix_candidate( array &$prefixes, string $raw, bool $known = false ): void {
+		$raw = strtolower( trim( $raw ) );
+		$raw = preg_replace( '/[^a-z0-9_\-]/', '', $raw );
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			return;
+		}
+
+		// Normalize trailing separators for storage (matching adds them).
+		$core = rtrim( $raw, '_-' );
+		if ( '' === $core ) {
+			return;
+		}
+
+		if ( ! $known && in_array( $core, self::PREFIX_DENYLIST, true ) ) {
+			return;
+		}
+
+		// Known short stems (wc, gf, …) are OK because matching always requires _ or - after the stem.
+		$min = self::MIN_PREFIX_LEN;
+		if ( $known ) {
+			$min = 2;
+		}
+		if ( strlen( $core ) < $min ) {
+			return;
+		}
+
+		$prefixes[] = $core;
+	}
+
+	/**
+	 * Known option prefixes for popular plugins (folder slug ≠ DB keys).
+	 * Prefer specific stems; short ones like wc/gf only work with _ / - separator later.
 	 *
 	 * @param string $folder Plugin directory name.
 	 * @return string[]
 	 */
 	private function known_prefixes_for_folder( string $folder ): array {
 		$map = array(
-			'better-wp-security'         => array( 'itsec', 'ithemes', 'itsec_' ),
-			'wordpress-seo'              => array( 'wpseo', 'yoast', 'wpseo_' ),
-			'seo-by-rank-math'           => array( 'rank_math', 'rank_math_' ),
-			'kadence-blocks'             => array( 'kadence', 'kb', 'stellarwp' ),
-			'woocommerce'                => array( 'woocommerce', 'wc', 'wc_' ),
+			'better-wp-security'         => array( 'itsec', 'itsec_', 'ithemes-security' ),
+			'wordpress-seo'              => array( 'wpseo', 'yoast_migrations', 'yoast_indexation' ),
+			'seo-by-rank-math'           => array( 'rank_math' ),
+			'kadence-blocks'             => array( 'kadence_blocks', 'kadence_blocks_' ),
+			'woocommerce'                => array( 'woocommerce', 'wc_' ),
 			'elementor'                  => array( 'elementor', '_elementor' ),
-			'advanced-custom-fields'     => array( 'acf', 'acf_' ),
-			'advanced-custom-fields-pro' => array( 'acf', 'acf_' ),
-			'wordfence'                  => array( 'wordfence', 'wfls', 'wf' ),
-			'wp-mail-smtp'               => array( 'wp_mail_smtp', 'wpms' ),
-			'updraftplus'                => array( 'updraft', 'updraftplus' ),
-			'redirection'                => array( 'redirection', 'redirection_' ),
-			'jetpack'                    => array( 'jetpack', 'jetpack_' ),
-			'gravityforms'               => array( 'gravityforms', 'gf', 'rgform' ),
-			'wpforms-lite'               => array( 'wpforms', 'wpforms_' ),
-			'wpforms'                    => array( 'wpforms', 'wpforms_' ),
-			'litespeed-cache'            => array( 'litespeed', 'litespeed_' ),
-			'wp-rocket'                  => array( 'wp_rocket', 'rocket' ),
-			'sg-cachepress'              => array( 'sg', 'siteground' ),
+			'advanced-custom-fields'     => array( 'acf_' ),
+			'advanced-custom-fields-pro' => array( 'acf_' ),
+			'wordfence'                  => array( 'wordfence', 'wfls_', 'wf_' ),
+			'wp-mail-smtp'               => array( 'wp_mail_smtp' ),
+			'updraftplus'                => array( 'updraft_', 'updraftplus' ),
+			'redirection'                => array( 'redirection_' ),
+			'jetpack'                    => array( 'jetpack' ),
+			'gravityforms'               => array( 'gf_', 'gravityforms', 'rg_' ),
+			'wpforms-lite'               => array( 'wpforms' ),
+			'wpforms'                    => array( 'wpforms' ),
+			'litespeed-cache'            => array( 'litespeed' ),
+			'wp-rocket'                  => array( 'wp_rocket', 'rocket_' ),
+			'sg-cachepress'              => array( 'siteground', 'sg_cachepress' ),
 			'fluentform'                 => array( 'fluentform', '_fluentform' ),
 			'fluent-crm'                 => array( 'fluentcrm', '_fluentcrm' ),
+			'contact-form-7'             => array( 'wpcf7' ),
+			'all-in-one-wp-migration'    => array( 'ai1wm' ),
+			'duplicate-post'             => array( 'duplicate_post' ),
+			'classic-editor'             => array( 'classic-editor' ),
+			'tso-swiss-knife-advanced-maintenance-developer-toolkit' => array( 'tsosk_', 'tso_swiss_knife_' ),
+			'tso-options-tables-cleaner' => array( 'tsootc_', 'tso_options_tables_cleaner_' ),
+			'tso-image-master'           => array( 'tsoim_', 'tso_image_master_' ),
+			'tso-link-inspector'         => array( 'tsoliin_', 'tso_link_inspector_' ),
 		);
 
 		return $map[ $folder ] ?? array();
 	}
 
 	/**
-	 * Scan plugin PHP files for option key prefixes used in get/update_option calls.
+	 * Scan plugin PHP for literal option names used in *option() calls.
 	 *
 	 * @param string $file Plugin basename path.
-	 * @return string[]
+	 * @return array{exact:string[],prefixes:string[]}
 	 */
-	private function scan_plugin_option_prefixes( string $file ): array {
+	private function scan_plugin_option_keys( string $file ): array {
+		$exact    = array();
 		$prefixes = array();
-		$paths    = array( WP_PLUGIN_DIR . '/' . $file );
-		$dir      = dirname( WP_PLUGIN_DIR . '/' . $file );
-		if ( is_dir( $dir ) ) {
-			$main = basename( $file );
+		$paths    = array();
+		$main     = tsosk_get_plugin_file_path( $file );
+		if ( '' !== $main ) {
+			$paths[] = $main;
+		}
+		$dir = '' !== $main ? dirname( $main ) : '';
+		if ( '' !== $dir && is_dir( $dir ) ) {
+			$main_base = basename( $file );
 			foreach ( glob( $dir . '/*.php' ) ?: array() as $php_file ) {
-				if ( basename( $php_file ) !== $main ) {
+				if ( basename( $php_file ) !== $main_base ) {
 					$paths[] = $php_file;
 				}
 			}
@@ -258,106 +405,185 @@ class TSOSK_Mod_Footprint {
 			}
 		}
 
-		$seen_opts = array();
-		foreach ( array_slice( array_unique( $paths ), 0, 20 ) as $path ) {
+		foreach ( array_slice( array_unique( $paths ), 0, 25 ) as $path ) {
 			if ( ! is_readable( $path ) ) {
 				continue;
 			}
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$content = (string) file_get_contents( $path, false, null, 0, 262144 );
-			if ( preg_match_all( "/(?:get_option|update_option|add_option|delete_option)\s*\(\s*['\"]([a-zA-Z0-9_\-]{2,})['\"]/", $content, $matches ) ) {
-				foreach ( $matches[1] as $option_name ) {
-					if ( isset( $seen_opts[ $option_name ] ) ) {
-						continue;
-					}
-					$seen_opts[ $option_name ] = true;
-					$prefixes[] = strtolower( $option_name );
-					if ( preg_match( '/^([a-z][a-z0-9_]*)_/i', $option_name, $pm ) ) {
-						$prefixes[] = strtolower( $pm[1] );
+			if ( ! preg_match_all( "/(?:get_option|update_option|add_option|delete_option)\s*\(\s*['\"]([a-zA-Z0-9_\-]{3,80})['\"]/", $content, $matches ) ) {
+				continue;
+			}
+			foreach ( $matches[1] as $option_name ) {
+				$name = strtolower( (string) $option_name );
+				if ( in_array( $name, self::PREFIX_DENYLIST, true ) ) {
+					continue;
+				}
+				$exact[] = $name;
+
+				// Derive a stem only when long enough and followed by a separator in the original name.
+				if ( preg_match( '/^([a-z][a-z0-9]{2,})[_-]/i', $name, $pm ) ) {
+					$stem = strtolower( $pm[1] );
+					if ( ! in_array( $stem, self::PREFIX_DENYLIST, true ) && strlen( $stem ) >= self::MIN_PREFIX_LEN ) {
+						$prefixes[] = $stem;
 					}
 				}
 			}
-			if ( preg_match( '/\btsosk_/i', $content ) ) {
-				$prefixes[] = 'tsosk';
-			}
-			if ( preg_match( '/\btso_/i', $content ) ) {
-				$prefixes[] = 'tso';
-			}
 		}
 
-		return $prefixes;
+		return array(
+			'exact'    => array_values( array_unique( $exact ) ),
+			'prefixes' => array_values( array_unique( $prefixes ) ),
+		);
 	}
 
 	/**
-	 * Count distinct wp_options rows matching any prefix.
+	 * Load all option names once (no values).
 	 *
-	 * @param string[] $prefixes Option name prefixes.
+	 * @return string[]
+	 */
+	private function get_all_option_names(): array {
+		if ( null !== $this->all_option_names ) {
+			return $this->all_option_names;
+		}
+
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$names = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options}" );
+		$this->all_option_names = array_map( 'strval', (array) $names );
+		return $this->all_option_names;
+	}
+
+	/**
+	 * Assign each option name to at most one plugin (longest matcher wins).
+	 *
+	 * @param array<string,array{matchers:array{exact:string[],prefixes:string[]}}> $candidates Plugin candidates keyed by file.
+	 * @return array<string,string[]> option names per plugin file.
+	 */
+	private function assign_options_exclusively( array $candidates ): array {
+		$claims = array(); // option_name => [file, score]
+
+		foreach ( $candidates as $file => $row ) {
+			$exact    = $row['matchers']['exact'] ?? array();
+			$prefixes = $row['matchers']['prefixes'] ?? array();
+
+			$exact_map = array_fill_keys( $exact, true );
+
+			foreach ( $this->get_all_option_names() as $option_name ) {
+				$score = $this->match_score( $option_name, $exact_map, $prefixes );
+				if ( $score <= 0 ) {
+					continue;
+				}
+				if ( ! isset( $claims[ $option_name ] ) || $score > $claims[ $option_name ]['score'] ) {
+					$claims[ $option_name ] = array(
+						'file'  => $file,
+						'score' => $score,
+					);
+				}
+			}
+		}
+
+		$assigned = array();
+		foreach ( $claims as $option_name => $claim ) {
+			$file = $claim['file'];
+			if ( ! isset( $assigned[ $file ] ) ) {
+				$assigned[ $file ] = array();
+			}
+			$assigned[ $file ][] = $option_name;
+		}
+
+		foreach ( $assigned as $file => $names ) {
+			sort( $names );
+			$assigned[ $file ] = $names;
+		}
+
+		return $assigned;
+	}
+
+	/**
+	 * Score how well an option name matches a plugin's matchers.
+	 * Higher is better. Exact name > longer prefix.
+	 *
+	 * @param string         $option_name Option name.
+	 * @param array<string,bool> $exact_map Exact names.
+	 * @param string[]       $prefixes    Prefix cores.
 	 * @return int
 	 */
-	private function count_options_by_prefixes( array $prefixes ): int {
-		global $wpdb;
-		$conditions = array();
-		$values     = array();
+	private function match_score( string $option_name, array $exact_map, array $prefixes ): int {
+		$option_name = strtolower( $option_name );
+
+		if ( isset( $exact_map[ $option_name ] ) ) {
+			return 1000 + strlen( $option_name );
+		}
+
+		$best = 0;
 		foreach ( $prefixes as $prefix ) {
-			$prefix = sanitize_key( str_replace( '-', '_', $prefix ) );
-			if ( strlen( $prefix ) < 2 ) {
+			$prefix = strtolower( rtrim( $prefix, '_-' ) );
+			if ( '' === $prefix ) {
 				continue;
 			}
-			$conditions[] = 'option_name = %s';
-			$values[]     = $prefix;
-			foreach ( array( '_', '-' ) as $sep ) {
-				$like         = $wpdb->esc_like( $prefix ) . $sep . '%';
-				$conditions[] = 'option_name LIKE %s';
-				$values[]     = $like;
+
+			// Exact equal to prefix.
+			if ( $option_name === $prefix ) {
+				$best = max( $best, 500 + strlen( $prefix ) );
+				continue;
 			}
-			$like         = $wpdb->esc_like( $prefix ) . '%';
-			$conditions[] = 'option_name LIKE %s';
-			$values[]     = $like;
+
+			// Must continue with separator — never bare "wc%" / "tso%".
+			$plen = strlen( $prefix );
+			if ( strlen( $option_name ) <= $plen ) {
+				continue;
+			}
+			if ( 0 !== strpos( $option_name, $prefix ) ) {
+				continue;
+			}
+			$next = $option_name[ $plen ];
+			if ( '_' !== $next && '-' !== $next ) {
+				continue;
+			}
+			$best = max( $best, 100 + $plen );
 		}
-		if ( empty( $conditions ) ) {
-			return 0;
-		}
-		$sql = 'SELECT COUNT(DISTINCT option_name) FROM ' . $wpdb->options . ' WHERE ' . implode( ' OR ', $conditions );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Static LIKE clauses; values bound via prepare().
-		return (int) $wpdb->get_var( $wpdb->prepare( $sql, ...$values ) );
+
+		return $best;
 	}
 
 	/**
-	 * Best prefix for Options Editor search link.
+	 * @param array{exact?:string[],prefixes?:string[]} $matchers Matchers.
+	 * @return string[]
+	 */
+	private function display_prefixes( array $matchers ): array {
+		$list = array_merge( $matchers['prefixes'] ?? array(), array_slice( $matchers['exact'] ?? array(), 0, 5 ) );
+		$list = array_values( array_unique( $list ) );
+		usort(
+			$list,
+			static function ( string $a, string $b ): int {
+				return strlen( $b ) <=> strlen( $a );
+			}
+		);
+		return $list;
+	}
+
+	/**
+	 * Best search string for Options Editor.
 	 *
-	 * @param string[] $prefixes Detected prefixes.
+	 * @param array{exact?:string[],prefixes?:string[]} $matchers Matchers.
+	 * @param string[]                                  $samples  Assigned sample keys.
 	 * @return string
 	 */
-	private function best_search_prefix( array $prefixes ): string {
-		if ( empty( $prefixes ) ) {
-			return '';
-		}
-
-		$best_prefix = '';
-		$best_count  = 0;
-
-		foreach ( array_unique( $prefixes ) as $prefix ) {
-			$prefix = sanitize_key( str_replace( '-', '_', (string) $prefix ) );
-			if ( strlen( $prefix ) < 2 ) {
-				continue;
+	private function best_search_prefix( array $matchers, array $samples = array() ): string {
+		if ( ! empty( $samples ) ) {
+			// Common stem of assigned keys.
+			$first = (string) $samples[0];
+			if ( preg_match( '/^([a-z0-9]+[_-])/i', $first, $m ) ) {
+				return rtrim( $m[1], '_-' );
 			}
-			$count = $this->count_options_by_prefixes( array( $prefix ) );
-			if ( $count > $best_count ) {
-				$best_count  = $count;
-				$best_prefix = $prefix;
-			}
+			return $first;
 		}
-
-		if ( '' === $best_prefix ) {
-			usort(
-				$prefixes,
-				static function ( string $a, string $b ): int {
-					return strlen( $b ) <=> strlen( $a );
-				}
-			);
-			$best_prefix = sanitize_key( str_replace( '-', '_', (string) $prefixes[0] ) );
+		$prefixes = $matchers['prefixes'] ?? array();
+		if ( ! empty( $prefixes ) ) {
+			return (string) $prefixes[0];
 		}
-
-		return $best_prefix;
+		$exact = $matchers['exact'] ?? array();
+		return ! empty( $exact ) ? (string) $exact[0] : '';
 	}
 }

@@ -123,8 +123,15 @@ class TSOSK_Mod_Health {
 		$site_name = isset( $report['site']['name'] ) ? (string) $report['site']['name'] : '';
 		$site_url  = isset( $report['site']['url'] ) ? (string) $report['site']['url'] : '';
 		$generated = isset( $report['generated_at'] ) ? (string) $report['generated_at'] : '';
-		$checks    = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
-		$css       = TSOSK_Support::read_asset_css( 'assets/css/tsosk-health-report.css' );
+		$checks = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
+
+		wp_register_style(
+			'tsosk-health-report',
+			TSOSK_URL . 'assets/css/tsosk-health-report.css',
+			array(),
+			TSOSK_VERSION
+		);
+		wp_enqueue_style( 'tsosk-health-report' );
 
 		ob_start();
 		?>
@@ -133,12 +140,7 @@ class TSOSK_Mod_Health {
 <head>
 	<meta charset="utf-8">
 	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site_name ) ); ?></title>
-	<style id="tsosk-health-report-style">
-	<?php
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static plugin CSS asset.
-	echo $css;
-	?>
-	</style>
+	<?php wp_print_styles( 'tsosk-health-report' ); ?>
 </head>
 <body class="tsosk-health-report">
 	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h1>
@@ -396,7 +398,7 @@ class TSOSK_Mod_Health {
 	 * @return array{label:string,status:string,details:string}
 	 */
 	private function debug_log_check(): array {
-		$path = WP_CONTENT_DIR . '/debug.log';
+		$path = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'debug.log';
 		$size = file_exists( $path ) ? (int) filesize( $path ) : 0;
 
 		return array(

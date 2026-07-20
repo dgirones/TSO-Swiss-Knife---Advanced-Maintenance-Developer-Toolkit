@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Image_Sizes_Audit {
 
-	/** Option key for disabled image size names (shared with WP Internals). */
+	/** Option key for disabled image size names. */
 	public const OPTION_DISABLED_SIZES = 'tsosk_disabled_image_sizes';
 
 	/** @var TSOSK_Mod_Image_Sizes_Audit|null */

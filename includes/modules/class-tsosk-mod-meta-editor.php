@@ -107,8 +107,8 @@ class TSOSK_Mod_Meta_Editor {
 
 		$context   = $this->sanitize_context();
 		$search    = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
-		$object_id = isset( $_POST['object_id'] ) ? absint( $_POST['object_id'] ) : 0;
-		$page      = max( 1, absint( $_POST['page'] ?? 1 ) );
+		$object_id = isset( $_POST['object_id'] ) ? absint( wp_unslash( $_POST['object_id'] ) ) : 0;
+		$page      = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
 		$offset    = ( $page - 1 ) * self::PER_PAGE;
 
 		if ( 'user' === $context ) {
@@ -185,7 +185,7 @@ class TSOSK_Mod_Meta_Editor {
 
 		global $wpdb;
 		$context = $this->sanitize_context();
-		$meta_id = absint( $_POST['meta_id'] ?? 0 );
+		$meta_id = isset( $_POST['meta_id'] ) ? absint( wp_unslash( $_POST['meta_id'] ) ) : 0;
 		if ( ! $meta_id ) {
 			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -233,9 +233,8 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		$context = $this->sanitize_context();
-		$meta_id = absint( $_POST['meta_id'] ?? 0 );
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- meta values may be serialized.
-		$value   = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
+		$meta_id = isset( $_POST['meta_id'] ) ? absint( wp_unslash( $_POST['meta_id'] ) ) : 0;
+		$value   = TSOSK_Support::get_post_scalar( 'value' );
 
 		if ( ! $meta_id ) {
 			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -298,7 +297,7 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		$context = $this->sanitize_context();
-		$meta_id = absint( $_POST['meta_id'] ?? 0 );
+		$meta_id = isset( $_POST['meta_id'] ) ? absint( wp_unslash( $_POST['meta_id'] ) ) : 0;
 		if ( ! $meta_id ) {
 			wp_send_json_error( __( 'Invalid meta ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -353,10 +352,9 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		$context   = $this->sanitize_context();
-		$object_id = absint( $_POST['object_id'] ?? 0 );
+		$object_id = isset( $_POST['object_id'] ) ? absint( wp_unslash( $_POST['object_id'] ) ) : 0;
 		$key       = isset( $_POST['meta_key'] ) ? sanitize_text_field( wp_unslash( $_POST['meta_key'] ) ) : '';
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$value     = isset( $_POST['value'] ) ? wp_unslash( $_POST['value'] ) : '';
+		$value     = TSOSK_Support::get_post_scalar( 'value' );
 
 		if ( ! $object_id || ! $key ) {
 			wp_send_json_error( __( 'Object ID and meta key are required.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );

@@ -607,6 +607,197 @@ class TSOSK_Mod_Slow_Queries {
 
 		<?php endif; ?>
 
+		<?php $this->render_savequeries_viewer(); ?>
+
+		<?php
+	}
+
+	/**
+	 * Live SAVEQUERIES table for the current admin page load.
+	 */
+	private function render_savequeries_viewer(): void {
+		global $wpdb;
+
+		$sq_enabled = defined( 'SAVEQUERIES' ) && SAVEQUERIES;
+		$sq_queries = $sq_enabled && is_array( $wpdb->queries ) ? $wpdb->queries : array();
+		$sq_count   = count( $sq_queries );
+		$sq_total   = $sq_enabled ? array_sum( array_column( $sq_queries, 1 ) ) : 0;
+		$sq_max     = $sq_count ? max( array_column( $sq_queries, 1 ) ) : 0;
+		$sq_sql_map = array();
+		foreach ( $sq_queries as $q ) {
+			$sql                  = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			$sq_sql_map[ $sql ] = ( $sq_sql_map[ $sql ] ?? 0 ) + 1;
+		}
+		$sq_dupes = array_filter( $sq_sql_map, static fn( $n ) => $n > 1 );
+		?>
+		<div class="tsosk-card">
+			<h3>
+				<span class="dashicons dashicons-database" aria-hidden="true"></span>
+				<?php esc_html_e( 'Database Queries (SAVEQUERIES)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php if ( $sq_enabled && $sq_count ) : ?>
+				<span class="tsosk-badge <?php echo $sq_count > 100 ? 'tsosk-badge-warn' : 'tsosk-badge-info'; ?>"
+				      style="margin-left:8px;font-size:12px;">
+					<?php
+					printf(
+						/* translators: %d: number of queries on this page load */
+						esc_html__( '%d queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						(int) $sq_count
+					);
+					?>
+				</span>
+				<?php endif; ?>
+			</h3>
+			<p class="description">
+				<?php esc_html_e( 'Live list of database queries executed while loading this Slow Query Monitor page. Enable the monitor above (it can turn SAVEQUERIES on for you) or use Developer mode in Debug Mode, then reload.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+
+			<?php if ( ! $sq_enabled ) : ?>
+			<div class="tsosk-notice tsosk-notice-info">
+				<strong><?php esc_html_e( 'SAVEQUERIES is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php esc_html_e( 'Enable the monitor and save settings, or turn on Developer mode in Debug Mode, then reload this page. Only use SAVEQUERIES while debugging — it has a memory overhead on every request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+			<?php elseif ( ! $sq_count ) : ?>
+			<p class="description">
+				<?php esc_html_e( 'SAVEQUERIES is active but no queries were recorded yet. Reload the page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<?php else : ?>
+
+			<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+				<div class="tsosk-sq-stat">
+					<span class="tsosk-sq-stat-val <?php echo $sq_count > 100 ? 'tsosk-sq-warn' : ''; ?>">
+						<?php echo esc_html( (string) $sq_count ); ?>
+					</span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-sq-stat">
+					<span class="tsosk-sq-stat-val <?php echo $sq_total > 0.5 ? 'tsosk-sq-warn' : ''; ?>">
+						<?php echo esc_html( number_format( $sq_total * 1000, 2 ) ); ?> ms
+					</span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-sq-stat">
+					<span class="tsosk-sq-stat-val <?php echo $sq_max > 0.1 ? 'tsosk-sq-warn' : ''; ?>">
+						<?php echo esc_html( number_format( $sq_max * 1000, 2 ) ); ?> ms
+					</span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Slowest query', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<?php if ( ! empty( $sq_dupes ) ) : ?>
+				<div class="tsosk-sq-stat">
+					<span class="tsosk-sq-stat-val tsosk-sq-warn">
+						<?php echo esc_html( (string) count( $sq_dupes ) ); ?>
+					</span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Duplicate queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<?php endif; ?>
+			</div>
+
+			<?php if ( ! empty( $sq_dupes ) ) : ?>
+			<div class="tsosk-notice tsosk-notice-warn" style="margin-bottom:12px;">
+				<strong><?php esc_html_e( '⚠ Duplicate queries detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php
+				printf(
+					/* translators: %d: number of distinct duplicate queries */
+					esc_html__( '%d distinct queries are executed more than once. This often indicates a plugin calling get_option(), get_post_meta() or similar in a loop without caching.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) count( $sq_dupes )
+				);
+				?>
+			</div>
+			<?php endif; ?>
+
+			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+				<input type="text" id="tsosk-sq-filter"
+				       placeholder="<?php esc_attr_e( 'Filter queries…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+				       style="min-width:220px;" autocomplete="off">
+				<label style="font-size:13px;">
+					<input type="checkbox" id="tsosk-sq-dupes-only">
+					<?php esc_html_e( 'Show duplicates only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</label>
+				<label style="font-size:13px;">
+					<input type="checkbox" id="tsosk-sq-slow-only">
+					<?php esc_html_e( 'Show slow only (>5 ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</label>
+				<span id="tsosk-sq-count-shown" style="font-size:12px;color:#646970;"></span>
+			</div>
+
+			<div class="tsosk-table-wrap">
+			<table class="widefat tsosk-table" id="tsosk-sq-table">
+				<thead><tr>
+					<th style="width:44px;">#</th>
+					<th style="width:70px;"><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'SQL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:30%;"><?php esc_html_e( 'Called by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				</tr></thead>
+				<tbody>
+				<?php
+				$sorted = $sq_queries;
+				usort( $sorted, static fn( $a, $b ) => $b[1] <=> $a[1] );
+				foreach ( $sorted as $i => $q ) :
+					$sql_raw   = (string) $q[0];
+					$time_ms   = (float) $q[1] * 1000;
+					$caller    = (string) ( $q[2] ?? '' );
+					$sql_clean = preg_replace( '/\s+/', ' ', trim( $sql_raw ) );
+					$is_slow   = $time_ms > 5;
+					$is_dupe   = ( $sq_sql_map[ $sql_clean ] ?? 0 ) > 1;
+					$kw        = strtoupper( strtok( $sql_clean, ' ' ) );
+					$kw_color  = array(
+						'SELECT' => '#2271b1',
+						'INSERT' => '#16a34a',
+						'UPDATE' => '#d97706',
+						'DELETE' => '#d63638',
+						'CREATE' => '#7c3aed',
+						'DROP'   => '#d63638',
+						'ALTER'  => '#7c3aed',
+						'SHOW'   => '#646970',
+					);
+					$kw_c = $kw_color[ $kw ] ?? '#374151';
+					?>
+				<tr class="tsosk-sq-row<?php echo $is_slow ? ' tsosk-sq-slow' : ''; ?><?php echo $is_dupe ? ' tsosk-sq-dupe' : ''; ?>"
+				    data-sql="<?php echo esc_attr( strtolower( $sql_clean ) ); ?>"
+				    data-dupe="<?php echo $is_dupe ? '1' : '0'; ?>"
+				    data-slow="<?php echo $is_slow ? '1' : '0'; ?>">
+					<td style="color:#646970;font-size:12px;"><?php echo esc_html( (string) ( $i + 1 ) ); ?></td>
+					<td style="font-family:monospace;font-size:12px;">
+						<span style="color:<?php echo esc_attr( $is_slow ? '#d63638' : ( $time_ms > 2 ? '#d97706' : '#16a34a' ) ); ?>;font-weight:600;">
+							<?php echo esc_html( number_format( $time_ms, 3 ) ); ?> ms
+						</span>
+					</td>
+					<td style="word-break:break-word;">
+						<?php if ( $is_dupe ) : ?>
+						<span class="tsosk-badge tsosk-badge-warn" style="font-size:10px;margin-right:4px;">
+							<?php
+							printf(
+								/* translators: %d: number of times query ran */
+								esc_html__( '×%d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								(int) $sq_sql_map[ $sql_clean ]
+							);
+							?>
+						</span>
+						<?php endif; ?>
+						<span class="tsosk-badge" style="background:<?php echo esc_attr( $kw_c ); ?>20;color:<?php echo esc_attr( $kw_c ); ?>;font-size:10px;margin-right:4px;">
+							<?php echo esc_html( $kw ); ?>
+						</span>
+						<code style="font-size:11px;color:#1d2327;background:none;word-break:break-all;">
+							<?php echo esc_html( mb_substr( $sql_clean, strlen( $kw ) + 1 ) ); ?>
+						</code>
+					</td>
+					<td style="font-size:11px;color:#646970;word-break:break-word;">
+						<?php
+						$frames = array_filter(
+							array_map( 'trim', explode( ',', $caller ) ),
+							static fn( $f ) => '' !== $f && ! in_array( $f, array( 'wpdb->query', 'wpdb->get_results', 'wpdb->get_var', 'wpdb->get_row', 'wpdb->prepare' ), true )
+						);
+						$frames = array_slice( array_values( $frames ), -3 );
+						echo esc_html( implode( ' → ', $frames ) );
+						?>
+					</td>
+				</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+			</div>
+
+			<?php endif; ?>
+		</div>
 		<?php
 	}
 

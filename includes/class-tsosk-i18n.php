@@ -2,7 +2,7 @@
 /**
  * TSO Swiss Knife – Internationalization bootstrap.
  *
- * Loads bundled translations from languages/ (WordPress auto-load) and applies the admin
+ * Loads bundled translations from languages/ and applies the admin
  * language preference only on this plugin's settings screen (WordPress.org
  * compatible gettext flow; no custom gettext filter).
  *
@@ -41,8 +41,6 @@ class TSOSK_I18n {
 
 	/**
 	 * Register locale filters and load bundled translations on the plugin admin screen.
-	 *
-	 * Translations ship as .po files; compiled .mo is cached under uploads when needed.
 	 */
 	public function init(): void {
 		add_filter( 'locale', array( $this, 'filter_locale' ), 10, 1 );
@@ -83,7 +81,7 @@ class TSOSK_I18n {
 			return '';
 		}
 
-		$lang = get_user_meta( get_current_user_id(), self::LANGUAGE_META_KEY, true );
+		$lang      = get_user_meta( get_current_user_id(), self::LANGUAGE_META_KEY, true );
 		$languages = self::get_languages();
 
 		return isset( $languages[ $lang ] ) ? (string) $lang : '';
@@ -123,9 +121,9 @@ class TSOSK_I18n {
 	}
 
 	/**
-	 * Load the bundled .po/.mo catalog for the active plugin admin locale.
+	 * Load the bundled .mo catalog for the active plugin admin locale.
 	 *
-	 * WordPress JIT may load an outdated language pack; our bundled .po is the source
+	 * WordPress JIT may load an outdated language pack; our bundled .mo is the source
 	 * of truth for new strings on this screen.
 	 */
 	public function load_bundled_translations(): void {
@@ -177,105 +175,13 @@ class TSOSK_I18n {
 	}
 
 	/**
-	 * Resolve the best MO file for a locale suffix (bundled or uploads cache).
+	 * Resolve the bundled MO file for a locale suffix.
 	 *
 	 * @param string $suffix Locale suffix (ca, es_ES).
 	 * @return string Readable .mo path or empty string.
 	 */
 	private function resolve_mo_file( string $suffix ): string {
-		$domain  = TSOSK_TEXT_DOMAIN;
-		$pofile  = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.po';
-		$bundled = TSOSK_PATH . 'languages/' . $domain . '-' . $suffix . '.mo';
-		$cache   = WP_CONTENT_DIR . '/uploads/tsosk-l10n/' . $domain . '-' . $suffix . '.mo';
-
-		if ( ! is_readable( $pofile ) ) {
-			if ( is_readable( $bundled ) ) {
-				return $bundled;
-			}
-			return is_readable( $cache ) ? $cache : '';
-		}
-
-		$po_mtime = (int) filemtime( $pofile );
-
-		// Bundled .mo is used only when it is at least as new as the source .po.
-		if ( is_readable( $bundled ) && (int) filemtime( $bundled ) >= $po_mtime ) {
-			return $bundled;
-		}
-
-		if ( is_readable( $cache ) && (int) filemtime( $cache ) >= $po_mtime ) {
-			return $cache;
-		}
-
-		$compiled = $this->compile_po_to_mo( $pofile, $cache );
-		if ( '' !== $compiled ) {
-			return $compiled;
-		}
-
-		// Fall back to bundled .mo even if stale (better than no catalog).
+		$bundled = TSOSK_PATH . 'languages/' . TSOSK_TEXT_DOMAIN . '-' . $suffix . '.mo';
 		return is_readable( $bundled ) ? $bundled : '';
-	}
-
-	/**
-	 * Compile a .po file to .mo using WordPress POMO classes.
-	 *
-	 * @param string $pofile Source .po path.
-	 * @param string $mofile Target .mo path.
-	 * @return string Compiled .mo path or empty string on failure.
-	 */
-	private function compile_po_to_mo( string $pofile, string $mofile ): string {
-		$this->load_pomo_classes();
-
-		$po = new PO();
-		if ( ! $po->import_from_file( $pofile ) ) {
-			return '';
-		}
-
-		$mo = new MO();
-		$mo->merge_with( $po );
-
-		$dir = dirname( $mofile );
-		if ( ! is_dir( $dir ) ) {
-			wp_mkdir_p( $dir );
-			$this->protect_l10n_cache_dir( $dir );
-		}
-
-		if ( ! wp_is_writable( $dir ) || ! $mo->export_to_file( $mofile ) ) {
-			return '';
-		}
-
-		return is_readable( $mofile ) ? $mofile : '';
-	}
-
-	/**
-	 * Ensure WordPress POMO classes are available.
-	 */
-	private function load_pomo_classes(): void {
-		if ( class_exists( 'PO', false ) ) {
-			return;
-		}
-
-		require_once ABSPATH . WPINC . '/pomo/translations.php';
-		require_once ABSPATH . WPINC . '/pomo/streams.php';
-		require_once ABSPATH . WPINC . '/pomo/entry.php';
-		require_once ABSPATH . WPINC . '/pomo/po.php';
-		require_once ABSPATH . WPINC . '/pomo/mo.php';
-	}
-
-	/**
-	 * Protect the uploads translation cache directory.
-	 *
-	 * @param string $dir Cache directory path.
-	 */
-	private function protect_l10n_cache_dir( string $dir ): void {
-		$htaccess = $dir . '/.htaccess';
-		if ( ! file_exists( $htaccess ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
-		}
-		$index = $dir . '/index.php';
-		if ( ! file_exists( $index ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $index, "<?php // Silence is golden.\n" );
-		}
 	}
 }

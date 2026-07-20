@@ -431,34 +431,58 @@ class TSOSK_Mod_Users {
 	 * @param string    $nonce Nonce.
 	 */
 	private function render_sessions_card( array $users, string $nonce ): void {
+		$current_user_id = get_current_user_id();
 		?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Administrator Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Session tokens stored by WordPress. Close individual sessions or all sessions for a user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p class="description">
+				<?php esc_html_e( 'Session tokens stored by WordPress. The same administrator can have several open sessions at once (different browser, device, IP or “Remember me” login). That is normal — it is not a duplicate bug.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
 			<?php if ( empty( $users ) ) : ?>
 				<p><?php esc_html_e( 'No users found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<?php foreach ( $users as $user ) : ?>
 					<?php
-					$sessions = WP_Session_Tokens::get_instance( $user->ID )->get_all();
-					$last     = (int) get_user_meta( $user->ID, self::META_LAST_LOGIN, true );
+					$sessions  = WP_Session_Tokens::get_instance( $user->ID )->get_all();
+					$last      = (int) get_user_meta( $user->ID, self::META_LAST_LOGIN, true );
+					$is_self   = ( $current_user_id === (int) $user->ID );
+					$session_n = count( $sessions );
 					?>
 					<div class="tsosk-users-session-block" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #dcdcde;">
 						<p style="margin:0 0 8px;">
 							<strong><code><?php echo esc_html( $user->user_login ); ?></code></strong>
+							<span class="description">
+								—
+								<?php
+								printf(
+									/* translators: %d: number of active sessions */
+									esc_html( _n( '%d active session', '%d active sessions', $session_n, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+									(int) $session_n
+								);
+								?>
+							</span>
 							<?php if ( $last ) : ?>
 								<span class="description"> — <?php esc_html_e( 'Last login:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last ) ); ?></span>
 							<?php endif; ?>
-							<button type="button" class="button button-small tsosk-user-close-sessions" style="margin-left:8px;"
-							        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Close all sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-							</button>
-							<button type="button" class="button button-small tsosk-user-force-pwd"
-							        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Force password change', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-							</button>
+							<?php if ( $is_self ) : ?>
+								<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;"><?php esc_html_e( 'You (this account)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<?php else : ?>
+								<button type="button" class="button button-small tsosk-user-close-sessions" style="margin-left:8px;"
+								        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'Close all sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+								<button type="button" class="button button-small tsosk-user-force-pwd"
+								        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'Force password change', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+							<?php endif; ?>
 							<span class="tsosk-ajax-msg"></span>
 						</p>
+						<?php if ( $is_self ) : ?>
+							<p class="description">
+								<?php esc_html_e( 'For safety, you cannot close your own sessions from this screen (that could lock you out). Use another admin account to close them, or log out elsewhere / clear cookies on those devices.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</p>
+						<?php endif; ?>
 						<?php if ( empty( $sessions ) ) : ?>
 							<p class="description"><?php esc_html_e( 'No active sessions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php else : ?>
@@ -478,7 +502,7 @@ class TSOSK_Mod_Users {
 										<td><?php echo esc_html( isset( $session['login'] ) ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $session['login'] ) : '—' ); ?></td>
 										<td><?php echo esc_html( isset( $session['expiration'] ) ? date_i18n( get_option( 'date_format' ), (int) $session['expiration'] ) : '—' ); ?></td>
 										<td>
-											<?php if ( get_current_user_id() !== (int) $user->ID ) : ?>
+											<?php if ( ! $is_self ) : ?>
 											<button type="button" class="button button-small button-link-delete tsosk-user-close-one-session"
 											        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>"
 											        data-token="<?php echo esc_attr( (string) $token ); ?>"
@@ -486,7 +510,7 @@ class TSOSK_Mod_Users {
 												<?php esc_html_e( 'Close', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 											</button>
 											<?php else : ?>
-												—
+												<span class="description"><?php esc_html_e( 'Own session', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 											<?php endif; ?>
 										</td>
 									</tr>

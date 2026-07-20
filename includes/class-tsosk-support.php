@@ -135,6 +135,100 @@ class TSOSK_Support {
 		$css = file_get_contents( $path );
 		return is_string( $css ) ? $css : '';
 	}
+
+	/**
+	 * Read a POST field as text: unslash + UTF-8/null-byte cleanup.
+	 *
+	 * Callers must verify nonce/capability before using this helper.
+	 * Keeps JSON / serialized shapes (unlike sanitize_text_field).
+	 *
+	 * @param string $key POST key.
+	 * @return string
+	 */
+	public static function get_post_scalar( string $key ): string {
+		$key = sanitize_key( $key );
+		if ( '' === $key || ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Caller verifies nonce before use.
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- Raw POST body cleaned with wp_check_invalid_utf8 + null-byte strip below (must not use sanitize_text_field: destroys JSON/serialized option values).
+		$raw = wp_unslash( $_POST[ $key ] );
+		if ( ! is_string( $raw ) ) {
+			if ( is_scalar( $raw ) || null === $raw ) {
+				$raw = (string) $raw;
+			} else {
+				return '';
+			}
+		}
+
+		$raw     = str_replace( "\0", '', $raw );
+		$checked = wp_check_invalid_utf8( $raw, true );
+		return is_string( $checked ) ? $checked : '';
+	}
+
+	/**
+	 * Decode a JSON POST field into an array after UTF-8 cleanup.
+	 *
+	 * @param string $key POST key.
+	 * @return array<mixed>
+	 */
+	public static function get_post_json_array( string $key ): array {
+		return self::decode_json_array( self::get_post_scalar( $key ) );
+	}
+
+	/**
+	 * Sanitize a scalar string meant for option/meta storage (keeps JSON/serialized shape).
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_stored_scalar( $value ): string {
+		if ( ! is_string( $value ) ) {
+			if ( is_scalar( $value ) || null === $value ) {
+				$value = (string) $value;
+			} else {
+				$value = '';
+			}
+		}
+
+		$value = str_replace( "\0", '', $value );
+		$checked = wp_check_invalid_utf8( $value, true );
+		return is_string( $checked ) ? $checked : '';
+	}
+
+	/**
+	 * Decode a JSON POST body into an array after UTF-8 cleanup.
+	 *
+	 * @param mixed $raw Unslashed JSON string.
+	 * @return array<mixed>
+	 */
+	public static function decode_json_array( $raw ): array {
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			return array();
+		}
+		$raw     = self::sanitize_stored_scalar( $raw );
+		$decoded = json_decode( $raw, true );
+		return is_array( $decoded ) ? $decoded : array();
+	}
+
+	/**
+	 * Recursively sanitize a string/array structure with sanitize_text_field.
+	 *
+	 * @param mixed $value Value to sanitize.
+	 * @return mixed
+	 */
+	public static function sanitize_text_deep( $value ) {
+		if ( is_array( $value ) ) {
+			return map_deep( $value, 'sanitize_text_field' );
+		}
+		if ( is_string( $value ) ) {
+			return sanitize_text_field( $value );
+		}
+		if ( is_scalar( $value ) || null === $value ) {
+			return sanitize_text_field( (string) $value );
+		}
+		return '';
+	}
 }
 
 add_filter( 'plugin_row_meta', array( 'TSOSK_Support', 'filter_plugin_row_meta' ), 10, 2 );

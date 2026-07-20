@@ -37,6 +37,7 @@ $tsosk_options = array(
 	'tsosk_cas_rate',
 	'tsosk_cas_form_dup',
 	'tsosk_fi_ignored',
+	'tsosk_fi_last_results',
 	'tsosk_sr_history',
 	'tsosk_oe_history',
 	'tsosk_activity_log',
@@ -47,6 +48,9 @@ $tsosk_options = array(
 	'tsosk_hidden_profiles',
 	'tsosk_admin_menu_settings',
 	'tsosk_admin_menu_manifest',
+	'tsosk_login_history',
+	'tsosk_disabled_image_sizes',
+	'tsosk_health_suppress',
 );
 
 foreach ( $tsosk_options as $tsosk_option ) {
@@ -66,6 +70,8 @@ foreach ( $tsosk_transients as $tsosk_transient ) {
 
 delete_transient( 'tsosk_media_footprint_v1' );
 delete_transient( 'tsosk_image_sizes_audit_v1' );
+delete_transient( 'tsosk_media_full_review_v1' );
+delete_transient( 'tsosk_media_full_review_state' );
 
 // ── User meta ──────────────────────────────────────────────────────────────
 
@@ -74,122 +80,63 @@ global $wpdb;
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(
 	$wpdb->prepare(
-		"DELETE FROM {$wpdb->usermeta} WHERE meta_key IN (%s, %s, %s, %s, %s, %s, %s)",
+		"DELETE FROM {$wpdb->usermeta} WHERE meta_key IN (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
 		'tsosk_sandbox_plugins',
 		'tsosk_sandbox_token',
 		'tsosk_admin_language',
 		'tsosk_sidebar_order',
 		'tsosk_sidebar_tab_groups',
 		'tsosk_sidebar_hidden',
-		'tsosk_sidebar_favorites'
+		'tsosk_sidebar_favorites',
+		'tsosk_force_password_change',
+		'tsosk_last_login'
 	)
 );
 
-// ── Config files (uploads/tsosk-config) ────────────────────────────────────
+// ── Uploads data (plugin slug folder + legacy short folders) ───────────────
 
-$tsosk_config_dir = WP_CONTENT_DIR . '/uploads/tsosk-config';
+/**
+ * Recursively delete a directory under uploads (files then empty dirs).
+ *
+ * @param string $dir Absolute directory path.
+ */
+$tsosk_delete_uploads_tree = static function ( string $dir ) use ( &$tsosk_delete_uploads_tree ): void {
+	if ( '' === $dir || ! is_dir( $dir ) ) {
+		return;
+	}
+	$entries = scandir( $dir );
+	if ( ! is_array( $entries ) ) {
+		return;
+	}
+	foreach ( $entries as $entry ) {
+		if ( '.' === $entry || '..' === $entry ) {
+			continue;
+		}
+		$item = trailingslashit( $dir ) . $entry;
+		if ( is_dir( $item ) ) {
+			$tsosk_delete_uploads_tree( $item );
+		} elseif ( is_file( $item ) ) {
+			wp_delete_file( $item );
+		}
+	}
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	@rmdir( $dir );
+};
+
+$tsosk_upload_targets = array();
 if ( function_exists( 'wp_upload_dir' ) ) {
-	$tsosk_uploads = wp_upload_dir();
-	if ( ! empty( $tsosk_uploads['basedir'] ) ) {
-		$tsosk_config_dir = trailingslashit( wp_normalize_path( $tsosk_uploads['basedir'] ) ) . 'tsosk-config';
+	$tsosk_uploads = wp_upload_dir( null, false );
+	if ( ! empty( $tsosk_uploads['basedir'] ) && empty( $tsosk_uploads['error'] ) ) {
+		$tsosk_base = trailingslashit( wp_normalize_path( (string) $tsosk_uploads['basedir'] ) );
+		$tsosk_upload_targets[] = $tsosk_base . 'tso-swiss-knife-advanced-maintenance-developer-toolkit';
+		$tsosk_upload_targets[] = $tsosk_base . 'tsosk-config';
+		$tsosk_upload_targets[] = $tsosk_base . 'tsosk-logs';
+		$tsosk_upload_targets[] = $tsosk_base . 'tsosk-l10n';
 	}
 }
 
-$tsosk_config_files = array(
-	'tsosk-debug-flags.json',
-	'tsosk-security-flags.json',
-	'tsosk-profiles-flags.json',
-	'tsosk-debug-flags.php',
-	'tsosk-security-flags.php',
-	'tsosk-profiles-flags.php',
-);
-
-$tsosk_config_guard_files = array( '.htaccess', 'index.php' );
-
-foreach ( $tsosk_config_files as $tsosk_config_file ) {
-	$tsosk_path = $tsosk_config_dir . '/' . $tsosk_config_file;
-	if ( file_exists( $tsosk_path ) ) {
-		wp_delete_file( $tsosk_path );
-	}
-}
-
-$tsosk_log_archive_dir = $tsosk_config_dir . '/log-archives';
-if ( is_dir( $tsosk_log_archive_dir ) ) {
-	$tsosk_archive_files = glob( $tsosk_log_archive_dir . '/*' );
-	if ( is_array( $tsosk_archive_files ) ) {
-		foreach ( $tsosk_archive_files as $tsosk_archive_file ) {
-			if ( is_file( $tsosk_archive_file ) ) {
-				wp_delete_file( $tsosk_archive_file );
-			}
-		}
-	}
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
-	@rmdir( $tsosk_log_archive_dir );
-}
-
-foreach ( $tsosk_config_guard_files as $tsosk_guard_file ) {
-	$tsosk_path = $tsosk_config_dir . '/' . $tsosk_guard_file;
-	if ( file_exists( $tsosk_path ) ) {
-		wp_delete_file( $tsosk_path );
-	}
-}
-
-if ( is_dir( $tsosk_config_dir ) ) {
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
-	@rmdir( $tsosk_config_dir );
-}
-
-// ── Plugin log directory (uploads/tsosk-logs) ──────────────────────────────
-
-$tsosk_logs_dir = trailingslashit( dirname( $tsosk_config_dir ) ) . 'tsosk-logs';
-if ( is_dir( $tsosk_logs_dir ) ) {
-	$tsosk_log_files = glob( $tsosk_logs_dir . '/*' );
-	if ( is_array( $tsosk_log_files ) ) {
-		foreach ( $tsosk_log_files as $tsosk_log_path ) {
-			if ( is_file( $tsosk_log_path ) ) {
-				wp_delete_file( $tsosk_log_path );
-			}
-		}
-	}
-	$tsosk_log_subdirs = glob( $tsosk_logs_dir . '/*', GLOB_ONLYDIR );
-	if ( is_array( $tsosk_log_subdirs ) ) {
-		foreach ( $tsosk_log_subdirs as $tsosk_log_subdir ) {
-			$tsosk_nested = glob( $tsosk_log_subdir . '/*' );
-			if ( is_array( $tsosk_nested ) ) {
-				foreach ( $tsosk_nested as $tsosk_nested_file ) {
-					if ( is_file( $tsosk_nested_file ) ) {
-						wp_delete_file( $tsosk_nested_file );
-					}
-				}
-			}
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
-			@rmdir( $tsosk_log_subdir );
-		}
-	}
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
-	@rmdir( $tsosk_logs_dir );
-}
-
-// ── Compiled translation cache (uploads/tsosk-l10n) ───────────────────────
-
-$tsosk_l10n_dir = trailingslashit( dirname( $tsosk_config_dir ) ) . 'tsosk-l10n';
-if ( is_dir( $tsosk_l10n_dir ) ) {
-	$tsosk_l10n_files = glob( $tsosk_l10n_dir . '/*.mo' );
-	if ( is_array( $tsosk_l10n_files ) ) {
-		foreach ( $tsosk_l10n_files as $tsosk_l10n_file ) {
-			if ( is_file( $tsosk_l10n_file ) ) {
-				wp_delete_file( $tsosk_l10n_file );
-			}
-		}
-	}
-	foreach ( array( '.htaccess', 'index.php' ) as $tsosk_l10n_guard ) {
-		$tsosk_l10n_guard_path = $tsosk_l10n_dir . '/' . $tsosk_l10n_guard;
-		if ( file_exists( $tsosk_l10n_guard_path ) ) {
-			wp_delete_file( $tsosk_l10n_guard_path );
-		}
-	}
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
-	@rmdir( $tsosk_l10n_dir );
+foreach ( array_unique( $tsosk_upload_targets ) as $tsosk_upload_dir ) {
+	$tsosk_delete_uploads_tree( $tsosk_upload_dir );
 }
 
 // Remove login-protection rewrite rules from the stored rules option.
@@ -197,12 +144,15 @@ flush_rewrite_rules( false );
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 
-$tsosk_legacy_mu_files = array(
-	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-debug-flags.php',
-	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-security-flags.php',
-	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-profiles-flags.php',
-	trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-sandbox-loader.php',
-);
+$tsosk_legacy_mu_files = array();
+if ( defined( 'WPMU_PLUGIN_DIR' ) ) {
+	$tsosk_legacy_mu_files = array(
+		trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-debug-flags.php',
+		trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-security-flags.php',
+		trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-profiles-flags.php',
+		trailingslashit( WPMU_PLUGIN_DIR ) . 'tsosk-sandbox-loader.php',
+	);
+}
 
 foreach ( $tsosk_legacy_mu_files as $tsosk_mu_file ) {
 	if ( file_exists( $tsosk_mu_file ) ) {

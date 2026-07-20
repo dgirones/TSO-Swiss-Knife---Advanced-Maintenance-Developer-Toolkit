@@ -66,7 +66,7 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$post_id      = absint( $_POST['post_id'] ?? 0 );
+		$post_id      = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
 		$new_slug_raw = sanitize_text_field( wp_unslash( $_POST['new_slug'] ?? '' ) );
 		$do_redirect  = ! empty( $_POST['auto_redirect'] );
 
@@ -163,7 +163,7 @@ class TSOSK_Mod_Slug_Manager {
 		}
 
 		$ids       = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
-		$threshold = max( 10, min( 200, absint( $_POST['threshold'] ?? self::DEFAULT_THRESHOLD ) ) );
+		$threshold = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
 		if ( empty( $ids ) ) {
@@ -195,7 +195,7 @@ class TSOSK_Mod_Slug_Manager {
 		}
 
 		$ids         = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
-		$threshold   = max( 10, min( 200, absint( $_POST['threshold'] ?? self::DEFAULT_THRESHOLD ) ) );
+		$threshold   = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
 		if ( empty( $ids ) ) {
@@ -403,72 +403,132 @@ class TSOSK_Mod_Slug_Manager {
 
 		$q         = sanitize_text_field( wp_unslash( $_POST['q'] ?? '' ) );
 		$post_type = sanitize_key( wp_unslash( $_POST['post_type'] ?? '' ) );
-		$page      = max( 1, absint( $_POST['page'] ?? 1 ) );
+		$page      = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
 		$offset    = ( $page - 1 ) * self::PER_PAGE;
 
 		$allowed_types = $this->get_public_post_types();
+		$like          = $q ? ( '%' . $wpdb->esc_like( $q ) . '%' ) : '';
 
-		// Build type_clause using esc_sql() on validated values so it can be safely
-		// interpolated into outer prepare() calls without double-escaping placeholders.
 		if ( $post_type && in_array( $post_type, $allowed_types, true ) ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- value validated against whitelist.
-			$type_clause = "AND post_type = '" . esc_sql( $post_type ) . "'";
+			if ( $q ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$total = (int) $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_name LIKE %s
+						    AND post_type = %s",
+						$like,
+						$post_type
+					)
+				);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_name, post_type, post_status
+						   FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_name LIKE %s
+						    AND post_type = %s
+						  ORDER BY post_name ASC
+						  LIMIT %d OFFSET %d",
+						$like,
+						$post_type,
+						self::PER_PAGE,
+						$offset
+					)
+				);
+			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$total = (int) $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_type = %s",
+						$post_type
+					)
+				);
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_name, post_type, post_status
+						   FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_type = %s
+						  ORDER BY post_name ASC
+						  LIMIT %d OFFSET %d",
+						$post_type,
+						self::PER_PAGE,
+						$offset
+					)
+				);
+			}
 		} else {
-			$escaped = array_map( 'esc_sql', $allowed_types );
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- values from whitelist, each esc_sql'd.
-			$type_clause = "AND post_type IN ('" . implode( "','", $escaped ) . "')";
-		}
+			if ( array() === $allowed_types ) {
+				wp_send_json_success(
+					array(
+						'items'       => array(),
+						'total'       => 0,
+						'page'        => $page,
+						'total_pages' => 1,
+					)
+				);
+			}
 
-		// $type_clause: built with esc_sql() on whitelist-validated post type names — safe to interpolate.
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-		if ( $q ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->posts}
-					  WHERE post_status IN ('publish','draft','private','pending','future')
-					    AND post_name LIKE %s
-					  {$type_clause}",
-					'%' . $wpdb->esc_like( $q ) . '%'
-				)
-			);
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT ID, post_title, post_name, post_type, post_status
-					   FROM {$wpdb->posts}
-					  WHERE post_status IN ('publish','draft','private','pending','future')
-					    AND post_name LIKE %s
-					  {$type_clause}
-					  ORDER BY post_name ASC
-					  LIMIT %d OFFSET %d",
-					'%' . $wpdb->esc_like( $q ) . '%',
-					self::PER_PAGE,
-					$offset
-				)
-			);
-		} else {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var(
-				"SELECT COUNT(*) FROM {$wpdb->posts}
-				  WHERE post_status IN ('publish','draft','private','pending','future')
-				  {$type_clause}"
-			);
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT ID, post_title, post_name, post_type, post_status
-					   FROM {$wpdb->posts}
-					  WHERE post_status IN ('publish','draft','private','pending','future')
-					  {$type_clause}
-					  ORDER BY post_name ASC
-					  LIMIT %d OFFSET %d",
-					self::PER_PAGE,
-					$offset
-				)
-			);
+			// Placeholders only (%s); values bound via prepare(). Imploded inline to avoid DirectDB temp vars.
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			if ( $q ) {
+				$count_args = array_merge( array( $like ), $allowed_types );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$total = (int) $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_name LIKE %s
+						    AND post_type IN (" . implode( ',', array_fill( 0, count( $allowed_types ), '%s' ) ) . ')',
+						...$count_args
+					)
+				);
+				$list_args = array_merge( array( $like ), $allowed_types, array( self::PER_PAGE, $offset ) );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_name, post_type, post_status
+						   FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_name LIKE %s
+						    AND post_type IN (" . implode( ',', array_fill( 0, count( $allowed_types ), '%s' ) ) . ')
+						  ORDER BY post_name ASC
+						  LIMIT %d OFFSET %d',
+						...$list_args
+					)
+				);
+			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$total = (int) $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_type IN (" . implode( ',', array_fill( 0, count( $allowed_types ), '%s' ) ) . ')',
+						...$allowed_types
+					)
+				);
+				$list_args = array_merge( $allowed_types, array( self::PER_PAGE, $offset ) );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_name, post_type, post_status
+						   FROM {$wpdb->posts}
+						  WHERE post_status IN ('publish','draft','private','pending','future')
+						    AND post_type IN (" . implode( ',', array_fill( 0, count( $allowed_types ), '%s' ) ) . ')
+						  ORDER BY post_name ASC
+						  LIMIT %d OFFSET %d',
+						...$list_args
+					)
+				);
+			}
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		}
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		$items = array();
 		foreach ( (array) $rows as $row ) {
