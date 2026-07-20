@@ -761,25 +761,28 @@ class TSOSK_Mod_Comment_Antispam {
 		$url    = '';
 		$parts  = array();
 
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Gravity Forms validates submission.
+		$post_data = $this->sanitize_provider_post( wp_unslash( $_POST ) );
+		if ( ! is_array( $post_data ) ) {
+			$post_data = array();
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
 		foreach ( $form['fields'] as $field ) {
 			if ( ! is_object( $field ) || empty( $field->id ) ) {
 				continue;
 			}
 
-			// phpcs:disable WordPress.Security.NonceVerification.Missing -- Gravity Forms validates submission.
 			$raw_value = class_exists( 'GFFormsModel' ) && method_exists( 'GFFormsModel', 'get_field_value' )
-				? GFFormsModel::get_field_value( $field, wp_unslash( $_POST ) )
+				? GFFormsModel::get_field_value( $field, $post_data )
 				: null;
-			// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 			if ( null === $raw_value ) {
 				$input_key = 'input_' . (string) $field->id;
-				// phpcs:ignore WordPress.Security.NonceVerification.Missing
-				if ( ! isset( $_POST[ $input_key ] ) ) {
+				if ( ! isset( $post_data[ $input_key ] ) ) {
 					continue;
 				}
-				// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$raw_value = wp_unslash( $_POST[ $input_key ] );
+				$raw_value = $post_data[ $input_key ];
 			}
 
 			$value = $this->normalize_field_value( $raw_value );
@@ -819,6 +822,31 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Recursively sanitize POST data from third-party form providers.
+	 *
+	 * @param mixed $post Raw POST array or value.
+	 * @return array<string, mixed>|string
+	 */
+	private function sanitize_provider_post( $post ) {
+		if ( ! is_array( $post ) ) {
+			return sanitize_text_field( (string) $post );
+		}
+
+		$sanitized = array();
+		foreach ( $post as $key => $value ) {
+			$key = sanitize_key( (string) $key );
+			if ( '' === $key ) {
+				continue;
+			}
+			$sanitized[ $key ] = is_array( $value )
+				? $this->sanitize_provider_post( $value )
+				: sanitize_text_field( (string) $value );
+		}
+
+		return $sanitized;
+	}
+
+	/**
 	 * Extract submission from raw POST (Gravity Forms).
 	 *
 	 * @param string $source Provider slug.
@@ -826,14 +854,13 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	private function extract_fields_from_post( string $source ): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Provider validates nonce.
-		$raw = array();
-		foreach ( $_POST as $key => $value ) {
-			$raw[ (string) $key ] = is_array( $value )
-				? array_map( 'strval', wp_unslash( $value ) )
-				: wp_unslash( $value );
+		$post = wp_unslash( $_POST );
+		if ( ! is_array( $post ) ) {
+			$post = array();
 		}
+		$raw = $this->sanitize_provider_post( $post );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		return $this->extract_fields_from_array( $raw, $source );
+		return $this->extract_fields_from_array( is_array( $raw ) ? $raw : array(), $source );
 	}
 
 	/**

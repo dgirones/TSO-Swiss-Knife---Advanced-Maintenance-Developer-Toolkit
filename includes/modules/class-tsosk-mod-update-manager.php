@@ -341,7 +341,7 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 		$installed = array_keys( get_plugins() );
 		$rules     = array();
@@ -370,7 +370,7 @@ class TSOSK_Mod_Update_Manager {
 	 */
 	private function get_plugins_for_ui(): array {
 		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 
 		$all    = get_plugins();
@@ -556,10 +556,10 @@ class TSOSK_Mod_Update_Manager {
 	 */
 	private function count_pending_updates(): array {
 		if ( ! function_exists( 'get_plugin_updates' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/update.php';
+			tsosk_require_wp_admin( 'includes/update.php' );
 		}
 		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/translation-install.php';
+			tsosk_require_wp_admin( 'includes/translation-install.php' );
 		}
 
 		$plugin_updates = get_plugin_updates();
@@ -719,10 +719,10 @@ class TSOSK_Mod_Update_Manager {
 			wp_send_json_error( __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once ABSPATH . 'wp-admin/includes/update.php';
+		tsosk_require_wp_admin( 'includes/admin.php' );
+		tsosk_require_wp_admin( 'includes/update.php' );
 		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/translation-install.php';
+			tsosk_require_wp_admin( 'includes/translation-install.php' );
 		}
 
 		$before = $this->count_pending_updates();
