@@ -266,11 +266,32 @@ class TSOSK_Activity_Log {
 			'scan'    => __( 'Scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'purge'   => __( 'Purge', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'cancel'  => __( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'clear'   => __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bulk'    => __( 'Bulk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'clone'   => __( 'Clone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$action = sanitize_key( $action );
 
 		return $labels[ $action ] ?? ucfirst( $action );
+	}
+
+	/**
+	 * Human-readable Update Manager preset label (includes retired slugs).
+	 *
+	 * @param string $preset Stored preset slug.
+	 * @return string
+	 */
+	public static function update_manager_preset_label( string $preset ): string {
+		$preset = sanitize_key( $preset );
+		$labels = array(
+			'default'     => __( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable_all' => __( 'Disable all updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'custom'      => __( 'Custom', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'auto_all'    => __( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+
+		return $labels[ $preset ] ?? $preset;
 	}
 
 	/**
@@ -315,9 +336,9 @@ class TSOSK_Activity_Log {
 			},
 			'/^Update Manager settings saved \(preset: (.+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
-					/* translators: %s: preset slug */
+					/* translators: %s: preset label */
 					__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					$m[1]
+					self::update_manager_preset_label( $m[1] )
 				);
 			},
 			'/^Site Health suppression settings saved\.$/' => static function (): string {
@@ -350,10 +371,18 @@ class TSOSK_Activity_Log {
 					(int) $m[1]
 				);
 			},
+			'/^Manual update check finished \(plugins pending: (\d+) → (\d+)\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: plugins before, 2: plugins after */
+					__( 'Manual update check finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1],
+					(int) $m[2]
+				);
+			},
 			'/^Manual update run finished \(plugins pending: (\d+) → (\d+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: plugins before, 2: plugins after */
-					__( 'Manual update run finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Manual update check finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1],
 					(int) $m[2]
 				);
@@ -390,15 +419,6 @@ class TSOSK_Activity_Log {
 			if ( preg_match( $pattern, $summary, $matches ) ) {
 				return $callback( $matches );
 			}
-		}
-
-		// Module-specific fallbacks using details when available.
-		if ( 'update-manager' === $module && 'save' === $action && isset( $details['preset'] ) ) {
-			return sprintf(
-				/* translators: %s: preset slug */
-				__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				(string) $details['preset']
-			);
 		}
 
 		return $summary;
@@ -449,6 +469,10 @@ class TSOSK_Activity_Log {
 
 		update_option( self::OPTION, $entries, false );
 		update_option( self::MIGRATED_OPTION, 1, false );
+
+		// Legacy per-module history options are no longer written; remove after import.
+		delete_option( 'tsosk_oe_history' );
+		delete_option( 'tsosk_sr_history' );
 	}
 
 	/**

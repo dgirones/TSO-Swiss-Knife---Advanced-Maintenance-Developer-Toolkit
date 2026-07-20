@@ -242,11 +242,10 @@ class TSOSK_Mod_Update_Manager {
 			'update-manager',
 			'save',
 			sprintf(
-				/* translators: %s: preset slug */
+				/* translators: %s: preset label */
 				__( 'Update Manager settings saved (preset: %s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$preset
-			),
-			array( 'preset' => $preset )
+				TSOSK_Activity_Log::update_manager_preset_label( $preset )
+			)
 		);
 		wp_send_json_success( __( 'Update Manager settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
@@ -748,10 +747,6 @@ class TSOSK_Mod_Update_Manager {
 				__( 'Manual update check finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$before['plugins'],
 				$after['plugins']
-			),
-			array(
-				'plugins_before' => (int) $before['plugins'],
-				'plugins_after'  => (int) $after['plugins'],
 			)
 		);
 
