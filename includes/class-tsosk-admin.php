@@ -283,6 +283,7 @@ class TSOSK_Admin {
 					'sm_redirect_note' => __( 'Redirect will be added to TSO Swiss Knife Redirects automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_clear_confirm' => __( 'Clear the entire slow query log? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_delete_confirm'=> __( 'Delete this entry?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sq_ignore_confirm'=> __( 'Ignore this SQL pattern? Matching queries will stop being logged.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_no_results'    => __( 'No slow queries match your search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_slow'          => __( 'slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_page'          => __( 'Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -734,6 +735,8 @@ class TSOSK_Admin {
 			'sandbox'         => 'development',
 			'hooks'           => 'development',
 			'rewrite'         => 'development',
+			'object-cache'    => 'development',
+			'recovery'        => 'development',
 			'server-files'    => 'development',
 			'maintenance'     => 'site',
 			'users'           => 'site',
@@ -885,6 +888,16 @@ class TSOSK_Admin {
 				'label' => __( 'Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-admin-links',
 				'class' => 'TSOSK_Mod_Rewrite',
+			),
+			'object-cache' => array(
+				'label' => __( 'Object Cache Tools', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-performance',
+				'class' => 'TSOSK_Mod_Object_Cache',
+			),
+			'recovery'   => array(
+				'label' => __( 'Recovery Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-sos',
+				'class' => 'TSOSK_Mod_Recovery',
 			),
 			'server-files' => array(
 				'label' => __( 'Server Files Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

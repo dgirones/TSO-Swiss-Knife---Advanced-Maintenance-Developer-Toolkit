@@ -39,6 +39,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Hooks Inspector** — Browse the live `$wp_filter` global, with callback details and a real-time search filter.
 * **Rewrite Rules Flush** — Soft or hard flush with a single click; search within the current rules table.
 * **Object Cache Tools** — View the active cache driver and flush it instantly.
+* **Recovery Mode** — Open WordPress recovery URLs and clear plugins/themes paused after a fatal error.
 * **Server Files Review** — Scan for unexpected PHP files in uploads and other writable directories.
 * **Redirects** — Manage safe redirect rules stored in the database with import and export support.
 * **Custom 404 Page** — Assign a WordPress page as the site 404 template with live preview before saving.

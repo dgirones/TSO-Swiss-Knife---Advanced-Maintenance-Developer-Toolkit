@@ -357,11 +357,8 @@ class TSOSK_Mod_Maintenance {
 				?></textarea>
 				<p class="description">
 					<?php
-					printf(
-						/* translators: %s: current IP address */
-						esc_html__( 'Your current IP: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'<code>' . esc_html( $this->get_client_ip() ) . '</code>'
-					);
+					echo esc_html__( 'Your current IP:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+					echo ' <code>' . esc_html( $this->get_client_ip() ) . '</code>';
 					?>
 				</p>
 			</div>

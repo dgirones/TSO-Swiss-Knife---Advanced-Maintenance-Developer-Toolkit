@@ -10,6 +10,9 @@
  * Features:
  *  – Configurable threshold (default 100 ms).
  *  – Persistent log (up to 500 entries, stored per-request batch).
+ *  – SQL fingerprint grouping (Top Slow Query Patterns).
+ *  – Ignore patterns (substring / fingerprint) to skip noisy queries.
+ *  – Export log as CSV or JSON.
  *  – Duplicate detection: marks queries that repeat across requests.
  *  – Per-request grouping: each logged batch carries URL, timestamp, load time.
  *  – Statistics: total slow queries, slowest ever, most frequent.
@@ -65,6 +68,8 @@ class TSOSK_Mod_Slow_Queries {
 		add_action( 'wp_ajax_tsosk_sq_clear_log',     array( $this, 'ajax_clear_log' ) );
 		add_action( 'wp_ajax_tsosk_sq_delete_entry',  array( $this, 'ajax_delete_entry' ) );
 		add_action( 'wp_ajax_tsosk_sq_get_log',       array( $this, 'ajax_get_log' ) );
+		add_action( 'wp_ajax_tsosk_sq_ignore_pattern', array( $this, 'ajax_ignore_pattern' ) );
+		add_action( 'admin_post_tsosk_sq_export', array( $this, 'handle_export' ) );
 	}
 
 	// ── Settings ─────────────────────────────────────────────────────────────
@@ -72,19 +77,49 @@ class TSOSK_Mod_Slow_Queries {
 	/**
 	 * Return settings with safe defaults.
 	 *
-	 * @return array{enabled:bool,threshold_ms:int,max_entries:int,exclude_ajax:bool,exclude_cron:bool}
+	 * @return array{enabled:bool,threshold_ms:int,max_entries:int,exclude_ajax:bool,exclude_cron:bool,ignore_patterns:array<int,string>}
 	 */
 	private function get_settings(): array {
 		$s = get_option( self::SETTINGS_OPTION, array() );
 		if ( ! is_array( $s ) ) {
 			$s = array();
 		}
+		$patterns = $s['ignore_patterns'] ?? array();
+		if ( is_string( $patterns ) ) {
+			$patterns = preg_split( '/\r\n|\r|\n/', $patterns ) ?: array();
+		}
+		if ( ! is_array( $patterns ) ) {
+			$patterns = array();
+		}
+		$patterns = array_values(
+			array_unique(
+				array_filter(
+					array_map(
+						static function ( $p ): string {
+							// Keep fingerprints intact (?, %, underscores). Only trim length/control chars.
+							$p = trim( (string) $p );
+							$p = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $p );
+							return is_string( $p ) ? $p : '';
+						},
+						$patterns
+					),
+					static function ( string $p ): bool {
+						return '' !== $p;
+					}
+				)
+			)
+		);
+		if ( count( $patterns ) > 50 ) {
+			$patterns = array_slice( $patterns, 0, 50 );
+		}
+
 		return array(
-			'enabled'      => (bool) ( $s['enabled']      ?? false ),
-			'threshold_ms' => max( 1, min( 10000, (int) ( $s['threshold_ms'] ?? self::DEFAULT_THRESHOLD_MS ) ) ),
-			'max_entries'  => max( 50, min( 2000, (int) ( $s['max_entries']  ?? self::MAX_ENTRIES ) ) ),
-			'exclude_ajax' => (bool) ( $s['exclude_ajax'] ?? false ),
-			'exclude_cron' => (bool) ( $s['exclude_cron'] ?? true ),
+			'enabled'         => (bool) ( $s['enabled'] ?? false ),
+			'threshold_ms'    => max( 1, min( 10000, (int) ( $s['threshold_ms'] ?? self::DEFAULT_THRESHOLD_MS ) ) ),
+			'max_entries'     => max( 50, min( 2000, (int) ( $s['max_entries'] ?? self::MAX_ENTRIES ) ) ),
+			'exclude_ajax'    => (bool) ( $s['exclude_ajax'] ?? false ),
+			'exclude_cron'    => (bool) ( $s['exclude_cron'] ?? true ),
+			'ignore_patterns' => $patterns,
 		);
 	}
 
@@ -125,13 +160,20 @@ class TSOSK_Mod_Slow_Queries {
 		}
 
 		// Collect slow queries from this request.
-		$slow = array();
+		$slow     = array();
+		$patterns = $s['ignore_patterns'];
 		foreach ( $wpdb->queries as $q ) {
 			$time = (float) ( $q[1] ?? 0 );
 			if ( $time < $threshold_sec ) {
 				continue;
 			}
-			$sql    = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			$sql = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			if ( ! is_string( $sql ) || '' === $sql ) {
+				continue;
+			}
+			if ( $this->is_ignored_sql( $sql, $patterns ) ) {
+				continue;
+			}
 			$caller = (string) ( $q[2] ?? '' );
 			// Strip internal wpdb frames from caller.
 			$frames = array_filter(
@@ -143,9 +185,10 @@ class TSOSK_Mod_Slow_Queries {
 				}
 			);
 			$slow[] = array(
-				'sql'    => $sql,
-				'time'   => round( $time * 1000, 3 ), // ms
-				'caller' => implode( ' → ', array_slice( array_values( $frames ), -3 ) ),
+				'sql'         => $sql,
+				'fingerprint' => $this->fingerprint_sql( $sql ),
+				'time'        => round( $time * 1000, 3 ), // ms
+				'caller'      => implode( ' → ', array_slice( array_values( $frames ), -3 ) ),
 			);
 		}
 
@@ -200,6 +243,60 @@ class TSOSK_Mod_Slow_Queries {
 	}
 
 	/**
+	 * Normalise SQL into a fingerprint pattern (literals → ?).
+	 *
+	 * @param string $sql Raw SQL.
+	 * @return string
+	 */
+	private function fingerprint_sql( string $sql ): string {
+		$sql = preg_replace( '/\s+/', ' ', trim( $sql ) );
+		if ( ! is_string( $sql ) || '' === $sql ) {
+			return '';
+		}
+		// Quoted string literals.
+		$sql = preg_replace( "/'(?:\\\\'|[^'])*'/", '?', $sql );
+		$sql = preg_replace( '/"(?:\\\\"|[^"])*"/', '?', $sql );
+		if ( ! is_string( $sql ) ) {
+			return '';
+		}
+		// Numeric literals.
+		$sql = preg_replace( '/\b\d+(?:\.\d+)?\b/', '?', $sql );
+		if ( ! is_string( $sql ) ) {
+			return '';
+		}
+		// Collapse long IN (?, ?, ?) lists.
+		$sql = preg_replace( '/\(\s*\?(?:\s*,\s*\?)+\s*\)/', '(?)', $sql );
+		return is_string( $sql ) ? $sql : '';
+	}
+
+	/**
+	 * Whether a SQL string matches any ignore pattern (substring or fingerprint).
+	 *
+	 * @param string               $sql      Raw SQL.
+	 * @param array<int, string>   $patterns Ignore patterns.
+	 * @return bool
+	 */
+	private function is_ignored_sql( string $sql, array $patterns ): bool {
+		if ( empty( $patterns ) ) {
+			return false;
+		}
+		$fp    = $this->fingerprint_sql( $sql );
+		$sql_l = strtolower( $sql );
+		$fp_l  = strtolower( $fp );
+		foreach ( $patterns as $pattern ) {
+			$pattern = trim( (string) $pattern );
+			if ( '' === $pattern ) {
+				continue;
+			}
+			$pl = strtolower( $pattern );
+			if ( $fp_l === $pl || false !== strpos( $sql_l, $pl ) || false !== strpos( $fp_l, $pl ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Compute summary statistics from the log.
 	 *
 	 * @param array $log Full log.
@@ -211,25 +308,47 @@ class TSOSK_Mod_Slow_Queries {
 		$slowest_sql   = '';
 		$caller_counts = array();
 		$sql_counts    = array();
+		$patterns      = $this->get_settings()['ignore_patterns'];
 
 		foreach ( $log as $batch ) {
 			foreach ( (array) ( $batch['queries'] ?? array() ) as $q ) {
+				$sql = (string) ( $q['sql'] ?? '' );
+				if ( '' === $sql ) {
+					continue;
+				}
+				// Keep ignored historical rows out of Top Patterns (they stay in the raw log until cleared).
+				if ( $this->is_ignored_sql( $sql, $patterns ) ) {
+					continue;
+				}
+
 				$total_slow++;
-				$t   = (float) $q['time'];
-				$sql = (string) $q['sql'];
+				$t   = (float) ( $q['time'] ?? 0 );
 				$cal = (string) ( $q['caller'] ?? '' );
+				$fp  = isset( $q['fingerprint'] ) && is_string( $q['fingerprint'] ) && '' !== $q['fingerprint']
+					? $q['fingerprint']
+					: $this->fingerprint_sql( $sql );
 
 				if ( $t > $slowest_ms ) {
 					$slowest_ms  = $t;
 					$slowest_sql = $sql;
 				}
 
-				$sql_norm = md5( preg_replace( '/\b\d+\b/', '?', $sql ) );
-				$sql_counts[ $sql_norm ] = array(
-					'count' => ( $sql_counts[ $sql_norm ]['count'] ?? 0 ) + 1,
-					'sql'   => $sql,
-					'max'   => max( $sql_counts[ $sql_norm ]['max'] ?? 0, $t ),
+				$key  = md5( $fp );
+				$prev = $sql_counts[ $key ] ?? array(
+					'count'       => 0,
+					'total_ms'    => 0.0,
+					'max'         => 0.0,
+					'sql'         => $sql,
+					'fingerprint' => $fp,
 				);
+				$prev['count']++;
+				$prev['total_ms']   += $t;
+				$prev['max']         = max( (float) $prev['max'], $t );
+				$prev['fingerprint'] = $fp;
+				if ( mb_strlen( $sql ) < mb_strlen( (string) $prev['sql'] ) ) {
+					$prev['sql'] = $sql;
+				}
+				$sql_counts[ $key ] = $prev;
 
 				if ( $cal ) {
 					$caller_counts[ $cal ] = ( $caller_counts[ $cal ] ?? 0 ) + 1;
@@ -237,16 +356,30 @@ class TSOSK_Mod_Slow_Queries {
 			}
 		}
 
-		arsort( $sql_counts );
+		uasort(
+			$sql_counts,
+			static function ( array $a, array $b ): int {
+				if ( $a['count'] === $b['count'] ) {
+					return $b['max'] <=> $a['max'];
+				}
+				return $b['count'] <=> $a['count'];
+			}
+		);
 		arsort( $caller_counts );
 
+		$top = array();
+		foreach ( array_slice( $sql_counts, 0, 10, true ) as $entry ) {
+			$entry['avg'] = $entry['count'] > 0 ? round( $entry['total_ms'] / $entry['count'], 2 ) : 0.0;
+			$top[]        = $entry;
+		}
+
 		return array(
-			'total_slow'   => $total_slow,
-			'total_batches'=> count( $log ),
-			'slowest_ms'   => $slowest_ms,
-			'slowest_sql'  => $slowest_sql,
-			'top_callers'  => array_slice( $caller_counts, 0, 5, true ),
-			'top_sqls'     => array_slice( $sql_counts,    0, 5, true ),
+			'total_slow'    => $total_slow,
+			'total_batches' => count( $log ),
+			'slowest_ms'    => $slowest_ms,
+			'slowest_sql'   => $slowest_sql,
+			'top_callers'   => array_slice( $caller_counts, 0, 5, true ),
+			'top_sqls'      => $top,
 		);
 	}
 
@@ -259,12 +392,28 @@ class TSOSK_Mod_Slow_Queries {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
+		$raw_ignore = isset( $_POST['ignore_patterns'] )
+			? sanitize_textarea_field( wp_unslash( $_POST['ignore_patterns'] ) )
+			: '';
+		$ignore_lines = preg_split( '/\r\n|\r|\n/', $raw_ignore ) ?: array();
+		$ignore_patterns = array();
+		foreach ( $ignore_lines as $line ) {
+			$line = trim( (string) $line );
+			$line = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $line );
+			$line = is_string( $line ) ? $line : '';
+			if ( '' !== $line && mb_strlen( $line ) <= 2000 ) {
+				$ignore_patterns[] = $line;
+			}
+		}
+		$ignore_patterns = array_values( array_unique( array_slice( $ignore_patterns, 0, 50 ) ) );
+
 		$new = array(
-			'enabled'      => ! empty( $_POST['enabled'] ),
-			'threshold_ms' => max( 1, min( 10000, absint( wp_unslash( $_POST['threshold_ms'] ?? 100 ) ) ) ),
-			'max_entries'  => max( 50, min( 2000, absint( wp_unslash( $_POST['max_entries']  ?? 500 ) ) ) ),
-			'exclude_ajax' => ! empty( $_POST['exclude_ajax'] ),
-			'exclude_cron' => ! empty( $_POST['exclude_cron'] ),
+			'enabled'         => ! empty( $_POST['enabled'] ),
+			'threshold_ms'    => max( 1, min( 10000, absint( wp_unslash( $_POST['threshold_ms'] ?? 100 ) ) ) ),
+			'max_entries'     => max( 50, min( 2000, absint( wp_unslash( $_POST['max_entries'] ?? 500 ) ) ) ),
+			'exclude_ajax'    => ! empty( $_POST['exclude_ajax'] ),
+			'exclude_cron'    => ! empty( $_POST['exclude_cron'] ),
+			'ignore_patterns' => $ignore_patterns,
 		);
 
 		update_option( self::SETTINGS_OPTION, $new, false );
@@ -300,6 +449,122 @@ class TSOSK_Mod_Slow_Queries {
 		) );
 	}
 
+	/**
+	 * AJAX: add one ignore pattern (from Top Slow Queries).
+	 */
+	public function ajax_ignore_pattern(): void {
+		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$pattern = isset( $_POST['pattern'] )
+			? sanitize_textarea_field( wp_unslash( $_POST['pattern'] ) )
+			: '';
+		$normalized = preg_replace( '/\s+/', ' ', $pattern );
+		$pattern    = is_string( $normalized ) ? trim( $normalized ) : trim( $pattern );
+		if ( '' === $pattern || mb_strlen( $pattern ) > 2000 ) {
+			wp_send_json_error( __( 'Invalid ignore pattern.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Avoid sanitize_text_field() here — it can alter SQL fingerprints (?, %, etc.).
+		$s        = $this->get_settings();
+		$patterns = $s['ignore_patterns'];
+		foreach ( $patterns as $existing ) {
+			if ( 0 === strcasecmp( (string) $existing, $pattern ) ) {
+				wp_send_json_success(
+					array(
+						'message'  => __( 'Pattern ignored. Matching queries will no longer be logged. Save settings or reload to refresh the ignore list field.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'patterns' => $patterns,
+					)
+				);
+			}
+		}
+		$patterns[] = $pattern;
+		$patterns   = array_slice( $patterns, 0, 50 );
+		$s['ignore_patterns'] = $patterns;
+		update_option( self::SETTINGS_OPTION, $s, false );
+
+		TSOSK_Activity_Log::log( 'slow-queries', 'save', __( 'Slow query ignore pattern added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		wp_send_json_success(
+			array(
+				'message'  => __( 'Pattern ignored. Matching queries will no longer be logged. Save settings or reload to refresh the ignore list field.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'patterns' => $patterns,
+			)
+		);
+	}
+
+	/**
+	 * Download slow query log as CSV or JSON.
+	 */
+	public function handle_export(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		check_admin_referer( 'tsosk_sq_export' );
+
+		$format = isset( $_GET['format'] ) ? sanitize_key( wp_unslash( $_GET['format'] ) ) : 'csv';
+		if ( ! in_array( $format, array( 'csv', 'json' ), true ) ) {
+			$format = 'csv';
+		}
+
+		$log  = $this->get_log();
+		$stamp = gmdate( 'Y-m-d-His' );
+
+		if ( 'json' === $format ) {
+			nocache_headers();
+			header( 'Content-Type: application/json; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename="tsosk-slow-queries-' . $stamp . '.json"' );
+			echo wp_json_encode(
+				array(
+					'exported_at' => gmdate( 'c' ),
+					'site'        => home_url( '/' ),
+					'batches'     => $log,
+					'patterns'    => $this->compute_stats( $log )['top_sqls'],
+				),
+				JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+			);
+			exit;
+		}
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tsosk-slow-queries-' . $stamp . '.csv"' );
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- php://output stream for download.
+		$out = fopen( 'php://output', 'w' );
+		if ( false === $out ) {
+			wp_die( esc_html__( 'Could not open export stream.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		fprintf( $out, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) ); // UTF-8 BOM for Excel.
+		fputcsv( $out, array( 'timestamp_utc', 'url', 'load_ms', 'query_ms', 'fingerprint', 'sql', 'caller' ) );
+		foreach ( $log as $batch ) {
+			$ts  = isset( $batch['ts'] ) ? gmdate( 'c', (int) $batch['ts'] ) : '';
+			$url = (string) ( $batch['url'] ?? '' );
+			$load = (float) ( $batch['load_ms'] ?? 0 );
+			foreach ( (array) ( $batch['queries'] ?? array() ) as $q ) {
+				$sql = (string) ( $q['sql'] ?? '' );
+				$fp  = isset( $q['fingerprint'] ) ? (string) $q['fingerprint'] : $this->fingerprint_sql( $sql );
+				fputcsv(
+					$out,
+					array(
+						$ts,
+						$url,
+						$load,
+						(float) ( $q['time'] ?? 0 ),
+						$fp,
+						$sql,
+						(string) ( $q['caller'] ?? '' ),
+					)
+				);
+			}
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $out );
+		exit;
+	}
+
 	/** AJAX: clear the full log. */
 	public function ajax_clear_log(): void {
 		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
@@ -317,12 +582,16 @@ class TSOSK_Mod_Slow_Queries {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
-		$idx = absint( wp_unslash( $_POST['idx'] ?? -1 ) );
-		$log = $this->get_log();
-		if ( isset( $log[ $idx ] ) ) {
-			array_splice( $log, $idx, 1 );
-			update_option( self::LOG_OPTION, $log, false );
+		if ( ! isset( $_POST['idx'] ) ) {
+			wp_send_json_error( __( 'Invalid entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		$idx = absint( wp_unslash( $_POST['idx'] ) );
+		$log = $this->get_log();
+		if ( ! array_key_exists( $idx, $log ) ) {
+			wp_send_json_error( __( 'Entry not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		array_splice( $log, $idx, 1 );
+		update_option( self::LOG_OPTION, $log, false );
 		wp_send_json_success( __( 'Entry deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
@@ -337,7 +606,8 @@ class TSOSK_Mod_Slow_Queries {
 		$per_page = 20;
 		$search   = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
 
-		$log = array_reverse( $this->get_log() ); // newest first
+		$chrono = $this->get_log(); // chronological; delete uses these indexes.
+		$log    = array_reverse( $chrono ); // newest first for display.
 
 		// Filter by search.
 		if ( $search ) {
@@ -361,13 +631,15 @@ class TSOSK_Mod_Slow_Queries {
 		$total = count( $log );
 		$items = array_slice( $log, ( $page - 1 ) * $per_page, $per_page );
 
-		// Re-index for delete operations.
-		$full_log = array_reverse( $this->get_log() );
+		// Map each displayed batch to its chronological index for delete.
 		$items_with_idx = array();
 		foreach ( $items as $batch ) {
-			$orig_idx = array_search( $batch, $full_log, true );
+			$orig_idx = array_search( $batch, $chrono, true );
+			if ( false === $orig_idx ) {
+				continue;
+			}
 			$items_with_idx[] = array(
-				'idx'        => $orig_idx,
+				'idx'        => (int) $orig_idx,
 				'ts'         => $batch['ts'],
 				'url'        => $batch['url'],
 				'load_ms'    => $batch['load_ms'],
@@ -474,6 +746,16 @@ class TSOSK_Mod_Slow_Queries {
 						</label>
 					</td>
 				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Ignore patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<textarea id="tsosk-sq-ignore-patterns" rows="4" style="width:100%;max-width:520px;font-family:monospace;font-size:12px;"
+						          placeholder="<?php esc_attr_e( 'One pattern per line (substring or fingerprint). Example: action_scheduler', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_textarea( implode( "\n", $s['ignore_patterns'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Matching SQL (case-insensitive substring or fingerprint) is not logged. Max 50 lines.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</p>
+					</td>
+				</tr>
 			</table>
 			<div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-sq-save"
@@ -519,19 +801,24 @@ class TSOSK_Mod_Slow_Queries {
 		<?php /* ── Top offenders ── */ ?>
 		<?php if ( ! empty( $stats['top_sqls'] ) ) : ?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Top Slow Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<h3><?php esc_html_e( 'Top Slow Query Patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Queries grouped by normalised SQL pattern (numbers replaced with ?). Those appearing most often or taking longest are listed first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Queries grouped by SQL fingerprint (string/number literals replaced with ?). Use Ignore to stop logging a known noisy pattern.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
-						<th style="width:8%;"><?php esc_html_e( 'Count', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th style="width:12%;"><?php esc_html_e( 'Max time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'SQL pattern', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:7%;"><?php esc_html_e( 'Count', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:10%;"><?php esc_html_e( 'Max', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:10%;"><?php esc_html_e( 'Avg', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Fingerprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:90px;"></th>
 					</tr></thead>
 					<tbody>
 					<?php foreach ( $stats['top_sqls'] as $entry ) : ?>
+					<?php
+					$fp_display = (string) ( $entry['fingerprint'] ?? $entry['sql'] );
+					?>
 					<tr>
 						<td>
 							<span class="tsosk-badge tsosk-badge-<?php echo $entry['count'] > 5 ? 'warn' : 'info'; ?>"
@@ -541,23 +828,34 @@ class TSOSK_Mod_Slow_Queries {
 						</td>
 						<td style="font-family:monospace;font-size:12px;">
 							<span style="color:<?php echo $entry['max'] > 500 ? '#d63638' : ( $entry['max'] > 200 ? '#d97706' : '#374151' ); ?>;font-weight:600;">
-								<?php echo esc_html( number_format( $entry['max'], 2 ) ); ?> ms
+								<?php echo esc_html( number_format( (float) $entry['max'], 2 ) ); ?> ms
 							</span>
+						</td>
+						<td style="font-family:monospace;font-size:12px;">
+							<?php echo esc_html( number_format( (float) ( $entry['avg'] ?? 0 ), 2 ) ); ?> ms
 						</td>
 						<td class="tsosk-code" style="font-size:11px;word-break:break-all;color:#1d2327;">
 							<?php
-							$sql_short = mb_substr( (string) $entry['sql'], 0, 200 );
+							$sql_short = mb_substr( $fp_display, 0, 220 );
 							echo esc_html( $sql_short );
-							if ( mb_strlen( (string) $entry['sql'] ) > 200 ) {
-								echo '<span style="color:#8c8f94;"> …</span>';
+							if ( mb_strlen( $fp_display ) > 220 ) {
+								echo ' …';
 							}
 							?>
+						</td>
+						<td>
+							<button type="button" class="button button-small tsosk-sq-ignore-pattern"
+							        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+							        data-pattern="<?php echo esc_attr( $fp_display ); ?>">
+								<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</button>
 						</td>
 					</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
 			</div>
+			<span class="tsosk-ajax-msg" id="tsosk-sq-pattern-msg"></span>
 		</div>
 		<?php endif; ?>
 
@@ -578,6 +876,12 @@ class TSOSK_Mod_Slow_Queries {
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tsosk_sq_export&format=csv' ), 'tsosk_sq_export' ) ); ?>">
+					<?php esc_html_e( 'Export CSV', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</a>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tsosk_sq_export&format=json' ), 'tsosk_sq_export' ) ); ?>">
+					<?php esc_html_e( 'Export JSON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</a>
 				<button class="button button-link-delete" id="tsosk-sq-clear-btn"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -625,7 +929,10 @@ class TSOSK_Mod_Slow_Queries {
 		$sq_max     = $sq_count ? max( array_column( $sq_queries, 1 ) ) : 0;
 		$sq_sql_map = array();
 		foreach ( $sq_queries as $q ) {
-			$sql                  = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			$sql = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			if ( ! is_string( $sql ) || '' === $sql ) {
+				continue;
+			}
 			$sq_sql_map[ $sql ] = ( $sq_sql_map[ $sql ] ?? 0 ) + 1;
 		}
 		$sq_dupes = array_filter( $sq_sql_map, static fn( $n ) => $n > 1 );

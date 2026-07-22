@@ -53,6 +53,8 @@ class TSOSK_Mod_Users {
 		add_action( 'password_reset', array( $this, 'on_password_reset' ), 10, 2 );
 		add_action( 'profile_update', array( $this, 'on_profile_password_update' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'maybe_force_password_change' ) );
+		add_action( 'template_redirect', array( $this, 'maybe_force_password_front' ) );
+		add_filter( 'login_redirect', array( $this, 'force_password_login_redirect' ), 10, 3 );
 		add_action( 'admin_notices', array( $this, 'force_password_notice' ) );
 	}
 
@@ -148,6 +150,36 @@ class TSOSK_Mod_Users {
 				exit;
 			}
 		}
+	}
+
+	/**
+	 * Force password change for front-end sessions (subscribers never hit admin_init).
+	 */
+	public function maybe_force_password_front(): void {
+		if ( ! is_user_logged_in() || is_admin() ) {
+			return;
+		}
+		if ( ! get_user_meta( get_current_user_id(), self::META_FORCE_PASSWORD, true ) ) {
+			return;
+		}
+		wp_safe_redirect( add_query_arg( 'tsosk_force_pwd', '1', admin_url( 'profile.php' ) ) );
+		exit;
+	}
+
+	/**
+	 * Send forced-password users to their profile after login.
+	 *
+	 * @param string           $redirect_to           Default redirect.
+	 * @param string           $requested_redirect_to Requested redirect.
+	 * @param WP_User|WP_Error $user                  Authenticated user.
+	 * @return string
+	 */
+	public function force_password_login_redirect( $redirect_to, $requested_redirect_to, $user ) {
+		unset( $requested_redirect_to );
+		if ( $user instanceof WP_User && get_user_meta( $user->ID, self::META_FORCE_PASSWORD, true ) ) {
+			return add_query_arg( 'tsosk_force_pwd', '1', admin_url( 'profile.php' ) );
+		}
+		return $redirect_to;
 	}
 
 	/**

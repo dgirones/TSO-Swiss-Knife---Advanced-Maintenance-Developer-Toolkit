@@ -433,10 +433,15 @@ class TSOSK_Config_Storage {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
 		}
-		$index = trailingslashit( $dir ) . 'index.php';
+		// Prefer a non-executable blank index over PHP under uploads (WordPress.org guideline).
+		$legacy_php = trailingslashit( $dir ) . 'index.php';
+		if ( file_exists( $legacy_php ) ) {
+			wp_delete_file( $legacy_php );
+		}
+		$index = trailingslashit( $dir ) . 'index.html';
 		if ( ! file_exists( $index ) ) {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $index, "<?php // Silence is golden.\n" );
+			file_put_contents( $index, '' );
 		}
 	}
 

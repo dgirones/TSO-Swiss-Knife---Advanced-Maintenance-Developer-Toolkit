@@ -57,15 +57,14 @@ class TSOSK_Mod_Cron {
 
 		do_action_ref_array( $hook, $args ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores, WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 
-		// Mirror wp_cron(): reschedule recurring hooks or remove one-off events.
+		// Mirror wp_cron(): reschedule recurring hooks, then remove the fired occurrence.
 		if ( ! empty( $event['schedule'] ) ) {
 			$rescheduled = wp_reschedule_event( $timestamp, $event['schedule'], $hook, $args );
 			if ( false === $rescheduled ) {
 				wp_send_json_error( __( 'Event ran but could not be rescheduled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
-		} else {
-			wp_unschedule_event( $timestamp, $hook, $args );
 		}
+		wp_unschedule_event( $timestamp, $hook, $args );
 
 		TSOSK_Activity_Log::log(
 			'cron',

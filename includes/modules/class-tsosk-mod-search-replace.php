@@ -42,9 +42,8 @@ class TSOSK_Mod_Search_Replace {
 	}
 
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_sr_get_tables', array( $this, 'ajax_get_tables' ) );
-		add_action( 'wp_ajax_tsosk_sr_preview',    array( $this, 'ajax_preview' ) );
-		add_action( 'wp_ajax_tsosk_sr_execute',    array( $this, 'ajax_execute' ) );
+		add_action( 'wp_ajax_tsosk_sr_preview', array( $this, 'ajax_preview' ) );
+		add_action( 'wp_ajax_tsosk_sr_execute', array( $this, 'ajax_execute' ) );
 	}
 
 	// ── Table / column discovery ──────────────────────────────────────────────
@@ -325,15 +324,6 @@ class TSOSK_Mod_Search_Replace {
 	}
 
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
-
-	/** AJAX: return the list of tables with sizes. */
-	public function ajax_get_tables(): void {
-		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
-		}
-		wp_send_json_success( $this->get_all_tables() );
-	}
 
 	/** AJAX: dry-run preview — returns matches without modifying the DB. */
 	public function ajax_preview(): void {

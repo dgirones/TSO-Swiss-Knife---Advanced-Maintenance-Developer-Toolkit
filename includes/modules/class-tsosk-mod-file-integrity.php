@@ -54,10 +54,9 @@ class TSOSK_Mod_File_Integrity {
 	}
 
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_fi_scan',           array( $this, 'ajax_scan' ) );
-		add_action( 'wp_ajax_tsosk_fi_ignore',         array( $this, 'ajax_ignore' ) );
-		add_action( 'wp_ajax_tsosk_fi_unignore',       array( $this, 'ajax_unignore' ) );
-		add_action( 'wp_ajax_tsosk_fi_clear_cache',    array( $this, 'ajax_clear_cache' ) );
+		add_action( 'wp_ajax_tsosk_fi_scan',     array( $this, 'ajax_scan' ) );
+		add_action( 'wp_ajax_tsosk_fi_ignore',   array( $this, 'ajax_ignore' ) );
+		add_action( 'wp_ajax_tsosk_fi_unignore', array( $this, 'ajax_unignore' ) );
 	}
 
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
@@ -73,7 +72,13 @@ class TSOSK_Mod_File_Integrity {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$force = ! empty( $_POST['force'] );
+		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
+
+		if ( $force ) {
+			delete_transient( self::TRANSIENT_RESULTS );
+			delete_transient( self::TRANSIENT_CHECKSUMS );
+			delete_option( self::OPTION_RESULTS );
+		}
 
 		if ( ! $force ) {
 			$cached = $this->get_stored_results();
@@ -191,22 +196,6 @@ class TSOSK_Mod_File_Integrity {
 		);
 
 		wp_send_json_success( __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-	}
-
-	/**
-	 * AJAX: clear cached checksums and results, force fresh API fetch on next scan.
-	 */
-	public function ajax_clear_cache(): void {
-		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
-		}
-
-		delete_transient( self::TRANSIENT_RESULTS );
-		delete_transient( self::TRANSIENT_CHECKSUMS );
-		delete_option( self::OPTION_RESULTS );
-		TSOSK_Activity_Log::log( 'file-integrity', 'delete', __( 'File integrity scan cache cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		wp_send_json_success( __( 'Cache cleared. Next scan will fetch fresh checksums from WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	// ── Scan logic ────────────────────────────────────────────────────────────

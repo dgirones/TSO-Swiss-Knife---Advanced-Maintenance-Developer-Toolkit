@@ -360,7 +360,7 @@ class TSOSK_Mod_Options_Editor {
 					);
 				}
 				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-				$test = @unserialize( $raw );
+				$test = @unserialize( $raw, array( 'allowed_classes' => false ) );
 				if ( false === $test && $raw !== serialize( false ) ) {
 					return new WP_Error(
 						'invalid_serialized',
@@ -531,7 +531,7 @@ class TSOSK_Mod_Options_Editor {
 		}
 		if ( $this->looks_serialized( $raw_val ) ) {
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-			$test = @unserialize( $raw_val );
+			$test = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
 			if ( false === $test && $raw_val !== serialize( false ) ) {
 				wp_send_json_error( __( 'The value looks like serialized PHP but is not valid. Please fix the syntax or paste plain text instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
@@ -650,9 +650,9 @@ class TSOSK_Mod_Options_Editor {
 		switch ( $type ) {
 			case 'serialized':
 				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-				$data = @unserialize( $value );
+				$data = @unserialize( $value, array( 'allowed_classes' => false ) );
 				if ( is_array( $data ) )  { return '[array, ' . count( $data ) . ' keys]'; }
-				if ( is_object( $data ) ) { return '[object: ' . get_class( $data ) . ']'; }
+				if ( is_object( $data ) ) { return '[object]'; }
 				return mb_substr( $value, 0, 60 );
 			case 'json':
 				$data = json_decode( $value, true );
@@ -667,7 +667,7 @@ class TSOSK_Mod_Options_Editor {
 	private function pretty_value( string $value, string $type ): string {
 		if ( 'serialized' === $type ) {
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-			$data = @unserialize( $value );
+			$data = @unserialize( $value, array( 'allowed_classes' => false ) );
 			if ( false !== $data || $value === serialize( false ) ) {
 				return $this->export_var( $data );
 			}

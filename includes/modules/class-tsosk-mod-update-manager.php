@@ -460,6 +460,43 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Remove update-check blockers for a manual "Check for updates" run.
+	 *
+	 * @return array<int, array{0:string,1:string}> Lifted filter descriptors.
+	 */
+	private function temporarily_lift_update_block_filters(): array {
+		$candidates = array(
+			array( self::tsosk_um_build_pre_update_filter( 'core' ), 'block_core_transient' ),
+			array( self::tsosk_um_build_pre_update_filter( 'plugins' ), 'block_plugin_transient' ),
+			array( self::tsosk_um_build_pre_update_filter( 'themes' ), 'block_theme_transient' ),
+			array( 'translations_api', 'block_translations_api' ),
+		);
+		$lifted = array();
+		foreach ( $candidates as $item ) {
+			if ( has_filter( $item[0], array( $this, $item[1] ) ) ) {
+				remove_filter( $item[0], array( $this, $item[1] ), 999 );
+				$lifted[] = $item;
+			}
+		}
+		return $lifted;
+	}
+
+	/**
+	 * Re-apply filters removed by temporarily_lift_update_block_filters().
+	 *
+	 * @param array<int, array{0:string,1:string}> $lifted Lifted filter descriptors.
+	 */
+	private function restore_update_block_filters( array $lifted ): void {
+		foreach ( $lifted as $item ) {
+			if ( 'translations_api' === $item[0] ) {
+				add_filter( $item[0], array( $this, $item[1] ), 999, 3 );
+			} else {
+				add_filter( $item[0], array( $this, $item[1] ), 999 );
+			}
+		}
+	}
+
+	/**
 	 * @param mixed $value Ignored.
 	 * @return object
 	 */
@@ -718,6 +755,9 @@ class TSOSK_Mod_Update_Manager {
 			wp_send_json_error( __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		// Temporarily lift custom block filters so this manual check can reach WordPress.org.
+		$lifted = $this->temporarily_lift_update_block_filters();
+
 		tsosk_require_wp_admin( 'includes/admin.php' );
 		tsosk_require_wp_admin( 'includes/update.php' );
 		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
@@ -736,6 +776,8 @@ class TSOSK_Mod_Update_Manager {
 		delete_site_transient( 'update_themes' );
 		wp_update_plugins();
 		wp_update_themes();
+
+		$this->restore_update_block_filters( $lifted );
 
 		$after = $this->count_pending_updates();
 

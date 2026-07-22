@@ -1020,6 +1020,37 @@
 		} );
 	} );
 
+	// ── Recovery Mode ──────────────────────────────────────────────────────
+
+	$( document ).on( 'click', '.tsosk-recovery-resume', function () {
+		var $btn      = $( this );
+		var nonce     = $btn.data( 'nonce' );
+		var type      = $btn.data( 'type' );
+		var extension = $btn.data( 'extension' );
+		var $msg      = $( '#tsosk-recovery-msg' );
+		var label     = $btn.text();
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_recovery_resume',
+			data   : { nonce: nonce, type: type, extension: extension },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					$btn.closest( 'li' ).fadeOut( 300, function () { $( this ).remove(); } );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( label || tsosk.i18n.clear_pause );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( label || tsosk.i18n.clear_pause );
+			}
+		} );
+	} );
+
 	// ── Maintenance Mode ───────────────────────────────────────────────────
 
 	var tsoskMaintLogoFrame = null;
@@ -1083,10 +1114,10 @@
 					// Update status badge text.
 					var $badge = $( '#tsosk-maintenance-status' );
 					if ( r.data.enabled ) {
-						$badge.text( tsosk.i18n.on ).removeClass( 'tsosk-badge--ok' ).addClass( 'tsosk-badge--warn' );
+						$badge.text( tsosk.i18n.on ).removeClass( 'tsosk-badge-ok' ).addClass( 'tsosk-badge-warn' );
 						$btn.text( tsosk.i18n.disable );
 					} else {
-						$badge.text( tsosk.i18n.off ).removeClass( 'tsosk-badge--warn' ).addClass( 'tsosk-badge--ok' );
+						$badge.text( tsosk.i18n.off ).removeClass( 'tsosk-badge-warn' ).addClass( 'tsosk-badge-ok' );
 						$btn.text( tsosk.i18n.enable );
 					}
 				} else {
@@ -3484,6 +3515,7 @@
 				max_entries  : $( '#tsosk-sq-max-entries' ).val(),
 				exclude_ajax : $( '#tsosk-sq-exclude-ajax' ).prop( 'checked' ) ? 1 : 0,
 				exclude_cron : $( '#tsosk-sq-exclude-cron' ).prop( 'checked' ) ? 1 : 0,
+				ignore_patterns : $( '#tsosk-sq-ignore-patterns' ).val() || ''
 			},
 			success: function ( r ) {
 				if ( r.success ) {
@@ -3552,7 +3584,7 @@
 				if ( r.success ) {
 					showMsg( $msg, r.data, 'ok' );
 					$( '#tsosk-sq-batches' ).empty();
-					$btn.fadeOut( 300 );
+					$btn.prop( 'disabled', false );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false );
@@ -3561,6 +3593,38 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	// Ignore SQL fingerprint pattern
+	$( document ).on( 'click', '.tsosk-sq-ignore-pattern', function () {
+		var $btn    = $( this );
+		var nonce   = $btn.attr( 'data-nonce' );
+		var pattern = $btn.attr( 'data-pattern' );
+		var $msg    = $( '#tsosk-sq-pattern-msg' );
+		var label   = $btn.text();
+		if ( ! pattern ) { return; }
+		if ( ! confirm( tsosk.i18n.sq_ignore_confirm || 'Ignore this SQL pattern?' ) ) { return; }
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		ajaxPost( {
+			action : 'tsosk_sq_ignore_pattern',
+			data   : { nonce: nonce, pattern: pattern },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					if ( r.data && r.data.patterns && $( '#tsosk-sq-ignore-patterns' ).length ) {
+						$( '#tsosk-sq-ignore-patterns' ).val( r.data.patterns.join( '\n' ) );
+					}
+					$btn.closest( 'tr' ).fadeOut( 300, function () { $( this ).remove(); } );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( label );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( label );
 			}
 		} );
 	} );

@@ -991,7 +991,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( ! empty( $this->settings['time_trap'] ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form.
 			$token = isset( $_POST[ self::TIME_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::TIME_FIELD ] ) ) : '';
-			if ( '' !== $token && ! $this->verify_time_token( $token ) ) {
+			if ( '' === $token || ! $this->verify_time_token( $token ) ) {
 				return $fail(
 					'time_trap',
 					__( 'Submitted too quickly or the form expired. Please wait a few seconds and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )

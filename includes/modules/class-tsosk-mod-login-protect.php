@@ -823,10 +823,25 @@ class TSOSK_Mod_Login_Protect {
 			);
 		}
 
+		// Login maintenance without any trusted IP locks everyone out (including the admin).
+		if ( ! empty( $new['login_maintenance'] )
+			&& '' === trim( (string) $new['login_maintenance_ips'] )
+			&& '' === trim( (string) $new['whitelist_ips'] )
+		) {
+			wp_send_json_error( __( 'Add at least one trusted IP (maintenance list or whitelist) before enabling login maintenance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		update_option( self::OPTION_SETTINGS, $new, false );
 
-		// Flush rewrite rules if slug changed.
+		// Flush rewrite rules if slug changed — register the NEW rule first (init already passed).
 		if ( $old_settings['login_slug'] !== $new['login_slug'] || $old_settings['custom_url'] !== $new['custom_url'] ) {
+			if ( ! empty( $new['custom_url'] ) && ! empty( $new['login_slug'] ) ) {
+				add_rewrite_rule(
+					'^' . preg_quote( $new['login_slug'], '#' ) . '/?$',
+					'index.php?' . self::QUERY_VAR . '=' . $new['login_slug'],
+					'top'
+				);
+			}
 			flush_rewrite_rules( false );
 		}
 

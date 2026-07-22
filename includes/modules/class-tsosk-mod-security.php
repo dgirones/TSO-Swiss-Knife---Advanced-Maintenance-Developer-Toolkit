@@ -220,18 +220,27 @@ class TSOSK_Mod_Security {
 			<?php if ( ! empty( $legacy_exists ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-warn">
 				<?php
-				/* translators: %s: legacy file path */
-				printf( esc_html__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>' );
+				echo wp_kses(
+					sprintf(
+						/* translators: %s: legacy file path */
+						__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>'
+					),
+					array( 'code' => array() )
+				);
 				?>
 			</div>
 		<?php endif; ?>
 		<?php if ( $mu_exists ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
 				<?php
-				printf(
-					/* translators: %s: file path */
-					esc_html__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
+				echo wp_kses(
+					sprintf(
+						/* translators: %s: file path */
+						__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
+					),
+					array( 'code' => array() )
 				);
 				?>
 			</div>

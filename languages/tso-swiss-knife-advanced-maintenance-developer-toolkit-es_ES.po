@@ -3192,9 +3192,65 @@ msgstr "Patrón SQL"
 msgid "The monitor is disabled. Enable it below to start capturing slow queries. SAVEQUERIES must also be active."
 msgstr "El monitor está desactivado. Actívelo abajo para comenzar a capturar consultas lentas. SAVEQUERIES también debe estar activo."
 
-#: includes/modules/class-tsosk-mod-slow-queries.php:522
+#: includes/modules/class-tsosk-mod-slow-queries.php
 msgid "Top Slow Queries"
 msgstr "Consultas lentas principales"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Top Slow Query Patterns"
+msgstr "Patrones de consultas lentas"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Queries grouped by SQL fingerprint (string/number literals replaced with ?). Use Ignore to stop logging a known noisy pattern."
+msgstr "Consultas agrupadas por huella SQL (literales de texto/número sustituidos por ?). Use Ignorar para dejar de registrar un patrón ruidoso conocido."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Fingerprint"
+msgstr "Huella"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Avg"
+msgstr "Media"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Max"
+msgstr "Máx"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Ignore patterns"
+msgstr "Patrones a ignorar"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "One pattern per line (substring or fingerprint). Example: action_scheduler"
+msgstr "Un patrón por línea (subcadena o huella). Ejemplo: action_scheduler"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Matching SQL (case-insensitive substring or fingerprint) is not logged. Max 50 lines."
+msgstr "El SQL coincidente (subcadena o huella, sin distinguir mayúsculas) no se registra. Máximo 50 líneas."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Export CSV"
+msgstr "Exportar CSV"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Export JSON"
+msgstr "Exportar JSON"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Ignore this SQL pattern? Matching queries will stop being logged."
+msgstr "¿Ignorar este patrón SQL? Las consultas coincidentes dejarán de registrarse."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Pattern ignored. Matching queries will no longer be logged. Save settings or reload to refresh the ignore list field."
+msgstr "Patrón ignorado. Las consultas coincidentes ya no se registrarán. Guarde la configuración o recargue para actualizar el campo de la lista."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Invalid ignore pattern."
+msgstr "Patrón de ignorado no válido."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php
+msgid "Slow query ignore pattern added."
+msgstr "Patrón de ignorado de consultas lentas añadido."
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:468
 msgid "AJAX requests"
