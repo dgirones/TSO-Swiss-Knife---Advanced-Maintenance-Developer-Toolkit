@@ -113,6 +113,42 @@ function tsosk_get_wp_root_dir(): string {
 }
 
 /**
+ * Locate the WordPress core root (directory containing wp-includes/).
+ *
+ * Tries ABSPATH and get_home_path() so subdirectory installs and custom layouts resolve correctly.
+ *
+ * @return string Trailing slash.
+ */
+function tsosk_locate_core_root(): string {
+	static $cached = null;
+	if ( null !== $cached ) {
+		return $cached;
+	}
+
+	$candidates = array();
+	if ( defined( 'ABSPATH' ) ) {
+		$candidates[] = wp_normalize_path( trailingslashit( ABSPATH ) );
+	}
+	if ( function_exists( 'get_home_path' ) ) {
+		$home = get_home_path();
+		if ( is_string( $home ) && '' !== $home ) {
+			$candidates[] = wp_normalize_path( trailingslashit( $home ) );
+		}
+	}
+
+	$candidates = array_values( array_unique( array_filter( $candidates ) ) );
+	foreach ( $candidates as $root ) {
+		if ( is_dir( $root . 'wp-includes' ) && is_readable( $root . 'wp-includes/version.php' ) ) {
+			$cached = $root;
+			return $cached;
+		}
+	}
+
+	$cached = $candidates[0] ?? ( defined( 'ABSPATH' ) ? wp_normalize_path( trailingslashit( ABSPATH ) ) : '' );
+	return $cached;
+}
+
+/**
  * Absolute path under the WordPress root (e.g. wp-config.php, robots.txt).
  *
  * @param string $relative Path relative to the install root.
@@ -219,8 +255,6 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-database',
 	'includes/modules/class-tsosk-mod-hooks',
 	'includes/modules/class-tsosk-mod-rewrite',
-	'includes/modules/class-tsosk-mod-object-cache',
-	'includes/modules/class-tsosk-mod-recovery',
 	'includes/modules/class-tsosk-mod-maintenance',
 	'includes/modules/class-tsosk-mod-sandbox',
 	'includes/modules/class-tsosk-mod-users',
@@ -360,8 +394,6 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Database',
 		'TSOSK_Mod_Hooks',
 		'TSOSK_Mod_Rewrite',
-		'TSOSK_Mod_Object_Cache',
-		'TSOSK_Mod_Recovery',
 		'TSOSK_Mod_Maintenance',
 		'TSOSK_Mod_Sandbox',
 		'TSOSK_Mod_Users',

@@ -39,9 +39,7 @@ class TSOSK_Mod_Option_Library {
 			wp_send_json_error( __( 'Unknown or undocumented option.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( TSOSK_Mod_Options_Editor::is_protected_option_name( $name ) ) {
-			wp_send_json_error( __( 'This option is protected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
+		$protected = TSOSK_Mod_Options_Editor::is_protected_option_name( $name );
 
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -62,12 +60,13 @@ class TSOSK_Mod_Option_Library {
 
 		wp_send_json_success(
 			array(
-				'name'     => $name,
-				'exists'   => true,
-				'autoload' => (string) $row['autoload'],
-				'size'     => strlen( $value ),
-				'preview'  => $preview,
-				'edit_url' => TSOSK_Mod_Options_Editor::get_admin_url_with_search( $name ),
+				'name'      => $name,
+				'exists'    => true,
+				'autoload'  => (string) $row['autoload'],
+				'size'      => strlen( $value ),
+				'preview'   => $preview,
+				'protected' => $protected,
+				'edit_url'  => TSOSK_Mod_Options_Editor::get_admin_url_with_search( $name, $protected, true ),
 			)
 		);
 	}
@@ -175,7 +174,7 @@ class TSOSK_Mod_Option_Library {
 							$protected = TSOSK_Mod_Options_Editor::is_protected_option_name( $option['name'] );
 							$readonly  = ! empty( $option['readonly'] ) || $protected;
 							$caution   = ! empty( $option['caution'] ) && ! $protected;
-							$edit_url  = TSOSK_Mod_Options_Editor::get_admin_url_with_search( $option['name'] );
+							$edit_url  = TSOSK_Mod_Options_Editor::get_admin_url_with_search( $option['name'], $protected, true );
 							?>
 						<tr class="tsosk-ol-option-row" data-option-name="<?php echo esc_attr( $option['name'] ); ?>">
 							<td><code><?php echo esc_html( $option['name'] ); ?></code></td>
@@ -196,7 +195,7 @@ class TSOSK_Mod_Option_Library {
 								<?php endif; ?>
 							</td>
 							<td>
-								<?php if ( $exists && ! $readonly ) : ?>
+								<?php if ( $exists ) : ?>
 								<button type="button" class="button button-small tsosk-ol-preview"
 								        data-name="<?php echo esc_attr( $option['name'] ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">

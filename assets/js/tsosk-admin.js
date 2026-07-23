@@ -41,7 +41,7 @@
 	 * @param {Function} [params.error]  Optional error callback( xhr ).
 	 */
 	function ajaxPost( params ) {
-		$.post(
+		var request = $.post(
 			tsosk.ajax_url,
 			$.extend( { action: params.action }, params.data ),
 			function ( response ) {
@@ -50,11 +50,15 @@
 				}
 			},
 			'json'
-		).fail( function ( xhr ) {
+		);
+		request.fail( function ( xhr ) {
 			if ( params.error ) {
 				params.error( xhr );
 			}
 		} );
+		if ( params.complete ) {
+			request.always( params.complete );
+		}
 	}
 
 	// ── Cron Manager ───────────────────────────────────────────────────────
@@ -993,64 +997,6 @@
 		} );
 	} );
 
-	// ── Object Cache ───────────────────────────────────────────────────────
-
-	$( document ).on( 'click', '#tsosk-oc-flush', function () {
-		var $btn  = $( this );
-		var nonce = $btn.data( 'nonce' );
-		var $msg  = $( '#tsosk-oc-msg' );
-
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
-
-		ajaxPost( {
-			action : 'tsosk_object_cache_flush',
-			data   : { nonce: nonce },
-			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-				}
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.flush_cache );
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.flush_cache );
-			}
-		} );
-	} );
-
-	// ── Recovery Mode ──────────────────────────────────────────────────────
-
-	$( document ).on( 'click', '.tsosk-recovery-resume', function () {
-		var $btn      = $( this );
-		var nonce     = $btn.data( 'nonce' );
-		var type      = $btn.data( 'type' );
-		var extension = $btn.data( 'extension' );
-		var $msg      = $( '#tsosk-recovery-msg' );
-		var label     = $btn.text();
-
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
-
-		ajaxPost( {
-			action : 'tsosk_recovery_resume',
-			data   : { nonce: nonce, type: type, extension: extension },
-			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-					$btn.closest( 'li' ).fadeOut( 300, function () { $( this ).remove(); } );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false ).text( label || tsosk.i18n.clear_pause );
-				}
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( label || tsosk.i18n.clear_pause );
-			}
-		} );
-	} );
-
 	// ── Maintenance Mode ───────────────────────────────────────────────────
 
 	var tsoskMaintLogoFrame = null;
@@ -1957,6 +1903,8 @@
 		sortCol        : 'option_name',
 		sortDir        : 'ASC',
 		showProtected  : false,
+		exactSearch    : false,
+		autoOpen       : false,
 		readOnly       : false,
 	};
 
@@ -1999,6 +1947,7 @@
 				sort_dir         : tsosk_oe.sortDir,
 				filter_type      : $( '#tsosk-oe-filter-type' ).val() || '',
 				show_protected   : tsosk_oe.showProtected ? 1 : 0,
+				exact            : tsosk_oe.exactSearch ? 1 : 0,
 			},
 			success: function ( r ) {
 				if ( reqId !== tsosk_oe_search_seq ) {
@@ -2035,13 +1984,29 @@
 			return;
 		}
 		var initialSearch = '';
+		var autoOpen      = false;
 		if ( typeof URLSearchParams !== 'undefined' ) {
-			var oeParam = new URLSearchParams( window.location.search ).get( 'oe_search' );
+			var params = new URLSearchParams( window.location.search );
+			var oeParam = params.get( 'oe_search' );
 			if ( oeParam ) {
 				initialSearch = oeParam;
 				$( '#tsosk-oe-search' ).val( initialSearch );
 			}
+			if ( '1' === params.get( 'oe_protected' ) ) {
+				tsosk_oe.showProtected = true;
+				var $protBtn = $( '#tsosk-oe-toggle-protected' );
+				if ( $protBtn.length ) {
+					$protBtn.attr( 'aria-pressed', 'true' );
+					$protBtn.text( tsosk.i18n.oe_hide_protected || $protBtn.text() );
+					$protBtn.addClass( 'button-primary' );
+				}
+			}
+			if ( '1' === params.get( 'oe_exact' ) ) {
+				tsosk_oe.exactSearch = true;
+				autoOpen = true;
+			}
 		}
+		tsosk_oe.autoOpen = autoOpen;
 		tsosk_oe_search( initialSearch, 1 );
 	} );
 
@@ -2136,6 +2101,11 @@
 		} );
 
 		tsosk_oe_render_pagination( data );
+
+		if ( tsosk_oe.autoOpen && items.length === 1 ) {
+			tsosk_oe.autoOpen = false;
+			$tbody.find( '.tsosk-oe-edit-btn' ).first().trigger( 'click' );
+		}
 	}
 
 	function tsosk_oe_render_pagination( data ) {
@@ -4258,9 +4228,11 @@
 			success: function ( r ) {
 				if ( r && r.success && r.data ) {
 					$( '#tsosk-ol-preview-name' ).text( r.data.name );
-					$( '#tsosk-ol-preview-meta' ).text(
-						'autoload: ' + r.data.autoload + ', ' + r.data.size + ' bytes'
-					);
+					var meta = 'autoload: ' + r.data.autoload + ', ' + r.data.size + ' bytes';
+					if ( r.data.protected ) {
+						meta += ' — ' + ( tsosk.i18n.oe_protected || 'Protected' );
+					}
+					$( '#tsosk-ol-preview-meta' ).text( meta );
 					$( '#tsosk-ol-preview-value' ).text( r.data.preview || '' );
 					$( '#tsosk-ol-preview-edit' ).attr( 'href', r.data.edit_url || '#' );
 					var loaded = tsosk.i18n.ol_preview_loaded || tsosk.i18n.done;

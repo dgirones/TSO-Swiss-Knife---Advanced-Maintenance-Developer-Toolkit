@@ -735,8 +735,6 @@ class TSOSK_Admin {
 			'sandbox'         => 'development',
 			'hooks'           => 'development',
 			'rewrite'         => 'development',
-			'object-cache'    => 'development',
-			'recovery'        => 'development',
 			'server-files'    => 'development',
 			'maintenance'     => 'site',
 			'users'           => 'site',
@@ -888,16 +886,6 @@ class TSOSK_Admin {
 				'label' => __( 'Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-admin-links',
 				'class' => 'TSOSK_Mod_Rewrite',
-			),
-			'object-cache' => array(
-				'label' => __( 'Object Cache Tools', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'  => 'dashicons-performance',
-				'class' => 'TSOSK_Mod_Object_Cache',
-			),
-			'recovery'   => array(
-				'label' => __( 'Recovery Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'  => 'dashicons-sos',
-				'class' => 'TSOSK_Mod_Recovery',
 			),
 			'server-files' => array(
 				'label' => __( 'Server Files Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

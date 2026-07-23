@@ -201,6 +201,82 @@ class TSOSK_Mod_File_Integrity {
 	// ── Scan logic ────────────────────────────────────────────────────────────
 
 	/**
+	 * Normalize a relative path from the WordPress core root.
+	 *
+	 * @param string $path Relative path.
+	 * @return string
+	 */
+	private function normalize_rel_path( string $path ): string {
+		return ltrim( str_replace( '\\', '/', $path ), '/' );
+	}
+
+	/**
+	 * Normalize checksum map keys from the WordPress.org API.
+	 *
+	 * @param array<string, string> $checksums Raw checksums.
+	 * @return array<string, string>
+	 */
+	private function normalize_checksum_map( array $checksums ): array {
+		$normalized = array();
+		foreach ( $checksums as $rel_path => $expected_md5 ) {
+			$key = $this->normalize_rel_path( (string) $rel_path );
+			if ( '' !== $key ) {
+				$normalized[ $key ] = strtolower( (string) $expected_md5 );
+			}
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Candidate WordPress core roots (ABSPATH, home path, etc.).
+	 *
+	 * @return string[] Trailing-slash paths.
+	 */
+	private function get_core_root_candidates(): array {
+		$candidates = array();
+		if ( function_exists( 'tsosk_locate_core_root' ) ) {
+			$candidates[] = tsosk_locate_core_root();
+		}
+		if ( defined( 'ABSPATH' ) ) {
+			$candidates[] = wp_normalize_path( trailingslashit( ABSPATH ) );
+		}
+		if ( function_exists( 'get_home_path' ) ) {
+			$home = get_home_path();
+			if ( is_string( $home ) && '' !== $home ) {
+				$candidates[] = wp_normalize_path( trailingslashit( $home ) );
+			}
+		}
+
+		$unique = array();
+		foreach ( $candidates as $root ) {
+			$root = wp_normalize_path( trailingslashit( (string) $root ) );
+			if ( '' !== $root && is_dir( $root . 'wp-includes' ) && ! in_array( $root, $unique, true ) ) {
+				$unique[] = $root;
+			}
+		}
+
+		return $unique;
+	}
+
+	/**
+	 * Resolve an absolute path for a core file relative to known roots.
+	 *
+	 * @param string   $rel_path Relative path from core root.
+	 * @param string[] $roots    Candidate core roots.
+	 * @return string Absolute path (may not exist).
+	 */
+	private function resolve_core_file_abs( string $rel_path, array $roots ): string {
+		$rel = $this->normalize_rel_path( $rel_path );
+		foreach ( $roots as $root ) {
+			$abs = $root . $rel;
+			if ( file_exists( $abs ) ) {
+				return $abs;
+			}
+		}
+		return ( $roots[0] ?? '' ) . $rel;
+	}
+
+	/**
 	 * Execute the full scan and return a results array.
 	 *
 	 * @return array<string,mixed>|WP_Error
@@ -216,12 +292,13 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$ignored           = $this->get_ignored();
-		// ABSPATH is the canonical core root (works for subdirectory installs such as example.com/blog).
-		$abspath           = wp_normalize_path( trailingslashit( ABSPATH ) );
+		$core_roots        = $this->get_core_root_candidates();
+		$core_root         = $core_roots[0] ?? wp_normalize_path( trailingslashit( ABSPATH ) );
 		$modified          = array();
 		$missing           = array();
 		$missing_optional  = array();
 		$added             = array();
+		$seen_added        = array();
 
 		// ── Check every file listed in the official checksums ──────────────
 		foreach ( $checksums as $rel_path => $expected_md5 ) {
@@ -234,7 +311,8 @@ class TSOSK_Mod_File_Integrity {
 				continue;
 			}
 
-			$abs = $abspath . ltrim( $rel_path, '/' );
+			$rel_path = $this->normalize_rel_path( $rel_path );
+			$abs      = $this->resolve_core_file_abs( $rel_path, $core_roots );
 
 			if ( ! file_exists( $abs ) ) {
 				$row = array(
@@ -268,39 +346,42 @@ class TSOSK_Mod_File_Integrity {
 		// (files that exist on disk but are NOT in the official checksums)
 		$scan_dirs = array( 'wp-admin', 'wp-includes' );
 		foreach ( $scan_dirs as $dir ) {
-			$full_dir = $abspath . ltrim( $dir, '/' );
-			if ( ! is_dir( $full_dir ) ) {
-				continue;
-			}
-			$iterator = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator( $full_dir, RecursiveDirectoryIterator::SKIP_DOTS ),
-				RecursiveIteratorIterator::SELF_FIRST
-			);
-			foreach ( $iterator as $file_info ) {
-				try {
-					if ( ! $file_info->isFile() ) {
-						continue;
-					}
-				} catch ( RuntimeException $e ) {
-					continue; // Unreadable entry — skip.
-				}
-				// Safety cap: never scan more than 2000 unexpected files per directory.
-				if ( count( $added ) >= 2000 ) {
-					break;
-				}
-				$abs_path = wp_normalize_path( (string) $file_info->getRealPath() );
-				$rel      = ltrim( str_replace( $abspath, '', $abs_path ), '/' );
-
-				if ( in_array( $rel, $ignored, true ) ) {
+			foreach ( $core_roots as $root ) {
+				$full_dir = $root . $this->normalize_rel_path( $dir );
+				if ( ! is_dir( $full_dir ) ) {
 					continue;
 				}
-				// If this file is NOT in the official checksums, it's unexpected.
-				if ( ! array_key_exists( $rel, $checksums ) ) {
-					$added[] = array(
-						'file'  => $rel,
-						'size'  => (int) $file_info->getSize(),
-						'mtime' => (int) $file_info->getMTime(),
-					);
+				$iterator = new RecursiveIteratorIterator(
+					new RecursiveDirectoryIterator( $full_dir, RecursiveDirectoryIterator::SKIP_DOTS ),
+					RecursiveIteratorIterator::SELF_FIRST
+				);
+				foreach ( $iterator as $file_info ) {
+					try {
+						if ( ! $file_info->isFile() ) {
+							continue;
+						}
+					} catch ( RuntimeException $e ) {
+						continue; // Unreadable entry — skip.
+					}
+					// Safety cap: never scan more than 2000 unexpected files per directory.
+					if ( count( $added ) >= 2000 ) {
+						break 2;
+					}
+					$subpath = $iterator->getSubPathname();
+					$rel     = $this->normalize_rel_path( $dir . '/' . str_replace( '\\', '/', (string) $subpath ) );
+
+					if ( in_array( $rel, $ignored, true ) || isset( $seen_added[ $rel ] ) ) {
+						continue;
+					}
+					// If this file is NOT in the official checksums, it's unexpected.
+					if ( ! array_key_exists( $rel, $checksums ) ) {
+						$seen_added[ $rel ] = true;
+						$added[] = array(
+							'file'  => $rel,
+							'size'  => (int) $file_info->getSize(),
+							'mtime' => (int) $file_info->getMTime(),
+						);
+					}
 				}
 			}
 		}
@@ -314,6 +395,7 @@ class TSOSK_Mod_File_Integrity {
 			'n_issues'          => count( $modified ) + count( $missing ),
 			'scanned_at'        => time(),
 			'wp_version'        => get_bloginfo( 'version' ),
+			'core_root'         => $core_root,
 			'from_cache'        => false,
 		);
 
@@ -408,7 +490,7 @@ class TSOSK_Mod_File_Integrity {
 	private function fetch_checksums() {
 		$cached = get_transient( self::TRANSIENT_CHECKSUMS );
 		if ( is_array( $cached ) && ! empty( $cached ) ) {
-			return $cached;
+			return $this->normalize_checksum_map( $cached );
 		}
 
 		$version = get_bloginfo( 'version' );
@@ -449,6 +531,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$checksums = $data['checksums'];
+		$checksums = $this->normalize_checksum_map( $checksums );
 		set_transient( self::TRANSIENT_CHECKSUMS, $checksums, DAY_IN_SECONDS );
 
 		return $checksums;

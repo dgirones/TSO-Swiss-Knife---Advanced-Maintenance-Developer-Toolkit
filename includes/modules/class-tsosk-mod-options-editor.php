@@ -126,18 +126,24 @@ class TSOSK_Mod_Options_Editor {
 	/**
 	 * Admin URL for Options Editor with a pre-filled name filter.
 	 *
-	 * @param string $search Option name prefix or fragment.
+	 * @param string $search         Option name prefix or fragment.
+	 * @param bool   $show_protected Include protected options in the browse list.
+	 * @param bool   $exact          Match the option name exactly (not LIKE).
 	 * @return string
 	 */
-	public static function get_admin_url_with_search( string $search ): string {
-		return add_query_arg(
-			array(
-				'page'      => 'tso-swiss-knife',
-				'tab'       => 'options-editor',
-				'oe_search' => $search,
-			),
-			admin_url( 'tools.php' )
+	public static function get_admin_url_with_search( string $search, bool $show_protected = false, bool $exact = false ): string {
+		$args = array(
+			'page'      => 'tso-swiss-knife',
+			'tab'       => 'options-editor',
+			'oe_search' => $search,
 		);
+		if ( $show_protected ) {
+			$args['oe_protected'] = '1';
+		}
+		if ( $exact ) {
+			$args['oe_exact'] = '1';
+		}
+		return add_query_arg( $args, admin_url( 'tools.php' ) );
 	}
 
 	private function is_deletion_blocked( string $name ): bool {
@@ -458,6 +464,7 @@ class TSOSK_Mod_Options_Editor {
 		$sort_dir    = strtoupper( sanitize_key( wp_unslash( $_POST['sort_dir']  ?? 'ASC' ) ) ) === 'DESC' ? 'DESC' : 'ASC';
 		$filter_type = sanitize_key( wp_unslash( $_POST['filter_type'] ?? '' ) );
 		$show_protected = ! empty( $_POST['show_protected'] );
+		$exact          = ! empty( $_POST['exact'] );
 		$offset      = ( $page - 1 ) * self::PER_PAGE;
 
 		$allowed_cols = array( 'option_name', 'autoload', 'size', 'type', 'preview' );
@@ -470,8 +477,13 @@ class TSOSK_Mod_Options_Editor {
 		$args    = array();
 
 		if ( $search ) {
-			$where .= ' AND option_name LIKE %s';
-			$args[] = '%' . $wpdb->esc_like( $search ) . '%';
+			if ( $exact ) {
+				$where .= ' AND option_name = %s';
+				$args[] = $search;
+			} else {
+				$where .= ' AND option_name LIKE %s';
+				$args[] = '%' . $wpdb->esc_like( $search ) . '%';
+			}
 		}
 
 		$this->append_options_type_filter_sql( $filter_type, $where, $args );
