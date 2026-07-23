@@ -403,7 +403,15 @@ class TSOSK_Mod_Slow_Queries {
 		}
 
 		$live       = $this->get_current_request_query_stats();
-		$log_stats  = $this->compute_stats( $this->get_log() );
+		$log        = $this->get_log();
+		$log_stats  = array() !== $log ? $this->compute_stats( $log ) : array(
+			'total_slow'    => 0,
+			'total_batches' => 0,
+			'slowest_ms'    => 0.0,
+			'slowest_sql'   => '',
+			'top_callers'   => array(),
+			'top_sqls'      => array(),
+		);
 		$tab_url    = admin_url( 'tools.php?page=tso-swiss-knife&tab=slow-queries' );
 		$debug_url  = admin_url( 'tools.php?page=tso-swiss-knife&tab=debug' );
 
@@ -553,6 +561,11 @@ class TSOSK_Mod_Slow_Queries {
 	 */
 	public function enqueue_admin_bar_styles(): void {
 		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$settings    = $this->get_settings();
+		$savequeries = defined( 'SAVEQUERIES' ) && SAVEQUERIES;
+		if ( ! $savequeries && ! $settings['enabled'] ) {
 			return;
 		}
 		$css = '#wpadminbar #wp-admin-bar-tsosk-slow-queries .ab-submenu { min-width: 320px; max-width: min(92vw, 560px); }

@@ -39,7 +39,7 @@ class TSOSK_Mod_Option_Library {
 			wp_send_json_error( __( 'Unknown or undocumented option.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( in_array( $name, TSOSK_Mod_Options_Editor::get_protected_option_names(), true ) ) {
+		if ( TSOSK_Mod_Options_Editor::is_protected_option_name( $name ) ) {
 			wp_send_json_error( __( 'This option is protected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
@@ -172,8 +172,9 @@ class TSOSK_Mod_Option_Library {
 						<?php foreach ( $library['options'] as $option ) : ?>
 							<?php
 							$exists    = TSOSK_Option_Library::option_exists( $option['name'] );
-							$readonly  = ! empty( $option['readonly'] );
-							$caution   = ! empty( $option['caution'] );
+							$protected = TSOSK_Mod_Options_Editor::is_protected_option_name( $option['name'] );
+							$readonly  = ! empty( $option['readonly'] ) || $protected;
+							$caution   = ! empty( $option['caution'] ) && ! $protected;
 							$edit_url  = TSOSK_Mod_Options_Editor::get_admin_url_with_search( $option['name'] );
 							?>
 						<tr class="tsosk-ol-option-row" data-option-name="<?php echo esc_attr( $option['name'] ); ?>">
@@ -185,7 +186,9 @@ class TSOSK_Mod_Option_Library {
 								<?php else : ?>
 									<span class="tsosk-badge"><?php esc_html_e( 'Not set', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
-								<?php if ( $caution ) : ?>
+								<?php if ( $protected ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn" style="margin-left:4px;"><?php esc_html_e( 'Protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php elseif ( $caution ) : ?>
 									<span class="tsosk-badge tsosk-badge-warn" style="margin-left:4px;"><?php esc_html_e( 'Caution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 								<?php if ( $readonly ) : ?>

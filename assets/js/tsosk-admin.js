@@ -1978,12 +1978,14 @@
 	} );
 
 	// Auto-load all options when Browse tab is first visible
+	var tsosk_oe_search_seq = 0;
 	function tsosk_oe_search( search, page ) {
 		tsosk_oe.lastSearch  = search;
 		tsosk_oe.currentPage = page || 1;
 		var nonce    = $( '#tsosk-oe-nonce' ).val();
 		var $msg     = $( '#tsosk-oe-search-msg' );
 		var $spinner = $( '#tsosk-oe-tbody' );
+		var reqId    = ++tsosk_oe_search_seq;
 
 		$spinner.html( '<tr><td colspan="6" style="text-align:center;padding:14px;color:#666;"><span class="spinner is-active" style="float:none;margin:0 8px 0 0;"></span>' + tsosk.i18n.loading + '</td></tr>' );
 
@@ -1999,6 +2001,9 @@
 				show_protected   : tsosk_oe.showProtected ? 1 : 0,
 			},
 			success: function ( r ) {
+				if ( reqId !== tsosk_oe_search_seq ) {
+					return;
+				}
 				if ( r.success ) {
 					tsosk_oe.totalPages = r.data.total_pages;
 					tsosk_oe_render_table( r.data );
@@ -2008,6 +2013,9 @@
 				}
 			},
 			error: function () {
+				if ( reqId !== tsosk_oe_search_seq ) {
+					return;
+				}
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 			}
 		} );

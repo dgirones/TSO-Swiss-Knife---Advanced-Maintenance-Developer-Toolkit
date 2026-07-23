@@ -157,13 +157,13 @@ class TSOSK_Mod_Options_Editor {
 	}
 
 	/**
-	 * Whether an option is a WordPress core protected name.
+	 * Whether an option name is protected (exact list or pattern).
 	 *
 	 * @param string $name Option name.
 	 * @return bool
 	 */
-	private function is_protected_core( string $name ): bool {
-		if ( in_array( $name, $this->get_protected(), true ) ) {
+	public static function is_protected_option_name( string $name ): bool {
+		if ( in_array( $name, self::get_protected_option_names(), true ) ) {
 			return true;
 		}
 		foreach ( self::get_protected_option_patterns() as $pattern ) {
@@ -172,6 +172,16 @@ class TSOSK_Mod_Options_Editor {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Whether an option is a WordPress core protected name.
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	private function is_protected_core( string $name ): bool {
+		return self::is_protected_option_name( $name );
 	}
 
 	/**
