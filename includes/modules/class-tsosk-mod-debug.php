@@ -406,6 +406,46 @@ class TSOSK_Mod_Debug {
 	}
 
 	/**
+	 * Copy-paste wp-config.php snippets for common debug presets.
+	 *
+	 * @return array<string,array{title:string,desc:string,snippet:string}>
+	 */
+	private function wpconfig_debug_snippets(): array {
+		return array(
+			'developer'   => array(
+				'title'   => __( 'Developer mode (staging)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Same preset as the Developer mode button above: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', true );",
+			),
+			'production'  => array(
+				'title'   => __( 'Production (debug off)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Disable all debug constants on live sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', false );\ndefine( 'WP_DEBUG_LOG', false );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', false );",
+			),
+			'display'     => array(
+				'title'   => __( 'Show PHP errors on screen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Local troubleshooting only — never use on production. Visitors would see PHP notices and warnings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', true );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', false );",
+			),
+			'script'      => array(
+				'title'   => __( 'Unminified core CSS/JS (SCRIPT_DEBUG)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Loads non-minified WordPress core assets. Combine with the developer preset when debugging front-end scripts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', true );\ndefine( 'SAVEQUERIES', false );",
+			),
+			'queries'     => array(
+				'title'   => __( 'Database query logging only (SAVEQUERIES)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Record SQL queries without full PHP debug output. View results on the Slow Query Monitor tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', false );\ndefine( 'WP_DEBUG_LOG', false );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', true );",
+			),
+			'full_local'  => array(
+				'title'   => __( 'Full local debugging (all on)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Maximum verbosity for a local machine: on-screen errors, debug.log, unminified assets, and query logging.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', true );\ndefine( 'SCRIPT_DEBUG', true );\ndefine( 'SAVEQUERIES', true );",
+			),
+		);
+	}
+
+	/**
 	 * Find the wp-config.php path (handles the "one level up" pattern).
 	 *
 	 * @return string Absolute path, or empty string if not found.
@@ -719,6 +759,50 @@ class TSOSK_Mod_Debug {
 			<p class="description">
 				<?php esc_html_e( 'Values active on this page load. Use Developer mode above to toggle the debug preset. Constants locked in wp-config.php are labelled below and cannot be overridden here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+
+			<div class="tsosk-guide-card" style="margin:14px 0 18px;">
+				<h4 class="tsosk-guide-title" style="font-size:14px;">
+					<?php esc_html_e( 'Edit wp-config.php manually', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</h4>
+				<p class="description" style="margin:0 0 10px;">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: marker line in wp-config.php */
+							__( 'Add or change these lines in %1$s before the line %2$s. If a constant is already defined, update its value — do not add a second define() for the same name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>wp-config.php</code>',
+							'<code>/* That\'s all, stop editing! Happy publishing. */</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
+				<?php if ( $wpconfig_exists ) : ?>
+				<p class="description" style="margin:0 0 12px;">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: absolute path to wp-config.php */
+							__( 'Detected file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>' . esc_html( $wpconfig_path ) . '</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
+				<?php endif; ?>
+				<p class="description" style="margin:0 0 12px;">
+					<?php esc_html_e( 'This plugin can also apply the developer preset via JSON in your uploads folder (no wp-config.php edit). Constants defined in wp-config.php always win and cannot be changed from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+
+				<?php foreach ( $this->wpconfig_debug_snippets() as $preset_key => $preset ) : ?>
+				<details class="tsosk-debug-advanced"<?php echo 'developer' === $preset_key ? ' open' : ''; ?>>
+					<summary><?php echo esc_html( $preset['title'] ); ?></summary>
+					<p class="description" style="margin:0 0 8px;"><?php echo esc_html( $preset['desc'] ); ?></p>
+					<pre class="tsosk-code" style="margin:0;padding:12px;background:#fff;border:1px solid #dcdcde;border-radius:3px;overflow:auto;white-space:pre;"><?php echo esc_html( $preset['snippet'] ); ?></pre>
+				</details>
+				<?php endforeach; ?>
+			</div>
 
 			<div class="tsosk-debug-flags" id="tsosk-debug-form">
 				<?php
