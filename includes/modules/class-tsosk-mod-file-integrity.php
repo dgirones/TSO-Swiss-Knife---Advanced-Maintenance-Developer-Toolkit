@@ -216,7 +216,8 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$ignored           = $this->get_ignored();
-		$abspath           = wp_normalize_path( untrailingslashit( tsosk_get_wp_root_dir() ) );
+		// ABSPATH is the canonical core root (works for subdirectory installs such as example.com/blog).
+		$abspath           = wp_normalize_path( trailingslashit( ABSPATH ) );
 		$modified          = array();
 		$missing           = array();
 		$missing_optional  = array();
@@ -233,7 +234,7 @@ class TSOSK_Mod_File_Integrity {
 				continue;
 			}
 
-			$abs = $abspath . $rel_path;
+			$abs = $abspath . ltrim( $rel_path, '/' );
 
 			if ( ! file_exists( $abs ) ) {
 				$row = array(
@@ -267,7 +268,7 @@ class TSOSK_Mod_File_Integrity {
 		// (files that exist on disk but are NOT in the official checksums)
 		$scan_dirs = array( 'wp-admin', 'wp-includes' );
 		foreach ( $scan_dirs as $dir ) {
-			$full_dir = $abspath . $dir;
+			$full_dir = $abspath . ltrim( $dir, '/' );
 			if ( ! is_dir( $full_dir ) ) {
 				continue;
 			}

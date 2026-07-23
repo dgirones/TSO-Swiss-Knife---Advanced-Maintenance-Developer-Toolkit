@@ -40,6 +40,18 @@ class TSOSK_Option_Library {
 						'desc' => __( 'Organise uploads into year/month folders.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
+						'name' => 'posts_per_page',
+						'desc' => __( 'Number of posts shown on blog pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'posts_per_rss',
+						'desc' => __( 'Number of posts in RSS feeds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'rss_use_excerpt',
+						'desc' => __( 'Use excerpts instead of full posts in feeds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
 						'name' => 'blog_charset',
 						'desc' => __( 'Site character encoding (usually UTF-8).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
@@ -55,13 +67,85 @@ class TSOSK_Option_Library {
 						'caution' => true,
 					),
 					array(
-						'name' => 'posts_per_page',
-						'desc' => __( 'Number of posts shown on blog pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					),
-					array(
 						'name' => 'users_can_register',
 						'desc' => __( 'Whether anyone can register (0 or 1).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
+					),
+					array(
+						'name' => 'blog_public',
+						'desc' => __( 'Discourage search engines (0 = discourage, 1 = allow indexing).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'permalink_structure',
+						'desc' => __( 'Pretty permalink pattern (empty = plain ?p= links).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'category_base',
+						'desc' => __( 'Custom base slug for category URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'tag_base',
+						'desc' => __( 'Custom base slug for tag URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'show_on_front',
+						'desc' => __( 'Front page displays: posts or a static page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'page_on_front',
+						'desc' => __( 'Page ID used as the static front page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'page_for_posts',
+						'desc' => __( 'Page ID used as the posts page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'default_comment_status',
+						'desc' => __( 'Allow comments on new posts (open or closed).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'comment_moderation',
+						'desc' => __( 'Hold comments for manual approval before they appear.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'thumbnail_size_w',
+						'desc' => __( 'Thumbnail width in pixels.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'thumbnail_size_h',
+						'desc' => __( 'Thumbnail height in pixels.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'medium_size_w',
+						'desc' => __( 'Medium image width in pixels.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'large_size_w',
+						'desc' => __( 'Large image width in pixels.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'image_default_size',
+						'desc' => __( 'Default size inserted into posts (thumbnail, medium, large, full).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+					array(
+						'name' => 'WPLANG',
+						'desc' => __( 'WordPress locale code (empty = English US).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+					),
+					array(
+						'name' => 'cron',
+						'desc' => __( 'Scheduled cron events (serialized array).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution' => true,
+						'readonly' => true,
 					),
 				),
 			),

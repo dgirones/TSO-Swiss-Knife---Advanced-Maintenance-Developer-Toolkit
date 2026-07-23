@@ -43,15 +43,57 @@ class TSOSK_Mod_Options_Editor {
 		return array(
 			'siteurl', 'home', 'blogname', 'blogdescription',
 			'admin_email', 'active_plugins', 'active_sitewide_plugins',
-			'template', 'stylesheet',
+			'template', 'stylesheet', 'template_root', 'stylesheet_root',
 			'db_version', 'initial_db_version',
 			'wp_user_roles',
 			'auth_key', 'secure_auth_key', 'logged_in_key', 'nonce_key',
 			'auth_salt', 'secure_auth_salt', 'logged_in_salt', 'nonce_salt',
+			'cron', 'rewrite_rules', 'permalink_structure',
+			'recently_activated', 'recently_edited', 'uninstall_plugins',
+			'sidebars_widgets', 'widget_block',
+			'WPLANG', 'gmt_offset', 'timezone_string',
+			'date_format', 'time_format', 'start_of_week',
+			'default_category', 'default_email_category',
+			'default_comment_status', 'default_ping_status', 'default_pingback_flag',
+			'comments_notify', 'moderation_notify', 'comment_moderation',
+			'comment_whitelist', 'comment_registration',
+			'close_comments_for_old_posts', 'close_comments_days_old',
+			'thread_comments', 'thread_comments_depth', 'page_comments',
+			'comments_per_page', 'default_comments_page', 'comment_order',
+			'comment_max_links', 'moderation_keys', 'blacklist_keys',
+			'show_avatars', 'avatar_rating', 'avatar_default',
+			'thumbnail_size_w', 'thumbnail_size_h', 'thumbnail_crop',
+			'medium_size_w', 'medium_size_h', 'large_size_w', 'large_size_h',
+			'image_default_link_type', 'image_default_size',
+			'ping_sites', 'blog_public', 'blog_charset',
+			'default_role', 'users_can_register',
+			'show_on_front', 'page_on_front', 'page_for_posts',
+			'sticky_posts', 'site_icon', 'site_logo',
+			'fresh_site', 'can_compress_scripts',
+			'upload_path', 'upload_url_path',
+			'category_base', 'tag_base',
+			'auto_core_update_notified', 'auto_plugin_theme_update_emails',
+			'auto_update_core_dev', 'auto_update_core_minor', 'auto_update_core_major',
+			'recovery_keys',
 			self::HISTORY_OPTION,
 			TSOSK_Activity_Log::OPTION,
 			TSOSK_Activity_Log::MIGRATED_OPTION,
 			'tsosk_activated', 'tsosk_version',
+		);
+	}
+
+	/**
+	 * Option name patterns hidden from the default browse list (SQL LIKE).
+	 *
+	 * @return string[]
+	 */
+	public static function get_protected_option_patterns(): array {
+		return array(
+			'theme_mods_%',
+			'widget_%',
+			'recovery_mode_%',
+			'_transient_%',
+			'_site_transient_%',
 		);
 	}
 
@@ -62,11 +104,10 @@ class TSOSK_Mod_Options_Editor {
 	 */
 	public static function get_caution_option_names(): array {
 		return array(
-			'blogpublic', 'default_role', 'permalink_structure',
-			'rewrite_rules', 'upload_path', 'upload_url_path',
-			'users_can_register', 'default_comment_status',
-			'show_on_front', 'page_on_front', 'page_for_posts',
-			'cron', 'wp_mail_smtp',
+			'posts_per_page', 'posts_per_rss', 'rss_use_excerpt',
+			'mailserver_url', 'mailserver_login', 'mailserver_pass', 'mailserver_port',
+			'default_post_format', 'default_post_category',
+			'wp_mail_smtp',
 		);
 	}
 
@@ -116,13 +157,31 @@ class TSOSK_Mod_Options_Editor {
 	}
 
 	/**
+	 * Whether an option name is protected (exact list or pattern).
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	public static function is_protected_option_name( string $name ): bool {
+		if ( in_array( $name, self::get_protected_option_names(), true ) ) {
+			return true;
+		}
+		foreach ( self::get_protected_option_patterns() as $pattern ) {
+			if ( fnmatch( $pattern, $name ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Whether an option is a WordPress core protected name.
 	 *
 	 * @param string $name Option name.
 	 * @return bool
 	 */
 	private function is_protected_core( string $name ): bool {
-		return in_array( $name, $this->get_protected(), true );
+		return self::is_protected_option_name( $name );
 	}
 
 	/**
@@ -271,6 +330,16 @@ class TSOSK_Mod_Options_Editor {
 		$where .= ' AND option_name NOT LIKE %s AND option_name NOT LIKE %s';
 		$args[] = $wpdb->esc_like( '_transient_' ) . '%';
 		$args[] = $wpdb->esc_like( '_site_transient_' ) . '%';
+
+		if ( ! $show_protected ) {
+			foreach ( self::get_protected_option_patterns() as $pattern ) {
+				if ( str_starts_with( $pattern, '_transient_' ) || str_starts_with( $pattern, '_site_transient_' ) ) {
+					continue;
+				}
+				$where .= ' AND option_name NOT LIKE %s';
+				$args[] = $pattern;
+			}
+		}
 
 		if ( $show_protected ) {
 			return;
@@ -753,6 +822,7 @@ class TSOSK_Mod_Options_Editor {
 		<div class="tsosk-oe-panel" id="tsosk-oe-panel-list">
 			<div class="tsosk-card">
 				<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+					<input type="hidden" id="tsosk-oe-nonce" value="<?php echo esc_attr( $nonce ); ?>">
 					<input type="text" id="tsosk-oe-search"
 					       placeholder="<?php esc_attr_e( 'Filter by option name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 					       style="min-width:220px;" autocomplete="off">
@@ -763,12 +833,11 @@ class TSOSK_Mod_Options_Editor {
 						<option value="integer"><?php esc_html_e( 'Integer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
-					<button class="button" id="tsosk-oe-do-search" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<button type="button" class="button" id="tsosk-oe-toggle-protected" aria-pressed="false"><?php esc_html_e( 'Show protected options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<button class="button button-small" id="tsosk-oe-clear-filters" title="<?php esc_attr_e( 'Clear all filters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">✕</button>
 					<span class="tsosk-ajax-msg" id="tsosk-oe-search-msg"></span>
 				</div>
-				<p class="description" style="margin-top:6px;"><?php esc_html_e( 'Options are sorted alphabetically by name. Filter by name or type. Click a column header to sort by size, autoload, or type.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<p class="description" style="margin-top:6px;"><?php esc_html_e( 'Options are sorted alphabetically by name. Start typing to filter instantly (for example: cron). Click a column header to sort by size, autoload, or type.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			</div>
 
 			<div id="tsosk-oe-results">
