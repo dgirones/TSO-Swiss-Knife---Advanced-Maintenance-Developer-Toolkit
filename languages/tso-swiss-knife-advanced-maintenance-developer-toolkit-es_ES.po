@@ -3601,6 +3601,70 @@ msgstr "No se han encontrado eventos cron."
 msgid "Debug Constants"
 msgstr "Constantes de depuracion"
 
+#: includes/modules/class-tsosk-mod-debug.php:416
+msgid "Developer mode (staging)"
+msgstr "Modo desarrollador (staging)"
+
+#: includes/modules/class-tsosk-mod-debug.php:417
+msgid "Same preset as the Developer mode button above: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor."
+msgstr "Mismo preset que el boton Modo desarrollador de arriba: activa depuracion, guarda en wp-content/debug.log, oculta errores a visitantes y registra consultas SQL para el Monitor de consultas lentas."
+
+#: includes/modules/class-tsosk-mod-debug.php:421
+msgid "Production (debug off)"
+msgstr "Produccion (depuracion desactivada)"
+
+#: includes/modules/class-tsosk-mod-debug.php:422
+msgid "Disable all debug constants on live sites."
+msgstr "Desactiva todas las constantes de depuracion en sitios en produccion."
+
+#: includes/modules/class-tsosk-mod-debug.php:426
+msgid "Show PHP errors on screen"
+msgstr "Mostrar errores PHP en pantalla"
+
+#: includes/modules/class-tsosk-mod-debug.php:427
+msgid "Local troubleshooting only — never use on production. Visitors would see PHP notices and warnings."
+msgstr "Solo para diagnostico local; nunca en produccion. Los visitantes verian avisos y advertencias PHP."
+
+#: includes/modules/class-tsosk-mod-debug.php:431
+msgid "Unminified core CSS/JS (SCRIPT_DEBUG)"
+msgstr "CSS/JS del nucleo sin minificar (SCRIPT_DEBUG)"
+
+#: includes/modules/class-tsosk-mod-debug.php:432
+msgid "Loads non-minified WordPress core assets. Combine with the developer preset when debugging front-end scripts."
+msgstr "Carga recursos del nucleo de WordPress sin minificar. Combinalo con el preset desarrollador al depurar scripts del front-end."
+
+#: includes/modules/class-tsosk-mod-debug.php:436
+msgid "Database query logging only (SAVEQUERIES)"
+msgstr "Solo registro de consultas SQL (SAVEQUERIES)"
+
+#: includes/modules/class-tsosk-mod-debug.php:437
+msgid "Record SQL queries without full PHP debug output. View results on the Slow Query Monitor tab."
+msgstr "Registra consultas SQL sin activar toda la salida de depuracion PHP. Consulta los resultados en la pestana Monitor de consultas lentas."
+
+#: includes/modules/class-tsosk-mod-debug.php:441
+msgid "Full local debugging (all on)"
+msgstr "Depuracion local completa (todo activado)"
+
+#: includes/modules/class-tsosk-mod-debug.php:442
+msgid "Maximum verbosity for a local machine: on-screen errors, debug.log, unminified assets, and query logging."
+msgstr "Maxima verbosidad en un entorno local: errores en pantalla, debug.log, recursos sin minificar y registro de consultas."
+
+#: includes/modules/class-tsosk-mod-debug.php:765
+msgid "Edit wp-config.php manually"
+msgstr "Editar wp-config.php manualmente"
+
+#: includes/modules/class-tsosk-mod-debug.php:772
+msgid "Add or change these lines in %1$s before the line %2$s. If a constant is already defined, update its value — do not add a second define() for the same name."
+msgstr "Anade o cambia estas lineas en %1$s antes de la linea %2$s. Si una constante ya esta definida, actualiza su valor; no anadas un segundo define() con el mismo nombre."
+
+#: includes/modules/class-tsosk-mod-debug.php:786
+msgid "Detected file: %s"
+msgstr "Archivo detectado: %s"
+
+#: includes/modules/class-tsosk-mod-debug.php:795
+msgid "This plugin can also apply the developer preset via JSON in your uploads folder (no wp-config.php edit). Constants defined in wp-config.php always win and cannot be changed from here."
+msgstr "Este plugin tambien puede aplicar el preset desarrollador mediante JSON en tu carpeta uploads (sin editar wp-config.php). Las constantes definidas en wp-config.php siempre tienen prioridad y no se pueden cambiar desde aqui."
+
 #: includes/modules/class-tsosk-mod-debug.php:794
 msgid "Available Error Logs"
 msgstr "Logs de errores disponibles"
