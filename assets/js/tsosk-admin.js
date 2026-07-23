@@ -1981,11 +1981,10 @@
 	function tsosk_oe_search( search, page ) {
 		tsosk_oe.lastSearch  = search;
 		tsosk_oe.currentPage = page || 1;
-		var nonce    = $( '#tsosk-oe-do-search' ).data( 'nonce' );
+		var nonce    = $( '#tsosk-oe-nonce' ).val();
 		var $msg     = $( '#tsosk-oe-search-msg' );
 		var $spinner = $( '#tsosk-oe-tbody' );
 
-		$( '#tsosk-oe-do-search' ).prop( 'disabled', true );
 		$spinner.html( '<tr><td colspan="6" style="text-align:center;padding:14px;color:#666;"><span class="spinner is-active" style="float:none;margin:0 8px 0 0;"></span>' + tsosk.i18n.loading + '</td></tr>' );
 
 		ajaxPost( {
@@ -2007,18 +2006,24 @@
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
-				$( '#tsosk-oe-do-search' ).prop( 'disabled', false );
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$( '#tsosk-oe-do-search' ).prop( 'disabled', false );
 			}
 		} );
 	}
 
+	var tsosk_oe_search_timer = null;
+	function tsosk_oe_schedule_search() {
+		clearTimeout( tsosk_oe_search_timer );
+		tsosk_oe_search_timer = setTimeout( function () {
+			tsosk_oe_search( $( '#tsosk-oe-search' ).val().trim(), 1 );
+		}, 350 );
+	}
+
 	// Auto-load on page ready (always load when editor is present)
 	$( function () {
-		if ( ! $( '#tsosk-oe-do-search' ).length ) {
+		if ( ! $( '#tsosk-oe-nonce' ).length ) {
 			return;
 		}
 		var initialSearch = '';
@@ -2032,11 +2037,8 @@
 		tsosk_oe_search( initialSearch, 1 );
 	} );
 
-	$( document ).on( 'click', '#tsosk-oe-do-search', function () {
-		tsosk_oe_search( $( '#tsosk-oe-search' ).val().trim(), 1 );
-	} );
-	$( document ).on( 'keydown', '#tsosk-oe-search', function ( e ) {
-		if ( e.key === 'Enter' ) { tsosk_oe_search( $( this ).val().trim(), 1 ); }
+	$( document ).on( 'input', '#tsosk-oe-search', function () {
+		tsosk_oe_schedule_search();
 	} );
 	// Filter dropdowns auto-trigger search
 	$( document ).on( 'change', '#tsosk-oe-filter-type', function () {
@@ -2081,7 +2083,7 @@
 
 	function tsosk_oe_render_table( data ) {
 		var $tbody = $( '#tsosk-oe-tbody' );
-		var nonce  = $( '#tsosk-oe-do-search' ).data( 'nonce' );
+		var nonce  = $( '#tsosk-oe-nonce' ).val();
 		var items  = data.items || [];
 
 		$tbody.empty();

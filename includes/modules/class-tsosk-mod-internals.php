@@ -51,11 +51,6 @@ class TSOSK_Mod_Internals {
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, query vars, rewrite tags and shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
-		<p>
-			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=image-sizes-audit' ) ); ?>">
-				<?php esc_html_e( 'Open Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</a>
-		</p>
 
 		<div class="tsosk-toolbar">
 			<input type="text" id="tsosk-internals-search" class="regular-text" placeholder="<?php esc_attr_e( 'Filter internals...', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">

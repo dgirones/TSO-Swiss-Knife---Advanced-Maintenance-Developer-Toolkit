@@ -353,7 +353,7 @@ class TSOSK_Mod_Redirects {
 				<p class="description" style="margin-top:10px;">
 					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer shows the previous page (HTTP Referer) when the browser sent it — direct visits, bots and bookmarks usually leave it empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
-				<div class="tsosk-table-wrap" style="margin-top:12px;">
+				<div class="tsosk-table-wrap tsosk-404-table-wrap" style="margin-top:12px;">
 					<table class="widefat tsosk-table" id="tsosk-404-table">
 						<thead>
 							<tr>
@@ -368,10 +368,10 @@ class TSOSK_Mod_Redirects {
 							<?php foreach ( $not_found_log as $item ) : ?>
 							<?php $path_url = $this->rule_value_to_url( (string) $item['path'], 'exact', true ); ?>
 							<tr>
-								<td class="tsosk-code tsosk-redirect-url-col"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $item['path'], $path_url ) ); ?></td>
-								<td><?php echo esc_html( number_format_i18n( absint( $item['hits'] ) ) ); ?></td>
-								<td><?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $item['last_hit'] ) ) ); ?></td>
-								<td class="tsosk-code tsosk-redirect-url-col">
+								<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $item['path'], $path_url ) ); ?></td>
+								<td class="tsosk-404-col-visits" data-label="<?php esc_attr_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( absint( $item['hits'] ) ) ); ?></td>
+								<td class="tsosk-404-col-date" data-label="<?php esc_attr_e( 'Last visit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $item['last_hit'] ) ) ); ?></td>
+								<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Referrer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<?php
 									$referrer = (string) ( $item['referrer'] ?? '' );
 									if ( '' === $referrer ) {
@@ -381,7 +381,7 @@ class TSOSK_Mod_Redirects {
 									}
 									?>
 								</td>
-								<td>
+								<td data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<button class="button button-small tsosk-404-create-redirect" data-source="<?php echo esc_attr( $item['path'] ); ?>">
 										<?php esc_html_e( 'Create Redirect', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 									</button>
@@ -436,18 +436,18 @@ class TSOSK_Mod_Redirects {
 								$target_url = $this->rule_value_to_url( (string) $rule['target'], (string) $rule['match_type'], false );
 								?>
 								<tr>
-									<td class="tsosk-code tsosk-redirect-url-col"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['source'], $source_url ) ); ?></td>
-									<td><?php echo esc_html( $this->match_type_label( $rule['match_type'] ) ); ?></td>
-									<td class="tsosk-code tsosk-redirect-url-col"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['target'], $target_url ) ); ?></td>
-									<td><?php echo esc_html( (string) $rule['status'] ); ?></td>
-									<td>
+									<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['source'], $source_url ) ); ?></td>
+									<td data-label="<?php esc_attr_e( 'Match', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $this->match_type_label( $rule['match_type'] ) ); ?></td>
+									<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Target', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['target'], $target_url ) ); ?></td>
+									<td data-label="<?php esc_attr_e( 'HTTP code', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) $rule['status'] ); ?></td>
+									<td data-label="<?php esc_attr_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 										<?php if ( $rule['enabled'] ) : ?>
 											<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 										<?php else : ?>
 											<span class="tsosk-badge"><?php esc_html_e( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 										<?php endif; ?>
 									</td>
-									<td>
+									<td data-label="<?php esc_attr_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 										<?php echo esc_html( number_format_i18n( absint( $rule['hits'] ) ) ); ?>
 										<?php if ( ! empty( $rule['last_hit'] ) ) : ?>
 											<br><small class="description"><?php echo esc_html( sprintf(
@@ -457,7 +457,7 @@ class TSOSK_Mod_Redirects {
 											) ); ?></small>
 										<?php endif; ?>
 									</td>
-									<td class="tsosk-actions">
+									<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 										<button class="button button-small tsosk-redirect-edit"
 										        data-id="<?php echo esc_attr( $rule['id'] ); ?>"
 										        data-source="<?php echo esc_attr( $rule['source'] ); ?>"

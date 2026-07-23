@@ -3083,59 +3083,74 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 }
 
 /* ── Redirects ────────────────────────────────────────────────────────────── */
-.tsosk-redirects-table-wrap {
-    overflow-x: hidden;
+.tsosk-redirects-table-wrap,
+.tsosk-404-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 #tsosk-redirects-table,
 #tsosk-404-table {
-    table-layout: fixed;
+    table-layout: auto;
     width: 100%;
     max-width: 100%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-source,
 #tsosk-redirects-table .tsosk-redirect-col-target {
-    width: 24%;
+    width: 28%;
+    min-width: 180px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-match {
     width: 8%;
+    min-width: 72px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-code {
     width: 6%;
+    min-width: 64px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-active {
     width: 8%;
+    min-width: 72px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-visits {
-    width: 10%;
+    width: 8%;
+    min-width: 64px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-actions {
-    width: 20%;
+    width: 14%;
+    min-width: 120px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-url-col,
 #tsosk-404-table .tsosk-redirect-url-col {
-    max-width: 0;
-    overflow: hidden;
-    line-height: 1.35;
-    vertical-align: middle;
+    min-width: 200px;
+    line-height: 1.45;
+    vertical-align: top;
+    word-break: break-all;
 }
 
 #tsosk-redirects-table .tsosk-redirect-url-link,
 #tsosk-redirects-table .tsosk-redirect-url-text,
 #tsosk-404-table .tsosk-redirect-url-link,
 #tsosk-404-table .tsosk-redirect-url-text {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: inline;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    word-break: break-all;
+    max-width: none;
+}
+
+#tsosk-404-table .tsosk-404-col-visits,
+#tsosk-404-table .tsosk-404-col-date {
     white-space: nowrap;
-    max-width: 100%;
+    width: 1%;
 }
 
 #tsosk-redirects-table .tsosk-actions {
@@ -3151,6 +3166,59 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     width: 100%;
     box-sizing: border-box;
     text-align: center;
+}
+
+@media (max-width: 782px) {
+    #tsosk-404-table thead,
+    #tsosk-redirects-table thead {
+        display: none;
+    }
+
+    #tsosk-404-table,
+    #tsosk-404-table tbody,
+    #tsosk-404-table tr,
+    #tsosk-404-table td,
+    #tsosk-redirects-table,
+    #tsosk-redirects-table tbody,
+    #tsosk-redirects-table tr,
+    #tsosk-redirects-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #tsosk-404-table tr,
+    #tsosk-redirects-table tr {
+        margin: 0 0 14px;
+        padding: 12px;
+        border: 1px solid #dcdcde;
+        border-radius: 4px;
+        background: #fff;
+    }
+
+    #tsosk-404-table td,
+    #tsosk-redirects-table td {
+        padding: 6px 0;
+        border: 0;
+        max-width: none;
+    }
+
+    #tsosk-404-table td::before,
+    #tsosk-redirects-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #646970;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    #tsosk-404-table .tsosk-redirect-url-col,
+    #tsosk-redirects-table .tsosk-redirect-url-col {
+        min-width: 0;
+    }
 }
 
 .tsosk-redirect-url-link {

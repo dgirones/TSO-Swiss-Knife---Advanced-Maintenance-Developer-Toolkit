@@ -70,6 +70,9 @@ class TSOSK_Mod_Slow_Queries {
 		add_action( 'wp_ajax_tsosk_sq_get_log',       array( $this, 'ajax_get_log' ) );
 		add_action( 'wp_ajax_tsosk_sq_ignore_pattern', array( $this, 'ajax_ignore_pattern' ) );
 		add_action( 'admin_post_tsosk_sq_export', array( $this, 'handle_export' ) );
+		add_action( 'admin_bar_menu', array( $this, 'admin_bar_menu' ), 999 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_admin_bar_styles' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_bar_styles' ) );
 	}
 
 	// ── Settings ─────────────────────────────────────────────────────────────
@@ -381,6 +384,245 @@ class TSOSK_Mod_Slow_Queries {
 			'top_callers'   => array_slice( $caller_counts, 0, 5, true ),
 			'top_sqls'      => $top,
 		);
+	}
+
+	/**
+	 * Admin bar menu with live request metrics (Query Monitor style).
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
+	 */
+	public function admin_bar_menu( WP_Admin_Bar $wp_admin_bar ): void {
+		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$settings   = $this->get_settings();
+		$savequeries = defined( 'SAVEQUERIES' ) && SAVEQUERIES;
+		if ( ! $savequeries && ! $settings['enabled'] ) {
+			return;
+		}
+
+		$live       = $this->get_current_request_query_stats();
+		$log_stats  = $this->compute_stats( $this->get_log() );
+		$tab_url    = admin_url( 'tools.php?page=tso-swiss-knife&tab=slow-queries' );
+		$debug_url  = admin_url( 'tools.php?page=tso-swiss-knife&tab=debug' );
+
+		$load_s  = $live ? round( $live['load_ms'] / 1000, 2 ) : 0;
+		$q_count = $live ? $live['query_count'] : 0;
+		$title   = $savequeries
+			? sprintf(
+				/* translators: 1: page load seconds, 2: query count */
+				__( '%1$ss · %2$dQ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				number_format_i18n( $load_s, 2 ),
+				$q_count
+			)
+			: __( 'Slow queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+
+		$wp_admin_bar->add_node(
+			array(
+				'id'    => 'tsosk-slow-queries',
+				'title' => esc_html( $title ),
+				'href'  => $tab_url,
+				'meta'  => array(
+					'class' => 'tsosk-sq-admin-bar-root',
+				),
+			)
+		);
+
+		if ( $live ) {
+			$wp_admin_bar->add_node(
+				array(
+					'parent' => 'tsosk-slow-queries',
+					'id'     => 'tsosk-sq-ab-overview',
+					'title'  => esc_html(
+						sprintf(
+							/* translators: 1: load ms, 2: memory MB, 3: query time ms */
+							__( 'Page %1$s ms · Memory %2$s MB · DB %3$s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							number_format_i18n( $live['load_ms'], 1 ),
+							number_format_i18n( $live['memory_mb'], 1 ),
+							number_format_i18n( $live['query_time_ms'], 1 )
+						)
+					),
+				)
+			);
+
+			$wp_admin_bar->add_node(
+				array(
+					'parent' => 'tsosk-slow-queries',
+					'id'     => 'tsosk-sq-ab-queries',
+					'title'  => esc_html(
+						sprintf(
+							/* translators: 1: query count, 2: slow count, 3: threshold ms */
+							__( 'This request: %1$d queries (%2$d slow ≥ %3$d ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							$live['query_count'],
+							$live['slow_count'],
+							$settings['threshold_ms']
+						)
+					),
+					'href'   => $tab_url . '#tsosk-sq-live-viewer',
+				)
+			);
+
+			if ( $live['slowest_ms'] > 0 ) {
+				$wp_admin_bar->add_node(
+					array(
+						'parent' => 'tsosk-slow-queries',
+						'id'     => 'tsosk-sq-ab-slowest',
+						'title'  => esc_html(
+							sprintf(
+								/* translators: 1: milliseconds, 2: SQL excerpt */
+								__( 'Slowest: %1$s ms — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								number_format_i18n( $live['slowest_ms'], 2 ),
+								$this->admin_bar_excerpt( $live['slowest_sql'], 72 )
+							)
+						),
+						'href'   => $tab_url . '#tsosk-sq-live-viewer',
+					)
+				);
+			}
+		} elseif ( ! $savequeries ) {
+			$wp_admin_bar->add_node(
+				array(
+					'parent' => 'tsosk-slow-queries',
+					'id'     => 'tsosk-sq-ab-enable',
+					'title'  => esc_html__( 'SAVEQUERIES is off — enable monitoring on the Slow Query tab', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'href'   => $tab_url,
+				)
+			);
+		}
+
+		if ( $log_stats['total_slow'] > 0 ) {
+			$wp_admin_bar->add_node(
+				array(
+					'parent' => 'tsosk-slow-queries',
+					'id'     => 'tsosk-sq-ab-log',
+					'title'  => esc_html(
+						sprintf(
+							/* translators: 1: slow query count, 2: batch count */
+							__( 'Logged slow queries: %1$d (%2$d requests)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							$log_stats['total_slow'],
+							$log_stats['total_batches']
+						)
+					),
+					'href'   => $tab_url . '#tsosk-sq-log',
+				)
+			);
+
+			if ( ! empty( $log_stats['top_sqls'][0] ) ) {
+				$top = $log_stats['top_sqls'][0];
+				$wp_admin_bar->add_node(
+					array(
+						'parent' => 'tsosk-slow-queries',
+						'id'     => 'tsosk-sq-ab-top',
+						'title'  => esc_html(
+							sprintf(
+								/* translators: 1: hit count, 2: max ms, 3: SQL excerpt */
+								__( 'Top pattern: %1$d× (max %2$s ms) — %3$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								(int) $top['count'],
+								number_format_i18n( (float) $top['max'], 1 ),
+								$this->admin_bar_excerpt( (string) $top['fingerprint'], 60 )
+							)
+						),
+						'href'   => $tab_url . '#tsosk-sq-patterns',
+					)
+				);
+			}
+		}
+
+		$wp_admin_bar->add_node(
+			array(
+				'parent' => 'tsosk-slow-queries',
+				'id'     => 'tsosk-sq-ab-open',
+				'title'  => esc_html__( 'Open Slow Query Monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'href'   => $tab_url,
+			)
+		);
+
+		$wp_admin_bar->add_node(
+			array(
+				'parent' => 'tsosk-slow-queries',
+				'id'     => 'tsosk-sq-ab-debug',
+				'title'  => esc_html__( 'Open Debug Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'href'   => $debug_url,
+			)
+		);
+	}
+
+	/**
+	 * Enqueue minimal admin-bar submenu styles.
+	 */
+	public function enqueue_admin_bar_styles(): void {
+		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$css = '#wpadminbar #wp-admin-bar-tsosk-slow-queries .ab-submenu { min-width: 320px; max-width: min(92vw, 560px); }
+#wpadminbar #wp-admin-bar-tsosk-slow-queries .ab-item { white-space: nowrap; }
+#wpadminbar .tsosk-sq-admin-bar-root > .ab-item { font-weight: 600; }';
+		wp_register_style( 'tsosk-sq-admin-bar', false, array(), TSOSK_VERSION );
+		wp_enqueue_style( 'tsosk-sq-admin-bar' );
+		wp_add_inline_style( 'tsosk-sq-admin-bar', $css );
+	}
+
+	/**
+	 * Collect query stats for the current request.
+	 *
+	 * @return array{load_ms:float,memory_mb:float,query_count:int,query_time_ms:float,slow_count:int,slowest_ms:float,slowest_sql:string}|null
+	 */
+	private function get_current_request_query_stats(): ?array {
+		global $wpdb;
+
+		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES || ! is_array( $wpdb->queries ) ) {
+			return null;
+		}
+
+		$threshold_sec = $this->get_settings()['threshold_ms'] / 1000.0;
+		$query_time_ms = 0.0;
+		$slow_count    = 0;
+		$slowest_ms    = 0.0;
+		$slowest_sql   = '';
+
+		foreach ( $wpdb->queries as $q ) {
+			$time = (float) ( $q[1] ?? 0 );
+			$query_time_ms += $time * 1000;
+			if ( $time >= $threshold_sec ) {
+				++$slow_count;
+				$t_ms = $time * 1000;
+				if ( $t_ms > $slowest_ms ) {
+					$slowest_ms  = $t_ms;
+					$slowest_sql = (string) ( $q[0] ?? '' );
+				}
+			}
+		}
+
+		$load_ms = defined( 'WP_START_TIMESTAMP' ) ? ( microtime( true ) - WP_START_TIMESTAMP ) * 1000 : 0;
+
+		return array(
+			'load_ms'        => round( $load_ms, 1 ),
+			'memory_mb'      => round( memory_get_peak_usage( true ) / 1048576, 1 ),
+			'query_count'    => count( $wpdb->queries ),
+			'query_time_ms'  => round( $query_time_ms, 1 ),
+			'slow_count'     => $slow_count,
+			'slowest_ms'     => round( $slowest_ms, 2 ),
+			'slowest_sql'    => preg_replace( '/\s+/', ' ', trim( $slowest_sql ) ),
+		);
+	}
+
+	/**
+	 * Shorten SQL/fingerprint text for admin-bar menu rows.
+	 *
+	 * @param string $text   Source text.
+	 * @param int    $length Max length.
+	 * @return string
+	 */
+	private function admin_bar_excerpt( string $text, int $length = 60 ): string {
+		$text = preg_replace( '/\s+/', ' ', trim( $text ) );
+		if ( ! is_string( $text ) || '' === $text ) {
+			return '—';
+		}
+		if ( mb_strlen( $text ) <= $length ) {
+			return $text;
+		}
+		return mb_substr( $text, 0, $length - 1 ) . '…';
 	}
 
 	// ── AJAX ─────────────────────────────────────────────────────────────────
@@ -800,7 +1042,7 @@ class TSOSK_Mod_Slow_Queries {
 
 		<?php /* ── Top offenders ── */ ?>
 		<?php if ( ! empty( $stats['top_sqls'] ) ) : ?>
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-sq-patterns">
 			<h3><?php esc_html_e( 'Top Slow Query Patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'Queries grouped by SQL fingerprint (string/number literals replaced with ?). Use Ignore to stop logging a known noisy pattern.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -860,7 +1102,7 @@ class TSOSK_Mod_Slow_Queries {
 		<?php endif; ?>
 
 		<?php /* ── Log table ── */ ?>
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-sq-log">
 			<h3>
 				<?php esc_html_e( 'Slow Query Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
@@ -937,7 +1179,7 @@ class TSOSK_Mod_Slow_Queries {
 		}
 		$sq_dupes = array_filter( $sq_sql_map, static fn( $n ) => $n > 1 );
 		?>
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-sq-live-viewer">
 			<h3>
 				<span class="dashicons dashicons-database" aria-hidden="true"></span>
 				<?php esc_html_e( 'Database Queries (SAVEQUERIES)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
