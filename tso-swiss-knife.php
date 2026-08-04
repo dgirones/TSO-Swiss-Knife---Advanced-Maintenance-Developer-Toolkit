@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.0.0' );
+define( 'TSOSK_VERSION',  '1.0.1' );
 define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
@@ -263,7 +263,6 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-image-sizes-audit',
 	'includes/modules/class-tsosk-mod-security',
 	'includes/modules/class-tsosk-mod-email',
-	'includes/modules/class-tsosk-mod-footprint',
 	'includes/modules/class-tsosk-mod-content-audit',
 	'includes/modules/class-tsosk-mod-server-files',
 	'includes/modules/class-tsosk-mod-health',
@@ -402,7 +401,6 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Image_Sizes_Audit',
 		'TSOSK_Mod_Security',
 		'TSOSK_Mod_Email',
-		'TSOSK_Mod_Footprint',
 		'TSOSK_Mod_Content_Audit',
 		'TSOSK_Mod_Server_Files',
 		'TSOSK_Mod_Health',

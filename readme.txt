@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 = Included modules =
 
 * **Activity History** — Central log of changes across all plugin tools (options edited, database replacements, maintenance mode, admin menu, and more). Pinned as the default favorite for quick access.
-* **Hidden WordPress Profiles** — Switch between curated admin UI profiles that show or hide module groups for cleaner workflows.
+* **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
 * **Cron Manager** — List, manually run, or delete scheduled WP-Cron events. Core hooks are protected from accidental deletion.
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
 * **Debug Mode** — Toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, and SAVEQUERIES via JSON flags stored under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/` — no wp-config.php editing required.
@@ -34,16 +34,16 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Heartbeat Controls** — Set Heartbeat mode (default / disable frontend / disable editor / disable all) and interval.
 * **Update Manager** — Review pending core, plugin, and theme updates, optionally block update checks (staging), and control update email notifications.
 * **TSO Options & Tables Cleaner** — In-plugin promo for the free [TSO Options & Tables Cleaner](https://wordpress.org/plugins/tso-options-tables-cleaner/) companion plugin (database cleanup, orphan options, backups, and table optimization on WordPress.org).
-* **Slow Query Monitor** — Surface slow database queries logged when SAVEQUERIES is enabled.
+* **Slow Query Monitor** — Log slow database queries when SAVEQUERIES is enabled, inspect live queries for the current request, export CSV/JSON, and open a summary from the admin bar.
 * **Search & Replace** — Run dry-run or live serialized-safe search and replace across database tables.
 * **Hooks Inspector** — Browse the live `$wp_filter` global, with callback details and a real-time search filter.
 * **Rewrite Rules Flush** — Soft or hard flush with a single click; search within the current rules table.
 * **Server Files Review** — Scan for unexpected PHP files in uploads and other writable directories.
 * **Redirects** — Manage safe redirect rules stored in the database with import and export support.
-* **Custom 404 Page** — Assign a WordPress page as the site 404 template with live preview before saving.
+* **Custom 404 Page** — Assign a WordPress page as the site 404 response while keeping the original URL and a real HTTP 404 status (no redirect).
 * **Slug Manager** — Bulk-edit post and term slugs with conflict detection.
 * **Health Report** — Generate a shareable site health snapshot covering environment, plugins, and common issues.
-* **Reorder & Hide Sidebar** — Choose which admin sidebar items to show, drag to reorder, rename labels, and move submenus under another section. Simpler than dedicated menu editor plugins.
+* **Reorder & Hide Sidebar** — Drag to reorder WordPress admin menu items, rename labels, nest items under another section, or hide items for all admins.
 * **Users & Sessions** — Review administrators, role-less users, old accounts, and active sessions.
 * **Roles & Capabilities** — Compare roles, apply capability templates, and audit dangerous caps.
 * **Media Cleaner** — Review unattached media, missing attachment files, and unreferenced uploads.
@@ -51,7 +51,6 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Core File Integrity** — Verify WordPress core files against official checksums and flag unexpected changes.
 * **Login Protection** — Custom login URL, brute-force limits, and related hardening controls.
 * **Email Diagnostics** — Inspect wp_mail settings and send a test email.
-* **Plugin Footprint** — Estimate each plugin's options, cron hooks, shortcodes, and REST routes.
 * **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, long slugs, and broken shortcodes.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
 * **Plugin Sandbox** — Isolate plugin conflicts via a must-use loader: only your selected plugins load for your admin session.
@@ -89,7 +88,7 @@ When you run a core integrity scan, the plugin requests official WordPress core 
 
 = Does this plugin work with object-cache plugins like Redis? =
 
-Yes. The Object Cache Tools module detects the active driver and calls `wp_cache_flush()`, which delegates correctly to any persistent cache backend.
+Yes. Features that use WordPress cache APIs (for example flushing related caches after cleanup tools) call core functions such as `wp_cache_flush()` / `wp_cache_delete()`, which delegate to whatever persistent object-cache drop-in is active (Redis, Memcached, etc.).
 
 = Is it safe to delete an option from the Options Editor tab? =
 
@@ -137,18 +136,23 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Screenshots ==
 
-1. Cron Manager — list of scheduled events with manual-run and delete actions.
-2. Debug Mode — toggle debug constants via uploads config without editing wp-config.php.
-3. Transients Manager — filter by status and purge expired entries in bulk.
-4. TSO Options & Tables Cleaner — companion plugin promo for database cleanup and optimization.
-5. Maintenance Mode — toggle with custom message and IP whitelist.
+1. Hidden WordPress Profiles — apply quick presets and toggle performance, content, and privacy constants via the plugin config under uploads (no wp-config.php editing).
+2. Custom 404 Page — assign any WordPress page as the site 404 response while keeping the original URL and a real HTTP 404 status (no redirect).
+3. Reorder & Hide Sidebar — drag to reorder WordPress admin menu items, rename labels, nest items under another section, or hide items for all admins.
+4. Slow Query Monitor — inspect slow and live database queries when SAVEQUERIES is enabled, export the log, and open a summary from the admin bar.
 
 == Changelog ==
+
+= 1.0.1 =
+* Fixed bugs in modules.
 
 = 1.0.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Fixed bugs in modules.
 
 = 1.0.0 =
 Initial release.
