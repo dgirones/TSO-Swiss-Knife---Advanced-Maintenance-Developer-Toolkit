@@ -2168,6 +2168,16 @@
         table-layout: auto;
     }
 
+    .tsosk-redirects-table-wrap > .widefat.tsosk-table,
+    .tsosk-404-table-wrap > .widefat.tsosk-table,
+    #tsosk-redirects-table,
+    #tsosk-404-table {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        table-layout: fixed;
+    }
+
     .tsosk-sm-audit-table .tsosk-sm-title-col,
     .tsosk-sm-audit-table td.tsosk-sm-title-col,
     .tsosk-sm-title-col {
@@ -2180,30 +2190,6 @@
         min-width: 100px;
         width: auto;
         max-width: none;
-    }
-
-    .tsosk-fp-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .tsosk-fp-card-meta {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-
-    .tsosk-fp-oe-link {
-        width: 100%;
-        text-align: center;
-        box-sizing: border-box;
-    }
-
-    .tsosk-fp-slug {
-        align-self: flex-start;
-        flex: 1 1 100%;
-        max-width: 100%;
-        word-break: break-all;
-        white-space: normal;
     }
 
     .tsosk-oe-tabs {
@@ -3085,54 +3071,49 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 /* ── Redirects ────────────────────────────────────────────────────────────── */
 .tsosk-redirects-table-wrap,
 .tsosk-404-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
 #tsosk-redirects-table,
 #tsosk-404-table {
-    table-layout: auto;
+    table-layout: fixed;
     width: 100%;
     max-width: 100%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-source,
 #tsosk-redirects-table .tsosk-redirect-col-target {
-    width: 28%;
-    min-width: 180px;
+    width: 26%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-match {
     width: 8%;
-    min-width: 72px;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-code {
-    width: 6%;
-    min-width: 64px;
+    width: 7%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-active {
-    width: 8%;
-    min-width: 72px;
+    width: 9%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-visits {
-    width: 8%;
-    min-width: 64px;
+    width: 7%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-actions {
-    width: 14%;
-    min-width: 120px;
+    width: 17%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-url-col,
 #tsosk-404-table .tsosk-redirect-url-col {
-    min-width: 200px;
+    min-width: 0;
     line-height: 1.45;
     vertical-align: top;
-    word-break: break-all;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 #tsosk-redirects-table .tsosk-redirect-url-link,
@@ -3140,17 +3121,16 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 #tsosk-404-table .tsosk-redirect-url-link,
 #tsosk-404-table .tsosk-redirect-url-text {
     display: inline;
-    overflow: visible;
-    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     white-space: normal;
-    word-break: break-all;
-    max-width: none;
+    max-width: 100%;
 }
 
 #tsosk-404-table .tsosk-404-col-visits,
 #tsosk-404-table .tsosk-404-col-date {
     white-space: nowrap;
-    width: 1%;
+    width: 12%;
 }
 
 #tsosk-redirects-table .tsosk-actions {
@@ -3159,6 +3139,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     flex-direction: column;
     gap: 4px;
     align-items: stretch;
+    min-width: 0;
 }
 
 #tsosk-redirects-table .tsosk-actions .button {
@@ -3166,6 +3147,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     width: 100%;
     box-sizing: border-box;
     text-align: center;
+    white-space: normal;
 }
 
 @media (max-width: 782px) {
@@ -3347,82 +3329,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     }
 }
 
-/* ── Plugin Footprint ─────────────────────────────────────────────────────── */
-.tsosk-fp-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
-    margin-top: 12px;
-}
-
-.tsosk-fp-card {
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-    padding: 10px 12px;
-    background: #fff;
-    box-sizing: border-box;
-}
-
-.tsosk-fp-card-inactive {
-    opacity: .75;
-    background: #fafafa;
-}
-
-.tsosk-fp-card-name {
-    font-size: 13px;
-    margin-bottom: 8px;
-    line-height: 1.35;
-    word-break: break-word;
-}
-
-.tsosk-fp-version {
-    font-size: 11px;
-    color: #646970;
-    margin-left: 4px;
-}
-
-.tsosk-fp-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-}
-
-.tsosk-fp-options {
-    font-size: 12px;
-    font-weight: 600;
-    color: #2271b1;
-    flex: 0 0 auto;
-}
-
-.tsosk-fp-heavy  { color: #d63638; }
-.tsosk-fp-medium { color: #d97706; }
-.tsosk-fp-warn   { color: #b45309; }
-
-.tsosk-fp-slug {
-    font-size: 11px;
-    color: #8c8f94;
-    background: #f0f0f1;
-    padding: 2px 6px;
-    border-radius: 3px;
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: 100%;
-    word-break: break-all;
-    box-sizing: border-box;
-}
-
-.tsosk-fp-oe-link {
-    font-size: 11px !important;
-    line-height: 1.8 !important;
-    padding: 0 8px !important;
-    height: auto !important;
-    flex: 1 1 auto;
-    max-width: 100%;
-    white-space: normal;
-    text-align: center;
-}
-
 /* ══ Slow Query Monitor ══════════════════════════════════════════════════════ */
 
 .tsosk-sq-stat {
@@ -3452,6 +3358,112 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 
 .tsosk-sq-warn {
     color: #d63638 !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-amber {
+    color: #d97706 !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-ok {
+    color: #16a34a !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-filter-label {
+    font-size: 13px;
+}
+
+.tsosk-sq-cell-muted {
+    color: #646970;
+    font-size: 12px;
+}
+
+.tsosk-sq-cell-mono {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+.tsosk-sq-cell-sql,
+.tsosk-sq-cell-caller {
+    word-break: break-word;
+}
+
+.tsosk-sq-cell-caller {
+    font-size: 11px;
+    color: #646970;
+}
+
+.tsosk-sq-dupe-badge,
+.tsosk-sq-kw-badge {
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+.tsosk-sq-sql-code {
+    font-size: 11px;
+    color: #1d2327;
+    background: none;
+    word-break: break-all;
+}
+
+.tsosk-sq-batch-badge {
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-batch-meta {
+    font-size: 11px;
+    color: #646970;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-batch-meta-muted {
+    color: #8c8f94;
+}
+
+.tsosk-sq-batch-worst {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-delete-batch-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-toggle-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+    color: #646970;
+}
+
+.tsosk-sq-query-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.tsosk-sq-query-time {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tsosk-sq-query-num,
+.tsosk-sq-caller-arrow {
+    font-size: 11px;
+    color: #8c8f94;
+}
+
+.tsosk-sq-page-meta {
+    font-size: 12px;
+    color: #646970;
 }
 
 .tsosk-sq-batch {
@@ -3619,7 +3631,134 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 
 .tsosk-history-modules {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 6px 16px;
-    margin-bottom: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px 16px;
+    margin: 12px 0 16px;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    max-height: 420px;
+    overflow-y: auto;
 }
+
+.tsosk-history-module-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.tsosk-history-module-row input {
+    margin: 2px 0 0;
+    flex-shrink: 0;
+}
+
+/* ══ Site snapshot import ════════════════════════════════════════════════════ */
+
+.tsosk-snapshot-section-list {
+    list-style: none;
+    margin: 12px 0;
+    padding: 0;
+}
+
+.tsosk-snapshot-section-list li {
+    margin-bottom: 6px;
+}
+
+.tsosk-snapshot-import-card {
+    margin-top: 16px;
+    max-width: 720px;
+}
+
+.tsosk-snapshot-import-file {
+    margin: 10px 0 14px;
+    padding: 12px 14px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.tsosk-snapshot-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.tsosk-snapshot-file-name {
+    color: #646970;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.tsosk-snapshot-json-label {
+    display: block;
+    margin: 8px 0 6px;
+}
+
+.tsosk-snapshot-json {
+    width: 100%;
+    min-height: 180px;
+    font-family: Consolas, Monaco, monospace;
+    box-sizing: border-box;
+}
+
+.tsosk-snapshot-import-sections {
+    margin-top: 12px;
+    display: none;
+    padding: 12px;
+}
+
+.tsosk-snapshot-import-sections-desc {
+    margin-top: 0;
+}
+
+.tsosk-snapshot-import-actions {
+    margin-top: 10px;
+}
+
+/* ══ Email diagnostics ═══════════════════════════════════════════════════════ */
+
+.tsosk-email-smtp-list {
+    margin: 8px 0 0;
+    padding-left: 1.2em;
+}
+
+.tsosk-email-smtp-list li {
+    margin: 4px 0;
+}
+
+.tsosk-email-test-fields .tsosk-field-row {
+    margin-bottom: 10px;
+}
+
+.tsosk-email-headers {
+    white-space: pre-wrap;
+    display: block;
+}
+
+.tsosk-email-report {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tsosk-email-history-table code {
+    font-size: 11px;
+    word-break: break-all;
+}
+
