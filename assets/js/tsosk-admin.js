@@ -559,27 +559,84 @@
 
 	// ── Email Diagnostics ──────────────────────────────────────────────────
 
+	function tsoskEmailPayloadMessage( data, fallback ) {
+		if ( data && typeof data === 'object' && data.message ) {
+			return data.message;
+		}
+		if ( typeof data === 'string' && data ) {
+			return data;
+		}
+		return fallback || tsosk.i18n.error;
+	}
+
+	function tsoskEmailApplyResultsHtml( data ) {
+		if ( data && typeof data === 'object' && data.html ) {
+			$( '#tsosk-email-results' ).html( data.html );
+		}
+	}
+
 	$( document ).on( 'click', '#tsosk-email-send-test', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-email-msg' );
+		var format = $( 'input[name="tsosk_email_format"]:checked' ).val() || 'plain';
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 		ajaxPost( {
 			action : 'tsosk_email_send_test',
-			data   : { nonce: $btn.data( 'nonce' ), email: $( '#tsosk-email-test-address' ).val() },
+			data   : {
+				nonce  : $btn.data( 'nonce' ),
+				email  : $( '#tsosk-email-test-address' ).val(),
+				cc     : $( '#tsosk-email-test-cc' ).val(),
+				format : format
+			},
 			success: function ( r ) {
 				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					showMsg( $msg, tsoskEmailPayloadMessage( r.data, tsosk.i18n.done ), 'ok' );
+					tsoskEmailApplyResultsHtml( r.data );
 				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					showMsg( $msg, tsoskEmailPayloadMessage( r.data, tsosk.i18n.error ), 'error' );
+					tsoskEmailApplyResultsHtml( r.data );
 				}
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.send_test );
 			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
+			error: function ( xhr ) {
+				var data = xhr && xhr.responseJSON ? xhr.responseJSON.data : null;
+				showMsg( $msg, tsoskEmailPayloadMessage( data, tsosk.i18n.error ), 'error' );
+				tsoskEmailApplyResultsHtml( data );
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.send_test );
 			}
 		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-email-copy-report', function () {
+		var $msg = $( '#tsosk-email-copy-msg' );
+		var text = $( '#tsosk-email-report' ).val() || '';
+		var doneLabel = ( tsosk.i18n && tsosk.i18n.email_copied ) ? tsosk.i18n.email_copied : 'Copied';
+
+		function onCopied() {
+			showMsg( $msg, doneLabel, 'ok' );
+		}
+
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( text ).then( onCopied ).catch( function () {
+				$( '#tsosk-email-report' ).trigger( 'select' );
+				try {
+					document.execCommand( 'copy' );
+					onCopied();
+				} catch ( e ) {
+					showMsg( $msg, tsosk.i18n.error, 'error' );
+				}
+			} );
+			return;
+		}
+
+		$( '#tsosk-email-report' ).trigger( 'select' );
+		try {
+			document.execCommand( 'copy' );
+			onCopied();
+		} catch ( e2 ) {
+			showMsg( $msg, tsosk.i18n.error, 'error' );
+		}
 	} );
 
 	// ── Transients Manager ─────────────────────────────────────────────────
@@ -3495,6 +3552,7 @@
 				max_entries  : $( '#tsosk-sq-max-entries' ).val(),
 				exclude_ajax : $( '#tsosk-sq-exclude-ajax' ).prop( 'checked' ) ? 1 : 0,
 				exclude_cron : $( '#tsosk-sq-exclude-cron' ).prop( 'checked' ) ? 1 : 0,
+				show_admin_bar : $( '#tsosk-sq-show-admin-bar' ).prop( 'checked' ) ? 1 : 0,
 				ignore_patterns : $( '#tsosk-sq-ignore-patterns' ).val() || ''
 			},
 			success: function ( r ) {
@@ -3526,17 +3584,18 @@
 	$( document ).on( 'click', '.tsosk-sq-delete-batch', function ( e ) {
 		e.stopPropagation();
 		var $btn  = $( this );
-		var idx   = $btn.data( 'idx' );
+		var id    = $btn.attr( 'data-id' ) || $btn.data( 'id' );
 		var nonce = $btn.data( 'nonce' );
 		var $msg  = $( '#tsosk-sq-log-msg' );
+		if ( ! id ) { return; }
 		if ( ! confirm( tsosk.i18n.sq_delete_confirm ) ) { return; }
 		$btn.prop( 'disabled', true );
 		ajaxPost( {
 			action : 'tsosk_sq_delete_entry',
-			data   : { nonce: nonce, idx: idx },
+			data   : { nonce: nonce, id: id },
 			success: function ( r ) {
 				if ( r.success ) {
-					$( '#tsosk-sq-batch-' + idx ).fadeOut( 300, function () { $( this ).remove(); } );
+					$( '.tsosk-sq-batch[data-id="' + id + '"], #tsosk-sq-batch-' + id ).fadeOut( 300, function () { $( this ).remove(); } );
 					showMsg( $msg, r.data, 'ok' );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
@@ -3652,36 +3711,40 @@
 			$.each( batch.queries || [], function ( j, q ) {
 				if ( parseFloat( q.time ) > maxTime ) { maxTime = parseFloat( q.time ); }
 			} );
-			var worstColor = maxTime > 500 ? '#d63638' : ( maxTime > 200 ? '#d97706' : '#374151' );
-			var badgeCls   = batch.slow_count > 5 ? 'tsosk-badge-warn' : 'tsosk-badge-info';
+			var worstCls    = maxTime > 500 ? 'tsosk-sq-warn' : ( maxTime > 200 ? 'tsosk-sq-amber' : '' );
+			var badgeCls    = batch.slow_count > 5 ? 'tsosk-badge-warn' : 'tsosk-badge-info';
+			var batchId     = batch.id || ( 'tmp-' + i );
+			var batchIdAttr = String( batchId ).replace( /"/g, '' );
 
-			var $batch = $( '<div class="tsosk-sq-batch" id="tsosk-sq-batch-' + batch.idx + '"></div>' );
+			var $batch = $( '<div class="tsosk-sq-batch"></div>' )
+				.attr( 'id', 'tsosk-sq-batch-' + batchIdAttr )
+				.attr( 'data-id', batchIdAttr );
 
-			var headerHtml = '<div class="tsosk-sq-batch-header" data-idx="' + batch.idx + '">'
-				+ '<span class="tsosk-badge ' + badgeCls + '" style="font-size:11px;flex-shrink:0;">' + batch.slow_count + ' ' + tsosk.i18n.sq_slow + '</span>'
+			var headerHtml = '<div class="tsosk-sq-batch-header" data-id="' + batchIdAttr + '">'
+				+ '<span class="tsosk-badge ' + badgeCls + ' tsosk-sq-batch-badge">' + batch.slow_count + ' ' + tsosk.i18n.sq_slow + '</span>'
 				+ '<span class="tsosk-sq-batch-url">' + $( '<span>' ).text( batch.url || '—' ).html() + '</span>'
-				+ '<span style="font-size:11px;color:#646970;white-space:nowrap;">' + new Date( batch.ts * 1000 ).toISOString().replace( 'T', ' ' ).slice( 0, 16 ) + ' UTC</span>'
-				+ ( batch.load_ms > 0 ? '<span style="font-size:11px;color:#8c8f94;white-space:nowrap;">Page: ' + parseFloat( batch.load_ms ).toFixed(1) + ' ms</span>' : '' )
-				+ '<span style="font-size:11px;font-weight:700;color:' + worstColor + ';white-space:nowrap;">Worst: ' + maxTime.toFixed(2) + ' ms</span>'
-				+ '<button class="button button-small tsosk-sq-delete-batch" style="margin-left:auto;" data-idx="' + batch.idx + '" data-nonce="' + nonce + '">' + tsosk.i18n.delete + '</button>'
-				+ '<span class="tsosk-sq-toggle-icon" style="font-size:12px;color:#646970;">▼</span>'
+				+ '<span class="tsosk-sq-batch-meta">' + new Date( batch.ts * 1000 ).toISOString().replace( 'T', ' ' ).slice( 0, 16 ) + ' UTC</span>'
+				+ ( batch.load_ms > 0 ? '<span class="tsosk-sq-batch-meta tsosk-sq-batch-meta-muted">Page: ' + parseFloat( batch.load_ms ).toFixed(1) + ' ms</span>' : '' )
+				+ '<span class="tsosk-sq-batch-worst ' + worstCls + '">Worst: ' + maxTime.toFixed(2) + ' ms</span>'
+				+ '<button type="button" class="button button-small tsosk-sq-delete-batch tsosk-sq-delete-batch-btn" data-id="' + batchIdAttr + '" data-nonce="' + nonce + '">' + tsosk.i18n.delete + '</button>'
+				+ '<span class="tsosk-sq-toggle-icon">▼</span>'
 				+ '</div>';
 
 			var bodyHtml = '<div class="tsosk-sq-batch-body">';
 			$.each( batch.queries || [], function ( j, q ) {
 				var t  = parseFloat( q.time );
-				var tc = t > 500 ? '#d63638' : ( t > 200 ? '#d97706' : '#374151' );
+				var tc = t > 500 ? 'tsosk-sq-warn' : ( t > 200 ? 'tsosk-sq-amber' : '' );
 				var kw = ( q.sql || '' ).split( ' ' )[0].toUpperCase();
 				var kwColors = { SELECT:'#2271b1', INSERT:'#16a34a', UPDATE:'#d97706', DELETE:'#d63638', CREATE:'#7c3aed', DROP:'#d63638' };
 				var kwc = kwColors[kw] || '#374151';
 				bodyHtml += '<div class="tsosk-sq-query-row">'
-					+ '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">'
-					+ '<span style="font-size:12px;font-weight:700;color:' + tc + ';">' + t.toFixed(3) + ' ms</span>'
-					+ '<span class="tsosk-badge" style="font-size:10px;background:' + kwc + '20;color:' + kwc + ';">' + $('<span>').text(kw).html() + '</span>'
-					+ '<span style="font-size:11px;color:#8c8f94;">#' + (j+1) + '</span>'
+					+ '<div class="tsosk-sq-query-meta">'
+					+ '<span class="tsosk-sq-query-time ' + tc + '">' + t.toFixed(3) + ' ms</span>'
+					+ '<span class="tsosk-badge tsosk-sq-kw-badge" style="background:' + kwc + '20;color:' + kwc + ';">' + $('<span>').text(kw).html() + '</span>'
+					+ '<span class="tsosk-sq-query-num">#' + (j+1) + '</span>'
 					+ '</div>'
 					+ '<div class="tsosk-sq-query-sql">' + $('<span>').text(q.sql || '').html() + '</div>'
-					+ ( q.caller ? '<div class="tsosk-sq-query-caller"><span style="color:#8c8f94;">↳</span> ' + $('<span>').text(q.caller).html() + '</div>' : '' )
+					+ ( q.caller ? '<div class="tsosk-sq-query-caller"><span class="tsosk-sq-caller-arrow">↳</span> ' + $('<span>').text(q.caller).html() + '</div>' : '' )
 					+ '</div>';
 			} );
 			bodyHtml += '</div>';
@@ -4285,12 +4348,12 @@
 
 		keys.forEach( function ( id ) {
 			var label = labels[ id ] || id;
-			$list.append(
-				'<li style="margin-bottom:6px;"><label>'
-				+ '<input type="checkbox" class="tsosk-snapshot-import-section" value="' + id + '" checked> '
-				+ label.replace( /</g, '&lt;' )
-				+ '</label></li>'
-			);
+			var $li = $( '<li style="margin-bottom:6px;"></li>' );
+			var $label = $( '<label></label>' );
+			var $cb = $( '<input type="checkbox" class="tsosk-snapshot-import-section" checked>' ).val( id );
+			$label.append( $cb ).append( document.createTextNode( ' ' + String( label ) ) );
+			$li.append( $label );
+			$list.append( $li );
 		} );
 		$box.show();
 	}
@@ -4303,10 +4366,22 @@
 		}
 	} );
 
+	$( document ).on( 'click', '#tsosk-snapshot-file-btn', function () {
+		$( '#tsosk-snapshot-file' ).trigger( 'click' );
+	} );
+
 	$( document ).on( 'change', '#tsosk-snapshot-file', function ( e ) {
 		var file = e.target.files && e.target.files[0];
 		var $msg = $( '#tsosk-snapshot-msg' );
-		if ( ! file ) { return; }
+		var $name = $( '#tsosk-snapshot-file-name' );
+		var noneLabel = ( tsosk.i18n && tsosk.i18n.snapshot_no_file ) ? tsosk.i18n.snapshot_no_file : '';
+		if ( ! file ) {
+			if ( noneLabel ) {
+				$name.text( noneLabel );
+			}
+			return;
+		}
+		$name.text( file.name );
 		var reader = new FileReader();
 		reader.onload = function ( ev ) {
 			$( '#tsosk-snapshot-json' ).val( ev.target.result || '' );
@@ -4329,17 +4404,19 @@
 			showMsg( $msg, tsosk.i18n.error, 'error' );
 			return;
 		}
+		if ( ! $( '#tsosk-snapshot-import-sections' ).is( ':visible' ) ) {
+			showMsg( $msg, tsosk.i18n.snapshot_invalid_json || tsosk.i18n.error, 'error' );
+			return;
+		}
 		if ( ! window.confirm( tsosk.i18n.snapshot_confirm_import ) ) { return; }
 
 		var importSections = [];
-		if ( $( '#tsosk-snapshot-import-sections' ).is( ':visible' ) ) {
-			$( '.tsosk-snapshot-import-section:checked' ).each( function () {
-				importSections.push( $( this ).val() );
-			} );
-			if ( importSections.length < 1 ) {
-				window.alert( tsosk.i18n.snapshot_no_sections );
-				return;
-			}
+		$( '.tsosk-snapshot-import-section:checked' ).each( function () {
+			importSections.push( $( this ).val() );
+		} );
+		if ( importSections.length < 1 ) {
+			window.alert( tsosk.i18n.snapshot_no_sections );
+			return;
 		}
 
 		$btn.prop( 'disabled', true );
@@ -4350,6 +4427,7 @@
 				if ( r.success ) {
 					$( '#tsosk-snapshot-json' ).val( '' );
 					$( '#tsosk-snapshot-file' ).val( '' );
+					$( '#tsosk-snapshot-file-name' ).text( tsosk.i18n.snapshot_no_file || '' );
 					$( '#tsosk-snapshot-import-sections' ).hide();
 					$( '#tsosk-snapshot-import-list' ).empty();
 					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
