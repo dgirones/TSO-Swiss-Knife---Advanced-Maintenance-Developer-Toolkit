@@ -1,18 +1,17 @@
-# Copyright (C) 2026 Tu Soporte Online
-# This file is distributed under the GPL-2.0-or-later.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workspace\n"
+"POT-Creation-Date: 2026-07-23T09:58:47+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-23T09:58:47+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
+"X-Generator: WP-CLI 2.12.0\n"
 
 #. Plugin Name of the plugin
 #: tso-swiss-knife.php
@@ -21,7 +20,10 @@ msgstr ""
 
 #. Description of the plugin
 #: tso-swiss-knife.php
-msgid "Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more."
+msgid ""
+"Complete maintenance and developer toolkit: cron manager, debug mode, "
+"transients, database tools, hooks inspector, maintenance mode, plugin "
+"sandbox and more."
 msgstr ""
 
 #. Author of the plugin
@@ -211,8 +213,7 @@ msgid "Update"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:255
-#: includes/class-tsosk-admin.php:247
-#: includes/class-tsosk-admin.php:305
+#: includes/class-tsosk-admin.php:247 includes/class-tsosk-admin.php:305
 #: includes/modules/class-tsosk-mod-cron.php:334
 #: includes/modules/class-tsosk-mod-redirects.php:478
 #: includes/modules/class-tsosk-mod-slow-queries.php:1451
@@ -221,14 +222,12 @@ msgid "Delete"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:256
-#: includes/class-tsosk-admin.php:313
-#: includes/class-tsosk-admin.php:1203
+#: includes/class-tsosk-admin.php:313 includes/class-tsosk-admin.php:1203
 msgid "Save"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:257
-#: includes/class-tsosk-admin.php:239
-#: includes/class-tsosk-admin.php:316
+#: includes/class-tsosk-admin.php:239 includes/class-tsosk-admin.php:316
 #: includes/class-tsosk-admin.php:1206
 #: includes/modules/class-tsosk-mod-login-protect.php:1498
 msgid "Reset"
@@ -281,8 +280,7 @@ msgid "Purge"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:268
-#: includes/class-tsosk-admin.php:317
-#: includes/class-tsosk-admin.php:325
+#: includes/class-tsosk-admin.php:317 includes/class-tsosk-admin.php:325
 #: includes/class-tsosk-admin.php:1209
 #: includes/modules/class-tsosk-mod-cron.php:368
 #: includes/modules/class-tsosk-mod-options-editor.php:913
@@ -422,8 +420,7 @@ msgstr ""
 msgid "Activity history cleared."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:131
-#: includes/class-tsosk-admin.php:132
+#: includes/class-tsosk-admin.php:131 includes/class-tsosk-admin.php:132
 #: includes/class-tsosk-admin.php:1142
 #: includes/modules/class-tsosk-mod-admin-menu.php:1407
 #: includes/modules/class-tsosk-mod-admin-menu.php:1408
@@ -472,11 +469,11 @@ msgid "Update Redirect"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:195
-msgid "WP_DEBUG and WP_DEBUG_LOG are selected. Save settings to activate debug.log."
+msgid ""
+"WP_DEBUG and WP_DEBUG_LOG are selected. Save settings to activate debug.log."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:197
-#: includes/class-tsosk-admin.php:245
+#: includes/class-tsosk-admin.php:197 includes/class-tsosk-admin.php:245
 #: includes/modules/class-tsosk-mod-cron.php:327
 #: includes/modules/class-tsosk-mod-redirects.php:468
 msgid "Edit"
@@ -561,7 +558,9 @@ msgid "Close all sessions"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:216
-msgid "Force this user to change their password on next login and close all sessions?"
+msgid ""
+"Force this user to change their password on next login and close all "
+"sessions?"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:217
@@ -659,7 +658,9 @@ msgid "Remove"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:237
-msgid "Scan timed out. The server took too long to respond. Try Force Re-scan or check PHP max_execution_time."
+msgid ""
+"Scan timed out. The server took too long to respond. Try Force Re-scan or "
+"check PHP max_execution_time."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:238
@@ -761,13 +762,11 @@ msgstr ""
 msgid "JSON — must remain valid JSON after editing."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:263
-#: includes/class-tsosk-admin.php:289
+#: includes/class-tsosk-admin.php:263 includes/class-tsosk-admin.php:289
 msgid "Page"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:264
-#: includes/class-tsosk-admin.php:290
+#: includes/class-tsosk-admin.php:264 includes/class-tsosk-admin.php:290
 msgid "of"
 msgstr ""
 
@@ -818,7 +817,9 @@ msgid "Reason"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:275
-msgid "Truncate the selected slugs and create redirects where enabled? This changes permalinks immediately."
+msgid ""
+"Truncate the selected slugs and create redirects where enabled? This changes"
+" permalinks immediately."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:276
@@ -881,7 +882,8 @@ msgid "No matches found for the search term in the selected tables."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:292
-msgid "This will modify the database. Have you made a backup? Click OK to proceed."
+msgid ""
+"This will modify the database. Have you made a backup? Click OK to proceed."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:293
@@ -910,7 +912,8 @@ msgid "Review below and click \"Execute replace\" to commit changes."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:299
-msgid "Import will overwrite settings for the sections in this snapshot. Continue?"
+msgid ""
+"Import will overwrite settings for the sections in this snapshot. Continue?"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:300
@@ -979,15 +982,13 @@ msgstr ""
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:314
-#: includes/class-tsosk-admin.php:1047
+#: includes/class-tsosk-admin.php:314 includes/class-tsosk-admin.php:1047
 #: includes/modules/class-tsosk-mod-admin-menu.php:3346
 #: includes/modules/class-tsosk-mod-admin-menu.php:3395
 msgid "Hide"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:315
-#: includes/class-tsosk-admin.php:1047
+#: includes/class-tsosk-admin.php:315 includes/class-tsosk-admin.php:1047
 msgid "Show"
 msgstr ""
 
@@ -1007,8 +1008,7 @@ msgstr ""
 msgid "Drop at end of list"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:323
-#: includes/class-tsosk-admin.php:1043
+#: includes/class-tsosk-admin.php:323 includes/class-tsosk-admin.php:1043
 msgid "Remove from favorites"
 msgstr ""
 
@@ -1023,8 +1023,7 @@ msgstr ""
 msgid "No items found."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:327
-#: includes/class-tsosk-admin.php:1068
+#: includes/class-tsosk-admin.php:327 includes/class-tsosk-admin.php:1068
 msgid "Search… (Ctrl+K)"
 msgstr ""
 
@@ -1036,13 +1035,11 @@ msgstr ""
 msgid "Type to find a tab, then press Enter or click a result."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:330
-#: includes/class-tsosk-admin.php:1084
+#: includes/class-tsosk-admin.php:330 includes/class-tsosk-admin.php:1084
 msgid "Site status"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:331
-#: includes/class-tsosk-admin.php:1104
+#: includes/class-tsosk-admin.php:331 includes/class-tsosk-admin.php:1104
 msgid "Enable dev mode"
 msgstr ""
 
@@ -1092,7 +1089,9 @@ msgstr ""
 #. translators: %s: log file label shown in the confirmation dialog.
 #: includes/class-tsosk-admin.php:342
 #, php-format
-msgid "Empty \"%s\"? All log entries will be deleted but the file will remain on disk. This cannot be undone."
+msgid ""
+"Empty \"%s\"? All log entries will be deleted but the file will remain on "
+"disk. This cannot be undone."
 msgstr ""
 
 #. translators: %s: log file label shown in the confirmation dialog.
@@ -1112,8 +1111,7 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:608
-#: includes/class-tsosk-admin.php:661
+#: includes/class-tsosk-admin.php:608 includes/class-tsosk-admin.php:661
 #: includes/modules/class-tsosk-mod-action-scheduler.php:191
 #: includes/modules/class-tsosk-mod-action-scheduler.php:217
 #: includes/modules/class-tsosk-mod-action-scheduler.php:242
@@ -1312,10 +1310,6 @@ msgstr ""
 msgid "Email Diagnostics"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:983
-msgid "Plugin Footprint"
-msgstr ""
-
 #: includes/class-tsosk-admin.php:1062
 msgid "Search tools"
 msgstr ""
@@ -1370,7 +1364,10 @@ msgid "Organise"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:1199
-msgid "Drag tabs to reorder and move them between categories, drag into Favorites, and reorder favorites. Click ✕ on a tool to hide it or on a favorite to remove it."
+msgid ""
+"Drag tabs to reorder and move them between categories, drag into Favorites, "
+"and reorder favorites. Click ✕ on a tool to hide it or on a favorite to "
+"remove it."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:1255
@@ -1618,7 +1615,9 @@ msgid "Could not install the sandbox loader in must-use plugins."
 msgstr ""
 
 #: includes/class-tsosk-sandbox-mu.php:137
-msgid "Plugin sandbox requires AUTH_KEY in wp-config.php. Generate secure keys before using sandbox mode."
+msgid ""
+"Plugin sandbox requires AUTH_KEY in wp-config.php. Generate secure keys "
+"before using sandbox mode."
 msgstr ""
 
 #: includes/class-tsosk-site-status.php:66
@@ -1722,11 +1721,16 @@ msgid "Could not delete this action."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-action-scheduler.php:269
-msgid "Inspect background jobs queued by WooCommerce and other plugins that use Action Scheduler. Cancel pending or delete failed actions when you know they are safe to remove."
+msgid ""
+"Inspect background jobs queued by WooCommerce and other plugins that use "
+"Action Scheduler. Cancel pending or delete failed actions when you know they"
+" are safe to remove."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-action-scheduler.php:274
-msgid "Action Scheduler was not detected. Install WooCommerce or a plugin that bundles Action Scheduler to use this tool."
+msgid ""
+"Action Scheduler was not detected. Install WooCommerce or a plugin that "
+"bundles Action Scheduler to use this tool."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-action-scheduler.php:279
@@ -1831,7 +1835,8 @@ msgstr ""
 msgid "Could not read the admin menu. Reload this page and try again."
 msgstr ""
 
-#. translators: 1: hidden items count, 2: renamed items count, 3: relocated items count
+#. translators: 1: hidden items count, 2: renamed items count, 3: relocated
+#. items count
 #: includes/modules/class-tsosk-mod-admin-menu.php:3005
 #, php-format
 msgid "Sidebar menu saved: %1$d hidden, %2$d renamed, %3$d relocated."
@@ -1909,7 +1914,9 @@ msgstr ""
 #. translators: 1: matched slug count, 2: saved slug count, 3: live slug count
 #: includes/modules/class-tsosk-mod-admin-menu.php:3258
 #, php-format
-msgid "Tools submenu: %1$d of %2$d saved slugs match the live sidebar (%3$d items live)."
+msgid ""
+"Tools submenu: %1$d of %2$d saved slugs match the live sidebar (%3$d items "
+"live)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3265
@@ -1925,15 +1932,24 @@ msgid "Live sidebar (first 6):"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3271
-msgid "Compare the sidebar on Dashboard or any admin page after saving. Reload this page with the same ?tsosk_am_debug=1 parameter to refresh these values."
+msgid ""
+"Compare the sidebar on Dashboard or any admin page after saving. Reload this"
+" page with the same ?tsosk_am_debug=1 parameter to refresh these values."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3299
-msgid "Choose which items appear in the WordPress admin sidebar, change their order by dragging, rename labels, and move submenus under another section. Changes apply to all admin users."
+msgid ""
+"Choose which items appear in the WordPress admin sidebar, change their order"
+" by dragging, rename labels, and move submenus under another section. "
+"Changes apply to all admin users."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3303
-msgid "Main sections (Posts, Media, Plugins…) are collapsed by default. Click the arrow on a section to show its sub-items. Drag to reorder. Use “Under” to move a submenu, or choose a parent in “Main section (top level)” to place a plugin menu inside another section (e.g. a standalone plugin under Tools)."
+msgid ""
+"Main sections (Posts, Media, Plugins…) are collapsed by default. Click the "
+"arrow on a section to show its sub-items. Drag to reorder. Use “Under” to "
+"move a submenu, or choose a parent in “Main section (top level)” to place a "
+"plugin menu inside another section (e.g. a standalone plugin under Tools)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3309
@@ -1941,7 +1957,9 @@ msgid "Sidebar menu items"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3310
-msgid "Main sections are collapsed by default — click the arrow to show sub-items. Drag the handle to reorder. Use “Hide” to remove items from the sidebar."
+msgid ""
+"Main sections are collapsed by default — click the arrow to show sub-items. "
+"Drag the handle to reorder. Use “Hide” to remove items from the sidebar."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3314
@@ -1961,7 +1979,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3335
-msgid "Hidden items are listed in the section below. Uncheck “Hide” and save to show them again in the sidebar."
+msgid ""
+"Hidden items are listed in the section below. Uncheck “Hide” and save to "
+"show them again in the sidebar."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3344
@@ -1984,7 +2004,9 @@ msgid "Hidden items"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3403
-msgid "Hidden items could not be loaded. Reload this page, or reset the menu to defaults if the problem persists."
+msgid ""
+"Hidden items could not be loaded. Reload this page, or reset the menu to "
+"defaults if the problem persists."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-admin-menu.php:3422
@@ -2020,7 +2042,9 @@ msgid "Honeypot triggered."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:997
-msgid "Submitted too quickly or the form expired. Please wait a few seconds and try again."
+msgid ""
+"Submitted too quickly or the form expired. Please wait a few seconds and try"
+" again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1005
@@ -2089,7 +2113,10 @@ msgid "Block log cleared."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1953
-msgid "Multi-layer spam protection for WordPress comments and contact forms. Local rules catch most bots; optional Akismet or CleanTalk cloud checks add global reputation data when you need stronger filtering."
+msgid ""
+"Multi-layer spam protection for WordPress comments and contact forms. Local "
+"rules catch most bots; optional Akismet or CleanTalk cloud checks add global"
+" reputation data when you need stronger filtering."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1961
@@ -2137,7 +2164,9 @@ msgid "Contact forms"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1986
-msgid "Applies the same rules to Contact Form 7, WPForms, Gravity Forms, Elementor Pro and Fluent Forms when those plugins are active."
+msgid ""
+"Applies the same rules to Contact Form 7, WPForms, Gravity Forms, Elementor "
+"Pro and Fluent Forms when those plugins are active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1991
@@ -2157,7 +2186,9 @@ msgid "Local protection layers"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2022
-msgid "These run on your server without external API calls. Together they block most automated spam."
+msgid ""
+"These run on your server without external API calls. Together they block "
+"most automated spam."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2026
@@ -2181,7 +2212,9 @@ msgid "Rate limit by IP"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2036
-msgid "Stops the same IP from sending too many comments or form submissions in a short period."
+msgid ""
+"Stops the same IP from sending too many comments or form submissions in a "
+"short period."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2042
@@ -2189,7 +2222,9 @@ msgid "Block disposable email domains"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2043
-msgid "Rejects temporary email services (e.g. Mailinator, Guerrilla Mail) often used by spammers."
+msgid ""
+"Rejects temporary email services (e.g. Mailinator, Guerrilla Mail) often "
+"used by spammers."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2049
@@ -2197,7 +2232,8 @@ msgid "Block duplicate comments"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2050
-msgid "Rejects the same text from the same IP within the duplicate window below."
+msgid ""
+"Rejects the same text from the same IP within the duplicate window below."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2055
@@ -2221,7 +2257,9 @@ msgid "Log blocked attempts"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2068
-msgid "Keeps a recent list at the bottom of this page so you can review what was blocked and why."
+msgid ""
+"Keeps a recent list at the bottom of this page so you can review what was "
+"blocked and why."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2074
@@ -2229,7 +2267,9 @@ msgid "Min. seconds before submit"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2077
-msgid "How long the visitor must wait after the form loads before submitting. Instant submissions are treated as bots. Typical value: 3–5 seconds."
+msgid ""
+"How long the visitor must wait after the form loads before submitting. "
+"Instant submissions are treated as bots. Typical value: 3–5 seconds."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2081
@@ -2237,7 +2277,9 @@ msgid "Max. form age (seconds)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2084
-msgid "Maximum time a form stays valid after it was opened. Older tokens are rejected (e.g. a tab left open overnight). Default: 7200 (2 hours)."
+msgid ""
+"Maximum time a form stays valid after it was opened. Older tokens are "
+"rejected (e.g. a tab left open overnight). Default: 7200 (2 hours)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2088
@@ -2245,7 +2287,9 @@ msgid "Max comments per IP"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2091
-msgid "Maximum allowed submissions from one IP address within the rate limit window. Example: 3 means the fourth attempt in that period is blocked."
+msgid ""
+"Maximum allowed submissions from one IP address within the rate limit "
+"window. Example: 3 means the fourth attempt in that period is blocked."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2095
@@ -2253,7 +2297,9 @@ msgid "Rate limit window (minutes)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2098
-msgid "Time span used together with \"Max comments per IP\". Example: 3 submissions per 60 minutes."
+msgid ""
+"Time span used together with \"Max comments per IP\". Example: 3 submissions"
+" per 60 minutes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2102
@@ -2261,7 +2307,9 @@ msgid "Max links in comment"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2105
-msgid "Blocks submissions with more than this many http/https links in the text. Use 0 to disable. Spam often contains many URLs."
+msgid ""
+"Blocks submissions with more than this many http/https links in the text. "
+"Use 0 to disable. Spam often contains many URLs."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2109
@@ -2269,7 +2317,9 @@ msgid "Duplicate window (minutes)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2112
-msgid "How long to remember recent submissions when checking for duplicates from the same IP with identical content."
+msgid ""
+"How long to remember recent submissions when checking for duplicates from "
+"the same IP with identical content."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2116
@@ -2289,7 +2339,9 @@ msgid "Reject with error (do not save)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2123
-msgid "What happens to blocked WordPress comments. Contact forms always show an error and never store the message."
+msgid ""
+"What happens to blocked WordPress comments. Contact forms always show an "
+"error and never store the message."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2130
@@ -2297,7 +2349,9 @@ msgid "Cloud filter (optional)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2131
-msgid "For effectiveness similar to dedicated anti-spam plugins, enable a cloud check. Local rules still run as a second layer."
+msgid ""
+"For effectiveness similar to dedicated anti-spam plugins, enable a cloud "
+"check. Local rules still run as a second layer."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2135
@@ -2317,11 +2371,15 @@ msgid "CleanTalk API (requires access key)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2142
-msgid "Optional second opinion from a global spam database. Local rules always run first; the cloud check adds extra filtering when enabled."
+msgid ""
+"Optional second opinion from a global spam database. Local rules always run "
+"first; the cloud check adds extra filtering when enabled."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2144
-msgid "Akismet plugin is not active. Install and configure Akismet or choose another mode."
+msgid ""
+"Akismet plugin is not active. Install and configure Akismet or choose "
+"another mode."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2149
@@ -2329,7 +2387,9 @@ msgid "CleanTalk access key"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2152
-msgid "Only used when Cloud mode is CleanTalk. You can reuse your existing CleanTalk key without keeping their plugin active."
+msgid ""
+"Only used when Cloud mode is CleanTalk. You can reuse your existing "
+"CleanTalk key without keeping their plugin active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2159
@@ -2337,7 +2397,9 @@ msgid "Reputation blocklists"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2161
-msgid "Query community spam databases before accepting a submission. Results are cached for 6 hours per IP/email to respect API limits."
+msgid ""
+"Query community spam databases before accepting a submission. Results are "
+"cached for 6 hours per IP/email to respect API limits."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2167
@@ -2357,7 +2419,11 @@ msgid "Min. confidence (%)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2177
-msgid "When Stop Forum Spam finds a match, it returns how sure it is (0–100%). We only block if that value is equal to or above this threshold. Lower = stricter (more blocks, including uncertain matches). Higher = only block when the database is very confident. Recommended: 50."
+msgid ""
+"When Stop Forum Spam finds a match, it returns how sure it is (0–100%). We "
+"only block if that value is equal to or above this threshold. Lower = "
+"stricter (more blocks, including uncertain matches). Higher = only block "
+"when the database is very confident. Recommended: 50."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2185
@@ -2377,7 +2443,9 @@ msgid "API key"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2195
-msgid "Create a free key at abuseipdb.com. The plugin sends the visitor IP to check whether other sites have reported it for abuse."
+msgid ""
+"Create a free key at abuseipdb.com. The plugin sends the visitor IP to check"
+" whether other sites have reported it for abuse."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2199
@@ -2385,7 +2453,10 @@ msgid "Min. abuse score (0–100)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2202
-msgid "AbuseIPDB assigns each IP a score from 0 (clean) to 100 (widely reported). We block when the score is equal to or above this value. Lower = block sooner; higher = only block IPs with many abuse reports. Recommended: 75."
+msgid ""
+"AbuseIPDB assigns each IP a score from 0 (clean) to 100 (widely reported). "
+"We block when the score is equal to or above this value. Lower = block "
+"sooner; higher = only block IPs with many abuse reports. Recommended: 75."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2206
@@ -2393,7 +2464,9 @@ msgid "Max. report age (days)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2209
-msgid "Ignore abuse reports older than this many days. Prevents blocking an IP because of a problem that happened long ago."
+msgid ""
+"Ignore abuse reports older than this many days. Prevents blocking an IP "
+"because of a problem that happened long ago."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2217
@@ -2413,7 +2486,9 @@ msgid "Access key"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2227
-msgid "Your personal key from projecthoneypot.org. Used to query their DNS blocklist for known bots and harvesters."
+msgid ""
+"Your personal key from projecthoneypot.org. Used to query their DNS "
+"blocklist for known bots and harvesters."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2231
@@ -2421,7 +2496,10 @@ msgid "Min. threat score (suspicious IPs)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2234
-msgid "For IPs marked only as \"suspicious\" (not confirmed spammers), block when their threat score is at or above this value (0-255). Confirmed comment spammers and email harvesters are always blocked regardless of this setting."
+msgid ""
+"For IPs marked only as \"suspicious\" (not confirmed spammers), block when "
+"their threat score is at or above this value (0-255). Confirmed comment "
+"spammers and email harvesters are always blocked regardless of this setting."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2241
@@ -2429,7 +2507,10 @@ msgid "Blocklists & bypass"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2242
-msgid "Your own rules on top of automatic checks: block specific words or URLs, extend the disposable-email list, or whitelist trusted IPs that should never be filtered."
+msgid ""
+"Your own rules on top of automatic checks: block specific words or URLs, "
+"extend the disposable-email list, or whitelist trusted IPs that should never"
+" be filtered."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2245
@@ -2437,7 +2518,10 @@ msgid "Blocked keywords"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2248
-msgid "One word or phrase per line. If any line appears in the comment text, author name, email or URL, the submission is blocked. Lines starting with # are ignored. Not case-sensitive."
+msgid ""
+"One word or phrase per line. If any line appears in the comment text, author"
+" name, email or URL, the submission is blocked. Lines starting with # are "
+"ignored. Not case-sensitive."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2252
@@ -2445,7 +2529,10 @@ msgid "Blocked URL fragments"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2255
-msgid "One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). Matched anywhere in the submission content. Useful to stop recurring spam links."
+msgid ""
+"One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). "
+"Matched anywhere in the submission content. Useful to stop recurring spam "
+"links."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2259
@@ -2453,7 +2540,10 @@ msgid "Extra disposable domains"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2262
-msgid "Add email domains to block in addition to the built-in list. One domain per line, with or without @ (e.g. tempmail.example). Only applies when \"Block disposable email domains\" is enabled above."
+msgid ""
+"Add email domains to block in addition to the built-in list. One domain per "
+"line, with or without @ (e.g. tempmail.example). Only applies when \"Block "
+"disposable email domains\" is enabled above."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2266
@@ -2461,7 +2551,10 @@ msgid "Whitelist IPs"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2269
-msgid "One IP address per line. These addresses skip every anti-spam rule (local, cloud and reputation). Use for your office, home or test machines — not for public visitors."
+msgid ""
+"One IP address per line. These addresses skip every anti-spam rule (local, "
+"cloud and reputation). Use for your office, home or test machines — not for "
+"public visitors."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2277
@@ -2531,13 +2624,17 @@ msgid "Cron"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:67
-msgid "Read-only view of the most relevant WordPress constants. Sensitive values (DB_USER, DB_PASSWORD, auth keys) are intentionally omitted."
+msgid ""
+"Read-only view of the most relevant WordPress constants. Sensitive values "
+"(DB_USER, DB_PASSWORD, auth keys) are intentionally omitted."
 msgstr ""
 
 #. translators: 1: link open, 2: link close
 #: includes/modules/class-tsosk-mod-constants.php:74
 #, php-format
-msgid "To toggle common performance and privacy constants safely, use %1$sHidden WordPress Profiles%2$s."
+msgid ""
+"To toggle common performance and privacy constants safely, use %1$sHidden "
+"WordPress Profiles%2$s."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:82
@@ -2549,7 +2646,9 @@ msgid "Environment Overrides"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:95
-msgid "Hidden constants that change WordPress behavior for updates, file editing, trash, revisions, autosaves, SSL and environments."
+msgid ""
+"Hidden constants that change WordPress behavior for updates, file editing, "
+"trash, revisions, autosaves, SSL and environments."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:100
@@ -2615,7 +2714,6 @@ msgid "Active Theme"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:190
-#: includes/modules/class-tsosk-mod-footprint.php:147
 msgid "Active Plugins"
 msgstr ""
 
@@ -2692,7 +2790,8 @@ msgid "Current Admin Time"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:219
-msgid "Defines whether the site runs as production, staging, development or local."
+msgid ""
+"Defines whether the site runs as production, staging, development or local."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:220
@@ -2826,7 +2925,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:121
-msgid "Find hidden content problems: empty titles, missing featured images, old pending/private content, long slugs and broken shortcodes."
+msgid ""
+"Find hidden content problems: empty titles, missing featured images, old "
+"pending/private content, long slugs and broken shortcodes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:124
@@ -2856,19 +2957,31 @@ msgid "What are broken shortcodes?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:133
-msgid "A broken shortcode is a [tag] found in post or page content whose plugin or theme is no longer active or installed. WordPress will not convert it into HTML — instead, the raw [shortcode] text appears on your page, which looks unprofessional and may confuse visitors."
+msgid ""
+"A broken shortcode is a [tag] found in post or page content whose plugin or "
+"theme is no longer active or installed. WordPress will not convert it into "
+"HTML — instead, the raw [shortcode] text appears on your page, which looks "
+"unprofessional and may confuse visitors."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:135
-msgid "Common causes: a plugin was deactivated or uninstalled without cleaning up its shortcodes from content. To fix: re-install the plugin, replace the shortcode with equivalent HTML, or remove it entirely from the post."
+msgid ""
+"Common causes: a plugin was deactivated or uninstalled without cleaning up "
+"its shortcodes from content. To fix: re-install the plugin, replace the "
+"shortcode with equivalent HTML, or remove it entirely from the post."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:137
-msgid "Note: scans up to 100 recent posts/pages whose content contains a [ character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-plugins or late-registered plugins may still appear as false positives."
+msgid ""
+"Note: scans up to 100 recent posts/pages whose content contains a [ "
+"character. Numeric-only tags like [5196] are ignored. Shortcodes from MU-"
+"plugins or late-registered plugins may still appear as false positives."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:140
-msgid "Each row is one post or page. If it contains several broken shortcodes, you can remove one tag at a time or all broken tags in that post."
+msgid ""
+"Each row is one post or page. If it contains several broken shortcodes, you "
+"can remove one tag at a time or all broken tags in that post."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:143
@@ -2957,7 +3070,10 @@ msgid "Cron event rescheduled: %s."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:216
-msgid "Lists all scheduled WordPress cron events. Core events are read-only. Custom events can be run manually or deleted. The Source column shows which plugin or WordPress itself registered the hook."
+msgid ""
+"Lists all scheduled WordPress cron events. Core events are read-only. Custom"
+" events can be run manually or deleted. The Source column shows which plugin"
+" or WordPress itself registered the hook."
 msgstr ""
 
 #. translators: %d: number of cron events
@@ -3022,7 +3138,9 @@ msgid "Theme: %s"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:307
-msgid "Hook not registered on this request — often a deactivated plugin or a callback loaded only during cron."
+msgid ""
+"Hook not registered on this request — often a deactivated plugin or a "
+"callback loaded only during cron."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:347
@@ -3030,7 +3148,9 @@ msgid "Reschedule cron event"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:348
-msgid "Change when the event runs next. For recurring events, pick the interval. Useful for orphaned events from deactivated plugins."
+msgid ""
+"Change when the event runs next. For recurring events, pick the interval. "
+"Useful for orphaned events from deactivated plugins."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:354
@@ -3054,7 +3174,8 @@ msgid "WordPress"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:802
-msgid "DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php."
+msgid ""
+"DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:802
@@ -3175,7 +3296,10 @@ msgid "Custom 404 settings saved."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:596
-msgid "Create a custom 404 page like any normal page, then select it here. Visitors see your page content while the server still returns a real 404 code (no redirect). Search engines are told the URL does not exist."
+msgid ""
+"Create a custom 404 page like any normal page, then select it here. Visitors"
+" see your page content while the server still returns a real 404 code (no "
+"redirect). Search engines are told the URL does not exist."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:613
@@ -3187,7 +3311,9 @@ msgid "— None (theme default) —"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:630
-msgid "Create the page under Pages → Add New, then pick it here. Permalinks must not be set to “Plain”."
+msgid ""
+"Create the page under Pages → Add New, then pick it here. Permalinks must "
+"not be set to “Plain”."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:636
@@ -3208,7 +3334,9 @@ msgid "Options"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:653
-msgid "Each option below is optional. The short explanations tell you what changes on your site when you tick the box."
+msgid ""
+"Each option below is optional. The short explanations tell you what changes "
+"on your site when you tick the box."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:659
@@ -3216,7 +3344,10 @@ msgid "Hide 404 page from front-end search results"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:662
-msgid "When a visitor searches your site, this page will not appear in the results. That way people only see it when they hit a broken link, not when they look for normal content."
+msgid ""
+"When a visitor searches your site, this page will not appear in the results."
+" That way people only see it when they hit a broken link, not when they look"
+" for normal content."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:669
@@ -3224,7 +3355,9 @@ msgid "Hide 404 page from the Pages list in admin"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:672
-msgid "The page still exists and works as your 404, but it disappears from Pages → All Pages so you are less likely to delete or edit it by mistake."
+msgid ""
+"The page still exists and works as your 404, but it disappears from Pages → "
+"All Pages so you are less likely to delete or edit it by mistake."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:679
@@ -3232,7 +3365,10 @@ msgid "Return 404 when the 404 page URL is opened directly"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:682
-msgid "If someone types the 404 page address in the browser (instead of landing on it from a bad link), they still get a “not found” response. Recommended: leave this on."
+msgid ""
+"If someone types the 404 page address in the browser (instead of landing on "
+"it from a bad link), they still get a “not found” response. Recommended: "
+"leave this on."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:689
@@ -3240,7 +3376,10 @@ msgid "Disable WordPress URL autocorrection guessing on 404"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:692
-msgid "WordPress can redirect a wrong URL to a similar page it thinks you meant. Enable this to turn off that guess and always show your custom 404 page instead."
+msgid ""
+"WordPress can redirect a wrong URL to a similar page it thinks you meant. "
+"Enable this to turn off that guess and always show your custom 404 page "
+"instead."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:699
@@ -3248,7 +3387,11 @@ msgid "Send HTTP 410 (Gone) instead of 404"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:702
-msgid "Your custom 404 page still appears exactly the same for visitors. Only the hidden HTTP code changes: 410 instead of 404. Use 410 when you removed content on purpose and want search engines to drop those URLs faster. For normal broken links, leave this off and keep 404."
+msgid ""
+"Your custom 404 page still appears exactly the same for visitors. Only the "
+"hidden HTTP code changes: 410 instead of 404. Use 410 when you removed "
+"content on purpose and want search engines to drop those URLs faster. For "
+"normal broken links, leave this off and keep 404."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:708
@@ -3256,7 +3399,9 @@ msgid "Show the failed URL on the page"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:710
-msgid "Add one of these inside your 404 page content to display the URL that caused the error."
+msgid ""
+"Add one of these inside your 404 page content to display the URL that caused"
+" the error."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:713
@@ -3264,15 +3409,20 @@ msgid "Open Pages and edit your selected 404 page."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:714
-msgid "In the block editor: click + → search “URL causing 404 error” (TSO Swiss Knife) and insert the block where you want the link shown."
+msgid ""
+"In the block editor: click + → search “URL causing 404 error” (TSO Swiss "
+"Knife) and insert the block where you want the link shown."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:715
-msgid "Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url]."
+msgid ""
+"Classic editor or a text/HTML block: paste a shortcode from the table below,"
+" e.g. [tsosk_404_url]."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:716
-msgid "Save the page. On a real 404, visitors see the broken URL they requested."
+msgid ""
+"Save the page. On a real 404, visitors see the broken URL they requested."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:721
@@ -3313,7 +3463,8 @@ msgid "Domain + path"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:745
-msgid "Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife)."
+msgid ""
+"Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:757
@@ -3321,23 +3472,32 @@ msgid "Preview 404 page"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:73
-msgid "Clean expired transients, revisions, auto-drafts, and trashed posts or comments safely."
+msgid ""
+"Clean expired transients, revisions, auto-drafts, and trashed posts or "
+"comments safely."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:74
-msgid "Browse and delete orphan wp_options grouped by plugin, with autoload management."
+msgid ""
+"Browse and delete orphan wp_options grouped by plugin, with autoload "
+"management."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:75
-msgid "Detect and remove tables left behind by uninstalled plugins — with review-only mode when confidence is low."
+msgid ""
+"Detect and remove tables left behind by uninstalled plugins — with review-"
+"only mode when confidence is low."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:76
-msgid "Full database SQL backup: export, download, restore, or delete backups from uploads."
+msgid ""
+"Full database SQL backup: export, download, restore, or delete backups from "
+"uploads."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:77
-msgid "OPTIMIZE fragmented tables to reclaim space and improve query performance."
+msgid ""
+"OPTIMIZE fragmented tables to reclaim space and improve query performance."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:78
@@ -3350,7 +3510,10 @@ msgid "From Tu Soporte Online"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:90
-msgid "Keep your WordPress database lean and fast. A dedicated plugin to clean wp_options, orphan metadata, revisions, and leftover tables — with SQL backups before you delete anything."
+msgid ""
+"Keep your WordPress database lean and fast. A dedicated plugin to clean "
+"wp_options, orphan metadata, revisions, and leftover tables — with SQL "
+"backups before you delete anything."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:94
@@ -3383,7 +3546,9 @@ msgid "Quick tip:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-database.php:131
-msgid "Go to Plugins → Add New, search for “TSO” and TSO Options & Tables Cleaner appears in the results — free on WordPress.org."
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Options & Tables Cleaner "
+"appears in the results — free on WordPress.org."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:84
@@ -3441,7 +3606,10 @@ msgid "Developer mode (staging)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:417
-msgid "Same preset as the Developer mode button above: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor."
+msgid ""
+"Same preset as the Developer mode button above: enable debugging, log to wp-"
+"content/debug.log, hide errors from visitors, and record DB queries for the "
+"Slow Query Monitor."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:421
@@ -3457,7 +3625,9 @@ msgid "Show PHP errors on screen"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:427
-msgid "Local troubleshooting only — never use on production. Visitors would see PHP notices and warnings."
+msgid ""
+"Local troubleshooting only — never use on production. Visitors would see PHP"
+" notices and warnings."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:431
@@ -3465,7 +3635,9 @@ msgid "Unminified core CSS/JS (SCRIPT_DEBUG)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:432
-msgid "Loads non-minified WordPress core assets. Combine with the developer preset when debugging front-end scripts."
+msgid ""
+"Loads non-minified WordPress core assets. Combine with the developer preset "
+"when debugging front-end scripts."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:436
@@ -3473,7 +3645,9 @@ msgid "Database query logging only (SAVEQUERIES)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:437
-msgid "Record SQL queries without full PHP debug output. View results on the Slow Query Monitor tab."
+msgid ""
+"Record SQL queries without full PHP debug output. View results on the Slow "
+"Query Monitor tab."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:441
@@ -3481,7 +3655,9 @@ msgid "Full local debugging (all on)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:442
-msgid "Maximum verbosity for a local machine: on-screen errors, debug.log, unminified assets, and query logging."
+msgid ""
+"Maximum verbosity for a local machine: on-screen errors, debug.log, "
+"unminified assets, and query logging."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:557
@@ -3501,7 +3677,9 @@ msgid "Developer mode disabled. Reload the page to apply."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:582
-msgid "This log file cannot be modified from the plugin. Only files under the plugin uploads logs folder may be emptied or shrunk."
+msgid ""
+"This log file cannot be modified from the plugin. Only files under the "
+"plugin uploads logs folder may be emptied or shrunk."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:588
@@ -3522,7 +3700,8 @@ msgid "Log file emptied. The file was kept on disk."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:613
-msgid "This log file cannot be modified from the plugin, or the file was not found."
+msgid ""
+"This log file cannot be modified from the plugin, or the file was not found."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:622
@@ -3556,11 +3735,17 @@ msgid "Log reduced to the last %1$d lines. Older entries archived to %2$s"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:702
-msgid "Inspect error logs and manage debug settings from this tab. Constants already defined in wp-config.php cannot be changed from the plugin."
+msgid ""
+"Inspect error logs and manage debug settings from this tab. Constants "
+"already defined in wp-config.php cannot be changed from the plugin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:708
-msgid "Recommended on staging: one click saves a debug preset (WP_DEBUG, debug.log, SAVEQUERIES; errors hidden from visitors) as JSON in your uploads folder. Reload the page to apply. Does not override constants already set in wp-config.php."
+msgid ""
+"Recommended on staging: one click saves a debug preset (WP_DEBUG, debug.log,"
+" SAVEQUERIES; errors hidden from visitors) as JSON in your uploads folder. "
+"Reload the page to apply. Does not override constants already set in wp-"
+"config.php."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:714
@@ -3574,7 +3759,9 @@ msgstr ""
 #. translators: %s: legacy file path
 #: includes/modules/class-tsosk-mod-debug.php:734
 #, php-format
-msgid "Legacy file found in mu-plugins: %s — save settings once to migrate it to the correct location and delete the old file."
+msgid ""
+"Legacy file found in mu-plugins: %s — save settings once to migrate it to "
+"the correct location and delete the old file."
 msgstr ""
 
 #. translators: %s: file path
@@ -3589,7 +3776,10 @@ msgid "Debug Constants"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:760
-msgid "Values active on this page load. Use Developer mode above to toggle the debug preset. Constants locked in wp-config.php are labelled below and cannot be overridden here."
+msgid ""
+"Values active on this page load. Use Developer mode above to toggle the "
+"debug preset. Constants locked in wp-config.php are labelled below and "
+"cannot be overridden here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:765
@@ -3599,7 +3789,10 @@ msgstr ""
 #. translators: %s: marker line in wp-config.php
 #: includes/modules/class-tsosk-mod-debug.php:772
 #, php-format
-msgid "Add or change these lines in %1$s before the line %2$s. If a constant is already defined, update its value — do not add a second define() for the same name."
+msgid ""
+"Add or change these lines in %1$s before the line %2$s. If a constant is "
+"already defined, update its value — do not add a second define() for the "
+"same name."
 msgstr ""
 
 #. translators: %s: absolute path to wp-config.php
@@ -3609,7 +3802,10 @@ msgid "Detected file: %s"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:795
-msgid "This plugin can also apply the developer preset via JSON in your uploads folder (no wp-config.php edit). Constants defined in wp-config.php always win and cannot be changed from here."
+msgid ""
+"This plugin can also apply the developer preset via JSON in your uploads "
+"folder (no wp-config.php edit). Constants defined in wp-config.php always "
+"win and cannot be changed from here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:812
@@ -3637,7 +3833,9 @@ msgid "Loads unminified CSS/JS from WordPress core."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:832
-msgid "Records DB queries for the Slow Query Monitor. View the live query list on that tab after enabling."
+msgid ""
+"Records DB queries for the Slow Query Monitor. View the live query list on "
+"that tab after enabling."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:856
@@ -3655,7 +3853,9 @@ msgid "Available Error Logs"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:880
-msgid "Shows readable WordPress/PHP error logs detected inside this WordPress installation. Previews are limited to the end of each file."
+msgid ""
+"Shows readable WordPress/PHP error logs detected inside this WordPress "
+"installation. Previews are limited to the end of each file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:883
@@ -3663,7 +3863,9 @@ msgid "debug.log"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:884
-msgid "Created by WordPress when WP_DEBUG and WP_DEBUG_LOG are true. Enable them with Developer mode above."
+msgid ""
+"Created by WordPress when WP_DEBUG and WP_DEBUG_LOG are true. Enable them "
+"with Developer mode above."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:886
@@ -3671,7 +3873,10 @@ msgid "error_log"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:887
-msgid "Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files. Emptying or shrinking is limited to log files inside the plugin uploads folder."
+msgid ""
+"Created by PHP/your hosting server when PHP error logging is active. The "
+"plugin can preview and download these files. Emptying or shrinking is "
+"limited to log files inside the plugin uploads folder."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php:893
@@ -3767,7 +3972,9 @@ msgid "wp_mail returned false."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-email.php:93
-msgid "Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP plugins and delivery result."
+msgid ""
+"Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP "
+"plugins and delivery result."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-email.php:97
@@ -3859,7 +4066,11 @@ msgid "Invalid response from WordPress.org API."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:484
-msgid "Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org. It reports differences — it never installs, deletes, restores or downloads any file on your server."
+msgid ""
+"Read-only security check: compares WordPress core files (wp-admin/, wp-"
+"includes/, root PHP) against official MD5 checksums from WordPress.org. It "
+"reports differences — it never installs, deletes, restores or downloads any "
+"file on your server."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:488
@@ -3875,7 +4086,9 @@ msgid "Fetch checksums from WordPress.org (cached 24 h)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:494
-msgid "Compare hashes and list modified or missing core files, plus files not in the official release."
+msgid ""
+"Compare hashes and list modified or missing core files, plus files not in "
+"the official release."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:495
@@ -3891,29 +4104,44 @@ msgid "It does NOT"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:502
-msgid "Replace a dedicated malware scanner — use a security plugin for deep malware analysis."
+msgid ""
+"Replace a dedicated malware scanner — use a security plugin for deep malware"
+" analysis."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:503
-msgid "Treat removed default themes/plugins from the release ZIP as problems — those are listed separately as informational."
+msgid ""
+"Treat removed default themes/plugins from the release ZIP as problems — "
+"those are listed separately as informational."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:504
-msgid "Scan custom plugins, uploads or other wp-content/ folders beyond the official checksum list."
+msgid ""
+"Scan custom plugins, uploads or other wp-content/ folders beyond the "
+"official checksum list."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:505
-msgid "Automatically restore or download files — you must fix issues manually."
+msgid ""
+"Automatically restore or download files — you must fix issues manually."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:512
-msgid "Default WordPress themes and plugins listed in the release checksums (Hello Dolly, Akismet, Twenty Twenty-*, etc.) are often removed on purpose. Missing those files is not counted as an issue. Only modified core files and missing files under wp-admin/, wp-includes/, or the WordPress root count as real problems."
+msgid ""
+"Default WordPress themes and plugins listed in the release checksums (Hello "
+"Dolly, Akismet, Twenty Twenty-*, etc.) are often removed on purpose. Missing"
+" those files is not counted as an issue. Only modified core files and "
+"missing files under wp-admin/, wp-includes/, or the WordPress root count as "
+"real problems."
 msgstr ""
 
 #. translators: %s: WordPress version
 #: includes/modules/class-tsosk-mod-file-integrity.php:525
 #, php-format
-msgid "You are running a pre-release version of WordPress (%s). The WordPress.org API may not have checksums for this version yet, which will cause the scan to fail. This is expected behaviour on alpha/beta/RC builds."
+msgid ""
+"You are running a pre-release version of WordPress (%s). The WordPress.org "
+"API may not have checksums for this version yet, which will cause the scan "
+"to fail. This is expected behaviour on alpha/beta/RC builds."
 msgstr ""
 
 #. translators: %s: WordPress version number
@@ -3943,7 +4171,9 @@ msgid "Ignored Files"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:579
-msgid "These files are excluded from scan results. Remove them from this list to include them again."
+msgid ""
+"These files are excluded from scan results. Remove them from this list to "
+"include them again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:583
@@ -4010,7 +4240,9 @@ msgid "%d not in official release"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:725
-msgid "Informational findings (removed default themes/plugins, or files not in the official release) are listed below but are not counted as problems."
+msgid ""
+"Informational findings (removed default themes/plugins, or files not in the "
+"official release) are listed below but are not counted as problems."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:732
@@ -4026,7 +4258,11 @@ msgid "Modified Files"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:743
-msgid "These files exist on your server but their MD5 hash does not match the official WordPress release. This could mean the file was legitimately edited (e.g. by a plugin installer), infected by malware, or corrupted. Review each file before taking action."
+msgid ""
+"These files exist on your server but their MD5 hash does not match the "
+"official WordPress release. This could mean the file was legitimately edited"
+" (e.g. by a plugin installer), infected by malware, or corrupted. Review "
+"each file before taking action."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:744
@@ -4036,7 +4272,10 @@ msgstr ""
 #. translators: %s: URL to WordPress.org release archive (opens in a new tab).
 #: includes/modules/class-tsosk-mod-file-integrity.php:749
 #, php-format
-msgid "Download the same WordPress version from <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer nofollow\">wordpress.org/download/releases/</a> and replace the affected files via FTP/SFTP or the Hosting file manager."
+msgid ""
+"Download the same WordPress version from <a href=\"%s\" target=\"_blank\" "
+"rel=\"noopener noreferrer nofollow\">wordpress.org/download/releases/</a> "
+"and replace the affected files via FTP/SFTP or the Hosting file manager."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:768
@@ -4053,7 +4292,10 @@ msgid "Missing Core Files"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:801
-msgid "These core files are listed in the official WordPress checksums but were not found on your server (typically under wp-admin/, wp-includes/, or the WordPress root). This scan never downloads or restores missing files."
+msgid ""
+"These core files are listed in the official WordPress checksums but were not"
+" found on your server (typically under wp-admin/, wp-includes/, or the "
+"WordPress root). This scan never downloads or restores missing files."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:833
@@ -4061,7 +4303,11 @@ msgid "Removed default plugins/themes (not an issue)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:837
-msgid "These paths belong to default plugins or themes that ship in the WordPress release ZIP (e.g. Akismet, Hello Dolly, Twenty Twenty-*). They are often deleted because they are unused. This is normal and is not counted as a problem."
+msgid ""
+"These paths belong to default plugins or themes that ship in the WordPress "
+"release ZIP (e.g. Akismet, Hello Dolly, Twenty Twenty-*). They are often "
+"deleted because they are unused. This is normal and is not counted as a "
+"problem."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:841
@@ -4073,51 +4319,11 @@ msgid "Files not in the official WordPress release"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:876
-msgid "These files exist inside wp-admin/ or wp-includes/ but are not part of the official WordPress release checksums. This is usually harmless — some plugins and server environments add helper files here. Only investigate files you do not recognise."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:139
-msgid "Shows how many wp_options rows are attributed to each plugin. Each option key is assigned to at most one plugin (longest matching prefix / exact name from plugin source). Short generic prefixes are ignored so keys are not mis-attributed."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:143
-msgid "Open Options Editor"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:150
-msgid "Inactive Plugins"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:169
-msgid "Inactive plugins may still leave options in the database. If an inactive plugin has many options you may want to uninstall it properly (Delete in the Plugins list) rather than just deactivating it."
-msgstr ""
-
-#. translators: %d: number of options
-#: includes/modules/class-tsosk-mod-footprint.php:188
-#, php-format
-msgid "%d options"
-msgstr ""
-
-#. translators: %d: number of options remaining
-#: includes/modules/class-tsosk-mod-footprint.php:194
-#, php-format
-msgid "%d options remaining"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:203
-msgid "View in Options Editor"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:207
-msgid "0 options"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:213
-msgid "Matched by:"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-footprint.php:219
-msgid "Example keys:"
+msgid ""
+"These files exist inside wp-admin/ or wp-includes/ but are not part of the "
+"official WordPress release checksums. This is usually harmless — some "
+"plugins and server environments add helper files here. Only investigate "
+"files you do not recognise."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:62
@@ -4151,7 +4357,9 @@ msgid "Generated"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:227
-msgid "A compact health report with checks that help detect risky settings, noisy logs, broken links and maintenance issues."
+msgid ""
+"A compact health report with checks that help detect risky settings, noisy "
+"logs, broken links and maintenance issues."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:234
@@ -4167,7 +4375,9 @@ msgid "Email Alerts"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:269
-msgid "Alerts are intentionally small and actionable. The current alert sends an email when the 404 monitor exceeds the configured hourly threshold."
+msgid ""
+"Alerts are intentionally small and actionable. The current alert sends an "
+"email when the 404 monitor exceeds the configured hourly threshold."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:273
@@ -4187,7 +4397,11 @@ msgid "Hide WordPress Site Health notices"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:292
-msgid "On staging or private test sites, WordPress may show heavy warnings on Tools › Site Health about search-engine visibility or debug.log being public. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health."
+msgid ""
+"On staging or private test sites, WordPress may show heavy warnings on Tools"
+" › Site Health about search-engine visibility or debug.log being public. "
+"Enable the options below to hide those specific tests. This does not change "
+"your real settings — it only removes the notices from Site Health."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:296
@@ -4278,7 +4492,9 @@ msgid "Default (WordPress standard)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:111
-msgid "Heartbeat runs everywhere at the default interval (15–60 s). Auto-save, lock detection and login checks work normally. Recommended for most sites."
+msgid ""
+"Heartbeat runs everywhere at the default interval (15–60 s). Auto-save, lock"
+" detection and login checks work normally. Recommended for most sites."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:113
@@ -4290,11 +4506,15 @@ msgid "Disable on frontend only"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:117
-msgid "Stops the Heartbeat from running on public pages. Admin and editor still work normally. Reduces server load if you have many anonymous visitors."
+msgid ""
+"Stops the Heartbeat from running on public pages. Admin and editor still "
+"work normally. Reduces server load if you have many anonymous visitors."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:119
-msgid "Good option for high-traffic sites that do not need real-time front-end features."
+msgid ""
+"Good option for high-traffic sites that do not need real-time front-end "
+"features."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:122
@@ -4302,11 +4522,14 @@ msgid "Disable everywhere except the post editor"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:123
-msgid "Heartbeat only runs in the post/page editor to preserve auto-save and lock detection. Disabled on all other admin pages and the front end."
+msgid ""
+"Heartbeat only runs in the post/page editor to preserve auto-save and lock "
+"detection. Disabled on all other admin pages and the front end."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:125
-msgid "Good balance: keeps editor features, removes unnecessary polling elsewhere."
+msgid ""
+"Good balance: keeps editor features, removes unnecessary polling elsewhere."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:128
@@ -4314,7 +4537,11 @@ msgid "Disable completely (⚠ disables auto-save)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:129
-msgid "Stops the Heartbeat script everywhere, including the editor. Auto-save, post lock detection and login-expiry warnings stop working. Use only on staging or maintenance environments, or if you have an alternative auto-save solution."
+msgid ""
+"Stops the Heartbeat script everywhere, including the editor. Auto-save, post"
+" lock detection and login-expiry warnings stop working. Use only on staging "
+"or maintenance environments, or if you have an alternative auto-save "
+"solution."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:131
@@ -4322,7 +4549,10 @@ msgid "Not recommended for production. Disables auto-save completely."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:136
-msgid "WordPress Heartbeat polls the server periodically for auto-save, post lock detection and login expiration. On busy sites this can increase server load. Adjust here without editing any file."
+msgid ""
+"WordPress Heartbeat polls the server periodically for auto-save, post lock "
+"detection and login expiration. On busy sites this can increase server load."
+" Adjust here without editing any file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:140
@@ -4344,7 +4574,9 @@ msgid "Custom Interval (seconds)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:164
-msgid "Override how often the Heartbeat polls. 0 = use the WordPress default (15 s). Range: 15–300 s."
+msgid ""
+"Override how often the Heartbeat polls. 0 = use the WordPress default (15 "
+"s). Range: 15–300 s."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:165
@@ -4352,7 +4584,9 @@ msgid "Recommended:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:166
-msgid "60 s on shared hosting or low-traffic sites. 15–30 s only if real-time collaboration is needed."
+msgid ""
+"60 s on shared hosting or low-traffic sites. 15–30 s only if real-time "
+"collaboration is needed."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:170
@@ -4360,7 +4594,9 @@ msgid "0 = WordPress default (15 s)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:212
-msgid "Hidden WordPress profiles saved. Reload the page if constant values do not update immediately."
+msgid ""
+"Hidden WordPress profiles saved. Reload the page if constant values do not "
+"update immediately."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:223
@@ -4416,13 +4652,18 @@ msgid "Hidden WordPress profiles settings saved (no changes)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:425
-msgid "Activate safe WordPress performance and privacy tweaks in one place. Constants are saved as JSON under the plugin uploads folder and loaded before plugins. Runtime filters apply on the next page load without editing wp-config.php."
+msgid ""
+"Activate safe WordPress performance and privacy tweaks in one place. "
+"Constants are saved as JSON under the plugin uploads folder and loaded "
+"before plugins. Runtime filters apply on the next page load without editing "
+"wp-config.php."
 msgstr ""
 
 #. translators: 1: constants tab link open, 2: link close
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:432
 #, php-format
-msgid "For a full read-only list of defined constants, open %1$sWP Constants%2$s."
+msgid ""
+"For a full read-only list of defined constants, open %1$sWP Constants%2$s."
 msgstr ""
 
 #. translators: %s: file path
@@ -4435,7 +4676,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:456
 #: includes/modules/class-tsosk-mod-security.php:226
 #, php-format
-msgid "Legacy file found in mu-plugins: %s — save settings once to migrate it."
+msgid ""
+"Legacy file found in mu-plugins: %s — save settings once to migrate it."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:464
@@ -4443,7 +4685,9 @@ msgid "Quick presets"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:465
-msgid "Check the boxes below, then click Save. Presets only select options — nothing is applied until you save."
+msgid ""
+"Check the boxes below, then click Save. Presets only select options — "
+"nothing is applied until you save."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:468
@@ -4463,7 +4707,10 @@ msgid "Constants (uploads config)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:476
-msgid "Requires a full page reload (or new request) after saving for constant values to take effect. Values already set in wp-config.php cannot be overridden here."
+msgid ""
+"Requires a full page reload (or new request) after saving for constant "
+"values to take effect. Values already set in wp-config.php cannot be "
+"overridden here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:479
@@ -4475,27 +4722,39 @@ msgid "Tick the box to enable that constant in the plugin config file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:482
-msgid "For numbers: the input box is the new value that will be saved when you click Save."
+msgid ""
+"For numbers: the input box is the new value that will be saved when you "
+"click Save."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:483
-msgid "The green badge is the value active on your site right now (from wp-config.php or WordPress default) — not the value in the input box."
+msgid ""
+"The green badge is the value active on your site right now (from wp-"
+"config.php or WordPress default) — not the value in the input box."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:484
-msgid "The blue “wp-config.php” badge means that constant is locked in wp-config.php and cannot be changed from here."
+msgid ""
+"The blue “wp-config.php” badge means that constant is locked in wp-"
+"config.php and cannot be changed from here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:491
-msgid "Disable WordPress pseudo-cron on page visits. Use a real server cron calling wp-cron.php instead."
+msgid ""
+"Disable WordPress pseudo-cron on page visits. Use a real server cron calling"
+" wp-cron.php instead."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:498
-msgid "Concatenate admin scripts (legacy optimization; may conflict with some plugins)."
+msgid ""
+"Concatenate admin scripts (legacy optimization; may conflict with some "
+"plugins)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:505
-msgid "Compress admin scripts (deprecated in modern WordPress; use only if you know you need it)."
+msgid ""
+"Compress admin scripts (deprecated in modern WordPress; use only if you know"
+" you need it)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:514
@@ -4515,7 +4774,10 @@ msgid "Runtime filters"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:544
-msgid "Applied via WordPress hooks on the next request after saving. No server reload required. XML-RPC and RSS feeds are configured under Security Review; REST API under REST API."
+msgid ""
+"Applied via WordPress hooks on the next request after saving. No server "
+"reload required. XML-RPC and RSS feeds are configured under Security Review;"
+" REST API under REST API."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:548
@@ -4523,11 +4785,14 @@ msgid "Removes emoji scripts and styles from the front end and admin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:549
-msgid "Stops WordPress from embedding external content and related discovery tags."
+msgid ""
+"Stops WordPress from embedding external content and related discovery tags."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:550
-msgid "Sets default comment and ping status to closed for new content (does not change existing posts)."
+msgid ""
+"Sets default comment and ping status to closed for new content (does not "
+"change existing posts)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:585
@@ -4558,7 +4823,10 @@ msgid "Activity log settings saved."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:87
-msgid "All important changes made through TSO Swiss Knife are recorded here: options edited, database replacements, maintenance mode, admin menu, and more."
+msgid ""
+"All important changes made through TSO Swiss Knife are recorded here: "
+"options edited, database replacements, maintenance mode, admin menu, and "
+"more."
 msgstr ""
 
 #. translators: 1: current count, 2: max entries
@@ -4574,7 +4842,9 @@ msgid "Shows the last %d actions across enabled plugin tools."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:119
-msgid "No changes recorded yet. When you save settings or edit data in any TSO Swiss Knife tool, it will appear here."
+msgid ""
+"No changes recorded yet. When you save settings or edit data in any TSO "
+"Swiss Knife tool, it will appear here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:125
@@ -4615,7 +4885,10 @@ msgid "Logging preferences"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:153
-msgid "Choose which tools write to the history and how many entries to keep. Use “Log all tools” for the default, or uncheck it and select only the modules you want recorded."
+msgid ""
+"Choose which tools write to the history and how many entries to keep. Use "
+"“Log all tools” for the default, or uncheck it and select only the modules "
+"you want recorded."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:157
@@ -4627,7 +4900,10 @@ msgid "Maximum entries"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:177
-msgid "Tip: check only the modules you care about to reduce noise. Save, then uncheck modules you want to exclude — or clear history after changing filters."
+msgid ""
+"Tip: check only the modules you care about to reduce noise. Save, then "
+"uncheck modules you want to exclude — or clear history after changing "
+"filters."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-history.php:181
@@ -4662,7 +4938,9 @@ msgstr ""
 #. translators: %d: number of registered hooks
 #: includes/modules/class-tsosk-mod-hooks.php:66
 #, php-format
-msgid "%d hooks are currently registered. This view is a snapshot at page load. Results are paginated to prevent server timeouts."
+msgid ""
+"%d hooks are currently registered. This view is a snapshot at page load. "
+"Results are paginated to prevent server timeouts."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hooks.php:76
@@ -4708,11 +4986,17 @@ msgid "Image size settings saved. New uploads will skip disabled sizes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:134
-msgid "Audit how much disk space each registered image size uses, estimate recoverable space from thumbnails, and disable sizes you do not need on new uploads."
+msgid ""
+"Audit how much disk space each registered image size uses, estimate "
+"recoverable space from thumbnails, and disable sizes you do not need on new "
+"uploads."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:144
-msgid "Counts are based on attachment metadata and a disk scan for unmatched derivative files. Disabling a size only affects new uploads — existing files are not deleted."
+msgid ""
+"Counts are based on attachment metadata and a disk scan for unmatched "
+"derivative files. Disabling a size only affects new uploads — existing files"
+" are not deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:148
@@ -4752,7 +5036,10 @@ msgid "Last audit"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:255
-msgid "Risks when disabling sizes: broken images in old content, missing srcset variants, and layout issues in themes or page builders that expect specific dimensions. Test on staging first."
+msgid ""
+"Risks when disabling sizes: broken images in old content, missing srcset "
+"variants, and layout issues in themes or page builders that expect specific "
+"dimensions. Test on staging first."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:257
@@ -4821,7 +5108,9 @@ msgid "Could save ~%s on future uploads"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-internals.php:52
-msgid "Inspect hidden WordPress registries loaded in the current request: post types, statuses, taxonomies, roles, query vars, rewrite tags and shortcodes."
+msgid ""
+"Inspect hidden WordPress registries loaded in the current request: post "
+"types, statuses, taxonomies, roles, query vars, rewrite tags and shortcodes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-internals.php:56
@@ -4868,7 +5157,9 @@ msgstr ""
 #. translators: 1: IP address, 2: minutes remaining
 #: includes/modules/class-tsosk-mod-login-protect.php:372
 #, php-format
-msgid "Too many failed login attempts from %1$s. Please try again in %2$d minute(s)."
+msgid ""
+"Too many failed login attempts from %1$s. Please try again in %2$d "
+"minute(s)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:409
@@ -4900,7 +5191,8 @@ msgid ""
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:543
-msgid "A verification code was sent to your email. Enter it below and try again."
+msgid ""
+"A verification code was sent to your email. Enter it below and try again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:550
@@ -4928,7 +5220,9 @@ msgstr ""
 #. translators: 1: count, 2: minutes
 #: includes/modules/class-tsosk-mod-login-protect.php:731
 #, php-format
-msgid "%1$d IP lockouts occurred in the last %2$d minutes. Review Login Protection in TSO Swiss Knife."
+msgid ""
+"%1$d IP lockouts occurred in the last %2$d minutes. Review Login Protection "
+"in TSO Swiss Knife."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:811
@@ -4942,7 +5236,9 @@ msgid "\"%s\" is a reserved slug and cannot be used as the login URL."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:831
-msgid "Add at least one trusted IP (maintenance list or whitelist) before enabling login maintenance."
+msgid ""
+"Add at least one trusted IP (maintenance list or whitelist) before enabling "
+"login maintenance."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:848
@@ -5002,7 +5298,9 @@ msgid ""
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1171
-msgid "Protect the WordPress login page against brute-force attacks and unwanted access. Each feature can be enabled and configured independently."
+msgid ""
+"Protect the WordPress login page against brute-force attacks and unwanted "
+"access. Each feature can be enabled and configured independently."
 msgstr ""
 
 #. translators: %d: number of locked out IPs
@@ -5020,7 +5318,11 @@ msgid "Custom Login URL"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1203
-msgid "Changes the login page URL from the default /wp-login.php to a secret address only you know. Direct requests to /wp-login.php or /wp-admin/ while logged out will return a 404 instead of the login form, making the page invisible to bots."
+msgid ""
+"Changes the login page URL from the default /wp-login.php to a secret "
+"address only you know. Direct requests to /wp-login.php or /wp-admin/ while "
+"logged out will return a 404 instead of the login form, making the page "
+"invisible to bots."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1204
@@ -5028,7 +5330,9 @@ msgid "Important:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1205
-msgid "Save the new URL before enabling — if you lose it, you can disable this feature from the database or directly from this panel via a whitelisted IP."
+msgid ""
+"Save the new URL before enabling — if you lose it, you can disable this "
+"feature from the database or directly from this panel via a whitelisted IP."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1210
@@ -5038,7 +5342,10 @@ msgstr ""
 #. translators: %s: Security tab URL
 #: includes/modules/class-tsosk-mod-login-protect.php:1215
 #, php-format
-msgid "The custom login URL does not block authentication via <code>xmlrpc.php</code>. Disable XML-RPC in the <a href=\"%s\">Security</a> tab for stronger protection."
+msgid ""
+"The custom login URL does not block authentication via "
+"<code>xmlrpc.php</code>. Disable XML-RPC in the <a href=\"%s\">Security</a> "
+"tab for stronger protection."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1229
@@ -5066,7 +5373,10 @@ msgid "Brute-Force Protection"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1277
-msgid "Counts consecutive failed login attempts per IP address. Once the threshold is reached, further login attempts from that IP are blocked for the configured duration. Successful logins reset the counter."
+msgid ""
+"Counts consecutive failed login attempts per IP address. Once the threshold "
+"is reached, further login attempts from that IP are blocked for the "
+"configured duration. Successful logins reset the counter."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1282
@@ -5082,11 +5392,15 @@ msgid "Block forbidden usernames"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1297
-msgid "Instantly lock out IPs that try to log in with admin, administrador or administrator"
+msgid ""
+"Instantly lock out IPs that try to log in with admin, administrador or "
+"administrator"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1300
-msgid "Uses the lockout duration below. Whitelisted IPs are exempt. Works even when brute-force counting is disabled."
+msgid ""
+"Uses the lockout duration below. Whitelisted IPs are exempt. Works even when"
+" brute-force counting is disabled."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1305
@@ -5126,7 +5440,10 @@ msgid "IP Whitelist"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1363
-msgid "Whitelisted IPs always have access to the login page regardless of the custom URL setting, and are never locked out by the brute-force protection. Add your office and home IPs here."
+msgid ""
+"Whitelisted IPs always have access to the login page regardless of the "
+"custom URL setting, and are never locked out by the brute-force protection. "
+"Add your office and home IPs here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1369
@@ -5179,7 +5496,9 @@ msgid "IP whitelist by role"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1434
-msgid "One role per line: role_slug: ip1, ip2. Global whitelist IPs always bypass this rule."
+msgid ""
+"One role per line: role_slug: ip1, ip2. Global whitelist IPs always bypass "
+"this rule."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1438
@@ -5199,7 +5518,9 @@ msgid "Live Attempt Counters"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1467
-msgid "IPs that have failed login attempts within the active window but have not yet been locked out."
+msgid ""
+"IPs that have failed login attempts within the active window but have not "
+"yet been locked out."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1471
@@ -5260,7 +5581,8 @@ msgid "Preview only — maintenance mode is not active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:129
-msgid "We are performing scheduled maintenance. We will be back online shortly."
+msgid ""
+"We are performing scheduled maintenance. We will be back online shortly."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:208
@@ -5283,7 +5605,9 @@ msgid "Settings saved."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:282
-msgid "Put the site in maintenance mode. Logged-in administrators always see the site normally. All other visitors get a 503 page."
+msgid ""
+"Put the site in maintenance mode. Logged-in administrators always see the "
+"site normally. All other visitors get a 503 page."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:286
@@ -5319,7 +5643,9 @@ msgid "Remove logo"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:323
-msgid "Shown above the site name on the maintenance page. Leave empty to use the default wrench icon."
+msgid ""
+"Shown above the site name on the maintenance page. Leave empty to use the "
+"default wrench icon."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:328
@@ -5327,7 +5653,9 @@ msgid "Page heading"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:333
-msgid "Large title shown on the maintenance page (e.g. your brand name). Leave empty to use the site name."
+msgid ""
+"Large title shown on the maintenance page (e.g. your brand name). Leave "
+"empty to use the site name."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:338
@@ -5349,7 +5677,9 @@ msgid "Preview maintenance page"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:375
-msgid "Preview opens in a new tab using the settings above (even if you have not saved yet). Maintenance mode stays off."
+msgid ""
+"Preview opens in a new tab using the settings above (even if you have not "
+"saved yet). Maintenance mode stays off."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:55
@@ -5373,21 +5703,30 @@ msgid "No scan in progress. Start a full review again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:117
-msgid "Full media review completed. Every Media Library item and every eligible uploads file was checked."
+msgid ""
+"Full media review completed. Every Media Library item and every eligible "
+"uploads file was checked."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:156
-msgid "Diagnoses Media Library problems: attachment records in the database whose file is missing or whose path is stored incorrectly, media not attached to any post, and files in uploads that WordPress does not know about."
+msgid ""
+"Diagnoses Media Library problems: attachment records in the database whose "
+"file is missing or whose path is stored incorrectly, media not attached to "
+"any post, and files in uploads that WordPress does not know about."
 msgstr ""
 
 #. translators: 1: attachments checked, 2: upload files checked, 3: date
 #: includes/modules/class-tsosk-mod-media-cleaner.php:171
 #, php-format
-msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
+msgid ""
+"Last full review: %1$s Media Library items and %2$s uploads files checked on"
+" %3$s."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:177
-msgid "No full review yet. Run a full review to check every Media Library item and every eligible file under wp-content/uploads/ (in batches, until finished)."
+msgid ""
+"No full review yet. Run a full review to check every Media Library item and "
+"every eligible file under wp-content/uploads/ (in batches, until finished)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:187
@@ -5401,7 +5740,8 @@ msgid "Media Library items with missing or broken files"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:199
-msgid "Run a full media review to inspect every attachment in the Media Library."
+msgid ""
+"Run a full media review to inspect every attachment in the Media Library."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:206
@@ -5414,7 +5754,9 @@ msgid "Uploads Files Not Referenced in Database"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:216
-msgid "Run a full media review to walk the entire uploads folder (excluding protected plugin folders and thumbnail variants)."
+msgid ""
+"Run a full media review to walk the entire uploads folder (excluding "
+"protected plugin folders and thumbnail variants)."
 msgstr ""
 
 #. translators: 1: checked attachments, 2: total attachments
@@ -5436,11 +5778,15 @@ msgid "Done. Media Library: %1$s · Uploads files: %2$s"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:620
-msgid "Broken database path: a full URL was stored instead of a relative file path. The file itself seems to exist on disk."
+msgid ""
+"Broken database path: a full URL was stored instead of a relative file path."
+" The file itself seems to exist on disk."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:622
-msgid "Broken database path: a full URL was stored instead of a relative file path, and the file was not found on disk."
+msgid ""
+"Broken database path: a full URL was stored instead of a relative file path,"
+" and the file was not found on disk."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:624
@@ -5452,11 +5798,18 @@ msgid "The stored file path could not be interpreted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:629
-msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
+msgid ""
+"The Media Library entry exists in the database, but the file is not on the "
+"server at the expected path."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:648
-msgid "These are attachment records in the WordPress database (Media Library), not random files on disk. WordPress expects each one to point to a file under wp-content/uploads/. If the stored path is a full URL (common after migrations), the path shown by WordPress looks duplicated and wrong — that is a database problem, not a real folder named “http:”."
+msgid ""
+"These are attachment records in the WordPress database (Media Library), not "
+"random files on disk. WordPress expects each one to point to a file under "
+"wp-content/uploads/. If the stored path is a full URL (common after "
+"migrations), the path shown by WordPress looks duplicated and wrong — that "
+"is a database problem, not a real folder named “http:”."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:658
@@ -5500,7 +5853,10 @@ msgid "Open in Media Library"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:750
-msgid "Complete walk of wp-content/uploads. Skips thumbnail variants (-WIDTHxHEIGHT), protected plugin folders (TSO backups/cache/config), and guard files (index.php, .htaccess)."
+msgid ""
+"Complete walk of wp-content/uploads. Skips thumbnail variants "
+"(-WIDTHxHEIGHT), protected plugin folders (TSO backups/cache/config), and "
+"guard files (index.php, .htaccess)."
 msgstr ""
 
 #. translators: %s: number of files checked
@@ -5510,7 +5866,9 @@ msgid "Uploads files checked in the last full review: %s."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:762
-msgid "No unreferenced files found. The full uploads walk completed with no orphans outside the excluded folders."
+msgid ""
+"No unreferenced files found. The full uploads walk completed with no orphans"
+" outside the excluded folders."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:765
@@ -5518,7 +5876,9 @@ msgid "Relative File"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:820
-msgid "These files are in the Media Library but not attached to any post or page. Regenerate thumbnails only applies to image attachments."
+msgid ""
+"These files are in the Media Library but not attached to any post or page. "
+"Regenerate thumbnails only applies to image attachments."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:843
@@ -5530,11 +5890,16 @@ msgid "Uploads scan completed."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-footprint.php:69
-msgid "See how much disk space wp-content/uploads uses: totals by month and file type, largest files, and how much space thumbnails take compared to originals."
+msgid ""
+"See how much disk space wp-content/uploads uses: totals by month and file "
+"type, largest files, and how much space thumbnails take compared to "
+"originals."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-footprint.php:79
-msgid "Scan results are cached for 10 minutes. Large sites may hit the file limit — review totals before deleting anything."
+msgid ""
+"Scan results are cached for 10 minutes. Large sites may hit the file limit —"
+" review totals before deleting anything."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-footprint.php:83
@@ -5570,7 +5935,9 @@ msgid "Last scan"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-footprint.php:161
-msgid "Scan stopped at the file safety limit. Totals are partial — use for guidance only."
+msgid ""
+"Scan stopped at the file safety limit. Totals are partial — use for guidance"
+" only."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-footprint.php:168
@@ -5668,7 +6035,10 @@ msgid "What is meta data?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:411
-msgid "Meta is extra information stored in the database for each post or user — not visible in the normal editor. Plugins and themes use it for settings, layout data, SEO fields, featured images, and much more."
+msgid ""
+"Meta is extra information stored in the database for each post or user — not"
+" visible in the normal editor. Plugins and themes use it for settings, "
+"layout data, SEO fields, featured images, and much more."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:416
@@ -5676,7 +6046,8 @@ msgid "Post meta vs user meta"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:418
-msgid "Post meta — attached to a post, page, or custom post type (ID = post ID)."
+msgid ""
+"Post meta — attached to a post, page, or custom post type (ID = post ID)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:419
@@ -5692,7 +6063,9 @@ msgid "Inspect what a plugin stored for a specific post or user."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:426
-msgid "Fix a wrong value (e.g. featured image ID) when you know exactly what to change."
+msgid ""
+"Fix a wrong value (e.g. featured image ID) when you know exactly what to "
+"change."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:427
@@ -5725,7 +6098,9 @@ msgid "Click Search, then Edit on a row to view or change the full value."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:440
-msgid "Use Add meta row only when you know the exact key and value a plugin expects."
+msgid ""
+"Use Add meta row only when you know the exact key and value a plugin "
+"expects."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:445
@@ -5774,11 +6149,14 @@ msgid "Post/User ID"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:486
-msgid "Leave empty to search across the whole site, or enter one ID to see only that post or user."
+msgid ""
+"Leave empty to search across the whole site, or enter one ID to see only "
+"that post or user."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:488
-msgid "Search in meta key names and values — e.g. “elementor” or “_thumbnail”."
+msgid ""
+"Search in meta key names and values — e.g. “elementor” or “_thumbnail”."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:489
@@ -5786,11 +6164,15 @@ msgid "Protected keys"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:490
-msgid "Session tokens, capabilities, and keys containing “license” or “api_key” cannot be edited — this prevents breaking logins or licenses."
+msgid ""
+"Session tokens, capabilities, and keys containing “license” or “api_key” "
+"cannot be edited — this prevents breaking logins or licenses."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:499
-msgid "View and edit hidden post and user data (meta) stored in the database — useful for debugging plugins and fixing specific values."
+msgid ""
+"View and edit hidden post and user data (meta) stored in the database — "
+"useful for debugging plugins and fixing specific values."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:505
@@ -5798,7 +6180,10 @@ msgid "Advanced tool — proceed with caution."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:506
-msgid "Wrong values can break a page, user account, or page builder layout. Make a backup before editing. Prefer each plugin’s own settings screen when possible."
+msgid ""
+"Wrong values can break a page, user account, or page builder layout. Make a "
+"backup before editing. Prefer each plugin’s own settings screen when "
+"possible."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:510
@@ -5853,7 +6238,9 @@ msgid "Edit meta value"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:566
-msgid "You are editing the raw value stored in the database. Save only if you are sure the new value is correct."
+msgid ""
+"You are editing the raw value stored in the database. Save only if you are "
+"sure the new value is correct."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:572
@@ -5869,7 +6256,9 @@ msgid "Add meta row"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:582
-msgid "Creates a new meta entry for a post or user. The key must match what the plugin or theme expects."
+msgid ""
+"Creates a new meta entry for a post or user. The key must match what the "
+"plugin or theme expects."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php:592
@@ -5889,7 +6278,9 @@ msgid "Option not found in the database."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-option-library.php:119
-msgid "Documented wp_options for WordPress core and popular plugins detected on this site. Use Options Editor to change values; previews here are read-only."
+msgid ""
+"Documented wp_options for WordPress core and popular plugins detected on "
+"this site. Use Options Editor to change values; previews here are read-only."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-option-library.php:123
@@ -5998,7 +6389,9 @@ msgid "This option is marked as caution and cannot be edited here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:595
-msgid "The value looks like serialized PHP but is not valid. Please fix the syntax or paste plain text instead."
+msgid ""
+"The value looks like serialized PHP but is not valid. Please fix the syntax "
+"or paste plain text instead."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:612
@@ -6006,7 +6399,8 @@ msgid "Option saved."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:632
-msgid "Invalid option name. Use only letters, numbers, hyphens and underscores."
+msgid ""
+"Invalid option name. Use only letters, numbers, hyphens and underscores."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:635
@@ -6034,7 +6428,10 @@ msgid "Option deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:791
-msgid "Browse and edit options stored in wp_options. The list loads automatically in alphabetical order. Protected core options and transients are hidden by default."
+msgid ""
+"Browse and edit options stored in wp_options. The list loads automatically "
+"in alphabetical order. Protected core options and transients are hidden by "
+"default."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:795
@@ -6042,7 +6439,9 @@ msgid "⚠ Use with caution."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:796
-msgid "Editing wp_options directly can break your site if critical values are changed incorrectly."
+msgid ""
+"Editing wp_options directly can break your site if critical values are "
+"changed incorrectly."
 msgstr ""
 
 #. translators: %d: number of options in database
@@ -6093,7 +6492,10 @@ msgid "Clear all filters"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:830
-msgid "Options are sorted alphabetically by name. Start typing to filter instantly (for example: cron). Click a column header to sort by size, autoload, or type."
+msgid ""
+"Options are sorted alphabetically by name. Start typing to filter instantly "
+"(for example: cron). Click a column header to sort by size, autoload, or "
+"type."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:840
@@ -6119,7 +6521,9 @@ msgid "Caution:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:870
-msgid "This option affects core WordPress behavior. Edit carefully and test after saving."
+msgid ""
+"This option affects core WordPress behavior. Edit carefully and test after "
+"saving."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:873
@@ -6135,7 +6539,9 @@ msgid "Serialized PHP detected."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:878
-msgid "The editor always works with the raw serialized string — do not modify unless you know PHP serialization syntax exactly."
+msgid ""
+"The editor always works with the raw serialized string — do not modify "
+"unless you know PHP serialization syntax exactly."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:884
@@ -6159,7 +6565,9 @@ msgid "Autoload:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:923
-msgid "Adds a new row directly to wp_options. Use only for custom plugin options or development purposes."
+msgid ""
+"Adds a new row directly to wp_options. Use only for custom plugin options or"
+" development purposes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options-editor.php:930
@@ -6179,23 +6587,33 @@ msgid "yes (loaded on every request)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:73
-msgid "Scans posts, pages, custom post types, menus, comments and optional ACF fields for links."
+msgid ""
+"Scans posts, pages, custom post types, menus, comments and optional ACF "
+"fields for links."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:74
-msgid "Checks each URL via HTTP: broken links, redirects, insecure HTTP and connection errors."
+msgid ""
+"Checks each URL via HTTP: broken links, redirects, insecure HTTP and "
+"connection errors."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:75
-msgid "Fix links inline from the dashboard — edit URL, smart suggestion, unlink or mark as OK."
+msgid ""
+"Fix links inline from the dashboard — edit URL, smart suggestion, unlink or "
+"mark as OK."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:76
-msgid "Bulk actions, CSV export, daily scan and hourly background checks via WP-Cron."
+msgid ""
+"Bulk actions, CSV export, daily scan and hourly background checks via WP-"
+"Cron."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:77
-msgid "Email alerts for hard-broken links and optional nofollow on broken links for SEO."
+msgid ""
+"Email alerts for hard-broken links and optional nofollow on broken links for"
+" SEO."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:78
@@ -6203,7 +6621,10 @@ msgid "Catalan and Spanish translations included."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:90
-msgid "Find and fix broken links across your whole site without opening each post in the editor. A dedicated plugin for link maintenance, SEO hygiene and peace of mind."
+msgid ""
+"Find and fix broken links across your whole site without opening each post "
+"in the editor. A dedicated plugin for link maintenance, SEO hygiene and "
+"peace of mind."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:115
@@ -6211,7 +6632,9 @@ msgid "Open TSO Link Inspector"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:131
-msgid "Go to Plugins → Add New, search for “TSO” and TSO Link Inspector appears in the results — free on WordPress.org."
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Link Inspector appears in "
+"the results — free on WordPress.org."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:40
@@ -6231,7 +6654,9 @@ msgid "Not available"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:64
-msgid "WordPress Recovery Mode allows an admin to log in and deactivate plugins or themes that cause a fatal error."
+msgid ""
+"WordPress Recovery Mode allows an admin to log in and deactivate plugins or "
+"themes that cause a fatal error."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:68
@@ -6239,7 +6664,10 @@ msgid "What you can do here"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:69
-msgid "Recovery Mode is a WordPress safety feature. It is not a permanent on/off switch: WordPress enters it when a fatal error is detected, or when you open a valid recovery URL."
+msgid ""
+"Recovery Mode is a WordPress safety feature. It is not a permanent on/off "
+"switch: WordPress enters it when a fatal error is detected, or when you open"
+" a valid recovery URL."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:71
@@ -6251,7 +6679,9 @@ msgid "See plugins or themes that WordPress has paused after a fatal error."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:73
-msgid "Clear a paused item after you have fixed the error, so WordPress can try loading it again."
+msgid ""
+"Clear a paused item after you have fixed the error, so WordPress can try "
+"loading it again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:78
@@ -6279,7 +6709,9 @@ msgid "Recovery Mode URL"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:100
-msgid "Use this URL to enter recovery mode. It is single-use and expires after 1 hour."
+msgid ""
+"Use this URL to enter recovery mode. It is single-use and expires after 1 "
+"hour."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-recovery.php:105
@@ -6381,7 +6813,9 @@ msgid "404 log cleared."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:269
-msgid "Create and review safe WordPress-level redirects. Rules are stored in a prefixed option and are applied before the theme renders."
+msgid ""
+"Create and review safe WordPress-level redirects. Rules are stored in a "
+"prefixed option and are applied before the theme renders."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:273
@@ -6389,7 +6823,13 @@ msgid "Why use redirects?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:275
-msgid "Redirects tell browsers and search engines that a URL has moved. They preserve SEO value when you rename a post, merge content, or change permalink structure. A 301 permanent redirect passes most ranking signals to the new URL; 302/307 are for temporary moves. Use 410 when content is permanently removed. Google follows redirects when crawling — broken old URLs without redirects become 404s and may lose traffic."
+msgid ""
+"Redirects tell browsers and search engines that a URL has moved. They "
+"preserve SEO value when you rename a post, merge content, or change "
+"permalink structure. A 301 permanent redirect passes most ranking signals to"
+" the new URL; 302/307 are for temporary moves. Use 410 when content is "
+"permanently removed. Google follows redirects when crawling — broken old "
+"URLs without redirects become 404s and may lose traffic."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:280
@@ -6423,7 +6863,9 @@ msgid "Regular expression"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:294
-msgid "Wildcard captures can be used in the target as $1, $2, etc. Regex rules should not include delimiters."
+msgid ""
+"Wildcard captures can be used in the target as $1, $2, etc. Regex rules "
+"should not include delimiters."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:297
@@ -6431,7 +6873,9 @@ msgid "Target URL or Path"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:299
-msgid "Use a site path or a URL allowed by WordPress safe redirects. Leave empty for 410 or 451 responses."
+msgid ""
+"Use a site path or a URL allowed by WordPress safe redirects. Leave empty "
+"for 410 or 451 responses."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:302
@@ -6483,7 +6927,9 @@ msgid "404 Monitor"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:345
-msgid "Recent 404 visits are captured so you can create redirects from missing URLs."
+msgid ""
+"Recent 404 visits are captured so you can create redirects from missing "
+"URLs."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:347
@@ -6491,7 +6937,15 @@ msgid "No 404 visits recorded yet."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:354
-msgid "Visits counts how many times each missing URL was requested. Referrer shows the previous page (HTTP Referer) when the browser sent it — direct visits, bots and bookmarks usually leave it empty."
+msgid ""
+"Visits counts how many times each missing URL was requested. Referrer keeps "
+"the last known previous page (HTTP Referer). If none was ever sent, Direct / "
+"unknown is shown, plus the last User-Agent when available (direct visits, "
+"bots and bookmarks often send none)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php
+msgid "Direct / unknown"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:360
@@ -6591,7 +7045,9 @@ msgstr ""
 #. translators: %d: number of 404 hits
 #: includes/modules/class-tsosk-mod-redirects.php:751
 #, php-format
-msgid "The site recorded %d recent 404 hits. Review the Redirects tab to create redirects."
+msgid ""
+"The site recorded %d recent 404 hits. Review the Redirects tab to create "
+"redirects."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-redirects.php:817
@@ -6628,7 +7084,9 @@ msgid "REST API settings saved."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:103
-msgid "The main WordPress API: saves posts and pages, loads media, users, categories, etc. The Block Editor cannot work without it."
+msgid ""
+"The main WordPress API: saves posts and pages, loads media, users, "
+"categories, etc. The Block Editor cannot work without it."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:105
@@ -6637,11 +7095,15 @@ msgid "Critical — do not disable"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:108
-msgid "Endpoints used exclusively by the Block Editor (Gutenberg) while you edit content in wp-admin."
+msgid ""
+"Endpoints used exclusively by the Block Editor (Gutenberg) while you edit "
+"content in wp-admin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:113
-msgid "Powers Site Health checks under Tools → Site Health. Disabling hides tests and status in the admin."
+msgid ""
+"Powers Site Health checks under Tools → Site Health. Disabling hides tests "
+"and status in the admin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:115
@@ -6649,7 +7111,9 @@ msgid "High risk — admin tools break"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:118
-msgid "Handles embed previews (YouTube, Twitter, etc.) and allows other sites to embed your posts. Rarely needed to block."
+msgid ""
+"Handles embed previews (YouTube, Twitter, etc.) and allows other sites to "
+"embed your posts. Rarely needed to block."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:120
@@ -6665,7 +7129,9 @@ msgid "High risk — future core features"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:128
-msgid "WordPress Abilities API — used by newer core and plugin integrations. Only block if you know it is unused."
+msgid ""
+"WordPress Abilities API — used by newer core and plugin integrations. Only "
+"block if you know it is unused."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:130
@@ -6673,7 +7139,10 @@ msgid "Medium risk — newer integrations"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:139
-msgid "Endpoints registered by a plugin or theme. Blocking cuts off every request to this API group — the related plugin feature will stop working for everyone, including logged-in admins."
+msgid ""
+"Endpoints registered by a plugin or theme. Blocking cuts off every request "
+"to this API group — the related plugin feature will stop working for "
+"everyone, including logged-in admins."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:141
@@ -6685,7 +7154,11 @@ msgid "What are REST namespaces?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:153
-msgid "WordPress exposes data through the REST API — a set of URLs like /wp-json/wp/v2/posts that apps, the Block Editor, and plugins use to read or update content. A “namespace” is a group of those URLs (e.g. wp/v2 = posts, pages, media)."
+msgid ""
+"WordPress exposes data through the REST API — a set of URLs like /wp-"
+"json/wp/v2/posts that apps, the Block Editor, and plugins use to read or "
+"update content. A “namespace” is a group of those URLs (e.g. wp/v2 = posts, "
+"pages, media)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:158
@@ -6693,7 +7166,11 @@ msgid "What does blocking do?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:159
-msgid "When you tick a namespace below, every request to that API group returns an error — for visitors and for logged-in admins alike. It is a surgical “off switch” for one API group, not the same as the access mode above (which only affects logged-out users)."
+msgid ""
+"When you tick a namespace below, every request to that API group returns an "
+"error — for visitors and for logged-in admins alike. It is a surgical “off "
+"switch” for one API group, not the same as the access mode above (which only"
+" affects logged-out users)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:162
@@ -6701,11 +7178,15 @@ msgid "Why would you use this?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:164
-msgid "Advanced hardening: hide a plugin’s public API if you do not need it and it adds attack surface."
+msgid ""
+"Advanced hardening: hide a plugin’s public API if you do not need it and it "
+"adds attack surface."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:165
-msgid "Troubleshooting: temporarily block a namespace to see if a problem comes from a specific plugin."
+msgid ""
+"Troubleshooting: temporarily block a namespace to see if a problem comes "
+"from a specific plugin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:171
@@ -6713,11 +7194,17 @@ msgid "Is it dangerous?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:172
-msgid "Yes, if you block the wrong namespace. Core groups (wp/v2, wp-block-editor) will break the Block Editor immediately. Plugin namespaces will break that plugin’s features. Leave everything unchecked unless you have a specific reason and have tested on staging."
+msgid ""
+"Yes, if you block the wrong namespace. Core groups (wp/v2, wp-block-editor) "
+"will break the Block Editor immediately. Plugin namespaces will break that "
+"plugin’s features. Leave everything unchecked unless you have a specific "
+"reason and have tested on staging."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:194
-msgid "Control anonymous access to the WordPress REST API. Read the compatibility warnings below before restricting access."
+msgid ""
+"Control anonymous access to the WordPress REST API. Read the compatibility "
+"warnings below before restricting access."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:199
@@ -6725,7 +7212,9 @@ msgid "⚠ Compatibility Warning"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:200
-msgid "The following active plugins are known to require the REST API. Disabling or restricting it may break their functionality:"
+msgid ""
+"The following active plugins are known to require the REST API. Disabling or"
+" restricting it may break their functionality:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:215
@@ -6733,7 +7222,11 @@ msgid "REST API Access"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:218
-msgid "The WordPress Block Editor (Gutenberg) and many modern plugins rely entirely on the REST API. Disabling it for non-authenticated users prevents those plugins from working on the front end, and may also break the admin dashboard if any plugin makes front-end REST calls while logged out."
+msgid ""
+"The WordPress Block Editor (Gutenberg) and many modern plugins rely entirely"
+" on the REST API. Disabling it for non-authenticated users prevents those "
+"plugins from working on the front end, and may also break the admin "
+"dashboard if any plugin makes front-end REST calls while logged out."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:224
@@ -6741,7 +7234,9 @@ msgid "Enabled (default)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:225
-msgid "The REST API is fully public. All plugins work normally. Recommended for all sites using the Block Editor, Jetpack, WooCommerce, ACF, Yoast or similar."
+msgid ""
+"The REST API is fully public. All plugins work normally. Recommended for all"
+" sites using the Block Editor, Jetpack, WooCommerce, ACF, Yoast or similar."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:232
@@ -6749,7 +7244,11 @@ msgid "Disabled for non-authenticated users"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:233
-msgid "Anonymous REST requests return a 401 error. Logged-in users are not affected. Only use this if you do not have any plugin that needs the REST API for unauthenticated visitors, and you have tested it first in a staging environment."
+msgid ""
+"Anonymous REST requests return a 401 error. Logged-in users are not "
+"affected. Only use this if you do not have any plugin that needs the REST "
+"API for unauthenticated visitors, and you have tested it first in a staging "
+"environment."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:240
@@ -6757,7 +7256,9 @@ msgid "Disable Specific Namespaces"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:242
-msgid "Optional advanced control. Tick a namespace only to completely block that API group. Most sites should leave all boxes unchecked."
+msgid ""
+"Optional advanced control. Tick a namespace only to completely block that "
+"API group. Most sites should leave all boxes unchecked."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:248
@@ -6778,19 +7279,27 @@ msgid "Block"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:292
-msgid "Core WordPress namespaces stay unchecked and locked by default so the Block Editor keeps working. Only change this if you are deliberately hardening a site without Gutenberg."
+msgid ""
+"Core WordPress namespaces stay unchecked and locked by default so the Block "
+"Editor keeps working. Only change this if you are deliberately hardening a "
+"site without Gutenberg."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:317
-msgid "Jetpack relies on the REST API for sync, stats, Publicize and many other features."
+msgid ""
+"Jetpack relies on the REST API for sync, stats, Publicize and many other "
+"features."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:318
-msgid "WooCommerce uses the REST API for the cart, checkout, store blocks and mobile apps."
+msgid ""
+"WooCommerce uses the REST API for the cart, checkout, store blocks and "
+"mobile apps."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:319
-msgid "Yoast SEO uses the REST API for the sidebar integration in the Block Editor."
+msgid ""
+"Yoast SEO uses the REST API for the sidebar integration in the Block Editor."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:320
@@ -6806,7 +7315,8 @@ msgid "CF7 uses REST API endpoints for form submissions."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:323
-msgid "Elementor uses REST API calls in the page builder and for template library."
+msgid ""
+"Elementor uses REST API calls in the page builder and for template library."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:324
@@ -6814,7 +7324,9 @@ msgid "The Block Editor requires REST API for all edit operations."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:325
-msgid "WP Rocket uses the REST API for cache invalidation and heartbeat optimisation."
+msgid ""
+"WP Rocket uses the REST API for cache invalidation and heartbeat "
+"optimisation."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:326
@@ -6838,7 +7350,9 @@ msgid "Rewrite rules flushed successfully."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:53
-msgid "Flush and inspect WordPress rewrite rules. A \"hard flush\" also regenerates the .htaccess / web.config file."
+msgid ""
+"Flush and inspect WordPress rewrite rules. A \"hard flush\" also regenerates"
+" the .htaccess / web.config file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:57
@@ -6846,7 +7360,10 @@ msgid "When and how to flush rewrite rules"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:59
-msgid "WordPress stores URL routing rules in the database. Plugins and custom post types register rules when they load; those rules must be rebuilt after permalink or routing changes."
+msgid ""
+"WordPress stores URL routing rules in the database. Plugins and custom post "
+"types register rules when they load; those rules must be rebuilt after "
+"permalink or routing changes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:63
@@ -6854,7 +7371,10 @@ msgid "Soft flush"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:65
-msgid "Regenerates rules in the database only. Safer and usually enough after activating a plugin, changing slug settings, or fixing 404s on custom post types."
+msgid ""
+"Regenerates rules in the database only. Safer and usually enough after "
+"activating a plugin, changing slug settings, or fixing 404s on custom post "
+"types."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:69
@@ -6862,11 +7382,17 @@ msgid "Hard flush"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:71
-msgid "Also rewrites .htaccess (Apache) or web.config (IIS). Use when soft flush does not fix front-end 404s, or after moving the site to a subdirectory. On nginx, server config must still be updated manually."
+msgid ""
+"Also rewrites .htaccess (Apache) or web.config (IIS). Use when soft flush "
+"does not fix front-end 404s, or after moving the site to a subdirectory. On "
+"nginx, server config must still be updated manually."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:76
-msgid "Avoid flushing on every page load — it is expensive. Only flush when something actually changed. A hard flush can overwrite custom server rules if WordPress does not detect them; back up .htaccess first."
+msgid ""
+"Avoid flushing on every page load — it is expensive. Only flush when "
+"something actually changed. A hard flush can overwrite custom server rules "
+"if WordPress does not detect them; back up .htaccess first."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:81
@@ -6874,7 +7400,9 @@ msgid "Flush Rewrite Rules"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:82
-msgid "Soft flush: regenerates rules in the database. Hard flush: also updates the server rewrite configuration file."
+msgid ""
+"Soft flush: regenerates rules in the database. Hard flush: also updates the "
+"server rewrite configuration file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:95
@@ -6882,7 +7410,9 @@ msgid "Permalink & Routing Simulator"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:96
-msgid "Enter a public URL or path to see hidden routing details: matching rewrite rule, resolved post ID and query target."
+msgid ""
+"Enter a public URL or path to see hidden routing details: matching rewrite "
+"rule, resolved post ID and query target."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:101
@@ -6941,7 +7471,9 @@ msgid "Object cache flushed."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:249
-msgid "Inspect the WordPress object cache and detect active caching plugins. The object cache stores frequently used database query results in memory."
+msgid ""
+"Inspect the WordPress object cache and detect active caching plugins. The "
+"object cache stores frequently used database query results in memory."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:254
@@ -6949,7 +7481,12 @@ msgid "Detected cache plugins:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:263
-msgid "⚠ Flushing the object cache from here clears WordPress in-memory data. Page HTML cache managed by LiteSpeed Cache, WP Rocket, W3 Total Cache or similar plugins has its OWN flush mechanism inside those plugins. The Flush button below only clears the WordPress object cache (Redis, Memcached, or in-memory)."
+msgid ""
+"⚠ Flushing the object cache from here clears WordPress in-memory data. Page "
+"HTML cache managed by LiteSpeed Cache, WP Rocket, W3 Total Cache or similar "
+"plugins has its OWN flush mechanism inside those plugins. The Flush button "
+"below only clears the WordPress object cache (Redis, Memcached, or in-"
+"memory)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:269
@@ -6989,27 +7526,39 @@ msgid "Cache Stats"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:314
-msgid "This flushes the WordPress object cache (Redis, Memcached or in-memory). It does NOT flush HTML page cache from LiteSpeed Cache, WP Rocket, W3 Total Cache or similar plugins — use those plugins' own flush buttons for that."
+msgid ""
+"This flushes the WordPress object cache (Redis, Memcached or in-memory). It "
+"does NOT flush HTML page cache from LiteSpeed Cache, WP Rocket, W3 Total "
+"Cache or similar plugins — use those plugins' own flush buttons for that."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:337
-msgid "Page HTML cache + object cache. Use LiteSpeed Cache › Manage Cache to flush HTML. This button flushes LSCache object cache."
+msgid ""
+"Page HTML cache + object cache. Use LiteSpeed Cache › Manage Cache to flush "
+"HTML. This button flushes LSCache object cache."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:338
-msgid "Page HTML cache. Use WP Rocket › Clear Cache for HTML. This button has no effect on WP Rocket HTML cache."
+msgid ""
+"Page HTML cache. Use WP Rocket › Clear Cache for HTML. This button has no "
+"effect on WP Rocket HTML cache."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:339
-msgid "Multi-layer cache including page, object and browser. Use W3TC Performance › Empty All Caches to flush HTML."
+msgid ""
+"Multi-layer cache including page, object and browser. Use W3TC Performance ›"
+" Empty All Caches to flush HTML."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:340
-msgid "Static HTML page cache. Use Delete Cache in the WP Super Cache settings."
+msgid ""
+"Static HTML page cache. Use Delete Cache in the WP Super Cache settings."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:341
-msgid "Static HTML cache. Use the Flush icon in the admin bar or WP Fastest Cache settings."
+msgid ""
+"Static HTML cache. Use the Flush icon in the admin bar or WP Fastest Cache "
+"settings."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:342
@@ -7017,7 +7566,9 @@ msgid "Page cache and asset optimization. Use Hummingbird › Caching to flush."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:343
-msgid "Static HTML page cache. Use the Clear Cache button in Cache Enabler settings."
+msgid ""
+"Static HTML page cache. Use the Clear Cache button in Cache Enabler "
+"settings."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:344
@@ -7030,7 +7581,8 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:346
 #: includes/modules/class-tsosk-mod-rewrite.php:347
-msgid "Redis-backed WordPress object cache. The Flush button above will flush this."
+msgid ""
+"Redis-backed WordPress object cache. The Flush button above will flush this."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:348
@@ -7042,7 +7594,8 @@ msgid "Page and CSS/JS optimization cache. Use WP Boost settings to clear."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rewrite.php:350
-msgid "CSS/JS/HTML minification cache. Use Autoptimize › Delete Cache to clear."
+msgid ""
+"CSS/JS/HTML minification cache. Use Autoptimize › Delete Cache to clear."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:187
@@ -7146,7 +7699,9 @@ msgid "Edit other user accounts."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:253
-msgid "Legacy user level (deprecated). WordPress no longer uses levels for permissions."
+msgid ""
+"Legacy user level (deprecated). WordPress no longer uses levels for "
+"permissions."
 msgstr ""
 
 #. translators: %s: post type slug
@@ -7243,7 +7798,9 @@ msgid "Capability removed."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:534
-msgid "Inspect, compare, clone and edit WordPress role capabilities. Dangerous capabilities are blocked or flagged."
+msgid ""
+"Inspect, compare, clone and edit WordPress role capabilities. Dangerous "
+"capabilities are blocked or flagged."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:546
@@ -7299,7 +7856,9 @@ msgid "Read only"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:589
-msgid "Replaces the role capabilities with the template (caps not in the template are removed; blocked caps are never granted)."
+msgid ""
+"Replaces the role capabilities with the template (caps not in the template "
+"are removed; blocked caps are never granted)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:590
@@ -7311,11 +7870,15 @@ msgid "Add capability"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:595
-msgid "Only for custom roles (not administrator). Use lowercase with underscores, e.g. edit_products."
+msgid ""
+"Only for custom roles (not administrator). Use lowercase with underscores, "
+"e.g. edit_products."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:601
-msgid "View-only for the administrator role. Capabilities cannot be added or removed here."
+msgid ""
+"View-only for the administrator role. Capabilities cannot be added or "
+"removed here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-roles.php:605
@@ -7337,7 +7900,9 @@ msgid "Plugin sandbox applied (%d plugins)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:156
-msgid "Sandbox applied. The page will reload and only your selected plugins will load."
+msgid ""
+"Sandbox applied. The page will reload and only your selected plugins will "
+"load."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:171
@@ -7349,7 +7914,10 @@ msgid "Sandbox exited. Reloading restores the normal plugin set."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:193
-msgid "Test plugin conflicts with real isolation: a must-use loader makes WordPress load only your selected plugins on the next request. Other visitors are not affected."
+msgid ""
+"Test plugin conflicts with real isolation: a must-use loader makes WordPress"
+" load only your selected plugins on the next request. Other visitors are not"
+" affected."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:199
@@ -7399,15 +7967,21 @@ msgid "Select the plugins you want to test."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:259
-msgid "Click Apply Sandbox — a must-use loader is installed and a secure session cookie is set."
+msgid ""
+"Click Apply Sandbox — a must-use loader is installed and a secure session "
+"cookie is set."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:260
-msgid "After reload, WordPress loads only those plugin files for you. Everyone else keeps the normal set."
+msgid ""
+"After reload, WordPress loads only those plugin files for you. Everyone else"
+" keeps the normal set."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:261
-msgid "Click Exit Sandbox when finished. The loader is removed when no sessions remain."
+msgid ""
+"Click Exit Sandbox when finished. The loader is removed when no sessions "
+"remain."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:264
@@ -7415,11 +7989,15 @@ msgid "Note:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-sandbox.php:265
-msgid "TSO Swiss Knife and other must-use plugins always stay loaded. The server must allow writing to wp-content/mu-plugins."
+msgid ""
+"TSO Swiss Knife and other must-use plugins always stay loaded. The server "
+"must allow writing to wp-content/mu-plugins."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:381
-msgid "Run Preview again before executing. The search settings changed or the preview expired."
+msgid ""
+"Run Preview again before executing. The search settings changed or the "
+"preview expired."
 msgstr ""
 
 #. translators: 1: tables, 2: rows, 3: cells
@@ -7457,7 +8035,10 @@ msgid "What is this tool for?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:814
-msgid "It finds a piece of text inside your database and replaces it with another — across posts, options, meta, and other tables. Think of it as “Find & Replace” in a text editor, but for the whole WordPress database."
+msgid ""
+"It finds a piece of text inside your database and replaces it with another —"
+" across posts, options, meta, and other tables. Think of it as “Find & "
+"Replace” in a text editor, but for the whole WordPress database."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:819
@@ -7473,7 +8054,8 @@ msgid "Switch http:// to https:// in stored content or options."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:823
-msgid "Fix a typo or wrong path that appears in many posts or plugin settings."
+msgid ""
+"Fix a typo or wrong path that appears in many posts or plugin settings."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:829
@@ -7485,7 +8067,9 @@ msgid "Type the exact text to find and what to replace it with."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:831
-msgid "Choose which tables to scan (WordPress tables is enough for most URL changes)."
+msgid ""
+"Choose which tables to scan (WordPress tables is enough for most URL "
+"changes)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:832
@@ -7514,7 +8098,9 @@ msgid "Search for"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:858
-msgid "The exact text you want to find. It is matched inside table cells (post content, options, meta, etc.)."
+msgid ""
+"The exact text you want to find. It is matched inside table cells (post "
+"content, options, meta, etc.)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:859
@@ -7532,11 +8118,15 @@ msgid "Case-sensitive"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:862
-msgid "When off, “Site” and “site” are treated the same. Turn on only if capital letters matter."
+msgid ""
+"When off, “Site” and “site” are treated the same. Turn on only if capital "
+"letters matter."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:864
-msgid "Advanced mode for patterns (not plain text). Only enable if you know regex — wrong patterns can change too much."
+msgid ""
+"Advanced mode for patterns (not plain text). Only enable if you know regex —"
+" wrong patterns can change too much."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:865
@@ -7545,19 +8135,26 @@ msgid "Tables to search"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:866
-msgid "Which database tables to scan. For URL or content fixes, selecting WordPress tables (posts, postmeta, options…) is usually enough."
+msgid ""
+"Which database tables to scan. For URL or content fixes, selecting WordPress"
+" tables (posts, postmeta, options…) is usually enough."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:878
-msgid "Bulk find-and-replace inside your WordPress database — with a preview step so you see changes before they are written."
+msgid ""
+"Bulk find-and-replace inside your WordPress database — with a preview step "
+"so you see changes before they are written."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:884
-msgid "⚠ Always make a full database backup before running a replace operation."
+msgid ""
+"⚠ Always make a full database backup before running a replace operation."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:885
-msgid "A wrong search term can alter hundreds of rows at once. Preview is mandatory — Execute only appears after a successful preview."
+msgid ""
+"A wrong search term can alter hundreds of rows at once. Preview is mandatory"
+" — Execute only appears after a successful preview."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:898
@@ -7573,7 +8170,9 @@ msgid "advanced — test carefully"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:935
-msgid "Tick the tables where the text might live. Unsure? Start with “Select WordPress tables”."
+msgid ""
+"Tick the tables where the text might live. Unsure? Start with “Select "
+"WordPress tables”."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:939
@@ -7593,7 +8192,8 @@ msgid "Step 1 — shows what would change, without writing anything."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:975
-msgid "Step 2 — applies the replace to the database. Only available after preview."
+msgid ""
+"Step 2 — applies the replace to the database. Only available after preview."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-search-replace.php:985
@@ -7615,7 +8215,10 @@ msgid "Security settings saved. Reload the page to see the new values."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:171
-msgid "Hides the built-in plugin and theme code editors from the WordPress admin (Appearance › Editor, Plugins › Editor). Strongly recommended on production sites to prevent accidental or malicious code injection via the dashboard."
+msgid ""
+"Hides the built-in plugin and theme code editors from the WordPress admin "
+"(Appearance › Editor, Plugins › Editor). Strongly recommended on production "
+"sites to prevent accidental or malicious code injection via the dashboard."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:172
@@ -7623,23 +8226,38 @@ msgid "Recommended: ON on all production sites."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:177
-msgid "Prevents any plugin or theme from being installed, updated or deleted from the WordPress admin. Also disables the WordPress auto-updater. Use on hardened servers where all deploys are done via version control. Note: this also blocks WordPress core auto-updates."
+msgid ""
+"Prevents any plugin or theme from being installed, updated or deleted from "
+"the WordPress admin. Also disables the WordPress auto-updater. Use on "
+"hardened servers where all deploys are done via version control. Note: this "
+"also blocks WordPress core auto-updates."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:178
-msgid "Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if you rely on the admin for updates."
+msgid ""
+"Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if "
+"you rely on the admin for updates."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:183
-msgid "Forces the WordPress login page and admin area to always use HTTPS, even if the front end runs on HTTP. Only enable this if you have a valid SSL certificate. If you do not have SSL, this will lock you out of the admin."
+msgid ""
+"Forces the WordPress login page and admin area to always use HTTPS, even if "
+"the front end runs on HTTP. Only enable this if you have a valid SSL "
+"certificate. If you do not have SSL, this will lock you out of the admin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:184
-msgid "Recommended: ON if you have SSL. Never enable without a working SSL certificate."
+msgid ""
+"Recommended: ON if you have SSL. Never enable without a working SSL "
+"certificate."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:190
-msgid "Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config under the plugin uploads folder that is loaded at plugin init time. Constants already defined in wp-config.php take precedence."
+msgid ""
+"Read-only security review plus safe toggles for WordPress hardening "
+"constants. Toggles save JSON config under the plugin uploads folder that is "
+"loaded at plugin init time. Constants already defined in wp-config.php take "
+"precedence."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:194
@@ -7647,7 +8265,8 @@ msgid "Remote access"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:195
-msgid "Reduce common attack vectors from anonymous visitors and remote clients."
+msgid ""
+"Reduce common attack vectors from anonymous visitors and remote clients."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:199
@@ -7667,7 +8286,8 @@ msgid "Redirects feed URLs; reduces discovery surface."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:211
-msgid "REST API access and namespace controls are configured in the REST API tab."
+msgid ""
+"REST API access and namespace controls are configured in the REST API tab."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:212
@@ -7699,11 +8319,16 @@ msgid "TSO config"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:293
-msgid "Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO override filter (saved on this panel). To remove the wp-config line entirely, edit that file."
+msgid ""
+"Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO "
+"override filter (saved on this panel). To remove the wp-config line "
+"entirely, edit that file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:297
-msgid "This constant is set in wp-config.php. Remove or change that line there to manage it from this panel."
+msgid ""
+"This constant is set in wp-config.php. Remove or change that line there to "
+"manage it from this panel."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:309
@@ -7716,7 +8341,9 @@ msgid "Security Checks"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:317
-msgid "Read-only overview of common security settings. This does not replace a firewall or security scanner."
+msgid ""
+"Read-only overview of common security settings. This does not replace a "
+"firewall or security scanner."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:348
@@ -7855,7 +8482,11 @@ msgid ".htaccess (WordPress subdirectory)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:590
-msgid "Review and edit the server configuration files that control crawling, permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache may use a root .htaccess in public_html plus a separate one inside WordPress. Also shows all sitemap files detected on this installation."
+msgid ""
+"Review and edit the server configuration files that control crawling, "
+"permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache"
+" may use a root .htaccess in public_html plus a separate one inside "
+"WordPress. Also shows all sitemap files detected on this installation."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:599
@@ -7863,7 +8494,10 @@ msgid "Sitemaps"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:601
-msgid "Sitemaps are files that list all the pages on your website so that search engines like Google can find them more easily. This panel detects sitemaps generated by popular SEO plugins."
+msgid ""
+"Sitemaps are files that list all the pages on your website so that search "
+"engines like Google can find them more easily. This panel detects sitemaps "
+"generated by popular SEO plugins."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:605
@@ -7908,11 +8542,15 @@ msgid "No obvious issues were detected."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:701
-msgid "No robots.txt file was found. WordPress may serve a default virtual robots.txt. You can create one here."
+msgid ""
+"No robots.txt file was found. WordPress may serve a default virtual "
+"robots.txt. You can create one here."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:703
-msgid "No .htaccess file was found at the WordPress root. This is normal on Nginx servers. On Apache, it is required for pretty permalinks."
+msgid ""
+"No .htaccess file was found at the WordPress root. This is normal on Nginx "
+"servers. On Apache, it is required for pretty permalinks."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:712
@@ -7928,23 +8566,32 @@ msgid "A Disallow: / rule blocks crawling for the matching user agent."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:722
-msgid "No Sitemap directive was found. Consider adding one so search engines can discover your sitemap directly."
+msgid ""
+"No Sitemap directive was found. Consider adding one so search engines can "
+"discover your sitemap directly."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:725
-msgid "Uploads are blocked for crawlers. Confirm this is intentional if media files should rank in search."
+msgid ""
+"Uploads are blocked for crawlers. Confirm this is intentional if media files"
+" should rank in search."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:733
-msgid "The standard WordPress block was not found. This is normal with custom server rules."
+msgid ""
+"The standard WordPress block was not found. This is normal with custom "
+"server rules."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:736
-msgid "RewriteEngine On was not found. Pretty permalinks may not work on Apache."
+msgid ""
+"RewriteEngine On was not found. Pretty permalinks may not work on Apache."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:739
-msgid "Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors."
+msgid ""
+"Directory indexing appears to be enabled (Options +Indexes). This shows "
+"folder contents to visitors."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:742
@@ -7964,7 +8611,12 @@ msgid "🌐 This is the file Google reads."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:774
-msgid "Search engines (Google, Bing, etc.) always look for robots.txt at the domain root — for example https://example.com/robots.txt. If your WordPress is installed in a subdirectory like /blog/ or /pruebas/, the search engines still only read the one at the root domain. Rules in this file apply to the entire domain and all its subdirectories."
+msgid ""
+"Search engines (Google, Bing, etc.) always look for robots.txt at the domain"
+" root — for example https://example.com/robots.txt. If your WordPress is "
+"installed in a subdirectory like /blog/ or /pruebas/, the search engines "
+"still only read the one at the root domain. Rules in this file apply to the "
+"entire domain and all its subdirectories."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:778
@@ -7972,7 +8624,11 @@ msgid "Document root .htaccess"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:779
-msgid "This is the .htaccess at your hosting document root (e.g. public_html). It may contain site-wide redirects, security rules or PHP settings that apply before WordPress loads. The WordPress subdirectory has its own .htaccess below for permalinks."
+msgid ""
+"This is the .htaccess at your hosting document root (e.g. public_html). It "
+"may contain site-wide redirects, security rules or PHP settings that apply "
+"before WordPress loads. The WordPress subdirectory has its own .htaccess "
+"below for permalinks."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:783
@@ -7980,7 +8636,10 @@ msgid "WordPress permalink .htaccess"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:784
-msgid "This file only affects URLs inside the WordPress folder. Pretty permalinks and rewrite rules for posts/pages are stored here. Site-wide rules in public_html/.htaccess are shown separately above when detected."
+msgid ""
+"This file only affects URLs inside the WordPress folder. Pretty permalinks "
+"and rewrite rules for posts/pages are stored here. Site-wide rules in "
+"public_html/.htaccess are shown separately above when detected."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:788
@@ -7988,7 +8647,10 @@ msgid "⚠ Google does not read this file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:789
-msgid "This robots.txt is inside a WordPress subdirectory. Search engines ignore it — they only read the one at the domain root. You can edit it here for your own reference, but it has no effect on how crawlers index your site."
+msgid ""
+"This robots.txt is inside a WordPress subdirectory. Search engines ignore it"
+" — they only read the one at the domain root. You can edit it here for your "
+"own reference, but it has no effect on how crawlers index your site."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:822
@@ -8004,7 +8666,9 @@ msgid "Save Changes"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-server-files.php:840
-msgid "File is read-only. To edit it, make it writable via FTP or your hosting control panel."
+msgid ""
+"File is read-only. To edit it, make it writable via FTP or your hosting "
+"control panel."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:67
@@ -8160,11 +8824,16 @@ msgid "List exceeds the maximum of %d items."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:503
-msgid "Save and restore site snapshots of selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Only plugin-owned settings are included — never wp-config or license keys."
+msgid ""
+"Save and restore site snapshots of selected TSO Swiss Knife settings as JSON"
+" for staging, backups, or migrations. Only plugin-owned settings are "
+"included — never wp-config or license keys."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:507
-msgid "Import overwrites existing settings for the selected sections. Always export a backup first and test on staging."
+msgid ""
+"Import overwrites existing settings for the selected sections. Always export"
+" a backup first and test on staging."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:511
@@ -8185,7 +8854,9 @@ msgid "Import snapshot"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:532
-msgid "Paste JSON from a previous export or upload a .json file. You can choose which sections to restore."
+msgid ""
+"Paste JSON from a previous export or upload a .json file. You can choose "
+"which sections to restore."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:537
@@ -8253,11 +8924,15 @@ msgid "Open Debug Mode"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:672
-msgid "Settings saved. SAVEQUERIES was enabled in the debug config — reload the page to start capturing queries."
+msgid ""
+"Settings saved. SAVEQUERIES was enabled in the debug config — reload the "
+"page to start capturing queries."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:675
-msgid "Settings saved. SAVEQUERIES is not active — enable it in Debug Mode so queries are captured."
+msgid ""
+"Settings saved. SAVEQUERIES is not active — enable it in Debug Mode so "
+"queries are captured."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:684
@@ -8274,7 +8949,9 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:719
 #: includes/modules/class-tsosk-mod-slow-queries.php:734
-msgid "Pattern ignored. Matching queries will no longer be logged. Save settings or reload to refresh the ignore list field."
+msgid ""
+"Pattern ignored. Matching queries will no longer be logged. Save settings or"
+" reload to refresh the ignore list field."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:730
@@ -8306,7 +8983,10 @@ msgid "Entry deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:914
-msgid "Captures and logs database queries that take longer than a configurable threshold. Helps identify performance bottlenecks caused by slow or repeated queries."
+msgid ""
+"Captures and logs database queries that take longer than a configurable "
+"threshold. Helps identify performance bottlenecks caused by slow or repeated"
+" queries."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:920
@@ -8314,11 +8994,16 @@ msgid "⚠ SAVEQUERIES is not active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:921
-msgid "The monitor is enabled but cannot capture queries because SAVEQUERIES is false. Enable Developer mode in Debug Mode, or set SAVEQUERIES in wp-config.php manually."
+msgid ""
+"The monitor is enabled but cannot capture queries because SAVEQUERIES is "
+"false. Enable Developer mode in Debug Mode, or set SAVEQUERIES in wp-"
+"config.php manually."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:925
-msgid "The monitor is disabled. Enable it below to start capturing slow queries. SAVEQUERIES must also be active."
+msgid ""
+"The monitor is disabled. Enable it below to start capturing slow queries. "
+"SAVEQUERIES must also be active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:929
@@ -8376,11 +9061,14 @@ msgid "Ignore patterns"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:995
-msgid "One pattern per line (substring or fingerprint). Example: action_scheduler"
+msgid ""
+"One pattern per line (substring or fingerprint). Example: action_scheduler"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:997
-msgid "Matching SQL (case-insensitive substring or fingerprint) is not logged. Max 50 lines."
+msgid ""
+"Matching SQL (case-insensitive substring or fingerprint) is not logged. Max "
+"50 lines."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1018
@@ -8401,7 +9089,9 @@ msgid "Top Slow Query Patterns"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1048
-msgid "Queries grouped by SQL fingerprint (string/number literals replaced with ?). Use Ignore to stop logging a known noisy pattern."
+msgid ""
+"Queries grouped by SQL fingerprint (string/number literals replaced with ?)."
+" Use Ignore to stop logging a known noisy pattern."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1053
@@ -8437,11 +9127,16 @@ msgid "Export JSON"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1147
-msgid "No slow queries have been recorded yet. The monitor is active — entries will appear here after page requests that contain queries exceeding the threshold."
+msgid ""
+"No slow queries have been recorded yet. The monitor is active — entries will"
+" appear here after page requests that contain queries exceeding the "
+"threshold."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1149
-msgid "No data. Enable the monitor and activate SAVEQUERIES to start capturing slow queries."
+msgid ""
+"No data. Enable the monitor and activate SAVEQUERIES to start capturing slow"
+" queries."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1185
@@ -8455,7 +9150,10 @@ msgid "%d queries"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1200
-msgid "Live list of database queries executed while loading this Slow Query Monitor page. Enable the monitor above (it can turn SAVEQUERIES on for you) or use Developer mode in Debug Mode, then reload."
+msgid ""
+"Live list of database queries executed while loading this Slow Query Monitor"
+" page. Enable the monitor above (it can turn SAVEQUERIES on for you) or use "
+"Developer mode in Debug Mode, then reload."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1205
@@ -8463,11 +9161,15 @@ msgid "SAVEQUERIES is not active."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1206
-msgid "Enable the monitor and save settings, or turn on Developer mode in Debug Mode, then reload this page. Only use SAVEQUERIES while debugging — it has a memory overhead on every request."
+msgid ""
+"Enable the monitor and save settings, or turn on Developer mode in Debug "
+"Mode, then reload this page. Only use SAVEQUERIES while debugging — it has a"
+" memory overhead on every request."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1210
-msgid "SAVEQUERIES is active but no queries were recorded yet. Reload the page."
+msgid ""
+"SAVEQUERIES is active but no queries were recorded yet. Reload the page."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1219
@@ -8489,7 +9191,10 @@ msgstr ""
 #. translators: %d: number of distinct duplicate queries
 #: includes/modules/class-tsosk-mod-slow-queries.php:1249
 #, php-format
-msgid "%d distinct queries are executed more than once. This often indicates a plugin calling get_option(), get_post_meta() or similar in a loop without caching."
+msgid ""
+"%d distinct queries are executed more than once. This often indicates a "
+"plugin calling get_option(), get_post_meta() or similar in a loop without "
+"caching."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1258
@@ -8584,7 +9289,9 @@ msgstr ""
 #. translators: 1: fixed count, 2: skipped count, 3: threshold
 #: includes/modules/class-tsosk-mod-slug-manager.php:269
 #, php-format
-msgid "%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped (already short enough or could not be changed)."
+msgid ""
+"%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped "
+"(already short enough or could not be changed)."
 msgstr ""
 
 #. translators: %d: number of errors
@@ -8608,8 +9315,12 @@ msgstr ""
 #. translators: 1: number of slugs to change, 2: threshold, 3: skipped count
 #: includes/modules/class-tsosk-mod-slug-manager.php:373
 #, php-format
-msgid "%1$d slug will be shortened to a maximum of %2$d characters. %3$d item will be skipped."
-msgid_plural "%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items will be skipped."
+msgid ""
+"%1$d slug will be shortened to a maximum of %2$d characters. %3$d item will "
+"be skipped."
+msgid_plural ""
+"%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items "
+"will be skipped."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -8618,11 +9329,18 @@ msgid "301 redirects will be created from the old URLs."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:577
-msgid "Audit and fix post slugs across all public post types. Rename any slug inline with an optional automatic 301 redirect — no broken links. Long slugs hurt SEO; duplicates confuse crawlers; special characters and uppercase letters cause encoding issues."
+msgid ""
+"Audit and fix post slugs across all public post types. Rename any slug "
+"inline with an optional automatic 301 redirect — no broken links. Long slugs"
+" hurt SEO; duplicates confuse crawlers; special characters and uppercase "
+"letters cause encoding issues."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:582
-msgid "⚠ The Redirects module is not active. Automatic 301 redirects will not be created when you rename slugs. Enable the Redirects module to avoid broken links."
+msgid ""
+"⚠ The Redirects module is not active. Automatic 301 redirects will not be "
+"created when you rename slugs. Enable the Redirects module to avoid broken "
+"links."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:590
@@ -8662,7 +9380,12 @@ msgstr ""
 #. translators: %d: threshold
 #: includes/modules/class-tsosk-mod-slug-manager.php:659
 #, php-format
-msgid "Posts and pages whose slug exceeds %d characters. Long slugs are harder for users to share and may negatively affect SEO click-through rates. Recommended maximum: 50 characters. The Bulk Fix button truncates all selected slugs at the last word boundary and creates automatic 301 redirects."
+msgid ""
+"Posts and pages whose slug exceeds %d characters. Long slugs are harder for "
+"users to share and may negatively affect SEO click-through rates. "
+"Recommended maximum: 50 characters. The Bulk Fix button truncates all "
+"selected slugs at the last word boundary and creates automatic 301 "
+"redirects."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:666
@@ -8674,7 +9397,11 @@ msgid "Duplicate Slugs"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:698
-msgid "Posts that share the same slug within the same post type. WordPress appends a numeric suffix (-2, -3…) at runtime to avoid collisions, but the stored slug stays as-is. Duplicate slugs confuse search engines and can cause canonical URL issues."
+msgid ""
+"Posts that share the same slug within the same post type. WordPress appends "
+"a numeric suffix (-2, -3…) at runtime to avoid collisions, but the stored "
+"slug stays as-is. Duplicate slugs confuse search engines and can cause "
+"canonical URL issues."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:702
@@ -8682,7 +9409,11 @@ msgid "✓ No duplicate slugs found."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:720
-msgid "Slugs containing uppercase letters, spaces, accented characters, or other non-ASCII characters. These can cause URL encoding issues, browser inconsistencies and problems with caching layers. A clean slug uses only lowercase a–z, digits 0–9 and hyphens."
+msgid ""
+"Slugs containing uppercase letters, spaces, accented characters, or other "
+"non-ASCII characters. These can cause URL encoding issues, browser "
+"inconsistencies and problems with caching layers. A clean slug uses only "
+"lowercase a–z, digits 0–9 and hyphens."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:724
@@ -8690,7 +9421,9 @@ msgid "✓ No character issues found."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:737
-msgid "Find any post or page by its slug and rename it inline. Leave the search box empty and click Load to browse all content."
+msgid ""
+"Find any post or page by its slug and rename it inline. Leave the search box"
+" empty and click Load to browse all content."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:741
@@ -8783,7 +9516,9 @@ msgid "%d transients deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-transients.php:233
-msgid "Manage WordPress transients stored in the options table. This view works on sites without an external object cache."
+msgid ""
+"Manage WordPress transients stored in the options table. This view works on "
+"sites without an external object cache."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-transients.php:241
@@ -8843,7 +9578,9 @@ msgstr ""
 #. translators: 1: hidden profiles link, 2: cron manager link
 #: includes/modules/class-tsosk-mod-update-manager.php:643
 #, php-format
-msgid "DISABLE_WP_CRON is on (often via %1$s). Background updates only run if a server cron calls wp-cron.php. Check the %2$s tab."
+msgid ""
+"DISABLE_WP_CRON is on (often via %1$s). Background updates only run if a "
+"server cron calls wp-cron.php. Check the %2$s tab."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:644
@@ -8871,7 +9608,9 @@ msgstr ""
 #. translators: %s: security review link
 #: includes/modules/class-tsosk-mod-update-manager.php:658
 #, php-format
-msgid "DISALLOW_FILE_MODS is enabled (%s or wp-config.php). WordPress cannot install updates automatically."
+msgid ""
+"DISALLOW_FILE_MODS is enabled (%s or wp-config.php). WordPress cannot "
+"install updates automatically."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:661
@@ -8903,7 +9642,9 @@ msgid "Partially blocked"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:682
-msgid "Custom rules hide some update checks. Automatic updates are managed by WordPress (Dashboard → Updates)."
+msgid ""
+"Custom rules hide some update checks. Automatic updates are managed by "
+"WordPress (Dashboard → Updates)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:684
@@ -8911,7 +9652,9 @@ msgid "Not blocking"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:686
-msgid "This module is not blocking update checks. Configure automatic updates in Dashboard → Updates."
+msgid ""
+"This module is not blocking update checks. Configure automatic updates in "
+"Dashboard → Updates."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:689
@@ -8944,14 +9687,20 @@ msgstr ""
 msgid "Update Manager is blocking all updates. Change the preset first."
 msgstr ""
 
-#. translators: 1: plugins before, 2: themes before, 3: translations before, 4: plugins after, 5: themes after, 6: translations after
+#. translators: 1: plugins before, 2: themes before, 3: translations before,
+#. 4: plugins after, 5: themes after, 6: translations after
 #: includes/modules/class-tsosk-mod-update-manager.php:799
 #, php-format
-msgid "Update check finished. Pending before — plugins: %1$d, themes: %2$d, translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations: %6$d. Install updates from Dashboard → Updates."
+msgid ""
+"Update check finished. Pending before — plugins: %1$d, themes: %2$d, "
+"translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations:"
+" %6$d. Install updates from Dashboard → Updates."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:820
-msgid "Monitor WordPress update status, optionally block update checks (staging), hide specific plugin updates, and control update email notifications."
+msgid ""
+"Monitor WordPress update status, optionally block update checks (staging), "
+"hide specific plugin updates, and control update email notifications."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:824
@@ -8959,7 +9708,11 @@ msgid "What does this module do?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:826
-msgid "WordPress checks wordpress.org for core, plugin, theme and translation updates, can install some automatically, and sends email when updates happen. This module helps you troubleshoot update issues, block update checks when needed, and manage notification emails."
+msgid ""
+"WordPress checks wordpress.org for core, plugin, theme and translation "
+"updates, can install some automatically, and sends email when updates "
+"happen. This module helps you troubleshoot update issues, block update "
+"checks when needed, and manage notification emails."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:830
@@ -8969,7 +9722,9 @@ msgstr ""
 #. translators: %s: Dashboard → Updates admin screen link
 #: includes/modules/class-tsosk-mod-update-manager.php:834
 #, php-format
-msgid "Automatic updates are configured in WordPress itself — go to %s to enable or disable auto-updates per component."
+msgid ""
+"Automatic updates are configured in WordPress itself — go to %s to enable or"
+" disable auto-updates per component."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:841
@@ -8977,7 +9732,10 @@ msgid "Security note:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:842
-msgid "Blocking updates removes security patches from appearing in the dashboard. Only disable updates on staging, managed hosts with external patching, or when you update manually on a schedule."
+msgid ""
+"Blocking updates removes security patches from appearing in the dashboard. "
+"Only disable updates on staging, managed hosts with external patching, or "
+"when you update manually on a schedule."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:847
@@ -8985,7 +9743,10 @@ msgid "Update status & troubleshooting"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:848
-msgid "If updates stay pending for days, check the blockers below. Use the button to contact wordpress.org and refresh the pending update list (does not install updates)."
+msgid ""
+"If updates stay pending for days, check the blockers below. Use the button "
+"to contact wordpress.org and refresh the pending update list (does not "
+"install updates)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:868
@@ -9005,7 +9766,9 @@ msgid "No overrides — WordPress handles update checks and emails as usual."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:886
-msgid "Stop update checks for core, plugins, themes and translations. Hide dashboard nags."
+msgid ""
+"Stop update checks for core, plugins, themes and translations. Hide "
+"dashboard nags."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:890
@@ -9017,7 +9780,9 @@ msgid "Update checks"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:907
-msgid "Prevent WordPress from seeing available updates in the dashboard (blocks the API check)."
+msgid ""
+"Prevent WordPress from seeing available updates in the dashboard (blocks the"
+" API check)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:911
@@ -9045,7 +9810,9 @@ msgid "Individual plugins"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:934
-msgid "Hide available updates for specific plugins in the dashboard. Does not change WordPress auto-update settings — use Dashboard → Updates for that."
+msgid ""
+"Hide available updates for specific plugins in the dashboard. Does not "
+"change WordPress auto-update settings — use Dashboard → Updates for that."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:938
@@ -9070,7 +9837,9 @@ msgid "Update email notifications"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:998
-msgid "Uncheck to stop WordPress from sending that type of update email to the site admin."
+msgid ""
+"Uncheck to stop WordPress from sending that type of update email to the site"
+" admin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:1003
@@ -9106,7 +9875,9 @@ msgid "Theme automatic updates"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:69
-msgid "Your administrator requires you to change your password. Update it on your profile page below."
+msgid ""
+"Your administrator requires you to change your password. Update it on your "
+"profile page below."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:273
@@ -9176,7 +9947,9 @@ msgid "Login history cleared."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:442
-msgid "Inspect sessions, login history, inactive accounts and manage user security actions."
+msgid ""
+"Inspect sessions, login history, inactive accounts and manage user security "
+"actions."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:446
@@ -9204,7 +9977,10 @@ msgid "Administrator Sessions"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:471
-msgid "Session tokens stored by WordPress. The same administrator can have several open sessions at once (different browser, device, IP or “Remember me” login). That is normal — it is not a duplicate bug."
+msgid ""
+"Session tokens stored by WordPress. The same administrator can have several "
+"open sessions at once (different browser, device, IP or “Remember me” "
+"login). That is normal — it is not a duplicate bug."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:474
@@ -9232,7 +10008,10 @@ msgid "Force password change"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:515
-msgid "For safety, you cannot close your own sessions from this screen (that could lock you out). Use another admin account to close them, or log out elsewhere / clear cookies on those devices."
+msgid ""
+"For safety, you cannot close your own sessions from this screen (that could "
+"lock you out). Use another admin account to close them, or log out elsewhere"
+" / clear cookies on those devices."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:519
@@ -9260,7 +10039,9 @@ msgid "Inactive Users (90+ days)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:568
-msgid "Based on last successful login (or registration date if never logged in). Administrators are never deleted in bulk."
+msgid ""
+"Based on last successful login (or registration date if never logged in). "
+"Administrators are never deleted in bulk."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:570
