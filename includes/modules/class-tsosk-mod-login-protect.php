@@ -445,30 +445,57 @@ class TSOSK_Mod_Login_Protect {
 			return;
 		}
 
-		$attempts = $this->get_all_attempts();
-		$now      = time();
-		$window   = (int) $s['lockout_window'] * 60; // window in seconds.
+		$this->with_attempts_lock(
+			function () use ( $s, $ip, $username ): void {
+				$attempts = $this->get_all_attempts();
+				$now      = time();
+				$window   = (int) $s['lockout_window'] * 60; // window in seconds.
 
-		if ( isset( $attempts[ $ip ] ) ) {
-			$entry = $attempts[ $ip ];
-			// Reset counter if the window has expired.
-			if ( $now - (int) $entry['first'] > $window ) {
-				$entry = array( 'count' => 0, 'first' => $now );
+				if ( isset( $attempts[ $ip ] ) ) {
+					$entry = $attempts[ $ip ];
+					// Reset counter if the window has expired.
+					if ( $now - (int) $entry['first'] > $window ) {
+						$entry = array( 'count' => 0, 'first' => $now );
+					}
+					$entry['count']++;
+				} else {
+					$entry = array( 'count' => 1, 'first' => $now );
+				}
+
+				$attempts[ $ip ] = $entry;
+
+				// Lock out if over threshold.
+				if ( $entry['count'] >= (int) $s['max_attempts'] ) {
+					$this->apply_ip_lockout( $ip, $username, (int) $entry['count'] );
+					unset( $attempts[ $ip ] );
+				}
+
+				update_option( self::OPTION_ATTEMPTS, $attempts, false );
 			}
-			$entry['count']++;
-		} else {
-			$entry = array( 'count' => 1, 'first' => $now );
+		);
+	}
+
+	/**
+	 * Serialize attempt-counter updates across concurrent failed logins.
+	 *
+	 * @param callable $callback Mutation callback.
+	 */
+	private function with_attempts_lock( callable $callback ): void {
+		global $wpdb;
+		$lock_name = 'tsosk_lp_attempts';
+		$got       = false;
+		if ( isset( $wpdb ) && $wpdb instanceof wpdb ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$got = ( '1' === (string) $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 3)', $lock_name ) ) );
 		}
-
-		$attempts[ $ip ] = $entry;
-
-		// Lock out if over threshold.
-		if ( $entry['count'] >= (int) $s['max_attempts'] ) {
-			$this->apply_ip_lockout( $ip, $username, (int) $entry['count'] );
-			unset( $attempts[ $ip ] );
+		try {
+			$callback();
+		} finally {
+			if ( $got ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
+			}
 		}
-
-		update_option( self::OPTION_ATTEMPTS, $attempts, false );
 	}
 
 	/**
@@ -861,10 +888,11 @@ class TSOSK_Mod_Login_Protect {
 		$index = isset( $_POST['idx'] ) ? absint( wp_unslash( $_POST['idx'] ) ) : -1;
 		$reset_attempts_only = ! empty( $_POST['reset_attempts_only'] );
 
+		if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			wp_send_json_error( __( 'Invalid IP address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		if ( $reset_attempts_only ) {
-			if ( '' === $ip ) {
-				wp_send_json_error( __( 'Invalid IP address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-			}
 			$attempts = $this->get_all_attempts();
 			if ( isset( $attempts[ $ip ] ) ) {
 				unset( $attempts[ $ip ] );
@@ -877,10 +905,6 @@ class TSOSK_Mod_Login_Protect {
 				array( 'ip' => $ip )
 			);
 			wp_send_json_success( __( 'Attempt counter cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		if ( '' === $ip ) {
-			wp_send_json_error( __( 'Invalid IP address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$lockouts = $this->get_lockout_log();

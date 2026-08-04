@@ -215,13 +215,17 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		$key = (string) $row['meta_key'];
+		if ( self::is_protected_key( $key, $context ) ) {
+			wp_send_json_error( __( 'This meta key is protected and cannot be viewed here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		wp_send_json_success(
 			array(
 				'meta_id'   => (int) $row['meta_id'],
 				'object_id' => (int) $row['object_id'],
 				'key'       => $key,
 				'value'     => (string) $row['meta_value'],
-				'protected' => self::is_protected_key( $key, $context ),
+				'protected' => false,
 			)
 		);
 	}

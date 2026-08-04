@@ -29,9 +29,16 @@ class TSOSK_Mod_Roles {
 			'activate_plugins',
 			'delete_plugins',
 			'edit_plugins',
+			'update_plugins',
+			'upload_plugins',
 			'install_themes',
 			'edit_themes',
 			'delete_themes',
+			'update_themes',
+			'upload_themes',
+			'update_core',
+			'edit_files',
+			'manage_network',
 			'unfiltered_html',
 			'edit_users',
 			'delete_users',
@@ -49,13 +56,8 @@ class TSOSK_Mod_Roles {
 		return array_merge(
 			self::get_blocked_caps(),
 			array(
-				'edit_files',
-				'update_core',
-				'update_plugins',
-				'update_themes',
 				'export',
 				'import',
-				'manage_network',
 			)
 		);
 	}

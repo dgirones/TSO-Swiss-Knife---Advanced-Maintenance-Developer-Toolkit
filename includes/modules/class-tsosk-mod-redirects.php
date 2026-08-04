@@ -78,9 +78,7 @@ class TSOSK_Mod_Redirects {
 			}
 
 			if ( in_array( absint( $rule['status'] ), array( 410, 451 ), true ) ) {
-				$rules[ $id ]['hits']     = absint( $rule['hits'] ) + 1;
-				$rules[ $id ]['last_hit'] = time();
-				update_option( self::OPTION, $rules, false );
+				$this->bump_rule_hits( $id, $rules );
 
 				status_header( absint( $rule['status'] ) );
 				nocache_headers();
@@ -96,11 +94,9 @@ class TSOSK_Mod_Redirects {
 				continue;
 			}
 
-			$rules[ $id ]['hits']     = absint( $rule['hits'] ) + 1;
-			$rules[ $id ]['last_hit'] = time();
-			update_option( self::OPTION, $rules, false );
+			$this->bump_rule_hits( $id, $rules );
 
-			wp_safe_redirect( $target_url, absint( $rule['status'] ) );
+			$this->do_redirect( $target_url, absint( $rule['status'] ) );
 			exit;
 		}
 
@@ -130,21 +126,26 @@ class TSOSK_Mod_Redirects {
 		}
 
 		$source = 'regex' === $match_type ? trim( $source ) : $this->normalize_path( $source );
-		if ( '' === $source ) {
-			wp_send_json_error( __( 'Enter a valid source path such as /old-page/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-		if ( 'regex' === $match_type && false === @preg_match( '#' . str_replace( '#', '\#', $source ) . '#', '/' ) ) {
-			wp_send_json_error( __( 'Enter a valid regular expression source.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		$validated = $this->sanitize_rule_for_storage(
+			array(
+				'id'         => $id,
+				'source'     => $source,
+				'target'     => $target,
+				'match_type' => $match_type,
+				'status'     => $status,
+				'enabled'    => $enabled,
+			)
+		);
+		if ( is_wp_error( $validated ) ) {
+			wp_send_json_error( $validated->get_error_message() );
 		}
 
-		if ( ! in_array( $status, $this->allowed_statuses(), true ) ) {
-			wp_send_json_error( __( 'Invalid redirect status.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$target_url = in_array( $status, array( 410, 451 ), true ) ? '' : $this->target_to_url( $target );
-		if ( ! in_array( $status, array( 410, 451 ), true ) && '' === $target_url ) {
-			wp_send_json_error( __( 'Enter a valid target URL or site path.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
+		$source     = $validated['source'];
+		$target     = $validated['target'];
+		$match_type = $validated['match_type'];
+		$status     = $validated['status'];
+		$enabled    = $validated['enabled'];
+		$target_url = $validated['target_url'];
 
 		if ( '' !== $target_url && 'regex' !== $match_type && $this->is_loop( $source, $target_url ) ) {
 			wp_send_json_error( __( 'The target points back to the source and would create a loop.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -160,15 +161,15 @@ class TSOSK_Mod_Redirects {
 		$last_hit = isset( $rules[ $id ]['last_hit'] ) ? absint( $rules[ $id ]['last_hit'] ) : 0;
 
 		$rules[ $id ] = array(
-			'id'       => $id,
-			'source'   => $source,
-			'target'   => $target,
+			'id'         => $id,
+			'source'     => $source,
+			'target'     => $target,
 			'match_type' => $match_type,
-			'status'   => $status,
-			'enabled'  => $enabled,
-			'hits'     => $hits,
-			'last_hit' => $last_hit,
-			'created'  => $created,
+			'status'     => $status,
+			'enabled'    => $enabled,
+			'hits'       => $hits,
+			'last_hit'   => $last_hit,
+			'created'    => $created,
 		);
 
 		update_option( self::OPTION, $rules, false );
@@ -351,7 +352,7 @@ class TSOSK_Mod_Redirects {
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
 				<p class="description" style="margin-top:10px;">
-					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer shows the previous page (HTTP Referer) when the browser sent it — direct visits, bots and bookmarks usually leave it empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 				<div class="tsosk-table-wrap tsosk-404-table-wrap" style="margin-top:12px;">
 					<table class="widefat tsosk-table" id="tsosk-404-table">
@@ -373,12 +374,23 @@ class TSOSK_Mod_Redirects {
 								<td class="tsosk-404-col-date" data-label="<?php esc_attr_e( 'Last visit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $item['last_hit'] ) ) ); ?></td>
 								<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Referrer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<?php
-									$referrer = (string) ( $item['referrer'] ?? '' );
-									if ( '' === $referrer ) {
-										echo esc_html( '—' );
-									} else {
-										echo wp_kses_post( $this->render_rule_url_cell( $referrer, $referrer ) );
-									}
+									echo wp_kses(
+										$this->render_404_referrer_cell( $item ),
+										array(
+											'a'    => array(
+												'href'   => true,
+												'target' => true,
+												'rel'    => true,
+												'class'  => true,
+												'title'  => true,
+											),
+											'span' => array(
+												'class' => true,
+												'title' => true,
+											),
+											'br'   => array(),
+										)
+									);
 									?>
 								</td>
 								<td data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
@@ -518,16 +530,26 @@ class TSOSK_Mod_Redirects {
 			$raw_match_type = (string) ( $rule['match_type'] ?? 'exact' );
 			$match_type = in_array( $raw_match_type, array( 'exact', 'wildcard', 'regex' ), true ) ? $raw_match_type : 'exact';
 
+			$source = 'regex' === $match_type
+				? sanitize_text_field( (string) ( $rule['source'] ?? '' ) )
+				: $this->normalize_path( (string) ( $rule['source'] ?? '' ) );
+			if ( '' === $source ) {
+				continue;
+			}
+			if ( 'regex' === $match_type && ! $this->is_safe_regex_source( $source ) ) {
+				continue;
+			}
+
 			$out[ $id ] = array(
-				'id'       => $id,
-				'source'   => 'regex' === $match_type ? sanitize_text_field( (string) ( $rule['source'] ?? '' ) ) : $this->normalize_path( (string) ( $rule['source'] ?? '' ) ),
-				'target'   => sanitize_text_field( (string) ( $rule['target'] ?? '' ) ),
+				'id'         => $id,
+				'source'     => $source,
+				'target'     => sanitize_text_field( (string) ( $rule['target'] ?? '' ) ),
 				'match_type' => $match_type,
-				'status'   => $status,
-				'enabled'  => ! empty( $rule['enabled'] ),
-				'hits'     => absint( $rule['hits'] ?? 0 ),
-				'last_hit' => absint( $rule['last_hit'] ?? 0 ),
-				'created'  => absint( $rule['created'] ?? 0 ),
+				'status'     => $status,
+				'enabled'    => ! empty( $rule['enabled'] ),
+				'hits'       => absint( $rule['hits'] ?? 0 ),
+				'last_hit'   => absint( $rule['last_hit'] ?? 0 ),
+				'created'    => absint( $rule['created'] ?? 0 ),
 			);
 		}
 
@@ -644,21 +666,75 @@ class TSOSK_Mod_Redirects {
 		}
 
 		if ( 'regex' === $match_type ) {
+			if ( ! $this->is_safe_regex_source( (string) $rule['source'] ) ) {
+				return false;
+			}
 			$pattern = '#' . str_replace( '#', '\#', $rule['source'] ) . '#';
-			if ( false === @preg_match( $pattern, $request_path, $matches ) || ! preg_match( $pattern, $request_path, $matches ) ) {
+			// Single match — @ suppresses compile warnings already validated at save time.
+			if ( 1 !== @preg_match( $pattern, $request_path, $matches ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 				return false;
 			}
 		}
 
 		$target = (string) $rule['target'];
+		// Captures must not control the host of absolute redirect targets.
+		if ( preg_match( '#^https?://([^/?#]+)#i', $target, $host_m ) && preg_match( '/\$\d+/', $host_m[1] ) ) {
+			return false;
+		}
+
+		$expected_host = '';
+		if ( preg_match( '#^https?://#i', $target ) ) {
+			$template_url = $this->target_to_url( preg_replace( '/\$\d+/', 'x', $target ) );
+			$expected_host = strtolower( (string) wp_parse_url( $template_url, PHP_URL_HOST ) );
+		}
+
 		foreach ( $matches as $index => $match ) {
 			if ( 0 === $index ) {
 				continue;
 			}
-			$target = str_replace( '$' . $index, rawurlencode( $match ), $target );
+			$target = str_replace( '$' . $index, rawurlencode( (string) $match ), $target );
+		}
+
+		if ( '' !== $expected_host ) {
+			$final_url  = $this->target_to_url( $target );
+			$final_host = strtolower( (string) wp_parse_url( $final_url, PHP_URL_HOST ) );
+			if ( '' === $final_url || $final_host !== $expected_host ) {
+				return false;
+			}
 		}
 
 		return $target;
+	}
+
+	/**
+	 * Increment redirect hit counters with write throttling.
+	 *
+	 * @param string              $id    Rule id.
+	 * @param array<string,array> $rules Rules map (by reference for in-request accuracy).
+	 */
+	private function bump_rule_hits( string $id, array &$rules ): void {
+		if ( ! isset( $rules[ $id ] ) ) {
+			return;
+		}
+
+		$now = time();
+		$rules[ $id ]['hits']     = absint( $rules[ $id ]['hits'] ) + 1;
+		$rules[ $id ]['last_hit'] = $now;
+
+		$gate_key  = 'tsosk_rd_hit_gate_' . $id;
+		$delta_key = 'tsosk_rd_hit_delta_' . $id;
+		if ( false !== get_transient( $gate_key ) ) {
+			set_transient( $delta_key, absint( get_transient( $delta_key ) ) + 1, HOUR_IN_SECONDS );
+			return;
+		}
+
+		set_transient( $gate_key, 1, 15 );
+		$delta = absint( get_transient( $delta_key ) );
+		delete_transient( $delta_key );
+		if ( $delta > 0 ) {
+			$rules[ $id ]['hits'] = absint( $rules[ $id ]['hits'] ) + $delta;
+		}
+		update_option( self::OPTION, $rules, false );
 	}
 
 	/**
@@ -668,16 +744,48 @@ class TSOSK_Mod_Redirects {
 	 * @param string $request_path Normalized path.
 	 */
 	private function record_404( string $request_uri, string $request_path ): void {
-		$logs = $this->get_404_log();
-		$key = md5( $request_path );
-		$referrer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		$referrer   = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 
+		// Cap option writes under bot storms (sample ≈ every 5 seconds).
+		if ( false !== get_transient( 'tsosk_404_write_gate' ) ) {
+			// Still enrich an existing row with referrer/UA when the write path is gated.
+			if ( '' !== $referrer || '' !== $user_agent ) {
+				$logs = $this->get_404_log();
+				$key  = md5( $request_path );
+				if ( isset( $logs[ $key ] ) ) {
+					$changed = false;
+					if ( '' !== $referrer && '' === (string) ( $logs[ $key ]['referrer'] ?? '' ) ) {
+						$logs[ $key ]['referrer'] = $referrer;
+						$changed                  = true;
+					}
+					if ( '' !== $user_agent ) {
+						$logs[ $key ]['user_agent'] = $user_agent;
+						$changed                    = true;
+					}
+					if ( $changed ) {
+						update_option( self::LOG_OPTION, $logs, false );
+					}
+				}
+			}
+			$this->maybe_send_404_alert( $this->increment_404_hour_counter() );
+			return;
+		}
+		set_transient( 'tsosk_404_write_gate', 1, 5 );
+
+		$logs = $this->get_404_log();
+		$key  = md5( $request_path );
+
 		if ( isset( $logs[ $key ] ) ) {
-			$logs[ $key ]['hits'] = absint( $logs[ $key ]['hits'] ) + 1;
+			$logs[ $key ]['hits']     = absint( $logs[ $key ]['hits'] ) + 1;
 			$logs[ $key ]['last_hit'] = time();
-			$logs[ $key ]['referrer'] = $referrer;
-			$logs[ $key ]['user_agent'] = $user_agent;
+			// Keep the last non-empty referrer; empty headers must not wipe a known source.
+			if ( '' !== $referrer ) {
+				$logs[ $key ]['referrer'] = $referrer;
+			}
+			if ( '' !== $user_agent ) {
+				$logs[ $key ]['user_agent'] = $user_agent;
+			}
 		} else {
 			$logs[ $key ] = array(
 				'path'       => $request_path,
@@ -700,7 +808,19 @@ class TSOSK_Mod_Redirects {
 		$logs = array_slice( $logs, 0, 200, true );
 		update_option( self::LOG_OPTION, $logs, false );
 
-		$this->maybe_send_404_alert( $logs );
+		$this->maybe_send_404_alert( $this->increment_404_hour_counter() );
+	}
+
+	/**
+	 * Count a 404 hit for the current UTC clock hour.
+	 *
+	 * @return int Hits in this hour after increment.
+	 */
+	private function increment_404_hour_counter(): int {
+		$key   = 'tsosk_404_hits_' . gmdate( 'YmdH' );
+		$count = absint( get_transient( $key ) ) + 1;
+		set_transient( $key, $count, 2 * HOUR_IN_SECONDS );
+		return $count;
 	}
 
 	/**
@@ -714,27 +834,21 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
-	 * Send a threshold alert if configured.
+	 * Send one email when hourly 404 visits reach the configured threshold.
 	 *
-	 * @param array $logs Current 404 logs.
+	 * @param int $hour_hits Hits recorded in the current clock hour.
 	 */
-	private function maybe_send_404_alert( array $logs ): void {
+	private function maybe_send_404_alert( int $hour_hits ): void {
 		$settings = get_option( 'tsosk_alert_settings', array() );
 		if ( empty( $settings['enabled'] ) || empty( $settings['email'] ) ) {
 			return;
 		}
 
 		$threshold = max( 1, absint( $settings['not_found_threshold'] ?? 25 ) );
-		$since = time() - HOUR_IN_SECONDS;
-		$count = 0;
-		foreach ( $logs as $item ) {
-			if ( absint( $item['last_hit'] ) >= $since ) {
-				$count += absint( $item['hits'] );
-			}
-		}
-
 		$last_sent = absint( get_option( 'tsosk_404_alert_last_sent', 0 ) );
-		if ( $count < $threshold || $last_sent > $since ) {
+		// Cooldown uses the same UTC clock-hour bucket as the hit counter.
+		$same_clock_hour = ( gmdate( 'YmdH', $last_sent ) === gmdate( 'YmdH' ) );
+		if ( $hour_hits < $threshold || ( $last_sent > 0 && $same_clock_hour ) ) {
 			return;
 		}
 
@@ -747,9 +861,10 @@ class TSOSK_Mod_Redirects {
 				wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
 			),
 			sprintf(
-				/* translators: %d: number of 404 hits */
-				__( 'The site recorded %d recent 404 hits. Review the Redirects tab to create redirects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$count
+				/* translators: 1: number of 404 hits this hour, 2: configured threshold */
+				__( 'The site recorded %1$d Not Found (404) visits in the last hour (threshold: %2$d). Review the Redirects tab to create redirects for broken URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$hour_hits,
+				$threshold
 			)
 		);
 	}
@@ -784,6 +899,32 @@ class TSOSK_Mod_Redirects {
 		}
 
 		return $this->target_to_url( $value );
+	}
+
+	/**
+	 * Render the 404 monitor Referrer cell (last known URL, or Direct / unknown + UA hint).
+	 *
+	 * @param array<string, mixed> $item Log row.
+	 * @return string
+	 */
+	private function render_404_referrer_cell( array $item ): string {
+		$referrer   = isset( $item['referrer'] ) ? (string) $item['referrer'] : '';
+		$user_agent = isset( $item['user_agent'] ) ? (string) $item['user_agent'] : '';
+
+		if ( '' !== $referrer ) {
+			return $this->render_rule_url_cell( $referrer, $referrer );
+		}
+
+		$html = '<span class="tsosk-redirect-url-text">' . esc_html__( 'Direct / unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+
+		if ( '' !== $user_agent ) {
+			$short = ( function_exists( 'mb_strlen' ) && mb_strlen( $user_agent ) > 72 )
+				? mb_substr( $user_agent, 0, 69 ) . '…'
+				: ( ( strlen( $user_agent ) > 72 ) ? substr( $user_agent, 0, 69 ) . '…' : $user_agent );
+			$html .= '<br><span class="description" title="' . esc_attr( $user_agent ) . '">' . esc_html( $short ) . '</span>';
+		}
+
+		return $html;
 	}
 
 	/**
@@ -844,7 +985,93 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
-	 * Convert a stored target into a safe URL.
+	 * Validate and normalize a redirect rule for storage / import.
+	 *
+	 * @param array<string,mixed> $rule Raw rule fields.
+	 * @return array<string,mixed>|WP_Error Normalized rule (+ target_url) or error.
+	 */
+	public function sanitize_rule_for_storage( array $rule ) {
+		$match_type = sanitize_key( (string) ( $rule['match_type'] ?? 'exact' ) );
+		if ( ! in_array( $match_type, array( 'exact', 'wildcard', 'regex' ), true ) ) {
+			$match_type = 'exact';
+		}
+
+		$source = isset( $rule['source'] ) ? (string) $rule['source'] : '';
+		$source = 'regex' === $match_type ? trim( $source ) : $this->normalize_path( sanitize_text_field( $source ) );
+		if ( '' === $source ) {
+			return new WP_Error( 'empty_source', __( 'Enter a valid source path such as /old-page/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( 'regex' === $match_type && ! $this->is_safe_regex_source( $source ) ) {
+			return new WP_Error( 'bad_regex', __( 'Enter a valid regular expression source.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$status = absint( $rule['status'] ?? 301 );
+		if ( ! in_array( $status, $this->allowed_statuses(), true ) ) {
+			return new WP_Error( 'bad_status', __( 'Invalid redirect status.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$target = sanitize_text_field( (string) ( $rule['target'] ?? '' ) );
+		if ( preg_match( '#^https?://([^/?#]+)#i', $target, $host_m ) && preg_match( '/\$\d+/', $host_m[1] ) ) {
+			return new WP_Error( 'bad_target', __( 'Capture tokens ($1, $2, …) are not allowed in the host of an absolute URL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$target_url = in_array( $status, array( 410, 451 ), true ) ? '' : $this->target_to_url( preg_replace( '/\$\d+/', 'x', $target ) );
+		if ( ! in_array( $status, array( 410, 451 ), true ) && '' === $target_url ) {
+			return new WP_Error( 'bad_target', __( 'Enter a valid target URL or site path.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		return array(
+			'id'         => sanitize_key( (string) ( $rule['id'] ?? '' ) ),
+			'source'     => $source,
+			'target'     => $target,
+			'match_type' => $match_type,
+			'status'     => $status,
+			'enabled'    => ! empty( $rule['enabled'] ),
+			'hits'       => absint( $rule['hits'] ?? 0 ),
+			'last_hit'   => absint( $rule['last_hit'] ?? 0 ),
+			'created'    => absint( $rule['created'] ?? time() ),
+			'target_url' => $target_url,
+		);
+	}
+
+	/**
+	 * Whether a regex source is compilable and not an obvious ReDoS pattern.
+	 *
+	 * @param string $source Pattern without delimiters.
+	 * @return bool
+	 */
+	private function is_safe_regex_source( string $source ): bool {
+		$source = trim( $source );
+		if ( '' === $source || strlen( $source ) > 300 ) {
+			return false;
+		}
+		// Nested quantifiers like (a+)+ / (a*)* are classic catastrophic backtracking.
+		if ( preg_match( '/\([^()]*[+*][^()]*\)[+*]/', $source ) ) {
+			return false;
+		}
+		$pattern = '#' . str_replace( '#', '\#', $source ) . '#';
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Compile-check only.
+		return false !== @preg_match( $pattern, '/' );
+	}
+
+	/**
+	 * Redirect to an on-site or allowed absolute http(s) URL.
+	 *
+	 * @param string $url    Destination.
+	 * @param int    $status HTTP status.
+	 */
+	private function do_redirect( string $url, int $status ): void {
+		$home_host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		$url_host  = (string) wp_parse_url( $url, PHP_URL_HOST );
+		if ( '' !== $url_host && '' !== $home_host && strtolower( $url_host ) !== strtolower( $home_host ) ) {
+			// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Intentional external redirect after admin validation.
+			wp_redirect( $url, $status );
+			return;
+		}
+		wp_safe_redirect( $url, $status );
+	}
+
+	/**
+	 * Convert a stored target into a safe URL (site path or absolute http/https).
 	 *
 	 * @param string $target Raw target.
 	 * @return string
@@ -868,8 +1095,21 @@ class TSOSK_Mod_Redirects {
 			return '';
 		}
 
-		$validated = wp_validate_redirect( $target, '' );
-		return '' === $validated ? '' : $validated;
+		$scheme = strtolower( (string) wp_parse_url( $target, PHP_URL_SCHEME ) );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			return '';
+		}
+
+		$home_host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		$url_host  = (string) wp_parse_url( $target, PHP_URL_HOST );
+		// Same host: prefer WordPress allowlist validation.
+		if ( '' !== $url_host && '' !== $home_host && strtolower( $url_host ) === strtolower( $home_host ) ) {
+			$validated = wp_validate_redirect( $target, '' );
+			return '' === $validated ? '' : $validated;
+		}
+
+		// External absolute URL (admin-configured only).
+		return $target;
 	}
 
 	/**

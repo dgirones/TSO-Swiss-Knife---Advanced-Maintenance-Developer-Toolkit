@@ -166,6 +166,15 @@ class TSOSK_Mod_Debug {
 		}
 
 		$path = wp_normalize_path( $path );
+		if ( false !== strpos( $path, '..' ) ) {
+			return '';
+		}
+
+		$resolved = realpath( $path );
+		if ( false !== $resolved ) {
+			$path = wp_normalize_path( $resolved );
+		}
+
 		$allowed_roots = array(
 			tsosk_get_wp_root_dir(),
 			wp_normalize_path( WP_CONTENT_DIR ),

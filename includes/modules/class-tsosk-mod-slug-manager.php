@@ -162,7 +162,10 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ids       = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
+		$ids       = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
+			? array_map( 'absint', map_deep( wp_unslash( $_POST['post_ids'] ), 'sanitize_text_field' ) )
+			: array();
+		$ids       = array_values( array_filter( $ids ) );
 		$threshold = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
@@ -194,7 +197,10 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ids         = array_map( 'absint', (array) ( $_POST['post_ids'] ?? array() ) );
+		$ids         = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
+			? array_map( 'absint', map_deep( wp_unslash( $_POST['post_ids'] ), 'sanitize_text_field' ) )
+			: array();
+		$ids         = array_values( array_filter( $ids ) );
 		$threshold   = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 

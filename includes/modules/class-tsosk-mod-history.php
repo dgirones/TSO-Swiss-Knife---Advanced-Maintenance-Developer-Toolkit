@@ -165,11 +165,11 @@ class TSOSK_Mod_History {
 				<?php
 				foreach ( TSOSK_Activity_Log::get_configurable_modules() as $module ) :
 					?>
-				<label style="font-size:13px;">
+				<label class="tsosk-history-module-row">
 					<input type="checkbox" class="tsosk-history-module" name="tsosk_history_modules[]"
 					       value="<?php echo esc_attr( $module ); ?>"
 					       <?php checked( $log_all || in_array( $module, $enabled_modules, true ) ); ?>>
-					<?php echo esc_html( TSOSK_Activity_Log::module_label( $module ) ); ?>
+					<span><?php echo esc_html( TSOSK_Activity_Log::module_label( $module ) ); ?></span>
 				</label>
 				<?php endforeach; ?>
 			</div>

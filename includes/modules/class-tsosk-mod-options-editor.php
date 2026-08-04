@@ -618,7 +618,35 @@ class TSOSK_Mod_Options_Editor {
 			}
 		}
 
-		$old_raw = $this->fetch_option_value_from_db( $name );
+		$old_raw  = $this->fetch_option_value_from_db( $name );
+		$old_type = $this->detect_type( $old_raw );
+		if ( 'serialized' === $old_type ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			$old_data = @unserialize( $old_raw, array( 'allowed_classes' => false ) );
+			$old_is_structure = is_array( $old_data ) || is_object( $old_data );
+			if ( $old_is_structure ) {
+				if ( ! $this->looks_serialized( $raw_val ) ) {
+					wp_send_json_error( __( 'This option stores structured data. Paste a valid serialized PHP value (or keep the existing structure).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+				$new_data = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
+				if ( ( false === $new_data && $raw_val !== serialize( false ) ) || ( ! is_array( $new_data ) && ! is_object( $new_data ) ) ) {
+					wp_send_json_error( __( 'This option stores structured data. The new value must unserialize to an array or object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
+			}
+		} elseif ( 'json' === $old_type ) {
+			$prepared = $this->prepare_new_option_value( $raw_val, 'json' );
+			if ( is_wp_error( $prepared ) ) {
+				wp_send_json_error( $prepared->get_error_message() );
+			}
+			$raw_val = $prepared;
+		} elseif ( 'integer' === $old_type ) {
+			$prepared = $this->prepare_new_option_value( $raw_val, 'integer' );
+			if ( is_wp_error( $prepared ) ) {
+				wp_send_json_error( $prepared->get_error_message() );
+			}
+			$raw_val = $prepared;
+		}
 
 		update_option( $name, $raw_val, $autoload );
 		$this->log_activity( array(

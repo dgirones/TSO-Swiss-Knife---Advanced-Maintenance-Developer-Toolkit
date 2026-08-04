@@ -219,24 +219,8 @@ class TSOSK_Mod_Search_Replace {
 			return serialize( $replaced ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		}
 
-		// Fallback: replace inside serialized string segments and fix byte lengths.
-		$result = preg_replace_callback(
-			'/s:(\d+):"((?:[^"\\\\]|\\\\.)*)";/s',
-			function ( array $m ) use ( $search, $replace_str, $case, $is_regex ): string {
-				$inner    = stripcslashes( $m[2] );
-				$replaced = $this->do_replace( $search, $replace_str, $inner, $case, $is_regex );
-				$escaped  = addcslashes( $replaced, "\\\"\0" );
-				return 's:' . strlen( $escaped ) . ':"' . $escaped . '";';
-			},
-			$subject
-		);
-
-		if ( null === $result ) {
-			return $subject;
-		}
-
-		$test = @unserialize( $result, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-		return ( false !== $test || 'b:0;' === $result ) ? $result : $subject;
+		// Do not rewrite opaque serialized blobs with string heuristics — lengths break easily.
+		return $subject;
 	}
 
 	/**
@@ -280,14 +264,56 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	private function do_replace( string $search, string $replace, string $subject, bool $case, bool $is_regex ): string {
 		if ( $is_regex ) {
-			$flags    = $case ? '' : 'i';
-			$replaced = preg_replace( '/' . $search . '/' . $flags . 'u', $replace, $subject );
-			return null !== $replaced ? $replaced : $subject;
+			$pattern = $this->build_regex_pattern( $search, $case );
+			if ( '' === $pattern ) {
+				return $subject;
+			}
+			// Treat replacement as literal text (no $n / \n backreferences).
+			$literal  = str_replace( array( '\\', '$' ), array( '\\\\', '\\$' ), $replace );
+			$replaced = preg_replace( $pattern, $literal, $subject );
+			if ( null === $replaced || PREG_NO_ERROR !== preg_last_error() ) {
+				return $subject;
+			}
+			return $replaced;
 		}
 		if ( $case ) {
 			return str_replace( $search, $replace, $subject );
 		}
 		return str_ireplace( $search, $replace, $subject );
+	}
+
+	/**
+	 * Build a delimited regex pattern, or empty string when unsafe/invalid.
+	 *
+	 * @param string $search Pattern without delimiters.
+	 * @param bool   $case   Case-sensitive when true.
+	 * @return string
+	 */
+	private function build_regex_pattern( string $search, bool $case ): string {
+		if ( ! $this->is_safe_regex_pattern( $search ) ) {
+			return '';
+		}
+		$flags = $case ? '' : 'i';
+		return '#' . str_replace( '#', '\#', $search ) . '#' . $flags . 'u';
+	}
+
+	/**
+	 * Whether a user regex is compilable and not an obvious ReDoS pattern.
+	 *
+	 * @param string $source Pattern without delimiters.
+	 * @return bool
+	 */
+	private function is_safe_regex_pattern( string $source ): bool {
+		$source = (string) $source;
+		if ( '' === $source || strlen( $source ) > 500 ) {
+			return false;
+		}
+		if ( preg_match( '/\([^()]*[+*][^()]*\)[+*]/', $source ) ) {
+			return false;
+		}
+		$pattern = '#' . str_replace( '#', '\#', $source ) . '#u';
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Compile-check only.
+		return false !== @preg_match( $pattern, '' );
 	}
 
 	/**
@@ -314,8 +340,11 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	private function value_contains( string $search, string $subject, bool $case, bool $is_regex ): bool {
 		if ( $is_regex ) {
-			$flags = $case ? '' : 'i';
-			return (bool) preg_match( '/' . $search . '/' . $flags . 'u', $subject );
+			$pattern = $this->build_regex_pattern( $search, $case );
+			if ( '' === $pattern ) {
+				return false;
+			}
+			return 1 === preg_match( $pattern, $subject );
 		}
 		if ( $case ) {
 			return false !== strpos( $subject, $search );
@@ -773,11 +802,8 @@ class TSOSK_Mod_Search_Replace {
 			return new WP_Error( 'empty_search', __( 'Search term cannot be empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( $is_regex ) {
-			// Validate regex syntax.
-			if ( false === @preg_match( '/' . $search . '/u', '' ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-				return new WP_Error( 'invalid_regex', __( 'The search pattern is not a valid regular expression.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-			}
+		if ( $is_regex && ! $this->is_safe_regex_pattern( $search ) ) {
+			return new WP_Error( 'invalid_regex', __( 'The search pattern is not a valid regular expression.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		// Validate tables: sanitize and confirm each exists.

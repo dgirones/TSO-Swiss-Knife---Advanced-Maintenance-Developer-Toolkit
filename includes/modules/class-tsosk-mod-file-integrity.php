@@ -74,20 +74,13 @@ class TSOSK_Mod_File_Integrity {
 
 		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
 
+		// Always re-check the server when the admin clicks Scan. Cached results are
+		// only used for the initial tab render — returning them here caused false
+		// "missing" lists after a bad/outdated scan.
+		delete_transient( self::TRANSIENT_RESULTS );
+		delete_option( self::OPTION_RESULTS );
 		if ( $force ) {
-			delete_transient( self::TRANSIENT_RESULTS );
 			delete_transient( self::TRANSIENT_CHECKSUMS );
-			delete_option( self::OPTION_RESULTS );
-		}
-
-		if ( ! $force ) {
-			$cached = $this->get_stored_results();
-			if ( is_array( $cached ) ) {
-				$cached               = $this->normalize_scan_result( $cached );
-				$cached['from_cache'] = true;
-				$cached['html']       = $this->render_results( $cached, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
-				wp_send_json_success( $cached );
-			}
 		}
 
 		$result = $this->run_scan();
@@ -207,7 +200,11 @@ class TSOSK_Mod_File_Integrity {
 	 * @return string
 	 */
 	private function normalize_rel_path( string $path ): string {
-		return ltrim( str_replace( '\\', '/', $path ), '/' );
+		$path = ltrim( str_replace( '\\', '/', $path ), '/' );
+		if ( '' === $path || str_contains( $path, '..' ) || str_starts_with( $path, '/' ) ) {
+			return '';
+		}
+		return $path;
 	}
 
 	/**
@@ -219,26 +216,30 @@ class TSOSK_Mod_File_Integrity {
 	private function normalize_checksum_map( array $checksums ): array {
 		$normalized = array();
 		foreach ( $checksums as $rel_path => $expected_md5 ) {
+			if ( ! is_string( $expected_md5 ) && ! is_numeric( $expected_md5 ) ) {
+				continue;
+			}
 			$key = $this->normalize_rel_path( (string) $rel_path );
-			if ( '' !== $key ) {
-				$normalized[ $key ] = strtolower( (string) $expected_md5 );
+			$hash = strtolower( (string) $expected_md5 );
+			if ( '' !== $key && preg_match( '/^[a-f0-9]{32}$/', $hash ) ) {
+				$normalized[ $key ] = $hash;
 			}
 		}
 		return $normalized;
 	}
 
 	/**
-	 * Candidate WordPress core roots (ABSPATH, home path, etc.).
+	 * Candidate WordPress core roots (ABSPATH first — matches Site Health).
 	 *
-	 * @return string[] Trailing-slash paths.
+	 * @return string[] Trailing-slash paths that contain readable core files.
 	 */
 	private function get_core_root_candidates(): array {
 		$candidates = array();
-		if ( function_exists( 'tsosk_locate_core_root' ) ) {
-			$candidates[] = tsosk_locate_core_root();
-		}
 		if ( defined( 'ABSPATH' ) ) {
 			$candidates[] = wp_normalize_path( trailingslashit( ABSPATH ) );
+		}
+		if ( function_exists( 'tsosk_locate_core_root' ) ) {
+			$candidates[] = tsosk_locate_core_root();
 		}
 		if ( function_exists( 'get_home_path' ) ) {
 			$home = get_home_path();
@@ -250,12 +251,30 @@ class TSOSK_Mod_File_Integrity {
 		$unique = array();
 		foreach ( $candidates as $root ) {
 			$root = wp_normalize_path( trailingslashit( (string) $root ) );
-			if ( '' !== $root && is_dir( $root . 'wp-includes' ) && ! in_array( $root, $unique, true ) ) {
+			if ( '' === $root || in_array( $root, $unique, true ) ) {
+				continue;
+			}
+			// Require a real core install, not an empty/stub wp-includes folder.
+			if ( is_readable( $root . 'wp-includes/version.php' ) && is_readable( $root . 'wp-settings.php' ) ) {
 				$unique[] = $root;
 			}
 		}
 
 		return $unique;
+	}
+
+	/**
+	 * Whether an absolute path is a readable regular file.
+	 *
+	 * @param string $abs Absolute path.
+	 * @return bool
+	 */
+	private function is_readable_core_file( string $abs ): bool {
+		if ( '' === $abs ) {
+			return false;
+		}
+		// Prefer is_file — file_exists() is true for directories too.
+		return is_file( $abs ) && is_readable( $abs );
 	}
 
 	/**
@@ -267,13 +286,22 @@ class TSOSK_Mod_File_Integrity {
 	 */
 	private function resolve_core_file_abs( string $rel_path, array $roots ): string {
 		$rel = $this->normalize_rel_path( $rel_path );
+		if ( '' === $rel ) {
+			return '';
+		}
 		foreach ( $roots as $root ) {
-			$abs = $root . $rel;
-			if ( file_exists( $abs ) ) {
+			$abs = wp_normalize_path( $root . $rel );
+			$root_n = wp_normalize_path( $root );
+			// Ensure resolved path stays under the candidate core root.
+			if ( 0 !== strpos( $abs, $root_n ) ) {
+				continue;
+			}
+			if ( $this->is_readable_core_file( $abs ) ) {
 				return $abs;
 			}
 		}
-		return ( $roots[0] ?? '' ) . $rel;
+		$fallback_root = $roots[0] ?? '';
+		return '' === $fallback_root ? '' : wp_normalize_path( $fallback_root . $rel );
 	}
 
 	/**
@@ -293,12 +321,23 @@ class TSOSK_Mod_File_Integrity {
 
 		$ignored           = $this->get_ignored();
 		$core_roots        = $this->get_core_root_candidates();
-		$core_root         = $core_roots[0] ?? wp_normalize_path( trailingslashit( ABSPATH ) );
+		if ( empty( $core_roots ) ) {
+			return new WP_Error(
+				'no_core_root',
+				__( 'Could not locate a readable WordPress core directory (wp-includes/version.php). Check open_basedir and file permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			);
+		}
+		$core_root         = $core_roots[0];
 		$modified          = array();
 		$missing           = array();
 		$missing_optional  = array();
 		$added             = array();
 		$seen_added        = array();
+
+		// Sanity probe: if common core files are readable, a later mass-missing
+		// result means path/checksum mismatch — not a wiped install.
+		$probe_ok = $this->is_readable_core_file( $core_root . 'wp-includes/version.php' )
+			&& $this->is_readable_core_file( $core_root . 'wp-settings.php' );
 
 		// ── Check every file listed in the official checksums ──────────────
 		foreach ( $checksums as $rel_path => $expected_md5 ) {
@@ -311,10 +350,13 @@ class TSOSK_Mod_File_Integrity {
 				continue;
 			}
 
-			$rel_path = $this->normalize_rel_path( $rel_path );
-			$abs      = $this->resolve_core_file_abs( $rel_path, $core_roots );
+			$rel_path = $this->normalize_rel_path( (string) $rel_path );
+			if ( '' === $rel_path || ! is_string( $expected_md5 ) || ! preg_match( '/^[a-f0-9]{32}$/i', $expected_md5 ) ) {
+				continue;
+			}
+			$abs = $this->resolve_core_file_abs( $rel_path, $core_roots );
 
-			if ( ! file_exists( $abs ) ) {
+			if ( ! $this->is_readable_core_file( $abs ) ) {
 				$row = array(
 					'file'     => $rel_path,
 					'expected' => $expected_md5,
@@ -340,6 +382,21 @@ class TSOSK_Mod_File_Integrity {
 					'mtime'    => (int) filemtime( $abs ),
 				);
 			}
+		}
+
+		// If nearly everything looks "missing" but the probe files exist, the scan
+		// cannot trust this result (wrong root / unreadable paths / bad checksum map).
+		$core_checked = count( $modified ) + count( $missing );
+		if ( $probe_ok && $core_checked > 50 && count( $missing ) > (int) ( $core_checked * 0.8 ) ) {
+			return new WP_Error(
+				'integrity_path_mismatch',
+				sprintf(
+					/* translators: 1: core root path, 2: missing count */
+					__( 'Integrity scan aborted: %2$d core files looked missing while WordPress itself is readable at %1$s. This usually means a path or cache problem — click Force Re-scan. If it persists, check that PHP can read wp-admin and wp-includes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$core_root,
+					count( $missing )
+				)
+			);
 		}
 
 		// ── Detect unexpected files in wp-admin/ and wp-includes/ ──────────
@@ -456,20 +513,50 @@ class TSOSK_Mod_File_Integrity {
 
 	/**
 	 * Read cached scan results (transient first, then persistent option).
+	 * Discard results that do not match the current WP version / core root.
 	 *
 	 * @return array<string,mixed>|null
 	 */
 	private function get_stored_results(): ?array {
+		$version = (string) get_bloginfo( 'version' );
+		$roots   = $this->get_core_root_candidates();
+		$root    = $roots[0] ?? '';
+
 		$cached = get_transient( self::TRANSIENT_RESULTS );
-		if ( is_array( $cached ) && ! empty( $cached['scanned_at'] ) ) {
+		if ( is_array( $cached ) && ! empty( $cached['scanned_at'] ) && $this->stored_results_still_valid( $cached, $version, $root ) ) {
 			return $cached;
 		}
 		$stored = get_option( self::OPTION_RESULTS, array() );
-		if ( is_array( $stored ) && ! empty( $stored['scanned_at'] ) ) {
+		if ( is_array( $stored ) && ! empty( $stored['scanned_at'] ) && $this->stored_results_still_valid( $stored, $version, $root ) ) {
 			set_transient( self::TRANSIENT_RESULTS, $stored, DAY_IN_SECONDS );
 			return $stored;
 		}
 		return null;
+	}
+
+	/**
+	 * Whether stored scan metadata still matches this install.
+	 *
+	 * @param array<string,mixed> $data    Stored scan.
+	 * @param string              $version Current WP version.
+	 * @param string              $root    Current preferred core root.
+	 * @return bool
+	 */
+	private function stored_results_still_valid( array $data, string $version, string $root ): bool {
+		if ( (string) ( $data['wp_version'] ?? '' ) !== $version ) {
+			return false;
+		}
+		$stored_root = wp_normalize_path( trailingslashit( (string) ( $data['core_root'] ?? '' ) ) );
+		if ( '' !== $root && '' !== $stored_root && $stored_root !== $root ) {
+			return false;
+		}
+		// Discard absurd “almost everything missing” caches from older buggy scans.
+		$missing = is_array( $data['missing'] ?? null ) ? $data['missing'] : array();
+		$total   = absint( $data['total'] ?? 0 );
+		if ( $total > 100 && count( $missing ) > (int) ( $total * 0.5 ) ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -485,33 +572,93 @@ class TSOSK_Mod_File_Integrity {
 	/**
 	 * Fetch and cache official WordPress core checksums from WordPress.org API.
 	 *
+	 * Uses en_US first (same as Site Health): localized installs share the same
+	 * core PHP paths; locale packages mainly add wp-content/languages files.
+	 *
 	 * @return array<string,string>|WP_Error Map of relative-path => MD5 hash.
 	 */
 	private function fetch_checksums() {
+		$version = (string) get_bloginfo( 'version' );
+		$locale  = (string) get_locale();
+		$cache_key_meta = $version . '|' . $locale;
+
 		$cached = get_transient( self::TRANSIENT_CHECKSUMS );
-		if ( is_array( $cached ) && ! empty( $cached ) ) {
-			return $this->normalize_checksum_map( $cached );
+		if ( is_array( $cached ) && ! empty( $cached['__tsosk_meta'] ) && $cached['__tsosk_meta'] === $cache_key_meta && ! empty( $cached['map'] ) && is_array( $cached['map'] ) ) {
+			return $this->normalize_checksum_map( $cached['map'] );
+		}
+		// Legacy flat transient without version stamp — discard.
+		if ( is_array( $cached ) && empty( $cached['__tsosk_meta'] ) ) {
+			delete_transient( self::TRANSIENT_CHECKSUMS );
 		}
 
-		$version = get_bloginfo( 'version' );
-		$locale  = get_locale();
+		// Prefer core helper when available (handles API quirks).
+		if ( ! function_exists( 'get_core_checksums' ) ) {
+			tsosk_require_wp_admin( 'includes/update.php' );
+		}
+		$checksums = false;
+		if ( function_exists( 'get_core_checksums' ) ) {
+			$checksums = get_core_checksums( $version, 'en_US' );
+			if ( ( ! is_array( $checksums ) || empty( $checksums ) ) && 'en_US' !== $locale ) {
+				$checksums = get_core_checksums( $version, $locale );
+			}
+		}
 
-		$url      = add_query_arg( array( 'version' => $version, 'locale' => $locale ), self::API_URL );
-		$response = wp_remote_get( $url, array( 'timeout' => 30, 'sslverify' => true ) );
+		if ( ! is_array( $checksums ) || empty( $checksums ) ) {
+			$checksums = $this->fetch_checksums_remote( $version, 'en_US' );
+			if ( is_wp_error( $checksums ) && 'en_US' !== $locale ) {
+				$checksums = $this->fetch_checksums_remote( $version, $locale );
+			}
+			if ( is_wp_error( $checksums ) ) {
+				return $checksums;
+			}
+		}
+
+		$checksums = $this->normalize_checksum_map( $checksums );
+		if ( empty( $checksums ) ) {
+			return new WP_Error( 'api_error', __( 'Invalid response from WordPress.org API.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		set_transient(
+			self::TRANSIENT_CHECKSUMS,
+			array(
+				'__tsosk_meta' => $cache_key_meta,
+				'map'          => $checksums,
+			),
+			DAY_IN_SECONDS
+		);
+
+		return $checksums;
+	}
+
+	/**
+	 * HTTP fetch of core checksums for a version/locale.
+	 *
+	 * @param string $version WP version.
+	 * @param string $locale  Locale code.
+	 * @return array<string,string>|WP_Error
+	 */
+	private function fetch_checksums_remote( string $version, string $locale ) {
+		$url      = add_query_arg(
+			array(
+				'version' => $version,
+				'locale'  => $locale,
+			),
+			self::API_URL
+		);
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'   => 30,
+				'sslverify' => true,
+			)
+		);
 
 		if ( is_wp_error( $response ) ) {
-			// Retry with en_US if locale-specific request failed.
-			if ( 'en_US' !== $locale ) {
-				$url_en   = add_query_arg( array( 'version' => $version, 'locale' => 'en_US' ), self::API_URL );
-				$response = wp_remote_get( $url_en, array( 'timeout' => 30, 'sslverify' => true ) );
-			}
-			if ( is_wp_error( $response ) ) {
-				return new WP_Error(
-					'api_error',
-					/* translators: %s: error message */
-					sprintf( __( 'Could not reach WordPress.org checksums API: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $response->get_error_message() )
-				);
-			}
+			return new WP_Error(
+				'api_error',
+				/* translators: %s: error message */
+				sprintf( __( 'Could not reach WordPress.org checksums API: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $response->get_error_message() )
+			);
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
@@ -523,18 +670,12 @@ class TSOSK_Mod_File_Integrity {
 			);
 		}
 
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-
-		if ( ! isset( $data['checksums'] ) || ! is_array( $data['checksums'] ) ) {
+		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		if ( ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
 			return new WP_Error( 'api_error', __( 'Invalid response from WordPress.org API.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$checksums = $data['checksums'];
-		$checksums = $this->normalize_checksum_map( $checksums );
-		set_transient( self::TRANSIENT_CHECKSUMS, $checksums, DAY_IN_SECONDS );
-
-		return $checksums;
+		return $body['checksums'];
 	}
 
 	/**
@@ -629,7 +770,7 @@ class TSOSK_Mod_File_Integrity {
 			<button class="button" id="tsosk-fi-force-scan"
 			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 			        data-force="1"
-			        title="<?php esc_attr_e( 'Force fresh scan — ignores the 24-hour cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			        title="<?php esc_attr_e( 'Re-download checksums from WordPress.org and scan again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<?php esc_html_e( 'Force Re-scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-fi-msg"></span>

@@ -102,7 +102,7 @@ class TSOSK_Mod_Health {
 	}
 
 	/**
-	 * @return array{blog_public:bool,debug_enabled:bool}
+	 * @return array
 	 */
 	private function get_suppress_settings(): array {
 		$defaults = array(
@@ -266,7 +266,7 @@ class TSOSK_Mod_Health {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Email Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Alerts are intentionally small and actionable. The current alert sends an email when the 404 monitor exceeds the configured hourly threshold.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Optional email when the Redirects 404 monitor sees too much traffic to missing pages. Useful to catch broken links or bots scanning your site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<label class="tsosk-radio-row">
 				<input type="checkbox" id="tsosk-alerts-enabled" <?php checked( ! empty( $settings['enabled'] ) ); ?>>
@@ -277,8 +277,18 @@ class TSOSK_Mod_Health {
 				<input type="email" id="tsosk-alerts-email" class="regular-text" value="<?php echo esc_attr( $settings['email'] ); ?>">
 			</div>
 			<div class="tsosk-field-row">
-				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( '404 hourly threshold', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
+				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( 'Max 404 visits per hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="number" id="tsosk-alerts-404-threshold" min="1" value="<?php echo esc_attr( (string) $settings['not_found_threshold'] ); ?>">
+				<p class="description" style="margin:6px 0 0;">
+					<?php
+					printf(
+						/* translators: 1: example threshold value from settings, 2: same threshold (minimum visits in one hour) */
+						esc_html__( 'Example: with %1$d, you get one email if the site records %2$d or more Not Found (404) visits within the same clock hour. Each visit counts once (not the lifetime total of a URL). At most one alert email is sent per hour.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						(int) $settings['not_found_threshold'],
+						(int) $settings['not_found_threshold']
+					);
+					?>
+				</p>
 			</div>
 			<button class="button button-primary" id="tsosk-health-save-alerts" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -310,7 +320,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Get alert settings.
 	 *
-	 * @return array{enabled:bool,email:string,not_found_threshold:int}
+	 * @return array
 	 */
 	private function get_settings(): array {
 		$settings = get_option( self::OPTION, array() );
@@ -328,7 +338,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Build health checks.
 	 *
-	 * @return array<int, array{label:string,status:string,details:string}>
+	 * @return array
 	 */
 	private function get_checks(): array {
 		$checks = array();
@@ -368,7 +378,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Check overdue cron events.
 	 *
-	 * @return array{label:string,status:string,details:string}
+	 * @return array
 	 */
 	private function cron_check(): array {
 		$cron = _get_cron_array();
@@ -395,7 +405,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Check debug log size.
 	 *
-	 * @return array{label:string,status:string,details:string}
+	 * @return array
 	 */
 	private function debug_log_check(): array {
 		$path = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'debug.log';
@@ -411,7 +421,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Check recent 404 activity.
 	 *
-	 * @return array{label:string,status:string,details:string}
+	 * @return array
 	 */
 	private function not_found_check(): array {
 		$logs = get_option( 'tsosk_404_log', array() );
@@ -431,7 +441,7 @@ class TSOSK_Mod_Health {
 	/**
 	 * Check autoloaded options size.
 	 *
-	 * @return array{label:string,status:string,details:string}
+	 * @return array
 	 */
 	private function autoload_check(): array {
 		global $wpdb;

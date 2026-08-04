@@ -377,6 +377,8 @@ class TSOSK_Mod_Admin_Menu {
 			return $posted_id;
 		}
 
+		$posted_slug = $this->canonical_submenu_slug( (string) $posted_parsed['slug'] );
+
 		foreach ( $known_rows as $row ) {
 			if ( (string) ( $row['id'] ?? '' ) === $posted_id ) {
 				return $posted_id;
@@ -384,7 +386,8 @@ class TSOSK_Mod_Admin_Menu {
 			if ( (int) ( $row['level'] ?? 0 ) !== ( '' === $posted_parsed['parent'] ? 0 : 1 ) ) {
 				continue;
 			}
-			if ( (string) ( $row['slug'] ?? '' ) !== $posted_parsed['slug'] ) {
+			$row_slug = $this->canonical_submenu_slug( (string) ( $row['slug'] ?? '' ) );
+			if ( $row_slug !== $posted_slug ) {
 				continue;
 			}
 			return (string) $row['id'];
@@ -695,7 +698,10 @@ class TSOSK_Mod_Admin_Menu {
 	}
 
 	/**
-	 * Repair legacy Customizer slugs where square brackets were stripped on save.
+	 * Repair and stabilize submenu slugs for matching / saved order.
+	 *
+	 * Appearance → Customizer links include a volatile `return=` query that changes
+	 * with the current admin page; strip it so reorder rules keep matching.
 	 *
 	 * @param string $slug Menu slug.
 	 */
@@ -706,10 +712,10 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		$repairs = array(
-			'autofocussection='     => 'autofocus[section]=',
-			'autofocuspanel='       => 'autofocus[panel]=',
-			'autofocuscollection='  => 'autofocus[collection]=',
-			'autofocuscontrol='     => 'autofocus[control]=',
+			'autofocussection='    => 'autofocus[section]=',
+			'autofocuspanel='      => 'autofocus[panel]=',
+			'autofocuscollection=' => 'autofocus[collection]=',
+			'autofocuscontrol='    => 'autofocus[control]=',
 		);
 
 		foreach ( $repairs as $broken => $fixed ) {
@@ -718,7 +724,53 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
+		// customize.php?return=… / url=… change every request — keep autofocus* only.
+		if ( preg_match( '#(?:^|/)customize\.php(?:\?|$)#', $slug ) ) {
+			$parts = explode( '?', $slug, 2 );
+			$file  = (string) $parts[0];
+			$query = array();
+			if ( isset( $parts[1] ) && '' !== $parts[1] ) {
+				parse_str( $parts[1], $query );
+			}
+			unset( $query['return'], $query['url'] );
+
+			$keep = array();
+			foreach ( $query as $key => $value ) {
+				$key = (string) $key;
+				if ( 0 === strpos( $key, 'autofocus' ) ) {
+					$keep[ $key ] = $value;
+				}
+			}
+
+			if ( array() === $keep ) {
+				return 'customize.php';
+			}
+
+			return 'customize.php?' . $this->build_menu_query_string( $keep );
+		}
+
 		return $slug;
+	}
+
+	/**
+	 * Build a query string for menu slugs (preserves nested autofocus keys).
+	 *
+	 * @param array<string, mixed> $query Query args.
+	 */
+	private function build_menu_query_string( array $query ): string {
+		$parts = array();
+		foreach ( $query as $key => $value ) {
+			$key = (string) $key;
+			if ( is_array( $value ) ) {
+				foreach ( $value as $sub_key => $sub_value ) {
+					$parts[] = rawurlencode( $key . '[' . $sub_key . ']' ) . '=' . rawurlencode( (string) $sub_value );
+				}
+				continue;
+			}
+			$parts[] = rawurlencode( $key ) . '=' . rawurlencode( (string) $value );
+		}
+		// WordPress menu slugs use unencoded brackets in autofocus[…] keys.
+		return str_replace( array( '%5B', '%5D' ), array( '[', ']' ), implode( '&', $parts ) );
 	}
 
 	/**
@@ -739,9 +791,8 @@ class TSOSK_Mod_Admin_Menu {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function dedupe_submenu_display_rows( array $rows, string $parent_slug ): array {
-		$deduped         = array();
-		$seen_canonical  = array();
-		$seen_titles     = array();
+		$deduped        = array();
+		$seen_canonical = array();
 
 		foreach ( $rows as $row ) {
 			$slug       = $this->canonical_submenu_slug( (string) ( $row['slug'] ?? '' ) );
@@ -752,15 +803,7 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 
-			$title_key = $row_parent . '|' . strtolower( trim( (string) ( $row['title'] ?? '' ) ) );
-			if ( '' !== trim( (string) ( $row['title'] ?? '' ) ) && isset( $seen_titles[ $title_key ] ) ) {
-				continue;
-			}
-
 			$seen_canonical[ $dedupe_key ] = true;
-			if ( '' !== trim( (string) ( $row['title'] ?? '' ) ) ) {
-				$seen_titles[ $title_key ] = true;
-			}
 
 			$row['slug'] = $slug;
 			$row['id']   = $this->canonical_submenu_item_id( $slug, $row_parent );
@@ -1106,24 +1149,58 @@ class TSOSK_Mod_Admin_Menu {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function sort_sub_rows_by_ids( array $rows, array $id_order ): array {
-		$by_id = array();
+		$by_id           = array();
+		$by_canonical_id = array();
 		foreach ( $rows as $row ) {
-			$by_id[ (string) ( $row['id'] ?? '' ) ] = $row;
+			$id = (string) ( $row['id'] ?? '' );
+			if ( '' === $id ) {
+				continue;
+			}
+			$by_id[ $id ] = $row;
+			$parsed       = self::parse_item_id( $id );
+			if ( $parsed && '' !== $parsed['parent'] ) {
+				$canonical_id                   = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
+				$by_canonical_id[ $canonical_id ] = $row;
+			}
 		}
 
 		$sorted = array();
 		$used   = array();
 		foreach ( $id_order as $id ) {
 			$id = (string) $id;
-			if ( '' === $id || ! isset( $by_id[ $id ] ) || ! empty( $used[ $id ] ) ) {
+			if ( '' === $id ) {
 				continue;
 			}
-			$sorted[]   = $by_id[ $id ];
-			$used[ $id ] = true;
+
+			$row = null;
+			$matched_id = '';
+			if ( isset( $by_id[ $id ] ) && empty( $used[ $id ] ) ) {
+				$row        = $by_id[ $id ];
+				$matched_id = $id;
+			} else {
+				$parsed = self::parse_item_id( $id );
+				if ( $parsed && '' !== $parsed['parent'] ) {
+					$canonical_id = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
+					if ( isset( $by_canonical_id[ $canonical_id ] ) ) {
+						$candidate = $by_canonical_id[ $canonical_id ];
+						$live_id   = (string) ( $candidate['id'] ?? '' );
+						if ( '' !== $live_id && empty( $used[ $live_id ] ) ) {
+							$row        = $candidate;
+							$matched_id = $live_id;
+						}
+					}
+				}
+			}
+
+			if ( null === $row || '' === $matched_id ) {
+				continue;
+			}
+			$sorted[]            = $row;
+			$used[ $matched_id ] = true;
 		}
 		foreach ( $rows as $row ) {
 			$id = (string) ( $row['id'] ?? '' );
-			if ( ! empty( $used[ $id ] ) ) {
+			if ( '' === $id || ! empty( $used[ $id ] ) ) {
 				continue;
 			}
 			$sorted[] = $row;
@@ -1362,11 +1439,13 @@ class TSOSK_Mod_Admin_Menu {
 	 * @param string $parent_slug  Current parent slug in $submenu.
 	 */
 	private function find_submenu_settings_id( string $slug, string $parent_slug ): string {
-		$settings = self::get_settings();
+		$settings  = self::get_settings();
+		$canonical = $this->canonical_submenu_slug( $slug );
 
 		foreach ( $settings['relocations'] ?? array() as $item_id => $new_parent ) {
+			unset( $new_parent );
 			$parsed = self::parse_item_id( (string) $item_id );
-			if ( $parsed && $parsed['slug'] === $slug ) {
+			if ( $parsed && $this->canonical_submenu_slug( (string) $parsed['slug'] ) === $canonical ) {
 				return (string) $item_id;
 			}
 		}
@@ -1378,12 +1457,12 @@ class TSOSK_Mod_Admin_Menu {
 
 		foreach ( $candidate_ids as $item_id ) {
 			$parsed = self::parse_item_id( (string) $item_id );
-			if ( $parsed && '' !== $parsed['parent'] && $parsed['slug'] === $slug ) {
+			if ( $parsed && '' !== $parsed['parent'] && $this->canonical_submenu_slug( (string) $parsed['slug'] ) === $canonical ) {
 				return (string) $item_id;
 			}
 		}
 
-		return self::item_id( $slug, $parent_slug );
+		return self::item_id( $canonical, $parent_slug );
 	}
 
 	/**
@@ -2110,7 +2189,7 @@ class TSOSK_Mod_Admin_Menu {
 
 			foreach ( $candidates as $candidate ) {
 				foreach ( $live_slugs as $live_slug ) {
-					if ( $this->submenu_entry_matches_slug( array( '', '', $live_slug ), $candidate ) ) {
+					if ( $this->submenu_entry_matches_slug( array( '', '', $live_slug ), $candidate, '', true ) ) {
 						$hints[ $item_id ] = $live_slug;
 						break 2;
 					}
@@ -2353,12 +2432,13 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Remove nested-top slugs from submenu order lists of sections they no longer belong to.
 	 *
-	 * @param array<string, array<int, string>> $sub_order   Parent => ordered slugs.
-	 * @param array<string, string>             $nested_tops Item id => parent slug.
+	 * @param array<string, array<int, string>> $sub_order      Parent => ordered slugs.
+	 * @param array<string, array<int, string>> $sub_order_ids  Parent => ordered item ids.
+	 * @param array<string, string>             $nested_tops    Item id => parent slug.
 	 */
-	private function prune_nested_slugs_from_sub_order( array &$sub_order, array $nested_tops ): void {
+	private function prune_nested_slugs_from_sub_order( array &$sub_order, array &$sub_order_ids, array $nested_tops ): void {
 		foreach ( $nested_tops as $item_id => $parent_slug ) {
-			$parsed = self::parse_item_id( (string) $item_id );
+			$parsed      = self::parse_item_id( (string) $item_id );
 			$parent_slug = $this->sanitize_menu_slug( (string) $parent_slug );
 			if ( ! $parsed || '' !== $parsed['parent'] || '' === $parent_slug ) {
 				continue;
@@ -2385,17 +2465,43 @@ class TSOSK_Mod_Admin_Menu {
 					)
 				);
 			}
+
+			foreach ( array_keys( $sub_order_ids ) as $section ) {
+				$section = (string) $section;
+				if ( $section === $parent_slug || ! is_array( $sub_order_ids[ $section ] ?? null ) ) {
+					continue;
+				}
+
+				$sub_order_ids[ $section ] = array_values(
+					array_filter(
+						$sub_order_ids[ $section ],
+						function ( $saved_id ) use ( $slug, $section ) {
+							$parsed_id = self::parse_item_id( (string) $saved_id );
+							if ( ! $parsed_id ) {
+								return true;
+							}
+							return ! $this->submenu_entry_matches_slug(
+								array( '', '', (string) $parsed_id['slug'] ),
+								$slug,
+								$section,
+								true
+							);
+						}
+					)
+				);
+			}
 		}
 	}
 
 	/**
 	 * Remove top-level plugin slugs from submenu order maps when they are no longer nested.
 	 *
-	 * @param array<string, array<int, string>> $sub_order   Parent => ordered slugs.
-	 * @param array<int, string>                $top_order   Top-level slug order.
-	 * @param array<string, string>             $nested_tops Item id => parent slug.
+	 * @param array<string, array<int, string>> $sub_order      Parent => ordered slugs.
+	 * @param array<string, array<int, string>> $sub_order_ids  Parent => ordered item ids.
+	 * @param array<int, string>                $top_order      Top-level slug order.
+	 * @param array<string, string>             $nested_tops    Item id => parent slug.
 	 */
-	private function prune_top_level_slugs_from_sub_order( array &$sub_order, array $top_order, array $nested_tops ): void {
+	private function prune_top_level_slugs_from_sub_order( array &$sub_order, array &$sub_order_ids, array $top_order, array $nested_tops ): void {
 		$nested_slugs = array();
 		foreach ( $nested_tops as $item_id => $parent_slug ) {
 			unset( $parent_slug );
@@ -2428,6 +2534,34 @@ class TSOSK_Mod_Admin_Menu {
 						function ( $saved_slug ) use ( $slug, $section ) {
 							return ! $this->submenu_entry_matches_slug(
 								array( '', '', (string) $saved_slug ),
+								$slug,
+								$section,
+								true
+							);
+						}
+					)
+				);
+			}
+
+			foreach ( array_keys( $sub_order_ids ) as $section ) {
+				$section = (string) $section;
+				if ( ! is_array( $sub_order_ids[ $section ] ?? null ) ) {
+					continue;
+				}
+				if ( $this->top_level_menu_slug_matches( $section, $slug ) ) {
+					continue;
+				}
+
+				$sub_order_ids[ $section ] = array_values(
+					array_filter(
+						$sub_order_ids[ $section ],
+						function ( $saved_id ) use ( $slug, $section ) {
+							$parsed_id = self::parse_item_id( (string) $saved_id );
+							if ( ! $parsed_id ) {
+								return true;
+							}
+							return ! $this->submenu_entry_matches_slug(
+								array( '', '', (string) $parsed_id['slug'] ),
 								$slug,
 								$section,
 								true
@@ -2484,10 +2618,11 @@ class TSOSK_Mod_Admin_Menu {
 			return false;
 		}
 
-		// Only compare file basename when neither slug is an admin.php?page= plugin screen.
-		if ( ! str_contains( $entry_slug, 'page=' ) && ! str_contains( $order_slug, 'page=' ) ) {
-			$base_entry = basename( (string) strtok( $entry_slug, '?' ) );
-			$base_order = basename( (string) strtok( $order_slug, '?' ) );
+		// Basename-only match is unsafe when either slug has a query string
+		// (themes.php vs themes.php?page=…, customize.php?return=… vs autofocus variants).
+		if ( ! str_contains( $entry_slug, '?' ) && ! str_contains( $order_slug, '?' ) && ! str_contains( $entry_slug, 'page=' ) && ! str_contains( $order_slug, 'page=' ) ) {
+			$base_entry = basename( $entry_slug );
+			$base_order = basename( $order_slug );
 			if ( '' !== $base_entry && $base_entry === $base_order ) {
 				return true;
 			}
@@ -2969,8 +3104,8 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
-		$this->prune_nested_slugs_from_sub_order( $sub_order, $nested_tops );
-		$this->prune_top_level_slugs_from_sub_order( $sub_order, $top_order, $nested_tops );
+		$this->prune_nested_slugs_from_sub_order( $sub_order, $sub_order_ids, $nested_tops );
+		$this->prune_top_level_slugs_from_sub_order( $sub_order, $sub_order_ids, $top_order, $nested_tops );
 
 		$clean_settings = $this->normalize_stored_submenu_settings(
 			array(
