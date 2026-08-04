@@ -44,7 +44,6 @@ class TSOSK_Site_Status {
 			'health'           => 'report diagnostics alerts salud informe',
 			'content-audit'    => 'broken shortcodes shortcode rotos roto empty title auditoria contenido imagen destacada',
 			'slug-manager'     => 'slug permalink url rename slugs gestor slugs enlaces permanentes',
-			'footprint'        => 'plugin footprint options huella plugins opciones',
 			'history'          => 'activity history log historial actividad cambios registro',
 		);
 	}

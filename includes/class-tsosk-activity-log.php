@@ -81,7 +81,6 @@ class TSOSK_Activity_Log {
 			'slow-queries',
 			'sandbox',
 			'cron',
-			'database',
 			'roles',
 			'slug-manager',
 			'file-integrity',
@@ -94,6 +93,7 @@ class TSOSK_Activity_Log {
 			'content-audit',
 			'media-footprint',
 			'image-sizes-audit',
+			'email',
 		);
 	}
 
@@ -221,12 +221,10 @@ class TSOSK_Activity_Log {
 			'slow-queries'      => __( 'Slow Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'sandbox'           => __( 'Plugin Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'cron'              => __( 'Cron Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'database'          => __( 'TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'roles'             => __( 'Roles & Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'slug-manager'      => __( 'Slug Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'file-integrity'    => __( 'File Integrity', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'rewrite'           => __( 'Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'object-cache'      => __( 'Object Cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'transients'        => __( 'Transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'users'             => __( 'Users & Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'site-snapshot'     => __( 'Export/Import TSO Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -235,6 +233,7 @@ class TSOSK_Activity_Log {
 			'content-audit'     => __( 'Content Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'media-footprint'   => __( 'Uploads Disk Footprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'image-sizes-audit' => __( 'Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'email'             => __( 'Email Diagnostics', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$module = sanitize_key( $module );
@@ -269,6 +268,8 @@ class TSOSK_Activity_Log {
 			'clear'   => __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'bulk'    => __( 'Bulk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'clone'   => __( 'Clone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'send'    => __( 'Send', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'error'   => __( 'Error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$action = sanitize_key( $action );
