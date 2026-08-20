@@ -305,7 +305,9 @@ class TSOSK_Admin {
 					'snapshot_invalid_json'   => __( 'Paste or upload a valid TSO snapshot JSON first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_no_file'        => __( 'No file chosen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'redirects_select_404'    => __( 'Select at least one 404 row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of 404 paths queued for redirect creation. */
 					'redirects_prefill_queue' => __( '%1$d paths queued. The form shows the first — save each redirect to advance automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of 404 paths still waiting in the redirect queue. */
 					'redirects_prefill_next'  => __( 'Redirect saved. %1$d path(s) remaining in the queue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_site_url'   => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_wp_version' => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

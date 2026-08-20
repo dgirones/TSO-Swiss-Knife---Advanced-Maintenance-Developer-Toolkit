@@ -126,10 +126,12 @@ class TSOSK_Mod_Hidden_Profiles {
 	 */
 	public static function disable_emojis_dns_prefetch( array $urls, string $relation_type ): array {
 		if ( 'dns-prefetch' === $relation_type ) {
-			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter hook.
-			$emoji_svg = apply_filters( 'emoji_svg_url', 'https://s.w.org/images/core/emoji/2/svg/' );
 			foreach ( $urls as $key => $url ) {
-				if ( is_string( $url ) && str_contains( $url, $emoji_svg ) ) {
+				if ( ! is_string( $url ) ) {
+					continue;
+				}
+				$host = wp_parse_url( $url, PHP_URL_HOST );
+				if ( is_string( $host ) && 's.w.org' === $host ) {
 					unset( $urls[ $key ] );
 				}
 			}
