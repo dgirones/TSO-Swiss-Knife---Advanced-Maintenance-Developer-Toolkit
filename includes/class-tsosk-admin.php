@@ -182,6 +182,9 @@ class TSOSK_Admin {
 				'snapshot_section_labels' => class_exists( 'TSOSK_Mod_Site_Snapshot' )
 					? TSOSK_Mod_Site_Snapshot::get_section_labels()
 					: array(),
+				'snapshot_current_env'    => class_exists( 'TSOSK_Mod_Site_Snapshot' )
+					? TSOSK_Mod_Site_Snapshot::get_current_environment()
+					: array(),
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -301,6 +304,14 @@ class TSOSK_Admin {
 					'snapshot_no_sections'    => __( 'Select at least one section.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_invalid_json'   => __( 'Paste or upload a valid TSO snapshot JSON first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_no_file'        => __( 'No file chosen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_select_404'    => __( 'Select at least one 404 row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_prefill_queue' => __( '%1$d paths queued. The form shows the first — save each redirect to advance automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_prefill_next'  => __( 'Redirect saved. %1$d path(s) remaining in the queue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_site_url'   => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_wp_version' => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_plugin'     => __( 'Snapshot schema', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_php'        => __( 'PHP version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_locale'     => __( 'Locale', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_more'          => __( 'more rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_pk'            => __( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_execute_btn'   => __( 'Execute replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

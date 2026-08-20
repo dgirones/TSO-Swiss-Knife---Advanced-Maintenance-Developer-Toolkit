@@ -211,6 +211,7 @@ class TSOSK_Mod_Cron {
 		);
 
 		$health = $this->get_cron_health( $events );
+		$missed = $this->get_missed_scheduled_posts();
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Lists all scheduled WordPress cron events. Core events are read-only. Custom events can be run manually or deleted. The Source column shows which plugin or WordPress itself registered the hook.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -246,6 +247,51 @@ class TSOSK_Mod_Cron {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Missed scheduled posts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $missed ) ) ); ?>)</h3>
+			<p class="description">
+				<?php esc_html_e( 'Posts with a future publish date that is already in the past. This usually means WP-Cron did not run publish_future_post on time. Visit the site, run wp cron event run --due-now, or use the Cron Manager to run overdue events.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<?php if ( empty( $missed ) ) : ?>
+				<p><?php esc_html_e( 'No stuck scheduled posts found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Scheduled for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Overdue by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $missed as $post ) : ?>
+								<?php
+								$scheduled_ts = strtotime( $post->post_date_gmt . ' GMT' );
+								$overdue      = $scheduled_ts > 0 ? human_time_diff( $scheduled_ts, $now ) : '—';
+								?>
+								<tr>
+									<td>
+										<a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer">
+											<?php echo esc_html( get_the_title( $post ) ?: '#' . $post->ID ); ?>
+										</a>
+									</td>
+									<td><?php echo esc_html( get_date_from_gmt( $post->post_date_gmt, get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
+									<td><?php echo esc_html( $overdue ); ?></td>
+									<td>
+										<a class="button button-small" href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer">
+											<?php esc_html_e( 'Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+										</a>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
 		</div>
 
 		<?php if ( empty( $events ) ) : ?>
@@ -343,7 +389,7 @@ class TSOSK_Mod_Cron {
 		</div>
 		<?php endif; ?>
 
-		<div id="tsosk-cron-edit-panel" class="tsosk-card" style="display:none;margin-top:16px;">
+		<div id="tsosk-cron-edit-panel" class="tsosk-card">
 			<h3><?php esc_html_e( 'Reschedule cron event', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Change when the event runs next. For recurring events, pick the interval. Useful for orphaned events from deactivated plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<input type="hidden" id="tsosk-cron-edit-hook" value="">
@@ -784,6 +830,31 @@ class TSOSK_Mod_Cron {
 			|| false !== strpos( $hook, '_cleanup' )
 			|| false !== strpos( $hook, '_purge' )
 			|| false !== strpos( $hook, '_check' )
+		);
+	}
+
+	/**
+	 * Posts scheduled in the past but still in future status.
+	 *
+	 * @return array<int, WP_Post>
+	 */
+	private function get_missed_scheduled_posts(): array {
+		return get_posts(
+			array(
+				'post_type'      => array( 'post', 'page' ),
+				'post_status'    => 'future',
+				'posts_per_page' => 30,
+				'no_found_rows'  => true,
+				'orderby'        => 'date',
+				'order'          => 'ASC',
+				'date_query'     => array(
+					array(
+						'before'    => gmdate( 'Y-m-d H:i:s' ),
+						'column'    => 'post_date_gmt',
+						'inclusive' => true,
+					),
+				),
+			)
 		);
 	}
 

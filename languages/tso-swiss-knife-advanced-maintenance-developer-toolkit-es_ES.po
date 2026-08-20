@@ -10117,7 +10117,7 @@ msgstr ""
 
 #: includes/class-tsosk-admin.php:279
 msgid "items"
-msgstr ""
+msgstr "elementos"
 
 #: includes/class-tsosk-config-storage.php:120
 msgid "Could not encode config data."
@@ -10273,21 +10273,21 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:71
 msgid "No shortcode removed. It may have already been deleted."
-msgstr ""
+msgstr "No se eliminó ningún shortcode. Puede que ya se hubiera borrado."
 
 #. translators: %d: number of shortcodes removed
 #: includes/modules/class-tsosk-mod-content-audit.php:102
 #, php-format
 msgid "%d shortcode removed."
 msgid_plural "%d shortcodes removed."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d shortcode eliminado."
+msgstr[1] "%d shortcodes eliminados."
 
 #. translators: %s: cron hook name
 #: includes/modules/class-tsosk-mod-cron.php:114
 #, php-format
 msgid "Cron event deleted: %s."
-msgstr ""
+msgstr "Evento cron eliminado: %s."
 
 #: includes/modules/class-tsosk-mod-custom-404.php:396
 msgid "Select a valid published page to preview."
@@ -10353,7 +10353,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:62
 msgid "Health alert settings saved."
-msgstr ""
+msgstr "Configuración de alertas de salud guardada."
 
 #. translators: %s: heartbeat mode
 #: includes/modules/class-tsosk-mod-heartbeat.php:94
@@ -10498,15 +10498,15 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-redirects.php:180
 #, php-format
 msgid "Redirect saved: %1$s (%2$d)."
-msgstr ""
+msgstr "Redirección guardada: %1$s (%2$d)."
 
 #: includes/modules/class-tsosk-mod-redirects.php:238
 msgid "Redirect enabled."
-msgstr ""
+msgstr "Redirección activada."
 
 #: includes/modules/class-tsosk-mod-redirects.php:239
 msgid "Redirect disabled."
-msgstr ""
+msgstr "Redirección desactivada."
 
 #. translators: 1: REST mode, 2: number of blocked namespaces
 #: includes/modules/class-tsosk-mod-rest-api.php:85
@@ -10758,11 +10758,11 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:70
 msgid "Maintenance mode"
-msgstr ""
+msgstr "Modo mantenimiento"
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:71
 msgid "Hidden WordPress profiles"
-msgstr ""
+msgstr "Perfiles ocultos de WordPress"
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:281
 msgid ""
@@ -11427,3 +11427,189 @@ msgstr ""
 "opciones del núcleo de WordPress y raíces genéricas como “tso” no se usan "
 "como coincidencia. “Ver en el editor de opciones” abre un filtro preciso "
 "para ese plugin."
+
+msgid "Top autoloaded options"
+msgstr "Opciones autoload principales"
+
+msgid "Largest wp_options rows loaded on every request (autoload = yes). Review heavy options in Options Editor if total autoload size is high."
+msgstr "Filas wp_options más grandes cargadas en cada petición (autoload = yes). Revisa opciones pesadas en el editor de opciones si el tamaño total de autoload es alto."
+
+msgid "No autoloaded options found."
+msgstr "No se han encontrado opciones autoload."
+
+msgid "Option name"
+msgstr "Nombre de la opción"
+
+msgid "Site URL consistency"
+msgstr "Coherencia de las URL del sitio"
+
+msgid "Home: %1$s — Site: %2$s"
+msgstr "Inicio: %1$s — Sitio: %2$s"
+
+msgid "Home: %s"
+msgstr "Inicio: %s"
+
+msgid "Site: %s"
+msgstr "Sitio: %s"
+
+msgid "Home and Site URL hosts differ."
+msgstr "Los hosts de la URL de inicio y del sitio difieren."
+
+msgid "Home and Site URL schemes differ."
+msgstr "Los esquemas de la URL de inicio y del sitio difieren."
+
+msgid "Security headers"
+msgstr "Cabeceras de seguridad"
+
+msgid "Present: %s"
+msgstr "Presentes: %s"
+
+msgid "No common security headers detected on the home page response."
+msgstr "No se han detectado cabeceras de seguridad habituales en la respuesta de la página de inicio."
+
+msgid "Missed scheduled posts"
+msgstr "Entradas programadas perdidas"
+
+msgid "Posts with a future publish date that is already in the past. This usually means WP-Cron did not run publish_future_post on time. Visit the site, run wp cron event run --due-now, or use the Cron Manager to run overdue events."
+msgstr "Entradas con fecha de publicación futura que ya ha pasado. Normalmente WP-Cron no ejecutó publish_future_post a tiempo. Visita el sitio, ejecuta wp cron event run --due-now o usa el gestor de cron para ejecutar eventos atrasados."
+
+msgid "No stuck scheduled posts found."
+msgstr "No se han encontrado entradas programadas bloqueadas."
+
+msgid "Scheduled for"
+msgstr "Programada para"
+
+msgid "Overdue by"
+msgstr "Atrasada por"
+
+msgid "Prefill redirect form (selected)"
+msgstr "Rellenar formulario de redirección (seleccionados)"
+
+msgid "Select all"
+msgstr "Seleccionar todo"
+
+msgid "Select"
+msgstr "Seleccionar"
+
+msgid "Duplicate titles"
+msgstr "Títulos duplicados"
+
+msgid "Posts or pages that share the exact same title. Duplicate titles can confuse editors and SEO tools."
+msgstr "Entradas o páginas con el mismo título exacto. Los títulos duplicados pueden confundir editores y herramientas SEO."
+
+msgid "No duplicate titles found."
+msgstr "No se han encontrado títulos duplicados."
+
+msgid "Count"
+msgstr "Recuento"
+
+msgid "Post IDs"
+msgstr "IDs de entradas"
+
+msgid "Shortcode inventory"
+msgstr "Inventario de shortcodes"
+
+msgid "Shortcodes found in the latest 100 posts/pages whose content contains brackets. Count = number of posts using each tag."
+msgstr "Shortcodes encontrados en las 100 entradas/páginas más recientes con corchetes en el contenido. Recuento = número de entradas que usan cada etiqueta."
+
+msgid "No shortcodes detected in the sampled content."
+msgstr "No se han detectado shortcodes en el contenido muestreado."
+
+msgid "Shortcode"
+msgstr "Shortcode"
+
+msgid "Registered"
+msgstr "Registrado"
+
+msgid "Environment comparison"
+msgstr "Comparación de entorno"
+
+msgid "Compares snapshot metadata with this site before import. Differences do not block import but help avoid surprises on staging or production."
+msgstr "Compara los metadatos de la instantánea con este sitio antes de importar. Las diferencias no bloquean la importación pero ayudan a evitar sorpresas en staging o producción."
+
+msgid "Field"
+msgstr "Campo"
+
+msgid "In snapshot"
+msgstr "En la instantánea"
+
+msgid "This site"
+msgstr "Este sitio"
+
+msgid "array (%d items)"
+msgstr "array (%d elementos)"
+
+msgid "set"
+msgstr "definido"
+
+msgid "Select at least one 404 row."
+msgstr "Selecciona al menos una fila 404."
+
+msgid "%1$d paths queued. The form shows the first — save each redirect to advance automatically."
+msgstr "%1$d rutas en cola. El formulario muestra la primera — guarda cada redirección para avanzar automáticamente."
+
+msgid "Redirect saved. %1$d path(s) remaining in the queue."
+msgstr "Redirección guardada. Quedan %1$d ruta(s) en la cola."
+
+msgid "Site URL"
+msgstr "URL del sitio"
+
+msgid "WordPress version"
+msgstr "Versión de WordPress"
+
+msgid "Snapshot schema"
+msgstr "Esquema de la instantánea"
+
+msgid "PHP version"
+msgstr "Versión de PHP"
+
+msgid "Locale"
+msgstr "Idioma del sitio"
+
+msgid "Posts"
+msgstr "Entradas"
+
+msgid "Admin menu manifest must be an object or array."
+msgstr "El manifiesto del menú de administración debe ser un objeto o una matriz."
+
+msgid "Admin menu section must be an object."
+msgstr "La sección del menú de administración debe ser un objeto."
+
+msgid "Capture tokens ($1, $2, …) are not allowed in the host of an absolute URL."
+msgstr "Los tokens de captura ($1, $2, …) no están permitidos en el host de una URL absoluta."
+
+msgid "Comment Anti-Spam section must be an object."
+msgstr "La sección Comment Anti-Spam debe ser un objeto."
+
+msgid "Custom 404 section must be an object."
+msgstr "La sección Custom 404 debe ser un objeto."
+
+msgid "Health alerts section must be an object."
+msgstr "La sección de alertas de salud debe ser un objeto."
+
+msgid "Health suppress section must be an object."
+msgstr "La sección de supresión de Site Health debe ser un objeto."
+
+msgid "Heartbeat section must be an object."
+msgstr "La sección Heartbeat debe ser un objeto."
+
+msgid "Hidden profiles section must be an object."
+msgstr "La sección Hidden profiles debe ser un objeto."
+
+msgid "Maintenance section must be an object."
+msgstr "La sección Maintenance debe ser un objeto."
+
+msgid "REST API section must be an object."
+msgstr "La sección REST API debe ser un objeto."
+
+msgid "Redirects module is not available."
+msgstr "El módulo Redirects no está disponible."
+
+msgid "Slow query settings must be an object."
+msgstr "La configuración de Slow Query debe ser un objeto."
+
+msgid "Unknown section \"%s\"."
+msgstr "Sección desconocida \"%s\"."
+
+msgid "Update Manager section must be an object."
+msgstr "La sección Update Manager debe ser un objeto."

@@ -272,7 +272,7 @@ class TSOSK_Mod_Redirects {
 
 		<div class="tsosk-guide-card">
 			<h3 class="tsosk-guide-title"><?php esc_html_e( 'Why use redirects?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description" style="margin-top:0;">
+			<p class="description tsosk-desc-flush">
 				<?php esc_html_e( 'Redirects tell browsers and search engines that a URL has moved. They preserve SEO value when you rename a post, merge content, or change permalink structure. A 301 permanent redirect passes most ranking signals to the new URL; 302/307 are for temporary moves. Use 410 when content is permanently removed. Google follows redirects when crawling — broken old URLs without redirects become 404s and may lose traffic.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 		</div>
@@ -350,14 +350,21 @@ class TSOSK_Mod_Redirects {
 				<button class="button button-secondary" id="tsosk-404-clear" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear 404 Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
+				<button class="button button-secondary" id="tsosk-404-prefill-selected" type="button">
+					<?php esc_html_e( 'Prefill redirect form (selected)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
-				<p class="description" style="margin-top:10px;">
+				<p class="description tsosk-desc-spaced">
 					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
-				<div class="tsosk-table-wrap tsosk-404-table-wrap" style="margin-top:12px;">
+				<div class="tsosk-table-wrap tsosk-404-table-wrap tsosk-404-table-wrap-spaced">
 					<table class="widefat tsosk-table" id="tsosk-404-table">
 						<thead>
 							<tr>
+								<th class="tsosk-404-col-select">
+									<label class="screen-reader-text" for="tsosk-404-select-all"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
+									<input type="checkbox" id="tsosk-404-select-all" aria-label="<?php esc_attr_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								</th>
 								<th><?php esc_html_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 								<th><?php esc_html_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 								<th><?php esc_html_e( 'Last visit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -369,6 +376,9 @@ class TSOSK_Mod_Redirects {
 							<?php foreach ( $not_found_log as $item ) : ?>
 							<?php $path_url = $this->rule_value_to_url( (string) $item['path'], 'exact', true ); ?>
 							<tr>
+								<td class="tsosk-404-col-select" data-label="<?php esc_attr_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+									<input type="checkbox" class="tsosk-404-select" value="1" data-source="<?php echo esc_attr( $item['path'] ); ?>" aria-label="<?php echo esc_attr( $item['path'] ); ?>">
+								</td>
 								<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $item['path'], $path_url ) ); ?></td>
 								<td class="tsosk-404-col-visits" data-label="<?php esc_attr_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( absint( $item['hits'] ) ) ); ?></td>
 								<td class="tsosk-404-col-date" data-label="<?php esc_attr_e( 'Last visit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $item['last_hit'] ) ) ); ?></td>
@@ -768,16 +778,21 @@ class TSOSK_Mod_Redirects {
 					}
 				}
 			}
-			$this->maybe_send_404_alert( $this->increment_404_hour_counter() );
+			$delta_key = 'tsosk_404_hit_delta_' . md5( $request_path );
+			set_transient( $delta_key, absint( get_transient( $delta_key ) ) + 1, HOUR_IN_SECONDS );
 			return;
 		}
 		set_transient( 'tsosk_404_write_gate', 1, 5 );
 
 		$logs = $this->get_404_log();
 		$key  = md5( $request_path );
+		$delta_key = 'tsosk_404_hit_delta_' . $key;
+		$delta     = absint( get_transient( $delta_key ) );
+		delete_transient( $delta_key );
+		$hit_increment = 1 + $delta;
 
 		if ( isset( $logs[ $key ] ) ) {
-			$logs[ $key ]['hits']     = absint( $logs[ $key ]['hits'] ) + 1;
+			$logs[ $key ]['hits']     = absint( $logs[ $key ]['hits'] ) + $hit_increment;
 			$logs[ $key ]['last_hit'] = time();
 			// Keep the last non-empty referrer; empty headers must not wipe a known source.
 			if ( '' !== $referrer ) {
@@ -790,7 +805,7 @@ class TSOSK_Mod_Redirects {
 			$logs[ $key ] = array(
 				'path'       => $request_path,
 				'uri'        => sanitize_text_field( $request_uri ),
-				'hits'       => 1,
+				'hits'       => $hit_increment,
 				'first_hit'  => time(),
 				'last_hit'   => time(),
 				'referrer'   => $referrer,
@@ -808,17 +823,19 @@ class TSOSK_Mod_Redirects {
 		$logs = array_slice( $logs, 0, 200, true );
 		update_option( self::LOG_OPTION, $logs, false );
 
-		$this->maybe_send_404_alert( $this->increment_404_hour_counter() );
+		$this->maybe_send_404_alert( $this->increment_404_hour_counter( $hit_increment ) );
 	}
 
 	/**
 	 * Count a 404 hit for the current UTC clock hour.
 	 *
+	 * @param int $amount Hits to add (includes batched gated hits).
 	 * @return int Hits in this hour after increment.
 	 */
-	private function increment_404_hour_counter(): int {
-		$key   = 'tsosk_404_hits_' . gmdate( 'YmdH' );
-		$count = absint( get_transient( $key ) ) + 1;
+	private function increment_404_hour_counter( int $amount = 1 ): int {
+		$amount = max( 1, $amount );
+		$key    = 'tsosk_404_hits_' . gmdate( 'YmdH' );
+		$count  = absint( get_transient( $key ) ) + $amount;
 		set_transient( $key, $count, 2 * HOUR_IN_SECONDS );
 		return $count;
 	}

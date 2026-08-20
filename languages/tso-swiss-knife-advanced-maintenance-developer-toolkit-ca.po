@@ -10102,7 +10102,7 @@ msgstr ""
 
 #: includes/class-tsosk-admin.php:279
 msgid "items"
-msgstr ""
+msgstr "elements"
 
 #: includes/class-tsosk-config-storage.php:120
 msgid "Could not encode config data."
@@ -10258,21 +10258,21 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:71
 msgid "No shortcode removed. It may have already been deleted."
-msgstr ""
+msgstr "No s'ha eliminat cap shortcode. Potser ja s'havia esborrat."
 
 #. translators: %d: number of shortcodes removed
 #: includes/modules/class-tsosk-mod-content-audit.php:102
 #, php-format
 msgid "%d shortcode removed."
 msgid_plural "%d shortcodes removed."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d shortcode eliminat."
+msgstr[1] "%d shortcodes eliminats."
 
 #. translators: %s: cron hook name
 #: includes/modules/class-tsosk-mod-cron.php:114
 #, php-format
 msgid "Cron event deleted: %s."
-msgstr ""
+msgstr "Esdeveniment cron eliminat: %s."
 
 #: includes/modules/class-tsosk-mod-custom-404.php:396
 msgid "Select a valid published page to preview."
@@ -10338,7 +10338,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:62
 msgid "Health alert settings saved."
-msgstr ""
+msgstr "Configuració d'alertes de salut desada."
 
 #. translators: %s: heartbeat mode
 #: includes/modules/class-tsosk-mod-heartbeat.php:94
@@ -10483,15 +10483,15 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-redirects.php:180
 #, php-format
 msgid "Redirect saved: %1$s (%2$d)."
-msgstr ""
+msgstr "Redirecció desada: %1$s (%2$d)."
 
 #: includes/modules/class-tsosk-mod-redirects.php:238
 msgid "Redirect enabled."
-msgstr ""
+msgstr "Redirecció activada."
 
 #: includes/modules/class-tsosk-mod-redirects.php:239
 msgid "Redirect disabled."
-msgstr ""
+msgstr "Redirecció desactivada."
 
 #. translators: 1: REST mode, 2: number of blocked namespaces
 #: includes/modules/class-tsosk-mod-rest-api.php:85
@@ -10743,11 +10743,11 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:70
 msgid "Maintenance mode"
-msgstr ""
+msgstr "Mode manteniment"
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:71
 msgid "Hidden WordPress profiles"
-msgstr ""
+msgstr "Perfils ocults de WordPress"
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:281
 msgid ""
@@ -11397,3 +11397,189 @@ msgstr ""
 "del nucli de WordPress i arrels genèriques com “tso” no s’usen com a "
 "coincidència. “Veure a l’editor d’opcions” obre un filtre precís per a "
 "aquest plugin."
+
+msgid "Top autoloaded options"
+msgstr "Opcions autoload principals"
+
+msgid "Largest wp_options rows loaded on every request (autoload = yes). Review heavy options in Options Editor if total autoload size is high."
+msgstr "Files wp_options més grans carregades a cada petició (autoload = yes). Revisa opcions pesades a l’editor d’opcions si la mida total d’autoload és alta."
+
+msgid "No autoloaded options found."
+msgstr "No s’han trobat opcions autoload."
+
+msgid "Option name"
+msgstr "Nom de l’opció"
+
+msgid "Site URL consistency"
+msgstr "Coherència de les URL del lloc"
+
+msgid "Home: %1$s — Site: %2$s"
+msgstr "Inici: %1$s — Lloc: %2$s"
+
+msgid "Home: %s"
+msgstr "Inici: %s"
+
+msgid "Site: %s"
+msgstr "Lloc: %s"
+
+msgid "Home and Site URL hosts differ."
+msgstr "Els hosts de la URL d’inici i del lloc difereixen."
+
+msgid "Home and Site URL schemes differ."
+msgstr "Els esquemes de la URL d’inici i del lloc difereixen."
+
+msgid "Security headers"
+msgstr "Capçaleres de seguretat"
+
+msgid "Present: %s"
+msgstr "Detectades: %s"
+
+msgid "No common security headers detected on the home page response."
+msgstr "No s’han detectat capçaleres de seguretat habituals a la resposta de la pàgina d’inici."
+
+msgid "Missed scheduled posts"
+msgstr "Entrades programades perdudes"
+
+msgid "Posts with a future publish date that is already in the past. This usually means WP-Cron did not run publish_future_post on time. Visit the site, run wp cron event run --due-now, or use the Cron Manager to run overdue events."
+msgstr "Entrades amb data de publicació futura que ja ha passat. Normalment WP-Cron no ha executat publish_future_post a temps. Visita el lloc, executa wp cron event run --due-now o usa el gestor de cron per executar esdeveniments endarrerits."
+
+msgid "No stuck scheduled posts found."
+msgstr "No s’han trobat entrades programades bloquejades."
+
+msgid "Scheduled for"
+msgstr "Programada per a"
+
+msgid "Overdue by"
+msgstr "Endarrerida per"
+
+msgid "Prefill redirect form (selected)"
+msgstr "Omplir formulari de redirecció (seleccionats)"
+
+msgid "Select all"
+msgstr "Seleccionar tot"
+
+msgid "Select"
+msgstr "Seleccionar"
+
+msgid "Duplicate titles"
+msgstr "Títols duplicats"
+
+msgid "Posts or pages that share the exact same title. Duplicate titles can confuse editors and SEO tools."
+msgstr "Entrades o pàgines amb el mateix títol exacte. Els títols duplicats poden confondre editors i eines SEO."
+
+msgid "No duplicate titles found."
+msgstr "No s’han trobat títols duplicats."
+
+msgid "Count"
+msgstr "Recompte"
+
+msgid "Post IDs"
+msgstr "IDs d’entrades"
+
+msgid "Shortcode inventory"
+msgstr "Inventari de shortcodes"
+
+msgid "Shortcodes found in the latest 100 posts/pages whose content contains brackets. Count = number of posts using each tag."
+msgstr "Shortcodes trobats a les 100 entrades/pàgines més recents amb claudàtors al contingut. Recompte = nombre d’entrades que usen cada etiqueta."
+
+msgid "No shortcodes detected in the sampled content."
+msgstr "No s’han detectat shortcodes al contingut mostrejat."
+
+msgid "Shortcode"
+msgstr "Shortcode"
+
+msgid "Registered"
+msgstr "Registrat"
+
+msgid "Environment comparison"
+msgstr "Comparació d’entorn"
+
+msgid "Compares snapshot metadata with this site before import. Differences do not block import but help avoid surprises on staging or production."
+msgstr "Compara les metadades de la instantània amb aquest lloc abans d’importar. Les diferències no bloquegen la importació però ajuden a evitar sorpreses a staging o producció."
+
+msgid "Field"
+msgstr "Camp"
+
+msgid "In snapshot"
+msgstr "A la instantània"
+
+msgid "This site"
+msgstr "Aquest lloc"
+
+msgid "array (%d items)"
+msgstr "array (%d elements)"
+
+msgid "set"
+msgstr "definit"
+
+msgid "Select at least one 404 row."
+msgstr "Selecciona com a mínim una fila 404."
+
+msgid "%1$d paths queued. The form shows the first — save each redirect to advance automatically."
+msgstr "%1$d camins a la cua. El formulari mostra el primer — desa cada redirecció per avançar automàticament."
+
+msgid "Redirect saved. %1$d path(s) remaining in the queue."
+msgstr "Redirecció desada. Queden %1$d camí(s) a la cua."
+
+msgid "Site URL"
+msgstr "URL del lloc"
+
+msgid "WordPress version"
+msgstr "Versió de WordPress"
+
+msgid "Snapshot schema"
+msgstr "Esquema de la instantània"
+
+msgid "PHP version"
+msgstr "Versió de PHP"
+
+msgid "Locale"
+msgstr "Idioma del lloc"
+
+msgid "Posts"
+msgstr "Entrades"
+
+msgid "Admin menu manifest must be an object or array."
+msgstr "El manifest del menú d'administració ha de ser un objecte o una matriu."
+
+msgid "Admin menu section must be an object."
+msgstr "La secció del menú d'administració ha de ser un objecte."
+
+msgid "Capture tokens ($1, $2, …) are not allowed in the host of an absolute URL."
+msgstr "Els tokens de captura ($1, $2, …) no es permeten a l'host d'una URL absoluta."
+
+msgid "Comment Anti-Spam section must be an object."
+msgstr "La secció Comment Anti-Spam ha de ser un objecte."
+
+msgid "Custom 404 section must be an object."
+msgstr "La secció Custom 404 ha de ser un objecte."
+
+msgid "Health alerts section must be an object."
+msgstr "La secció d'alertes de salut ha de ser un objecte."
+
+msgid "Health suppress section must be an object."
+msgstr "La secció de supressió de Site Health ha de ser un objecte."
+
+msgid "Heartbeat section must be an object."
+msgstr "La secció Heartbeat ha de ser un objecte."
+
+msgid "Hidden profiles section must be an object."
+msgstr "La secció Hidden profiles ha de ser un objecte."
+
+msgid "Maintenance section must be an object."
+msgstr "La secció Maintenance ha de ser un objecte."
+
+msgid "REST API section must be an object."
+msgstr "La secció REST API ha de ser un objecte."
+
+msgid "Redirects module is not available."
+msgstr "El mòdul Redirects no està disponible."
+
+msgid "Slow query settings must be an object."
+msgstr "La configuració de Slow Query ha de ser un objecte."
+
+msgid "Unknown section \"%s\"."
+msgstr "Secció desconeguda \"%s\"."
+
+msgid "Update Manager section must be an object."
+msgstr "La secció Update Manager ha de ser un objecte."

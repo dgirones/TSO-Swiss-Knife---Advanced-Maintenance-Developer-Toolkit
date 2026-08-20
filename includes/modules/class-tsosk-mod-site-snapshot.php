@@ -135,6 +135,8 @@ class TSOSK_Mod_Site_Snapshot {
 			'exported_at' => gmdate( 'c' ),
 			'site_url'    => home_url(),
 			'wp_version'  => get_bloginfo( 'version' ),
+			'php_version' => PHP_VERSION,
+			'locale'      => get_locale(),
 			'sections'    => $payload,
 		);
 	}
@@ -1061,6 +1063,51 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Current site metadata for import comparison (read-only).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function get_current_environment(): array {
+		return array(
+			'site_url'       => home_url(),
+			'wp_version'     => get_bloginfo( 'version' ),
+			'php_version'    => PHP_VERSION,
+			'locale'         => get_locale(),
+			'plugin'         => defined( 'TSOSK_VERSION' ) ? TSOSK_VERSION : '',
+			'schema_version' => (string) self::SCHEMA_VERSION,
+		);
+	}
+
+	/**
+	 * Whether each export section has stored data on this site.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function get_section_status_summary(): array {
+		$map = self::get_export_map();
+		$out = array();
+
+		foreach ( $map as $section => $option ) {
+			$value = get_option( $option, self::MISSING );
+			if ( self::MISSING === $value ) {
+				$out[ $section ] = 'missing';
+			} elseif ( is_array( $value ) ) {
+				$out[ $section ] = sprintf(
+					/* translators: %d: number of array items */
+					__( 'array (%d items)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					count( $value )
+				);
+			} elseif ( is_string( $value ) ) {
+				$out[ $section ] = size_format( strlen( $value ), 1 );
+			} else {
+				$out[ $section ] = __( 'set', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Render admin UI.
 	 */
 	public function render(): void {
@@ -1122,6 +1169,22 @@ class TSOSK_Mod_Site_Snapshot {
 					<?php esc_html_e( 'Uncheck any section you do not want to overwrite.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 				<ul id="tsosk-snapshot-import-list" class="tsosk-snapshot-section-list"></ul>
+			</div>
+			<div id="tsosk-snapshot-env-diff" class="tsosk-card tsosk-snapshot-env-diff" hidden>
+				<h4><?php esc_html_e( 'Environment comparison', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+				<p class="description"><?php esc_html_e( 'Compares snapshot metadata with this site before import. Differences do not block import but help avoid surprises on staging or production.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table" id="tsosk-snapshot-env-diff-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Field', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'In snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'This site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
 			</div>
 			<p class="tsosk-snapshot-import-actions">
 				<button type="button" class="button button-primary" id="tsosk-snapshot-import"

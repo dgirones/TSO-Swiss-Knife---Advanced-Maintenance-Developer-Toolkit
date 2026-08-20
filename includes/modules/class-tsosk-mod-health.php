@@ -215,7 +215,8 @@ class TSOSK_Mod_Health {
 		$nonce = wp_create_nonce( 'tsosk_health_nonce' );
 		$settings = $this->get_settings();
 		$suppress = $this->get_suppress_settings();
-		$checks = $this->get_checks();
+		$checks              = $this->get_checks();
+		$top_autoload        = $this->get_top_autoload_options();
 		$download_base = add_query_arg( 'action', 'tsosk_health_download_report', admin_url( 'admin-post.php' ) );
 		$download_url  = wp_nonce_url( $download_base, 'tsosk_health_download_report' );
 		$download_html = wp_nonce_url(
@@ -238,7 +239,7 @@ class TSOSK_Mod_Health {
 				</a>
 			</p>
 			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table">
+				<table class="widefat tsosk-table tsosk-health-checks-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -255,12 +256,41 @@ class TSOSK_Mod_Health {
 										<?php echo esc_html( strtoupper( $check['status'] ) ); ?>
 									</span>
 								</td>
-								<td><?php echo esc_html( $check['details'] ); ?></td>
+								<td class="tsosk-health-details"><?php echo esc_html( $check['details'] ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
 			</div>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Top autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Largest wp_options rows loaded on every request (autoload = yes). Review heavy options in Options Editor if total autoload size is high.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<?php if ( empty( $top_autoload ) ) : ?>
+				<p><?php esc_html_e( 'No autoloaded options found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Option name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $top_autoload as $row ) : ?>
+								<tr>
+									<td class="tsosk-code"><?php echo esc_html( $row['option_name'] ); ?></td>
+									<td><?php echo esc_html( size_format( absint( $row['size_bytes'] ), 2 ) ); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
 		</div>
 
 		<div class="tsosk-card">
@@ -279,7 +309,7 @@ class TSOSK_Mod_Health {
 			<div class="tsosk-field-row">
 				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( 'Max 404 visits per hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="number" id="tsosk-alerts-404-threshold" min="1" value="<?php echo esc_attr( (string) $settings['not_found_threshold'] ); ?>">
-				<p class="description" style="margin:6px 0 0;">
+				<p class="description tsosk-field-desc-tight">
 					<?php
 					printf(
 						/* translators: 1: example threshold value from settings, 2: same threshold (minimum visits in one hour) */
@@ -309,7 +339,7 @@ class TSOSK_Mod_Health {
 				<input type="checkbox" id="tsosk-health-suppress-debug" <?php checked( ! empty( $suppress['debug_enabled'] ) ); ?>>
 				<?php esc_html_e( 'Hide “debug.log may be publicly accessible” test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
-			<button class="button button-primary" id="tsosk-health-save-suppress" data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:10px;">
+			<button class="button button-primary tsosk-btn-mt" id="tsosk-health-save-suppress" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save suppression settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-health-suppress-msg"></span>
@@ -352,11 +382,7 @@ class TSOSK_Mod_Health {
 			'status'  => version_compare( PHP_VERSION, '8.0', '>=' ) ? 'ok' : 'warn',
 			'details' => PHP_VERSION,
 		);
-		$checks[] = array(
-			'label'   => __( 'HTTPS', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => is_ssl() || 0 === strpos( home_url(), 'https://' ) ? 'ok' : 'warn',
-			'details' => home_url(),
-		);
+		$checks[] = $this->site_urls_check();
 		$checks[] = array(
 			'label'   => __( 'WP_DEBUG_DISPLAY', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? 'warn' : 'ok',
@@ -371,8 +397,162 @@ class TSOSK_Mod_Health {
 		$checks[] = $this->debug_log_check();
 		$checks[] = $this->not_found_check();
 		$checks[] = $this->autoload_check();
+		$checks[] = $this->security_headers_check();
 
 		return $checks;
+	}
+
+	/**
+	 * Compare home and site URL scheme/host consistency.
+	 *
+	 * @return array
+	 */
+	private function site_urls_check(): array {
+		$home = (string) home_url();
+		$site = (string) site_url();
+		$home_parts = wp_parse_url( $home );
+		$site_parts = wp_parse_url( $site );
+
+		$home_scheme = isset( $home_parts['scheme'] ) ? strtolower( (string) $home_parts['scheme'] ) : '';
+		$site_scheme = isset( $site_parts['scheme'] ) ? strtolower( (string) $site_parts['scheme'] ) : '';
+		$home_host   = isset( $home_parts['host'] ) ? strtolower( (string) $home_parts['host'] ) : '';
+		$site_host   = isset( $site_parts['host'] ) ? strtolower( (string) $site_parts['host'] ) : '';
+
+		$status  = 'ok';
+		$details = sprintf(
+			/* translators: 1: home URL line, 2: site URL line */
+			"%1\$s\n%2\$s",
+			sprintf(
+				/* translators: %s: home URL */
+				__( 'Home: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$home
+			),
+			sprintf(
+				/* translators: %s: site URL */
+				__( 'Site: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$site
+			)
+		);
+
+		if ( 'https' !== $home_scheme || 'https' !== $site_scheme ) {
+			$status = 'warn';
+		}
+		if ( $home_host !== $site_host ) {
+			$status = 'warn';
+			$details .= "\n" . __( 'Home and Site URL hosts differ.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} elseif ( $home_scheme !== $site_scheme ) {
+			$details .= "\n" . __( 'Home and Site URL schemes differ.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		return array(
+			'label'   => __( 'Site URL consistency', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $status,
+			'details' => $details,
+		);
+	}
+
+	/**
+	 * Probe front page response headers (read-only).
+	 *
+	 * @return array
+	 */
+	private function security_headers_check(): array {
+		$cached = get_transient( 'tsosk_health_security_headers_check' );
+		if ( is_array( $cached ) && isset( $cached['label'], $cached['status'], $cached['details'] ) ) {
+			return $cached;
+		}
+
+		$url  = home_url( '/' );
+		$resp = wp_remote_head(
+			$url,
+			array(
+				'timeout'     => 8,
+				'redirection' => 3,
+				'sslverify'   => true,
+			)
+		);
+
+		if ( is_wp_error( $resp ) ) {
+			$result = array(
+				'label'   => __( 'Security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => 'info',
+				'details' => $resp->get_error_message(),
+			);
+			set_transient( 'tsosk_health_security_headers_check', $result, 15 * MINUTE_IN_SECONDS );
+			return $result;
+		}
+
+		$present = array();
+		$names   = array(
+			'x-content-type-options',
+			'x-frame-options',
+			'strict-transport-security',
+			'referrer-policy',
+		);
+
+		foreach ( $names as $name ) {
+			$value = wp_remote_retrieve_header( $resp, $name );
+			if ( '' !== $value ) {
+				$present[] = $name;
+			}
+		}
+
+		$count  = count( $present );
+		$status = $count >= 2 ? 'ok' : ( $count > 0 ? 'info' : 'warn' );
+
+		$result = array(
+			'label'   => __( 'Security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $status,
+			'details' => $count
+				? sprintf(
+					/* translators: %s: comma-separated header names */
+					__( 'Present: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $present )
+				)
+				: __( 'No common security headers detected on the home page response.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+
+		set_transient( 'tsosk_health_security_headers_check', $result, 15 * MINUTE_IN_SECONDS );
+
+		return $result;
+	}
+
+	/**
+	 * Largest autoloaded options by serialized size.
+	 *
+	 * @param int $limit Max rows.
+	 * @return array<int, array{option_name:string,size_bytes:int}>
+	 */
+	private function get_top_autoload_options( int $limit = 15 ): array {
+		global $wpdb;
+
+		$limit = max( 1, min( 50, $limit ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, LENGTH(option_value) AS size_bytes FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto') ORDER BY size_bytes DESC LIMIT %d",
+				$limit
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		$out = array();
+		foreach ( $rows as $row ) {
+			if ( empty( $row['option_name'] ) ) {
+				continue;
+			}
+			$out[] = array(
+				'option_name' => (string) $row['option_name'],
+				'size_bytes'  => absint( $row['size_bytes'] ?? 0 ),
+			);
+		}
+
+		return $out;
 	}
 
 	/**
@@ -381,12 +561,18 @@ class TSOSK_Mod_Health {
 	 * @return array
 	 */
 	private function cron_check(): array {
-		$cron = _get_cron_array();
+		$cron    = _get_cron_array();
 		$overdue = 0;
+		$cutoff  = time() - HOUR_IN_SECONDS;
 		if ( is_array( $cron ) ) {
-			foreach ( $cron as $timestamp => $events ) {
-				if ( absint( $timestamp ) < time() - HOUR_IN_SECONDS && ! empty( $events ) ) {
-					$overdue += count( $events );
+			foreach ( $cron as $timestamp => $hooks ) {
+				if ( absint( $timestamp ) >= $cutoff || ! is_array( $hooks ) ) {
+					continue;
+				}
+				foreach ( $hooks as $events_by_sig ) {
+					if ( is_array( $events_by_sig ) ) {
+						$overdue += count( $events_by_sig );
+					}
 				}
 			}
 		}
@@ -447,7 +633,7 @@ class TSOSK_Mod_Health {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$size = (int) $wpdb->get_var( "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload = 'yes'" );
+		$size = (int) $wpdb->get_var( "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto')" );
 
 		return array(
 			'label'   => __( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

@@ -3069,6 +3069,31 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 }
 
 /* ── Redirects ────────────────────────────────────────────────────────────── */
+.tsosk-desc-flush {
+	margin-top: 0;
+}
+
+.tsosk-desc-spaced {
+	margin-top: 10px;
+}
+
+.tsosk-404-table-wrap-spaced {
+	margin-top: 12px;
+}
+
+.tsosk-field-desc-tight {
+	margin: 6px 0 0;
+}
+
+.tsosk-btn-mt {
+	margin-top: 10px;
+}
+
+#tsosk-cron-edit-panel {
+	display: none;
+	margin-top: 16px;
+}
+
 .tsosk-redirects-table-wrap,
 .tsosk-404-table-wrap {
     overflow-x: hidden;
@@ -3131,6 +3156,26 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 #tsosk-404-table .tsosk-404-col-date {
     white-space: nowrap;
     width: 12%;
+}
+
+#tsosk-404-table .tsosk-404-col-select {
+	width: 2.5rem;
+	text-align: center;
+	vertical-align: top;
+}
+
+#tsosk-404-table .tsosk-404-col-select input[type="checkbox"] {
+	margin: 0;
+	vertical-align: top;
+}
+
+#tsosk-404-table tbody td {
+	vertical-align: top;
+}
+
+.tsosk-health-checks-table .tsosk-health-details {
+	white-space: pre-line;
+	vertical-align: top;
 }
 
 #tsosk-redirects-table .tsosk-actions {
@@ -3728,6 +3773,14 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 
 .tsosk-snapshot-import-actions {
     margin-top: 10px;
+}
+
+.tsosk-snapshot-env-diff {
+    margin-top: 12px;
+}
+
+.tsosk-snapshot-env-diff-warn td {
+    background: #fff8e5;
 }
 
 /* ══ Email diagnostics ═══════════════════════════════════════════════════════ */

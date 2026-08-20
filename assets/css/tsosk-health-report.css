@@ -21,6 +21,10 @@ body.tsosk-health-report {
 	text-align: left;
 }
 
+.tsosk-health-report td:nth-child(3) {
+	white-space: pre-line;
+}
+
 .tsosk-health-report th {
 	background: #f6f7f7;
 }

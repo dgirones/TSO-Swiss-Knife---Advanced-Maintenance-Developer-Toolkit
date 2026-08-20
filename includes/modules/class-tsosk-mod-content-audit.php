@@ -116,6 +116,8 @@ class TSOSK_Mod_Content_Audit {
 		$old_pending = $this->get_posts_by_issue( 'old_pending' );
 		$long_slugs = $this->get_posts_by_issue( 'long_slugs' );
 		$broken_shortcodes = $this->get_broken_shortcodes();
+		$duplicate_titles = $this->get_duplicate_titles();
+		$shortcode_inventory = $this->get_shortcode_inventory();
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Find hidden content problems: empty titles, missing featured images, old pending/private content, long slugs and broken shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -125,6 +127,81 @@ class TSOSK_Mod_Content_Audit {
 		<?php $this->render_post_table( __( 'Published Posts Without Featured Image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing_featured ); ?>
 		<?php $this->render_post_table( __( 'Old Pending or Private Content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $old_pending ); ?>
 		<?php $this->render_post_table( __( 'Long Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $long_slugs ); ?>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Duplicate titles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $duplicate_titles ) ) ); ?>)</h3>
+			<p class="description"><?php esc_html_e( 'Posts or pages that share the exact same title. Duplicate titles can confuse editors and SEO tools.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php if ( empty( $duplicate_titles ) ) : ?>
+				<p><?php esc_html_e( 'No duplicate titles found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Count', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Post IDs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $duplicate_titles as $row ) : ?>
+								<tr>
+									<td><?php echo esc_html( $row['title'] ); ?></td>
+									<td><?php echo esc_html( number_format_i18n( $row['count'] ) ); ?></td>
+									<td class="tsosk-code">
+										<?php
+										$links = array();
+										foreach ( $row['ids'] as $post_id ) {
+											$edit  = get_edit_post_link( $post_id );
+											$links[] = $edit
+												? '<a href="' . esc_url( $edit ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( (string) $post_id ) . '</a>'
+												: esc_html( (string) $post_id );
+										}
+										echo wp_kses_post( implode( ', ', $links ) );
+										?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Shortcode inventory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Shortcodes found in the latest 100 posts/pages whose content contains brackets. Count = number of posts using each tag.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php if ( empty( $shortcode_inventory ) ) : ?>
+				<p><?php esc_html_e( 'No shortcodes detected in the sampled content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+				<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Shortcode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Posts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Registered', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $shortcode_inventory as $tag => $count ) : ?>
+								<tr>
+									<td class="tsosk-code">[<?php echo esc_html( $tag ); ?>]</td>
+									<td><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
+									<td>
+										<?php if ( shortcode_exists( $tag ) ) : ?>
+											<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<?php else : ?>
+											<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'No', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php endif; ?>
+		</div>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Broken Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $broken_shortcodes ) ) ); ?>)</h3>
@@ -272,6 +349,79 @@ class TSOSK_Mod_Content_Audit {
 			}
 		}
 		return array_slice( $out, 0, 30 );
+	}
+
+	/**
+	 * Titles used by more than one post or page.
+	 *
+	 * @return array<int, array{title:string,count:int,ids:int[]}>
+	 */
+	private function get_duplicate_titles(): array {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			"SELECT post_title, GROUP_CONCAT(ID ORDER BY ID) AS ids, COUNT(*) AS cnt
+			FROM {$wpdb->posts}
+			WHERE post_type IN ('post','page')
+			AND post_status IN ('publish','draft','private','pending')
+			AND post_title != ''
+			GROUP BY post_title
+			HAVING cnt > 1
+			ORDER BY cnt DESC
+			LIMIT 30",
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		$out = array();
+		foreach ( $rows as $row ) {
+			$ids_raw = isset( $row['ids'] ) ? explode( ',', (string) $row['ids'] ) : array();
+			$ids     = array_values( array_filter( array_map( 'absint', $ids_raw ) ) );
+			if ( empty( $ids ) ) {
+				continue;
+			}
+			$out[] = array(
+				'title' => (string) ( $row['post_title'] ?? '' ),
+				'count' => absint( $row['cnt'] ?? count( $ids ) ),
+				'ids'   => $ids,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Shortcode usage counts in sampled content.
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_shortcode_inventory(): array {
+		$posts  = $this->get_posts_with_bracket_content();
+		$counts = array();
+
+		foreach ( $posts as $post ) {
+			if ( ! preg_match_all( '/\[([a-zA-Z][a-zA-Z0-9_-]*)/', $post->post_content, $matches ) ) {
+				continue;
+			}
+			foreach ( array_unique( $matches[1] ) as $shortcode ) {
+				$shortcode = sanitize_key( (string) $shortcode );
+				if ( '' === $shortcode || ctype_digit( $shortcode ) ) {
+					continue;
+				}
+				if ( ! isset( $counts[ $shortcode ] ) ) {
+					$counts[ $shortcode ] = 0;
+				}
+				++$counts[ $shortcode ];
+			}
+		}
+
+		arsort( $counts, SORT_NUMERIC );
+
+		return array_slice( $counts, 0, 40, true );
 	}
 
 	/**

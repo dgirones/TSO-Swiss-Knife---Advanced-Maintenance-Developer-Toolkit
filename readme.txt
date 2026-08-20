@@ -3,9 +3,9 @@ Contributors: deadko
 Donate link: https://ko-fi.com/deadko_cat
 Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 5.9
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,13 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.0.2 =
+* Health: site URL details on separate lines; autoload total includes yes/on/auto; accurate overdue cron count; security headers probe cached 15 minutes.
+* Redirects: 404 log checkbox alignment; bulk prefill queue advances automatically after each save; 404 hit counts stay in sync under write throttling.
+* Site Snapshot: environment diff panel clears after import.
+* Content Audit: duplicate titles and shortcode inventory.
+* Cron Manager: missed scheduled posts panel.
+
 = 1.0.1 =
 * Fixed bugs in modules.
 
@@ -150,6 +157,9 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Health, redirects, snapshot, and translation fixes. Tested with WordPress 7.1.
 
 = 1.0.1 =
 Fixed bugs in modules.

@@ -1274,6 +1274,62 @@
 
 	// ── Redirects ──────────────────────────────────────────────────────────
 
+	var TSOSK_404_PREFILL_KEY = 'tsosk_404_prefill_queue';
+
+	function tsosk404GetPrefillQueue() {
+		try {
+			var raw = sessionStorage.getItem( TSOSK_404_PREFILL_KEY );
+			var arr = raw ? JSON.parse( raw ) : [];
+			return Array.isArray( arr ) ? arr.filter( Boolean ) : [];
+		} catch ( e ) {
+			return [];
+		}
+	}
+
+	function tsosk404SetPrefillQueue( sources ) {
+		try {
+			sessionStorage.setItem( TSOSK_404_PREFILL_KEY, JSON.stringify( sources || [] ) );
+		} catch ( err ) {
+			// sessionStorage unavailable — queue falls back to single-row prefill.
+		}
+	}
+
+	function tsosk404UncheckSource( source ) {
+		$( '#tsosk-404-table .tsosk-404-select' ).each( function () {
+			if ( String( $( this ).data( 'source' ) || '' ) === source ) {
+				$( this ).prop( 'checked', false );
+			}
+		} );
+		var $rows     = $( '#tsosk-404-table .tsosk-404-select' );
+		var $checked  = $rows.filter( ':checked' );
+		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
+	}
+
+	function tsosk404PrefillFromQueue( introTotal ) {
+		var queue = tsosk404GetPrefillQueue();
+		if ( ! queue.length ) {
+			return false;
+		}
+		var source = queue.shift();
+		tsosk404SetPrefillQueue( queue );
+		if ( ! source ) {
+			return tsosk404PrefillFromQueue( introTotal );
+		}
+		resetRedirectForm();
+		$( '#tsosk-redirect-source' ).val( source );
+		tsosk404UncheckSource( source );
+		var remaining = queue.length;
+		var $msg      = $( '#tsosk-404-msg' );
+		if ( introTotal && introTotal > 1 && tsosk.i18n.redirects_prefill_queue ) {
+			showMsg( $msg, tsosk.i18n.redirects_prefill_queue.replace( '%1$d', String( introTotal ) ), 'ok' );
+		} else if ( remaining > 0 && tsosk.i18n.redirects_prefill_next ) {
+			showMsg( $msg, tsosk.i18n.redirects_prefill_next.replace( '%1$d', String( remaining ) ), 'ok' );
+		}
+		$( '#tsosk-redirect-target' ).focus();
+		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
+		return true;
+	}
+
 	function resetRedirectForm() {
 		$( '#tsosk-redirect-id' ).val( '' );
 		$( '#tsosk-redirect-source' ).val( '' );
@@ -1320,6 +1376,12 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					if ( tsosk404GetPrefillQueue().length ) {
+						tsosk404PrefillFromQueue( 0 );
+						$btn.prop( 'disabled', false ).text( tsosk.i18n.save_redirect );
+						return;
+					}
+					tsosk404SetPrefillQueue( [] );
 					setTimeout( function () {
 						window.location.reload();
 					}, 700 );
@@ -1399,6 +1461,36 @@
 		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
 	} );
 
+	$( document ).on( 'change', '#tsosk-404-select-all', function () {
+		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
+
+	$( document ).on( 'change', '#tsosk-404-table .tsosk-404-select', function () {
+		var $rows    = $( '#tsosk-404-table .tsosk-404-select' );
+		var $checked = $rows.filter( ':checked' );
+		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
+	} );
+
+	$( document ).on( 'click', '#tsosk-404-prefill-selected', function () {
+		var $checked = $( '#tsosk-404-table .tsosk-404-select:checked' );
+		if ( ! $checked.length ) {
+			window.alert( tsosk.i18n.redirects_select_404 || tsosk.i18n.error );
+			return;
+		}
+		var sources = [];
+		$checked.each( function () {
+			var source = String( $( this ).data( 'source' ) || '' );
+			if ( source ) {
+				sources.push( source );
+			}
+		} );
+		if ( ! sources.length ) {
+			return;
+		}
+		tsosk404SetPrefillQueue( sources.slice() );
+		tsosk404PrefillFromQueue( sources.length );
+	} );
+
 	$( document ).on( 'click', '#tsosk-404-clear', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-404-msg' );
@@ -1411,6 +1503,7 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					$( '#tsosk-404-select-all' ).prop( 'checked', false );
 					$( '#tsosk-404-table tbody tr' ).fadeOut( 300, function () {
 						$( this ).remove();
 					} );
@@ -4317,6 +4410,48 @@
 	} );
 
 	// ── Site Snapshot import ──────────────────────────────────────────────────
+	function tsoskSnapshotRefreshEnvDiff( data ) {
+		var $box   = $( '#tsosk-snapshot-env-diff' );
+		var $tbody = $( '#tsosk-snapshot-env-diff-table tbody' );
+		var cur    = ( typeof tsosk !== 'undefined' && tsosk.snapshot_current_env ) ? tsosk.snapshot_current_env : {};
+		var i18n   = ( typeof tsosk !== 'undefined' && tsosk.i18n ) ? tsosk.i18n : {};
+
+		$tbody.empty();
+		if ( ! data || 'tsosk-site-snapshot' !== data.format ) {
+			$box.prop( 'hidden', true );
+			return;
+		}
+
+		var fields = [
+			{ label: i18n.snapshot_env_site_url || 'Site URL', file: data.site_url || '', current: cur.site_url || '' },
+			{ label: i18n.snapshot_env_wp_version || 'WordPress version', file: data.wp_version || '', current: cur.wp_version || '' },
+			{ label: i18n.snapshot_env_plugin || 'Snapshot schema', file: String( data.version || '' ), current: String( cur.schema_version || '' ) },
+			{ label: i18n.snapshot_env_php || 'PHP version', file: data.php_version || '', current: cur.php_version || '' },
+			{ label: i18n.snapshot_env_locale || 'Locale', file: data.locale || '', current: cur.locale || '' }
+		];
+
+		fields.forEach( function ( f ) {
+			if ( ! f.file && ! f.current ) {
+				return;
+			}
+			var diff = String( f.file ) !== String( f.current );
+			var $tr  = $( '<tr></tr>' );
+			if ( diff ) {
+				$tr.addClass( 'tsosk-snapshot-env-diff-warn' );
+			}
+			$tr.append( $( '<td></td>' ).text( f.label ) );
+			$tr.append( $( '<td></td>' ).text( f.file || '—' ) );
+			$tr.append( $( '<td></td>' ).text( f.current || '—' ) );
+			$tbody.append( $tr );
+		} );
+
+		if ( $tbody.children().length ) {
+			$box.prop( 'hidden', false );
+		} else {
+			$box.prop( 'hidden', true );
+		}
+	}
+
 	function tsoskSnapshotRefreshImportSections() {
 		var $box    = $( '#tsosk-snapshot-import-sections' );
 		var $list   = $( '#tsosk-snapshot-import-list' );
@@ -4328,6 +4463,7 @@
 		$list.empty();
 		if ( ! json ) {
 			$box.hide();
+			tsoskSnapshotRefreshEnvDiff( null );
 			return;
 		}
 
@@ -4336,8 +4472,11 @@
 			data = JSON.parse( json );
 		} catch ( e ) {
 			$box.hide();
+			tsoskSnapshotRefreshEnvDiff( null );
 			return;
 		}
+
+		tsoskSnapshotRefreshEnvDiff( data );
 
 		var sections = data.sections || {};
 		var keys = Object.keys( sections );
@@ -4430,6 +4569,7 @@
 					$( '#tsosk-snapshot-file-name' ).text( tsosk.i18n.snapshot_no_file || '' );
 					$( '#tsosk-snapshot-import-sections' ).hide();
 					$( '#tsosk-snapshot-import-list' ).empty();
+					tsoskSnapshotRefreshEnvDiff( null );
 					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
