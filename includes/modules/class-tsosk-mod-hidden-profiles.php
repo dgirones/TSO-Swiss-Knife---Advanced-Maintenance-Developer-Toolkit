@@ -69,13 +69,14 @@ class TSOSK_Mod_Hidden_Profiles {
 		if ( ! empty( $flags['disable_emojis'] ) ) {
 			remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
 			remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+			remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+			remove_action( 'admin_enqueue_scripts', 'wp_enqueue_emoji_styles' );
 			remove_action( 'wp_print_styles', 'print_emoji_styles' );
 			remove_action( 'admin_print_styles', 'print_emoji_styles' );
 			remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
 			remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
 			remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
 			add_filter( 'tiny_mce_plugins', array( __CLASS__, 'disable_emojis_tinymce' ) );
-			add_filter( 'wp_resource_hints', array( __CLASS__, 'disable_emojis_dns_prefetch' ), 10, 2 );
 		}
 
 		if ( ! empty( $flags['disable_embeds'] ) ) {
@@ -117,26 +118,6 @@ class TSOSK_Mod_Hidden_Profiles {
 			return array_diff( $plugins, array( 'wpemoji' ) );
 		}
 		return $plugins;
-	}
-
-	/**
-	 * @param array  $urls          URLs.
-	 * @param string $relation_type Relation type.
-	 * @return array
-	 */
-	public static function disable_emojis_dns_prefetch( array $urls, string $relation_type ): array {
-		if ( 'dns-prefetch' === $relation_type ) {
-			foreach ( $urls as $key => $url ) {
-				if ( ! is_string( $url ) ) {
-					continue;
-				}
-				$host = wp_parse_url( $url, PHP_URL_HOST );
-				if ( is_string( $host ) && 's.w.org' === $host ) {
-					unset( $urls[ $key ] );
-				}
-			}
-		}
-		return $urls;
 	}
 
 	/**
