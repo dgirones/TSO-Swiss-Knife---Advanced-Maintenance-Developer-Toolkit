@@ -23,7 +23,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
 * **Debug Mode** — Toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, and SAVEQUERIES via JSON flags stored under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/` — no wp-config.php editing required.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
-* **Meta Editor** — Browse and edit post, user, term, and comment meta with type-aware validation.
+* **Meta Editor** — Browse and edit post and user meta with type-aware validation.
 * **Option Library** — Save named option presets and re-apply them across environments.
 * **Export/Import TSO Configuration** — Back up and restore plugin settings and module preferences as JSON.
 * **TSO Link Inspector** — In-plugin promo for the free [TSO Link Inspector](https://wordpress.org/plugins/tso-link-inspector/) companion plugin (broken-link scanner and fixer on WordPress.org).

@@ -224,6 +224,7 @@ class TSOSK_Admin {
 					'roles_only_b'      => __( 'Only in role B', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_both'        => __( 'In both roles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_admin_readonly' => __( 'Administrator capabilities loaded (read-only).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'roles_apply_confirm' => __( 'Apply this template? Capabilities not in the template will be removed from the selected role.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'regenerate'           => __( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review'    => __( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review_starting' => __( 'Starting full media review…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

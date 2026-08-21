@@ -93,6 +93,9 @@ class TSOSK_Mod_Cron {
 		if ( ! $hook || ! $timestamp ) {
 			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( $this->is_core_hook( $hook ) ) {
+			wp_send_json_error( __( 'Core cron events cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 
 		$crons = _get_cron_array();
 		if ( ! $crons || ! isset( $crons[ $timestamp ][ $hook ][ $sig ] ) ) {
@@ -133,6 +136,9 @@ class TSOSK_Mod_Cron {
 
 		if ( ! $hook || ! $old_timestamp || ! $new_timestamp ) {
 			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( $this->is_core_hook( $hook ) ) {
+			wp_send_json_error( __( 'Core cron events cannot be rescheduled here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$crons = _get_cron_array();
@@ -204,12 +210,6 @@ class TSOSK_Mod_Cron {
 		usort( $events, static function ( $a, $b ) {
 			return $a['timestamp'] - $b['timestamp'];
 		} );
-
-		$core_hooks = array(
-			'wp_scheduled_delete', 'wp_update_themes', 'wp_update_plugins',
-			'wp_version_check', 'wp_scheduled_auto_draft_delete',
-			'delete_expired_transients', 'recovery_mode_clean_expired_keys',
-		);
 
 		$health = $this->get_cron_health( $events );
 		$missed = $this->get_missed_scheduled_posts();
@@ -312,7 +312,7 @@ class TSOSK_Mod_Cron {
 				<tbody>
 					<?php foreach ( $events as $event ) : ?>
 						<?php
-						$is_core    = in_array( $event['hook'], $core_hooks, true );
+						$is_core    = $this->is_core_hook( (string) $event['hook'] );
 						$diff       = $event['timestamp'] - $now;
 						$overdue    = $diff < 0;
 						$time_label = $overdue
