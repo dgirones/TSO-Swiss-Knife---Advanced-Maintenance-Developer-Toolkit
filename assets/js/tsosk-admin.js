@@ -2760,12 +2760,14 @@
 
 	// ── Search & Edit tab ─────────────────────────────────────────────────
 
+	var tsosk_sm_search_seq = 0;
 	function tsosk_sm_search( q, page ) {
 		tsosk_sm.lastSearch  = q;
 		tsosk_sm.currentPage = page || 1;
 		var nonce     = $( '#tsosk-sm-search-btn' ).data( 'nonce' );
 		var $msg      = $( '#tsosk-sm-search-msg' );
 		var postType  = $( '#tsosk-sm-post-type' ).val();
+		var reqId     = ++tsosk_sm_search_seq;
 
 		$( '#tsosk-sm-search-btn, #tsosk-sm-load-all' ).prop( 'disabled', true );
 		$( '#tsosk-sm-search-placeholder' ).hide();
@@ -2774,6 +2776,9 @@
 			action : 'tsosk_sm_search',
 			data   : { nonce: nonce, q: q, post_type: postType, page: tsosk_sm.currentPage },
 			success: function ( r ) {
+				if ( reqId !== tsosk_sm_search_seq ) {
+					return;
+				}
 				if ( r.success ) {
 					tsosk_sm.totalPages = r.data.total_pages;
 					tsosk_sm_render_results( r.data );
@@ -2784,6 +2789,9 @@
 				$( '#tsosk-sm-search-btn, #tsosk-sm-load-all' ).prop( 'disabled', false );
 			},
 			error: function () {
+				if ( reqId !== tsosk_sm_search_seq ) {
+					return;
+				}
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$( '#tsosk-sm-search-btn, #tsosk-sm-load-all' ).prop( 'disabled', false );
 			}
@@ -4233,6 +4241,7 @@
 
 	// ── Meta Editor ───────────────────────────────────────────────────────────
 	var tsoskMe = { currentPage: 1, lastSearch: '', context: 'post', editingId: 0 };
+	var tsosk_me_search_seq = 0;
 
 	function tsoskMeSearch( page ) {
 		if ( ! $( '#tsosk-me-search-btn' ).length ) { return; }
@@ -4242,6 +4251,7 @@
 		var nonce    = $( '#tsosk-me-search-btn' ).data( 'nonce' );
 		var $msg     = $( '#tsosk-me-search-msg' );
 		var $tbody   = $( '#tsosk-me-tbody' );
+		var reqId    = ++tsosk_me_search_seq;
 		$tbody.html( '<tr><td colspan="5" style="text-align:center;">' + tsosk.i18n.loading + '</td></tr>' );
 		ajaxPost( {
 			action : 'tsosk_me_search',
@@ -4253,6 +4263,9 @@
 				page      : tsoskMe.currentPage
 			},
 			success: function ( r ) {
+				if ( reqId !== tsosk_me_search_seq ) {
+					return;
+				}
 				if ( ! r.success ) {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$tbody.html( '<tr><td colspan="5">' + tsosk.i18n.oe_no_results + '</td></tr>' );
@@ -4261,7 +4274,12 @@
 				tsoskMeRender( r.data );
 				showMsg( $msg, r.data.total + ' rows', 'ok' );
 			},
-			error: function () { showMsg( $msg, tsosk.i18n.error, 'error' ); }
+			error: function () {
+				if ( reqId !== tsosk_me_search_seq ) {
+					return;
+				}
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
 		} );
 	}
 
@@ -4915,6 +4933,9 @@
 	} );
 
 	$( document ).on( 'click', '#tsosk-roles-apply-template', function () {
+		if ( ! confirm( tsosk.i18n.roles_apply_confirm || tsosk.i18n.confirm_delete ) ) {
+			return;
+		}
 		var $msg = $( '#tsosk-roles-msg' );
 		ajaxPost( {
 			action : 'tsosk_roles_apply_template',

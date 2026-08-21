@@ -158,6 +158,22 @@ class TSOSK_Mod_Transients {
 			}
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$expired_site_keys = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options}
+				 WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) < %d",
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
+				$now
+			)
+		);
+		foreach ( $expired_site_keys as $timeout_key ) {
+			$key = substr( $timeout_key, strlen( '_site_transient_timeout_' ) );
+			if ( delete_site_transient( $key ) ) {
+				$count++;
+			}
+		}
+
 		TSOSK_Activity_Log::log(
 			'transients',
 			'purge',
@@ -196,6 +212,21 @@ class TSOSK_Mod_Transients {
 		foreach ( $all_keys as $option_name ) {
 			$key = substr( $option_name, strlen( '_transient_' ) );
 			if ( delete_transient( $key ) ) {
+				$count++;
+			}
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$site_keys = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name NOT LIKE %s",
+				$wpdb->esc_like( '_site_transient_' ) . '%',
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
+			)
+		);
+		foreach ( $site_keys as $option_name ) {
+			$key = substr( $option_name, strlen( '_site_transient_' ) );
+			if ( delete_site_transient( $key ) ) {
 				$count++;
 			}
 		}
