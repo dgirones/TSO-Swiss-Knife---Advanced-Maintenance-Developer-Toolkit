@@ -95,7 +95,7 @@ class TSOSK_Mod_File_Integrity {
 			'file-integrity',
 			'scan',
 			sprintf(
-				/* translators: %d: number of real core issues (modified + missing core files) */
+					/* translators: %d: number of issues */
 				__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$n_issues
 			)

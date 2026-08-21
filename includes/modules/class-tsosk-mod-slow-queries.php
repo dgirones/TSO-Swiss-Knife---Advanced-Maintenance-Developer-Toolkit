@@ -671,7 +671,7 @@ class TSOSK_Mod_Slow_Queries {
 							<span class="tsosk-badge tsosk-badge-warn">
 								<?php
 								printf(
-									/* translators: %d: number of times query ran */
+									/* translators: %d: number of times this query ran */
 									esc_html__( '×%d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 									(int) $row['count']
 								);
@@ -1924,7 +1924,7 @@ class TSOSK_Mod_Slow_Queries {
 						<span class="tsosk-badge tsosk-badge-warn tsosk-sq-dupe-badge">
 							<?php
 							printf(
-								/* translators: %d: number of times query pattern ran */
+								/* translators: %d: number of times this query ran */
 								esc_html__( '×%d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								(int) $sq_sql_map[ $sql_clean ]
 							);

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.0.4
+ * Version:     1.0.5
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.0.4' );
+define( 'TSOSK_VERSION',  '1.0.5' );
 define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );

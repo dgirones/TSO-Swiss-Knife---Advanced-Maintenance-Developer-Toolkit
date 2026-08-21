@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
 * **Cron Manager** — List, manually run, or delete scheduled WP-Cron events. Core hooks are protected from accidental deletion.
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
-* **Debug Mode** — Toggle WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG, and SAVEQUERIES via JSON flags stored under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/` — no wp-config.php editing required.
+* **Debug Mode** — One-click **Developer mode** preset for staging (`WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`; errors hidden from visitors), saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. The tab shows the constants currently in effect (read-only) and copy-paste `wp-config.php` snippets. Constants already defined in `wp-config.php` cannot be overridden.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
 * **Meta Editor** — Browse and edit post and user meta with type-aware validation.
 * **Option Library** — Save named option presets and re-apply them across environments.
@@ -116,7 +116,7 @@ No. Debug flags, security constants, and hidden-profile toggles are saved as JSO
 
 = Does Debug Mode create or manage wp-content/debug.log? =
 
-Debug Mode only stores JSON flags (for example `WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`) in the plugin uploads config folder. It does not create, truncate, or rotate `wp-content/debug.log`. If logging is enabled, WordPress or your server writes that file as usual. The Debug tab can list and preview common log paths when they already exist.
+No. Debug Mode does not create, truncate, or rotate `wp-content/debug.log`. Enabling **Developer mode** only stores JSON flags (`WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`, and related) in the plugin uploads config folder; WordPress or the server then writes `debug.log` as usual if logging is on. The Debug tab can list and preview common log paths when they already exist. Empty and shrink actions apply only to logs the plugin owns under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/` — never to `wp-content/debug.log`.
 
 = Can Server Files write robots.txt or .htaccess? =
 
@@ -142,6 +142,14 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 4. Slow Query Monitor — inspect slow and live database queries when SAVEQUERIES is enabled, export the log, and open a summary from the admin bar.
 
 == Changelog ==
+
+= 1.0.5 =
+* Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.
+* Transients: purge expired/all also clears site transients.
+* Roles: confirm before applying a capability template.
+* Meta Editor and Slug Manager: ignore stale search AJAX responses.
+* Debug Mode readme matches the Developer mode preset (no per-constant toggles).
+* Regenerated CA/ES translations; removed leftover Recovery Mode strings.
 
 = 1.0.4 =
 * Prefill queue no longer cleared when loading the next 404 redirect form.
@@ -170,6 +178,9 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+Cron Manager core-hook protection, site-transient purge, role template confirm, search race fixes, Debug Mode docs, and refreshed translations.
 
 = 1.0.4 =
 Fixes double-serialize in Meta/Options editors, redirect subdirectory sources, 404 prefill queue, shortcode removal, transients LIKE matching, and Slow Query duplicate snapshot.

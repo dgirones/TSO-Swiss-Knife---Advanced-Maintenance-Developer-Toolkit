@@ -233,7 +233,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				continue;
 			}
 			$changes[] = sprintf(
-				/* translators: 1: constant name, 2: enabled or disabled */
+				/* translators: 1: setting name, 2: enabled or disabled */
 				__( '%1$s %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$constant,
 				$is_on ? __( 'enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
@@ -283,7 +283,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				continue;
 			}
 			$changes[] = sprintf(
-				/* translators: 1: option label, 2: enabled or disabled */
+				/* translators: 1: setting name, 2: enabled or disabled */
 				__( '%1$s %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$label,
 				$is_on ? __( 'enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
