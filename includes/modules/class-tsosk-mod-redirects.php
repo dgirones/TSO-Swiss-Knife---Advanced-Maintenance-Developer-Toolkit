@@ -62,6 +62,7 @@ class TSOSK_Mod_Redirects {
 		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		$request_path = (string) wp_parse_url( $request_uri, PHP_URL_PATH );
 		$request_path = $this->normalize_path( rawurldecode( $request_path ) );
+		$request_path = $this->strip_home_subdirectory( $request_path );
 		if ( '' === $request_path ) {
 			return;
 		}
@@ -741,10 +742,16 @@ class TSOSK_Mod_Redirects {
 		set_transient( $gate_key, 1, 15 );
 		$delta = absint( get_transient( $delta_key ) );
 		delete_transient( $delta_key );
-		if ( $delta > 0 ) {
-			$rules[ $id ]['hits'] = absint( $rules[ $id ]['hits'] ) + $delta;
+
+		// Re-read before write to reduce lost updates under concurrent hits.
+		$fresh = $this->get_rules();
+		if ( ! isset( $fresh[ $id ] ) ) {
+			return;
 		}
-		update_option( self::OPTION, $rules, false );
+		$fresh[ $id ]['hits']     = absint( $fresh[ $id ]['hits'] ) + 1 + $delta;
+		$fresh[ $id ]['last_hit'] = $now;
+		$rules                    = $fresh;
+		update_option( self::OPTION, $fresh, false );
 	}
 
 	/**
@@ -780,6 +787,8 @@ class TSOSK_Mod_Redirects {
 			}
 			$delta_key = 'tsosk_404_hit_delta_' . md5( $request_path );
 			set_transient( $delta_key, absint( get_transient( $delta_key ) ) + 1, HOUR_IN_SECONDS );
+			// Keep hourly alert totals in sync even when option writes are deferred.
+			$this->maybe_send_404_alert( $this->increment_404_hour_counter( 1 ) );
 			return;
 		}
 		set_transient( 'tsosk_404_write_gate', 1, 5 );
@@ -981,6 +990,32 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * Strip the home subdirectory so rules use site-relative paths (e.g. /old-page/).
+	 *
+	 * @param string $path Normalized absolute request path.
+	 * @return string
+	 */
+	private function strip_home_subdirectory( string $path ): string {
+		if ( '' === $path ) {
+			return '';
+		}
+		$home_path = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path = $this->normalize_path( $home_path );
+		if ( '' === $home_path || '/' === $home_path ) {
+			return $path;
+		}
+		if ( $path === $home_path ) {
+			return '/';
+		}
+		$prefix = untrailingslashit( $home_path );
+		if ( str_starts_with( $path, $prefix . '/' ) ) {
+			$stripped = substr( $path, strlen( $prefix ) );
+			return '' === $stripped ? '/' : $this->normalize_path( $stripped );
+		}
+		return $path;
+	}
+
+	/**
 	 * Normalize a site-relative path.
 	 *
 	 * @param string $path Raw path.
@@ -1014,7 +1049,9 @@ class TSOSK_Mod_Redirects {
 		}
 
 		$source = isset( $rule['source'] ) ? (string) $rule['source'] : '';
-		$source = 'regex' === $match_type ? trim( $source ) : $this->normalize_path( sanitize_text_field( $source ) );
+		$source = 'regex' === $match_type
+			? trim( $source )
+			: $this->strip_home_subdirectory( $this->normalize_path( sanitize_text_field( $source ) ) );
 		if ( '' === $source ) {
 			return new WP_Error( 'empty_source', __( 'Enter a valid source path such as /old-page/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -1149,6 +1186,7 @@ class TSOSK_Mod_Redirects {
 	 */
 	private function is_loop( string $source, string $target_url ): bool {
 		$target_path = (string) wp_parse_url( $target_url, PHP_URL_PATH );
+		$target_path = $this->strip_home_subdirectory( $this->normalize_path( $target_path ) );
 		return $this->path_key( $source ) === $this->path_key( $target_path );
 	}
 

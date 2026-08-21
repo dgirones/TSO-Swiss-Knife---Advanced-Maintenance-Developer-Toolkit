@@ -343,7 +343,9 @@ class TSOSK_Mod_Options_Editor {
 					continue;
 				}
 				$where .= ' AND option_name NOT LIKE %s';
-				$args[] = $pattern;
+				// Escape LIKE wildcards in the literal prefix; keep intentional trailing %.
+				$literal = substr( $pattern, 0, -1 );
+				$args[]  = $wpdb->esc_like( $literal ) . '%';
 			}
 		}
 
@@ -442,7 +444,8 @@ class TSOSK_Mod_Options_Editor {
 						__( 'The value looks like serialized PHP but is not valid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
-				return $raw;
+				// Return PHP value so add_option()/update_option() serialize once.
+				return $test;
 
 			case 'text':
 			default:
@@ -648,12 +651,24 @@ class TSOSK_Mod_Options_Editor {
 			$raw_val = $prepared;
 		}
 
-		update_option( $name, $raw_val, $autoload );
+		// Avoid double-serialize: update_option() may maybe_serialize arrays/objects and serialized strings.
+		$to_store   = $raw_val;
+		$log_new    = is_string( $raw_val ) ? $raw_val : wp_json_encode( $raw_val );
+		if ( is_string( $raw_val ) && $this->looks_serialized( $raw_val ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			$decoded = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
+			if ( false !== $decoded || $raw_val === serialize( false ) ) {
+				$to_store = $decoded;
+				$log_new  = $raw_val;
+			}
+		}
+
+		update_option( $name, $to_store, $autoload );
 		$this->log_activity( array(
 			'action'   => 'update',
 			'name'     => $name,
 			'old'      => mb_substr( TSOSK_Support::sanitize_stored_scalar( $old_raw ), 0, 200 ),
-			'new'      => mb_substr( $raw_val, 0, 200 ),
+			'new'      => mb_substr( is_string( $log_new ) ? $log_new : TSOSK_Support::sanitize_stored_scalar( (string) $log_new ), 0, 200 ),
 			'autoload' => $autoload,
 			'time'     => time(),
 			'user'     => wp_get_current_user()->user_login,
@@ -693,12 +708,16 @@ class TSOSK_Mod_Options_Editor {
 			wp_send_json_error( $prepared_value->get_error_message() );
 		}
 
+		$log_new = is_string( $prepared_value )
+			? $prepared_value
+			: ( is_scalar( $prepared_value ) ? (string) $prepared_value : wp_json_encode( $prepared_value ) );
+
 		add_option( $name, $prepared_value, '', $autoload );
 		$this->log_activity( array(
 			'action'   => 'add',
 			'name'     => $name,
 			'old'      => '',
-			'new'      => mb_substr( $prepared_value, 0, 200 ),
+			'new'      => mb_substr( (string) $log_new, 0, 200 ),
 			'autoload' => $autoload,
 			'time'     => time(),
 			'user'     => wp_get_current_user()->user_login,
@@ -717,7 +736,7 @@ class TSOSK_Mod_Options_Editor {
 		if ( ! $name ) {
 			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		if ( $this->is_deletion_blocked( $name ) ) {
+		if ( $this->is_deletion_blocked( $name ) || self::is_protected_option_name( $name ) ) {
 			wp_send_json_error( __( 'This option is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_secret_option( $name ) ) {

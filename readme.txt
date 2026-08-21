@@ -2,10 +2,10 @@
 Contributors: deadko
 Donate link: https://ko-fi.com/deadko_cat
 Tags: maintenance, developer tools, cron, debug, database
-Requires at least: 5.9
+Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.2
+Stable tag: 1.0.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -143,6 +143,19 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.0.4 =
+* Prefill queue no longer cleared when loading the next 404 redirect form.
+* Meta and Options editors: avoid double-serializing values; meta delete clears object cache.
+* Redirects and Slug Manager: strip home subdirectory on source paths and loop detection.
+* Content Audit: shortcode removal uses a tag boundary so [foo] does not match [foobar].
+* Transients listing and purge: escape LIKE wildcards correctly.
+* Slow Query Monitor: ignore admin-bar stacks for duplicate detection (like Query Monitor); keep last-page duplicate SQL at the top of the tab.
+
+= 1.0.3 =
+* Safer cron reschedule, meta edits by row ID, and search-replace primary-key handling.
+* Redirects: subdirectory path matching, 404 alert counters, and prefill queue fixes.
+* Options Editor protections, Content Audit empty-title query, uninstall cleanup, Requires at least 6.1.
+
 = 1.0.2 =
 * Health: site URL details on separate lines; autoload total includes yes/on/auto; accurate overdue cron count; security headers probe cached 15 minutes.
 * Redirects: 404 log checkbox alignment; bulk prefill queue advances automatically after each save; 404 hit counts stay in sync under write throttling.
@@ -157,6 +170,12 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Fixes double-serialize in Meta/Options editors, redirect subdirectory sources, 404 prefill queue, shortcode removal, transients LIKE matching, and Slow Query duplicate snapshot.
+
+= 1.0.3 =
+Safer cron, meta, and search-replace; redirects and 404 alerts fixed; Options Editor and Content Audit hardened.
 
 = 1.0.2 =
 Health, redirects, snapshot, and translation fixes. Tested with WordPress 7.1.

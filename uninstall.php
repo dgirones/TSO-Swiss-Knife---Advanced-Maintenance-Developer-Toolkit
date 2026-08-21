@@ -62,20 +62,37 @@ foreach ( $tsosk_options as $tsosk_option ) {
 $tsosk_transients = array(
 	'tsosk_fi_results',
 	'tsosk_fi_checksums',
+	'tsosk_media_footprint_v1',
+	'tsosk_image_sizes_audit_v1',
+	'tsosk_media_full_review_v1',
+	'tsosk_media_full_review_state',
+	'tsosk_sq_log_lock',
+	'tsosk_health_security_headers_check',
 );
 
 foreach ( $tsosk_transients as $tsosk_transient ) {
 	delete_transient( $tsosk_transient );
 }
 
-delete_transient( 'tsosk_media_footprint_v1' );
-delete_transient( 'tsosk_image_sizes_audit_v1' );
-delete_transient( 'tsosk_media_full_review_v1' );
-delete_transient( 'tsosk_media_full_review_state' );
+global $wpdb;
+
+// Remove remaining plugin-prefixed transients (approvals, 2FA, lockouts, 404 gates, etc.).
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query(
+	$wpdb->prepare(
+		"DELETE FROM {$wpdb->options}
+		WHERE option_name LIKE %s
+		OR option_name LIKE %s
+		OR option_name LIKE %s
+		OR option_name LIKE %s",
+		$wpdb->esc_like( '_transient_tsosk_' ) . '%',
+		$wpdb->esc_like( '_transient_timeout_tsosk_' ) . '%',
+		$wpdb->esc_like( '_site_transient_tsosk_' ) . '%',
+		$wpdb->esc_like( '_site_transient_timeout_tsosk_' ) . '%'
+	)
+);
 
 // ── User meta ──────────────────────────────────────────────────────────────
-
-global $wpdb;
 
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(

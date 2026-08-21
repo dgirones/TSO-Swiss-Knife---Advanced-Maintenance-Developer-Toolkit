@@ -69,6 +69,9 @@ class TSOSK_Mod_Slow_Queries {
 			add_action( 'shutdown', array( $this, 'capture_slow_queries' ), 999 );
 		}
 
+		// Persist exact duplicate SQL from the last admin request (for the live viewer).
+		add_action( 'shutdown', array( $this, 'capture_duplicate_snapshot' ), 998 );
+
 		// AJAX handlers.
 		add_action( 'wp_ajax_tsosk_sq_save_settings', array( $this, 'ajax_save_settings' ) );
 		add_action( 'wp_ajax_tsosk_sq_clear_log',     array( $this, 'ajax_clear_log' ) );
@@ -409,6 +412,295 @@ class TSOSK_Mod_Slow_Queries {
 	}
 
 	/**
+	 * Normalize SQL for exact duplicate detection (align with Query Monitor).
+	 *
+	 * Collapses whitespace, strips trailing SQL block comments, and removes
+	 * wpdb placeholder-escape tokens so identical statements compare equal.
+	 *
+	 * @param string $sql Raw SQL from $wpdb->queries.
+	 * @return string
+	 */
+	private function normalize_sql_dupe_key( string $sql ): string {
+		global $wpdb;
+
+		if ( isset( $wpdb ) && is_object( $wpdb ) && method_exists( $wpdb, 'remove_placeholder_escape' ) ) {
+			$sql = (string) $wpdb->remove_placeholder_escape( $sql );
+		}
+		$stripped = preg_replace( '#/\*.*?\*/\s*$#s', '', $sql );
+		if ( is_string( $stripped ) ) {
+			$sql = $stripped;
+		}
+		$normalized = preg_replace( '/\s+/', ' ', trim( $sql ) );
+		return is_string( $normalized ) ? $normalized : '';
+	}
+
+	/**
+	 * Transient key for the current admin's last duplicate-query snapshot.
+	 *
+	 * @param int $user_id User ID.
+	 * @return string
+	 */
+	private function last_dupes_transient_key( int $user_id ): string {
+		return 'tsosk_sq_lastdupes_' . max( 0, $user_id );
+	}
+
+	/**
+	 * Build a duplicate map from $wpdb->queries (exact SQL keys → counts).
+	 *
+	 * @param array<int, mixed> $queries           Query rows.
+	 * @param bool              $exclude_admin_bar Skip queries triggered while rendering the admin bar (Query Monitor does the same).
+	 * @return array{map: array<string, int>, callers: array<string, string>, query_count: int}
+	 */
+	private function build_exact_dupe_map( array $queries, bool $exclude_admin_bar = true ): array {
+		$map         = array();
+		$callers     = array();
+		$query_count = 0;
+		foreach ( $queries as $q ) {
+			if ( ! is_array( $q ) ) {
+				continue;
+			}
+			$stack = (string) ( $q[2] ?? '' );
+			if ( $exclude_admin_bar && $this->caller_is_admin_bar( $stack ) ) {
+				continue;
+			}
+			$sql = $this->normalize_sql_dupe_key( (string) ( $q[0] ?? '' ) );
+			if ( '' === $sql ) {
+				continue;
+			}
+			++$query_count;
+			$map[ $sql ] = ( $map[ $sql ] ?? 0 ) + 1;
+			if ( ! isset( $callers[ $sql ] ) ) {
+				$callers[ $sql ] = $stack;
+			}
+		}
+		return array(
+			'map'         => $map,
+			'callers'     => $callers,
+			'query_count' => $query_count,
+		);
+	}
+
+	/**
+	 * Whether a SAVEQUERIES caller stack is from admin-bar rendering.
+	 *
+	 * @param string $stack Comma-separated caller list from $wpdb->queries[][2].
+	 * @return bool
+	 */
+	private function caller_is_admin_bar( string $stack ): bool {
+		if ( '' === $stack ) {
+			return false;
+		}
+		return false !== stripos( $stack, 'wp_admin_bar' )
+			|| false !== stripos( $stack, 'WP_Admin_Bar' )
+			|| false !== stripos( $stack, 'admin_bar_menu' );
+	}
+
+	/**
+	 * Persist a duplicate-query snapshot for the Slow Query Monitor tab.
+	 *
+	 * @param array<int, mixed> $queries Raw $wpdb->queries.
+	 * @return bool True when a snapshot with at least one duplicate was stored.
+	 */
+	private function store_duplicate_snapshot_from_queries( array $queries ): bool {
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+
+		$built = $this->build_exact_dupe_map( $queries, true );
+		$dupes = array_filter( $built['map'], static fn( $n ) => (int) $n > 1 );
+		if ( empty( $dupes ) ) {
+			return false;
+		}
+
+		arsort( $dupes, SORT_NUMERIC );
+		$list = array();
+		foreach ( $dupes as $sql => $count ) {
+			$list[] = array(
+				'sql'    => mb_substr( (string) $sql, 0, 2000 ),
+				'count'  => (int) $count,
+				'caller' => mb_substr( (string) ( $built['callers'][ $sql ] ?? '' ), 0, 500 ),
+			);
+			if ( count( $list ) >= 25 ) {
+				break;
+			}
+		}
+
+		$url = '';
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			$url = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		}
+
+		set_transient(
+			$this->last_dupes_transient_key( (int) get_current_user_id() ),
+			array(
+				'ts'          => time(),
+				'url'         => $url,
+				'query_count' => (int) $built['query_count'],
+				'dupes'       => $list,
+			),
+			12 * HOUR_IN_SECONDS
+		);
+		return true;
+	}
+
+	/**
+	 * Whether the current request is the Slow Query Monitor admin tab.
+	 *
+	 * @return bool
+	 */
+	private function is_viewing_slow_queries_tab(): bool {
+		if ( ! is_admin() ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab detection.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 'tso-swiss-knife' !== $page ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab detection.
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+		return 'slow-queries' === $tab;
+	}
+
+	/**
+	 * On shutdown: store exact duplicate queries for the next Slow Query Monitor view.
+	 *
+	 * The live table only lists queries from the Monitor page itself. Opening it from
+	 * the admin bar is a new request — without this snapshot the previous page's
+	 * duplicates would appear to "disappear".
+	 */
+	public function capture_duplicate_snapshot(): void {
+		global $wpdb;
+
+		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES || ! is_array( $wpdb->queries ) ) {
+			return;
+		}
+		if ( ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			return;
+		}
+		// Do not replace the previous page's snapshot while browsing this tab.
+		if ( $this->is_viewing_slow_queries_tab() ) {
+			return;
+		}
+
+		$this->store_duplicate_snapshot_from_queries( $wpdb->queries );
+	}
+
+	/**
+	 * Read the last duplicate snapshot for the current admin (if any).
+	 *
+	 * @return array{ts:int,url:string,query_count:int,dupes:array<int,array{sql:string,count:int,caller:string}>}|null
+	 */
+	private function get_last_dupes_snapshot(): ?array {
+		if ( ! is_user_logged_in() ) {
+			return null;
+		}
+		$raw = get_transient( $this->last_dupes_transient_key( (int) get_current_user_id() ) );
+		if ( ! is_array( $raw ) || empty( $raw['dupes'] ) || ! is_array( $raw['dupes'] ) ) {
+			return null;
+		}
+		$dupes = array();
+		foreach ( $raw['dupes'] as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			$sql = isset( $row['sql'] ) ? (string) $row['sql'] : '';
+			if ( '' === $sql ) {
+				continue;
+			}
+			$dupes[] = array(
+				'sql'    => $sql,
+				'count'  => max( 2, absint( $row['count'] ?? 2 ) ),
+				'caller' => isset( $row['caller'] ) ? (string) $row['caller'] : '',
+			);
+		}
+		if ( empty( $dupes ) ) {
+			return null;
+		}
+		return array(
+			'ts'          => absint( $raw['ts'] ?? 0 ),
+			'url'         => isset( $raw['url'] ) ? (string) $raw['url'] : '',
+			'query_count' => absint( $raw['query_count'] ?? 0 ),
+			'dupes'       => $dupes,
+		);
+	}
+
+	/**
+	 * Render the saved duplicate-query panel (from a previous request).
+	 */
+	private function render_last_dupes_panel(): void {
+		$last_dupes = $this->get_last_dupes_snapshot();
+		if ( ! $last_dupes ) {
+			return;
+		}
+		?>
+		<div class="tsosk-card" id="tsosk-sq-last-dupes">
+			<h3>
+				<span class="dashicons dashicons-warning" aria-hidden="true"></span>
+				<?php esc_html_e( 'Duplicates from your last page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</h3>
+			<p class="description">
+				<?php esc_html_e( 'Exact duplicate SQL from the previous request (same list the admin bar warned about). Saved when that page finished loading. The live table further down only shows queries for this Slow Query Monitor page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<p>
+				<?php
+				$when = $last_dupes['ts']
+					? human_time_diff( $last_dupes['ts'], time() ) . ' ' . __( 'ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: '—';
+				printf(
+					/* translators: 1: query count, 2: duplicate pattern count, 3: URL path, 4: relative time */
+					esc_html__( '%1$d queries · %2$d duplicate patterns · %3$s · %4$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $last_dupes['query_count'],
+					(int) count( $last_dupes['dupes'] ),
+					esc_html( $last_dupes['url'] ? $last_dupes['url'] : '—' ),
+					esc_html( $when )
+				);
+				?>
+			</p>
+			<div class="tsosk-table-wrap">
+			<table class="widefat tsosk-table">
+				<thead><tr>
+					<th style="width:70px;"><?php esc_html_e( 'Times', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'SQL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:30%;"><?php esc_html_e( 'Called by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				</tr></thead>
+				<tbody>
+				<?php foreach ( $last_dupes['dupes'] as $row ) : ?>
+					<tr>
+						<td class="tsosk-sq-cell-mono">
+							<span class="tsosk-badge tsosk-badge-warn">
+								<?php
+								printf(
+									/* translators: %d: number of times query ran */
+									esc_html__( '×%d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									(int) $row['count']
+								);
+								?>
+							</span>
+						</td>
+						<td class="tsosk-sq-cell-sql">
+							<code class="tsosk-sq-sql-code"><?php echo esc_html( $row['sql'] ); ?></code>
+						</td>
+						<td class="tsosk-sq-cell-caller">
+							<?php
+							$frames = array_filter(
+								array_map( 'trim', explode( ',', (string) $row['caller'] ) ),
+								static fn( $f ) => '' !== $f && ! in_array( $f, array( 'wpdb->query', 'wpdb->get_results', 'wpdb->get_var', 'wpdb->get_row', 'wpdb->prepare' ), true )
+							);
+							$frames = array_slice( array_values( $frames ), -3 );
+							echo esc_html( implode( ' → ', $frames ) );
+							?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Normalise SQL into a fingerprint pattern (literals → ?).
 	 *
 	 * @param string $sql Raw SQL.
@@ -566,6 +858,16 @@ class TSOSK_Mod_Slow_Queries {
 		}
 
 		$live       = $this->get_current_request_query_stats();
+		if (
+			$live
+			&& (int) $live['dupe_patterns'] > 0
+			&& $savequeries
+			&& ! $this->is_viewing_slow_queries_tab()
+			&& is_array( $GLOBALS['wpdb']->queries ?? null )
+		) {
+			// Persist early so the Monitor tab can show these SQL statements after navigation.
+			$this->store_duplicate_snapshot_from_queries( $GLOBALS['wpdb']->queries );
+		}
 		$log        = $this->get_log();
 		$log_stats  = array() !== $log ? $this->compute_stats( $log ) : array(
 			'total_slow'    => 0,
@@ -653,7 +955,7 @@ class TSOSK_Mod_Slow_Queries {
 							(int) $live['dupe_patterns']
 						)
 					),
-					'href'   => $tab_url . '#tsosk-sq-live-viewer',
+					'href'   => $tab_url . '#tsosk-sq-last-dupes',
 				)
 			);
 
@@ -670,7 +972,7 @@ class TSOSK_Mod_Slow_Queries {
 								$this->admin_bar_excerpt( $live['top_dupe_sql'], 56 )
 							)
 						),
-						'href'   => $tab_url . '#tsosk-sq-live-viewer',
+						'href'   => $tab_url . '#tsosk-sq-last-dupes',
 						'meta'   => array(
 							'class' => 'tsosk-sq-ab-item-warn',
 						),
@@ -808,17 +1110,16 @@ class TSOSK_Mod_Slow_Queries {
 		$slow_count    = 0;
 		$slowest_ms    = 0.0;
 		$slowest_sql   = '';
-		$sql_map       = array();
+		$built         = $this->build_exact_dupe_map( $wpdb->queries );
+		$sql_map       = $built['map'];
 
 		foreach ( $wpdb->queries as $q ) {
-			$time = (float) ( $q[1] ?? 0 );
+			$time  = (float) ( $q[1] ?? 0 );
+			$stack = (string) ( $q[2] ?? '' );
 			$query_time_ms += $time * 1000;
-			$sql  = preg_replace( '/\s+/', ' ', trim( (string) ( $q[0] ?? '' ) ) );
-			$sql  = is_string( $sql ) ? $sql : '';
-			if ( '' !== $sql ) {
-				$sql_map[ $sql ] = ( $sql_map[ $sql ] ?? 0 ) + 1;
-			}
-			if ( $time >= $threshold_sec ) {
+			// Duplicates ignore admin-bar stacks; slowest may still include them for load context.
+			$sql = $this->normalize_sql_dupe_key( (string) ( $q[0] ?? '' ) );
+			if ( $time >= $threshold_sec && ! $this->caller_is_admin_bar( $stack ) ) {
 				++$slow_count;
 				$t_ms = $time * 1000;
 				if ( $t_ms > $slowest_ms ) {
@@ -1221,6 +1522,8 @@ class TSOSK_Mod_Slow_Queries {
 		</div>
 		<?php endif; ?>
 
+		<?php $this->render_last_dupes_panel(); ?>
+
 		<?php /* ── Settings card ── */ ?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Monitor Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
@@ -1471,15 +1774,9 @@ class TSOSK_Mod_Slow_Queries {
 		$sq_total   = $sq_enabled ? array_sum( array_column( $sq_queries, 1 ) ) : 0;
 		$sq_max     = $sq_count ? max( array_column( $sq_queries, 1 ) ) : 0;
 		$threshold_ms = (int) $this->get_settings()['threshold_ms'];
-		$sq_sql_map = array();
-		foreach ( $sq_queries as $q ) {
-			$sql = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
-			if ( ! is_string( $sql ) || '' === $sql ) {
-				continue;
-			}
-			$sq_sql_map[ $sql ] = ( $sq_sql_map[ $sql ] ?? 0 ) + 1;
-		}
-		// Exact SQL duplicates (same as Query Monitor) — not fingerprints.
+		$built      = $this->build_exact_dupe_map( $sq_queries );
+		$sq_sql_map = $built['map'];
+		// Exact SQL duplicates (same idea as Query Monitor) — not fingerprints.
 		$sq_dupes = array_filter( $sq_sql_map, static fn( $n ) => $n > 1 );
 		$sq_dupe_rows = 0;
 		foreach ( $sq_dupes as $n ) {
@@ -1504,7 +1801,7 @@ class TSOSK_Mod_Slow_Queries {
 				<?php endif; ?>
 			</h3>
 			<p class="description">
-				<?php esc_html_e( 'Live list of database queries executed while loading this Slow Query Monitor page. Enable the monitor above (it can turn SAVEQUERIES on for you) or use Developer mode in Debug Mode, then reload.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Live list of database queries executed while loading this Slow Query Monitor page only. Duplicate detection ignores queries triggered by the admin bar (same approach as Query Monitor). For duplicates from another page, see the panel at the top of this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<?php if ( ! $sq_enabled ) : ?>
@@ -1596,8 +1893,7 @@ class TSOSK_Mod_Slow_Queries {
 					$sql_raw   = (string) $q[0];
 					$time_ms   = (float) $q[1] * 1000;
 					$caller    = (string) ( $q[2] ?? '' );
-					$sql_clean = preg_replace( '/\s+/', ' ', trim( $sql_raw ) );
-					$sql_clean = is_string( $sql_clean ) ? $sql_clean : '';
+					$sql_clean = $this->normalize_sql_dupe_key( $sql_raw );
 					$is_slow   = $time_ms >= $threshold_ms;
 					$is_dupe   = ( $sq_sql_map[ $sql_clean ] ?? 0 ) > 1;
 					$kw        = strtoupper( strtok( $sql_clean, ' ' ) );

@@ -143,8 +143,7 @@ class TSOSK_Mod_Cron {
 		$event = $crons[ $old_timestamp ][ $hook ][ $sig ];
 		$args  = isset( $event['args'] ) && is_array( $event['args'] ) ? $event['args'] : array();
 
-		wp_unschedule_event( $old_timestamp, $hook, $args );
-
+		// Validate and schedule the new occurrence first so a failure never drops the old event.
 		if ( 'single' === $schedule || '' === $schedule ) {
 			$scheduled = wp_schedule_single_event( $new_timestamp, $hook, $args );
 		} else {
@@ -158,6 +157,8 @@ class TSOSK_Mod_Cron {
 		if ( false === $scheduled ) {
 			wp_send_json_error( __( 'Could not reschedule the event.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+
+		wp_unschedule_event( $old_timestamp, $hook, $args );
 
 		TSOSK_Activity_Log::log(
 			'cron',

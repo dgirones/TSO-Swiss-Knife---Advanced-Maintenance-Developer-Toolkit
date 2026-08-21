@@ -54,14 +54,15 @@ class TSOSK_Mod_Content_Audit {
 
 		if ( '' !== $shortcode ) {
 			$quoted  = preg_quote( $shortcode, '/' );
-			$pattern = '/\[' . $quoted . '(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
+			// Tag boundary: removing [foo] must not match [foobar].
+			$pattern = '/\[' . $quoted . '(?![a-zA-Z0-9_])(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
 			$new     = preg_replace( $pattern, '', $content, -1, $removed );
 		} else {
 			$broken = $this->get_post_broken_shortcodes( $post );
 			$new    = $content;
 			foreach ( $broken as $tag ) {
 				$quoted  = preg_quote( $tag, '/' );
-				$pattern = '/\[' . $quoted . '(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
+				$pattern = '/\[' . $quoted . '(?![a-zA-Z0-9_])(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
 				$new     = preg_replace( $pattern, '', $new, -1, $count );
 				$removed += (int) $count;
 			}
@@ -270,6 +271,10 @@ class TSOSK_Mod_Content_Audit {
 	 * @return array<int,WP_Post>
 	 */
 	private function get_posts_by_issue( string $issue ): array {
+		if ( 'empty_titles' === $issue ) {
+			return $this->get_empty_title_posts();
+		}
+
 		$args = array(
 			'post_type'      => array( 'post', 'page' ),
 			'posts_per_page' => 30,
@@ -277,14 +282,12 @@ class TSOSK_Mod_Content_Audit {
 			'post_status'    => 'publish',
 		);
 
-		if ( 'empty_titles' === $issue ) {
-			$args['s'] = '';
-		} elseif ( 'missing_featured' === $issue ) {
-			$args['post_type'] = 'post';
+		if ( 'missing_featured' === $issue ) {
+			$args['post_type']      = 'post';
 			$args['posts_per_page'] = 100;
 		} elseif ( 'old_pending' === $issue ) {
 			$args['post_status'] = array( 'pending', 'private', 'draft' );
-			$args['date_query'] = array(
+			$args['date_query']  = array(
 				array(
 					'before' => gmdate( 'Y-m-d H:i:s', strtotime( '-90 days' ) ),
 					'column' => 'post_modified_gmt',
@@ -293,14 +296,6 @@ class TSOSK_Mod_Content_Audit {
 		}
 
 		$posts = get_posts( $args );
-		if ( 'empty_titles' === $issue ) {
-			$posts = array_filter(
-				$posts,
-				static function ( WP_Post $post ): bool {
-					return '' === trim( $post->post_title );
-				}
-			);
-		}
 		if ( 'missing_featured' === $issue ) {
 			$posts = array_filter(
 				$posts,
@@ -327,6 +322,39 @@ class TSOSK_Mod_Content_Audit {
 		}
 
 		return array_slice( array_values( $posts ), 0, 30 );
+	}
+
+	/**
+	 * Published posts/pages with an empty title (targeted query, not a recent sample).
+	 *
+	 * @return array<int,WP_Post>
+	 */
+	private function get_empty_title_posts(): array {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			"SELECT ID FROM {$wpdb->posts}
+			WHERE post_type IN ('post','page')
+			AND post_status = 'publish'
+			AND TRIM(post_title) = ''
+			ORDER BY post_modified_gmt DESC
+			LIMIT 50"
+		);
+		if ( ! is_array( $ids ) || array() === $ids ) {
+			return array();
+		}
+		$posts = get_posts(
+			array(
+				'post_type'      => array( 'post', 'page' ),
+				'post_status'    => 'publish',
+				'post__in'       => array_map( 'absint', $ids ),
+				'posts_per_page' => count( $ids ),
+				'orderby'        => 'post__in',
+				'no_found_rows'  => true,
+			)
+		);
+		return is_array( $posts ) ? array_values( $posts ) : array();
 	}
 
 	/**

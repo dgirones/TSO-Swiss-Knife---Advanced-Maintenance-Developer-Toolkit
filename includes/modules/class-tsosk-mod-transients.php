@@ -52,8 +52,8 @@ class TSOSK_Mod_Transients {
 					   AND option_name LIKE %s
 					 ORDER BY option_name
 					 LIMIT %d",
-					'_transient_%',
-					'_transient_timeout_%',
+					$wpdb->esc_like( '_transient_' ) . '%',
+					$wpdb->esc_like( '_transient_timeout_' ) . '%',
 					'%' . $wpdb->esc_like( '_transient_' . $search ) . '%',
 					$limit
 				),
@@ -69,8 +69,8 @@ class TSOSK_Mod_Transients {
 					   AND option_name NOT LIKE %s
 					 ORDER BY option_name
 					 LIMIT %d",
-					'_transient_%',
-					'_transient_timeout_%',
+					$wpdb->esc_like( '_transient_' ) . '%',
+					$wpdb->esc_like( '_transient_timeout_' ) . '%',
 					$limit
 				),
 				ARRAY_A
@@ -145,7 +145,7 @@ class TSOSK_Mod_Transients {
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options}
 				 WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) < %d",
-				'_transient_timeout_%',
+				$wpdb->esc_like( '_transient_timeout_' ) . '%',
 				$now
 			)
 		);
@@ -188,8 +188,8 @@ class TSOSK_Mod_Transients {
 		$all_keys = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name NOT LIKE %s",
-				'_transient_%',
-				'_transient_timeout_%'
+				$wpdb->esc_like( '_transient_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_' ) . '%'
 			)
 		);
 		$count = 0;

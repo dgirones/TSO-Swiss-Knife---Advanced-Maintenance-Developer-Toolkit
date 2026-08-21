@@ -1315,7 +1315,8 @@
 		if ( ! source ) {
 			return tsosk404PrefillFromQueue( introTotal );
 		}
-		resetRedirectForm();
+		// Do not clear the remaining queue when resetting fields.
+		resetRedirectForm( false );
 		$( '#tsosk-redirect-source' ).val( source );
 		tsosk404UncheckSource( source );
 		var remaining = queue.length;
@@ -1330,7 +1331,10 @@
 		return true;
 	}
 
-	function resetRedirectForm() {
+	function resetRedirectForm( clearQueue ) {
+		if ( false !== clearQueue ) {
+			tsosk404SetPrefillQueue( [] );
+		}
 		$( '#tsosk-redirect-id' ).val( '' );
 		$( '#tsosk-redirect-source' ).val( '' );
 		$( '#tsosk-redirect-target' ).val( '' );
@@ -2227,13 +2231,28 @@
 			var badge_al    = '<span style="background:' + ( item.autoload === 'yes' || item.autoload === 'on' ? '#fef3c7' : '#f3f4f6' ) + ';color:' + alColor + ';padding:2px 7px;border-radius:10px;font-size:11px;">' + item.autoload + '</span>';
 			var badge_type  = '<span style="background:#f3f4f6;color:' + tc + ';padding:2px 7px;border-radius:10px;font-size:11px;">' + item.type + '</span>';
 
-			var actions;
+			var actions = '';
+			var $actionsWrap = $( '<div></div>' );
 			if ( isProtected ) {
-				actions = '<button class="button button-small tsosk-oe-edit-btn" data-name="' + item.name + '" data-protected="1" data-caution="0" data-nonce="' + nonce + '">' + tsosk.i18n.oe_view + '</button>';
+				$actionsWrap.append(
+					$( '<button type="button" class="button button-small tsosk-oe-edit-btn"></button>' )
+						.attr( { 'data-name': item.name, 'data-protected': '1', 'data-caution': '0', 'data-nonce': nonce } )
+						.text( tsosk.i18n.oe_view )
+				);
 			} else {
-				actions = '<button class="button button-small tsosk-oe-edit-btn" data-name="' + item.name + '" data-protected="0" data-caution="' + ( isCaution ? 1 : 0 ) + '" data-nonce="' + nonce + '">' + tsosk.i18n.oe_edit + '</button> ';
-				actions += '<button class="button button-small button-link-delete tsosk-oe-delete-btn" data-name="' + item.name + '" data-nonce="' + nonce + '">' + tsosk.i18n.oe_delete + '</button>';
+				$actionsWrap.append(
+					$( '<button type="button" class="button button-small tsosk-oe-edit-btn"></button>' )
+						.attr( { 'data-name': item.name, 'data-protected': '0', 'data-caution': isCaution ? '1' : '0', 'data-nonce': nonce } )
+						.text( tsosk.i18n.oe_edit )
+				);
+				$actionsWrap.append( ' ' );
+				$actionsWrap.append(
+					$( '<button type="button" class="button button-small button-link-delete tsosk-oe-delete-btn"></button>' )
+						.attr( { 'data-name': item.name, 'data-nonce': nonce } )
+						.text( tsosk.i18n.oe_delete )
+				);
 			}
+			actions = $actionsWrap.html();
 
 			var $tr = $( '<tr>' + ( isProtected ? ' class="tsosk-oe-protected"' : '' ) + '>' );
 			var nameCell = $( '<td style="word-break:break-all;font-family:monospace;font-size:12px;color:#1d2327;">' );
@@ -3882,9 +3901,10 @@
 		var shown  = 0;
 		$rows.each( function () {
 			var $row  = $( this );
-			var sql   = String( $row.data( 'sql' ) || $row.attr( 'data-sql' ) || '' ).toLowerCase();
-			var isDu  = String( $row.data( 'dupe' ) || $row.attr( 'data-dupe' ) ) === '1';
-			var isSl  = String( $row.data( 'slow' ) || $row.attr( 'data-slow' ) ) === '1';
+			var sql   = String( $row.attr( 'data-sql' ) || '' ).toLowerCase();
+			// Prefer attr over .data() — jQuery coerces data-dupe="0" to number 0.
+			var isDu  = String( $row.attr( 'data-dupe' ) || '0' ) === '1';
+			var isSl  = String( $row.attr( 'data-slow' ) || '0' ) === '1';
 			var hide  = ( q && sql.indexOf( q ) === -1 )
 				|| ( onlyDu && ! isDu )
 				|| ( onlySl && ! isSl );
@@ -4423,18 +4443,27 @@
 		}
 
 		var fields = [
-			{ label: i18n.snapshot_env_site_url || 'Site URL', file: data.site_url || '', current: cur.site_url || '' },
-			{ label: i18n.snapshot_env_wp_version || 'WordPress version', file: data.wp_version || '', current: cur.wp_version || '' },
-			{ label: i18n.snapshot_env_plugin || 'Snapshot schema', file: String( data.version || '' ), current: String( cur.schema_version || '' ) },
-			{ label: i18n.snapshot_env_php || 'PHP version', file: data.php_version || '', current: cur.php_version || '' },
-			{ label: i18n.snapshot_env_locale || 'Locale', file: data.locale || '', current: cur.locale || '' }
+			{ label: i18n.snapshot_env_site_url || 'Site URL', file: data.site_url || '', current: cur.site_url || '', kind: 'url' },
+			{ label: i18n.snapshot_env_wp_version || 'WordPress version', file: data.wp_version || '', current: cur.wp_version || '', kind: 'text' },
+			{ label: i18n.snapshot_env_plugin || 'Snapshot schema', file: String( data.version || '' ), current: String( cur.schema_version || '' ), kind: 'text' },
+			{ label: i18n.snapshot_env_php || 'PHP version', file: data.php_version || '', current: cur.php_version || '', kind: 'text' },
+			{ label: i18n.snapshot_env_locale || 'Locale', file: data.locale || '', current: cur.locale || '', kind: 'locale' }
 		];
 
 		fields.forEach( function ( f ) {
 			if ( ! f.file && ! f.current ) {
 				return;
 			}
-			var diff = String( f.file ) !== String( f.current );
+			var left  = String( f.file || '' );
+			var right = String( f.current || '' );
+			if ( 'url' === f.kind ) {
+				left  = left.replace( /\/+$/, '' ).toLowerCase();
+				right = right.replace( /\/+$/, '' ).toLowerCase();
+			} else if ( 'locale' === f.kind ) {
+				left  = left.toLowerCase().replace( /-/g, '_' );
+				right = right.toLowerCase().replace( /-/g, '_' );
+			}
+			var diff = left !== right;
 			var $tr  = $( '<tr></tr>' );
 			if ( diff ) {
 				$tr.addClass( 'tsosk-snapshot-env-diff-warn' );

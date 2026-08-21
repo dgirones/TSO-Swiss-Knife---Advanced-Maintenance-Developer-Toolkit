@@ -374,9 +374,9 @@ class TSOSK_Mod_Search_Replace {
 			if ( ! $this->table_exists( $table ) ) {
 				continue;
 			}
-			$cols    = $this->get_text_columns( $table );
-			$pk      = $this->get_primary_key( $table );
-			if ( empty( $cols ) ) {
+			$cols = $this->get_text_columns( $table );
+			$pk   = $this->get_primary_key( $table );
+			if ( empty( $cols ) || '' === $pk ) {
 				continue;
 			}
 			$matches = $this->find_matches( $table, $cols, $pk, $params, true );
@@ -419,7 +419,15 @@ class TSOSK_Mod_Search_Replace {
 			}
 			$cols = $this->get_text_columns( $table );
 			$pk   = $this->get_primary_key( $table );
-			if ( empty( $cols ) || '' === $pk ) {
+			if ( empty( $cols ) ) {
+				continue;
+			}
+			if ( '' === $pk ) {
+				$stats['errors'][] = sprintf(
+					/* translators: %s: database table name */
+					__( 'Skipped table %s: no single-column primary key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$table
+				);
 				continue;
 			}
 			$table_stats = $this->replace_in_table( $table, $cols, $pk, $params );
@@ -764,14 +772,18 @@ class TSOSK_Mod_Search_Replace {
 		if ( ! is_array( $cols ) || array() === $cols ) {
 			return '';
 		}
+		$primary = array();
 		foreach ( $cols as $col ) {
-			if ( 'PRI' === ( $col['Key'] ?? '' ) ) {
-				$field = (string) ( $col['Field'] ?? '' );
-				return ( '' !== $this->sql_ident( $field ) ) ? $field : '';
+			if ( 'PRI' !== ( $col['Key'] ?? '' ) ) {
+				continue;
+			}
+			$field = (string) ( $col['Field'] ?? '' );
+			if ( '' !== $this->sql_ident( $field ) ) {
+				$primary[] = $field;
 			}
 		}
-		$field = (string) ( $cols[0]['Field'] ?? '' );
-		return ( '' !== $this->sql_ident( $field ) ) ? $field : '';
+		// Only a single-column primary key is safe for row updates (no first-column fallback).
+		return 1 === count( $primary ) ? $primary[0] : '';
 	}
 
 	// ── Request parsing ───────────────────────────────────────────────────────

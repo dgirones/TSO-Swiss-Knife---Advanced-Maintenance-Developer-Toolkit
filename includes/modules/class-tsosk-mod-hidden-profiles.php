@@ -389,7 +389,24 @@ class TSOSK_Mod_Hidden_Profiles {
 		if ( ! defined( $constant ) ) {
 			return false;
 		}
-		return ! TSOSK_Config_Storage::constant_defined_in_tsosk_config( $constant );
+		// Defined but not managed in TSO JSON → external lock (wp-config / another plugin).
+		if ( ! TSOSK_Config_Storage::constant_defined_in_tsosk_config( $constant ) ) {
+			return true;
+		}
+		// In TSO JSON: still locked when the live value differs (wp-config won define race).
+		$saved = $this->get_saved_constants();
+		if ( ! array_key_exists( $constant, $saved ) || null === $saved[ $constant ] ) {
+			return true;
+		}
+		$live = constant( $constant );
+		$want = $saved[ $constant ];
+		if ( is_bool( $want ) ) {
+			return (bool) $live !== (bool) $want;
+		}
+		if ( is_int( $want ) || ( is_string( $want ) && is_numeric( $want ) ) ) {
+			return (int) $live !== (int) $want;
+		}
+		return (string) $live !== (string) $want;
 	}
 
 	/**

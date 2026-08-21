@@ -1143,12 +1143,17 @@ class TSOSK_Mod_Slug_Manager {
 			$rules = array();
 		}
 
-		$old_key = $this->normalize_redirect_path( $old_path );
+		// Site-relative path without home subdirectory (matches Redirects module matching).
+		$old_path = $this->normalize_redirect_path( $old_path );
+		if ( '' === $old_path || '/' === $old_path ) {
+			return false;
+		}
+
 		foreach ( $rules as $rule ) {
 			if ( empty( $rule['source'] ) ) {
 				continue;
 			}
-			if ( $this->normalize_redirect_path( (string) $rule['source'] ) === $old_key ) {
+			if ( $this->normalize_redirect_path( (string) $rule['source'] ) === $old_path ) {
 				return false;
 			}
 		}
@@ -1171,7 +1176,8 @@ class TSOSK_Mod_Slug_Manager {
 	}
 
 	/**
-	 * Normalize a redirect source path for duplicate detection.
+	 * Normalize a redirect source path for storage and duplicate detection.
+	 * Strips the home subdirectory so rules match request paths (e.g. /blog/old/ → /old/).
 	 *
 	 * @param string $path Source path.
 	 * @return string
@@ -1181,6 +1187,18 @@ class TSOSK_Mod_Slug_Manager {
 		if ( '' === $path ) {
 			return '/';
 		}
+
+		$home_path = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path = trim( $home_path );
+		if ( '' !== $home_path && '/' !== $home_path ) {
+			$prefix = untrailingslashit( $home_path );
+			if ( $path === $prefix || $path === $prefix . '/' || $path === $home_path ) {
+				$path = '/';
+			} elseif ( str_starts_with( $path, $prefix . '/' ) ) {
+				$path = substr( $path, strlen( $prefix ) );
+			}
+		}
+
 		if ( '/' !== $path[0] ) {
 			$path = '/' . $path;
 		}

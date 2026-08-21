@@ -274,10 +274,37 @@ class TSOSK_Mod_Meta_Editor {
 			wp_send_json_error( __( 'This meta key is protected and cannot be edited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		// Update the selected meta_id / umeta_id only (update_*_meta would rewrite every row with the same key).
+		// Editor shows/saves raw DB strings — do not maybe_serialize() already-serialized values.
+		$stored = is_serialized( $value ) ? $value : maybe_serialize( $value );
 		if ( 'user' === $context ) {
-			update_user_meta( (int) $row['user_id'], $key, $value );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$updated = $wpdb->update(
+				$wpdb->usermeta,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- SET by umeta_id PK, not a meta_value scan.
+				array( 'meta_value' => $stored ),
+				array( 'umeta_id' => $meta_id ),
+				array( '%s' ),
+				array( '%d' )
+			);
 		} else {
-			update_post_meta( (int) $row['post_id'], $key, $value );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$updated = $wpdb->update(
+				$wpdb->postmeta,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- SET by meta_id PK, not a meta_value scan.
+				array( 'meta_value' => $stored ),
+				array( 'meta_id' => $meta_id ),
+				array( '%s' ),
+				array( '%d' )
+			);
+		}
+		if ( false === $updated ) {
+			wp_send_json_error( __( 'Could not update meta row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( 'user' === $context ) {
+			wp_cache_delete( (int) $row['user_id'], 'user_meta' );
+		} else {
+			wp_cache_delete( (int) $row['post_id'], 'post_meta' );
 		}
 
 		TSOSK_Activity_Log::log(
@@ -309,30 +336,36 @@ class TSOSK_Mod_Meta_Editor {
 		global $wpdb;
 		if ( 'user' === $context ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$key = $wpdb->get_var(
+			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT meta_key FROM {$wpdb->usermeta} WHERE umeta_id = %d",
+					"SELECT umeta_id, user_id, meta_key FROM {$wpdb->usermeta} WHERE umeta_id = %d",
 					$meta_id
-				)
+				),
+				ARRAY_A
 			);
-			if ( ! $key || self::is_protected_key( (string) $key, $context ) ) {
+			if ( ! $row || self::is_protected_key( (string) $row['meta_key'], $context ) ) {
 				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
+			$key = (string) $row['meta_key'];
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->delete( $wpdb->usermeta, array( 'umeta_id' => $meta_id ), array( '%d' ) );
+			wp_cache_delete( (int) $row['user_id'], 'user_meta' );
 		} else {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$key = $wpdb->get_var(
+			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT meta_key FROM {$wpdb->postmeta} WHERE meta_id = %d",
+					"SELECT meta_id, post_id, meta_key FROM {$wpdb->postmeta} WHERE meta_id = %d",
 					$meta_id
-				)
+				),
+				ARRAY_A
 			);
-			if ( ! $key || self::is_protected_key( (string) $key, $context ) ) {
+			if ( ! $row || self::is_protected_key( (string) $row['meta_key'], $context ) ) {
 				wp_send_json_error( __( 'This meta key is protected and cannot be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
+			$key = (string) $row['meta_key'];
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->delete( $wpdb->postmeta, array( 'meta_id' => $meta_id ), array( '%d' ) );
+			wp_cache_delete( (int) $row['post_id'], 'post_meta' );
 		}
 
 		TSOSK_Activity_Log::log(
