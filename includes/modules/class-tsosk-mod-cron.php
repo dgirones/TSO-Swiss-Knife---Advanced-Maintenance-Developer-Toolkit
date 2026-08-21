@@ -870,12 +870,40 @@ class TSOSK_Mod_Cron {
 		}
 		$lock = get_transient( 'doing_cron' );
 		$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+		$overdue_status = $overdue > 0
+			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		$frequent_status = $very_frequent > 0
+			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		$missing_status = ! empty( $without_callback )
+			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+
 		return array(
 			array( 'label' => __( 'WP-Cron execution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $cron_disabled ? __( 'External', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $cron_disabled ? 'tsosk-badge-info' : 'tsosk-badge-ok', 'details' => $cron_disabled ? __( 'DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WP-Cron is triggered by site traffic.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 			array( 'label' => __( 'Cron lock', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $lock ? __( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $lock ? 'tsosk-badge-info' : 'tsosk-badge-ok', 'details' => $lock ? __( 'A cron process appears to be running.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No doing_cron lock found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-			array( 'label' => __( 'Overdue events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $overdue > 0 ? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $overdue > 0 ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => sprintf( /* translators: %d: number of overdue events */ __( '%d events are more than one hour overdue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $overdue ) ),
-			array( 'label' => __( 'Very frequent events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $very_frequent > 0 ? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $very_frequent > 0 ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => sprintf( /* translators: %d: number of very frequent events */ __( '%d recurring events run more often than every 5 minutes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $very_frequent ) ),
-			array( 'label' => __( 'Hooks without callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => ! empty( $without_callback ) ? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => ! empty( $without_callback ) ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => empty( $without_callback ) ? __( 'All scheduled hooks have callbacks loaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : implode( ', ', array_slice( array_unique( $without_callback ), 0, 8 ) ) ),
+			array(
+				'label'   => __( 'Overdue events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => $overdue_status,
+				'badge'   => $overdue > 0 ? 'tsosk-badge-warn' : 'tsosk-badge-ok',
+				'details' => sprintf(
+					/* translators: %d: number of overdue events */
+					__( '%d events are more than one hour overdue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$overdue
+				),
+			),
+			array(
+				'label'   => __( 'Very frequent events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => $frequent_status,
+				'badge'   => $very_frequent > 0 ? 'tsosk-badge-warn' : 'tsosk-badge-ok',
+				'details' => sprintf(
+					/* translators: %d: number of very frequent events */
+					__( '%d recurring events run more often than every 5 minutes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$very_frequent
+				),
+			),
+			array( 'label' => __( 'Hooks without callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $missing_status, 'badge' => ! empty( $without_callback ) ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => empty( $without_callback ) ? __( 'All scheduled hooks have callbacks loaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : implode( ', ', array_slice( array_unique( $without_callback ), 0, 8 ) ) ),
 		);
 	}
 }
