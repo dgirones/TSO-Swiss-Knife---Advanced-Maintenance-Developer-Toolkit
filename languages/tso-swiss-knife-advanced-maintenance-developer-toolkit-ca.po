@@ -218,10 +218,12 @@ msgstr "Canvia com WordPress genera les sol·licituds cron."
 #: includes/modules/class-tsosk-mod-health.php:245
 #: includes/modules/class-tsosk-mod-security.php:320
 #: includes/modules/class-tsosk-mod-update-manager.php:851
+#: includes/modules/class-tsosk-mod-url-doctor.php:321
+#: includes/modules/class-tsosk-mod-url-doctor.php:389
 msgid "Check"
 msgstr "Comprovar"
 
-#: includes/class-tsosk-activity-log.php:268
+#: includes/class-tsosk-activity-log.php:274
 #: includes/modules/class-tsosk-mod-cron.php:885
 #: includes/modules/class-tsosk-mod-hooks.php:81
 msgid "Clear"
@@ -240,8 +242,8 @@ msgstr "Eliminar pausa"
 msgid "Close Sessions"
 msgstr "Tancar sessions"
 
-#: includes/class-tsosk-activity-log.php:233
-#: includes/class-tsosk-admin.php:987
+#: includes/class-tsosk-activity-log.php:236
+#: includes/class-tsosk-admin.php:1005
 msgid "Content Audit"
 msgstr "Auditoria de contingut"
 
@@ -283,8 +285,8 @@ msgstr "No s'han pogut regenerar les metadades de l'adjunt."
 msgid "Cron"
 msgstr "Cron"
 
-#: includes/class-tsosk-activity-log.php:223
-#: includes/class-tsosk-admin.php:812
+#: includes/class-tsosk-activity-log.php:226
+#: includes/class-tsosk-admin.php:815
 #: includes/modules/class-tsosk-mod-update-manager.php:645
 msgid "Cron Manager"
 msgstr "Gestor de Cron"
@@ -329,7 +331,7 @@ msgstr "Base de dades"
 msgid "Database Charset"
 msgstr "Joc de caràcters de la base de dades"
 
-#: includes/class-tsosk-admin.php:882
+#: includes/class-tsosk-admin.php:885
 #: includes/modules/class-tsosk-mod-database.php:88
 msgid "TSO Options & Tables Cleaner"
 msgstr "TSO Options & Tables Cleaner"
@@ -342,8 +344,8 @@ msgstr "Versió de la base de dades"
 msgid "Debug"
 msgstr "Depuració"
 
-#: includes/class-tsosk-activity-log.php:217
-#: includes/class-tsosk-admin.php:822
+#: includes/class-tsosk-activity-log.php:220
+#: includes/class-tsosk-admin.php:825
 msgid "Debug Mode"
 msgstr "Mode de depuració"
 
@@ -362,7 +364,7 @@ msgstr ""
 "Defineix si el lloc s'executa com a producció, staging, desenvolupament o "
 "local."
 
-#: includes/class-tsosk-activity-log.php:258
+#: includes/class-tsosk-activity-log.php:264
 #: includes/class-tsosk-admin.php:211
 #: includes/modules/class-tsosk-mod-redirects.php:496
 msgid "Disable"
@@ -430,12 +432,12 @@ msgstr ""
 "Elementor utilitza crides a la REST API al constructor de pàgines i per a la"
 " biblioteca de plantilles."
 
-#: includes/class-tsosk-activity-log.php:236
-#: includes/class-tsosk-admin.php:982
+#: includes/class-tsosk-activity-log.php:239
+#: includes/class-tsosk-admin.php:985
 msgid "Email Diagnostics"
 msgstr "Diagnòstic de correu"
 
-#: includes/class-tsosk-activity-log.php:257
+#: includes/class-tsosk-activity-log.php:263
 #: includes/class-tsosk-admin.php:210
 #: includes/modules/class-tsosk-mod-redirects.php:496
 msgid "Enable"
@@ -573,13 +575,13 @@ msgstr ""
 msgid "Hard Flush"
 msgstr "Buidar complet"
 
-#: includes/class-tsosk-admin.php:927
+#: includes/class-tsosk-admin.php:930
 #: includes/modules/class-tsosk-mod-health.php:232
 msgid "Health Report"
 msgstr "Informe de salut"
 
-#: includes/class-tsosk-activity-log.php:214
-#: includes/class-tsosk-admin.php:872
+#: includes/class-tsosk-activity-log.php:217
+#: includes/class-tsosk-admin.php:875
 msgid "Heartbeat"
 msgstr "Heartbeat"
 
@@ -619,7 +621,7 @@ msgstr ""
 msgid "Home URL"
 msgstr "URL d'inici"
 
-#: includes/class-tsosk-admin.php:897
+#: includes/class-tsosk-admin.php:900
 msgid "Hooks Inspector"
 msgstr "Inspector de Hooks"
 
@@ -647,6 +649,7 @@ msgstr "Inactiu"
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:149
 #: includes/modules/class-tsosk-mod-security.php:365
+#: includes/modules/class-tsosk-mod-url-doctor.php:391
 msgid "Info"
 msgstr "Informació"
 
@@ -726,8 +729,8 @@ msgstr "Entrada"
 #: includes/modules/class-tsosk-mod-search-replace.php:401
 #: includes/modules/class-tsosk-mod-security.php:43
 #: includes/modules/class-tsosk-mod-server-files.php:34
-#: includes/modules/class-tsosk-mod-site-snapshot.php:149
-#: includes/modules/class-tsosk-mod-site-snapshot.php:211
+#: includes/modules/class-tsosk-mod-site-snapshot.php:151
+#: includes/modules/class-tsosk-mod-site-snapshot.php:213
 #: includes/modules/class-tsosk-mod-slow-queries.php:1185
 #: includes/modules/class-tsosk-mod-slow-queries.php:1261
 #: includes/modules/class-tsosk-mod-slow-queries.php:1308
@@ -738,11 +741,14 @@ msgstr "Entrada"
 #: includes/modules/class-tsosk-mod-slug-manager.php:162
 #: includes/modules/class-tsosk-mod-slug-manager.php:197
 #: includes/modules/class-tsosk-mod-slug-manager.php:405
+#: includes/modules/class-tsosk-mod-staging.php:171
+#: includes/modules/class-tsosk-mod-staging.php:194
 #: includes/modules/class-tsosk-mod-transients.php:114
 #: includes/modules/class-tsosk-mod-transients.php:137
 #: includes/modules/class-tsosk-mod-transients.php:199
 #: includes/modules/class-tsosk-mod-update-manager.php:201
 #: includes/modules/class-tsosk-mod-update-manager.php:751
+#: includes/modules/class-tsosk-mod-url-doctor.php:210
 #: includes/modules/class-tsosk-mod-users.php:268
 #: includes/modules/class-tsosk-mod-users.php:295
 #: includes/modules/class-tsosk-mod-users.php:318
@@ -817,8 +823,8 @@ msgstr ""
 "Mailchimp for WP utilitza la REST API per als formularis i endpoints de "
 "subscripció."
 
-#: includes/class-tsosk-activity-log.php:209
-#: includes/class-tsosk-admin.php:992
+#: includes/class-tsosk-activity-log.php:212
+#: includes/class-tsosk-admin.php:1010
 msgid "Maintenance Mode"
 msgstr "Mode de manteniment"
 
@@ -840,7 +846,7 @@ msgstr "Consulta coincident"
 msgid "Matched Regex"
 msgstr "Regex coincident"
 
-#: includes/class-tsosk-admin.php:947
+#: includes/class-tsosk-admin.php:950
 msgid "Media Cleaner"
 msgstr "Netejador de media"
 
@@ -848,7 +854,7 @@ msgstr "Netejador de media"
 msgid "Memory"
 msgstr "Memòria"
 
-#: includes/class-tsosk-admin.php:1254
+#: includes/class-tsosk-admin.php:1272
 msgid "Module not available."
 msgstr "Mòdul no disponible."
 
@@ -864,6 +870,7 @@ msgstr "Plugins actius a la xarxa"
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:196
 #: includes/modules/class-tsosk-mod-internals.php:145
+#: includes/modules/class-tsosk-mod-runtime-stack.php:348
 msgid "No"
 msgstr "No"
 
@@ -949,6 +956,8 @@ msgstr "DESACTIVAT"
 #: includes/modules/class-tsosk-mod-heartbeat.php:149
 #: includes/modules/class-tsosk-mod-security.php:360
 #: includes/modules/class-tsosk-mod-security.php:369
+#: includes/modules/class-tsosk-mod-url-doctor.php:358
+#: includes/modules/class-tsosk-mod-url-doctor.php:386
 msgid "OK"
 msgstr "OK"
 
@@ -1037,6 +1046,7 @@ msgstr "Configuració error_log de PHP"
 
 #: includes/class-tsosk-admin.php:316
 #: includes/modules/class-tsosk-mod-health.php:381
+#: includes/modules/class-tsosk-mod-runtime-stack.php:207
 msgid "PHP version"
 msgstr "Versió de PHP"
 
@@ -1068,8 +1078,8 @@ msgstr "Permisos: %s."
 msgid "Persistent object cache detected."
 msgstr "S'ha detectat una caché d'objectes persistent."
 
-#: includes/class-tsosk-activity-log.php:222
-#: includes/class-tsosk-admin.php:997
+#: includes/class-tsosk-activity-log.php:225
+#: includes/class-tsosk-admin.php:1015
 msgid "Plugin Sandbox"
 msgstr "Sandbox de plugins"
 
@@ -1114,8 +1124,8 @@ msgstr "Eliminar tots els elements?"
 msgid "Query Vars"
 msgstr "Variables de consulta"
 
-#: includes/class-tsosk-activity-log.php:215
-#: includes/class-tsosk-admin.php:867
+#: includes/class-tsosk-activity-log.php:218
+#: includes/class-tsosk-admin.php:870
 msgid "REST API"
 msgstr "REST API"
 
@@ -1191,9 +1201,9 @@ msgstr "Redirecció desada."
 msgid "Redirect updated."
 msgstr "Redirecció actualitzada."
 
-#: includes/class-tsosk-activity-log.php:211
-#: includes/class-tsosk-admin.php:912
-#: includes/modules/class-tsosk-mod-site-snapshot.php:89
+#: includes/class-tsosk-activity-log.php:214
+#: includes/class-tsosk-admin.php:915
+#: includes/modules/class-tsosk-mod-site-snapshot.php:90
 msgid "Redirects"
 msgstr "Redireccions"
 
@@ -1239,8 +1249,8 @@ msgstr "ID d'entrada resolta"
 msgid "Review"
 msgstr "Revisar"
 
-#: includes/class-tsosk-activity-log.php:227
-#: includes/class-tsosk-admin.php:902
+#: includes/class-tsosk-activity-log.php:230
+#: includes/class-tsosk-admin.php:905
 msgid "Rewrite Rules"
 msgstr "Regles de reescriptura"
 
@@ -1252,7 +1262,7 @@ msgstr "Etiquetes de reescriptura"
 msgid "Rewrite rules flushed successfully."
 msgstr "Regles de reescriptura buidadades correctament."
 
-#: includes/class-tsosk-activity-log.php:261
+#: includes/class-tsosk-activity-log.php:267
 #: includes/class-tsosk-admin.php:199
 #: includes/modules/class-tsosk-mod-cron.php:365
 msgid "Run"
@@ -1281,8 +1291,8 @@ msgstr "Desa els errors a wp-content/debug.log."
 msgid "Security"
 msgstr "Seguretat"
 
-#: includes/class-tsosk-activity-log.php:216
-#: includes/class-tsosk-admin.php:962
+#: includes/class-tsosk-activity-log.php:219
+#: includes/class-tsosk-admin.php:965
 #: includes/modules/class-tsosk-mod-update-manager.php:659
 msgid "Security Review"
 msgstr "Revisió de seguretat"
@@ -1303,7 +1313,7 @@ msgstr "Enviar prova"
 msgid "Sent"
 msgstr "Enviat"
 
-#: includes/class-tsosk-admin.php:907
+#: includes/class-tsosk-admin.php:910
 msgid "Server Files Review"
 msgstr "Revisió de fitxers del servidor"
 
@@ -1361,7 +1371,7 @@ msgstr ""
 "deixen de funcionar. Useu-lo només en entorns de proves o manteniment."
 
 #: includes/class-tsosk-admin.php:131 includes/class-tsosk-admin.php:132
-#: includes/class-tsosk-admin.php:1141
+#: includes/class-tsosk-admin.php:1159
 #: includes/modules/class-tsosk-mod-admin-menu.php:1486
 #: includes/modules/class-tsosk-mod-admin-menu.php:1487
 #: includes/modules/class-tsosk-mod-admin-menu.php:1522
@@ -1436,8 +1446,8 @@ msgstr "Zona horària"
 msgid "Transient deleted."
 msgstr "Transiënt eliminat."
 
-#: includes/class-tsosk-activity-log.php:228
-#: includes/class-tsosk-admin.php:852
+#: includes/class-tsosk-activity-log.php:231
+#: includes/class-tsosk-admin.php:855
 msgid "Transients"
 msgstr "Transiènts"
 
@@ -1478,8 +1488,8 @@ msgstr ""
 msgid "User sessions closed."
 msgstr "Sessions d'usuari tancades."
 
-#: includes/class-tsosk-activity-log.php:229
-#: includes/class-tsosk-admin.php:937
+#: includes/class-tsosk-activity-log.php:232
+#: includes/class-tsosk-admin.php:940
 msgid "Users & Sessions"
 msgstr "Usuaris i sessions"
 
@@ -1487,7 +1497,7 @@ msgstr "Usuaris i sessions"
 msgid "Very frequent events"
 msgstr "Esdeveniments molt freqüents"
 
-#: includes/class-tsosk-admin.php:857
+#: includes/class-tsosk-admin.php:860
 msgid "WP Constants"
 msgstr "Constants WP"
 
@@ -1495,7 +1505,7 @@ msgstr "Constants WP"
 msgid "WP Content Directory"
 msgstr "Directori de contingut WP"
 
-#: includes/class-tsosk-admin.php:862
+#: includes/class-tsosk-admin.php:865
 msgid "WP Internals"
 msgstr "Internals de WP"
 
@@ -1587,6 +1597,8 @@ msgstr "El XML-RPC està desactivat per filtres."
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:194
 #: includes/modules/class-tsosk-mod-internals.php:145
+#: includes/modules/class-tsosk-mod-runtime-stack.php:300
+#: includes/modules/class-tsosk-mod-runtime-stack.php:345
 msgid "Yes"
 msgstr "Sí"
 
@@ -1602,7 +1614,7 @@ msgstr ""
 msgid "You cannot close your own sessions from here."
 msgstr "No podeu tancar les vostres pròpies sessions des d'aquí."
 
-#: includes/class-tsosk-admin.php:1119
+#: includes/class-tsosk-admin.php:1137
 msgid "You do not have permission to access this page."
 msgstr "No teniu permís per accedir a aquesta pàgina."
 
@@ -1748,7 +1760,7 @@ msgstr "En caché"
 msgid "Connecting to WordPress.org API…"
 msgstr "Connectant a l'API de WordPress.org…"
 
-#: includes/class-tsosk-admin.php:967
+#: includes/class-tsosk-admin.php:970
 msgid "Core File Integrity"
 msgstr "Integritat de fitxers del nucli"
 
@@ -1767,7 +1779,7 @@ msgstr "MD5 esperat"
 msgid "File ignored. Re-scan to update results."
 msgstr "Fitxer ignorat. Torneu a analitzar per actualitzar els resultats."
 
-#: includes/class-tsosk-activity-log.php:366
+#: includes/class-tsosk-activity-log.php:378
 #: includes/modules/class-tsosk-mod-file-integrity.php:187
 #: includes/modules/class-tsosk-mod-file-integrity.php:191
 msgid "File removed from ignore list."
@@ -2063,8 +2075,8 @@ msgstr "Bloqueig a"
 msgid "Live Attempt Counters"
 msgstr "Comptadors d'intents en viu"
 
-#: includes/class-tsosk-activity-log.php:218
-#: includes/class-tsosk-admin.php:972
+#: includes/class-tsosk-activity-log.php:221
+#: includes/class-tsosk-admin.php:975
 msgid "Login Protection"
 msgstr "Protecció d'inici de sessió"
 
@@ -2113,9 +2125,9 @@ msgstr ""
 "bruta i accessos no desitjats. Cada funció es pot activar i configurar de "
 "manera independent."
 
-#: includes/class-tsosk-activity-log.php:256
+#: includes/class-tsosk-activity-log.php:262
 #: includes/class-tsosk-admin.php:244 includes/class-tsosk-admin.php:333
-#: includes/class-tsosk-admin.php:1205
+#: includes/class-tsosk-admin.php:1223
 #: includes/modules/class-tsosk-mod-login-protect.php:1522
 msgid "Reset"
 msgstr "Restablir"
@@ -2265,7 +2277,7 @@ msgstr "Acció"
 msgid "Actions"
 msgstr "Accions"
 
-#: includes/class-tsosk-activity-log.php:252
+#: includes/class-tsosk-activity-log.php:258
 #: includes/modules/class-tsosk-mod-roles.php:599
 msgid "Add"
 msgstr "Afegir"
@@ -2298,9 +2310,9 @@ msgstr "Autocàrrega:"
 msgid "Browse & Edit"
 msgstr "Navegar i editar"
 
-#: includes/class-tsosk-activity-log.php:267
+#: includes/class-tsosk-activity-log.php:273
 #: includes/class-tsosk-admin.php:334 includes/class-tsosk-admin.php:342
-#: includes/class-tsosk-admin.php:1208
+#: includes/class-tsosk-admin.php:1226
 #: includes/modules/class-tsosk-mod-cron.php:415
 #: includes/modules/class-tsosk-mod-options-editor.php:982
 #: includes/modules/class-tsosk-mod-search-replace.php:1015
@@ -2316,7 +2328,7 @@ msgstr "Precaució:"
 msgid "Date"
 msgstr "Data"
 
-#: includes/class-tsosk-activity-log.php:254
+#: includes/class-tsosk-activity-log.php:260
 #: includes/class-tsosk-admin.php:252 includes/class-tsosk-admin.php:322
 #: includes/modules/class-tsosk-mod-cron.php:381
 #: includes/modules/class-tsosk-mod-redirects.php:501
@@ -2376,8 +2388,8 @@ msgstr "Opció desada."
 msgid "Option:"
 msgstr "Opció:"
 
-#: includes/class-tsosk-activity-log.php:205
-#: includes/class-tsosk-admin.php:827
+#: includes/class-tsosk-activity-log.php:208
+#: includes/class-tsosk-admin.php:830
 msgid "Options Editor"
 msgstr "Editor d'opcions"
 
@@ -2435,6 +2447,7 @@ msgstr "Mostrar valor en brut"
 #: includes/modules/class-tsosk-mod-media-footprint.php:201
 #: includes/modules/class-tsosk-mod-media-footprint.php:226
 #: includes/modules/class-tsosk-mod-options-editor.php:912
+#: includes/modules/class-tsosk-mod-runtime-stack.php:371
 #: includes/modules/class-tsosk-mod-server-files.php:800
 #: includes/modules/class-tsosk-mod-transients.php:302
 msgid "Size"
@@ -2478,7 +2491,7 @@ msgstr "Tipus"
 msgid "Type:"
 msgstr "Tipus:"
 
-#: includes/class-tsosk-activity-log.php:253
+#: includes/class-tsosk-activity-log.php:259
 msgid "Update"
 msgstr "Actualitzar"
 
@@ -2669,8 +2682,8 @@ msgstr "Cercar slug…"
 msgid "Select All"
 msgstr "Seleccionar-ho tot"
 
-#: includes/class-tsosk-activity-log.php:225
-#: includes/class-tsosk-admin.php:922
+#: includes/class-tsosk-activity-log.php:228
+#: includes/class-tsosk-admin.php:925
 msgid "Slug Manager"
 msgstr "Gestor de Slugs"
 
@@ -2806,26 +2819,26 @@ msgstr "sense títol"
 msgid "Redirects module required"
 msgstr "Mòdul de redireccions necessari"
 
-#: includes/class-tsosk-admin.php:331 includes/class-tsosk-admin.php:1046
+#: includes/class-tsosk-admin.php:331 includes/class-tsosk-admin.php:1064
 #: includes/modules/class-tsosk-mod-admin-menu.php:3481
 #: includes/modules/class-tsosk-mod-admin-menu.php:3530
 msgid "Hide"
 msgstr "Amagar"
 
-#: includes/class-tsosk-admin.php:1191
+#: includes/class-tsosk-admin.php:1209
 msgid "Organise"
 msgstr "Organitzar"
 
-#: includes/class-tsosk-admin.php:1189
+#: includes/class-tsosk-admin.php:1207
 msgid "Organise sidebar"
 msgstr "Organitzar la barra lateral"
 
-#: includes/class-tsosk-activity-log.php:255
-#: includes/class-tsosk-admin.php:330 includes/class-tsosk-admin.php:1202
+#: includes/class-tsosk-activity-log.php:261
+#: includes/class-tsosk-admin.php:330 includes/class-tsosk-admin.php:1220
 msgid "Save"
 msgstr "Desar"
 
-#: includes/class-tsosk-admin.php:332 includes/class-tsosk-admin.php:1046
+#: includes/class-tsosk-admin.php:332 includes/class-tsosk-admin.php:1064
 msgid "Show"
 msgstr "Mostrar"
 
@@ -3107,7 +3120,7 @@ msgstr ""
 "Fitxer antic trobat a mu-plugins: %s — deseu la configuració una vegada per "
 "migrar-lo."
 
-#: includes/class-tsosk-config-storage.php:115
+#: includes/class-tsosk-config-storage.php:116
 msgid "The config directory is not writable."
 msgstr "El directori de configuració no és d'escriptura."
 
@@ -3357,7 +3370,7 @@ msgstr "Netejar tot el registre de consultes lentes? No es pot desfer."
 msgid "Slow Query Log"
 msgstr "Registre de consultes lentes"
 
-#: includes/class-tsosk-admin.php:887
+#: includes/class-tsosk-admin.php:890
 #: includes/modules/class-tsosk-mod-slow-queries.php:922
 msgid "Slow Query Monitor"
 msgstr "Slow Query Monitor"
@@ -3558,8 +3571,8 @@ msgstr "Expressió regular"
 msgid "Replace with"
 msgstr "Substituir per"
 
-#: includes/class-tsosk-activity-log.php:207
-#: includes/class-tsosk-admin.php:892
+#: includes/class-tsosk-activity-log.php:210
+#: includes/class-tsosk-admin.php:895
 #: includes/modules/class-tsosk-mod-search-replace.php:928
 msgid "Search & Replace"
 msgstr "Cerca i substitució"
@@ -3645,8 +3658,8 @@ msgstr "Simulador d enllacos permanents i routing"
 msgid "Environment Overrides"
 msgstr "Sobreescriptures d entorn"
 
-#: includes/class-tsosk-activity-log.php:224
-#: includes/class-tsosk-admin.php:942
+#: includes/class-tsosk-activity-log.php:227
+#: includes/class-tsosk-admin.php:945
 #: includes/modules/class-tsosk-mod-internals.php:64
 msgid "Roles & Capabilities"
 msgstr "Rols i capacitats"
@@ -3741,11 +3754,11 @@ msgstr "No s han detectat shortcodes trencats en el contingut mostrejat."
 msgid "Shortcodes"
 msgstr "Shortcodes"
 
-#: includes/class-tsosk-admin.php:1181
+#: includes/class-tsosk-admin.php:1199
 msgid "Plugin tools"
 msgstr "Eines del plugin"
 
-#: includes/class-tsosk-admin.php:1277
+#: includes/class-tsosk-admin.php:1295
 msgid "Plugin language"
 msgstr "Idioma del plugin"
 
@@ -3783,7 +3796,7 @@ msgstr "Camí"
 msgid "Modified"
 msgstr "Modificat"
 
-#: includes/class-tsosk-activity-log.php:291
+#: includes/class-tsosk-activity-log.php:297
 #: includes/modules/class-tsosk-mod-update-manager.php:889
 msgid "Custom"
 msgstr "Personalitzat"
@@ -4220,7 +4233,7 @@ msgstr "Com funciona el sandbox"
 msgid "Note:"
 msgstr "Nota:"
 
-#: includes/class-tsosk-site-status.php:81
+#: includes/class-tsosk-site-status.php:84
 #: includes/modules/class-tsosk-mod-maintenance.php:103
 msgid "Maintenance"
 msgstr "Manteniment"
@@ -4315,7 +4328,7 @@ msgstr "Sense caducitat"
 msgid "Could not save the file."
 msgstr "No s'ha pogut desar el fitxer."
 
-#: includes/class-tsosk-config-storage.php:126
+#: includes/class-tsosk-config-storage.php:127
 msgid "Could not write the config file."
 msgstr "No s'ha pogut escriure el fitxer de configuració."
 
@@ -4457,6 +4470,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-file-integrity.php:1070
 #: includes/modules/class-tsosk-mod-file-integrity.php:1105
 #: includes/modules/class-tsosk-mod-media-cleaner.php:827
+#: includes/modules/class-tsosk-mod-runtime-stack.php:332
+#: includes/modules/class-tsosk-mod-runtime-stack.php:370
 msgid "File"
 msgstr "Fitxer"
 
@@ -4499,6 +4514,7 @@ msgstr "Missatge"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:263
 #: includes/modules/class-tsosk-mod-internals.php:67
+#: includes/modules/class-tsosk-mod-runtime-stack.php:369
 msgid "Name"
 msgstr "Nom"
 
@@ -4718,8 +4734,8 @@ msgstr ""
 "Per a una llista només de lectura de constants definides, obre %1$sConstants"
 " de WP%2$s."
 
-#: includes/class-tsosk-activity-log.php:210
-#: includes/class-tsosk-admin.php:807
+#: includes/class-tsosk-activity-log.php:213
+#: includes/class-tsosk-admin.php:810
 msgid "Hidden WordPress Profiles"
 msgstr "Perfils ocults de WordPress"
 
@@ -4832,7 +4848,7 @@ msgstr "Veure totes les opcions coincidents"
 msgid "Common prefix: %s"
 msgstr "Prefix habitual: %s"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:176
+#: includes/modules/class-tsosk-mod-site-snapshot.php:178
 msgid "Could not encode snapshot."
 msgstr "No s'ha pogut codificar la instantània."
 
@@ -4853,7 +4869,7 @@ msgstr ""
 " detectats en aquest lloc. Utilitzeu l'editor d'opcions per canviar valors; "
 "les previsualitzacions aquí són només lectura."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1147
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1170
 msgid "Download JSON snapshot"
 msgstr "Descarregar instantània JSON"
 
@@ -4865,21 +4881,21 @@ msgstr "Editar a l'editor d'opcions"
 msgid "Enable stock management globally."
 msgstr "Activar la gestió d'estoc globalment."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1131
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1154
 msgid "Export snapshot"
 msgstr "Exportar instantània"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:90
+#: includes/modules/class-tsosk-mod-site-snapshot.php:91
 msgid "Heartbeat settings"
 msgstr "Configuració de Heartbeat"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1152
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1192
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1175
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1215
 msgid "Import snapshot"
 msgstr "Importar instantània"
 
 #. translators: %s: comma-separated section labels
-#: includes/modules/class-tsosk-mod-site-snapshot.php:322
+#: includes/modules/class-tsosk-mod-site-snapshot.php:324
 #, php-format
 msgid "Imported sections: %s. Reload affected tabs to verify settings."
 msgstr ""
@@ -4904,7 +4920,7 @@ msgstr "Versió d'Elementor instal·lada."
 msgid "Invalid meta ID."
 msgstr "ID de meta no vàlid."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:224
+#: includes/modules/class-tsosk-mod-site-snapshot.php:226
 msgid "Invalid snapshot file format."
 msgstr "Format de fitxer d'instantània no vàlid."
 
@@ -4912,7 +4928,7 @@ msgstr "Format de fitxer d'instantània no vàlid."
 msgid "LiteSpeed cache enabled flag."
 msgstr "Indicador de memòria cau LiteSpeed activada."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:97
+#: includes/modules/class-tsosk-mod-site-snapshot.php:98
 msgid "Login protection"
 msgstr "Protecció d'inici de sessió"
 
@@ -4924,8 +4940,8 @@ msgstr "Configuració principal de Rank Math (serialitzada)."
 msgid "Main Yoast SEO settings (serialized array)."
 msgstr "Configuració principal de Yoast SEO (matriu serialitzada)."
 
-#: includes/class-tsosk-activity-log.php:206
-#: includes/class-tsosk-admin.php:832
+#: includes/class-tsosk-activity-log.php:209
+#: includes/class-tsosk-admin.php:835
 msgid "Meta Editor"
 msgstr "Editor de meta"
 
@@ -4955,7 +4971,7 @@ msgstr "Valor de meta desat."
 msgid "No preset libraries matched the active plugins."
 msgstr "Cap biblioteca predefinida coincideix amb els plugins actius."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:216
+#: includes/modules/class-tsosk-mod-site-snapshot.php:218
 msgid "No snapshot data received."
 msgstr "No s'han rebut dades d'instantània."
 
@@ -4983,7 +4999,7 @@ msgstr "Open Graph i perfils socials."
 msgid "Open in Options Editor"
 msgstr "Obrir a l'editor d'opcions"
 
-#: includes/class-tsosk-admin.php:837
+#: includes/class-tsosk-admin.php:840
 msgid "Option Library"
 msgstr "Biblioteca d'opcions"
 
@@ -5015,7 +5031,7 @@ msgstr "Tipus de contingut que utilitzen Elementor."
 msgid "Post/User ID"
 msgstr "ID d'entrada/usuari"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:92
+#: includes/modules/class-tsosk-mod-site-snapshot.php:93
 msgid "REST API settings"
 msgstr "Configuració de la REST API"
 
@@ -5027,9 +5043,9 @@ msgstr "Només lectura"
 msgid "Save meta"
 msgstr "Desar meta"
 
-#: includes/class-tsosk-activity-log.php:230
-#: includes/class-tsosk-admin.php:842
-#: includes/modules/class-tsosk-mod-site-snapshot.php:162
+#: includes/class-tsosk-activity-log.php:233
+#: includes/class-tsosk-admin.php:845
+#: includes/modules/class-tsosk-mod-site-snapshot.php:164
 msgid "Export/Import TSO Configuration"
 msgstr "Exportar/Importar configuració TSO"
 
@@ -5041,27 +5057,27 @@ msgstr "Codificació de caràcters del lloc (normalment UTF-8)."
 msgid "Site timezone identifier."
 msgstr "Identificador de zona horària del lloc."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:246
+#: includes/modules/class-tsosk-mod-site-snapshot.php:248
 msgid "Snapshot contains no sections to import."
 msgstr "La instantània no conté seccions per importar."
 
 #. translators: %s: comma-separated section labels
-#: includes/modules/class-tsosk-mod-site-snapshot.php:186
+#: includes/modules/class-tsosk-mod-site-snapshot.php:188
 #, php-format
 msgid "Site snapshot exported: %s."
 msgstr "Instantània del lloc exportada: %s."
 
 #. translators: %s: comma-separated section labels
-#: includes/modules/class-tsosk-mod-site-snapshot.php:315
+#: includes/modules/class-tsosk-mod-site-snapshot.php:317
 #, php-format
 msgid "Site snapshot imported: %s."
 msgstr "Instantània del lloc importada: %s."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:221
+#: includes/modules/class-tsosk-mod-site-snapshot.php:223
 msgid "The snapshot JSON could not be parsed."
 msgstr "No s'ha pogut analitzar el JSON de la instantània."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:161
+#: includes/modules/class-tsosk-mod-site-snapshot.php:163
 msgid "Select at least one section to export."
 msgstr "Seleccioneu almenys una secció per exportar."
 
@@ -5072,7 +5088,7 @@ msgstr ""
 "La importació sobreescriurà els ajustos de les seccions d'aquesta "
 "instantània. Voleu continuar?"
 
-#: includes/class-tsosk-activity-log.php:264
+#: includes/class-tsosk-activity-log.php:270
 msgid "Export"
 msgstr "Exportar"
 
@@ -5121,7 +5137,7 @@ msgstr "Si qualsevol pot registrar-se (0 o 1)."
 msgid "WPForms version."
 msgstr "Versió de WPForms."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1165
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1188
 msgid "{ \"format\": \"tsosk-site-snapshot\", ... }"
 msgstr "{ \"format\": \"tsosk-site-snapshot\", ... }"
 
@@ -5129,7 +5145,7 @@ msgstr "{ \"format\": \"tsosk-site-snapshot\", ... }"
 msgid "Delete row"
 msgstr "Eliminar fila"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:306
+#: includes/modules/class-tsosk-mod-site-snapshot.php:308
 msgid "No recognised sections were imported."
 msgstr "No s'han importat seccions reconegudes."
 
@@ -5165,19 +5181,19 @@ msgstr "WPForms"
 msgid "Yoast SEO"
 msgstr "Yoast SEO"
 
-#: includes/class-tsosk-admin.php:1166
+#: includes/class-tsosk-admin.php:1184
 msgid "Favorites"
 msgstr "Preferits"
 
-#: includes/class-tsosk-admin.php:1161
+#: includes/class-tsosk-admin.php:1179
 msgid "Favorite tools"
 msgstr "Eines preferides"
 
-#: includes/class-tsosk-admin.php:1169
+#: includes/class-tsosk-admin.php:1187
 msgid "Use Organise on the tools list, then drag tabs here."
 msgstr "Fes servir Organitzar a la llista d'eines i arrossega pestanyes aquí."
 
-#: includes/class-tsosk-admin.php:340 includes/class-tsosk-admin.php:1042
+#: includes/class-tsosk-admin.php:340 includes/class-tsosk-admin.php:1060
 msgid "Remove from favorites"
 msgstr "Treure de preferits"
 
@@ -5185,8 +5201,8 @@ msgstr "Treure de preferits"
 msgid "Add to favorites"
 msgstr "Afegir a preferits"
 
-#: includes/class-tsosk-activity-log.php:231
-#: includes/class-tsosk-admin.php:817
+#: includes/class-tsosk-activity-log.php:234
+#: includes/class-tsosk-admin.php:820
 msgid "Action Scheduler"
 msgstr "Planificador d'accions"
 
@@ -5317,15 +5333,15 @@ msgstr "Carregant…"
 msgid "Select at least one table."
 msgstr "Selecciona almenys una taula."
 
-#: includes/class-tsosk-admin.php:1061
+#: includes/class-tsosk-admin.php:1079
 msgid "Search tools"
 msgstr "Cercar eines"
 
-#: includes/class-tsosk-admin.php:344 includes/class-tsosk-admin.php:1067
+#: includes/class-tsosk-admin.php:344 includes/class-tsosk-admin.php:1085
 msgid "Search… (Ctrl+K)"
 msgstr "Cercar… (Ctrl+K)"
 
-#: includes/class-tsosk-admin.php:1066
+#: includes/class-tsosk-admin.php:1084
 msgid "Search tools (Ctrl+K)"
 msgstr "Cercar eines (Ctrl+K)"
 
@@ -5338,15 +5354,15 @@ msgid "Type to find a tab, then press Enter or click a result."
 msgstr ""
 "Escriu per trobar una pestanya i prem Retorn o fes clic en un resultat."
 
-#: includes/class-tsosk-admin.php:347 includes/class-tsosk-admin.php:1083
+#: includes/class-tsosk-admin.php:347 includes/class-tsosk-admin.php:1101
 msgid "Site status"
 msgstr "Estat del lloc"
 
-#: includes/class-tsosk-admin.php:1085
+#: includes/class-tsosk-admin.php:1103
 msgid "No special modes active"
 msgstr "Cap mode especial actiu"
 
-#: includes/class-tsosk-admin.php:348 includes/class-tsosk-admin.php:1103
+#: includes/class-tsosk-admin.php:348 includes/class-tsosk-admin.php:1121
 msgid "Enable dev mode"
 msgstr "Activar mode dev"
 
@@ -5354,36 +5370,36 @@ msgstr "Activar mode dev"
 msgid "Disable dev mode"
 msgstr "Desactivar mode dev"
 
-#: includes/class-tsosk-admin.php:1098
+#: includes/class-tsosk-admin.php:1116
 #: includes/modules/class-tsosk-mod-debug.php:715
 msgid "Developer mode"
 msgstr "Mode desenvolupador"
 
-#: includes/class-tsosk-admin.php:1102
+#: includes/class-tsosk-admin.php:1120
 msgid "Enable WP_DEBUG, debug.log and SAVEQUERIES"
 msgstr "Activa WP_DEBUG, debug.log i SAVEQUERIES"
 
-#: includes/class-tsosk-site-status.php:65
+#: includes/class-tsosk-site-status.php:68
 msgid "Debug ON"
 msgstr "Depuració ACTIVA"
 
-#: includes/class-tsosk-site-status.php:98
+#: includes/class-tsosk-site-status.php:101
 msgid "WP-Cron off"
 msgstr "WP-Cron desactivat"
 
-#: includes/class-tsosk-site-status.php:107
+#: includes/class-tsosk-site-status.php:110
 msgid "REST locked"
 msgstr "REST bloquejat"
 
-#: includes/class-tsosk-site-status.php:116
+#: includes/class-tsosk-site-status.php:119
 msgid "XML-RPC off"
 msgstr "XML-RPC desactivat"
 
-#: includes/class-tsosk-site-status.php:125
+#: includes/class-tsosk-site-status.php:128
 msgid "Hidden login"
 msgstr "Login ocult"
 
-#: includes/class-tsosk-site-status.php:134
+#: includes/class-tsosk-site-status.php:137
 msgid "Hardened admin"
 msgstr "Admin reforçat"
 
@@ -5425,8 +5441,8 @@ msgstr "Generat"
 msgid "Site"
 msgstr "Lloc"
 
-#: includes/class-tsosk-activity-log.php:212
-#: includes/class-tsosk-admin.php:917
+#: includes/class-tsosk-activity-log.php:215
+#: includes/class-tsosk-admin.php:920
 msgid "Custom 404 Page"
 msgstr "Pàgina 404 personalitzada"
 
@@ -5552,6 +5568,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2314
 #: includes/modules/class-tsosk-mod-custom-404.php:752
+#: includes/modules/class-tsosk-mod-staging.php:381
 msgid "Save settings"
 msgstr "Desar configuració"
 
@@ -5579,7 +5596,7 @@ msgstr "Mostrar"
 msgid "URL format"
 msgstr "Format d'URL"
 
-#: includes/class-tsosk-site-status.php:153
+#: includes/class-tsosk-site-status.php:156
 msgid "Custom 404"
 msgstr "404 personalitzada"
 
@@ -6306,12 +6323,12 @@ msgstr ""
 "Restaurar ni descarregar fitxers automàticament — heu de corregir els "
 "problemes manualment."
 
-#: includes/class-tsosk-activity-log.php:213
-#: includes/class-tsosk-admin.php:877
+#: includes/class-tsosk-activity-log.php:216
+#: includes/class-tsosk-admin.php:880
 msgid "Update Manager"
 msgstr "Gestor d'actualitzacions"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:91
+#: includes/modules/class-tsosk-mod-site-snapshot.php:92
 msgid "Update Manager settings"
 msgstr "Configuració del gestor d'actualitzacions"
 
@@ -6487,13 +6504,13 @@ msgstr ""
 "Trieu un punt de partida. Seleccioneu Personalitzat per ajustar cada opció a"
 " sota."
 
-#: includes/class-tsosk-activity-log.php:289
-#: includes/class-tsosk-activity-log.php:292
+#: includes/class-tsosk-activity-log.php:295
+#: includes/class-tsosk-activity-log.php:298
 #: includes/modules/class-tsosk-mod-update-manager.php:881
 msgid "WordPress default"
 msgstr "Per defecte de WordPress"
 
-#: includes/class-tsosk-activity-log.php:290
+#: includes/class-tsosk-activity-log.php:296
 #: includes/modules/class-tsosk-mod-update-manager.php:885
 msgid "Disable all updates"
 msgstr "Desactivar totes les actualitzacions"
@@ -6602,7 +6619,7 @@ msgstr ""
 msgid "Too many failed login attempts. Please try again later."
 msgstr "Massa intents d'inici de sessió fallits. Torna-ho a provar més tard."
 
-#: includes/class-tsosk-admin.php:847
+#: includes/class-tsosk-admin.php:850
 #: includes/modules/class-tsosk-mod-options.php:88
 msgid "TSO Link Inspector"
 msgstr "TSO Link Inspector"
@@ -6878,7 +6895,7 @@ msgstr ""
 "Buidar «%s»? S'esborraran totes les entrades del log però el fitxer es "
 "conservarà al disc. Aquesta acció no es pot desfer."
 
-#: includes/class-tsosk-admin.php:1156
+#: includes/class-tsosk-admin.php:1174
 msgid "Tools menu"
 msgstr "Menú d'eines"
 
@@ -6898,8 +6915,8 @@ msgstr ""
 "depuració, transients, eines de base de dades, inspector d'hooks, mode de "
 "manteniment, sandbox de plugins i molt més."
 
-#: includes/class-tsosk-activity-log.php:208
-#: includes/class-tsosk-admin.php:932
+#: includes/class-tsosk-activity-log.php:211
+#: includes/class-tsosk-admin.php:935
 msgid "Reorder & Hide Sidebar"
 msgstr "Ordenar i amagar menú lateral"
 
@@ -7111,7 +7128,7 @@ msgstr ""
 "Es mostra a sobre del nom del lloc a la pàgina de manteniment. Deixa-ho buit"
 " per fer servir la icona de clau per defecte."
 
-#: includes/class-tsosk-admin.php:802
+#: includes/class-tsosk-admin.php:805
 #: includes/modules/class-tsosk-mod-history.php:92
 #: includes/modules/class-tsosk-mod-search-replace.php:1038
 msgid "Activity History"
@@ -7141,7 +7158,7 @@ msgstr ""
 "Encara no s'ha registrat cap canvi. Quan desis ajustos o editis dades en "
 "qualsevol eina de TSO Swiss Knife, apareixerà aquí."
 
-#: includes/class-tsosk-activity-log.php:415
+#: includes/class-tsosk-activity-log.php:427
 #: includes/modules/class-tsosk-mod-history.php:46
 msgid "Activity history cleared."
 msgstr "Historial d'activitat esborrat."
@@ -7176,16 +7193,16 @@ msgid "All replace operations are logged in the %s tab."
 msgstr "Totes les operacions de reemplaçament es registren a la pestanya %s."
 
 #. translators: 1: action, 2: option name
-#: includes/class-tsosk-activity-log.php:394
-#: includes/class-tsosk-activity-log.php:541
+#: includes/class-tsosk-activity-log.php:406
+#: includes/class-tsosk-activity-log.php:553
 #: includes/modules/class-tsosk-mod-options-editor.php:840
 #, php-format
 msgid "Option %1$s: %2$s"
 msgstr "Opció %1$s: %2$s"
 
 #. translators: 1: search string, 2: replace string
-#: includes/class-tsosk-activity-log.php:402
-#: includes/class-tsosk-activity-log.php:572
+#: includes/class-tsosk-activity-log.php:414
+#: includes/class-tsosk-activity-log.php:584
 #: includes/modules/class-tsosk-mod-search-replace.php:451
 #, php-format
 msgid "Database replace: \"%1$s\" → \"%2$s\""
@@ -7238,35 +7255,35 @@ msgstr "desactivat"
 msgid "Clear all activity history? This cannot be undone."
 msgstr "Esborrar tot l'historial d'activitat? Això no es pot desfer."
 
-#: includes/class-tsosk-activity-log.php:220
+#: includes/class-tsosk-activity-log.php:223
 msgid "Server Files"
 msgstr "Fitxers del servidor"
 
-#: includes/class-tsosk-activity-log.php:221
+#: includes/class-tsosk-activity-log.php:224
 msgid "Slow Queries"
 msgstr "Consultes lentes"
 
-#: includes/class-tsosk-activity-log.php:226
+#: includes/class-tsosk-activity-log.php:229
 msgid "File Integrity"
 msgstr "Integritat de fitxers"
 
-#: includes/class-tsosk-activity-log.php:232
+#: includes/class-tsosk-activity-log.php:235
 msgid "Health & Alerts"
 msgstr "Salut i alertes"
 
-#: includes/class-tsosk-activity-log.php:262
+#: includes/class-tsosk-activity-log.php:268
 msgid "Flush"
 msgstr "Buidar"
 
-#: includes/class-tsosk-activity-log.php:263
+#: includes/class-tsosk-activity-log.php:269
 msgid "Import"
 msgstr "Importar"
 
-#: includes/class-tsosk-activity-log.php:265
+#: includes/class-tsosk-activity-log.php:271
 msgid "Scan"
 msgstr "Escanejar"
 
-#: includes/class-tsosk-activity-log.php:266
+#: includes/class-tsosk-activity-log.php:272
 msgid "Purge"
 msgstr "Purgar"
 
@@ -7277,6 +7294,7 @@ msgid "%1$s → %2$s"
 msgstr "%1$s → %2$s"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:262
+#: includes/modules/class-tsosk-mod-runtime-stack.php:249
 msgid "On"
 msgstr "Actiu"
 
@@ -7484,7 +7502,7 @@ msgstr "Desar ajustos de supressió"
 msgid "Settings saved. Refresh Site Health to see changes."
 msgstr "Ajustos desats. Recarrega Salut del lloc per veure els canvis."
 
-#: includes/class-tsosk-activity-log.php:346
+#: includes/class-tsosk-activity-log.php:352
 #: includes/modules/class-tsosk-mod-health.php:80
 msgid "Site Health suppression settings saved."
 msgstr "Ajustos de supressió de Salut del lloc desats."
@@ -7608,35 +7626,35 @@ msgstr ""
 msgid "Debug log shrunk to last %1$d lines (archive: %2$s)."
 msgstr "Debug.log reduït a les últimes %1$d línies (arxiu: %2$s)."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:96
+#: includes/modules/class-tsosk-mod-site-snapshot.php:97
 msgid "Site Health notice suppression"
 msgstr "Supressió d'avisos de Site Health"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:101
+#: includes/modules/class-tsosk-mod-site-snapshot.php:102
 msgid "Custom 404 page"
 msgstr "Pàgina 404 personalitzada"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:102
+#: includes/modules/class-tsosk-mod-site-snapshot.php:103
 msgid "Admin menu customizer"
 msgstr "Personalitzador del menú d'administració"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:104
+#: includes/modules/class-tsosk-mod-site-snapshot.php:105
 msgid "Disabled image sizes"
 msgstr "Mides d'imatge desactivades"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:105
+#: includes/modules/class-tsosk-mod-site-snapshot.php:106
 msgid "File integrity ignored files"
 msgstr "Fitxers ignorats a integritat de fitxers"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:95
+#: includes/modules/class-tsosk-mod-site-snapshot.php:96
 msgid "Health email alerts"
 msgstr "Alertes per email de salut"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1168
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1191
 msgid "Sections in this file"
 msgstr "Seccions en aquest fitxer"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1169
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1192
 msgid "Uncheck any section you do not want to overwrite."
 msgstr "Desmarca qualsevol secció que no vulguis sobreescriure."
 
@@ -8195,60 +8213,60 @@ msgid "After"
 msgstr "Despres"
 
 #. translators: 1: shortcode tag, 2: post ID
-#: includes/class-tsosk-activity-log.php:317
+#: includes/class-tsosk-activity-log.php:323
 #: includes/modules/class-tsosk-mod-content-audit.php:92
 #, php-format
 msgid "Removed broken shortcode [%1$s] from post #%2$d."
 msgstr "Shortcode trencat [%1$s] eliminat de l article #%2$d."
 
 #. translators: 1: fixed count, 2: skipped count
-#: includes/class-tsosk-activity-log.php:325
+#: includes/class-tsosk-activity-log.php:331
 #: includes/modules/class-tsosk-mod-slug-manager.php:267
 #, php-format
 msgid "Bulk slug fix: %1$d updated, %2$d skipped."
 msgstr "Correccio massiva de slugs: %1$d actualitzats, %2$d omesos."
 
 #. translators: 1: old slug, 2: new slug
-#: includes/class-tsosk-activity-log.php:333
+#: includes/class-tsosk-activity-log.php:339
 #: includes/modules/class-tsosk-mod-slug-manager.php:145
 #, php-format
 msgid "Slug renamed: %1$s → %2$s."
 msgstr "Slug reanomenat: %1$s → %2$s."
 
 #. translators: %s: preset label
-#: includes/class-tsosk-activity-log.php:341
+#: includes/class-tsosk-activity-log.php:347
 #: includes/modules/class-tsosk-mod-update-manager.php:246
 #, php-format
 msgid "Update Manager settings saved (preset: %s)."
 msgstr "Configuració del gestor d'actualitzacions desada (preajuste: %s)."
 
 #. translators: %s: archive filename
-#: includes/class-tsosk-activity-log.php:351
+#: includes/class-tsosk-activity-log.php:363
 #, php-format
 msgid "Debug log shrunk to last 500 lines (archive: %s)."
 msgstr "Registre de depuracio reduit a les ultimes 500 linies (arxiu: %s)."
 
 #. translators: %d: number of transients
-#: includes/class-tsosk-activity-log.php:358
+#: includes/class-tsosk-activity-log.php:370
 #: includes/modules/class-tsosk-mod-transients.php:182
 #, php-format
 msgid "Expired transients purged: %d."
 msgstr "Transients caducats eliminats: %d."
 
-#: includes/class-tsosk-activity-log.php:363
+#: includes/class-tsosk-activity-log.php:375
 #: includes/modules/class-tsosk-mod-file-integrity.php:162
 msgid "File added to ignore list."
 msgstr "Fitxer afegit a la llista d ignorats."
 
 #. translators: %d: number of issues
-#: includes/class-tsosk-activity-log.php:371
+#: includes/class-tsosk-activity-log.php:383
 #: includes/modules/class-tsosk-mod-file-integrity.php:99
 #, php-format
 msgid "File integrity scan completed (%d issue(s))."
 msgstr "Escaneig d integritat de fitxers completat (%d incidencia/es)."
 
 #. translators: %s: cron hook name
-#: includes/class-tsosk-activity-log.php:410
+#: includes/class-tsosk-activity-log.php:422
 #: includes/modules/class-tsosk-mod-cron.php:74
 #, php-format
 msgid "Cron event executed: %s."
@@ -8357,41 +8375,41 @@ msgstr ""
 "No es pot forcar el canvi de contrasenya als administradors des d aqui."
 
 #. translators: %s: skipped section errors
-#: includes/modules/class-tsosk-mod-site-snapshot.php:328
+#: includes/modules/class-tsosk-mod-site-snapshot.php:330
 #, php-format
 msgid "Skipped invalid sections: %s"
 msgstr "Seccions invalides omeses: %s"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:423
+#: includes/modules/class-tsosk-mod-site-snapshot.php:427
 msgid "Redirects section must be an object."
 msgstr "La seccio de redireccions ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:640
+#: includes/modules/class-tsosk-mod-site-snapshot.php:644
 msgid "Login protection section must be an object."
 msgstr "La seccio de proteccio d acces ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:681
+#: includes/modules/class-tsosk-mod-site-snapshot.php:685
 msgid "Login lockout log must be an array."
 msgstr "El registre de bloquejos ha de ser una llista."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:684
+#: includes/modules/class-tsosk-mod-site-snapshot.php:688
 msgid "Login lockout log exceeds the maximum allowed entries."
 msgstr "El registre de bloquejos supera el nombre maxim d entrades permes."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:711
+#: includes/modules/class-tsosk-mod-site-snapshot.php:715
 msgid "Login attempt counters must be an object."
 msgstr "Els comptadors d intents han de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:714
+#: includes/modules/class-tsosk-mod-site-snapshot.php:718
 msgid "Login attempt counters exceed the maximum allowed entries."
 msgstr "Els comptadors d intents superen el nombre maxim d entrades permes."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1023
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1046
 msgid "Expected a list of strings."
 msgstr "S esperava una llista de textos."
 
 #. translators: %d: maximum items
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1030
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1053
 #, php-format
 msgid "List exceeds the maximum of %d items."
 msgstr "La llista supera el maxim de %d elements."
@@ -8534,13 +8552,13 @@ msgstr "Derivat"
 msgid "Original / other"
 msgstr "Original / altre"
 
-#: includes/class-tsosk-activity-log.php:234
-#: includes/class-tsosk-admin.php:952
+#: includes/class-tsosk-activity-log.php:237
+#: includes/class-tsosk-admin.php:955
 msgid "Uploads Disk Footprint"
 msgstr "Petjada de disc d'uploads"
 
-#: includes/class-tsosk-activity-log.php:235
-#: includes/class-tsosk-admin.php:957
+#: includes/class-tsosk-activity-log.php:238
+#: includes/class-tsosk-admin.php:960
 msgid "Image Sizes Audit"
 msgstr "Auditoria de mides d'imatge"
 
@@ -8655,7 +8673,7 @@ msgstr "Podria estalviar ~%s en futures pujades"
 msgid "%1$d × %2$d — crop: %3$s"
 msgstr "%1$d × %2$d — retall: %3$s"
 
-#: includes/class-tsosk-admin.php:1198
+#: includes/class-tsosk-admin.php:1216
 msgid ""
 "Drag tabs to reorder and move them between categories, drag into Favorites, "
 "and reorder favorites. Click ✕ on a tool to hide it or on a favorite to "
@@ -8687,8 +8705,8 @@ msgstr ""
 "S'ignoren etiquetes només numèriques com [5196]. Shortcodes de MU-plugins o "
 "plugins registrats tard poden donar falsos positius."
 
-#: includes/class-tsosk-activity-log.php:219
-#: includes/class-tsosk-admin.php:977
+#: includes/class-tsosk-activity-log.php:222
+#: includes/class-tsosk-admin.php:980
 msgid "Comment Anti-Spam"
 msgstr "Anti-spam de comentaris"
 
@@ -9644,11 +9662,11 @@ msgstr "Tu Soporte Online"
 msgid "https://www.tusoporteonline.es/"
 msgstr "https://www.tusoporteonline.es/"
 
-#: includes/class-tsosk-activity-log.php:259
+#: includes/class-tsosk-activity-log.php:265
 msgid "Execute"
 msgstr "Executa"
 
-#: includes/class-tsosk-activity-log.php:260
+#: includes/class-tsosk-activity-log.php:266
 msgid "Toggle"
 msgstr "Commuta"
 
@@ -9656,7 +9674,7 @@ msgstr "Commuta"
 msgid "items"
 msgstr "elements"
 
-#: includes/class-tsosk-config-storage.php:120
+#: includes/class-tsosk-config-storage.php:121
 msgid "Could not encode config data."
 msgstr "No s’ha pogut codificar la configuració."
 
@@ -9688,19 +9706,19 @@ msgstr "No s’ha pogut llegir la plantilla del carregador de sandbox."
 msgid "Could not install the sandbox loader in must-use plugins."
 msgstr "No s’ha pogut instal·lar el carregador de sandbox a must-use plugins."
 
-#: includes/class-tsosk-site-status.php:72
+#: includes/class-tsosk-site-status.php:75
 msgid "SAVEQUERIES"
 msgstr "SAVEQUERIES"
 
-#: includes/class-tsosk-site-status.php:90
+#: includes/class-tsosk-site-status.php:93
 msgid "Sandbox"
 msgstr "Sandbox"
 
-#: includes/class-tsosk-site-status.php:144
+#: includes/class-tsosk-site-status.php:147
 msgid "Updates blocked"
 msgstr "Actualitzacions bloquejades"
 
-#: includes/class-tsosk-site-status.php:145
+#: includes/class-tsosk-site-status.php:148
 msgid "Update checks limited"
 msgstr "Comprovacions d’actualització limitades"
 
@@ -10333,7 +10351,7 @@ msgstr "Fitxer de servidor desat: %s."
 msgid ".htaccess"
 msgstr ".htaccess"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:93
+#: includes/modules/class-tsosk-mod-site-snapshot.php:94
 msgid "Maintenance mode"
 msgstr "Mode manteniment"
 
@@ -10403,8 +10421,8 @@ msgstr ""
 "actualitzacions automàtiques a Escriptori → Actualitzacions."
 
 #. translators: 1: plugins before, 2: plugins after
-#: includes/class-tsosk-activity-log.php:378
-#: includes/class-tsosk-activity-log.php:386
+#: includes/class-tsosk-activity-log.php:390
+#: includes/class-tsosk-activity-log.php:398
 #: includes/modules/class-tsosk-mod-update-manager.php:789
 #, php-format
 msgid "Manual update check finished (plugins pending: %1$d → %2$d)."
@@ -10706,27 +10724,27 @@ msgstr ""
 msgid "Show slow only (≥ %d ms)"
 msgstr "Només lentes (≥ %d ms)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:94
+#: includes/modules/class-tsosk-mod-site-snapshot.php:95
 msgid "Hidden WordPress profiles (runtime flags)"
 msgstr "Perfils ocults de WordPress (flags en temps d’execució)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:98
+#: includes/modules/class-tsosk-mod-site-snapshot.php:99
 msgid "Login lockout log (operational)"
 msgstr "Registre de bloquejos d’accés (operatiu)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:99
+#: includes/modules/class-tsosk-mod-site-snapshot.php:100
 msgid "Login attempt counters (operational)"
 msgstr "Comptadors d’intents d’accés (operatiu)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:100
+#: includes/modules/class-tsosk-mod-site-snapshot.php:101
 msgid "Slow query monitor settings"
 msgstr "Configuració del Slow Query Monitor"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:103
+#: includes/modules/class-tsosk-mod-site-snapshot.php:104
 msgid "Admin menu manifest (operational)"
 msgstr "Manifest del menú d’administració (operatiu)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:106
+#: includes/modules/class-tsosk-mod-site-snapshot.php:107
 msgid "Comment Anti-Spam settings"
 msgstr "Configuració de Comment Anti-Spam"
 
@@ -10738,21 +10756,21 @@ msgstr "Selecciona com a mínim una secció."
 msgid "Paste or upload a valid TSO snapshot JSON first."
 msgstr "Enganxa o puja primer un JSON de snapshot TSO vàlid."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:258
+#: includes/modules/class-tsosk-mod-site-snapshot.php:260
 msgid "Select at least one section to import."
 msgstr "Selecciona com a mínim una secció per importar."
 
 #. translators: 1: file version, 2: supported versions
-#: includes/modules/class-tsosk-mod-site-snapshot.php:232
+#: includes/modules/class-tsosk-mod-site-snapshot.php:234
 #, php-format
 msgid "Unsupported snapshot version %1$d. Supported: %2$s."
 msgstr "Versió de snapshot no compatible %1$d. Compatibles: %2$s."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:241
+#: includes/modules/class-tsosk-mod-site-snapshot.php:243
 msgid "This snapshot belongs to a different plugin."
 msgstr "Aquest snapshot pertany a un altre plugin."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:349
+#: includes/modules/class-tsosk-mod-site-snapshot.php:351
 msgid ""
 "Slow Query Monitor is enabled in settings, but SAVEQUERIES is defined as "
 "false and cannot be overridden — change wp-config.php or Debug Mode."
@@ -10761,7 +10779,7 @@ msgstr ""
 "definit com a false i no es pot sobreescriure — canvia wp-config.php o el "
 "mode Debug."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:356
+#: includes/modules/class-tsosk-mod-site-snapshot.php:358
 msgid ""
 "SAVEQUERIES was enabled in the debug config — reload for Slow Query Monitor "
 "to capture queries."
@@ -10769,7 +10787,7 @@ msgstr ""
 "SAVEQUERIES s’ha activat a la config de debug — recarrega perquè Slow Query "
 "Monitor capturi consultes."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:358
+#: includes/modules/class-tsosk-mod-site-snapshot.php:360
 msgid ""
 "Slow Query Monitor is enabled, but SAVEQUERIES is not active — enable it in "
 "Debug Mode."
@@ -10777,7 +10795,7 @@ msgstr ""
 "Slow Query Monitor està activat, però SAVEQUERIES no està actiu — activa’l "
 "al mode Debug."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1123
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1146
 msgid ""
 "Save and restore site snapshots of selected TSO Swiss Knife settings as JSON"
 " for staging, backups, or migrations. Includes plugin wp_options settings "
@@ -10790,7 +10808,7 @@ msgstr ""
 "plugin (Slow Query Monitor, Comment Anti-Spam, etc.). No inclou flags JSON "
 "de Debug/Seguretat a uploads, sessions sandbox ni el log de Slow Query."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1127
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1150
 msgid ""
 "Import overwrites existing settings for the selected sections. Always export"
 " a backup first and test on staging. Cross-site page/media IDs are validated"
@@ -10801,7 +10819,7 @@ msgstr ""
 "pàgina/mitjans d’un altre lloc es validen i es reinicien si no existeixen "
 "aquí."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1135
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1158
 msgid ""
 "Select sections to include in the JSON file. Operational logs are unchecked "
 "by default."
@@ -10809,7 +10827,7 @@ msgstr ""
 "Selecciona les seccions a incloure al JSON. Els registres operatius van "
 "desmarcats per defecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1153
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1176
 msgid ""
 "Paste JSON from a previous export or upload a .json file. You can choose "
 "which sections to restore. Null sections reset the target option to "
@@ -10860,16 +10878,16 @@ msgstr ""
 "cop (no el total històric d’una URL). Com a màxim s’envia un correu d’alerta"
 " per hora."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1163
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1186
 msgid "Or paste JSON here"
 msgstr "O enganxa el JSON aquí"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1157
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1180
 msgid "Choose a file"
 msgstr "Tria un fitxer"
 
 #: includes/class-tsosk-admin.php:307
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1160
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1183
 msgid "No file chosen"
 msgstr "No s'ha triat cap fitxer"
 
@@ -10906,11 +10924,11 @@ msgstr "Diagnòstic de correu: missatge de prova enviat."
 msgid "Email diagnostics: test message failed."
 msgstr "Diagnòstic de correu: el missatge de prova ha fallat."
 
-#: includes/class-tsosk-activity-log.php:271
+#: includes/class-tsosk-activity-log.php:277
 msgid "Send"
 msgstr "Enviar"
 
-#: includes/class-tsosk-activity-log.php:272
+#: includes/class-tsosk-activity-log.php:278
 msgid "Error"
 msgstr "Error"
 
@@ -11030,6 +11048,7 @@ msgid "CC"
 msgstr "CC"
 
 #: includes/modules/class-tsosk-mod-email.php:413
+#: includes/modules/class-tsosk-mod-staging.php:400
 msgid "Subject"
 msgstr "Assumpte"
 
@@ -11202,11 +11221,11 @@ msgstr "No s’han detectat shortcodes al contingut mostrejat."
 msgid "Registered"
 msgstr "Registrat"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1174
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1197
 msgid "Environment comparison"
 msgstr "Comparació d’entorn"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1175
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1198
 msgid ""
 "Compares snapshot metadata with this site before import. Differences do not "
 "block import but help avoid surprises on staging or production."
@@ -11215,25 +11234,25 @@ msgstr ""
 "Les diferències no bloquegen la importació però ajuden a evitar sorpreses a "
 "staging o producció."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1180
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1203
 msgid "Field"
 msgstr "Camp"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1181
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1204
 msgid "In snapshot"
 msgstr "A la instantània"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1182
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1205
 msgid "This site"
 msgstr "Aquest lloc"
 
 #. translators: %d: number of array items
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1097
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1120
 #, php-format
 msgid "array (%d items)"
 msgstr "array (%d elements)"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1103
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1126
 msgid "set"
 msgstr "definit"
 
@@ -11269,12 +11288,12 @@ msgstr "Idioma del lloc"
 msgid "Posts"
 msgstr "Entrades"
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:942
+#: includes/modules/class-tsosk-mod-site-snapshot.php:946
 msgid "Admin menu manifest must be an object or array."
 msgstr ""
 "El manifest del menú d'administració ha de ser un objecte o una matriu."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:803
+#: includes/modules/class-tsosk-mod-site-snapshot.php:807
 msgid "Admin menu section must be an object."
 msgstr "La secció del menú d'administració ha de ser un objecte."
 
@@ -11285,61 +11304,61 @@ msgstr ""
 "Els tokens de captura ($1, $2, …) no es permeten a l'host d'una URL "
 "absoluta."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:965
+#: includes/modules/class-tsosk-mod-site-snapshot.php:988
 msgid "Comment Anti-Spam section must be an object."
 msgstr "La secció Comment Anti-Spam ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:781
+#: includes/modules/class-tsosk-mod-site-snapshot.php:785
 msgid "Custom 404 section must be an object."
 msgstr "La secció Custom 404 ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:602
+#: includes/modules/class-tsosk-mod-site-snapshot.php:606
 msgid "Health alerts section must be an object."
 msgstr "La secció d'alertes de salut ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:621
+#: includes/modules/class-tsosk-mod-site-snapshot.php:625
 msgid "Health suppress section must be an object."
 msgstr "La secció de supressió de Site Health ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:458
+#: includes/modules/class-tsosk-mod-site-snapshot.php:462
 msgid "Heartbeat section must be an object."
 msgstr "La secció Heartbeat ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:586
+#: includes/modules/class-tsosk-mod-site-snapshot.php:590
 msgid "Hidden profiles section must be an object."
 msgstr "La secció Hidden profiles ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:565
+#: includes/modules/class-tsosk-mod-site-snapshot.php:569
 msgid "Maintenance section must be an object."
 msgstr "La secció Maintenance ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:538
+#: includes/modules/class-tsosk-mod-site-snapshot.php:542
 msgid "REST API section must be an object."
 msgstr "La secció REST API ha de ser un objecte."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:427
+#: includes/modules/class-tsosk-mod-site-snapshot.php:431
 msgid "Redirects module is not available."
 msgstr "El mòdul Redirects no està disponible."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:741
+#: includes/modules/class-tsosk-mod-site-snapshot.php:745
 msgid "Slow query settings must be an object."
 msgstr "La configuració de Slow Query ha de ser un objecte."
 
 #. translators: %s: section id
-#: includes/modules/class-tsosk-mod-site-snapshot.php:410
+#: includes/modules/class-tsosk-mod-site-snapshot.php:414
 #, php-format
 msgid "Unknown section \"%s\"."
 msgstr "Secció desconeguda \"%s\"."
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:476
+#: includes/modules/class-tsosk-mod-site-snapshot.php:480
 msgid "Update Manager section must be an object."
 msgstr "La secció Update Manager ha de ser un objecte."
 
-#: includes/class-tsosk-activity-log.php:269
+#: includes/class-tsosk-activity-log.php:275
 msgid "Bulk"
 msgstr "Massiu"
 
-#: includes/class-tsosk-activity-log.php:270
+#: includes/class-tsosk-activity-log.php:276
 msgid "Clone"
 msgstr "Clona"
 
@@ -11602,3 +11621,605 @@ msgstr ""
 "aquesta pàgina del Monitor de consultes lentes. La detecció de duplicats "
 "ignora les consultes de la barra d’administració (com Query Monitor). Per "
 "als duplicats d’una altra pàgina, mira el panell de dalt d’aquesta pestanya."
+
+#: includes/class-tsosk-activity-log.php:240
+#: includes/class-tsosk-admin.php:990
+msgid "Staging Mode"
+msgstr "Mode prova"
+
+#: includes/class-tsosk-activity-log.php:241
+#: includes/class-tsosk-admin.php:995
+msgid "URL & HTTPS Doctor"
+msgstr "Doctor d’adreces i HTTPS"
+
+#: includes/class-tsosk-activity-log.php:242
+#: includes/class-tsosk-admin.php:1000
+msgid "Server & Runtime"
+msgstr "Servidor i intern"
+
+#: includes/class-tsosk-activity-log.php:355
+#: includes/modules/class-tsosk-mod-staging.php:184
+msgid "Staging Mode settings saved."
+msgstr "S’han desat els paràmetres del mode prova."
+
+#: includes/class-tsosk-activity-log.php:358
+#: includes/modules/class-tsosk-mod-staging.php:198
+msgid "Staging mail log cleared."
+msgstr "S’ha buidat el registre de correus del mode prova."
+
+#: includes/class-tsosk-config-storage.php:178
+msgid "The logs directory is not writable."
+msgstr "No es pot escriure al directori de registres."
+
+#: includes/class-tsosk-config-storage.php:183
+msgid "Invalid log file name."
+msgstr "Nom de fitxer de registre no vàlid."
+
+#: includes/class-tsosk-config-storage.php:188
+msgid "Could not encode log data."
+msgstr "No s’han pogut codificar les dades del registre."
+
+#: includes/class-tsosk-config-storage.php:193
+msgid "Could not write the log file."
+msgstr "No s’ha pogut escriure el fitxer de registre."
+
+#: includes/class-tsosk-site-status.php:164
+msgid "Staging"
+msgstr "Prova"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:200
+msgid ""
+"A snapshot of what sits under WordPress on this server: extra cache files, "
+"must-use plugins that always load, and PHP limits that explain failed "
+"uploads or timeouts. Nothing here is changed."
+msgstr ""
+"Una foto del que hi ha sota WordPress en aquest servidor: fitxers extra de "
+"memòria cau, plugins d’ús obligat que sempre es carreguen i límits de PHP "
+"que expliquen pujades fallides o temps d’espera. Aquí no es canvia res."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:204
+msgid "PHP and hosting limits"
+msgstr "Límits de PHP i de l’allotjament"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:211
+msgid "Memory PHP may use"
+msgstr "Memòria que PHP pot fer servir"
+
+#. translators: %s: WP_MEMORY_LIMIT value
+#: includes/modules/class-tsosk-mod-runtime-stack.php:220
+#, php-format
+msgid "WordPress asks for %s."
+msgstr "WordPress en demana %s."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:230
+msgid "Largest file you can upload"
+msgstr "Fitxer més gran que es pot pujar"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:234
+msgid "Largest form WordPress can receive"
+msgstr "Formulari més gran que WordPress pot rebre"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:238
+msgid "Seconds a request may run"
+msgstr "Segons que pot durar una petició"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:242
+msgid "Form fields allowed in one request"
+msgstr "Camps de formulari permesos en una petició"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:246
+msgid "PHP accelerator (OPcache)"
+msgstr "Accelerador PHP (OPcache)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:251
+msgid "Off or unknown"
+msgstr "Apagat o desconegut"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:256
+msgid "Temporary folder"
+msgstr "Carpeta temporal"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:260
+msgid "Writable"
+msgstr "Es pot escriure"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:262
+msgid "Not writable"
+msgstr "No es pot escriure"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:267
+msgid "Clock (PHP vs WordPress)"
+msgstr "Rellotge (PHP vs WordPress)"
+
+#. translators: 1: PHP timezone, 2: WordPress timezone
+#: includes/modules/class-tsosk-mod-runtime-stack.php:273
+#, php-format
+msgid "PHP: %1$s. WordPress: %2$s."
+msgstr "PHP: %1$s. WordPress: %2$s."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:280
+msgid "They differ. Scheduled posts and cron times can look wrong."
+msgstr ""
+"No coincideixen. Les entrades programades i el cron poden mostrar hores "
+"rares."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:286
+msgid "PHP functions turned off by hosting"
+msgstr "Funcions PHP desactivades per l’allotjament"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:294
+msgid "Object cache (fast database memory)"
+msgstr "Memòria cau d’objectes (memòria ràpida de la base de dades)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:297
+msgid "Persistent cache (Redis / Memcached / similar)"
+msgstr "Memòria cau persistent (Redis / Memcached / similar)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:302
+msgid "No — WordPress is using its default in-memory cache for this request."
+msgstr ""
+"No: WordPress fa servir la memòria cau interna per defecte en aquesta "
+"petició."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:307
+msgid "Driver class"
+msgstr "Classe del controlador"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:311
+msgid "object-cache.php drop-in"
+msgstr "Fitxer extra object-cache.php"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:314
+msgid "Present"
+msgstr "Present"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:317
+msgid "Not present"
+msgstr "No hi és"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:325
+msgid "Drop-in files in wp-content"
+msgstr "Fitxers extra a wp-content"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:327
+msgid ""
+"These special files replace or extend core behaviour (cache, database, error"
+" pages). Hosting or a cache plugin often places them. They do not appear in "
+"the normal Plugins list."
+msgstr ""
+"Aquests fitxers especials substitueixen o amplien el nucli (memòria cau, "
+"base de dades, pàgines d’error). Sovint els posa l’allotjament o un plugin "
+"de cache. No surten a la llista normal de plugins."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:333
+msgid "Purpose"
+msgstr "Per a què serveix"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:334
+msgid "On disk?"
+msgstr "Al disc?"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:335
+#: includes/modules/class-tsosk-mod-runtime-stack.php:372
+msgid "Last changed"
+msgstr "Darrer canvi"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:359
+msgid "Must-use plugins (always on)"
+msgstr "Plugins d’ús obligat (sempre actius)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:361
+msgid ""
+"Files in mu-plugins load for everyone and cannot be deactivated from the "
+"Plugins screen. Hosting panels and this plugin’s Sandbox loader may appear "
+"here."
+msgstr ""
+"Els fitxers de mu-plugins es carreguen per a tothom i no es poden desactivar"
+" des de Plugins. Aquí poden sortir panells de l’allotjament i el carregador "
+"del Sandbox d’aquest plugin."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:364
+msgid "No must-use plugins found."
+msgstr "No s’ha trobat cap plugin d’ús obligat."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:108
+msgid "Staging Mode settings"
+msgstr "Paràmetres del mode prova"
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:969
+msgid "Staging Mode section must be an object."
+msgstr "La secció del mode prova ha de ser un objecte."
+
+#: includes/modules/class-tsosk-mod-staging.php:132
+msgid "STAGING"
+msgstr "PROVA"
+
+#: includes/modules/class-tsosk-mod-staging.php:136
+msgid "This copy is marked as a test site. Open Staging Mode settings."
+msgstr ""
+"Aquesta còpia està marcada com a web de prova. Obre els paràmetres del mode "
+"prova."
+
+#: includes/modules/class-tsosk-mod-staging.php:185
+msgid "Settings saved. Reload the page to apply them fully."
+msgstr ""
+"Paràmetres desats. Torna a carregar la pàgina per aplicar-los del tot."
+
+#: includes/modules/class-tsosk-mod-staging.php:199
+msgid "Mail log cleared."
+msgstr "Registre de correus buidat."
+
+#: includes/modules/class-tsosk-mod-staging.php:342
+msgid ""
+"Use this on a test copy of the site so it is obvious it is not production, "
+"so search engines skip it, and so customer emails are not sent by mistake. "
+"Everything stays off until you tick a box."
+msgstr ""
+"Fes-ho servir en una còpia de prova del web perquè quedi clar que no és el "
+"web en viu, perquè els cercadors no la llistin i perquè no s’enviïn correus "
+"als clients per error. Tot resta apagat fins que marques una casella."
+
+#: includes/modules/class-tsosk-mod-staging.php:346
+msgid ""
+"Turn these options off before you copy this database back to the live site. "
+"They are saved in this WordPress install."
+msgstr ""
+"Apaga aquestes opcions abans de copiar aquesta base de dades al web en viu. "
+"Es desen en aquesta instal·lació de WordPress."
+
+#: includes/modules/class-tsosk-mod-staging.php:350
+msgid "Test-site options"
+msgstr "Opcions de la còpia de prova"
+
+#: includes/modules/class-tsosk-mod-staging.php:353
+msgid "Show a red STAGING label in the admin bar"
+msgstr "Mostra una etiqueta vermella PROVA a la barra d’admin"
+
+#: includes/modules/class-tsosk-mod-staging.php:355
+msgid ""
+"Visible to administrators so nobody confuses this copy with the live site."
+msgstr ""
+"Visible per als administradors perquè ningú no confongui aquesta còpia amb "
+"el web en viu."
+
+#: includes/modules/class-tsosk-mod-staging.php:360
+msgid "Ask search engines not to list this copy"
+msgstr "Demana als cercadors que no llistin aquesta còpia"
+
+#: includes/modules/class-tsosk-mod-staging.php:362
+msgid ""
+"Adds no-index signals while this option is on. It does not permanently "
+"change Settings → Reading."
+msgstr ""
+"Afegeix senyals de no indexar mentre l’opció està activa. No canvia de forma"
+" permanent Paràmetres → Lectura."
+
+#: includes/modules/class-tsosk-mod-staging.php:367
+msgid "Do not send real emails"
+msgstr "No enviïs correus reals"
+
+#: includes/modules/class-tsosk-mod-staging.php:369
+msgid ""
+"WordPress will think the email was sent, but nothing leaves the server. A "
+"short copy is kept in the log below. Use this so a test shop does not email "
+"real customers."
+msgstr ""
+"WordPress creurà que el correu s’ha enviat, però no surt del servidor. Se’n "
+"guarda una còpia curta al registre de sota. Serveix perquè una botiga de "
+"prova no escrigui als clients de veritat."
+
+#: includes/modules/class-tsosk-mod-staging.php:374
+msgid "Keep a copy of emails even when they are sent"
+msgstr "Guarda una còpia dels correus encara que s’enviïn"
+
+#: includes/modules/class-tsosk-mod-staging.php:376
+msgid ""
+"Useful on the live site when you need to see whether WordPress tried to send"
+" a message. Only administrators can read the log. Message bodies are "
+"shortened."
+msgstr ""
+"Útil al web en viu quan cal veure si WordPress ha intentat enviar un "
+"missatge. Només els administradors poden llegir el registre. El cos del "
+"missatge s'escurça."
+
+#: includes/modules/class-tsosk-mod-staging.php:388
+msgid "Recent emails"
+msgstr "Correus recents"
+
+#: includes/modules/class-tsosk-mod-staging.php:390
+msgid ""
+"Stored as JSON under the plugin uploads folder (not in the public media "
+"library listing). The last 100 messages are kept. Full HTML bodies are not "
+"stored."
+msgstr ""
+"Es desa com a JSON a la carpeta d’uploads del plugin (no a la llibreria de "
+"mitjans pública). Es conserven els darrers 100 missatges. No es desa el HTML"
+" sencer."
+
+#: includes/modules/class-tsosk-mod-staging.php:393
+msgid "No emails recorded yet."
+msgstr "Encara no hi ha cap correu registrat."
+
+#: includes/modules/class-tsosk-mod-staging.php:398
+msgid "When"
+msgstr "Quan"
+
+#: includes/modules/class-tsosk-mod-staging.php:399
+msgid "To"
+msgstr "A"
+
+#: includes/modules/class-tsosk-mod-staging.php:401
+msgid "Sent?"
+msgstr "Enviat?"
+
+#: includes/modules/class-tsosk-mod-staging.php:417
+msgid "Held here"
+msgstr "Retingut aquí"
+
+#: includes/modules/class-tsosk-mod-staging.php:419
+msgid "Allowed to send"
+msgstr "S’ha deixat enviar"
+
+#: includes/modules/class-tsosk-mod-staging.php:429
+msgid "Clear mail log"
+msgstr "Buida el registre de correus"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:90
+msgid "Saved addresses"
+msgstr "Adreces desades"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:91
+msgid "WordPress does not have two valid web addresses stored."
+msgstr "WordPress no té dues adreces web vàlides desades."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:92
+msgid "Open Settings → General and check WordPress Address and Site Address."
+msgstr ""
+"Obre Paràmetres → General i revisa l’adreça de WordPress i l’adreça del "
+"lloc."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:100
+msgid "Public site vs admin address"
+msgstr "Web públic vs adreça d’admin"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:102
+msgid "Both addresses use the same domain. That is what you usually want."
+msgstr ""
+"Totes dues adreces fan servir el mateix domini. És el que normalment vols."
+
+#. translators: 1: home host, 2: site host
+#: includes/modules/class-tsosk-mod-url-doctor.php:105
+#, php-format
+msgid "The public site is %1$s but the admin address is %2$s."
+msgstr "El web públic és %1$s però l’adreça d’admin és %2$s."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:111
+msgid ""
+"After a move, these two often disagree. Search & Replace can fix stored "
+"links once you know the correct domain."
+msgstr ""
+"Després d’un canvi de servidor sovint no coincideixen. Cercar i substituir "
+"pot arreglar els enllaços un cop saps el domini correcte."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:119
+msgid "Padlock (HTTPS)"
+msgstr "Cadenat (HTTPS)"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:121
+msgid "Both saved addresses start with https."
+msgstr "Totes dues adreces desades comencen per https."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:122
+msgid ""
+"At least one saved address still starts with http. Browsers will warn "
+"visitors or mix secure and insecure files."
+msgstr ""
+"Almenys una adreça desada encara comença per http. El navegador avisarà els "
+"visitants o barrejarà fitxers segurs i insegurs."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:125
+msgid ""
+"Use a certificate on the server, then update both addresses to https (or run"
+" Search & Replace on a backup first)."
+msgstr ""
+"Posa un certificat al servidor i després passa totes dues adreces a https (o"
+" fes Cercar i substituir sobre una còpia de seguretat)."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:137
+msgid "This visit vs saved address"
+msgstr "Aquesta visita vs l’adreça desada"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:139
+msgid ""
+"The way you opened this page matches the saved public address (http or "
+"https)."
+msgstr ""
+"La manera com has obert aquesta pàgina coincideix amb l’adreça pública "
+"desada (http o https)."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:140
+msgid ""
+"You opened this page with a different padlock setting than the address "
+"WordPress has saved. Logins and cookies often break in that case."
+msgstr ""
+"Has obert aquesta pàgina amb un cadenat diferent del que WordPress té desat."
+" En aquests casos sovint fallen l’inici de sessió i les galetes."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:143
+msgid ""
+"Always open the admin using the same https/www form as Settings → General."
+msgstr ""
+"Obre sempre l’admin amb la mateixa forma https/www que a Paràmetres → "
+"General."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:149
+msgid "www vs without www"
+msgstr "www vs sense www"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:153
+msgid "Both addresses use www."
+msgstr "Totes dues adreces fan servir www."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:154
+msgid "Both addresses skip www."
+msgstr "Totes dues adreces van sense www."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:156
+msgid ""
+"One address uses www and the other does not. That usually causes extra "
+"redirects or mixed cookies."
+msgstr ""
+"Una adreça fa servir www i l’altra no. Això sol provocar redireccions de més"
+" o galetes barrejades."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:159
+msgid ""
+"Pick one form (with or without www) and keep it everywhere, including Search"
+" & Replace if needed."
+msgstr ""
+"Tria una forma (amb www o sense) i mantén-la a tot arreu, també a Cercar i "
+"substituir si cal."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:165
+msgid "Folder in the address"
+msgstr "Carpeta a l’adreça"
+
+#. translators: 1: home path, 2: site path
+#: includes/modules/class-tsosk-mod-url-doctor.php:169
+#, php-format
+msgid ""
+"Public path: %1$s. WordPress path: %2$s. This is normal when WordPress lives"
+" in a subfolder."
+msgstr ""
+"Camí públic: %1$s. Camí de WordPress: %2$s. És normal si WordPress viu en "
+"una subcarpeta."
+
+#. translators: %s: URL path
+#: includes/modules/class-tsosk-mod-url-doctor.php:175
+#, php-format
+msgid "Both addresses use the path %s."
+msgstr "Totes dues adreces fan servir el camí %s."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:183
+msgid "Force HTTPS for wp-admin"
+msgstr "Força HTTPS a wp-admin"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:185
+msgid "FORCE_SSL_ADMIN is on. The dashboard should only load over https."
+msgstr ""
+"FORCE_SSL_ADMIN està actiu. L’escriptori només hauria de carregar-se amb "
+"https."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:186
+msgid ""
+"FORCE_SSL_ADMIN is not on. That is fine if the whole site already uses "
+"https."
+msgstr ""
+"FORCE_SSL_ADMIN no està actiu. Està bé si tot el web ja fa servir https."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:195
+msgid "Locked in wp-config.php"
+msgstr "Blocat a wp-config.php"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:196
+msgid ""
+"WP_HOME and/or WP_SITEURL are defined in wp-config.php, so Settings → "
+"General cannot change those addresses. This plugin never edits that file."
+msgstr ""
+"WP_HOME i/o WP_SITEURL estan definits a wp-config.php, així que Paràmetres →"
+" General no pot canviar aquestes adreces. Aquest plugin no edita mai aquest "
+"fitxer."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:197
+msgid ""
+"If the constants are wrong after a move, edit wp-config.php on the server "
+"(or ask hosting)."
+msgstr ""
+"Si les constants són incorrectes després d’un canvi, edita wp-config.php al "
+"servidor (o demana-ho a l’allotjament)."
+
+#. translators: %d: HTTP status
+#: includes/modules/class-tsosk-mod-url-doctor.php:254
+#, php-format
+msgid ""
+"This site answered with status %d. The public address looks reachable from "
+"the server."
+msgstr ""
+"Aquest web ha respost amb l’estat %d. L’adreça pública sembla accessible des"
+" del servidor."
+
+#. translators: %s: final URL host
+#: includes/modules/class-tsosk-mod-url-doctor.php:260
+#, php-format
+msgid ""
+"The request ended on a different domain (%s). Check redirects, CDN, or a "
+"leftover old address."
+msgstr ""
+"La petició ha acabat en un altre domini (%s). Revisa redireccions, CDN o una"
+" adreça antiga que hagi quedat."
+
+#. translators: %d: HTTP status
+#: includes/modules/class-tsosk-mod-url-doctor.php:266
+#, php-format
+msgid ""
+"The public address answered with status %d. That is not a normal success "
+"page."
+msgstr ""
+"L’adreça pública ha respost amb l’estat %d. No és una pàgina d’èxit normal."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:299
+msgid ""
+"This screen explains whether the two addresses WordPress has saved still "
+"match how you open the site (https, www, folder). It does not change the "
+"database. Use Search & Replace only after you know the correct address."
+msgstr ""
+"Aquesta pantalla explica si les dues adreces que WordPress té desades encara"
+" coincideixen amb com obres el web (https, www, carpeta). No canvia la base "
+"de dades. Fes servir Cercar i substituir només quan sàpigues l’adreça "
+"correcta."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:303
+msgid "Addresses WordPress has saved"
+msgstr "Adreces que WordPress té desades"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:306
+msgid "Public site (Home)"
+msgstr "Web públic (Home)"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:310
+msgid "WordPress address (Site URL)"
+msgstr "Adreça de WordPress (Site URL)"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:317
+msgid "What we found"
+msgstr "Què hem trobat"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:322
+msgid "Result"
+msgstr "Resultat"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:323
+msgid "What it means"
+msgstr "Què vol dir"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:344
+msgid "Can the server reach its own public page?"
+msgstr "El servidor pot arribar a la seva pàgina pública?"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:346
+msgid ""
+"Optional. Only runs when you click the button. It asks this site’s own home "
+"address from the server (the same idea as Site Health). No other website is "
+"contacted."
+msgstr ""
+"Opcional. Només s’executa quan cliques el botó. El servidor pregunta a la "
+"pròpia adreça d’inici d’aquest web (la mateixa idea que Salut del lloc). No "
+"es contacta cap altre web."
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:350
+msgid "Check this site"
+msgstr "Comprova aquest web"
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:358
+msgid "Needs attention"
+msgstr "Cal revisar-ho"

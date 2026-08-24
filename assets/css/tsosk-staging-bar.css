@@ -1,0 +1,18 @@
+/*
+ * TSO Swiss Knife – Admin bar STAGING badge (front and admin).
+ */
+
+#wpadminbar #wp-admin-bar-tsosk-staging-badge > .ab-item,
+#wpadminbar #wp-admin-bar-tsosk-staging-badge > .ab-item .ab-icon,
+#wpadminbar #wp-admin-bar-tsosk-staging-badge > .ab-item .ab-label {
+	background: #d63638 !important;
+	color: #fff !important;
+	font-weight: 700;
+}
+
+#wpadminbar #wp-admin-bar-tsosk-staging-badge:hover > .ab-item,
+#wpadminbar #wp-admin-bar-tsosk-staging-badge:hover > .ab-item .ab-icon,
+#wpadminbar #wp-admin-bar-tsosk-staging-badge:hover > .ab-item .ab-label {
+	background: #b32d2e !important;
+	color: #fff !important;
+}
