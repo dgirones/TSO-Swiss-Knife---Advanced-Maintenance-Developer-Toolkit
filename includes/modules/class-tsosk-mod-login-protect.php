@@ -152,10 +152,48 @@ class TSOSK_Mod_Login_Protect {
 		$slug = $this->get_settings()['login_slug'];
 		if ( $slug ) {
 			add_rewrite_rule(
-				'^' . preg_quote( $slug, '#' ) . '/?$',
+				self::rewrite_rule_regex( $slug ),
 				'index.php?' . self::QUERY_VAR . '=' . $slug,
 				'top'
 			);
+		}
+	}
+
+	/**
+	 * Regex key used with add_rewrite_rule() for a custom login slug.
+	 *
+	 * @param string $slug Login slug.
+	 */
+	public static function rewrite_rule_regex( string $slug ): string {
+		$slug = sanitize_title_with_dashes( $slug );
+		return '^' . preg_quote( $slug, '#' ) . '/?$';
+	}
+
+	/**
+	 * Remove a custom login slug from in-memory and stored rewrite rules.
+	 *
+	 * Call this before flush_rewrite_rules() on deactivate/import when the rule
+	 * must not be written back into the rewrite_rules option.
+	 *
+	 * @param string $slug Login slug to remove.
+	 */
+	public static function purge_custom_login_rewrite( string $slug ): void {
+		$slug = sanitize_title_with_dashes( $slug );
+		if ( '' === $slug ) {
+			return;
+		}
+
+		$rule = self::rewrite_rule_regex( $slug );
+
+		global $wp_rewrite;
+		if ( isset( $wp_rewrite ) && is_object( $wp_rewrite ) && ! empty( $wp_rewrite->extra_rules_top ) && is_array( $wp_rewrite->extra_rules_top ) ) {
+			unset( $wp_rewrite->extra_rules_top[ $rule ] );
+		}
+
+		$stored = get_option( 'rewrite_rules' );
+		if ( is_array( $stored ) && isset( $stored[ $rule ] ) ) {
+			unset( $stored[ $rule ] );
+			update_option( 'rewrite_rules', $stored );
 		}
 	}
 
@@ -862,9 +900,12 @@ class TSOSK_Mod_Login_Protect {
 
 		// Flush rewrite rules if slug changed — register the NEW rule first (init already passed).
 		if ( $old_settings['login_slug'] !== $new['login_slug'] || $old_settings['custom_url'] !== $new['custom_url'] ) {
+			if ( ! empty( $old_settings['login_slug'] ) ) {
+				self::purge_custom_login_rewrite( (string) $old_settings['login_slug'] );
+			}
 			if ( ! empty( $new['custom_url'] ) && ! empty( $new['login_slug'] ) ) {
 				add_rewrite_rule(
-					'^' . preg_quote( $new['login_slug'], '#' ) . '/?$',
+					self::rewrite_rule_regex( (string) $new['login_slug'] ),
 					'index.php?' . self::QUERY_VAR . '=' . $new['login_slug'],
 					'top'
 				);

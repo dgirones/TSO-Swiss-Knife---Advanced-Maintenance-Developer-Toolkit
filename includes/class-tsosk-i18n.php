@@ -105,7 +105,11 @@ class TSOSK_I18n {
 	}
 
 	/**
-	 * Whether the current request is the plugin settings screen.
+	 * Whether the current request should use the plugin admin language.
+	 *
+	 * Covers the settings screen, plugin AJAX (admin-ajax.php), and plugin
+	 * admin-post downloads/exports so Health Report JSON/HTML and AJAX
+	 * messages match the language switcher (CAT / ES / ENG).
 	 *
 	 * @return bool
 	 */
@@ -116,8 +120,17 @@ class TSOSK_I18n {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page slug check.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 'tso-swiss-knife' === $page ) {
+			return true;
+		}
 
-		return 'tso-swiss-knife' === $page;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only action name for locale scope.
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		if ( '' !== $action && str_starts_with( $action, 'tsosk_' ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

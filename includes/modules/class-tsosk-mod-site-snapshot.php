@@ -264,6 +264,8 @@ class TSOSK_Mod_Site_Snapshot {
 		$imported = array();
 		$skipped  = array();
 		$notes    = array();
+		$old_lp   = get_option( 'tsosk_login_protect', array() );
+		$old_slug = ( is_array( $old_lp ) && ! empty( $old_lp['login_slug'] ) ) ? (string) $old_lp['login_slug'] : '';
 
 		foreach ( $sections as $section => $value ) {
 			$section = sanitize_key( (string) $section );
@@ -287,7 +289,8 @@ class TSOSK_Mod_Site_Snapshot {
 				continue;
 			}
 
-			update_option( $map[ $section ], $validated, false );
+			$autoload = ( 'staging' === $section );
+			update_option( $map[ $section ], $validated, $autoload );
 			$imported[] = $section;
 
 			if ( 'slow_queries' === $section && is_array( $validated ) && ! empty( $validated['enabled'] ) ) {
@@ -296,9 +299,23 @@ class TSOSK_Mod_Site_Snapshot {
 					$notes[] = $note;
 				}
 			}
+
+			if ( 'staging' === $section && is_array( $validated ) && in_array( true, $validated, true ) ) {
+				$notes[] = __( 'Staging Mode switches were imported as enabled. Confirm this is a test site, or turn them off under Staging Mode before going live.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
 		}
 
 		if ( in_array( 'login_protect', $imported, true ) ) {
+			// Import forces custom_url off; drop old and imported slugs from rewrite tables before flush.
+			if ( class_exists( 'TSOSK_Mod_Login_Protect' ) ) {
+				if ( '' !== $old_slug ) {
+					TSOSK_Mod_Login_Protect::purge_custom_login_rewrite( $old_slug );
+				}
+				$lp = get_option( 'tsosk_login_protect', array() );
+				if ( is_array( $lp ) && ! empty( $lp['login_slug'] ) && (string) $lp['login_slug'] !== $old_slug ) {
+					TSOSK_Mod_Login_Protect::purge_custom_login_rewrite( (string) $lp['login_slug'] );
+				}
+			}
 			flush_rewrite_rules( false );
 		}
 
@@ -1144,7 +1161,7 @@ class TSOSK_Mod_Site_Snapshot {
 		$operational  = self::get_operational_sections();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Save and restore site snapshots of selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin wp_options settings (Slow Query Monitor, Comment Anti-Spam, etc.). Does not include Debug/Security JSON flags under uploads, sandbox sessions, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode switches, Slow Query Monitor, Comment Anti-Spam, and Login Protect. Does not include Debug/Security JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-warn">

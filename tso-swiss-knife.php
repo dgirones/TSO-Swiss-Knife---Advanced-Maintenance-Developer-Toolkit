@@ -505,6 +505,10 @@ function tsosk_deactivate() {
 
 	$login_protect = get_option( 'tsosk_login_protect', array() );
 	if ( is_array( $login_protect ) && ! empty( $login_protect['custom_url'] ) && ! empty( $login_protect['login_slug'] ) ) {
+		// Remove the rule from memory/option first — otherwise flush would write it back while this request still has it registered.
+		if ( class_exists( 'TSOSK_Mod_Login_Protect' ) ) {
+			TSOSK_Mod_Login_Protect::purge_custom_login_rewrite( (string) $login_protect['login_slug'] );
+		}
 		flush_rewrite_rules( false );
 	}
 }

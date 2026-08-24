@@ -9,7 +9,7 @@ Stable tag: 1.0.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Admin toolkit with 35+ modules for cron, debug, security, database, redirects, roles, maintenance, staging copies, and site health reports.
+Admin toolkit with 40+ modules for cron, debug, security, database, redirects, roles, maintenance, staging copies, and site health reports.
 
 == Description ==
 
@@ -19,14 +19,14 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 * **Activity History** — Central log of changes across all plugin tools (options edited, database replacements, maintenance mode, admin menu, and more). Pinned as the default favorite for quick access.
 * **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
-* **Cron Manager** — List, manually run, or delete scheduled WP-Cron events. Core hooks are protected from accidental deletion.
+* **Cron Manager** — List scheduled WP-Cron events, run or delete non-core hooks, and keep WordPress core cron events read-only (no manual Run / Edit / Delete).
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
 * **Debug Mode** — One-click **Developer mode** preset for staging (`WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`; errors hidden from visitors), saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. The tab shows the constants currently in effect (read-only) and copy-paste `wp-config.php` snippets. Constants already defined in `wp-config.php` cannot be overridden.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
-* **Meta Editor** — Browse and edit post and user meta with type-aware validation.
+* **Meta Editor** — Browse and edit post and user meta. Without an object ID, search matches meta keys only (not values).
 * **Option Library** — Save named option presets and re-apply them across environments.
-* **Export/Import TSO Configuration** — Back up and restore plugin settings and module preferences as JSON.
-* **Transients** — Filter by status and purge expired or all transients in bulk.
+* **Export/Import TSO Configuration** — Back up and restore selected plugin `wp_options` settings as JSON (Redirects, Staging Mode switches, Login Protect, Slow Query settings, and more). Does not include Debug/Security JSON under uploads, the Staging mail log, sandbox sessions, or the Slow Query log.
+* **Transients** — Filter by status and purge expired or all transients in bulk (site transients on multisite require a network/super admin).
 * **WP Constants** — Read-only overview of relevant constants grouped by category.
 * **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, and shortcodes.
 * **REST API Controls** — Disable anonymous REST API access or block individual namespaces.
@@ -36,29 +36,33 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Search & Replace** — Run dry-run or live serialized-safe search and replace across database tables.
 * **Hooks Inspector** — Browse the live `$wp_filter` global, with callback details and a real-time search filter.
 * **Rewrite Rules Flush** — Soft or hard flush with a single click; search within the current rules table.
-* **Server Files Review** — Scan for unexpected PHP files in uploads and other writable directories.
+* **Server Files Review** — Scan for unexpected PHP files in uploads and other writable directories; optionally save `robots.txt` / `.htaccess` when you confirm.
 * **Redirects** — Manage safe redirect rules stored in the database with import and export support.
 * **Custom 404 Page** — Assign a WordPress page as the site 404 response while keeping the original URL and a real HTTP 404 status (no redirect).
 * **Slug Manager** — Bulk-edit post and term slugs with conflict detection.
-* **Health Report** — Generate a shareable site health snapshot covering environment, plugins, and common issues.
+* **Health Report** — Compact checks for risky settings, logs, 404 noise, and related issues; download HTML/JSON in the plugin UI language.
 * **Reorder & Hide Sidebar** — Drag to reorder WordPress admin menu items, rename labels, nest items under another section, or hide items for all admins.
 * **Users & Sessions** — Review administrators, role-less users, old accounts, and active sessions.
 * **Roles & Capabilities** — Compare roles, apply capability templates, and audit dangerous caps.
 * **Media Cleaner** — Review unattached media, missing attachment files, and unreferenced uploads.
+* **Uploads Disk Footprint** — Scan the uploads folder for size and file-type footprint statistics.
+* **Image Sizes Audit** — Review registered image sizes and disable unused sizes where appropriate.
 * **Security Review** — Highlight common hardening and update issues.
 * **Core File Integrity** — Verify WordPress core files against official checksums and flag unexpected changes.
 * **Login Protection** — Custom login URL, brute-force limits, and related hardening controls.
+* **Comment Anti-Spam** — Local honeypot/rate-limit rules plus optional reputation or cloud checks (off until you enable them and add keys where required).
 * **Email Diagnostics** — Inspect wp_mail settings and send a test email.
-* **Staging Mode** — Optional test-copy switches (all off by default): red STAGING label in the admin bar, ask search engines not to list this copy, hold outbound email so a staging shop does not message real customers, pause WP-Cron so queues do not run, and keep a short administrator-only mail log (source/type, CSV export) in the WordPress database (not under uploads).
+* **Staging Mode** — For test copies only (all off by default): red STAGING admin-bar label, ask search engines not to list this copy (without changing Settings → Reading), hold outbound email, pause WP-Cron execution, and keep a short administrator-only mail log in the database (CSV export). Turn everything off before copying the database back to production.
 * **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL (redirects are not followed), and an optional count of leftover http:// copies of that address. Does not change the database.
-* **Server & Runtime** — Read-only view of PHP limits, object-cache drop-in, other wp-content drop-ins, and must-use plugins that always load.
+* **Server & Runtime** — Read-only view of PHP limits, object-cache drop-in, other wp-content drop-ins, must-use plugins, and optional OPcache reset when the host allows it.
 * **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, long slugs, and broken shortcodes.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
 * **Plugin Sandbox** — Isolate plugin conflicts via a must-use loader: only your selected plugins load for your admin session.
 
 = Translations =
 
-* On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language. This only affects that admin screen.
+* On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language.
+* The same choice applies to this plugin’s AJAX responses and admin downloads (for example Health Report HTML/JSON and URL Doctor messages). It does not change the rest of wp-admin.
 * Further locales can be contributed via [Translate WordPress](https://translate.wordpress.org/) once the plugin is published.
 
 == External services ==
@@ -82,6 +86,10 @@ When you run a core integrity scan, the plugin requests official WordPress core 
 = URL & HTTPS Doctor (optional) =
 
 When you click **Check this site**, the plugin requests this site’s own home URL through the WordPress HTTP API (a loopback, similar to Site Health). Redirects are not followed. No third-party host is contacted and no personal data is sent. The request only runs after an administrator clicks the button.
+
+= Health Report security headers (optional) =
+
+Opening **Health Report** (or downloading its HTML/JSON) may request this site’s own home URL with a HEAD request to list common security response headers. Results are cached briefly. No third-party host is contacted and no personal data is sent.
 
 == Installation ==
 
@@ -111,17 +119,37 @@ Use only the **Plugin Sandbox** in this plugin. Combining it with other per-user
 
 No. Automatic updates are managed only by WordPress core (**Dashboard → Updates**). Update Manager can block update checks on staging sites, hide specific plugin updates, and control update email notifications — it does not write `auto_update_*` site options or hook `auto_update_*` filters.
 
+= When should I use Staging Mode? =
+
+Use it on a **cloned / staging / local copy**, right after you copy the live site, and before you place test orders or browse as a customer. Enable only the switches you need (badge, noindex, hold email, pause cron, mail log). Turn them all off before you copy that database back to production. Do not leave Staging Mode options enabled on the live site.
+
+= Does Staging Mode change Settings → Reading (“Discourage search engines”)? =
+
+No. It adds noindex headers, pauses XML sitemaps, and adjusts robots.txt while the option is on. It does **not** filter or save `blog_public`, so opening Settings → Reading will not permanently lock “Discourage search engines” after you turn Staging Mode off.
+
 = Does Staging Mode send customer emails from a test copy? =
 
-Not if you enable **Do not send real emails**. WordPress still thinks the mail was accepted, but it never leaves the server. A short copy (recipient, subject, excerpt) is stored in the WordPress database for administrators only (not as a public file under uploads). All Staging Mode switches are off until you turn them on. Turn them off before copying the database back to production.
+Not if you enable **Do not send real emails**. WordPress still thinks the mail was accepted, but it never leaves the server. A short copy (recipient, subject, excerpt) is stored in the WordPress database for administrators only (not as a public file under uploads). All Staging Mode switches are off until you turn them on.
+
+= Does pausing scheduled tasks in Staging Mode delete cron events? =
+
+No. Due events stay in **Cron Manager** but are not executed while that Staging Mode option is on. Turn it off on the live site so reminders and queues run again.
 
 = Does URL & HTTPS Doctor change my site address? =
 
 No. It only explains mismatches (http vs https, www, folder, and constants locked in wp-config.php). The leftover-http count is also read-only. Use **Search & Replace** if you decide to rewrite stored URLs, after a backup — always run preview first.
 
-= Does pausing scheduled tasks in Staging Mode delete cron events? =
+= Can I manually run WordPress core cron events? =
 
-No. Due events stay in **Cron Manager** but are not executed while that Staging Mode option is on. Turn it off on the live site so reminders and queues run again.
+No. Core hooks (for example `wp_version_check` or `wp_maybe_auto_update`) are read-only in Cron Manager: Run, Edit, and Delete are blocked in the UI and in AJAX.
+
+= What does Export/Import TSO Configuration include? =
+
+Selected plugin settings stored in `wp_options` (Redirects, Staging Mode switches, Login Protect, Comment Anti-Spam, Slow Query settings, Health alerts, and similar). It does **not** include Debug/Security/Hidden Profiles JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log. Import overwrites the sections you choose; always export a backup first. Login Protect never imports an enabled custom login URL (to avoid lockouts). If Staging switches arrive enabled, confirm you are on a test site.
+
+= Does the CAT / ES / ENG language switcher affect downloads and AJAX? =
+
+Yes for this plugin. Health Report HTML/JSON, URL Doctor messages, and other TSO AJAX/admin-post responses follow the language selected on **Tools › TSO Swiss Knife**. The rest of WordPress admin keeps the site language.
 
 = Where does the plugin write files? =
 
@@ -161,21 +189,18 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 == Changelog ==
 
 = 1.0.6 =
-* Staging Mode: optional admin-bar label, search-engine skip, outbound mail hold, and a short administrator mail log (all off by default).
-* Staging Mode no longer filters blog_public (avoids saving “Discourage search engines” if you open Settings → Reading).
-* Staging Mode: optional pause of WP-Cron (events stay scheduled but do not run), WooCommerce warning, test-host hint, mail log source/type, CSV export, and held-only filter.
-* Staging Mode mail log stored in the database (migrates and removes legacy uploads JSON); uploads config/log dirs always re-apply deny rules.
-* URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database; loopback does not follow redirects.
-* URL & HTTPS Doctor: optional count of leftover http:// copies of the public address, with a link that prefills Search & Replace (preview still required).
-* Server & Runtime: read-only PHP limits, drop-ins, must-use plugins, object-cache status, and PHP vs MySQL clock skew.
-* Server & Runtime: copy-to-clipboard summary and optional OPcache reset when the host allows it.
-* Incomplete plugin uploads show an admin notice listing missing files instead of a blank tool tab.
-* Cron Manager: block manual Run for core hooks (AJAX + UI).
-* Deactivation: flush rewrite rules when Login Protect custom URL was enabled.
-* Transients: site-transient purge uses sitemeta on multisite and requires super admin or network admin.
-* Meta Editor: without object ID, search matches meta_key only (not meta_value).
-* Uninstall: remove activity log settings, email diagnostics history, and staging mail log options.
-* Removed unused plugin-footprint module file.
+* New: Staging Mode (admin-bar label, noindex without touching blog_public, hold email, pause WP-Cron, database mail log + CSV).
+* New: URL & HTTPS Doctor (read-only diagnostics, loopback without following redirects, leftover http:// count with Search & Replace prefill).
+* New: Server & Runtime panel (PHP limits, drop-ins, MU-plugins, clock skew, optional OPcache reset).
+* Incomplete plugin uploads show an admin notice listing missing files.
+* Language switcher (CAT/ES/ENG) also applies to plugin AJAX and Health Report downloads.
+* Cron: core hooks are fully read-only (no Run / Edit / Delete); detection uses an explicit list only.
+* Transients: multisite site-transient purge uses sitemeta and requires super/network admin.
+* Meta Editor: key-only search without object ID; adding serialized values no longer double-serializes.
+* Login Protect: purge custom login rewrite before flush on deactivate, settings save, and snapshot import.
+* Export/Import: clearer exclusions; warn if Staging switches import enabled; Staging option stays autoloaded.
+* Uninstall: remove activity log settings, email diagnostics history, and staging mail log; force rewrite regeneration.
+* Health headers probe caches raw data / error codes (not mixed-language strings).
 
 = 1.0.5 =
 * Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.
@@ -214,7 +239,7 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 == Upgrade Notice ==
 
 = 1.0.6 =
-Adds Staging Mode, URL & HTTPS Doctor, Server & Runtime, and hardening for cron, transients, meta search, uninstall, and mail log storage.
+Adds Staging Mode, URL & HTTPS Doctor, and Server & Runtime, plus hardening for cron, rewrites, transients, meta, export/import, language downloads, and uninstall cleanup.
 
 = 1.0.5 =
 Cron Manager core-hook protection, site-transient purge, role template confirm, search race fixes, Debug Mode docs, and refreshed translations.

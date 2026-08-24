@@ -187,6 +187,7 @@ class TSOSK_Mod_Health {
 		$format = isset( $_GET['format'] ) && 'html' === sanitize_key( wp_unslash( $_GET['format'] ) ) ? 'html' : 'json';
 		$report = array(
 			'generated_at' => gmdate( 'c' ),
+			'locale'       => function_exists( 'determine_locale' ) ? determine_locale() : get_locale(),
 			'site'         => array(
 				'name' => get_bloginfo( 'name' ),
 				'url'  => home_url(),
@@ -454,12 +455,27 @@ class TSOSK_Mod_Health {
 	/**
 	 * Probe front page response headers (read-only).
 	 *
+	 * Cache stores raw header names only so translations stay in the active plugin language.
+	 *
 	 * @return array
 	 */
 	private function security_headers_check(): array {
-		$cached = get_transient( 'tsosk_health_security_headers_check' );
-		if ( is_array( $cached ) && isset( $cached['label'], $cached['status'], $cached['details'] ) ) {
-			return $cached;
+		$locale    = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+		$cache_key = 'tsosk_health_security_headers_v2_' . sanitize_key( (string) $locale );
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) && array_key_exists( 'present', $cached ) ) {
+			$error = '';
+			if ( ! empty( $cached['error_code'] ) && is_string( $cached['error_code'] ) ) {
+				$error = sprintf(
+					/* translators: %s: WP_Error code from the HTTP API */
+					__( 'Could not probe the home page (%s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					sanitize_key( $cached['error_code'] )
+				);
+			}
+			return $this->format_security_headers_result(
+				is_array( $cached['present'] ) ? $cached['present'] : array(),
+				$error
+			);
 		}
 
 		$url  = home_url( '/' );
@@ -473,13 +489,20 @@ class TSOSK_Mod_Health {
 		);
 
 		if ( is_wp_error( $resp ) ) {
-			$result = array(
-				'label'   => __( 'Security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'status'  => 'info',
-				'details' => $resp->get_error_message(),
+			$code    = $resp->get_error_code();
+			$payload = array(
+				'present'    => array(),
+				'error_code' => is_string( $code ) ? $code : 'http_request_failed',
 			);
-			set_transient( 'tsosk_health_security_headers_check', $result, 15 * MINUTE_IN_SECONDS );
-			return $result;
+			set_transient( $cache_key, $payload, 15 * MINUTE_IN_SECONDS );
+			return $this->format_security_headers_result(
+				array(),
+				sprintf(
+					/* translators: %s: WP_Error code from the HTTP API */
+					__( 'Could not probe the home page (%s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					sanitize_key( (string) $payload['error_code'] )
+				)
+			);
 		}
 
 		$present = array();
@@ -497,11 +520,37 @@ class TSOSK_Mod_Health {
 			}
 		}
 
+		$payload = array(
+			'present'    => $present,
+			'error_code' => '',
+		);
+		set_transient( $cache_key, $payload, 15 * MINUTE_IN_SECONDS );
+
+		return $this->format_security_headers_result( $present, '' );
+	}
+
+	/**
+	 * Build the translated security-headers check row from cached probe data.
+	 *
+	 * @param string[] $present Header names found.
+	 * @param string   $error   Transport error message, if any.
+	 * @return array{label:string,status:string,details:string}
+	 */
+	private function format_security_headers_result( array $present, string $error ): array {
+		$label = __( 'Security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		if ( '' !== $error ) {
+			return array(
+				'label'   => $label,
+				'status'  => 'info',
+				'details' => $error,
+			);
+		}
+
 		$count  = count( $present );
 		$status = $count >= 2 ? 'ok' : ( $count > 0 ? 'info' : 'warn' );
 
-		$result = array(
-			'label'   => __( 'Security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		return array(
+			'label'   => $label,
 			'status'  => $status,
 			'details' => $count
 				? sprintf(
@@ -511,10 +560,6 @@ class TSOSK_Mod_Health {
 				)
 				: __( 'No common security headers detected on the home page response.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
-
-		set_transient( 'tsosk_health_security_headers_check', $result, 15 * MINUTE_IN_SECONDS );
-
-		return $result;
 	}
 
 	/**

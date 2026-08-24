@@ -378,6 +378,7 @@ class TSOSK_Mod_Staging {
 	 * Guess which plugin, theme, or WordPress sent the mail (from the call stack).
 	 */
 	public static function detect_mail_source(): string {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Intentional stack walk to attribute wp_mail to plugin/theme; args ignored, depth capped.
 		$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 30 );
 		$self  = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( TSOSK_PATH ) : TSOSK_PATH;
 		$plug  = defined( 'WP_PLUGIN_DIR' ) ? wp_normalize_path( (string) WP_PLUGIN_DIR ) : '';
@@ -689,7 +690,7 @@ class TSOSK_Mod_Staging {
 				)
 			);
 		}
-		fclose( $out );
+		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closes php://output CSV stream opened above; not a disk write.
 		exit;
 	}
 
@@ -728,7 +729,10 @@ class TSOSK_Mod_Staging {
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Use this on a test copy of the site so it is obvious it is not production, so search engines skip it, and so customer emails are not sent by mistake. Everything stays off until you tick a box.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Protect a test copy of the site so nobody confuses it with production, so search engines stay away, and so customer emails are not sent by mistake.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</p>
+		<p class="tsosk-desc">
+			<?php esc_html_e( 'When to use it: right after you clone the live site to a staging or local URL (for example staging.example.com, .local, or LocalWP), before you place test orders or browse as a customer. Turn every option off before you copy this database back to the live site. All switches stay off until you tick a box.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<?php if ( $looks && ! $any_on ) : ?>
@@ -808,7 +812,7 @@ class TSOSK_Mod_Staging {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Recent emails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Stored as JSON under the plugin uploads folder (not in the public media library listing). The last 100 messages are kept. Full HTML bodies are not stored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Stored in the WordPress database for administrators only (not as a public file under uploads). The last 100 messages are kept. Full HTML bodies are not stored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php if ( empty( $log ) ) : ?>
 				<p><?php esc_html_e( 'No emails recorded yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>

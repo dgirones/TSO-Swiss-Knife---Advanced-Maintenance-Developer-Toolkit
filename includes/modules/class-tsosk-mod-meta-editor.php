@@ -410,12 +410,43 @@ class TSOSK_Mod_Meta_Editor {
 			if ( ! get_userdata( $object_id ) ) {
 				wp_send_json_error( __( 'User not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
-			add_user_meta( $object_id, $key, $value, false );
+			// Already-serialized strings must bypass add_*_meta (core maybe_serialize would double-encode).
+			if ( is_serialized( $value ) ) {
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->insert(
+					$wpdb->usermeta,
+					array(
+						'user_id'    => $object_id,
+						'meta_key'   => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- INSERT by object_id, not a meta_key scan.
+						'meta_value' => $value, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- INSERT value as provided by admin.
+					),
+					array( '%d', '%s', '%s' )
+				);
+				wp_cache_delete( $object_id, 'user_meta' );
+			} else {
+				add_user_meta( $object_id, $key, $value, false );
+			}
 		} else {
 			if ( ! get_post( $object_id ) ) {
 				wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
-			add_post_meta( $object_id, $key, $value, false );
+			if ( is_serialized( $value ) ) {
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->insert(
+					$wpdb->postmeta,
+					array(
+						'post_id'    => $object_id,
+						'meta_key'   => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- INSERT by object_id, not a meta_key scan.
+						'meta_value' => $value, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- INSERT value as provided by admin.
+					),
+					array( '%d', '%s', '%s' )
+				);
+				wp_cache_delete( $object_id, 'post_meta' );
+			} else {
+				add_post_meta( $object_id, $key, $value, false );
+			}
 		}
 
 		TSOSK_Activity_Log::log(

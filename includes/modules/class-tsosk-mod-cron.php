@@ -827,27 +827,32 @@ class TSOSK_Mod_Cron {
 	 * @return bool
 	 */
 	private function is_core_hook( string $hook ): bool {
-		$core = array(
-			'wp_scheduled_delete', 'wp_update_themes', 'wp_update_plugins',
-			'wp_version_check', 'wp_scheduled_auto_draft_delete',
-			'delete_expired_transients', 'recovery_mode_clean_expired_keys',
-			'wp_privacy_delete_old_export_files', 'wp_site_health_scheduled_check',
-			'wp_https_detection', 'wp_update_user_counts',
-			'wp_update_comment_type', 'wp_delete_temp_updater_backups',
-			'wp_scheduled_purge_all_comments', 'wp_scheduled_comment_purge',
-			'wp_maybe_auto_update', 'wp_split_shared_term_batch',
-			'wp_network_dashboard_setup', 'do_pings', 'publish_future_post',
-			'recovery_mode_clean_expired_keys', 'wp_scheduled_auto_draft_delete',
-		);
-		if ( in_array( $hook, $core, true ) ) {
-			return true;
+		static $core = null;
+		if ( null === $core ) {
+			$core = array(
+				'do_pings'                           => true,
+				'delete_expired_transients'          => true,
+				'publish_future_post'                => true,
+				'recovery_mode_clean_expired_keys'   => true,
+				'wp_delete_temp_updater_backups'     => true,
+				'wp_https_detection'                 => true,
+				'wp_maybe_auto_update'               => true,
+				'wp_network_dashboard_setup'         => true,
+				'wp_privacy_delete_old_export_files' => true,
+				'wp_scheduled_auto_draft_delete'     => true,
+				'wp_scheduled_comment_purge'         => true,
+				'wp_scheduled_delete'                => true,
+				'wp_scheduled_purge_all_comments'    => true,
+				'wp_site_health_scheduled_check'     => true,
+				'wp_split_shared_term_batch'         => true,
+				'wp_update_comment_type'             => true,
+				'wp_update_plugins'                  => true,
+				'wp_update_themes'                   => true,
+				'wp_update_user_counts'              => true,
+				'wp_version_check'                   => true,
+			);
 		}
-		return 0 === strpos( $hook, 'wp_' ) && (
-			false !== strpos( $hook, '_delete' )
-			|| false !== strpos( $hook, '_cleanup' )
-			|| false !== strpos( $hook, '_purge' )
-			|| false !== strpos( $hook, '_check' )
-		);
+		return isset( $core[ $hook ] );
 	}
 
 	/**

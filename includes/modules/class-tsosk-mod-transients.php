@@ -120,7 +120,8 @@ class TSOSK_Mod_Transients {
 			return $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT meta_key FROM {$wpdb->sitemeta}
-					 WHERE meta_key LIKE %s AND CAST(meta_value AS UNSIGNED) < %d",
+					 WHERE site_id = %d AND meta_key LIKE %s AND CAST(meta_value AS UNSIGNED) < %d",
+					(int) $wpdb->siteid,
 					$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
 					$now
 				)
@@ -151,7 +152,8 @@ class TSOSK_Mod_Transients {
 			return $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT meta_key FROM {$wpdb->sitemeta}
-					 WHERE meta_key LIKE %s AND meta_key NOT LIKE %s",
+					 WHERE site_id = %d AND meta_key LIKE %s AND meta_key NOT LIKE %s",
+					(int) $wpdb->siteid,
 					$wpdb->esc_like( '_site_transient_' ) . '%',
 					$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
 				)

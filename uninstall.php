@@ -161,8 +161,8 @@ foreach ( array_unique( $tsosk_upload_targets ) as $tsosk_upload_dir ) {
 	$tsosk_delete_uploads_tree( $tsosk_upload_dir );
 }
 
-// Remove login-protection rewrite rules from the stored rules option.
-flush_rewrite_rules( false );
+// Force rewrite regeneration on the next request (plugin code is not loaded during uninstall).
+delete_option( 'rewrite_rules' );
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 

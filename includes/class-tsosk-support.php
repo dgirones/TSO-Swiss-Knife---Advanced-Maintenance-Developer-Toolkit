@@ -150,7 +150,7 @@ class TSOSK_Support {
 			return '';
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Same caller; value is sanitized below.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended -- Raw GET cleaned with wp_check_invalid_utf8 + null-byte strip, then sanitize_text_field below (Search & Replace / URL Doctor prefill callers).
 		$raw = wp_unslash( $_GET[ $key ] );
 		if ( ! is_string( $raw ) ) {
 			if ( is_scalar( $raw ) || null === $raw ) {
