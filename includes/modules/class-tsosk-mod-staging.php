@@ -77,10 +77,14 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
-	 * @param array<string, bool|string|int> $robots Robots directives.
-	 * @return array<string, bool|string|int>
+	 * @param mixed $robots Robots directives from wp_robots (must stay untyped; other plugins may pass non-arrays).
+	 * @return mixed
 	 */
-	public function filter_wp_robots_noindex( array $robots ): array {
+	public function filter_wp_robots_noindex( $robots ) {
+		if ( ! is_array( $robots ) ) {
+			return $robots;
+		}
+		unset( $robots['index'] );
 		$robots['noindex'] = true;
 		return $robots;
 	}
@@ -89,19 +93,21 @@ class TSOSK_Mod_Staging {
 	 * @param mixed $enabled Whether sitemaps are enabled.
 	 * @return bool
 	 */
-	public function filter_sitemaps_off( $enabled ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+	public function filter_sitemaps_off( $enabled ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $enabled );
 		return false;
 	}
 
 	/**
-	 * @param string $output robots.txt body.
-	 * @param mixed  $public blog_public value (unused).
-	 * @return string
+	 * @param mixed $output robots.txt body.
+	 * @param mixed $public blog_public value (unused).
+	 * @return mixed
 	 */
-	public function filter_robots_txt( $output, $public ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+	public function filter_robots_txt( $output, $public ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $public );
-		$output = is_string( $output ) ? $output : '';
+		if ( ! is_string( $output ) ) {
+			return $output;
+		}
 		$marker = '# TSO Swiss Knife Staging Mode';
 		if ( false !== strpos( $output, $marker ) ) {
 			return $output;
@@ -112,10 +118,13 @@ class TSOSK_Mod_Staging {
 	/**
 	 * Merge noindex into X-Robots-Tag instead of replacing other plugins' values.
 	 *
-	 * @param array<string, string> $headers Response headers.
-	 * @return array<string, string>
+	 * @param mixed $headers Response headers (untyped: wp_headers is loosely typed).
+	 * @return mixed
 	 */
-	public function filter_robots_header( array $headers ): array {
+	public function filter_robots_header( $headers ) {
+		if ( ! is_array( $headers ) ) {
+			return $headers;
+		}
 		$existing = '';
 		foreach ( $headers as $name => $value ) {
 			if ( 0 === strcasecmp( (string) $name, 'X-Robots-Tag' ) ) {
@@ -320,7 +329,10 @@ class TSOSK_Mod_Staging {
 	 */
 	public static function build_mail_entry( array $atts, bool $blocked ): array {
 		$subject = isset( $atts['subject'] ) ? sanitize_text_field( (string) $atts['subject'] ) : '';
-		$message = isset( $atts['message'] ) ? (string) $atts['message'] : '';
+		$message = '';
+		if ( isset( $atts['message'] ) && ( is_string( $atts['message'] ) || is_numeric( $atts['message'] ) ) ) {
+			$message = (string) $atts['message'];
+		}
 		$excerpt = wp_strip_all_tags( $message );
 		$excerpt = html_entity_decode( $excerpt, ENT_QUOTES, 'UTF-8' );
 		$excerpt = preg_replace( '/\s+/', ' ', $excerpt );
