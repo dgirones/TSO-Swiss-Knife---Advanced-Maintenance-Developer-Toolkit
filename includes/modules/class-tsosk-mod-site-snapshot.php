@@ -51,6 +51,7 @@ class TSOSK_Mod_Site_Snapshot {
 			'disabled_image_sizes' => 'tsosk_disabled_image_sizes',
 			'fi_ignored'           => 'tsosk_fi_ignored',
 			'comment_antispam'     => 'tsosk_comment_antispam',
+			'staging'              => 'tsosk_staging_settings',
 		);
 	}
 
@@ -104,6 +105,7 @@ class TSOSK_Mod_Site_Snapshot {
 			'disabled_image_sizes' => __( 'Disabled image sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'fi_ignored'           => __( 'File integrity ignored files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'comment_antispam'     => __( 'Comment Anti-Spam settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'staging'              => __( 'Staging Mode settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -402,6 +404,8 @@ class TSOSK_Mod_Site_Snapshot {
 				return $this->sanitize_string_list_import( $value, 'fi_ignored' === $section ? 500 : 50 );
 			case 'comment_antispam':
 				return $this->sanitize_comment_antispam_import( $value );
+			case 'staging':
+				return $this->sanitize_staging_import( $value );
 			default:
 				return new WP_Error(
 					'unknown_section',
@@ -953,6 +957,25 @@ class TSOSK_Mod_Site_Snapshot {
 				}
 				return '';
 			}
+		);
+	}
+
+	/**
+	 * @param mixed $value Raw staging settings.
+	 * @return array|WP_Error
+	 */
+	private function sanitize_staging_import( $value ) {
+		if ( ! is_array( $value ) ) {
+			return new WP_Error( 'invalid_staging', __( 'Staging Mode section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( class_exists( 'TSOSK_Mod_Staging' ) ) {
+			return TSOSK_Mod_Staging::sanitize_settings( $value );
+		}
+		return array(
+			'show_badge'       => ! empty( $value['show_badge'] ),
+			'hide_from_search' => ! empty( $value['hide_from_search'] ),
+			'block_mail'       => ! empty( $value['block_mail'] ),
+			'log_mail'         => ! empty( $value['log_mail'] ),
 		);
 	}
 

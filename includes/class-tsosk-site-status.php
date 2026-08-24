@@ -45,6 +45,9 @@ class TSOSK_Site_Status {
 			'content-audit'    => 'broken shortcodes shortcode rotos roto empty title auditoria contenido imagen destacada',
 			'slug-manager'     => 'slug permalink url rename slugs gestor slugs enlaces permanentes',
 			'history'          => 'activity history log historial actividad cambios registro',
+			'staging'          => 'staging test copy mail log noindex staging mode prova correus',
+			'url-doctor'       => 'https www ssl siteurl home url doctor cadenat migracio',
+			'runtime-stack'    => 'php memory dropin mu-plugins redis object cache limits servidor',
 		);
 	}
 
@@ -153,6 +156,14 @@ class TSOSK_Site_Status {
 				'label' => __( 'Custom 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'info',
 				'tab'   => $tab_url( 'custom-404' ),
+			);
+		}
+
+		if ( class_exists( 'TSOSK_Mod_Staging' ) && TSOSK_Mod_Staging::is_any_feature_on() ) {
+			$badges[] = array(
+				'label' => __( 'Staging', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'type'  => 'warn',
+				'tab'   => $tab_url( 'staging' ),
 			);
 		}
 

@@ -51,6 +51,7 @@ $tsosk_options = array(
 	'tsosk_login_history',
 	'tsosk_disabled_image_sizes',
 	'tsosk_health_suppress',
+	'tsosk_staging_settings',
 );
 
 foreach ( $tsosk_options as $tsosk_option ) {
@@ -68,6 +69,7 @@ $tsosk_transients = array(
 	'tsosk_media_full_review_state',
 	'tsosk_sq_log_lock',
 	'tsosk_health_security_headers_check',
+	'tsosk_url_doctor_probe',
 );
 
 foreach ( $tsosk_transients as $tsosk_transient ) {

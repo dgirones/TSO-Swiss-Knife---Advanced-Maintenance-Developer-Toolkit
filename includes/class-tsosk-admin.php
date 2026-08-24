@@ -188,6 +188,9 @@ class TSOSK_Admin {
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'confirm_clear_mail_log' => __( 'Clear the staging mail log? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'ok_label'        => __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'needs_attention' => __( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'running'         => __( 'Running…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'done'            => __( 'Done!', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'error'           => __( 'Error. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -760,6 +763,9 @@ class TSOSK_Admin {
 			'health'          => 'site',
 			'admin-menu'      => 'site',
 			'history'         => 'site',
+			'staging'         => 'site',
+			'url-doctor'      => 'content',
+			'runtime-stack'   => 'development',
 		);
 	}
 
@@ -982,6 +988,21 @@ class TSOSK_Admin {
 				'label' => __( 'Email Diagnostics', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-email-alt',
 				'class' => 'TSOSK_Mod_Email',
+			),
+			'staging'    => array(
+				'label' => __( 'Staging Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-flag',
+				'class' => 'TSOSK_Mod_Staging',
+			),
+			'url-doctor' => array(
+				'label' => __( 'URL & HTTPS Doctor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-admin-site-alt3',
+				'class' => 'TSOSK_Mod_Url_Doctor',
+			),
+			'runtime-stack' => array(
+				'label' => __( 'Server & Runtime', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-dashboard',
+				'class' => 'TSOSK_Mod_Runtime_Stack',
 			),
 			'content-audit' => array(
 				'label' => __( 'Content Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

@@ -5793,4 +5793,105 @@
 		} );
 	} );
 
+	// ── Staging Mode ───────────────────────────────────────────────────────
+
+	$( document ).on( 'click', '#tsosk-staging-save', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-staging-msg' );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_staging_save',
+			data   : {
+				nonce            : nonce,
+				show_badge       : $( '#tsosk-staging-show-badge' ).is( ':checked' ) ? 1 : 0,
+				hide_from_search : $( '#tsosk-staging-hide-search' ).is( ':checked' ) ? 1 : 0,
+				block_mail       : $( '#tsosk-staging-block-mail' ).is( ':checked' ) ? 1 : 0,
+				log_mail         : $( '#tsosk-staging-log-mail' ).is( ':checked' ) ? 1 : 0
+			},
+			success: function ( r ) {
+				var text = r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error );
+				showMsg( $msg, text, r.success ? 'ok' : 'error' );
+				if ( r.success ) {
+					setTimeout( function () { window.location.reload(); }, 500 );
+					return;
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-staging-clear-log', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-staging-msg' );
+		var confirmMsg = ( tsosk.i18n && tsosk.i18n.confirm_clear_mail_log ) ? tsosk.i18n.confirm_clear_mail_log : tsosk.i18n.confirm_purge;
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_staging_clear_mail_log',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				var text = r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error );
+				showMsg( $msg, text, r.success ? 'ok' : 'error' );
+				if ( r.success ) {
+					$( '#tsosk-staging-mail-log tbody' ).empty();
+					setTimeout( function () { window.location.reload(); }, 600 );
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	// ── URL & HTTPS Doctor ─────────────────────────────────────────────────
+
+	$( document ).on( 'click', '#tsosk-url-doctor-probe', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-url-doctor-msg' );
+		var $box  = $( '#tsosk-url-doctor-probe-result' );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_url_doctor_probe',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				$btn.prop( 'disabled', false );
+				if ( ! r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					return;
+				}
+				var data = r.data || {};
+				var $p = $( '<p/>' );
+				var okText = ( tsosk.i18n && tsosk.i18n.ok_label ) ? tsosk.i18n.ok_label : 'OK';
+				var warnText = ( tsosk.i18n && tsosk.i18n.needs_attention ) ? tsosk.i18n.needs_attention : '!';
+				var $badge = $( '<span/>' )
+					.addClass( data.ok ? 'tsosk-badge tsosk-badge-ok' : 'tsosk-badge tsosk-badge-warn' )
+					.text( data.ok ? okText : warnText );
+				$p.append( $badge ).append( document.createTextNode( ' ' + ( data.message || '' ) ) );
+				if ( data.final_url ) {
+					$p.append( document.createElement( 'br' ) );
+					$p.append( $( '<code/>' ).text( String( data.final_url ) ) );
+				}
+				$box.empty().append( $p );
+				showMsg( $msg, tsosk.i18n.done, 'ok' );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
 } )( jQuery );

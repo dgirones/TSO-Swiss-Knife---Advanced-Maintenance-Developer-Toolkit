@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.0.5' );
+define( 'TSOSK_VERSION',  '1.0.6' );
 define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
@@ -283,6 +283,9 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-update-manager',
 	'includes/modules/class-tsosk-mod-admin-menu',
 	'includes/modules/class-tsosk-mod-history',
+	'includes/modules/class-tsosk-mod-staging',
+	'includes/modules/class-tsosk-mod-url-doctor',
+	'includes/modules/class-tsosk-mod-runtime-stack',
 );
 
 foreach ( $tsosk_includes as $tsosk_file ) {
@@ -298,6 +301,7 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
+add_action( 'plugins_loaded', 'tsosk_boot_staging_runtime', 1 );
 add_action( 'plugins_loaded', 'tsosk_init' );
 
 /**
@@ -332,6 +336,15 @@ function tsosk_bootstrap_sandbox(): void {
 }
 
 /**
+ * Staging mail/robots filters must run before other plugins_loaded callbacks at priority 10.
+ */
+function tsosk_boot_staging_runtime(): void {
+	if ( class_exists( 'TSOSK_Mod_Staging' ) ) {
+		TSOSK_Mod_Staging::get_instance()->init();
+	}
+}
+
+/**
  * Initialise all plugin modules.
  * Modules that need early hooks (heartbeat, REST, maintenance) init first.
  */
@@ -358,6 +371,7 @@ function tsosk_init() {
 		'TSOSK_Mod_Users',
 		'TSOSK_Mod_Admin_Menu',
 		'TSOSK_Mod_Slow_Queries',
+		'TSOSK_Mod_Staging',
 	);
 
 	foreach ( $tsosk_runtime_modules as $tsosk_class ) {
@@ -420,6 +434,9 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Slug_Manager',
 		'TSOSK_Mod_Admin_Menu',
 		'TSOSK_Mod_History',
+		'TSOSK_Mod_Staging',
+		'TSOSK_Mod_Url_Doctor',
+		'TSOSK_Mod_Runtime_Stack',
 	);
 
 	foreach ( $tsosk_admin_modules as $tsosk_class ) {

@@ -94,6 +94,9 @@ class TSOSK_Activity_Log {
 			'media-footprint',
 			'image-sizes-audit',
 			'email',
+			'staging',
+			'url-doctor',
+			'runtime-stack',
 		);
 	}
 
@@ -234,6 +237,9 @@ class TSOSK_Activity_Log {
 			'media-footprint'   => __( 'Uploads Disk Footprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'image-sizes-audit' => __( 'Image Sizes Audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'email'             => __( 'Email Diagnostics', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'staging'           => __( 'Staging Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'url-doctor'        => __( 'URL & HTTPS Doctor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'runtime-stack'     => __( 'Server & Runtime', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$module = sanitize_key( $module );
@@ -344,6 +350,12 @@ class TSOSK_Activity_Log {
 			},
 			'/^Site Health suppression settings saved\.$/' => static function (): string {
 				return __( 'Site Health suppression settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			},
+			'/^Staging Mode settings saved\.$/' => static function (): string {
+				return __( 'Staging Mode settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			},
+			'/^Staging mail log cleared\.$/' => static function (): string {
+				return __( 'Staging mail log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^Debug log shrunk to last 500 lines \(archive: (.+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
