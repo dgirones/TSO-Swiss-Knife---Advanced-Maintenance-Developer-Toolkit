@@ -26,14 +26,12 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Meta Editor** — Browse and edit post and user meta with type-aware validation.
 * **Option Library** — Save named option presets and re-apply them across environments.
 * **Export/Import TSO Configuration** — Back up and restore plugin settings and module preferences as JSON.
-* **TSO Link Inspector** — In-plugin promo for the free [TSO Link Inspector](https://wordpress.org/plugins/tso-link-inspector/) companion plugin (broken-link scanner and fixer on WordPress.org).
 * **Transients** — Filter by status and purge expired or all transients in bulk.
 * **WP Constants** — Read-only overview of relevant constants grouped by category.
 * **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, and shortcodes.
 * **REST API Controls** — Disable anonymous REST API access or block individual namespaces.
 * **Heartbeat Controls** — Set Heartbeat mode (default / disable frontend / disable editor / disable all) and interval.
 * **Update Manager** — Review pending core, plugin, and theme updates, optionally block update checks (staging), and control update email notifications.
-* **TSO Options & Tables Cleaner** — In-plugin promo for the free [TSO Options & Tables Cleaner](https://wordpress.org/plugins/tso-options-tables-cleaner/) companion plugin (database cleanup, orphan options, backups, and table optimization on WordPress.org).
 * **Slow Query Monitor** — Log slow database queries when SAVEQUERIES is enabled, inspect live queries for the current request, export CSV/JSON, and open a summary from the admin bar.
 * **Search & Replace** — Run dry-run or live serialized-safe search and replace across database tables.
 * **Hooks Inspector** — Browse the live `$wp_filter` global, with callback details and a real-time search filter.
