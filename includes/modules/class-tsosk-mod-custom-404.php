@@ -506,6 +506,11 @@ class TSOSK_Mod_Custom_404 {
 			TSOSK_VERSION,
 			true
 		);
+		wp_set_script_translations(
+			'tsosk-block-404-url',
+			TSOSK_TEXT_DOMAIN,
+			TSOSK_PATH . 'languages'
+		);
 
 		register_block_type(
 			'tsosk/404-url',

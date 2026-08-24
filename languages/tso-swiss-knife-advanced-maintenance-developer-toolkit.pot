@@ -3,13 +3,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit 1.0.6\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workspace\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-24T13:15:02+00:00\n"
+"POT-Creation-Date: 2026-08-24T13:55:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
@@ -373,12 +373,12 @@ msgid "Site Health suppression settings saved."
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:355
-#: includes/modules/class-tsosk-mod-staging.php:227
+#: includes/modules/class-tsosk-mod-staging.php:236
 msgid "Staging Mode settings saved."
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:358
-#: includes/modules/class-tsosk-mod-staging.php:241
+#: includes/modules/class-tsosk-mod-staging.php:250
 msgid "Staging mail log cleared."
 msgstr ""
 
@@ -476,7 +476,7 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-cron.php:878
 #: includes/modules/class-tsosk-mod-cron.php:881
 #: includes/modules/class-tsosk-mod-heartbeat.php:149
-#: includes/modules/class-tsosk-mod-runtime-stack.php:302
+#: includes/modules/class-tsosk-mod-runtime-stack.php:310
 #: includes/modules/class-tsosk-mod-security.php:360
 #: includes/modules/class-tsosk-mod-security.php:369
 #: includes/modules/class-tsosk-mod-url-doctor.php:480
@@ -485,7 +485,7 @@ msgid "OK"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:193
-#: includes/modules/class-tsosk-mod-runtime-stack.php:315
+#: includes/modules/class-tsosk-mod-runtime-stack.php:323
 #: includes/modules/class-tsosk-mod-url-doctor.php:480
 msgid "Needs attention"
 msgstr ""
@@ -1014,7 +1014,7 @@ msgstr ""
 
 #: includes/class-tsosk-admin.php:319
 #: includes/modules/class-tsosk-mod-health.php:381
-#: includes/modules/class-tsosk-mod-runtime-stack.php:225
+#: includes/modules/class-tsosk-mod-runtime-stack.php:233
 msgid "PHP version"
 msgstr ""
 
@@ -1155,12 +1155,12 @@ msgid "Disable dev mode"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:353
-#: includes/modules/class-tsosk-mod-custom-404.php:606
+#: includes/modules/class-tsosk-mod-custom-404.php:611
 msgid "Custom 404 active"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:354
-#: includes/modules/class-tsosk-mod-custom-404.php:607
+#: includes/modules/class-tsosk-mod-custom-404.php:612
 msgid "Using theme default 404"
 msgstr ""
 
@@ -1230,7 +1230,7 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-cron.php:87
 #: includes/modules/class-tsosk-mod-cron.php:128
 #: includes/modules/class-tsosk-mod-custom-404.php:386
-#: includes/modules/class-tsosk-mod-custom-404.php:542
+#: includes/modules/class-tsosk-mod-custom-404.php:547
 #: includes/modules/class-tsosk-mod-debug.php:267
 #: includes/modules/class-tsosk-mod-debug.php:352
 #: includes/modules/class-tsosk-mod-debug.php:555
@@ -1301,8 +1301,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-slug-manager.php:162
 #: includes/modules/class-tsosk-mod-slug-manager.php:197
 #: includes/modules/class-tsosk-mod-slug-manager.php:405
-#: includes/modules/class-tsosk-mod-staging.php:214
-#: includes/modules/class-tsosk-mod-staging.php:237
+#: includes/modules/class-tsosk-mod-staging.php:223
+#: includes/modules/class-tsosk-mod-staging.php:246
 #: includes/modules/class-tsosk-mod-transients.php:114
 #: includes/modules/class-tsosk-mod-transients.php:137
 #: includes/modules/class-tsosk-mod-transients.php:199
@@ -2620,8 +2620,8 @@ msgid "Clear log"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2314
-#: includes/modules/class-tsosk-mod-custom-404.php:752
-#: includes/modules/class-tsosk-mod-staging.php:447
+#: includes/modules/class-tsosk-mod-custom-404.php:757
+#: includes/modules/class-tsosk-mod-staging.php:459
 msgid "Save settings"
 msgstr ""
 
@@ -2718,15 +2718,15 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:194
 #: includes/modules/class-tsosk-mod-internals.php:145
-#: includes/modules/class-tsosk-mod-runtime-stack.php:346
-#: includes/modules/class-tsosk-mod-runtime-stack.php:391
+#: includes/modules/class-tsosk-mod-runtime-stack.php:354
+#: includes/modules/class-tsosk-mod-runtime-stack.php:399
 msgid "Yes"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:196
 #: includes/modules/class-tsosk-mod-internals.php:145
-#: includes/modules/class-tsosk-mod-runtime-stack.php:394
+#: includes/modules/class-tsosk-mod-runtime-stack.php:402
 msgid "No"
 msgstr ""
 
@@ -3011,7 +3011,7 @@ msgid "No shortcodes detected in the sampled content."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:182
-#: includes/modules/class-tsosk-mod-custom-404.php:722
+#: includes/modules/class-tsosk-mod-custom-404.php:727
 msgid "Shortcode"
 msgstr ""
 
@@ -3308,7 +3308,7 @@ msgid "All scheduled hooks have callbacks loaded."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-custom-404.php:286
-#: includes/modules/class-tsosk-mod-custom-404.php:600
+#: includes/modules/class-tsosk-mod-custom-404.php:605
 msgid "404 Page"
 msgstr ""
 
@@ -3334,130 +3334,130 @@ msgstr ""
 msgid "Page not found."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:547
+#: includes/modules/class-tsosk-mod-custom-404.php:552
 msgid "Select a valid page."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:550
+#: includes/modules/class-tsosk-mod-custom-404.php:555
 msgid "The selected page must be published."
 msgstr ""
 
 #. translators: %d: page ID
-#: includes/modules/class-tsosk-mod-custom-404.php:569
+#: includes/modules/class-tsosk-mod-custom-404.php:574
 #, php-format
 msgid "Custom 404 page set (page ID %d)."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:572
+#: includes/modules/class-tsosk-mod-custom-404.php:577
 msgid "Custom 404 page cleared (theme default)."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:576
+#: includes/modules/class-tsosk-mod-custom-404.php:581
 msgid "Custom 404 settings saved."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:596
+#: includes/modules/class-tsosk-mod-custom-404.php:601
 msgid "Create a custom 404 page like any normal page, then select it here. Visitors see your page content while the server still returns a real 404 code (no redirect). Search engines are told the URL does not exist."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:613
+#: includes/modules/class-tsosk-mod-custom-404.php:618
 msgid "Select page"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:621
+#: includes/modules/class-tsosk-mod-custom-404.php:626
 msgid "— None (theme default) —"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:630
+#: includes/modules/class-tsosk-mod-custom-404.php:635
 msgid "Create the page under Pages → Add New, then pick it here. Permalinks must not be set to “Plain”."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:636
+#: includes/modules/class-tsosk-mod-custom-404.php:641
 msgid "Edit page"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:640
+#: includes/modules/class-tsosk-mod-custom-404.php:645
 msgid "View page"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:644
+#: includes/modules/class-tsosk-mod-custom-404.php:649
 msgid "Test 404 response"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:651
+#: includes/modules/class-tsosk-mod-custom-404.php:656
 #: includes/modules/class-tsosk-mod-search-replace.php:948
 msgid "Options"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:653
+#: includes/modules/class-tsosk-mod-custom-404.php:658
 msgid "Each option below is optional. The short explanations tell you what changes on your site when you tick the box."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:659
+#: includes/modules/class-tsosk-mod-custom-404.php:664
 msgid "Hide 404 page from front-end search results"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:662
+#: includes/modules/class-tsosk-mod-custom-404.php:667
 msgid "When a visitor searches your site, this page will not appear in the results. That way people only see it when they hit a broken link, not when they look for normal content."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:669
+#: includes/modules/class-tsosk-mod-custom-404.php:674
 msgid "Hide 404 page from the Pages list in admin"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:672
+#: includes/modules/class-tsosk-mod-custom-404.php:677
 msgid "The page still exists and works as your 404, but it disappears from Pages → All Pages so you are less likely to delete or edit it by mistake."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:679
+#: includes/modules/class-tsosk-mod-custom-404.php:684
 msgid "Return 404 when the 404 page URL is opened directly"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:682
+#: includes/modules/class-tsosk-mod-custom-404.php:687
 msgid "If someone types the 404 page address in the browser (instead of landing on it from a bad link), they still get a “not found” response. Recommended: leave this on."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:689
+#: includes/modules/class-tsosk-mod-custom-404.php:694
 msgid "Disable WordPress URL autocorrection guessing on 404"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:692
+#: includes/modules/class-tsosk-mod-custom-404.php:697
 msgid "WordPress can redirect a wrong URL to a similar page it thinks you meant. Enable this to turn off that guess and always show your custom 404 page instead."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:699
+#: includes/modules/class-tsosk-mod-custom-404.php:704
 msgid "Send HTTP 410 (Gone) instead of 404"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:702
+#: includes/modules/class-tsosk-mod-custom-404.php:707
 msgid "Your custom 404 page still appears exactly the same for visitors. Only the hidden HTTP code changes: 410 instead of 404. Use 410 when you removed content on purpose and want search engines to drop those URLs faster. For normal broken links, leave this off and keep 404."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:708
+#: includes/modules/class-tsosk-mod-custom-404.php:713
 msgid "Show the failed URL on the page"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:710
+#: includes/modules/class-tsosk-mod-custom-404.php:715
 msgid "Add one of these inside your 404 page content to display the URL that caused the error."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:713
+#: includes/modules/class-tsosk-mod-custom-404.php:718
 msgid "Open Pages and edit your selected 404 page."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:714
+#: includes/modules/class-tsosk-mod-custom-404.php:719
 msgid "In the block editor: click + → search “URL causing 404 error” (TSO Swiss Knife) and insert the block where you want the link shown."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:715
+#: includes/modules/class-tsosk-mod-custom-404.php:720
 msgid "Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url]."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:716
+#: includes/modules/class-tsosk-mod-custom-404.php:721
 msgid "Save the page. On a real 404, visitors see the broken URL they requested."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:721
+#: includes/modules/class-tsosk-mod-custom-404.php:726
 #: includes/modules/class-tsosk-mod-media-footprint.php:227
 #: includes/modules/class-tsosk-mod-meta-editor.php:551
 #: includes/modules/class-tsosk-mod-options-editor.php:917
@@ -3467,34 +3467,34 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:723
+#: includes/modules/class-tsosk-mod-custom-404.php:728
 msgid "Example output"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:728
+#: includes/modules/class-tsosk-mod-custom-404.php:733
 #: assets/js/tsosk-block-404-url.js:26
 msgid "Full URL"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:729
+#: includes/modules/class-tsosk-mod-custom-404.php:734
 msgid "or"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:733
+#: includes/modules/class-tsosk-mod-custom-404.php:738
 #: assets/js/tsosk-block-404-url.js:27
 msgid "Path only"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:738
+#: includes/modules/class-tsosk-mod-custom-404.php:743
 #: assets/js/tsosk-block-404-url.js:28
 msgid "Domain + path"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:745
+#: includes/modules/class-tsosk-mod-custom-404.php:750
 msgid "Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife)."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:757
+#: includes/modules/class-tsosk-mod-custom-404.php:762
 msgid "Preview 404 page"
 msgstr ""
 
@@ -3871,7 +3871,7 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-media-footprint.php:201
 #: includes/modules/class-tsosk-mod-media-footprint.php:226
 #: includes/modules/class-tsosk-mod-options-editor.php:912
-#: includes/modules/class-tsosk-mod-runtime-stack.php:417
+#: includes/modules/class-tsosk-mod-runtime-stack.php:425
 #: includes/modules/class-tsosk-mod-server-files.php:800
 #: includes/modules/class-tsosk-mod-transients.php:302
 msgid "Size"
@@ -4099,7 +4099,7 @@ msgid "CC"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-email.php:413
-#: includes/modules/class-tsosk-mod-staging.php:466
+#: includes/modules/class-tsosk-mod-staging.php:478
 msgid "Subject"
 msgstr ""
 
@@ -4258,8 +4258,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-file-integrity.php:1070
 #: includes/modules/class-tsosk-mod-file-integrity.php:1105
 #: includes/modules/class-tsosk-mod-media-cleaner.php:827
-#: includes/modules/class-tsosk-mod-runtime-stack.php:378
-#: includes/modules/class-tsosk-mod-runtime-stack.php:416
+#: includes/modules/class-tsosk-mod-runtime-stack.php:386
+#: includes/modules/class-tsosk-mod-runtime-stack.php:424
 msgid "File"
 msgstr ""
 
@@ -5118,13 +5118,13 @@ msgid "Registered image sizes"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:262
-#: includes/modules/class-tsosk-mod-runtime-stack.php:272
+#: includes/modules/class-tsosk-mod-runtime-stack.php:280
 msgid "On"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:263
 #: includes/modules/class-tsosk-mod-internals.php:67
-#: includes/modules/class-tsosk-mod-runtime-stack.php:415
+#: includes/modules/class-tsosk-mod-runtime-stack.php:423
 msgid "Name"
 msgstr ""
 
@@ -5638,7 +5638,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:247
 #: includes/modules/class-tsosk-mod-slow-queries.php:1216
-#: includes/modules/class-tsosk-mod-staging.php:228
+#: includes/modules/class-tsosk-mod-staging.php:237
 msgid "Settings saved."
 msgstr ""
 
@@ -7517,154 +7517,154 @@ msgstr ""
 msgid "Select a role and click Load capabilities."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:218
+#: includes/modules/class-tsosk-mod-runtime-stack.php:226
 msgid "A snapshot of what sits under WordPress on this server: extra cache files, must-use plugins that always load, and PHP limits that explain failed uploads or timeouts. Nothing here is changed."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:222
+#: includes/modules/class-tsosk-mod-runtime-stack.php:230
 msgid "PHP and hosting limits"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:229
+#: includes/modules/class-tsosk-mod-runtime-stack.php:237
 msgid "Memory PHP may use"
 msgstr ""
 
 #. translators: %s: WP_MEMORY_LIMIT value
-#: includes/modules/class-tsosk-mod-runtime-stack.php:238
+#: includes/modules/class-tsosk-mod-runtime-stack.php:246
 #, php-format
 msgid "WordPress asks for %s."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:248
+#: includes/modules/class-tsosk-mod-runtime-stack.php:256
 msgid "Largest file you can upload"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:252
+#: includes/modules/class-tsosk-mod-runtime-stack.php:260
 msgid "Largest form WordPress can receive"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:256
+#: includes/modules/class-tsosk-mod-runtime-stack.php:264
 msgid "post_max_size is smaller than upload_max_filesize, so large uploads can fail even when the file-size limit looks high enough."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:261
+#: includes/modules/class-tsosk-mod-runtime-stack.php:269
 msgid "Seconds a request may run"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:265
+#: includes/modules/class-tsosk-mod-runtime-stack.php:273
 msgid "Form fields allowed in one request"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:269
+#: includes/modules/class-tsosk-mod-runtime-stack.php:277
 msgid "PHP accelerator (OPcache)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:274
+#: includes/modules/class-tsosk-mod-runtime-stack.php:282
 msgid "Off or unknown"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:279
+#: includes/modules/class-tsosk-mod-runtime-stack.php:287
 msgid "Temporary folder"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:283
+#: includes/modules/class-tsosk-mod-runtime-stack.php:291
 msgid "Writable"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:285
+#: includes/modules/class-tsosk-mod-runtime-stack.php:293
 msgid "Not writable"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:290
+#: includes/modules/class-tsosk-mod-runtime-stack.php:298
 msgid "WordPress timezone"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:293
+#: includes/modules/class-tsosk-mod-runtime-stack.php:301
 msgid "From Settings → General. WordPress keeps PHP on UTC internally, so a PHP timezone of UTC is normal."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:297
+#: includes/modules/class-tsosk-mod-runtime-stack.php:305
 msgid "PHP vs database clock"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:300
+#: includes/modules/class-tsosk-mod-runtime-stack.php:308
 msgid "Could not read the database clock."
 msgstr ""
 
 #. translators: %d: seconds of difference
-#: includes/modules/class-tsosk-mod-runtime-stack.php:308
+#: includes/modules/class-tsosk-mod-runtime-stack.php:316
 #, php-format
 msgid "PHP and MySQL differ by %d seconds."
 msgstr ""
 
 #. translators: %d: seconds of difference
-#: includes/modules/class-tsosk-mod-runtime-stack.php:321
+#: includes/modules/class-tsosk-mod-runtime-stack.php:329
 #, php-format
 msgid "PHP and MySQL clocks differ by %d seconds. Scheduled posts and cron times can look wrong."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:332
+#: includes/modules/class-tsosk-mod-runtime-stack.php:340
 msgid "PHP functions turned off by hosting"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:340
+#: includes/modules/class-tsosk-mod-runtime-stack.php:348
 msgid "Object cache (fast database memory)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:343
+#: includes/modules/class-tsosk-mod-runtime-stack.php:351
 msgid "Persistent cache (Redis / Memcached / similar)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:348
+#: includes/modules/class-tsosk-mod-runtime-stack.php:356
 msgid "No — WordPress is using its default in-memory cache for this request."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:353
+#: includes/modules/class-tsosk-mod-runtime-stack.php:361
 msgid "Driver class"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:357
+#: includes/modules/class-tsosk-mod-runtime-stack.php:365
 msgid "object-cache.php drop-in"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:360
+#: includes/modules/class-tsosk-mod-runtime-stack.php:368
 msgid "Present"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:363
+#: includes/modules/class-tsosk-mod-runtime-stack.php:371
 msgid "Not present"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:371
+#: includes/modules/class-tsosk-mod-runtime-stack.php:379
 msgid "Drop-in files in wp-content"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:373
+#: includes/modules/class-tsosk-mod-runtime-stack.php:381
 msgid "These special files replace or extend core behaviour (cache, database, error pages). Hosting or a cache plugin often places them. They do not appear in the normal Plugins list."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:379
+#: includes/modules/class-tsosk-mod-runtime-stack.php:387
 msgid "Purpose"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:380
+#: includes/modules/class-tsosk-mod-runtime-stack.php:388
 msgid "On disk?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:381
-#: includes/modules/class-tsosk-mod-runtime-stack.php:418
+#: includes/modules/class-tsosk-mod-runtime-stack.php:389
+#: includes/modules/class-tsosk-mod-runtime-stack.php:426
 msgid "Last changed"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:405
+#: includes/modules/class-tsosk-mod-runtime-stack.php:413
 msgid "Must-use plugins (always on)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:407
+#: includes/modules/class-tsosk-mod-runtime-stack.php:415
 msgid "Files in mu-plugins load for everyone and cannot be deactivated from the Plugins screen. Hosting panels and this plugin’s Sandbox loader may appear here."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:410
+#: includes/modules/class-tsosk-mod-runtime-stack.php:418
 msgid "No must-use plugins found."
 msgstr ""
 
@@ -9284,95 +9284,95 @@ msgstr ""
 msgid "edit ↗"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:175
+#: includes/modules/class-tsosk-mod-staging.php:184
 msgid "STAGING"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:179
+#: includes/modules/class-tsosk-mod-staging.php:188
 msgid "This copy is marked as a test site. Open Staging Mode settings."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:242
+#: includes/modules/class-tsosk-mod-staging.php:251
 msgid "Mail log cleared."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:408
+#: includes/modules/class-tsosk-mod-staging.php:420
 msgid "Use this on a test copy of the site so it is obvious it is not production, so search engines skip it, and so customer emails are not sent by mistake. Everything stays off until you tick a box."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:412
+#: includes/modules/class-tsosk-mod-staging.php:424
 msgid "Turn these options off before you copy this database back to the live site. They are saved in this WordPress install."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:416
+#: includes/modules/class-tsosk-mod-staging.php:428
 msgid "Test-site options"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:419
+#: includes/modules/class-tsosk-mod-staging.php:431
 msgid "Show a red STAGING label in the admin bar"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:421
+#: includes/modules/class-tsosk-mod-staging.php:433
 msgid "Visible to administrators so nobody confuses this copy with the live site."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:426
+#: includes/modules/class-tsosk-mod-staging.php:438
 msgid "Ask search engines not to list this copy"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:428
+#: includes/modules/class-tsosk-mod-staging.php:440
 msgid "Adds noindex headers, pauses XML sitemaps, and disallows crawling in robots.txt while this option is on. It does not change Settings → Reading."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:433
+#: includes/modules/class-tsosk-mod-staging.php:445
 msgid "Do not send real emails"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:435
+#: includes/modules/class-tsosk-mod-staging.php:447
 msgid "WordPress will think the email was sent, but nothing leaves the server. A short copy is kept in the log below. Use this so a test shop does not email real customers."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:440
+#: includes/modules/class-tsosk-mod-staging.php:452
 msgid "Keep a copy of emails even when they are sent"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:442
+#: includes/modules/class-tsosk-mod-staging.php:454
 msgid "Useful on the live site when you need to see whether WordPress tried to send a message. Only administrators can read the log. Message bodies are shortened."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:454
+#: includes/modules/class-tsosk-mod-staging.php:466
 msgid "Recent emails"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:456
+#: includes/modules/class-tsosk-mod-staging.php:468
 msgid "Stored as JSON under the plugin uploads folder (not in the public media library listing). The last 100 messages are kept. Full HTML bodies are not stored."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:459
+#: includes/modules/class-tsosk-mod-staging.php:471
 msgid "No emails recorded yet."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:464
+#: includes/modules/class-tsosk-mod-staging.php:476
 msgid "When"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:465
+#: includes/modules/class-tsosk-mod-staging.php:477
 msgid "To"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:467
+#: includes/modules/class-tsosk-mod-staging.php:479
 msgid "Sent?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:483
+#: includes/modules/class-tsosk-mod-staging.php:495
 msgid "Held here"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:485
+#: includes/modules/class-tsosk-mod-staging.php:497
 msgid "Allowed to send"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:495
+#: includes/modules/class-tsosk-mod-staging.php:507
 msgid "Clear mail log"
 msgstr ""
 
