@@ -976,6 +976,7 @@ class TSOSK_Mod_Site_Snapshot {
 			'hide_from_search' => ! empty( $value['hide_from_search'] ),
 			'block_mail'       => ! empty( $value['block_mail'] ),
 			'log_mail'         => ! empty( $value['log_mail'] ),
+			'pause_cron'       => ! empty( $value['pause_cron'] ),
 		);
 	}
 
@@ -1148,6 +1149,15 @@ class TSOSK_Mod_Site_Snapshot {
 
 		<div class="tsosk-notice tsosk-notice-warn">
 			<?php esc_html_e( 'Import overwrites existing settings for the selected sections. Always export a backup first and test on staging. Cross-site page/media IDs are validated and reset if missing on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</div>
+		<div class="tsosk-notice">
+			<?php
+			$config_dir = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'config' ) : '';
+			echo esc_html__( 'This snapshot does not include Debug Mode, Security, or Hidden Profiles JSON flags stored under the plugin uploads config folder. Copy that folder separately if you need the same constants on another site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			if ( '' !== $config_dir ) {
+				echo ' <code>' . esc_html( $config_dir ) . '</code>';
+			}
+			?>
 		</div>
 
 		<div class="tsosk-card">

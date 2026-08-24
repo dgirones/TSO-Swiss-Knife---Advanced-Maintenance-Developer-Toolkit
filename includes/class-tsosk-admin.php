@@ -60,7 +60,31 @@ class TSOSK_Admin {
 		add_action( 'wp_ajax_tsosk_save_sidebar_order',  array( $this, 'ajax_save_order' ) );
 		add_action( 'wp_ajax_tsosk_reset_sidebar_order', array( $this, 'ajax_reset_order' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_missing_includes_notice' ) );
 		add_filter( 'plugin_action_links_' . TSOSK_BASENAME, array( $this, 'action_links' ) );
+	}
+
+	/**
+	 * Warn administrators when the plugin folder is missing include files.
+	 */
+	public function maybe_missing_includes_notice(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! function_exists( 'tsosk_skipped_includes' ) ) {
+			return;
+		}
+		$skipped = tsosk_skipped_includes();
+		if ( empty( $skipped ) ) {
+			return;
+		}
+		$names = array();
+		foreach ( $skipped as $rel ) {
+			$names[] = basename( (string) $rel ) . '.php';
+		}
+		echo '<div class="notice notice-error"><p>';
+		echo esc_html__( 'TSO Swiss Knife is missing plugin files (incomplete upload). Some tools will not load until you upload the full plugin folder:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		echo ' <code>' . esc_html( implode( ', ', $names ) ) . '</code></p></div>';
 	}
 
 	/**
@@ -1272,7 +1296,7 @@ class TSOSK_Admin {
 						if ( class_exists( $class ) && method_exists( $class, 'get_instance' ) ) {
 							call_user_func( array( $class, 'get_instance' ) )->render();
 						} else {
-							echo '<p>' . esc_html__( 'Module not available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</p>';
+							echo '<p>' . esc_html__( 'This tool is not available because its PHP file is missing from the plugin folder. Re-upload the full plugin (same folder name) and it will appear here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</p>';
 						}
 						?>
 					</div>

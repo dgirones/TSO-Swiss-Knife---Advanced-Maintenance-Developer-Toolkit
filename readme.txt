@@ -49,8 +49,8 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Core File Integrity** — Verify WordPress core files against official checksums and flag unexpected changes.
 * **Login Protection** — Custom login URL, brute-force limits, and related hardening controls.
 * **Email Diagnostics** — Inspect wp_mail settings and send a test email.
-* **Staging Mode** — Optional test-copy switches (all off by default): red STAGING label in the admin bar, ask search engines not to list this copy, hold outbound email so a staging shop does not message real customers, and keep a short administrator-only mail log under the plugin uploads folder.
-* **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL. Does not change the database.
+* **Staging Mode** — Optional test-copy switches (all off by default): red STAGING label in the admin bar, ask search engines not to list this copy, hold outbound email so a staging shop does not message real customers, pause WP-Cron so queues do not run, and keep a short administrator-only mail log (source/type, CSV export) under the plugin uploads folder.
+* **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL, and an optional count of leftover http:// copies of that address. Does not change the database.
 * **Server & Runtime** — Read-only view of PHP limits, object-cache drop-in, other wp-content drop-ins, and must-use plugins that always load.
 * **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, long slugs, and broken shortcodes.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
@@ -117,7 +117,11 @@ Not if you enable **Do not send real emails**. WordPress still thinks the mail w
 
 = Does URL & HTTPS Doctor change my site address? =
 
-No. It only explains mismatches (http vs https, www, folder, and constants locked in wp-config.php). Use **Search & Replace** if you decide to rewrite stored URLs, after a backup.
+No. It only explains mismatches (http vs https, www, folder, and constants locked in wp-config.php). The leftover-http count is also read-only. Use **Search & Replace** if you decide to rewrite stored URLs, after a backup — always run preview first.
+
+= Does pausing scheduled tasks in Staging Mode delete cron events? =
+
+No. Due events stay in **Cron Manager** but are not executed while that Staging Mode option is on. Turn it off on the live site so reminders and queues run again.
 
 = Where does the plugin write files? =
 
@@ -159,8 +163,12 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 = 1.0.6 =
 * Staging Mode: optional admin-bar label, search-engine skip, outbound mail hold, and a short administrator mail log (all off by default).
 * Staging Mode no longer filters blog_public (avoids saving “Discourage search engines” if you open Settings → Reading).
+* Staging Mode: optional pause of WP-Cron (events stay scheduled but do not run), WooCommerce warning, test-host hint, mail log source/type, CSV export, and held-only filter.
 * URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database; loopback uses the real final URL after redirects.
+* URL & HTTPS Doctor: optional count of leftover http:// copies of the public address, with a link that prefills Search & Replace (preview still required).
 * Server & Runtime: read-only PHP limits, drop-ins, must-use plugins, object-cache status, and PHP vs MySQL clock skew.
+* Server & Runtime: copy-to-clipboard summary and optional OPcache reset when the host allows it.
+* Incomplete plugin uploads show an admin notice listing missing files instead of a blank tool tab.
 
 = 1.0.5 =
 * Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.

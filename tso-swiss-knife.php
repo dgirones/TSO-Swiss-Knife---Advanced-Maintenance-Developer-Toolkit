@@ -292,11 +292,26 @@ foreach ( $tsosk_includes as $tsosk_file ) {
 	$tsosk_path = TSOSK_PATH . $tsosk_file . '.php';
 	if ( ! is_readable( $tsosk_path ) ) {
 		// Partial uploads (e.g. main file updated without new module files) must not take the site down.
+		tsosk_skipped_includes( $tsosk_file );
 		continue;
 	}
 	require_once $tsosk_path;
 }
 unset( $tsosk_includes, $tsosk_file, $tsosk_path );
+
+/**
+ * Record or read include files that were skipped because they were missing on disk.
+ *
+ * @param string|null $add Relative path without .php, or null to only read.
+ * @return string[]
+ */
+function tsosk_skipped_includes( ?string $add = null ): array {
+	static $files = array();
+	if ( is_string( $add ) && '' !== $add ) {
+		$files[] = $add;
+	}
+	return $files;
+}
 
 // ── Early-load config overrides (JSON in uploads/{plugin-slug}/config) ────────
 if ( class_exists( 'TSOSK_Config_Storage' ) ) {

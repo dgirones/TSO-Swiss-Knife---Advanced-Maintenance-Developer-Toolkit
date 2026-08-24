@@ -42,6 +42,7 @@ class TSOSK_Mod_Staging {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_staging_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_staging_clear_mail_log', array( $this, 'ajax_clear_mail_log' ) );
+		add_action( 'admin_post_tsosk_staging_export_mail_log', array( $this, 'download_mail_log' ) );
 	}
 
 	/**
@@ -74,6 +75,21 @@ class TSOSK_Mod_Staging {
 		if ( ! empty( $settings['block_mail'] ) || ! empty( $settings['log_mail'] ) ) {
 			add_filter( 'pre_wp_mail', array( $this, 'filter_pre_wp_mail' ), 10, 2 );
 		}
+
+		if ( ! empty( $settings['pause_cron'] ) ) {
+			add_filter( 'pre_get_ready_cron_jobs', array( $this, 'filter_pause_cron' ) );
+		}
+	}
+
+	/**
+	 * Skip running due cron jobs without deleting the schedule.
+	 *
+	 * @param mixed $pre Short-circuit value from other plugins.
+	 * @return array
+	 */
+	public function filter_pause_cron( $pre ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		unset( $pre );
+		return array();
 	}
 
 	/**
@@ -229,6 +245,7 @@ class TSOSK_Mod_Staging {
 				'hide_from_search' => '1' === TSOSK_Support::get_post_scalar( 'hide_from_search' ),
 				'block_mail'       => '1' === TSOSK_Support::get_post_scalar( 'block_mail' ),
 				'log_mail'         => '1' === TSOSK_Support::get_post_scalar( 'log_mail' ),
+				'pause_cron'       => '1' === TSOSK_Support::get_post_scalar( 'pause_cron' ),
 			)
 		);
 
@@ -253,7 +270,7 @@ class TSOSK_Mod_Staging {
 
 	/**
 	 * @param array<string, mixed> $raw Raw flags.
-	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool}
+	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool,pause_cron:bool}
 	 */
 	public static function sanitize_settings( array $raw ): array {
 		return array(
@@ -261,6 +278,7 @@ class TSOSK_Mod_Staging {
 			'hide_from_search' => ! empty( $raw['hide_from_search'] ),
 			'block_mail'       => ! empty( $raw['block_mail'] ),
 			'log_mail'         => ! empty( $raw['log_mail'] ),
+			'pause_cron'       => ! empty( $raw['pause_cron'] ),
 		);
 	}
 
@@ -325,7 +343,7 @@ class TSOSK_Mod_Staging {
 	/**
 	 * @param array<string, mixed> $atts    wp_mail atts.
 	 * @param bool                 $blocked Whether sending was blocked.
-	 * @return array{time:int,to:string,subject:string,excerpt:string,blocked:bool}
+	 * @return array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}
 	 */
 	public static function build_mail_entry( array $atts, bool $blocked ): array {
 		$subject = isset( $atts['subject'] ) ? sanitize_text_field( (string) $atts['subject'] ) : '';
@@ -338,6 +356,7 @@ class TSOSK_Mod_Staging {
 		$excerpt = preg_replace( '/\s+/', ' ', $excerpt );
 		$excerpt = is_string( $excerpt ) ? trim( $excerpt ) : '';
 		$excerpt = self::utf8_excerpt( $excerpt, self::BODY_EXCERPT );
+		$source  = self::detect_mail_source();
 
 		return array(
 			'time'     => time(),
@@ -345,11 +364,161 @@ class TSOSK_Mod_Staging {
 			'subject'  => $subject,
 			'excerpt'  => sanitize_text_field( $excerpt ),
 			'blocked'  => $blocked,
+			'source'   => $source,
+			'kind'     => self::classify_mail_kind( $subject, $excerpt ),
 		);
 	}
 
 	/**
-	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool}
+	 * Guess which plugin, theme, or WordPress sent the mail (from the call stack).
+	 */
+	public static function detect_mail_source(): string {
+		$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 30 );
+		$self  = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( TSOSK_PATH ) : TSOSK_PATH;
+		$plug  = defined( 'WP_PLUGIN_DIR' ) ? wp_normalize_path( (string) WP_PLUGIN_DIR ) : '';
+		$theme = function_exists( 'get_theme_root' ) ? wp_normalize_path( (string) get_theme_root() ) : '';
+
+		foreach ( $trace as $frame ) {
+			if ( empty( $frame['file'] ) || ! is_string( $frame['file'] ) ) {
+				continue;
+			}
+			$file = wp_normalize_path( $frame['file'] );
+			if ( '' !== $self && 0 === strpos( $file, $self ) ) {
+				continue;
+			}
+			if ( '' !== $plug && 0 === strpos( $file, $plug ) ) {
+				$rel = ltrim( substr( $file, strlen( trailingslashit( $plug ) ) ), '/' );
+				$slug = explode( '/', $rel )[0];
+				$slug = sanitize_key( $slug );
+				if ( '' !== $slug ) {
+					return 'plugin:' . $slug;
+				}
+			}
+			if ( '' !== $theme && 0 === strpos( $file, $theme ) ) {
+				$rel  = ltrim( substr( $file, strlen( trailingslashit( $theme ) ) ), '/' );
+				$slug = explode( '/', $rel )[0];
+				$slug = sanitize_key( $slug );
+				if ( '' !== $slug ) {
+					return 'theme:' . $slug;
+				}
+			}
+		}
+
+		return 'core:wordpress';
+	}
+
+	/**
+	 * Classify a mail from subject + excerpt (best-effort labels for the log).
+	 *
+	 * @param string $subject Subject line.
+	 * @param string $excerpt Plain excerpt.
+	 */
+	public static function classify_mail_kind( string $subject, string $excerpt ): string {
+		$hay = strtolower( $subject . ' ' . $excerpt );
+		if ( false !== strpos( $hay, 'woocommerce' ) || false !== strpos( $hay, 'order #' ) || false !== strpos( $hay, 'pedido' ) || false !== strpos( $hay, 'comanda' ) ) {
+			return 'shop';
+		}
+		if ( false !== strpos( $hay, 'password' ) || false !== strpos( $hay, 'contrasenya' ) || false !== strpos( $hay, 'contraseña' ) ) {
+			return 'password';
+		}
+		if ( false !== strpos( $hay, 'new account' ) || false !== strpos( $hay, 'new user' ) || false !== strpos( $hay, 'compte nou' ) || false !== strpos( $hay, 'nueva cuenta' ) ) {
+			return 'account';
+		}
+		if ( false !== strpos( $hay, 'comment' ) || false !== strpos( $hay, 'comentari' ) || false !== strpos( $hay, 'comentario' ) ) {
+			return 'comment';
+		}
+		return 'other';
+	}
+
+	/**
+	 * Whether a hostname looks like a test/staging copy (does not enable anything).
+	 *
+	 * @param string $host Hostname only (no scheme).
+	 */
+	public static function host_looks_like_staging( string $host ): bool {
+		$host = strtolower( trim( $host ) );
+		if ( '' === $host ) {
+			return false;
+		}
+		if ( in_array( $host, array( 'localhost', '127.0.0.1', '::1' ), true ) ) {
+			return true;
+		}
+		$needles = array(
+			'.local',
+			'.test',
+			'.localhost',
+			'staging.',
+			'.staging',
+			'stage.',
+			'-staging',
+			'dev.',
+			'.dev',
+			'ngrok',
+			'trycloudflare',
+		);
+		foreach ( $needles as $needle ) {
+			if ( false !== strpos( $host, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether this install looks like a non-production copy.
+	 */
+	public static function looks_like_non_production(): bool {
+		if ( function_exists( 'wp_get_environment_type' ) ) {
+			$env = wp_get_environment_type();
+			if ( in_array( $env, array( 'staging', 'development', 'local' ), true ) ) {
+				return true;
+			}
+		}
+		$host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		return self::host_looks_like_staging( $host );
+	}
+
+	/**
+	 * Upcoming cron hooks within a window (does not run them).
+	 *
+	 * @param int $within_seconds Window from now.
+	 * @param int $limit          Max rows.
+	 * @return array<int, array{time:int,hook:string}>
+	 */
+	public static function upcoming_cron_hooks( int $within_seconds = DAY_IN_SECONDS, int $limit = 12 ): array {
+		if ( ! function_exists( '_get_cron_array' ) ) {
+			return array();
+		}
+		$crons = _get_cron_array();
+		if ( ! is_array( $crons ) ) {
+			return array();
+		}
+		$now    = time();
+		$until  = $now + max( 60, $within_seconds );
+		$out    = array();
+		foreach ( $crons as $timestamp => $hooks ) {
+			$ts = (int) $timestamp;
+			if ( $ts > $until ) {
+				continue;
+			}
+			if ( ! is_array( $hooks ) ) {
+				continue;
+			}
+			foreach ( array_keys( $hooks ) as $hook ) {
+				$out[] = array(
+					'time' => $ts,
+					'hook' => sanitize_key( (string) $hook ),
+				);
+				if ( count( $out ) >= $limit ) {
+					return $out;
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool,pause_cron:bool}
 	 */
 	public function get_settings(): array {
 		$stored = get_option( self::OPTION, array() );
@@ -372,7 +541,7 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
-	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool}>
+	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}>
 	 */
 	public function get_mail_log(): array {
 		$data = TSOSK_Config_Storage::read_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
@@ -388,9 +557,108 @@ class TSOSK_Mod_Staging {
 				'subject' => isset( $row['subject'] ) ? sanitize_text_field( (string) $row['subject'] ) : '',
 				'excerpt' => isset( $row['excerpt'] ) ? sanitize_text_field( (string) $row['excerpt'] ) : '',
 				'blocked' => ! empty( $row['blocked'] ),
+				'source'  => isset( $row['source'] ) ? sanitize_text_field( (string) $row['source'] ) : '',
+				'kind'    => isset( $row['kind'] ) ? sanitize_key( (string) $row['kind'] ) : 'other',
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * Human label for a stored source token (plugin:slug).
+	 *
+	 * @param string $source Token.
+	 */
+	public static function format_mail_source( string $source ): string {
+		if ( '' === $source ) {
+			return __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		$parts = explode( ':', $source, 2 );
+		$type  = $parts[0];
+		$name  = $parts[1] ?? '';
+		if ( 'plugin' === $type && '' !== $name ) {
+			return sprintf(
+				/* translators: %s: plugin folder name */
+				__( 'Plugin: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$name
+			);
+		}
+		if ( 'theme' === $type && '' !== $name ) {
+			return sprintf(
+				/* translators: %s: theme folder name */
+				__( 'Theme: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$name
+			);
+		}
+		return __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+	}
+
+	/**
+	 * Human label for a mail kind key.
+	 *
+	 * @param string $kind shop|password|account|comment|other.
+	 */
+	public static function format_mail_kind( string $kind ): string {
+		switch ( $kind ) {
+			case 'shop':
+				return __( 'Shop / order', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'password':
+				return __( 'Password reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'account':
+				return __( 'New account', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'comment':
+				return __( 'Comment', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			default:
+				return __( 'Other', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+	}
+
+	/**
+	 * CSV download of the mail log.
+	 */
+	public function download_mail_log(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		check_admin_referer( 'tsosk_staging_export_mail_log' );
+
+		$log = $this->get_mail_log();
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tsosk-mail-log.csv"' );
+
+		$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- CSV stream to the browser, not a plugin file write.
+		if ( false === $out ) {
+			exit;
+		}
+		fputcsv(
+			$out,
+			array(
+				'when_gmt',
+				'to',
+				'subject',
+				'excerpt',
+				'held',
+				'source',
+				'kind',
+			)
+		);
+		foreach ( $log as $row ) {
+			fputcsv(
+				$out,
+				array(
+					$row['time'] ? gmdate( 'Y-m-d H:i:s', $row['time'] ) : '',
+					$row['to'],
+					$row['subject'],
+					$row['excerpt'],
+					$row['blocked'] ? '1' : '0',
+					$row['source'],
+					$row['kind'],
+				)
+			);
+		}
+		fclose( $out );
+		exit;
 	}
 
 	/**
@@ -405,20 +673,40 @@ class TSOSK_Mod_Staging {
 		TSOSK_Config_Storage::write_log_json(
 			TSOSK_Config_Storage::MAIL_LOG_JSON,
 			array(
-				'version' => 1,
+				'version' => 2,
 				'entries' => $existing,
 			)
 		);
 	}
 
 	public function render(): void {
-		$nonce    = wp_create_nonce( 'tsosk_staging_nonce' );
-		$settings = $this->get_settings();
-		$log      = $this->get_mail_log();
+		$nonce     = wp_create_nonce( 'tsosk_staging_nonce' );
+		$settings  = $this->get_settings();
+		$log       = $this->get_mail_log();
+		$woo       = class_exists( 'WooCommerce' );
+		$looks     = self::looks_like_non_production();
+		$any_on    = self::is_any_feature_on();
+		$upcoming  = self::upcoming_cron_hooks();
+		$export    = wp_nonce_url(
+			add_query_arg( 'action', 'tsosk_staging_export_mail_log', admin_url( 'admin-post.php' ) ),
+			'tsosk_staging_export_mail_log'
+		);
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Use this on a test copy of the site so it is obvious it is not production, so search engines skip it, and so customer emails are not sent by mistake. Everything stays off until you tick a box.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
+
+		<?php if ( $looks && ! $any_on ) : ?>
+			<div class="tsosk-notice tsosk-notice-warn">
+				<?php esc_html_e( 'This address looks like a test copy (staging host, .local, or WordPress environment type). Nothing is on yet — tick the boxes below if this is not the live site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $woo ) : ?>
+			<div class="tsosk-notice tsosk-notice-warn">
+				<?php esc_html_e( 'WooCommerce is active. Holding email stops order and account messages from leaving the server. Payment gateways and background queues can still run unless you also pause scheduled tasks below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+		<?php endif; ?>
 
 		<div class="tsosk-notice tsosk-notice-warn">
 			<?php esc_html_e( 'Turn these options off before you copy this database back to the live site. They are saved in this WordPress install.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -454,6 +742,26 @@ class TSOSK_Mod_Staging {
 					<?php esc_html_e( 'Useful on the live site when you need to see whether WordPress tried to send a message. Only administrators can read the log. Message bodies are shortened.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</label>
+			<label class="tsosk-heartbeat-option">
+				<input type="checkbox" id="tsosk-staging-pause-cron" value="1" <?php checked( $settings['pause_cron'] ); ?>>
+				<strong><?php esc_html_e( 'Pause scheduled tasks (WP-Cron)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<p class="description" style="margin:4px 0 0 24px;">
+					<?php esc_html_e( 'Due events stay in the list but are not run. Turn this on so a test copy does not send reminders, process queues, or fire WooCommerce scheduled actions. Turn it off on the live site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+			</label>
+			<?php if ( ! empty( $upcoming ) ) : ?>
+				<p class="description" style="margin:8px 0 0 24px;">
+					<?php esc_html_e( 'Would run in the next 24 hours (still scheduled):', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php
+					$bits = array();
+					foreach ( $upcoming as $item ) {
+						$when   = $item['time'] ? wp_date( 'H:i', $item['time'] ) : '';
+						$bits[] = $item['hook'] . ( '' !== $when ? ' (' . $when . ')' : '' );
+					}
+					echo esc_html( implode( ', ', $bits ) );
+					?>
+				</p>
+			<?php endif; ?>
 			<p style="margin-top:12px;">
 				<button type="button" class="button button-primary" id="tsosk-staging-save" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Save settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -470,18 +778,26 @@ class TSOSK_Mod_Staging {
 			<?php if ( empty( $log ) ) : ?>
 				<p><?php esc_html_e( 'No emails recorded yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
+				<p>
+					<label>
+						<input type="checkbox" id="tsosk-staging-held-only" value="1">
+						<?php esc_html_e( 'Show only emails held here (not sent)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+				</p>
 				<table class="widefat tsosk-table" id="tsosk-staging-mail-log">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'When', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'To', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Subject', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Sent?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ( $log as $row ) : ?>
-							<tr>
+							<tr data-blocked="<?php echo $row['blocked'] ? '1' : '0'; ?>">
 								<td><?php echo esc_html( $row['time'] ? wp_date( 'Y-m-d H:i:s', $row['time'] ) : '—' ); ?></td>
 								<td><code><?php echo esc_html( $row['to'] ); ?></code></td>
 								<td>
@@ -490,6 +806,8 @@ class TSOSK_Mod_Staging {
 										<br><span class="description"><?php echo esc_html( $row['excerpt'] ); ?></span>
 									<?php endif; ?>
 								</td>
+								<td><?php echo esc_html( self::format_mail_source( $row['source'] ) ); ?></td>
+								<td><?php echo esc_html( self::format_mail_kind( $row['kind'] ) ); ?></td>
 								<td>
 									<?php if ( $row['blocked'] ) : ?>
 										<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Held here', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -506,6 +824,11 @@ class TSOSK_Mod_Staging {
 				<button type="button" class="button" id="tsosk-staging-clear-log" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear mail log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
+				<?php if ( ! empty( $log ) ) : ?>
+					<a class="button" href="<?php echo esc_url( $export ); ?>">
+						<?php esc_html_e( 'Download CSV', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</a>
+				<?php endif; ?>
 			</p>
 		</div>
 		<?php
