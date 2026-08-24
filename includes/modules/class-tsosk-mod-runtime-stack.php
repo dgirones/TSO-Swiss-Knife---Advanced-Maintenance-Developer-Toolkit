@@ -157,8 +157,12 @@ class TSOSK_Mod_Runtime_Stack {
 		$opcache     = function_exists( 'opcache_get_status' );
 		$opcache_on  = false;
 		if ( $opcache ) {
-			$status = opcache_get_status( false );
-			$opcache_on = is_array( $status ) && ! empty( $status['opcache_enabled'] );
+			try {
+				$status     = opcache_get_status( false );
+				$opcache_on = is_array( $status ) && ! empty( $status['opcache_enabled'] );
+			} catch ( Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- restrict_api / disabled internals must not fatal the admin tab.
+				unset( $e );
+			}
 		}
 
 		$wp_tz   = function_exists( 'wp_timezone_string' ) ? (string) wp_timezone_string() : '';
@@ -166,10 +170,14 @@ class TSOSK_Mod_Runtime_Stack {
 		$db_now  = null;
 		global $wpdb;
 		if ( isset( $wpdb ) && is_object( $wpdb ) && method_exists( $wpdb, 'get_var' ) ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- literal UNIX_TIMESTAMP(), no user input.
-			$raw = $wpdb->get_var( 'SELECT UNIX_TIMESTAMP()' );
-			if ( is_numeric( $raw ) ) {
-				$db_now = (int) $raw;
+			try {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- literal UNIX_TIMESTAMP(), no user input.
+				$raw = $wpdb->get_var( 'SELECT UNIX_TIMESTAMP()' );
+				if ( is_numeric( $raw ) ) {
+					$db_now = (int) $raw;
+				}
+			} catch ( Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- custom DB drop-ins must not fatal this read-only screen.
+				unset( $e );
 			}
 		}
 		$clock_skew = ( null === $db_now ) ? 0 : abs( $php_now - $db_now );
