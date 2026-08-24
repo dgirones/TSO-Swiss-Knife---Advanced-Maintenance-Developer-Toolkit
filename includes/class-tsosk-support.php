@@ -137,6 +137,39 @@ class TSOSK_Support {
 	}
 
 	/**
+	 * Read a GET field as text: unslash + UTF-8/null-byte cleanup, then sanitize_text_field.
+	 *
+	 * Use on admin screens after capability checks. Not for JSON or serialized blobs.
+	 *
+	 * @param string $key Query key.
+	 * @return string
+	 */
+	public static function get_query_scalar( string $key ): string {
+		$key = sanitize_key( $key );
+		if ( '' === $key || ! isset( $_GET[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Caller is a manage_options admin screen (Search & Replace prefill).
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Same caller; value is sanitized below.
+		$raw = wp_unslash( $_GET[ $key ] );
+		if ( ! is_string( $raw ) ) {
+			if ( is_scalar( $raw ) || null === $raw ) {
+				$raw = (string) $raw;
+			} else {
+				return '';
+			}
+		}
+
+		$raw     = str_replace( "\0", '', $raw );
+		$checked = wp_check_invalid_utf8( $raw, true );
+		if ( ! is_string( $checked ) ) {
+			return '';
+		}
+
+		return sanitize_text_field( $checked );
+	}
+
+	/**
 	 * Read a POST field as text: unslash + UTF-8/null-byte cleanup.
 	 *
 	 * Callers must verify nonce/capability before using this helper.

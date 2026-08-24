@@ -31,6 +31,7 @@ class TSOSK_Mod_Url_Doctor {
 
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_url_doctor_probe', array( $this, 'ajax_probe' ) );
+		add_action( 'wp_ajax_tsosk_url_doctor_leftovers', array( $this, 'ajax_leftovers' ) );
 	}
 
 	/**
@@ -314,6 +315,118 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * HTTP leftover of the current home URL (same host, http instead of https).
+	 *
+	 * @param string $home Home URL.
+	 * @return array{search:string,replace:string}|null
+	 */
+	public static function http_https_pair( string $home ): ?array {
+		$home = untrailingslashit( trim( $home ) );
+		if ( '' === $home ) {
+			return null;
+		}
+		$parts = wp_parse_url( $home );
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || 'https' !== strtolower( (string) $parts['scheme'] ) ) {
+			return null;
+		}
+		$https = set_url_scheme( $home, 'https' );
+		$http  = set_url_scheme( $home, 'http' );
+		if ( $http === $https ) {
+			return null;
+		}
+		return array(
+			'search'  => $http,
+			'replace' => $https,
+		);
+	}
+
+	/**
+	 * Build a Search & Replace admin URL with search/replace prefilled (preview still required).
+	 *
+	 * @param string $search  Find text.
+	 * @param string $replace Replace text.
+	 */
+	public static function search_replace_prefill_url( string $search, string $replace ): string {
+		return add_query_arg(
+			array(
+				'page'             => 'tso-swiss-knife',
+				'tab'              => 'search-replace',
+				'tsosk_sr_search'  => $search,
+				'tsosk_sr_replace' => $replace,
+			),
+			admin_url( 'tools.php' )
+		);
+	}
+
+	/**
+	 * Count content rows that still contain a needle (posts, postmeta, options, comments).
+	 *
+	 * @param string $needle Plain substring (not regex).
+	 * @return array{posts:int,postmeta:int,options:int,comments:int,total:int}
+	 */
+	public static function count_leftover_rows( string $needle ): array {
+		$empty = array(
+			'posts'    => 0,
+			'postmeta' => 0,
+			'options'  => 0,
+			'comments' => 0,
+			'total'    => 0,
+		);
+		$needle = trim( $needle );
+		if ( '' === $needle ) {
+			return $empty;
+		}
+
+		global $wpdb;
+		if ( ! isset( $wpdb ) || ! is_object( $wpdb ) ) {
+			return $empty;
+		}
+
+		$like = '%' . $wpdb->esc_like( $needle ) . '%';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin diagnostic COUNT, no user-built SQL identifiers.
+		$posts = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status NOT IN ('auto-draft','inherit') AND post_content LIKE %s",
+				$like
+			)
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$meta = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_value LIKE %s",
+				$like
+			)
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$options = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_value LIKE %s",
+				$like
+			)
+		);
+		$comments = 0;
+		if ( isset( $wpdb->comments ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$comments = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_content LIKE %s",
+					$like
+				)
+			);
+		}
+
+		$total = $posts + $meta + $options + $comments;
+		return array(
+			'posts'    => $posts,
+			'postmeta' => $meta,
+			'options'  => $options,
+			'comments' => $comments,
+			'total'    => $total,
+		);
+	}
+
+	/**
 	 * AJAX: loopback GET of this site's home URL only.
 	 */
 	public function ajax_probe(): void {
@@ -325,6 +438,57 @@ class TSOSK_Mod_Url_Doctor {
 		$result = $this->run_probe();
 		set_transient( self::TRANSIENT, $result, 15 * MINUTE_IN_SECONDS );
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * AJAX: count leftover http:// copies of the current home URL in content tables.
+	 */
+	public function ajax_leftovers(): void {
+		check_ajax_referer( 'tsosk_url_doctor_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$pair = self::http_https_pair( home_url() );
+		if ( null === $pair ) {
+			wp_send_json_success(
+				array(
+					'skip'    => true,
+					'message' => __( 'The public address is not https, so there is no http leftover of the same host to count.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				)
+			);
+		}
+
+		$counts = self::count_leftover_rows( $pair['search'] );
+		$url    = self::search_replace_prefill_url( $pair['search'], $pair['replace'] );
+		$message = sprintf(
+			/* translators: 1: number of rows, 2: http URL, 3: https URL */
+			__( '%1$d content rows still contain %2$s. Search & Replace can preview changing them to %3$s (nothing is written until you confirm).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$counts['total'],
+			$pair['search'],
+			$pair['replace']
+		);
+		$counts_label = sprintf(
+			/* translators: 1: posts, 2: postmeta, 3: options, 4: comments */
+			__( 'Posts: %1$d. Post meta: %2$d. Options: %3$d. Comments: %4$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$counts['posts'],
+			$counts['postmeta'],
+			$counts['options'],
+			$counts['comments']
+		);
+
+		wp_send_json_success(
+			array(
+				'skip'          => false,
+				'message'       => $message,
+				'counts'        => $counts,
+				'counts_label'  => $counts_label,
+				'search'        => $pair['search'],
+				'replace'       => $pair['replace'],
+				'replace_url'   => $url,
+				'replace_label' => __( 'Open Search & Replace with these values (preview first)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			)
+		);
 	}
 
 	/**
@@ -486,6 +650,20 @@ class TSOSK_Mod_Url_Doctor {
 					</p>
 				<?php endif; ?>
 			</div>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Leftover http addresses in the database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Optional. Counts posts, post meta, options, and comments that still contain the http version of this site’s public address. It does not change anything. Use Search & Replace afterwards — always preview first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<p>
+				<button type="button" class="button" id="tsosk-url-doctor-leftovers" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( 'Count leftover http addresses', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-url-doctor-leftovers-msg"></span>
+			</p>
+			<div id="tsosk-url-doctor-leftovers-result"></div>
 		</div>
 		<?php
 	}

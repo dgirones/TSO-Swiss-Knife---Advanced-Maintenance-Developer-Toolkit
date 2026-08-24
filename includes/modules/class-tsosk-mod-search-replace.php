@@ -908,8 +908,10 @@ class TSOSK_Mod_Search_Replace {
 
 	public function render(): void {
 		global $wpdb;
-		$nonce  = wp_create_nonce( 'tsosk_sr_nonce' );
-		$tables = $this->get_all_tables();
+		$nonce           = wp_create_nonce( 'tsosk_sr_nonce' );
+		$tables          = $this->get_all_tables();
+		$prefill_search  = TSOSK_Support::get_query_scalar( 'tsosk_sr_search' );
+		$prefill_replace = TSOSK_Support::get_query_scalar( 'tsosk_sr_replace' );
 		?>
 
 		<p class="tsosk-desc">
@@ -923,6 +925,12 @@ class TSOSK_Mod_Search_Replace {
 			<?php esc_html_e( 'A wrong search term can alter hundreds of rows at once. Preview is mandatory — Execute only appears after a successful preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
+		<?php if ( '' !== $prefill_search ) : ?>
+			<div class="tsosk-notice tsosk-notice-info">
+				<?php esc_html_e( 'Search and replace were filled from URL & HTTPS Doctor. Preview is still required before anything is written.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+		<?php endif; ?>
+
 		<?php /* ── Search form ── */ ?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Search & Replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
@@ -933,6 +941,7 @@ class TSOSK_Mod_Search_Replace {
 					<td>
 						<input type="text" id="tsosk-sr-search"
 						       style="width:100%;" autocomplete="off" spellcheck="false"
+						       value="<?php echo esc_attr( $prefill_search ); ?>"
 						       placeholder="<?php esc_attr_e( 'Text or regex pattern to find…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>
@@ -941,6 +950,7 @@ class TSOSK_Mod_Search_Replace {
 					<td>
 						<input type="text" id="tsosk-sr-replace"
 						       style="width:100%;" autocomplete="off" spellcheck="false"
+						       value="<?php echo esc_attr( $prefill_replace ); ?>"
 						       placeholder="<?php esc_attr_e( 'Replacement text (leave empty to delete matches)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>

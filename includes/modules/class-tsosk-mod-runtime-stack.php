@@ -26,7 +26,9 @@ class TSOSK_Mod_Runtime_Stack {
 		return self::$instance;
 	}
 
-	private function __construct() {}
+	private function __construct() {
+		add_action( 'wp_ajax_tsosk_runtime_opcache_reset', array( $this, 'ajax_opcache_reset' ) );
+	}
 
 	/**
 	 * Convert a PHP ini size string to bytes. -1 means unlimited.
@@ -209,7 +211,63 @@ class TSOSK_Mod_Runtime_Stack {
 			'disabled'     => $disabled_short,
 			'wp_memory'    => defined( 'WP_MEMORY_LIMIT' ) ? (string) WP_MEMORY_LIMIT : '',
 			'wp_max_mem'   => defined( 'WP_MAX_MEMORY_LIMIT' ) ? (string) WP_MAX_MEMORY_LIMIT : '',
+			'opcache_reset'=> self::can_reset_opcache() ? '1' : '0',
 		);
+	}
+
+	/**
+	 * Whether opcache_reset() can be called.
+	 */
+	public static function can_reset_opcache(): bool {
+		if ( ! function_exists( 'opcache_reset' ) ) {
+			return false;
+		}
+		$disabled = array_map( 'trim', explode( ',', (string) ini_get( 'disable_functions' ) ) );
+		return ! in_array( 'opcache_reset', $disabled, true );
+	}
+
+	/**
+	 * AJAX: reset OPcache when hosting allows it.
+	 */
+	public function ajax_opcache_reset(): void {
+		check_ajax_referer( 'tsosk_runtime_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		if ( ! self::can_reset_opcache() ) {
+			wp_send_json_error( __( 'This host does not allow resetting OPcache from PHP.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$ok = false;
+		try {
+			$ok = (bool) opcache_reset();
+		} catch ( Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			unset( $e );
+		}
+		if ( $ok ) {
+			wp_send_json_success( __( 'OPcache was reset for this PHP process. Other PHP workers may still hold old files until they recycle.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		wp_send_json_error( __( 'OPcache reset did not succeed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/**
+	 * Plain-text summary for copying to hosting support.
+	 *
+	 * @param array<string, string> $limits From get_php_limits().
+	 */
+	public static function build_summary_text( array $limits ): string {
+		$lines   = array();
+		$lines[] = 'TSO Swiss Knife — Server & Runtime';
+		$lines[] = 'PHP: ' . ( $limits['php'] ?? '' );
+		$lines[] = 'memory_limit: ' . ( $limits['memory'] ?? '' );
+		$lines[] = 'upload_max_filesize: ' . ( $limits['upload'] ?? '' );
+		$lines[] = 'post_max_size: ' . ( $limits['post'] ?? '' );
+		if ( ! empty( $limits['post_lt_up'] ) && '1' === $limits['post_lt_up'] ) {
+			$lines[] = 'WARNING: post_max_size is smaller than upload_max_filesize';
+		}
+		$lines[] = 'max_execution_time: ' . ( $limits['max_time'] ?? '' );
+		$lines[] = 'OPcache: ' . ( ( isset( $limits['opcache'] ) && '1' === $limits['opcache'] ) ? 'on' : 'off' );
+		$lines[] = 'temp: ' . ( $limits['temp'] ?? '' );
+		return implode( "\n", $lines );
 	}
 
 	public function render(): void {
@@ -220,10 +278,12 @@ class TSOSK_Mod_Runtime_Stack {
 		$oc_file  = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'object-cache.php';
 		$oc_exists = file_exists( $oc_file );
 		global $wp_object_cache;
-		$driver = is_object( $wp_object_cache ) ? get_class( $wp_object_cache ) : '';
+		$driver  = is_object( $wp_object_cache ) ? get_class( $wp_object_cache ) : '';
+		$nonce   = wp_create_nonce( 'tsosk_runtime_nonce' );
+		$summary = self::build_summary_text( $limits );
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'A snapshot of what sits under WordPress on this server: extra cache files, must-use plugins that always load, and PHP limits that explain failed uploads or timeouts. Nothing here is changed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'A snapshot of what sits under WordPress on this server: extra cache files, must-use plugins that always load, and PHP limits that explain failed uploads or timeouts. The OPcache button is the only action, and only if the host allows it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-card">
@@ -278,6 +338,14 @@ class TSOSK_Mod_Runtime_Stack {
 					<td>
 						<?php if ( '1' === $limits['opcache'] ) : ?>
 							<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'On', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<?php if ( '1' === $limits['opcache_reset'] ) : ?>
+								<button type="button" class="button button-small" id="tsosk-runtime-opcache" data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-left:8px;">
+									<?php esc_html_e( 'Reset OPcache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+								<span class="tsosk-ajax-msg" id="tsosk-runtime-opcache-msg"></span>
+							<?php else : ?>
+								<span class="description"><?php esc_html_e( 'This host does not allow resetting OPcache from PHP.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<?php endif; ?>
 						<?php else : ?>
 							<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Off or unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php endif; ?>
@@ -342,6 +410,13 @@ class TSOSK_Mod_Runtime_Stack {
 				</tr>
 				<?php endif; ?>
 			</table>
+			<p style="margin-top:12px;">
+				<button type="button" class="button" id="tsosk-runtime-copy-summary">
+					<?php esc_html_e( 'Copy summary for hosting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-runtime-copy-msg"></span>
+			</p>
+			<textarea id="tsosk-runtime-summary" class="large-text code" rows="8" readonly><?php echo esc_textarea( $summary ); ?></textarea>
 		</div>
 
 		<div class="tsosk-card">

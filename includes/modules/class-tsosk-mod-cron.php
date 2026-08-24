@@ -218,6 +218,19 @@ class TSOSK_Mod_Cron {
 			<?php esc_html_e( 'Lists all scheduled WordPress cron events. Core events are read-only. Custom events can be run manually or deleted. The Source column shows which plugin or WordPress itself registered the hook.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
+		<?php
+		if ( class_exists( 'TSOSK_Mod_Staging' ) ) {
+			$st = TSOSK_Mod_Staging::get_instance()->get_settings();
+			if ( ! empty( $st['pause_cron'] ) ) {
+				echo '<div class="tsosk-notice tsosk-notice-warn"><p>';
+				echo esc_html__( 'Staging Mode is pausing scheduled tasks. Events stay listed but will not run until you turn that option off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				echo ' <a href="' . esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=staging' ) ) . '">';
+				echo esc_html__( 'Open Staging Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				echo '</a></p></div>';
+			}
+		}
+		?>
+
 		<div class="tsosk-toolbar">
 			<span class="tsosk-badge tsosk-badge-info">
 				<?php
