@@ -49,8 +49,8 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Core File Integrity** — Verify WordPress core files against official checksums and flag unexpected changes.
 * **Login Protection** — Custom login URL, brute-force limits, and related hardening controls.
 * **Email Diagnostics** — Inspect wp_mail settings and send a test email.
-* **Staging Mode** — Optional test-copy switches (all off by default): red STAGING label in the admin bar, ask search engines not to list this copy, hold outbound email so a staging shop does not message real customers, pause WP-Cron so queues do not run, and keep a short administrator-only mail log (source/type, CSV export) under the plugin uploads folder.
-* **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL, and an optional count of leftover http:// copies of that address. Does not change the database.
+* **Staging Mode** — Optional test-copy switches (all off by default): red STAGING label in the admin bar, ask search engines not to list this copy, hold outbound email so a staging shop does not message real customers, pause WP-Cron so queues do not run, and keep a short administrator-only mail log (source/type, CSV export) in the WordPress database (not under uploads).
+* **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL (redirects are not followed), and an optional count of leftover http:// copies of that address. Does not change the database.
 * **Server & Runtime** — Read-only view of PHP limits, object-cache drop-in, other wp-content drop-ins, and must-use plugins that always load.
 * **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, long slugs, and broken shortcodes.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
@@ -81,7 +81,7 @@ When you run a core integrity scan, the plugin requests official WordPress core 
 
 = URL & HTTPS Doctor (optional) =
 
-When you click **Check this site**, the plugin requests this site’s own home URL through the WordPress HTTP API (a loopback, similar to Site Health). No third-party host is contacted and no personal data is sent. The request only runs after an administrator clicks the button.
+When you click **Check this site**, the plugin requests this site’s own home URL through the WordPress HTTP API (a loopback, similar to Site Health). Redirects are not followed. No third-party host is contacted and no personal data is sent. The request only runs after an administrator clicks the button.
 
 == Installation ==
 
@@ -113,7 +113,7 @@ No. Automatic updates are managed only by WordPress core (**Dashboard → Update
 
 = Does Staging Mode send customer emails from a test copy? =
 
-Not if you enable **Do not send real emails**. WordPress still thinks the mail was accepted, but it never leaves the server. A short copy (recipient, subject, excerpt) is stored as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/logs/` for administrators. All Staging Mode switches are off until you turn them on. Turn them off before copying the database back to production.
+Not if you enable **Do not send real emails**. WordPress still thinks the mail was accepted, but it never leaves the server. A short copy (recipient, subject, excerpt) is stored in the WordPress database for administrators only (not as a public file under uploads). All Staging Mode switches are off until you turn them on. Turn them off before copying the database back to production.
 
 = Does URL & HTTPS Doctor change my site address? =
 
@@ -125,7 +125,7 @@ No. Due events stay in **Cron Manager** but are not executed while that Staging 
 
 = Where does the plugin write files? =
 
-Runtime config, the Staging Mode mail log, and other managed logs go under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/`. The Plugin Sandbox may install a must-use loader under `mu-plugins` (via the WordPress Filesystem API) so early plugin filtering can run; that loader is removed when no sandbox sessions remain. The plugin does not write `wp-content/debug.log` or edit `wp-config.php`.
+Runtime config and other managed files go under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/`. The Staging Mode mail log is stored in the database (not under uploads). The Plugin Sandbox may install a must-use loader under `mu-plugins` (via the WordPress Filesystem API) so early plugin filtering can run; that loader is removed when no sandbox sessions remain. The plugin does not write `wp-content/debug.log` or edit `wp-config.php`.
 
 = Does this plugin edit wp-config.php? =
 
@@ -164,11 +164,18 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Staging Mode: optional admin-bar label, search-engine skip, outbound mail hold, and a short administrator mail log (all off by default).
 * Staging Mode no longer filters blog_public (avoids saving “Discourage search engines” if you open Settings → Reading).
 * Staging Mode: optional pause of WP-Cron (events stay scheduled but do not run), WooCommerce warning, test-host hint, mail log source/type, CSV export, and held-only filter.
-* URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database; loopback uses the real final URL after redirects.
+* Staging Mode mail log stored in the database (migrates and removes legacy uploads JSON); uploads config/log dirs always re-apply deny rules.
+* URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database; loopback does not follow redirects.
 * URL & HTTPS Doctor: optional count of leftover http:// copies of the public address, with a link that prefills Search & Replace (preview still required).
 * Server & Runtime: read-only PHP limits, drop-ins, must-use plugins, object-cache status, and PHP vs MySQL clock skew.
 * Server & Runtime: copy-to-clipboard summary and optional OPcache reset when the host allows it.
 * Incomplete plugin uploads show an admin notice listing missing files instead of a blank tool tab.
+* Cron Manager: block manual Run for core hooks (AJAX + UI).
+* Deactivation: flush rewrite rules when Login Protect custom URL was enabled.
+* Transients: site-transient purge uses sitemeta on multisite and requires super admin or network admin.
+* Meta Editor: without object ID, search matches meta_key only (not meta_value).
+* Uninstall: remove activity log settings, email diagnostics history, and staging mail log options.
+* Removed unused plugin-footprint module file.
 
 = 1.0.5 =
 * Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.
@@ -207,7 +214,7 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 == Upgrade Notice ==
 
 = 1.0.6 =
-Adds Staging Mode (mail hold + test-copy label), URL & HTTPS Doctor, and a read-only Server & Runtime panel.
+Adds Staging Mode, URL & HTTPS Doctor, Server & Runtime, and hardening for cron, transients, meta search, uninstall, and mail log storage.
 
 = 1.0.5 =
 Cron Manager core-hook protection, site-transient purge, role template confirm, search race fixes, Debug Mode docs, and refreshed translations.

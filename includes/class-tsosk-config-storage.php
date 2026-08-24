@@ -514,6 +514,9 @@ class TSOSK_Config_Storage {
 		}
 		if ( ! is_dir( $dir ) ) {
 			wp_mkdir_p( $dir );
+		}
+		if ( is_dir( $dir ) ) {
+			// Always re-apply protection (covers dirs created before protect_dir existed).
 			self::protect_dir( $dir );
 		}
 		return is_dir( $dir ) && wp_is_writable( $dir );
@@ -524,10 +527,10 @@ class TSOSK_Config_Storage {
 	 */
 	private static function protect_dir( string $dir ): void {
 		$htaccess = trailingslashit( $dir ) . '.htaccess';
-		if ( ! file_exists( $htaccess ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-			file_put_contents( $htaccess, "Order deny,allow\nDeny from all\n" );
-		}
+		$rules    = "Order deny,allow\nDeny from all\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n";
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		file_put_contents( $htaccess, $rules );
+
 		// Prefer a non-executable blank index over PHP under uploads (WordPress.org guideline).
 		$legacy_php = trailingslashit( $dir ) . 'index.php';
 		if ( file_exists( $legacy_php ) ) {

@@ -129,10 +129,16 @@ class TSOSK_Mod_Meta_Editor {
 			$params[] = $object_id;
 		}
 		if ( '' !== $search ) {
-			$like     = '%' . $wpdb->esc_like( $search ) . '%';
-			$where   .= ' AND (meta_key LIKE %s OR meta_value LIKE %s)';
-			$params[] = $like;
-			$params[] = $like;
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			if ( $object_id > 0 ) {
+				$where   .= ' AND (meta_key LIKE %s OR meta_value LIKE %s)';
+				$params[] = $like;
+				$params[] = $like;
+			} else {
+				// Without an object ID, scanning meta_value across the whole table is too heavy and can leak sensitive previews.
+				$where   .= ' AND meta_key LIKE %s';
+				$params[] = $like;
+			}
 		}
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table/column names are internal; values use prepare().

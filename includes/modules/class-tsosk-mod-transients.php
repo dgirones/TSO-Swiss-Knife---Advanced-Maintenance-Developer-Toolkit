@@ -106,6 +106,91 @@ class TSOSK_Mod_Transients {
 		return $out;
 	}
 
+	/**
+	 * Fetch expired site-transient timeout keys (network sitemeta or single-site options).
+	 *
+	 * @param int $now Unix timestamp.
+	 * @return string[]
+	 */
+	private function get_expired_site_transient_timeout_keys( int $now ): array {
+		global $wpdb;
+
+		if ( is_multisite() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			return $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT meta_key FROM {$wpdb->sitemeta}
+					 WHERE meta_key LIKE %s AND CAST(meta_value AS UNSIGNED) < %d",
+					$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
+					$now
+				)
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options}
+				 WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) < %d",
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
+				$now
+			)
+		);
+	}
+
+	/**
+	 * Fetch site-transient value keys (excluding timeout rows).
+	 *
+	 * @return string[] meta_key / option_name values.
+	 */
+	private function get_site_transient_value_keys(): array {
+		global $wpdb;
+
+		if ( is_multisite() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			return $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT meta_key FROM {$wpdb->sitemeta}
+					 WHERE meta_key LIKE %s AND meta_key NOT LIKE %s",
+					$wpdb->esc_like( '_site_transient_' ) . '%',
+					$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
+				)
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options}
+				 WHERE option_name LIKE %s AND option_name NOT LIKE %s",
+				$wpdb->esc_like( '_site_transient_' ) . '%',
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
+			)
+		);
+	}
+
+	/**
+	 * Strip the _site_transient_ prefix from a stored row name.
+	 *
+	 * @param string $stored meta_key or option_name.
+	 * @return string Transient key.
+	 */
+	private function site_transient_key_from_stored_name( string $stored ): string {
+		return substr( $stored, strlen( '_site_transient_' ) );
+	}
+
+	/**
+	 * Whether the current user may purge network site transients (wp_sitemeta on multisite).
+	 *
+	 * @return bool
+	 */
+	private function can_purge_site_transients(): bool {
+		if ( ! is_multisite() ) {
+			return true;
+		}
+		return is_super_admin() || is_network_admin();
+	}
+
 	// ── AJAX ──────────────────────────────────────────────────────────────────
 
 	public function ajax_delete(): void {
@@ -158,19 +243,13 @@ class TSOSK_Mod_Transients {
 			}
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$expired_site_keys = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT option_name FROM {$wpdb->options}
-				 WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) < %d",
-				$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
-				$now
-			)
-		);
-		foreach ( $expired_site_keys as $timeout_key ) {
-			$key = substr( $timeout_key, strlen( '_site_transient_timeout_' ) );
-			if ( delete_site_transient( $key ) ) {
-				$count++;
+		if ( $this->can_purge_site_transients() ) {
+			$expired_site_keys = $this->get_expired_site_transient_timeout_keys( $now );
+			foreach ( $expired_site_keys as $timeout_key ) {
+				$key = substr( $timeout_key, strlen( '_site_transient_timeout_' ) );
+				if ( delete_site_transient( $key ) ) {
+					$count++;
+				}
 			}
 		}
 
@@ -216,18 +295,13 @@ class TSOSK_Mod_Transients {
 			}
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$site_keys = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name NOT LIKE %s",
-				$wpdb->esc_like( '_site_transient_' ) . '%',
-				$wpdb->esc_like( '_site_transient_timeout_' ) . '%'
-			)
-		);
-		foreach ( $site_keys as $option_name ) {
-			$key = substr( $option_name, strlen( '_site_transient_' ) );
-			if ( delete_site_transient( $key ) ) {
-				$count++;
+		if ( $this->can_purge_site_transients() ) {
+			$site_keys = $this->get_site_transient_value_keys();
+			foreach ( $site_keys as $stored_name ) {
+				$key = $this->site_transient_key_from_stored_name( $stored_name );
+				if ( delete_site_transient( $key ) ) {
+					$count++;
+				}
 			}
 		}
 		TSOSK_Activity_Log::log(

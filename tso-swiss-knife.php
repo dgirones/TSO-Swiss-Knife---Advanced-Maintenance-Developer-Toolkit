@@ -502,4 +502,9 @@ function tsosk_deactivate() {
 			wp_delete_file( $maintenance_file );
 		}
 	}
+
+	$login_protect = get_option( 'tsosk_login_protect', array() );
+	if ( is_array( $login_protect ) && ! empty( $login_protect['custom_url'] ) && ! empty( $login_protect['login_slug'] ) ) {
+		flush_rewrite_rules( false );
+	}
 }

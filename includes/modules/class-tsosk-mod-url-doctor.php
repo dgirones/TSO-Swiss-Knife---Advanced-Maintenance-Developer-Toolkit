@@ -496,9 +496,10 @@ class TSOSK_Mod_Url_Doctor {
 	 */
 	private function run_probe(): array {
 		$home = home_url( '/' );
+		// Do not follow redirects: an intermediate hop could leave the site (CDN, old domain).
 		$args = array(
 			'timeout'     => 10,
-			'redirection' => 5,
+			'redirection' => 0,
 			'sslverify'   => true,
 			'user-agent'  => 'TSO-Swiss-Knife-URL-Doctor/' . TSOSK_VERSION,
 		);
@@ -529,7 +530,21 @@ class TSOSK_Mod_Url_Doctor {
 		$final_p = self::parse_url_parts( $final_url );
 		$host_ok = $final_p['valid'] && $final_p['host_nowww'] === $home_p['host_nowww'];
 
-		if ( $code >= 200 && $code < 400 && $host_ok ) {
+		if ( $code >= 300 && $code < 400 ) {
+			$message = $host_ok
+				? sprintf(
+					/* translators: 1: HTTP status, 2: redirect target URL */
+					__( 'This site answered with redirect status %1$d to %2$s (redirects are not followed by this check).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$code,
+					$final_url
+				)
+				: sprintf(
+					/* translators: 1: HTTP status, 2: redirect target host */
+					__( 'This site answered with redirect status %1$d toward a different domain (%2$s). Check CDN or leftover URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$code,
+					$final_p['valid'] ? $final_p['host'] : $final_url
+				);
+		} elseif ( $code >= 200 && $code < 300 && $host_ok ) {
 			$message = sprintf(
 				/* translators: %d: HTTP status */
 				__( 'This site answered with status %d. The public address looks reachable from the server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -554,7 +569,7 @@ class TSOSK_Mod_Url_Doctor {
 		}
 
 		return array(
-			'ok'          => ( $code >= 200 && $code < 400 && $host_ok ),
+			'ok'          => ( $code >= 200 && $code < 300 && $host_ok ),
 			'status'      => $code,
 			'final_url'   => esc_url_raw( $final_url ),
 			'message'     => $message,

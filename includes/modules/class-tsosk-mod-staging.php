@@ -20,6 +20,9 @@ class TSOSK_Mod_Staging {
 	/** Settings option (autoloaded; read on front requests). */
 	public const OPTION = 'tsosk_staging_settings';
 
+	/** Mail log option (not autoloaded; avoids web-accessible JSON under uploads). */
+	public const MAIL_LOG_OPTION = 'tsosk_staging_mail_log';
+
 	/** Max stored mail log rows. */
 	private const MAIL_LOG_LIMIT = 100;
 
@@ -263,6 +266,8 @@ class TSOSK_Mod_Staging {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
+		delete_option( self::MAIL_LOG_OPTION );
+		// Legacy JSON under uploads (pre-1.0.6 hardening).
 		TSOSK_Config_Storage::delete_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
 		TSOSK_Activity_Log::log( 'staging', 'delete', __( 'Staging mail log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		wp_send_json_success( __( 'Mail log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -544,9 +549,36 @@ class TSOSK_Mod_Staging {
 	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}>
 	 */
 	public function get_mail_log(): array {
-		$data = TSOSK_Config_Storage::read_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
-		$raw  = isset( $data['entries'] ) && is_array( $data['entries'] ) ? $data['entries'] : array();
-		$out  = array();
+		$stored = get_option( self::MAIL_LOG_OPTION, null );
+		if ( ! is_array( $stored ) ) {
+			// Migrate legacy JSON log from uploads once, then remove the web-facing file.
+			$legacy = TSOSK_Config_Storage::read_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
+			$raw    = isset( $legacy['entries'] ) && is_array( $legacy['entries'] ) ? $legacy['entries'] : array();
+			$out    = $this->sanitize_mail_log_entries( $raw );
+			if ( $out ) {
+				update_option(
+					self::MAIL_LOG_OPTION,
+					array(
+						'version' => 2,
+						'entries' => $out,
+					),
+					false
+				);
+			}
+			TSOSK_Config_Storage::delete_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
+			return $out;
+		}
+
+		$raw = isset( $stored['entries'] ) && is_array( $stored['entries'] ) ? $stored['entries'] : array();
+		return $this->sanitize_mail_log_entries( $raw );
+	}
+
+	/**
+	 * @param array<int, mixed> $raw Raw rows.
+	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}>
+	 */
+	private function sanitize_mail_log_entries( array $raw ): array {
+		$out = array();
 		foreach ( $raw as $row ) {
 			if ( ! is_array( $row ) ) {
 				continue;
@@ -670,13 +702,16 @@ class TSOSK_Mod_Staging {
 		$existing = $this->get_mail_log();
 		array_unshift( $existing, $entry );
 		$existing = array_slice( $existing, 0, self::MAIL_LOG_LIMIT );
-		TSOSK_Config_Storage::write_log_json(
-			TSOSK_Config_Storage::MAIL_LOG_JSON,
+		update_option(
+			self::MAIL_LOG_OPTION,
 			array(
 				'version' => 2,
 				'entries' => $existing,
-			)
+			),
+			false
 		);
+		// Drop legacy uploads JSON if it still exists.
+		TSOSK_Config_Storage::delete_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
 	}
 
 	public function render(): void {

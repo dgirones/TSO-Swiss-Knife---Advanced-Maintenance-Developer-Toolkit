@@ -29,6 +29,7 @@ $tsosk_options = array(
 	'tsosk_404_alert_last_sent',
 	'tsosk_alert_settings',
 	'tsosk_email_diagnostics',
+	'tsosk_email_diagnostics_history',
 	'tsosk_login_protect',
 	'tsosk_login_lockouts',
 	'tsosk_login_attempts',
@@ -41,6 +42,7 @@ $tsosk_options = array(
 	'tsosk_sr_history',
 	'tsosk_oe_history',
 	'tsosk_activity_log',
+	'tsosk_activity_log_settings',
 	'tsosk_activity_log_migrated',
 	'tsosk_slow_query_settings',
 	'tsosk_slow_query_log',
@@ -52,6 +54,7 @@ $tsosk_options = array(
 	'tsosk_disabled_image_sizes',
 	'tsosk_health_suppress',
 	'tsosk_staging_settings',
+	'tsosk_staging_mail_log',
 );
 
 foreach ( $tsosk_options as $tsosk_option ) {

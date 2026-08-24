@@ -48,6 +48,9 @@ class TSOSK_Mod_Cron {
 		if ( ! $hook || ! $timestamp ) {
 			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( $this->is_core_hook( $hook ) ) {
+			wp_send_json_error( __( 'Core cron events cannot be run manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		$crons = _get_cron_array();
 		if ( ! $crons || ! isset( $crons[ $timestamp ][ $hook ][ $sig ] ) ) {
 			wp_send_json_error( __( 'Cron event not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -370,6 +373,7 @@ class TSOSK_Mod_Cron {
 								<?php endif; ?>
 							</td>
 							<td class="tsosk-actions">
+								<?php if ( ! $is_core ) : ?>
 								<button class="button button-small tsosk-cron-run"
 								        data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
 								        data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
@@ -377,7 +381,6 @@ class TSOSK_Mod_Cron {
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
-								<?php if ( ! $is_core ) : ?>
 								<button class="button button-small tsosk-cron-edit"
 								        data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
 								        data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
