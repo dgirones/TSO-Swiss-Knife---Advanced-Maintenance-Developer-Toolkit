@@ -158,8 +158,9 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 = 1.0.6 =
 * Staging Mode: optional admin-bar label, search-engine skip, outbound mail hold, and a short administrator mail log (all off by default).
-* URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database.
-* Server & Runtime: read-only PHP limits, drop-ins, must-use plugins, and object-cache status.
+* Staging Mode no longer filters blog_public (avoids saving “Discourage search engines” if you open Settings → Reading).
+* URL & HTTPS Doctor: explains home/site URL, https, and www mismatches without changing the database; loopback uses the real final URL after redirects.
+* Server & Runtime: read-only PHP limits, drop-ins, must-use plugins, object-cache status, and PHP vs MySQL clock skew.
 
 = 1.0.5 =
 * Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.

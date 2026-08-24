@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Staging {
 
-	/** Settings option (not autoloaded). */
+	/** Settings option (autoloaded; read on front requests). */
 	public const OPTION = 'tsosk_staging_settings';
 
 	/** Max stored mail log rows. */
@@ -28,6 +28,9 @@ class TSOSK_Mod_Staging {
 
 	/** @var TSOSK_Mod_Staging|null */
 	private static $instance = null;
+
+	/** @var bool */
+	private static $did_init = false;
 
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -45,6 +48,11 @@ class TSOSK_Mod_Staging {
 	 * Runtime hooks (front and admin). All default off.
 	 */
 	public function init(): void {
+		if ( self::$did_init ) {
+			return;
+		}
+		self::$did_init = true;
+
 		$settings = $this->get_settings();
 
 		if ( ! empty( $settings['show_badge'] ) ) {
@@ -54,9 +62,13 @@ class TSOSK_Mod_Staging {
 		}
 
 		if ( ! empty( $settings['hide_from_search'] ) ) {
-			add_filter( 'pre_option_blog_public', array( $this, 'filter_blog_public_off' ) );
+			// Do not filter pre_option_blog_public: Settings → Reading would show
+			// "Discourage search engines" as checked and saving that screen would
+			// persist blog_public = 0 after staging is turned off.
 			add_filter( 'wp_robots', array( $this, 'filter_wp_robots_noindex' ) );
 			add_filter( 'wp_headers', array( $this, 'filter_robots_header' ) );
+			add_filter( 'wp_sitemaps_enabled', array( $this, 'filter_sitemaps_off' ) );
+			add_filter( 'robots_txt', array( $this, 'filter_robots_txt' ), 20, 2 );
 		}
 
 		if ( ! empty( $settings['block_mail'] ) || ! empty( $settings['log_mail'] ) ) {
@@ -65,30 +77,61 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
-	 * @param mixed $value Original option value (unused).
-	 * @return string
-	 */
-	public function filter_blog_public_off( $value ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
-		unset( $value );
-		return '0';
-	}
-
-	/**
 	 * @param array<string, bool|string|int> $robots Robots directives.
 	 * @return array<string, bool|string|int>
 	 */
 	public function filter_wp_robots_noindex( array $robots ): array {
-		$robots['noindex']  = true;
-		$robots['nofollow'] = true;
+		$robots['noindex'] = true;
 		return $robots;
 	}
 
 	/**
+	 * @param mixed $enabled Whether sitemaps are enabled.
+	 * @return bool
+	 */
+	public function filter_sitemaps_off( $enabled ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+		unset( $enabled );
+		return false;
+	}
+
+	/**
+	 * @param string $output robots.txt body.
+	 * @param mixed  $public blog_public value (unused).
+	 * @return string
+	 */
+	public function filter_robots_txt( $output, $public ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+		unset( $public );
+		$output = is_string( $output ) ? $output : '';
+		$marker = '# TSO Swiss Knife Staging Mode';
+		if ( false !== strpos( $output, $marker ) ) {
+			return $output;
+		}
+		return $output . "\n" . $marker . "\nUser-agent: *\nDisallow: /\n";
+	}
+
+	/**
+	 * Merge noindex into X-Robots-Tag instead of replacing other plugins' values.
+	 *
 	 * @param array<string, string> $headers Response headers.
 	 * @return array<string, string>
 	 */
 	public function filter_robots_header( array $headers ): array {
-		$headers['X-Robots-Tag'] = 'noindex, nofollow';
+		$existing = '';
+		foreach ( $headers as $name => $value ) {
+			if ( 0 === strcasecmp( (string) $name, 'X-Robots-Tag' ) ) {
+				$existing = is_string( $value ) ? $value : '';
+				unset( $headers[ $name ] );
+				break;
+			}
+		}
+		if ( '' === $existing ) {
+			$headers['X-Robots-Tag'] = 'noindex';
+			return $headers;
+		}
+		if ( false === stripos( $existing, 'noindex' ) ) {
+			$existing .= ', noindex';
+		}
+		$headers['X-Robots-Tag'] = $existing;
 		return $headers;
 	}
 
@@ -180,9 +223,9 @@ class TSOSK_Mod_Staging {
 			)
 		);
 
-		update_option( self::OPTION, $settings, false );
+		update_option( self::OPTION, $settings, true );
 		TSOSK_Activity_Log::log( 'staging', 'save', __( 'Staging Mode settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		wp_send_json_success( __( 'Settings saved. Reload the page to apply them fully.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -210,6 +253,31 @@ class TSOSK_Mod_Staging {
 			'block_mail'       => ! empty( $raw['block_mail'] ),
 			'log_mail'         => ! empty( $raw['log_mail'] ),
 		);
+	}
+
+	/**
+	 * Truncate a UTF-8 string without splitting a multibyte character.
+	 *
+	 * @param string $text Plain text.
+	 * @param int    $max  Max characters.
+	 */
+	public static function utf8_excerpt( string $text, int $max ): string {
+		if ( $max < 1 || '' === $text ) {
+			return '';
+		}
+		if ( function_exists( 'wp_html_excerpt' ) ) {
+			return wp_html_excerpt( $text, $max, '…' );
+		}
+		if ( function_exists( 'mb_strlen' ) && function_exists( 'mb_substr' ) ) {
+			if ( mb_strlen( $text, 'UTF-8' ) > $max ) {
+				return mb_substr( $text, 0, $max, 'UTF-8' ) . '…';
+			}
+			return $text;
+		}
+		if ( strlen( $text ) > $max ) {
+			return substr( $text, 0, $max ) . '…';
+		}
+		return $text;
 	}
 
 	/**
@@ -257,9 +325,7 @@ class TSOSK_Mod_Staging {
 		$excerpt = html_entity_decode( $excerpt, ENT_QUOTES, 'UTF-8' );
 		$excerpt = preg_replace( '/\s+/', ' ', $excerpt );
 		$excerpt = is_string( $excerpt ) ? trim( $excerpt ) : '';
-		if ( strlen( $excerpt ) > self::BODY_EXCERPT ) {
-			$excerpt = substr( $excerpt, 0, self::BODY_EXCERPT ) . '…';
-		}
+		$excerpt = self::utf8_excerpt( $excerpt, self::BODY_EXCERPT );
 
 		return array(
 			'time'     => time(),
@@ -359,7 +425,7 @@ class TSOSK_Mod_Staging {
 				<input type="checkbox" id="tsosk-staging-hide-search" value="1" <?php checked( $settings['hide_from_search'] ); ?>>
 				<strong><?php esc_html_e( 'Ask search engines not to list this copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<p class="description" style="margin:4px 0 0 24px;">
-					<?php esc_html_e( 'Adds no-index signals while this option is on. It does not permanently change Settings → Reading.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php esc_html_e( 'Adds noindex headers, pauses XML sitemaps, and disallows crawling in robots.txt while this option is on. It does not change Settings → Reading.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</label>
 			<label class="tsosk-heartbeat-option">

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-24T11:48:17+00:00\n"
+"POT-Creation-Date: 2026-08-24T13:15:02+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
@@ -35,80 +35,80 @@ msgid "https://www.tusoporteonline.es/"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:208
-#: includes/class-tsosk-admin.php:830
+#: includes/class-tsosk-admin.php:833
 msgid "Options Editor"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:209
-#: includes/class-tsosk-admin.php:835
+#: includes/class-tsosk-admin.php:838
 msgid "Meta Editor"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:210
-#: includes/class-tsosk-admin.php:895
+#: includes/class-tsosk-admin.php:898
 #: includes/modules/class-tsosk-mod-search-replace.php:928
 msgid "Search & Replace"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:211
-#: includes/class-tsosk-admin.php:935
+#: includes/class-tsosk-admin.php:938
 msgid "Reorder & Hide Sidebar"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:212
-#: includes/class-tsosk-admin.php:1010
+#: includes/class-tsosk-admin.php:1013
 msgid "Maintenance Mode"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:213
-#: includes/class-tsosk-admin.php:810
+#: includes/class-tsosk-admin.php:813
 msgid "Hidden WordPress Profiles"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:214
-#: includes/class-tsosk-admin.php:915
+#: includes/class-tsosk-admin.php:918
 #: includes/modules/class-tsosk-mod-site-snapshot.php:90
 msgid "Redirects"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:215
-#: includes/class-tsosk-admin.php:920
+#: includes/class-tsosk-admin.php:923
 msgid "Custom 404 Page"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:216
-#: includes/class-tsosk-admin.php:880
+#: includes/class-tsosk-admin.php:883
 msgid "Update Manager"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:217
-#: includes/class-tsosk-admin.php:875
+#: includes/class-tsosk-admin.php:878
 msgid "Heartbeat"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:218
-#: includes/class-tsosk-admin.php:870
+#: includes/class-tsosk-admin.php:873
 msgid "REST API"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:219
-#: includes/class-tsosk-admin.php:965
+#: includes/class-tsosk-admin.php:968
 #: includes/modules/class-tsosk-mod-update-manager.php:659
 msgid "Security Review"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:220
-#: includes/class-tsosk-admin.php:825
+#: includes/class-tsosk-admin.php:828
 msgid "Debug Mode"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:221
-#: includes/class-tsosk-admin.php:975
+#: includes/class-tsosk-admin.php:978
 msgid "Login Protection"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:222
-#: includes/class-tsosk-admin.php:980
+#: includes/class-tsosk-admin.php:983
 msgid "Comment Anti-Spam"
 msgstr ""
 
@@ -121,24 +121,24 @@ msgid "Slow Queries"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:225
-#: includes/class-tsosk-admin.php:1015
+#: includes/class-tsosk-admin.php:1018
 msgid "Plugin Sandbox"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:226
-#: includes/class-tsosk-admin.php:815
+#: includes/class-tsosk-admin.php:818
 #: includes/modules/class-tsosk-mod-update-manager.php:645
 msgid "Cron Manager"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:227
-#: includes/class-tsosk-admin.php:945
+#: includes/class-tsosk-admin.php:948
 #: includes/modules/class-tsosk-mod-internals.php:64
 msgid "Roles & Capabilities"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:228
-#: includes/class-tsosk-admin.php:925
+#: includes/class-tsosk-admin.php:928
 msgid "Slug Manager"
 msgstr ""
 
@@ -147,28 +147,28 @@ msgid "File Integrity"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:230
-#: includes/class-tsosk-admin.php:905
+#: includes/class-tsosk-admin.php:908
 msgid "Rewrite Rules"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:231
-#: includes/class-tsosk-admin.php:855
+#: includes/class-tsosk-admin.php:858
 msgid "Transients"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:232
-#: includes/class-tsosk-admin.php:940
+#: includes/class-tsosk-admin.php:943
 msgid "Users & Sessions"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:233
-#: includes/class-tsosk-admin.php:845
+#: includes/class-tsosk-admin.php:848
 #: includes/modules/class-tsosk-mod-site-snapshot.php:164
 msgid "Export/Import TSO Configuration"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:234
-#: includes/class-tsosk-admin.php:820
+#: includes/class-tsosk-admin.php:823
 msgid "Action Scheduler"
 msgstr ""
 
@@ -177,37 +177,37 @@ msgid "Health & Alerts"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:236
-#: includes/class-tsosk-admin.php:1005
+#: includes/class-tsosk-admin.php:1008
 msgid "Content Audit"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:237
-#: includes/class-tsosk-admin.php:955
+#: includes/class-tsosk-admin.php:958
 msgid "Uploads Disk Footprint"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:238
-#: includes/class-tsosk-admin.php:960
+#: includes/class-tsosk-admin.php:963
 msgid "Image Sizes Audit"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:239
-#: includes/class-tsosk-admin.php:985
+#: includes/class-tsosk-admin.php:988
 msgid "Email Diagnostics"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:240
-#: includes/class-tsosk-admin.php:990
+#: includes/class-tsosk-admin.php:993
 msgid "Staging Mode"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:241
-#: includes/class-tsosk-admin.php:995
+#: includes/class-tsosk-admin.php:998
 msgid "URL & HTTPS Doctor"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:242
-#: includes/class-tsosk-admin.php:1000
+#: includes/class-tsosk-admin.php:1003
 msgid "Server & Runtime"
 msgstr ""
 
@@ -221,8 +221,8 @@ msgid "Update"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:260
-#: includes/class-tsosk-admin.php:252
-#: includes/class-tsosk-admin.php:322
+#: includes/class-tsosk-admin.php:255
+#: includes/class-tsosk-admin.php:325
 #: includes/modules/class-tsosk-mod-cron.php:381
 #: includes/modules/class-tsosk-mod-redirects.php:501
 #: includes/modules/class-tsosk-mod-slow-queries.php:2092
@@ -231,27 +231,27 @@ msgid "Delete"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:261
-#: includes/class-tsosk-admin.php:330
-#: includes/class-tsosk-admin.php:1220
+#: includes/class-tsosk-admin.php:333
+#: includes/class-tsosk-admin.php:1223
 msgid "Save"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:262
-#: includes/class-tsosk-admin.php:244
-#: includes/class-tsosk-admin.php:333
-#: includes/class-tsosk-admin.php:1223
+#: includes/class-tsosk-admin.php:247
+#: includes/class-tsosk-admin.php:336
+#: includes/class-tsosk-admin.php:1226
 #: includes/modules/class-tsosk-mod-login-protect.php:1522
 msgid "Reset"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:263
-#: includes/class-tsosk-admin.php:210
+#: includes/class-tsosk-admin.php:213
 #: includes/modules/class-tsosk-mod-redirects.php:496
 msgid "Enable"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:264
-#: includes/class-tsosk-admin.php:211
+#: includes/class-tsosk-admin.php:214
 #: includes/modules/class-tsosk-mod-redirects.php:496
 msgid "Disable"
 msgstr ""
@@ -265,7 +265,7 @@ msgid "Toggle"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:267
-#: includes/class-tsosk-admin.php:199
+#: includes/class-tsosk-admin.php:202
 #: includes/modules/class-tsosk-mod-cron.php:365
 msgid "Run"
 msgstr ""
@@ -291,9 +291,9 @@ msgid "Purge"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:273
-#: includes/class-tsosk-admin.php:334
-#: includes/class-tsosk-admin.php:342
-#: includes/class-tsosk-admin.php:1226
+#: includes/class-tsosk-admin.php:337
+#: includes/class-tsosk-admin.php:345
+#: includes/class-tsosk-admin.php:1229
 #: includes/modules/class-tsosk-mod-cron.php:415
 #: includes/modules/class-tsosk-mod-options-editor.php:982
 #: includes/modules/class-tsosk-mod-search-replace.php:1015
@@ -373,12 +373,12 @@ msgid "Site Health suppression settings saved."
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:355
-#: includes/modules/class-tsosk-mod-staging.php:184
+#: includes/modules/class-tsosk-mod-staging.php:227
 msgid "Staging Mode settings saved."
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php:358
-#: includes/modules/class-tsosk-mod-staging.php:198
+#: includes/modules/class-tsosk-mod-staging.php:241
 msgid "Staging mail log cleared."
 msgstr ""
 
@@ -451,7 +451,7 @@ msgstr ""
 
 #: includes/class-tsosk-admin.php:131
 #: includes/class-tsosk-admin.php:132
-#: includes/class-tsosk-admin.php:1159
+#: includes/class-tsosk-admin.php:1162
 #: includes/modules/class-tsosk-mod-admin-menu.php:1486
 #: includes/modules/class-tsosk-mod-admin-menu.php:1487
 #: includes/modules/class-tsosk-mod-admin-menu.php:1522
@@ -468,215 +468,238 @@ msgid "Purge all items?"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:191
-msgid "Running…"
+msgid "Clear the staging mail log? This cannot be undone."
 msgstr ""
 
 #: includes/class-tsosk-admin.php:192
-msgid "Done!"
+#: includes/modules/class-tsosk-mod-cron.php:875
+#: includes/modules/class-tsosk-mod-cron.php:878
+#: includes/modules/class-tsosk-mod-cron.php:881
+#: includes/modules/class-tsosk-mod-heartbeat.php:149
+#: includes/modules/class-tsosk-mod-runtime-stack.php:302
+#: includes/modules/class-tsosk-mod-security.php:360
+#: includes/modules/class-tsosk-mod-security.php:369
+#: includes/modules/class-tsosk-mod-url-doctor.php:480
+#: includes/modules/class-tsosk-mod-url-doctor.php:511
+msgid "OK"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:193
-msgid "Error. Please try again."
+#: includes/modules/class-tsosk-mod-runtime-stack.php:315
+#: includes/modules/class-tsosk-mod-url-doctor.php:480
+msgid "Needs attention"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:194
-msgid "This will reload the page with the selected plugins. Continue?"
+msgid "Running…"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:195
-msgid "Clear pause"
+msgid "Done!"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:196
+msgid "Error. Please try again."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:197
+msgid "This will reload the page with the selected plugins. Continue?"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:198
+msgid "Clear pause"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:199
 #: includes/modules/class-tsosk-mod-redirects.php:319
 msgid "Save Redirect"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:197
+#: includes/class-tsosk-admin.php:200
 msgid "Update Redirect"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:198
+#: includes/class-tsosk-admin.php:201
 msgid "WP_DEBUG and WP_DEBUG_LOG are selected. Save settings to activate debug.log."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:200
-#: includes/class-tsosk-admin.php:250
+#: includes/class-tsosk-admin.php:203
+#: includes/class-tsosk-admin.php:253
 #: includes/modules/class-tsosk-mod-cron.php:287
 #: includes/modules/class-tsosk-mod-cron.php:374
 #: includes/modules/class-tsosk-mod-redirects.php:491
 msgid "Edit"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:201
+#: includes/class-tsosk-admin.php:204
 #: includes/modules/class-tsosk-mod-cron.php:414
 msgid "Save schedule"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:202
+#: includes/class-tsosk-admin.php:205
 #: includes/modules/class-tsosk-mod-cron.php:180
 msgid "Event rescheduled."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:203
+#: includes/class-tsosk-admin.php:206
 #: includes/modules/class-tsosk-mod-transients.php:289
 msgid "Purge Expired"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:204
+#: includes/class-tsosk-admin.php:207
 msgid "Purge All"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:205
+#: includes/class-tsosk-admin.php:208
 #: includes/modules/class-tsosk-mod-rewrite.php:85
 msgid "Soft Flush"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:206
+#: includes/class-tsosk-admin.php:209
 #: includes/modules/class-tsosk-mod-rewrite.php:89
 msgid "Hard Flush"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:207
+#: includes/class-tsosk-admin.php:210
 msgid "Flush Object Cache"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:208
+#: includes/class-tsosk-admin.php:211
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:614
 msgid "ON"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:209
+#: includes/class-tsosk-admin.php:212
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:616
 msgid "OFF"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:212
+#: includes/class-tsosk-admin.php:215
 #: includes/modules/class-tsosk-mod-sandbox.php:249
 msgid "Apply Sandbox"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:213
+#: includes/class-tsosk-admin.php:216
 msgid "Reset Sandbox"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:214
+#: includes/class-tsosk-admin.php:217
 #: includes/modules/class-tsosk-mod-debug.php:971
 msgid "Errors"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:215
+#: includes/class-tsosk-admin.php:218
 #: includes/modules/class-tsosk-mod-redirects.php:352
 msgid "Clear 404 Log"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:216
+#: includes/class-tsosk-admin.php:219
 #: includes/modules/class-tsosk-mod-health.php:324
 msgid "Save Alert Settings"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:217
+#: includes/class-tsosk-admin.php:220
 msgid "Close Sessions"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:218
+#: includes/class-tsosk-admin.php:221
 #: includes/modules/class-tsosk-mod-users.php:504
 msgid "Close all sessions"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:219
+#: includes/class-tsosk-admin.php:222
 msgid "Force this user to change their password on next login and close all sessions?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:220
+#: includes/class-tsosk-admin.php:223
 #: includes/modules/class-tsosk-mod-users.php:331
 msgid "Select at least one user."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:221
+#: includes/class-tsosk-admin.php:224
 msgid "Apply bulk action to selected inactive users?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:222
+#: includes/class-tsosk-admin.php:225
 msgid "High risk"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:223
+#: includes/class-tsosk-admin.php:226
 msgid "Only in role A"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:224
+#: includes/class-tsosk-admin.php:227
 msgid "Only in role B"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:225
+#: includes/class-tsosk-admin.php:228
 msgid "In both roles"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:226
+#: includes/class-tsosk-admin.php:229
 msgid "Administrator capabilities loaded (read-only)."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:227
+#: includes/class-tsosk-admin.php:230
 msgid "Apply this template? Capabilities not in the template will be removed from the selected role."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:228
+#: includes/class-tsosk-admin.php:231
 #: includes/modules/class-tsosk-mod-media-cleaner.php:840
 msgid "Regenerate Thumbnails"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:229
+#: includes/class-tsosk-admin.php:232
 #: includes/modules/class-tsosk-mod-media-cleaner.php:162
 msgid "Run full media review"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:230
+#: includes/class-tsosk-admin.php:233
 msgid "Starting full media review…"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:231
+#: includes/class-tsosk-admin.php:234
 #: includes/modules/class-tsosk-mod-media-footprint.php:74
 msgid "Scan uploads folder"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:232
+#: includes/class-tsosk-admin.php:235
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:139
 msgid "Run image sizes audit"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:233
+#: includes/class-tsosk-admin.php:236
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:331
 msgid "Save image size settings"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:234
+#: includes/class-tsosk-admin.php:237
 #: includes/modules/class-tsosk-mod-email.php:308
 msgid "Send Test"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:235
+#: includes/class-tsosk-admin.php:238
 msgid "Report copied to clipboard."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:236
+#: includes/class-tsosk-admin.php:239
 #: includes/modules/class-tsosk-mod-file-integrity.php:784
 msgid "Connecting to WordPress.org API…"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:237
+#: includes/class-tsosk-admin.php:240
 msgid "All core files are intact."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:238
+#: includes/class-tsosk-admin.php:241
 msgid "issue(s) found — review the results below."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:239
+#: includes/class-tsosk-admin.php:242
 msgid "Scan complete."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:240
+#: includes/class-tsosk-admin.php:243
 #: includes/modules/class-tsosk-mod-file-integrity.php:1008
 #: includes/modules/class-tsosk-mod-file-integrity.php:1043
 #: includes/modules/class-tsosk-mod-file-integrity.php:1081
@@ -685,325 +708,325 @@ msgstr ""
 msgid "Ignore"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:241
+#: includes/class-tsosk-admin.php:244
 #: includes/modules/class-tsosk-mod-file-integrity.php:818
 msgid "Remove"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:242
+#: includes/class-tsosk-admin.php:245
 msgid "Scan timed out. The server took too long to respond. Try Force Re-scan or check PHP max_execution_time."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:243
+#: includes/class-tsosk-admin.php:246
 #: includes/modules/class-tsosk-mod-login-protect.php:1622
 msgid "Unlock"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:245
+#: includes/class-tsosk-admin.php:248
 #: includes/modules/class-tsosk-mod-login-protect.php:1549
 msgid "Unlock All"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:246
+#: includes/class-tsosk-admin.php:249
 msgid "Unlock all currently locked IP addresses?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:247
+#: includes/class-tsosk-admin.php:250
 msgid "Clear the entire lockout log? This cannot be undone."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:248
+#: includes/class-tsosk-admin.php:251
 #: includes/modules/class-tsosk-mod-login-protect.php:1554
 #: includes/modules/class-tsosk-mod-slow-queries.php:1729
 msgid "Clear Log"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:249
+#: includes/class-tsosk-admin.php:252
 #: includes/modules/class-tsosk-mod-login-protect.php:1273
 msgid "Generate"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:251
+#: includes/class-tsosk-admin.php:254
 #: includes/modules/class-tsosk-mod-options-editor.php:981
 msgid "Save Option"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:253
+#: includes/class-tsosk-admin.php:256
 #: includes/modules/class-tsosk-mod-options-editor.php:1031
 msgid "Add Option"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:254
+#: includes/class-tsosk-admin.php:257
 #: includes/modules/class-tsosk-mod-admin-menu.php:3288
 #: includes/modules/class-tsosk-mod-option-library.php:189
 msgid "Protected"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:255
+#: includes/class-tsosk-admin.php:258
 msgid "View"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:256
+#: includes/class-tsosk-admin.php:259
 #: includes/modules/class-tsosk-mod-options-editor.php:895
 msgid "Show protected options"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:257
+#: includes/class-tsosk-admin.php:260
 msgid "Hide protected options"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:258
+#: includes/class-tsosk-admin.php:261
 #: includes/modules/class-tsosk-mod-options-editor.php:1011
 msgid "Plain text value."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:259
+#: includes/class-tsosk-admin.php:262
 msgid "Whole number only, for example: 0 or 42."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:260
+#: includes/class-tsosk-admin.php:263
 msgid "Valid JSON object or array."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:261
+#: includes/class-tsosk-admin.php:264
 msgid "Valid PHP serialized string."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:262
+#: includes/class-tsosk-admin.php:265
 #: includes/modules/class-tsosk-mod-options-editor.php:949
 msgid "Show raw value"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:263
+#: includes/class-tsosk-admin.php:266
 msgid "Show formatted value"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:264
+#: includes/class-tsosk-admin.php:267
 msgid "Delete this option permanently? This cannot be undone."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:265
+#: includes/class-tsosk-admin.php:268
 msgid "No options found."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:266
+#: includes/class-tsosk-admin.php:269
 msgid "Serialized PHP — edit only if you know PHP serialization syntax."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:267
+#: includes/class-tsosk-admin.php:270
 msgid "JSON — must remain valid JSON after editing."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:268
-#: includes/class-tsosk-admin.php:294
+#: includes/class-tsosk-admin.php:271
+#: includes/class-tsosk-admin.php:297
 msgid "Page"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:269
-#: includes/class-tsosk-admin.php:295
+#: includes/class-tsosk-admin.php:272
+#: includes/class-tsosk-admin.php:298
 msgid "of"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:270
+#: includes/class-tsosk-admin.php:273
 msgid "options"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:271
+#: includes/class-tsosk-admin.php:274
 #: includes/modules/class-tsosk-mod-slug-manager.php:1058
 msgid "Rename"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:272
+#: includes/class-tsosk-admin.php:275
 #: includes/modules/class-tsosk-mod-slug-manager.php:834
 msgid "Save New Slug"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:273
+#: includes/class-tsosk-admin.php:276
 msgid "No posts found."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:274
+#: includes/class-tsosk-admin.php:277
 #: includes/modules/class-tsosk-mod-slug-manager.php:609
 #: includes/modules/class-tsosk-mod-slug-manager.php:803
 msgid "characters"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:275
+#: includes/class-tsosk-admin.php:278
 #: includes/modules/class-tsosk-mod-slug-manager.php:684
 msgid "Bulk Fix Selected"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:276
+#: includes/class-tsosk-admin.php:279
 msgid "Bulk slug fix preview"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:277
+#: includes/class-tsosk-admin.php:280
 msgid "Confirm changes"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:278
+#: includes/class-tsosk-admin.php:281
 msgid "Skipped"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:279
+#: includes/class-tsosk-admin.php:282
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2286
 msgid "Reason"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:280
+#: includes/class-tsosk-admin.php:283
 msgid "Truncate the selected slugs and create redirects where enabled? This changes permalinks immediately."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:281
+#: includes/class-tsosk-admin.php:284
 #: includes/modules/class-tsosk-mod-content-audit.php:225
 #: includes/modules/class-tsosk-mod-slug-manager.php:788
 msgid "Post"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:282
+#: includes/class-tsosk-admin.php:285
 msgid "Before"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:283
+#: includes/class-tsosk-admin.php:286
 msgid "After"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:284
+#: includes/class-tsosk-admin.php:287
 msgid "items"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:285
+#: includes/class-tsosk-admin.php:288
 msgid "Remove this broken shortcode from the post content?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:286
+#: includes/class-tsosk-admin.php:289
 msgid "Remove all broken shortcodes from this post?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:287
+#: includes/class-tsosk-admin.php:290
 msgid "Cancel this scheduled action?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:288
+#: includes/class-tsosk-admin.php:291
 #: includes/modules/class-tsosk-mod-slug-manager.php:824
 msgid "Redirect will be added to TSO Swiss Knife Redirects automatically."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:289
+#: includes/class-tsosk-admin.php:292
 msgid "Clear the entire slow query log? This cannot be undone."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:290
+#: includes/class-tsosk-admin.php:293
 msgid "Delete this entry?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:291
+#: includes/class-tsosk-admin.php:294
 msgid "Ignore this SQL pattern? Matching queries will stop being logged."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:292
+#: includes/class-tsosk-admin.php:295
 msgid "No slow queries match your search."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:293
+#: includes/class-tsosk-admin.php:296
 msgid "slow"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:296
+#: includes/class-tsosk-admin.php:299
 msgid "No matches found for the search term in the selected tables."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:297
+#: includes/class-tsosk-admin.php:300
 msgid "This will modify the database. Have you made a backup? Click OK to proceed."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:298
+#: includes/class-tsosk-admin.php:301
 msgid "Select at least one table."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:299
+#: includes/class-tsosk-admin.php:302
 msgid "Enter a search term."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:300
+#: includes/class-tsosk-admin.php:303
 msgid "Settings changed after preview. Run Preview again before executing."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:301
+#: includes/class-tsosk-admin.php:304
 #: includes/modules/class-tsosk-mod-search-replace.php:1005
 msgid "Preview changes"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:302
+#: includes/class-tsosk-admin.php:305
 msgid "tables"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:303
+#: includes/class-tsosk-admin.php:306
 msgid "Review below and click \"Execute replace\" to commit changes."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:304
+#: includes/class-tsosk-admin.php:307
 msgid "Import will overwrite settings for the sections in this snapshot. Continue?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:305
+#: includes/class-tsosk-admin.php:308
 msgid "Select at least one section."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:306
+#: includes/class-tsosk-admin.php:309
 msgid "Paste or upload a valid TSO snapshot JSON first."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:307
+#: includes/class-tsosk-admin.php:310
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1183
 msgid "No file chosen"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:308
+#: includes/class-tsosk-admin.php:311
 msgid "Select at least one 404 row."
 msgstr ""
 
 #. translators: %1$d: number of 404 paths queued for redirect creation.
-#: includes/class-tsosk-admin.php:310
+#: includes/class-tsosk-admin.php:313
 #, php-format
 msgid "%1$d paths queued. The form shows the first — save each redirect to advance automatically."
 msgstr ""
 
 #. translators: %1$d: number of 404 paths still waiting in the redirect queue.
-#: includes/class-tsosk-admin.php:312
+#: includes/class-tsosk-admin.php:315
 #, php-format
 msgid "Redirect saved. %1$d path(s) remaining in the queue."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:313
+#: includes/class-tsosk-admin.php:316
 #: includes/modules/class-tsosk-mod-constants.php:186
 msgid "Site URL"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:314
+#: includes/class-tsosk-admin.php:317
 #: includes/modules/class-tsosk-mod-health.php:376
 msgid "WordPress version"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:315
+#: includes/class-tsosk-admin.php:318
 msgid "Snapshot schema"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:316
+#: includes/class-tsosk-admin.php:319
 #: includes/modules/class-tsosk-mod-health.php:381
-#: includes/modules/class-tsosk-mod-runtime-stack.php:207
+#: includes/modules/class-tsosk-mod-runtime-stack.php:225
 msgid "PHP version"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:317
+#: includes/class-tsosk-admin.php:320
 msgid "Locale"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:318
+#: includes/class-tsosk-admin.php:321
 msgid "more rows"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:319
+#: includes/class-tsosk-admin.php:322
 #: includes/modules/class-tsosk-mod-action-scheduler.php:296
 #: includes/modules/class-tsosk-mod-content-audit.php:530
 #: includes/modules/class-tsosk-mod-media-cleaner.php:656
@@ -1011,46 +1034,46 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:320
+#: includes/class-tsosk-admin.php:323
 #: includes/modules/class-tsosk-mod-search-replace.php:1011
 msgid "Execute replace"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:321
+#: includes/class-tsosk-admin.php:324
 msgid "Clear all activity history? This cannot be undone."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:323
+#: includes/class-tsosk-admin.php:326
 #: includes/modules/class-tsosk-mod-action-scheduler.php:305
 msgid "Loading…"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:324
+#: includes/class-tsosk-admin.php:327
 #: includes/modules/class-tsosk-mod-content-audit.php:535
 msgid "(no title)"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:325
+#: includes/class-tsosk-admin.php:328
 msgid "rows"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:326
+#: includes/class-tsosk-admin.php:329
 msgid "matches"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:327
+#: includes/class-tsosk-admin.php:330
 #: includes/modules/class-tsosk-mod-hooks.php:89
 #: includes/modules/class-tsosk-mod-hooks.php:155
 msgid "Previous"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:328
+#: includes/class-tsosk-admin.php:331
 #: includes/modules/class-tsosk-mod-hooks.php:102
 #: includes/modules/class-tsosk-mod-hooks.php:168
 msgid "Next"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:329
+#: includes/class-tsosk-admin.php:332
 #: includes/modules/class-tsosk-mod-heartbeat.php:175
 #: includes/modules/class-tsosk-mod-login-protect.php:1479
 #: includes/modules/class-tsosk-mod-maintenance.php:368
@@ -1060,109 +1083,109 @@ msgstr ""
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:331
-#: includes/class-tsosk-admin.php:1064
+#: includes/class-tsosk-admin.php:334
+#: includes/class-tsosk-admin.php:1067
 #: includes/modules/class-tsosk-mod-admin-menu.php:3481
 #: includes/modules/class-tsosk-mod-admin-menu.php:3530
 msgid "Hide"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:332
-#: includes/class-tsosk-admin.php:1064
+#: includes/class-tsosk-admin.php:335
+#: includes/class-tsosk-admin.php:1067
 msgid "Show"
 msgstr ""
 
 #. translators: %s: sidebar tab label.
-#: includes/class-tsosk-admin.php:336
+#: includes/class-tsosk-admin.php:339
 #, php-format
 msgid "Drop above: %s"
 msgstr ""
 
 #. translators: %s: sidebar tab label.
-#: includes/class-tsosk-admin.php:338
+#: includes/class-tsosk-admin.php:341
 #, php-format
 msgid "Drop below: %s"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:339
+#: includes/class-tsosk-admin.php:342
 msgid "Drop at end of list"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:340
-#: includes/class-tsosk-admin.php:1060
+#: includes/class-tsosk-admin.php:343
+#: includes/class-tsosk-admin.php:1063
 msgid "Remove from favorites"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:341
+#: includes/class-tsosk-admin.php:344
 msgid "Add to favorites"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:343
+#: includes/class-tsosk-admin.php:346
 #: includes/modules/class-tsosk-mod-content-audit.php:526
 #: includes/modules/class-tsosk-mod-media-cleaner.php:651
 #: includes/modules/class-tsosk-mod-media-cleaner.php:824
 msgid "No items found."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:344
-#: includes/class-tsosk-admin.php:1085
+#: includes/class-tsosk-admin.php:347
+#: includes/class-tsosk-admin.php:1088
 msgid "Search… (Ctrl+K)"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:345
+#: includes/class-tsosk-admin.php:348
 msgid "No matching tools."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:346
+#: includes/class-tsosk-admin.php:349
 msgid "Type to find a tab, then press Enter or click a result."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:347
-#: includes/class-tsosk-admin.php:1101
+#: includes/class-tsosk-admin.php:350
+#: includes/class-tsosk-admin.php:1104
 msgid "Site status"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:348
-#: includes/class-tsosk-admin.php:1121
+#: includes/class-tsosk-admin.php:351
+#: includes/class-tsosk-admin.php:1124
 msgid "Enable dev mode"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:349
+#: includes/class-tsosk-admin.php:352
 msgid "Disable dev mode"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:350
+#: includes/class-tsosk-admin.php:353
 #: includes/modules/class-tsosk-mod-custom-404.php:606
 msgid "Custom 404 active"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:351
+#: includes/class-tsosk-admin.php:354
 #: includes/modules/class-tsosk-mod-custom-404.php:607
 msgid "Using theme default 404"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:352
+#: includes/class-tsosk-admin.php:355
 msgid "Select a published page to preview."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:353
+#: includes/class-tsosk-admin.php:356
 msgid "Reset the sidebar menu to WordPress defaults?"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:354
+#: includes/class-tsosk-admin.php:357
 #: includes/modules/class-tsosk-mod-maintenance.php:314
 msgid "Select logo"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:355
+#: includes/class-tsosk-admin.php:358
 msgid "Use this image"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:356
+#: includes/class-tsosk-admin.php:359
 msgid "Preview loaded."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:357
+#: includes/class-tsosk-admin.php:360
 #: includes/modules/class-tsosk-mod-login-protect.php:1585
 #: includes/modules/class-tsosk-mod-transients.php:276
 #: includes/modules/class-tsosk-mod-transients.php:285
@@ -1171,30 +1194,30 @@ msgid "Expired"
 msgstr ""
 
 #. translators: %s: log file label shown in the confirmation dialog.
-#: includes/class-tsosk-admin.php:359
+#: includes/class-tsosk-admin.php:362
 #, php-format
 msgid "Empty \"%s\"? All log entries will be deleted but the file will remain on disk. This cannot be undone."
 msgstr ""
 
 #. translators: %s: log file label shown in the confirmation dialog.
-#: includes/class-tsosk-admin.php:361
+#: includes/class-tsosk-admin.php:364
 #, php-format
 msgid "Keep only the last 500 lines of %s? Older lines will be archived."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:362
+#: includes/class-tsosk-admin.php:365
 #: includes/modules/class-tsosk-mod-action-scheduler.php:288
 #: includes/modules/class-tsosk-mod-debug.php:927
 #: includes/modules/class-tsosk-mod-debug.php:979
 msgid "Refresh"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:378
+#: includes/class-tsosk-admin.php:381
 msgid "Open"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:625
-#: includes/class-tsosk-admin.php:678
+#: includes/class-tsosk-admin.php:628
+#: includes/class-tsosk-admin.php:681
 #: includes/modules/class-tsosk-mod-action-scheduler.php:191
 #: includes/modules/class-tsosk-mod-action-scheduler.php:217
 #: includes/modules/class-tsosk-mod-action-scheduler.php:242
@@ -1278,14 +1301,14 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-slug-manager.php:162
 #: includes/modules/class-tsosk-mod-slug-manager.php:197
 #: includes/modules/class-tsosk-mod-slug-manager.php:405
-#: includes/modules/class-tsosk-mod-staging.php:171
-#: includes/modules/class-tsosk-mod-staging.php:194
+#: includes/modules/class-tsosk-mod-staging.php:214
+#: includes/modules/class-tsosk-mod-staging.php:237
 #: includes/modules/class-tsosk-mod-transients.php:114
 #: includes/modules/class-tsosk-mod-transients.php:137
 #: includes/modules/class-tsosk-mod-transients.php:199
 #: includes/modules/class-tsosk-mod-update-manager.php:201
 #: includes/modules/class-tsosk-mod-update-manager.php:751
-#: includes/modules/class-tsosk-mod-url-doctor.php:210
+#: includes/modules/class-tsosk-mod-url-doctor.php:322
 #: includes/modules/class-tsosk-mod-users.php:268
 #: includes/modules/class-tsosk-mod-users.php:295
 #: includes/modules/class-tsosk-mod-users.php:318
@@ -1294,162 +1317,162 @@ msgstr ""
 msgid "Insufficient permissions."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:669
+#: includes/class-tsosk-admin.php:672
 msgid "Sidebar layout saved."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:685
+#: includes/class-tsosk-admin.php:688
 msgid "Sidebar reset to default order."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:706
+#: includes/class-tsosk-admin.php:709
 msgid "Profiles & config"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:707
+#: includes/class-tsosk-admin.php:710
 #: includes/modules/class-tsosk-mod-constants.php:42
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:467
 msgid "Performance"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:708
+#: includes/class-tsosk-admin.php:711
 #: includes/modules/class-tsosk-mod-constants.php:36
 msgid "Database"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:709
+#: includes/class-tsosk-admin.php:712
 #: includes/modules/class-tsosk-mod-constants.php:46
 msgid "Security"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:710
+#: includes/class-tsosk-admin.php:713
 msgid "Content & URLs"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:711
+#: includes/class-tsosk-admin.php:714
 msgid "Development"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:712
+#: includes/class-tsosk-admin.php:715
 msgid "Site & tools"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:805
+#: includes/class-tsosk-admin.php:808
 #: includes/modules/class-tsosk-mod-history.php:92
 #: includes/modules/class-tsosk-mod-search-replace.php:1038
 msgid "Activity History"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:840
+#: includes/class-tsosk-admin.php:843
 msgid "Option Library"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:850
+#: includes/class-tsosk-admin.php:853
 #: includes/modules/class-tsosk-mod-options.php:88
 msgid "TSO Link Inspector"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:860
+#: includes/class-tsosk-admin.php:863
 msgid "WP Constants"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:865
+#: includes/class-tsosk-admin.php:868
 msgid "WP Internals"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:885
+#: includes/class-tsosk-admin.php:888
 #: includes/modules/class-tsosk-mod-database.php:88
 msgid "TSO Options & Tables Cleaner"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:890
+#: includes/class-tsosk-admin.php:893
 #: includes/modules/class-tsosk-mod-slow-queries.php:922
 msgid "Slow Query Monitor"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:900
+#: includes/class-tsosk-admin.php:903
 msgid "Hooks Inspector"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:910
+#: includes/class-tsosk-admin.php:913
 msgid "Server Files Review"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:930
+#: includes/class-tsosk-admin.php:933
 #: includes/modules/class-tsosk-mod-health.php:232
 msgid "Health Report"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:950
+#: includes/class-tsosk-admin.php:953
 msgid "Media Cleaner"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:970
+#: includes/class-tsosk-admin.php:973
 msgid "Core File Integrity"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1079
+#: includes/class-tsosk-admin.php:1082
 msgid "Search tools"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1084
+#: includes/class-tsosk-admin.php:1087
 msgid "Search tools (Ctrl+K)"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1103
+#: includes/class-tsosk-admin.php:1106
 msgid "No special modes active"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1116
+#: includes/class-tsosk-admin.php:1119
 #: includes/modules/class-tsosk-mod-debug.php:715
 msgid "Developer mode"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1120
+#: includes/class-tsosk-admin.php:1123
 msgid "Enable WP_DEBUG, debug.log and SAVEQUERIES"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1137
+#: includes/class-tsosk-admin.php:1140
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1174
+#: includes/class-tsosk-admin.php:1177
 msgid "Tools menu"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1179
+#: includes/class-tsosk-admin.php:1182
 msgid "Favorite tools"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1184
+#: includes/class-tsosk-admin.php:1187
 msgid "Favorites"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1187
+#: includes/class-tsosk-admin.php:1190
 msgid "Use Organise on the tools list, then drag tabs here."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1199
+#: includes/class-tsosk-admin.php:1202
 msgid "Plugin tools"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1207
+#: includes/class-tsosk-admin.php:1210
 msgid "Organise sidebar"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1209
+#: includes/class-tsosk-admin.php:1212
 msgid "Organise"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1216
+#: includes/class-tsosk-admin.php:1219
 msgid "Drag tabs to reorder and move them between categories, drag into Favorites, and reorder favorites. Click ✕ on a tool to hide it or on a favorite to remove it."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1272
+#: includes/class-tsosk-admin.php:1275
 msgid "Module not available."
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1295
+#: includes/class-tsosk-admin.php:1298
 msgid "Plugin language"
 msgstr ""
 
@@ -2598,7 +2621,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2314
 #: includes/modules/class-tsosk-mod-custom-404.php:752
-#: includes/modules/class-tsosk-mod-staging.php:381
+#: includes/modules/class-tsosk-mod-staging.php:447
 msgid "Save settings"
 msgstr ""
 
@@ -2695,15 +2718,15 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:194
 #: includes/modules/class-tsosk-mod-internals.php:145
-#: includes/modules/class-tsosk-mod-runtime-stack.php:300
-#: includes/modules/class-tsosk-mod-runtime-stack.php:345
+#: includes/modules/class-tsosk-mod-runtime-stack.php:346
+#: includes/modules/class-tsosk-mod-runtime-stack.php:391
 msgid "Yes"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-constants.php:188
 #: includes/modules/class-tsosk-mod-content-audit.php:196
 #: includes/modules/class-tsosk-mod-internals.php:145
-#: includes/modules/class-tsosk-mod-runtime-stack.php:348
+#: includes/modules/class-tsosk-mod-runtime-stack.php:394
 msgid "No"
 msgstr ""
 
@@ -3128,8 +3151,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-health.php:245
 #: includes/modules/class-tsosk-mod-security.php:320
 #: includes/modules/class-tsosk-mod-update-manager.php:851
-#: includes/modules/class-tsosk-mod-url-doctor.php:321
-#: includes/modules/class-tsosk-mod-url-doctor.php:389
+#: includes/modules/class-tsosk-mod-url-doctor.php:443
+#: includes/modules/class-tsosk-mod-url-doctor.php:514
 msgid "Check"
 msgstr ""
 
@@ -3222,17 +3245,6 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-security.php:360
 #: includes/modules/class-tsosk-mod-security.php:369
 msgid "Review"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-cron.php:875
-#: includes/modules/class-tsosk-mod-cron.php:878
-#: includes/modules/class-tsosk-mod-cron.php:881
-#: includes/modules/class-tsosk-mod-heartbeat.php:149
-#: includes/modules/class-tsosk-mod-security.php:360
-#: includes/modules/class-tsosk-mod-security.php:369
-#: includes/modules/class-tsosk-mod-url-doctor.php:358
-#: includes/modules/class-tsosk-mod-url-doctor.php:386
-msgid "OK"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-cron.php:884
@@ -3859,7 +3871,7 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-media-footprint.php:201
 #: includes/modules/class-tsosk-mod-media-footprint.php:226
 #: includes/modules/class-tsosk-mod-options-editor.php:912
-#: includes/modules/class-tsosk-mod-runtime-stack.php:371
+#: includes/modules/class-tsosk-mod-runtime-stack.php:417
 #: includes/modules/class-tsosk-mod-server-files.php:800
 #: includes/modules/class-tsosk-mod-transients.php:302
 msgid "Size"
@@ -4087,7 +4099,7 @@ msgid "CC"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-email.php:413
-#: includes/modules/class-tsosk-mod-staging.php:400
+#: includes/modules/class-tsosk-mod-staging.php:466
 msgid "Subject"
 msgstr ""
 
@@ -4246,8 +4258,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-file-integrity.php:1070
 #: includes/modules/class-tsosk-mod-file-integrity.php:1105
 #: includes/modules/class-tsosk-mod-media-cleaner.php:827
-#: includes/modules/class-tsosk-mod-runtime-stack.php:332
-#: includes/modules/class-tsosk-mod-runtime-stack.php:370
+#: includes/modules/class-tsosk-mod-runtime-stack.php:378
+#: includes/modules/class-tsosk-mod-runtime-stack.php:416
 msgid "File"
 msgstr ""
 
@@ -4681,7 +4693,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-heartbeat.php:149
 #: includes/modules/class-tsosk-mod-security.php:365
-#: includes/modules/class-tsosk-mod-url-doctor.php:391
+#: includes/modules/class-tsosk-mod-url-doctor.php:516
 msgid "Info"
 msgstr ""
 
@@ -5106,13 +5118,13 @@ msgid "Registered image sizes"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:262
-#: includes/modules/class-tsosk-mod-runtime-stack.php:249
+#: includes/modules/class-tsosk-mod-runtime-stack.php:272
 msgid "On"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:263
 #: includes/modules/class-tsosk-mod-internals.php:67
-#: includes/modules/class-tsosk-mod-runtime-stack.php:369
+#: includes/modules/class-tsosk-mod-runtime-stack.php:415
 msgid "Name"
 msgstr ""
 
@@ -5626,6 +5638,7 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-maintenance.php:247
 #: includes/modules/class-tsosk-mod-slow-queries.php:1216
+#: includes/modules/class-tsosk-mod-staging.php:228
 msgid "Settings saved."
 msgstr ""
 
@@ -7504,136 +7517,154 @@ msgstr ""
 msgid "Select a role and click Load capabilities."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:200
+#: includes/modules/class-tsosk-mod-runtime-stack.php:218
 msgid "A snapshot of what sits under WordPress on this server: extra cache files, must-use plugins that always load, and PHP limits that explain failed uploads or timeouts. Nothing here is changed."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:204
+#: includes/modules/class-tsosk-mod-runtime-stack.php:222
 msgid "PHP and hosting limits"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:211
+#: includes/modules/class-tsosk-mod-runtime-stack.php:229
 msgid "Memory PHP may use"
 msgstr ""
 
 #. translators: %s: WP_MEMORY_LIMIT value
-#: includes/modules/class-tsosk-mod-runtime-stack.php:220
+#: includes/modules/class-tsosk-mod-runtime-stack.php:238
 #, php-format
 msgid "WordPress asks for %s."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:230
+#: includes/modules/class-tsosk-mod-runtime-stack.php:248
 msgid "Largest file you can upload"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:234
+#: includes/modules/class-tsosk-mod-runtime-stack.php:252
 msgid "Largest form WordPress can receive"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:238
+#: includes/modules/class-tsosk-mod-runtime-stack.php:256
+msgid "post_max_size is smaller than upload_max_filesize, so large uploads can fail even when the file-size limit looks high enough."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:261
 msgid "Seconds a request may run"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:242
+#: includes/modules/class-tsosk-mod-runtime-stack.php:265
 msgid "Form fields allowed in one request"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:246
+#: includes/modules/class-tsosk-mod-runtime-stack.php:269
 msgid "PHP accelerator (OPcache)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:251
+#: includes/modules/class-tsosk-mod-runtime-stack.php:274
 msgid "Off or unknown"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:256
+#: includes/modules/class-tsosk-mod-runtime-stack.php:279
 msgid "Temporary folder"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:260
+#: includes/modules/class-tsosk-mod-runtime-stack.php:283
 msgid "Writable"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:262
+#: includes/modules/class-tsosk-mod-runtime-stack.php:285
 msgid "Not writable"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:267
-msgid "Clock (PHP vs WordPress)"
+#: includes/modules/class-tsosk-mod-runtime-stack.php:290
+msgid "WordPress timezone"
 msgstr ""
 
-#. translators: 1: PHP timezone, 2: WordPress timezone
-#: includes/modules/class-tsosk-mod-runtime-stack.php:273
-#, php-format
-msgid "PHP: %1$s. WordPress: %2$s."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-runtime-stack.php:280
-msgid "They differ. Scheduled posts and cron times can look wrong."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-runtime-stack.php:286
-msgid "PHP functions turned off by hosting"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-runtime-stack.php:294
-msgid "Object cache (fast database memory)"
+#: includes/modules/class-tsosk-mod-runtime-stack.php:293
+msgid "From Settings → General. WordPress keeps PHP on UTC internally, so a PHP timezone of UTC is normal."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-runtime-stack.php:297
+msgid "PHP vs database clock"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:300
+msgid "Could not read the database clock."
+msgstr ""
+
+#. translators: %d: seconds of difference
+#: includes/modules/class-tsosk-mod-runtime-stack.php:308
+#, php-format
+msgid "PHP and MySQL differ by %d seconds."
+msgstr ""
+
+#. translators: %d: seconds of difference
+#: includes/modules/class-tsosk-mod-runtime-stack.php:321
+#, php-format
+msgid "PHP and MySQL clocks differ by %d seconds. Scheduled posts and cron times can look wrong."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:332
+msgid "PHP functions turned off by hosting"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:340
+msgid "Object cache (fast database memory)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:343
 msgid "Persistent cache (Redis / Memcached / similar)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:302
+#: includes/modules/class-tsosk-mod-runtime-stack.php:348
 msgid "No — WordPress is using its default in-memory cache for this request."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:307
+#: includes/modules/class-tsosk-mod-runtime-stack.php:353
 msgid "Driver class"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:311
+#: includes/modules/class-tsosk-mod-runtime-stack.php:357
 msgid "object-cache.php drop-in"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:314
+#: includes/modules/class-tsosk-mod-runtime-stack.php:360
 msgid "Present"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:317
+#: includes/modules/class-tsosk-mod-runtime-stack.php:363
 msgid "Not present"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:325
+#: includes/modules/class-tsosk-mod-runtime-stack.php:371
 msgid "Drop-in files in wp-content"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:327
+#: includes/modules/class-tsosk-mod-runtime-stack.php:373
 msgid "These special files replace or extend core behaviour (cache, database, error pages). Hosting or a cache plugin often places them. They do not appear in the normal Plugins list."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:333
+#: includes/modules/class-tsosk-mod-runtime-stack.php:379
 msgid "Purpose"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:334
+#: includes/modules/class-tsosk-mod-runtime-stack.php:380
 msgid "On disk?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:335
-#: includes/modules/class-tsosk-mod-runtime-stack.php:372
+#: includes/modules/class-tsosk-mod-runtime-stack.php:381
+#: includes/modules/class-tsosk-mod-runtime-stack.php:418
 msgid "Last changed"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:359
+#: includes/modules/class-tsosk-mod-runtime-stack.php:405
 msgid "Must-use plugins (always on)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:361
+#: includes/modules/class-tsosk-mod-runtime-stack.php:407
 msgid "Files in mu-plugins load for everyone and cannot be deactivated from the Plugins screen. Hosting panels and this plugin’s Sandbox loader may appear here."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-runtime-stack.php:364
+#: includes/modules/class-tsosk-mod-runtime-stack.php:410
 msgid "No must-use plugins found."
 msgstr ""
 
@@ -9253,99 +9284,95 @@ msgstr ""
 msgid "edit ↗"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:132
+#: includes/modules/class-tsosk-mod-staging.php:175
 msgid "STAGING"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:136
+#: includes/modules/class-tsosk-mod-staging.php:179
 msgid "This copy is marked as a test site. Open Staging Mode settings."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:185
-msgid "Settings saved. Reload the page to apply them fully."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-staging.php:199
+#: includes/modules/class-tsosk-mod-staging.php:242
 msgid "Mail log cleared."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:342
+#: includes/modules/class-tsosk-mod-staging.php:408
 msgid "Use this on a test copy of the site so it is obvious it is not production, so search engines skip it, and so customer emails are not sent by mistake. Everything stays off until you tick a box."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:346
+#: includes/modules/class-tsosk-mod-staging.php:412
 msgid "Turn these options off before you copy this database back to the live site. They are saved in this WordPress install."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:350
+#: includes/modules/class-tsosk-mod-staging.php:416
 msgid "Test-site options"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:353
+#: includes/modules/class-tsosk-mod-staging.php:419
 msgid "Show a red STAGING label in the admin bar"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:355
+#: includes/modules/class-tsosk-mod-staging.php:421
 msgid "Visible to administrators so nobody confuses this copy with the live site."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:360
+#: includes/modules/class-tsosk-mod-staging.php:426
 msgid "Ask search engines not to list this copy"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:362
-msgid "Adds no-index signals while this option is on. It does not permanently change Settings → Reading."
+#: includes/modules/class-tsosk-mod-staging.php:428
+msgid "Adds noindex headers, pauses XML sitemaps, and disallows crawling in robots.txt while this option is on. It does not change Settings → Reading."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:367
+#: includes/modules/class-tsosk-mod-staging.php:433
 msgid "Do not send real emails"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:369
+#: includes/modules/class-tsosk-mod-staging.php:435
 msgid "WordPress will think the email was sent, but nothing leaves the server. A short copy is kept in the log below. Use this so a test shop does not email real customers."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:374
+#: includes/modules/class-tsosk-mod-staging.php:440
 msgid "Keep a copy of emails even when they are sent"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:376
+#: includes/modules/class-tsosk-mod-staging.php:442
 msgid "Useful on the live site when you need to see whether WordPress tried to send a message. Only administrators can read the log. Message bodies are shortened."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:388
+#: includes/modules/class-tsosk-mod-staging.php:454
 msgid "Recent emails"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:390
+#: includes/modules/class-tsosk-mod-staging.php:456
 msgid "Stored as JSON under the plugin uploads folder (not in the public media library listing). The last 100 messages are kept. Full HTML bodies are not stored."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:393
+#: includes/modules/class-tsosk-mod-staging.php:459
 msgid "No emails recorded yet."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:398
+#: includes/modules/class-tsosk-mod-staging.php:464
 msgid "When"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:399
+#: includes/modules/class-tsosk-mod-staging.php:465
 msgid "To"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:401
+#: includes/modules/class-tsosk-mod-staging.php:467
 msgid "Sent?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:417
+#: includes/modules/class-tsosk-mod-staging.php:483
 msgid "Held here"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:419
+#: includes/modules/class-tsosk-mod-staging.php:485
 msgid "Allowed to send"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:429
+#: includes/modules/class-tsosk-mod-staging.php:495
 msgid "Clear mail log"
 msgstr ""
 
@@ -9704,188 +9731,188 @@ msgstr ""
 msgid "Theme automatic updates"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:90
+#: includes/modules/class-tsosk-mod-url-doctor.php:202
 msgid "Saved addresses"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:91
+#: includes/modules/class-tsosk-mod-url-doctor.php:203
 msgid "WordPress does not have two valid web addresses stored."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:92
+#: includes/modules/class-tsosk-mod-url-doctor.php:204
 msgid "Open Settings → General and check WordPress Address and Site Address."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:100
+#: includes/modules/class-tsosk-mod-url-doctor.php:212
 msgid "Public site vs admin address"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:102
+#: includes/modules/class-tsosk-mod-url-doctor.php:214
 msgid "Both addresses use the same domain. That is what you usually want."
 msgstr ""
 
 #. translators: 1: home host, 2: site host
-#: includes/modules/class-tsosk-mod-url-doctor.php:105
+#: includes/modules/class-tsosk-mod-url-doctor.php:217
 #, php-format
 msgid "The public site is %1$s but the admin address is %2$s."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:111
+#: includes/modules/class-tsosk-mod-url-doctor.php:223
 msgid "After a move, these two often disagree. Search & Replace can fix stored links once you know the correct domain."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:119
+#: includes/modules/class-tsosk-mod-url-doctor.php:231
 msgid "Padlock (HTTPS)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:121
+#: includes/modules/class-tsosk-mod-url-doctor.php:233
 msgid "Both saved addresses start with https."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:122
+#: includes/modules/class-tsosk-mod-url-doctor.php:234
 msgid "At least one saved address still starts with http. Browsers will warn visitors or mix secure and insecure files."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:125
+#: includes/modules/class-tsosk-mod-url-doctor.php:237
 msgid "Use a certificate on the server, then update both addresses to https (or run Search & Replace on a backup first)."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:137
+#: includes/modules/class-tsosk-mod-url-doctor.php:249
 msgid "This visit vs saved address"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:139
+#: includes/modules/class-tsosk-mod-url-doctor.php:251
 msgid "The way you opened this page matches the saved public address (http or https)."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:140
+#: includes/modules/class-tsosk-mod-url-doctor.php:252
 msgid "You opened this page with a different padlock setting than the address WordPress has saved. Logins and cookies often break in that case."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:143
+#: includes/modules/class-tsosk-mod-url-doctor.php:255
 msgid "Always open the admin using the same https/www form as Settings → General."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:149
+#: includes/modules/class-tsosk-mod-url-doctor.php:261
 msgid "www vs without www"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:153
+#: includes/modules/class-tsosk-mod-url-doctor.php:265
 msgid "Both addresses use www."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:154
+#: includes/modules/class-tsosk-mod-url-doctor.php:266
 msgid "Both addresses skip www."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:156
+#: includes/modules/class-tsosk-mod-url-doctor.php:268
 msgid "One address uses www and the other does not. That usually causes extra redirects or mixed cookies."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:159
+#: includes/modules/class-tsosk-mod-url-doctor.php:271
 msgid "Pick one form (with or without www) and keep it everywhere, including Search & Replace if needed."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:165
+#: includes/modules/class-tsosk-mod-url-doctor.php:277
 msgid "Folder in the address"
 msgstr ""
 
 #. translators: 1: home path, 2: site path
-#: includes/modules/class-tsosk-mod-url-doctor.php:169
+#: includes/modules/class-tsosk-mod-url-doctor.php:281
 #, php-format
 msgid "Public path: %1$s. WordPress path: %2$s. This is normal when WordPress lives in a subfolder."
 msgstr ""
 
 #. translators: %s: URL path
-#: includes/modules/class-tsosk-mod-url-doctor.php:175
+#: includes/modules/class-tsosk-mod-url-doctor.php:287
 #, php-format
 msgid "Both addresses use the path %s."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:183
+#: includes/modules/class-tsosk-mod-url-doctor.php:295
 msgid "Force HTTPS for wp-admin"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:185
+#: includes/modules/class-tsosk-mod-url-doctor.php:297
 msgid "FORCE_SSL_ADMIN is on. The dashboard should only load over https."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:186
+#: includes/modules/class-tsosk-mod-url-doctor.php:298
 msgid "FORCE_SSL_ADMIN is not on. That is fine if the whole site already uses https."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:195
+#: includes/modules/class-tsosk-mod-url-doctor.php:307
 msgid "Locked in wp-config.php"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:196
+#: includes/modules/class-tsosk-mod-url-doctor.php:308
 msgid "WP_HOME and/or WP_SITEURL are defined in wp-config.php, so Settings → General cannot change those addresses. This plugin never edits that file."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:197
+#: includes/modules/class-tsosk-mod-url-doctor.php:309
 msgid "If the constants are wrong after a move, edit wp-config.php on the server (or ask hosting)."
 msgstr ""
 
 #. translators: %d: HTTP status
-#: includes/modules/class-tsosk-mod-url-doctor.php:254
+#: includes/modules/class-tsosk-mod-url-doctor.php:371
 #, php-format
 msgid "This site answered with status %d. The public address looks reachable from the server."
 msgstr ""
 
 #. translators: %s: final URL host
-#: includes/modules/class-tsosk-mod-url-doctor.php:260
+#: includes/modules/class-tsosk-mod-url-doctor.php:377
 #, php-format
 msgid "The request ended on a different domain (%s). Check redirects, CDN, or a leftover old address."
 msgstr ""
 
 #. translators: %d: HTTP status
-#: includes/modules/class-tsosk-mod-url-doctor.php:266
+#: includes/modules/class-tsosk-mod-url-doctor.php:383
 #, php-format
 msgid "The public address answered with status %d. That is not a normal success page."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:299
+#: includes/modules/class-tsosk-mod-url-doctor.php:389
+msgid "The first request failed a certificate check; the retry skipped TLS verification (typical on local or self-signed sites)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:421
 msgid "This screen explains whether the two addresses WordPress has saved still match how you open the site (https, www, folder). It does not change the database. Use Search & Replace only after you know the correct address."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:303
+#: includes/modules/class-tsosk-mod-url-doctor.php:425
 msgid "Addresses WordPress has saved"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:306
+#: includes/modules/class-tsosk-mod-url-doctor.php:428
 msgid "Public site (Home)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:310
+#: includes/modules/class-tsosk-mod-url-doctor.php:432
 msgid "WordPress address (Site URL)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:317
+#: includes/modules/class-tsosk-mod-url-doctor.php:439
 msgid "What we found"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:322
+#: includes/modules/class-tsosk-mod-url-doctor.php:444
 msgid "Result"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:323
+#: includes/modules/class-tsosk-mod-url-doctor.php:445
 msgid "What it means"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:344
+#: includes/modules/class-tsosk-mod-url-doctor.php:466
 msgid "Can the server reach its own public page?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:346
+#: includes/modules/class-tsosk-mod-url-doctor.php:468
 msgid "Optional. Only runs when you click the button. It asks this site’s own home address from the server (the same idea as Site Health). No other website is contacted."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-url-doctor.php:350
+#: includes/modules/class-tsosk-mod-url-doctor.php:472
 msgid "Check this site"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-url-doctor.php:358
-msgid "Needs attention"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-users.php:69

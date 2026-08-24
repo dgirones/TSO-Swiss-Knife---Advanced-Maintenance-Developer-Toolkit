@@ -70,6 +70,118 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Resolve a Location header (absolute, protocol-relative, or relative) against a base URL.
+	 *
+	 * @param string $base     Requested URL.
+	 * @param string $location Location header value.
+	 */
+	public static function resolve_url( string $base, string $location ): string {
+		$location = trim( $location );
+		if ( '' === $location ) {
+			return $base;
+		}
+		if ( preg_match( '#^https?://#i', $location ) ) {
+			return $location;
+		}
+		if ( 0 === strpos( $location, '//' ) ) {
+			$base_p = wp_parse_url( $base );
+			$scheme = ( is_array( $base_p ) && ! empty( $base_p['scheme'] ) ) ? (string) $base_p['scheme'] : 'https';
+			return $scheme . ':' . $location;
+		}
+
+		$base_p = wp_parse_url( $base );
+		if ( ! is_array( $base_p ) || empty( $base_p['host'] ) ) {
+			return $base;
+		}
+		$scheme = ! empty( $base_p['scheme'] ) ? (string) $base_p['scheme'] : 'https';
+		$origin = $scheme . '://' . $base_p['host'];
+		if ( ! empty( $base_p['port'] ) ) {
+			$origin .= ':' . $base_p['port'];
+		}
+		if ( isset( $location[0] ) && '/' === $location[0] ) {
+			return $origin . $location;
+		}
+		$path = isset( $base_p['path'] ) && '' !== $base_p['path'] ? (string) $base_p['path'] : '/';
+		if ( ! isset( $path[0] ) || '/' !== $path[0] ) {
+			$path = '/' . $path;
+		}
+		$dir = preg_replace( '#/[^/]*$#', '/', $path );
+		if ( ! is_string( $dir ) || '' === $dir ) {
+			$dir = '/';
+		}
+		return $origin . $dir . $location;
+	}
+
+	/**
+	 * Location header from a wp_remote_* response array.
+	 *
+	 * @param array<string, mixed> $resp HTTP API response.
+	 */
+	public static function header_location_from_response( array $resp ): string {
+		if ( ! isset( $resp['headers'] ) ) {
+			return '';
+		}
+		$headers = $resp['headers'];
+		$loc     = '';
+		if ( is_object( $headers ) ) {
+			if ( method_exists( $headers, 'offsetGet' ) ) {
+				$loc = $headers->offsetGet( 'location' );
+			} elseif ( isset( $headers['location'] ) ) {
+				$loc = $headers['location'];
+			}
+		} elseif ( is_array( $headers ) && isset( $headers['location'] ) ) {
+			$loc = $headers['location'];
+		}
+		if ( is_array( $loc ) ) {
+			$end = end( $loc );
+			$loc = false === $end ? '' : $end;
+		}
+		return is_string( $loc ) ? trim( $loc ) : '';
+	}
+
+	/**
+	 * Final URL after redirects. wp_remote_retrieve_header( 'location' ) is empty
+	 * once WordPress has already followed the chain.
+	 *
+	 * @param array<string, mixed>|mixed $resp          HTTP API response.
+	 * @param string                     $requested_url Original request URL.
+	 */
+	public static function effective_url_from_response( $resp, string $requested_url ): string {
+		if ( ! is_array( $resp ) ) {
+			return $requested_url;
+		}
+
+		if ( isset( $resp['http_response'] ) && is_object( $resp['http_response'] ) ) {
+			$http = $resp['http_response'];
+			if ( method_exists( $http, 'get_response_object' ) ) {
+				$obj = $http->get_response_object();
+				if ( is_object( $obj ) && isset( $obj->url ) && is_string( $obj->url ) && '' !== $obj->url ) {
+					return $obj->url;
+				}
+			}
+		}
+
+		$location = self::header_location_from_response( $resp );
+		if ( '' === $location ) {
+			return $requested_url;
+		}
+		return self::resolve_url( $requested_url, $location );
+	}
+
+	/**
+	 * Whether a transport error looks like a TLS/certificate failure (local/self-signed).
+	 */
+	public static function is_transport_ssl_error( string $message ): bool {
+		$hay = strtolower( $message );
+		foreach ( array( 'ssl', 'certificate', 'curl error 60', 'curl error 51', 'curl error 77' ) as $needle ) {
+			if ( false !== strpos( $hay, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Build diagnostic rows from the two WordPress addresses.
 	 *
 	 * @param string               $home    Home URL.
@@ -216,37 +328,42 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
-	 * @return array{ok:bool,status:int,final_url:string,message:string}
+	 * @return array{ok:bool,status:int,final_url:string,message:string,ssl_relaxed:bool}
 	 */
 	private function run_probe(): array {
 		$home = home_url( '/' );
-		$resp = wp_remote_get(
-			$home,
-			array(
-				'timeout'     => 10,
-				'redirection' => 5,
-				'sslverify'   => true,
-			)
+		$args = array(
+			'timeout'     => 10,
+			'redirection' => 5,
+			'sslverify'   => true,
+			'user-agent'  => 'TSO-Swiss-Knife-URL-Doctor/' . TSOSK_VERSION,
 		);
+
+		$resp        = wp_remote_get( $home, $args );
+		$ssl_relaxed = false;
+
+		if ( is_wp_error( $resp ) && self::is_transport_ssl_error( $resp->get_error_message() ) ) {
+			$args['sslverify'] = false;
+			$resp              = wp_remote_get( $home, $args );
+			$ssl_relaxed       = true;
+		}
 
 		if ( is_wp_error( $resp ) ) {
 			return array(
-				'ok'        => false,
-				'status'    => 0,
-				'final_url' => $home,
-				'message'   => $resp->get_error_message(),
+				'ok'          => false,
+				'status'      => 0,
+				'final_url'   => $home,
+				'message'     => $resp->get_error_message(),
+				'ssl_relaxed' => false,
 			);
 		}
 
 		$code      = (int) wp_remote_retrieve_response_code( $resp );
-		$final_url = (string) wp_remote_retrieve_header( $resp, 'location' );
-		if ( '' === $final_url ) {
-			$final_url = $home;
-		}
+		$final_url = self::effective_url_from_response( $resp, $home );
 
 		$home_p  = self::parse_url_parts( $home );
 		$final_p = self::parse_url_parts( $final_url );
-		$host_ok = ! $final_p['valid'] || $final_p['host_nowww'] === $home_p['host_nowww'];
+		$host_ok = $final_p['valid'] && $final_p['host_nowww'] === $home_p['host_nowww'];
 
 		if ( $code >= 200 && $code < 400 && $host_ok ) {
 			$message = sprintf(
@@ -254,7 +371,7 @@ class TSOSK_Mod_Url_Doctor {
 				__( 'This site answered with status %d. The public address looks reachable from the server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$code
 			);
-		} elseif ( ! $host_ok ) {
+		} elseif ( $final_p['valid'] && ! $host_ok ) {
 			$message = sprintf(
 				/* translators: %s: final URL host */
 				__( 'The request ended on a different domain (%s). Check redirects, CDN, or a leftover old address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -268,11 +385,16 @@ class TSOSK_Mod_Url_Doctor {
 			);
 		}
 
+		if ( $ssl_relaxed ) {
+			$message .= ' ' . __( 'The first request failed a certificate check; the retry skipped TLS verification (typical on local or self-signed sites).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
 		return array(
-			'ok'        => ( $code >= 200 && $code < 400 && $host_ok ),
-			'status'    => $code,
-			'final_url' => esc_url_raw( $final_url ),
-			'message'   => $message,
+			'ok'          => ( $code >= 200 && $code < 400 && $host_ok ),
+			'status'      => $code,
+			'final_url'   => esc_url_raw( $final_url ),
+			'message'     => $message,
+			'ssl_relaxed' => $ssl_relaxed,
 		);
 	}
 
@@ -358,6 +480,9 @@ class TSOSK_Mod_Url_Doctor {
 							<?php echo ! empty( $probe['ok'] ) ? esc_html__( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
 						<?php echo esc_html( (string) $probe['message'] ); ?>
+						<?php if ( ! empty( $probe['final_url'] ) ) : ?>
+							<br><code><?php echo esc_html( (string) $probe['final_url'] ); ?></code>
+						<?php endif; ?>
 					</p>
 				<?php endif; ?>
 			</div>

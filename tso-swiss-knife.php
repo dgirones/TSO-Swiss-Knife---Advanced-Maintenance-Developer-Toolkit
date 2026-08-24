@@ -301,6 +301,7 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
+add_action( 'plugins_loaded', 'tsosk_boot_staging_runtime', 1 );
 add_action( 'plugins_loaded', 'tsosk_init' );
 
 /**
@@ -331,6 +332,15 @@ function tsosk_load_textdomain(): void {
 function tsosk_bootstrap_sandbox(): void {
 	if ( class_exists( 'TSOSK_Mod_Sandbox' ) ) {
 		TSOSK_Mod_Sandbox::get_instance()->init();
+	}
+}
+
+/**
+ * Staging mail/robots filters must run before other plugins_loaded callbacks at priority 10.
+ */
+function tsosk_boot_staging_runtime(): void {
+	if ( class_exists( 'TSOSK_Mod_Staging' ) ) {
+		TSOSK_Mod_Staging::get_instance()->init();
 	}
 }
 

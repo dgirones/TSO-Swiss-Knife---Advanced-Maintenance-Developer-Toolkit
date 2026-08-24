@@ -5813,6 +5813,10 @@
 			success: function ( r ) {
 				var text = r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error );
 				showMsg( $msg, text, r.success ? 'ok' : 'error' );
+				if ( r.success ) {
+					setTimeout( function () { window.location.reload(); }, 500 );
+					return;
+				}
 				$btn.prop( 'disabled', false );
 			},
 			error: function () {
@@ -5826,7 +5830,8 @@
 		var $btn  = $( this );
 		var nonce = $btn.data( 'nonce' );
 		var $msg  = $( '#tsosk-staging-msg' );
-		if ( ! window.confirm( tsosk.i18n.confirm_purge ) ) {
+		var confirmMsg = ( tsosk.i18n && tsosk.i18n.confirm_clear_mail_log ) ? tsosk.i18n.confirm_clear_mail_log : tsosk.i18n.confirm_purge;
+		if ( ! window.confirm( confirmMsg ) ) {
 			return;
 		}
 		$btn.prop( 'disabled', true );
@@ -5869,10 +5874,16 @@
 				}
 				var data = r.data || {};
 				var $p = $( '<p/>' );
+				var okText = ( tsosk.i18n && tsosk.i18n.ok_label ) ? tsosk.i18n.ok_label : 'OK';
+				var warnText = ( tsosk.i18n && tsosk.i18n.needs_attention ) ? tsosk.i18n.needs_attention : '!';
 				var $badge = $( '<span/>' )
 					.addClass( data.ok ? 'tsosk-badge tsosk-badge-ok' : 'tsosk-badge tsosk-badge-warn' )
-					.text( data.ok ? 'OK' : '!' );
+					.text( data.ok ? okText : warnText );
 				$p.append( $badge ).append( document.createTextNode( ' ' + ( data.message || '' ) ) );
+				if ( data.final_url ) {
+					$p.append( document.createElement( 'br' ) );
+					$p.append( $( '<code/>' ).text( String( data.final_url ) ) );
+				}
 				$box.empty().append( $p );
 				showMsg( $msg, tsosk.i18n.done, 'ok' );
 			},

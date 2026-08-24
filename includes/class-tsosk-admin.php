@@ -188,6 +188,9 @@ class TSOSK_Admin {
 				'i18n'            => array(
 					'confirm_delete'  => __( 'Are you sure you want to delete this item?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'confirm_purge'   => __( 'Purge all items?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'confirm_clear_mail_log' => __( 'Clear the staging mail log? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'ok_label'        => __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'needs_attention' => __( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'running'         => __( 'Running…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'done'            => __( 'Done!', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'error'           => __( 'Error. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

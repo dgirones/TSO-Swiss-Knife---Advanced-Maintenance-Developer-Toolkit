@@ -29,52 +29,54 @@ class TSOSK_Mod_Runtime_Stack {
 	private function __construct() {}
 
 	/**
-	 * Convert a PHP ini size string to bytes.
+	 * Convert a PHP ini size string to bytes. -1 means unlimited.
 	 *
-	 * @param string $value e.g. 128M, 1G, 512.
-	 * @return int
+	 * @param string $value e.g. 128M, 128MB, 1G, 512, -1.
+	 * @return int Bytes, or -1 for unlimited.
 	 */
 	public static function parse_ini_bytes( string $value ): int {
 		$value = trim( $value );
 		if ( '' === $value ) {
 			return 0;
 		}
-		if ( ctype_digit( $value ) ) {
+		$lower = strtolower( $value );
+		if ( '-1' === $lower ) {
+			return -1;
+		}
+		if ( preg_match( '/^(-?\d+(?:\.\d+)?)\s*([kmgt]i?b|[kmgtb])?$/i', $value, $m ) ) {
+			$number = (float) $m[1];
+			$unit   = isset( $m[2] ) ? strtolower( (string) $m[2] ) : '';
+			$unit   = str_replace( 'i', '', $unit );
+			$mult   = 1;
+			if ( 'k' === $unit || 'kb' === $unit ) {
+				$mult = 1024;
+			} elseif ( 'm' === $unit || 'mb' === $unit ) {
+				$mult = 1024 * 1024;
+			} elseif ( 'g' === $unit || 'gb' === $unit ) {
+				$mult = 1024 * 1024 * 1024;
+			} elseif ( 't' === $unit || 'tb' === $unit ) {
+				$mult = 1024 * 1024 * 1024 * 1024;
+			}
+			return (int) round( $number * $mult );
+		}
+		if ( is_numeric( $value ) ) {
 			return (int) $value;
 		}
-		$len    = strlen( $value );
-		$number = (float) substr( $value, 0, $len - 1 );
-		$unit   = strtolower( substr( $value, -1 ) );
-		$mult   = 1;
-		if ( 'k' === $unit ) {
-			$mult = 1024;
-		} elseif ( 'm' === $unit ) {
-			$mult = 1024 * 1024;
-		} elseif ( 'g' === $unit ) {
-			$mult = 1024 * 1024 * 1024;
-		} else {
-			return (int) $value;
-		}
-		return (int) round( $number * $mult );
+		return 0;
 	}
 
 	/**
-	 * Whether PHP and WordPress timezones disagree in a meaningful way.
+	 * Whether PHP and MySQL unix clocks differ enough to confuse cron/scheduling.
 	 *
-	 * @param string $php_tz PHP default timezone.
-	 * @param string $wp_tz  WordPress timezone string (may be empty or UTC offset).
-	 * @return bool
+	 * Do not compare PHP date_default_timezone_get() with wp_timezone_string():
+	 * WordPress sets PHP to UTC on load, so that comparison is always a false positive.
+	 *
+	 * @param int $php_unix   PHP time().
+	 * @param int $mysql_unix MySQL UNIX_TIMESTAMP().
+	 * @param int $max_skew   Allowed difference in seconds.
 	 */
-	public static function timezone_mismatch( string $php_tz, string $wp_tz ): bool {
-		$php_tz = trim( $php_tz );
-		$wp_tz  = trim( $wp_tz );
-		if ( '' === $php_tz || '' === $wp_tz ) {
-			return false;
-		}
-		if ( 0 === strpos( $wp_tz, '+' ) || 0 === strpos( $wp_tz, '-' ) || is_numeric( $wp_tz ) ) {
-			return false;
-		}
-		return strtolower( $php_tz ) !== strtolower( $wp_tz ) && 'UTC' !== strtoupper( $php_tz );
+	public static function clocks_disagree( int $php_unix, int $mysql_unix, int $max_skew = 120 ): bool {
+		return abs( $php_unix - $mysql_unix ) > $max_skew;
 	}
 
 	/**
@@ -90,8 +92,8 @@ class TSOSK_Mod_Runtime_Stack {
 		$content = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) );
 		$rows    = array();
 		foreach ( $list as $file => $meta ) {
-			$file = sanitize_file_name( (string) $file );
-			if ( '' === $file ) {
+			$file = basename( str_replace( '\\', '/', (string) $file ) );
+			if ( ! preg_match( '/^[A-Za-z0-9._-]+\.php$/', $file ) ) {
 				continue;
 			}
 			$path   = $content . $file;
@@ -159,8 +161,23 @@ class TSOSK_Mod_Runtime_Stack {
 			$opcache_on = is_array( $status ) && ! empty( $status['opcache_enabled'] );
 		}
 
-		$wp_tz  = function_exists( 'wp_timezone_string' ) ? (string) wp_timezone_string() : '';
-		$php_tz = (string) date_default_timezone_get();
+		$wp_tz   = function_exists( 'wp_timezone_string' ) ? (string) wp_timezone_string() : '';
+		$php_now = time();
+		$db_now  = null;
+		global $wpdb;
+		if ( isset( $wpdb ) && is_object( $wpdb ) && method_exists( $wpdb, 'get_var' ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- literal UNIX_TIMESTAMP(), no user input.
+			$raw = $wpdb->get_var( 'SELECT UNIX_TIMESTAMP()' );
+			if ( is_numeric( $raw ) ) {
+				$db_now = (int) $raw;
+			}
+		}
+		$clock_skew = ( null === $db_now ) ? 0 : abs( $php_now - $db_now );
+		$clock_bad  = ( null !== $db_now ) && self::clocks_disagree( $php_now, $db_now );
+
+		$upload_bytes = self::parse_ini_bytes( $upload );
+		$post_bytes   = self::parse_ini_bytes( $post );
+		$post_lt_up   = ( $upload_bytes > 0 && $post_bytes > 0 && $post_bytes < $upload_bytes );
 
 		$disabled_short = $disabled;
 		if ( strlen( $disabled_short ) > 180 ) {
@@ -172,14 +189,15 @@ class TSOSK_Mod_Runtime_Stack {
 			'memory'       => $memory,
 			'upload'       => $upload,
 			'post'         => $post,
+			'post_lt_up'   => $post_lt_up ? '1' : '0',
 			'max_time'     => $max_time,
 			'max_input'    => $max_input,
 			'opcache'      => $opcache_on ? '1' : '0',
 			'temp'         => $temp,
 			'temp_ok'      => $temp_ok ? '1' : '0',
-			'php_tz'       => $php_tz,
 			'wp_tz'        => $wp_tz,
-			'tz_mismatch'  => self::timezone_mismatch( $php_tz, $wp_tz ) ? '1' : '0',
+			'clock_skew'   => (string) $clock_skew,
+			'clock_ok'     => ( null === $db_now ) ? '' : ( $clock_bad ? '0' : '1' ),
 			'disabled'     => $disabled_short,
 			'wp_memory'    => defined( 'WP_MEMORY_LIMIT' ) ? (string) WP_MEMORY_LIMIT : '',
 			'wp_max_mem'   => defined( 'WP_MAX_MEMORY_LIMIT' ) ? (string) WP_MAX_MEMORY_LIMIT : '',
@@ -232,7 +250,12 @@ class TSOSK_Mod_Runtime_Stack {
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Largest form WordPress can receive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td><code><?php echo esc_html( $limits['post'] ); ?></code></td>
+					<td>
+						<code><?php echo esc_html( $limits['post'] ); ?></code>
+						<?php if ( '1' === $limits['post_lt_up'] ) : ?>
+							<br><span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'post_max_size is smaller than upload_max_filesize, so large uploads can fail even when the file-size limit looks high enough.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<?php endif; ?>
+					</td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Seconds a request may run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -264,20 +287,43 @@ class TSOSK_Mod_Runtime_Stack {
 					</td>
 				</tr>
 				<tr>
-					<th><?php esc_html_e( 'Clock (PHP vs WordPress)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'WordPress timezone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
-						<?php
-						echo esc_html(
-							sprintf(
-								/* translators: 1: PHP timezone, 2: WordPress timezone */
-								__( 'PHP: %1$s. WordPress: %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								$limits['php_tz'],
-								'' !== $limits['wp_tz'] ? $limits['wp_tz'] : '—'
-							)
-						);
-						?>
-						<?php if ( '1' === $limits['tz_mismatch'] ) : ?>
-							<br><span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'They differ. Scheduled posts and cron times can look wrong.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<code><?php echo esc_html( '' !== $limits['wp_tz'] ? $limits['wp_tz'] : '—' ); ?></code>
+						<span class="description"><?php esc_html_e( 'From Settings → General. WordPress keeps PHP on UTC internally, so a PHP timezone of UTC is normal.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'PHP vs database clock', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<?php if ( '' === $limits['clock_ok'] ) : ?>
+							<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Could not read the database clock.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<?php elseif ( '1' === $limits['clock_ok'] ) : ?>
+							<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<span class="description">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %d: seconds of difference */
+										__( 'PHP and MySQL differ by %d seconds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+										(int) $limits['clock_skew']
+									)
+								);
+								?>
+							</span>
+						<?php else : ?>
+							<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<span class="description">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %d: seconds of difference */
+										__( 'PHP and MySQL clocks differ by %d seconds. Scheduled posts and cron times can look wrong.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+										(int) $limits['clock_skew']
+									)
+								);
+								?>
+							</span>
 						<?php endif; ?>
 					</td>
 				</tr>
