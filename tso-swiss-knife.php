@@ -289,9 +289,14 @@ $tsosk_includes = array(
 );
 
 foreach ( $tsosk_includes as $tsosk_file ) {
-	require_once TSOSK_PATH . $tsosk_file . '.php';
+	$tsosk_path = TSOSK_PATH . $tsosk_file . '.php';
+	if ( ! is_readable( $tsosk_path ) ) {
+		// Partial uploads (e.g. main file updated without new module files) must not take the site down.
+		continue;
+	}
+	require_once $tsosk_path;
 }
-unset( $tsosk_includes, $tsosk_file );
+unset( $tsosk_includes, $tsosk_file, $tsosk_path );
 
 // ── Early-load config overrides (JSON in uploads/{plugin-slug}/config) ────────
 if ( class_exists( 'TSOSK_Config_Storage' ) ) {
