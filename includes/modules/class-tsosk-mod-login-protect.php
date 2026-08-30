@@ -50,6 +50,9 @@ class TSOSK_Mod_Login_Protect {
 	/** Maximum lockout log entries kept in the option. */
 	private const MAX_LOG = 200;
 
+	/** Invalid email 2FA codes allowed before the code is invalidated. */
+	private const MAX_2FA_ATTEMPTS = 5;
+
 	/** Usernames commonly targeted by bots (case-insensitive). */
 	private const FORBIDDEN_USERNAMES = array( 'admin', 'administrador', 'administrator' );
 
@@ -467,7 +470,7 @@ class TSOSK_Mod_Login_Protect {
 	 */
 	public function record_failed_attempt( string $username, $error = null ): void {
 		if ( $error instanceof WP_Error ) {
-			$skip = array( 'tsosk_2fa_required', 'tsosk_role_ip_denied', 'tsosk_locked_out', 'tsosk_forbidden_username' );
+			$skip = array( 'tsosk_2fa_required', 'tsosk_2fa_invalid', 'tsosk_2fa_max_attempts', 'tsosk_role_ip_denied', 'tsosk_locked_out', 'tsosk_forbidden_username' );
 			if ( in_array( $error->get_error_code(), $skip, true ) ) {
 				return;
 			}
@@ -581,13 +584,15 @@ class TSOSK_Mod_Login_Protect {
 		$submitted = isset( $_POST['tsosk_2fa_code'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			? sanitize_text_field( wp_unslash( $_POST['tsosk_2fa_code'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			: '';
-		$key       = 'tsosk_2fa_' . $user->ID;
-		$stored    = get_transient( $key );
+		$key          = 'tsosk_2fa_' . $user->ID;
+		$attempts_key = 'tsosk_2fa_attempts_' . $user->ID;
+		$stored       = get_transient( $key );
 
 		if ( '' === $submitted ) {
 			if ( ! $stored ) {
 				$code = (string) random_int( 100000, 999999 );
 				set_transient( $key, $code, 10 * MINUTE_IN_SECONDS );
+				delete_transient( $attempts_key );
 				wp_mail(
 					$user->user_email,
 					sprintf(
@@ -609,7 +614,34 @@ class TSOSK_Mod_Login_Protect {
 			);
 		}
 
+		$attempts = (int) get_transient( $attempts_key );
+		if ( $attempts >= self::MAX_2FA_ATTEMPTS ) {
+			delete_transient( $key );
+			delete_transient( $attempts_key );
+			return new WP_Error(
+				'tsosk_2fa_max_attempts',
+				__( 'Too many invalid verification codes. Sign in again to receive a new code.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			);
+		}
+
 		if ( ! is_string( $stored ) || ! hash_equals( $stored, $submitted ) ) {
+			$attempts++;
+			set_transient( $attempts_key, $attempts, 10 * MINUTE_IN_SECONDS );
+			if ( $attempts >= self::MAX_2FA_ATTEMPTS ) {
+				delete_transient( $key );
+				delete_transient( $attempts_key );
+				$s = $this->get_settings();
+				if ( ! empty( $s['brute_force'] ) && (int) $s['max_attempts'] > 0 ) {
+					$ip = $this->get_client_ip();
+					if ( ! $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) ) {
+						$this->apply_ip_lockout( $ip, $user->user_login, $attempts );
+					}
+				}
+				return new WP_Error(
+					'tsosk_2fa_max_attempts',
+					__( 'Too many invalid verification codes. Sign in again to receive a new code.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				);
+			}
 			return new WP_Error(
 				'tsosk_2fa_invalid',
 				__( 'Invalid or expired verification code.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
@@ -617,6 +649,7 @@ class TSOSK_Mod_Login_Protect {
 		}
 
 		delete_transient( $key );
+		delete_transient( $attempts_key );
 		return $user;
 	}
 

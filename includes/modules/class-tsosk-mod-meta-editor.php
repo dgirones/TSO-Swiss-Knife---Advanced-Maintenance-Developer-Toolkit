@@ -167,7 +167,7 @@ class TSOSK_Mod_Meta_Editor {
 				'object_id' => (int) $row['object_id'],
 				'key'       => $key,
 				'size'      => strlen( $value ),
-				'preview'   => $this->preview( $value ),
+				'preview'   => $protected ? $this->redacted_preview() : $this->preview( $value ),
 				'protected' => $protected,
 			);
 		}
@@ -281,8 +281,10 @@ class TSOSK_Mod_Meta_Editor {
 		}
 
 		// Update the selected meta_id / umeta_id only (update_*_meta would rewrite every row with the same key).
-		// Editor shows/saves raw DB strings — do not maybe_serialize() already-serialized values.
-		$stored = is_serialized( $value ) ? $value : maybe_serialize( $value );
+		$stored = $this->normalize_meta_value_for_storage( $value );
+		if ( is_wp_error( $stored ) ) {
+			wp_send_json_error( $stored->get_error_message() );
+		}
 		if ( 'user' === $context ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$updated = $wpdb->update(
@@ -412,6 +414,10 @@ class TSOSK_Mod_Meta_Editor {
 			}
 			// Already-serialized strings must bypass add_*_meta (core maybe_serialize would double-encode).
 			if ( is_serialized( $value ) ) {
+				$stored = $this->normalize_meta_value_for_storage( $value );
+				if ( is_wp_error( $stored ) ) {
+					wp_send_json_error( $stored->get_error_message() );
+				}
 				global $wpdb;
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$wpdb->insert(
@@ -419,7 +425,7 @@ class TSOSK_Mod_Meta_Editor {
 					array(
 						'user_id'    => $object_id,
 						'meta_key'   => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- INSERT by object_id, not a meta_key scan.
-						'meta_value' => $value, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- INSERT value as provided by admin.
+						'meta_value' => $stored, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Validated serialized value from admin editor.
 					),
 					array( '%d', '%s', '%s' )
 				);
@@ -432,6 +438,10 @@ class TSOSK_Mod_Meta_Editor {
 				wp_send_json_error( __( 'Post not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 			if ( is_serialized( $value ) ) {
+				$stored = $this->normalize_meta_value_for_storage( $value );
+				if ( is_wp_error( $stored ) ) {
+					wp_send_json_error( $stored->get_error_message() );
+				}
 				global $wpdb;
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$wpdb->insert(
@@ -439,7 +449,7 @@ class TSOSK_Mod_Meta_Editor {
 					array(
 						'post_id'    => $object_id,
 						'meta_key'   => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- INSERT by object_id, not a meta_key scan.
-						'meta_value' => $value, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- INSERT value as provided by admin.
+						'meta_value' => $stored, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Validated serialized value from admin editor.
 					),
 					array( '%d', '%s', '%s' )
 				);
@@ -472,6 +482,38 @@ class TSOSK_Mod_Meta_Editor {
 			return substr( $value, 0, 120 ) . '…';
 		}
 		return $value;
+	}
+
+	/**
+	 * Placeholder shown instead of secret meta previews in search results.
+	 *
+	 * @return string
+	 */
+	private function redacted_preview(): string {
+		return '••••••';
+	}
+
+	/**
+	 * Validate and normalize a meta value before writing to the database.
+	 *
+	 * @param string $value Raw value from the admin editor.
+	 * @return string|WP_Error Stored value or error when serialized input is invalid.
+	 */
+	private function normalize_meta_value_for_storage( string $value ) {
+		if ( ! is_serialized( $value ) ) {
+			return maybe_serialize( $value );
+		}
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- Admin-only meta editor validates before re-serializing.
+		$parsed = @unserialize( $value, array( 'allowed_classes' => false ) );
+		if ( false === $parsed && 'b:0;' !== $value ) {
+			return new WP_Error(
+				'tsosk_me_invalid_serialized',
+				__( 'Invalid serialized meta value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			);
+		}
+
+		return maybe_serialize( $parsed );
 	}
 
 	/**

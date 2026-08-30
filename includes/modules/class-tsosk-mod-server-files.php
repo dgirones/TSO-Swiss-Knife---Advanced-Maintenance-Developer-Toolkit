@@ -705,45 +705,319 @@ class TSOSK_Mod_Server_Files {
 
 	private function review_robots( string $content ): array {
 		$notices = array();
-		$lines   = $this->active_lines( $content );
-		$text    = implode( "\n", $lines );
+		$parsed  = $this->parse_robots_txt( $content );
 
-		if ( '' === trim( $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'robots.txt has no active directives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		if ( empty( $parsed['groups'] ) && empty( $parsed['sitemaps'] ) ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'robots.txt has no active directives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 			return $notices;
 		}
-		if ( ! preg_match( '/^User-agent\s*:/im', $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'No User-agent directive was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		if ( empty( $parsed['groups'] ) ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'No User-agent directive was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
-		if ( preg_match( '/^Disallow\s*:\s*\/\s*$/im', $text ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'A Disallow: / rule blocks crawling for the matching user agent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		$full_site_blocks = array();
+		$star_disallows   = array();
+
+		foreach ( $parsed['groups'] as $group ) {
+			$ua_label = implode( ', ', array_map( 'trim', $group['user_agents'] ) );
+			foreach ( $group['rules'] as $rule ) {
+				if ( 'disallow' !== $rule['type'] ) {
+					continue;
+				}
+				if ( $this->is_robots_root_disallow( $rule['path'] ) ) {
+					$full_site_blocks[] = array(
+						'ua'   => $ua_label,
+						'line' => $rule['line'],
+						'raw'  => $rule['raw'],
+					);
+					continue;
+				}
+				if ( '' === trim( $rule['path'] ) ) {
+					continue;
+				}
+				if ( $this->robots_group_targets_all_crawlers( $group['user_agents'] ) ) {
+					$star_disallows[] = $rule['path'];
+				}
+			}
 		}
-		if ( ! preg_match( '/^Sitemap\s*:/im', $text ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'No Sitemap directive was found. Consider adding one so search engines can discover your sitemap directly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		foreach ( $full_site_blocks as $block ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => sprintf(
+					/* translators: 1: user-agent list, 2: line number, 3: exact robots.txt line */
+					__( 'Line %2$d blocks the entire site for User-agent: %1$s (%3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$block['ua'],
+					(int) $block['line'],
+					$block['raw']
+				),
+			);
 		}
-		if ( preg_match( '/^Disallow\s*:\s*\/wp-content\/uploads/im', $text ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'Uploads are blocked for crawlers. Confirm this is intentional if media files should rank in search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		if ( empty( $full_site_blocks ) && ! empty( $star_disallows ) ) {
+			$star_disallows = array_values( array_unique( $star_disallows ) );
+			$shown     = array_slice( $star_disallows, 0, 6 );
+			$path_list = implode( ', ', $shown );
+			$extra          = count( $star_disallows ) - count( $shown );
+			if ( $extra > 0 ) {
+				$path_list .= sprintf(
+					/* translators: %d: additional blocked path count */
+					__( ' …and %d more', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$extra
+				);
+			}
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => sprintf(
+					/* translators: 1: number of blocked path prefixes, 2: comma-separated path list */
+					__( 'User-agent: * blocks %1$d path prefix(es), not the whole site: %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					count( $star_disallows ),
+					$path_list
+				),
+			);
 		}
+
+		if ( empty( $parsed['sitemaps'] ) ) {
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'No Sitemap directive was found. Consider adding one so search engines can discover your sitemap directly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		foreach ( $star_disallows as $path ) {
+			if ( 0 === strpos( $path, '/wp-content/uploads' ) || '/wp-content/uploads' === rtrim( $path, '/' ) ) {
+				$notices[] = array(
+					'type'    => 'info',
+					'message' => __( 'Uploads are blocked for crawlers. Confirm this is intentional if media files should rank in search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				);
+				break;
+			}
+		}
+
 		return $notices;
 	}
 
+	/**
+	 * Parse robots.txt into user-agent groups and global directives.
+	 *
+	 * @param string $content Raw file contents.
+	 * @return array{
+	 *   groups: array<int, array{user_agents: string[], rules: array<int, array{type: string, path: string, line: int, raw: string}>}>,
+	 *   sitemaps: string[],
+	 *   hosts: string[]
+	 * }
+	 */
+	private function parse_robots_txt( string $content ): array {
+		$groups   = array();
+		$sitemaps = array();
+		$hosts    = array();
+		$current  = null;
+
+		$raw_lines = preg_split( '/\R/', $content );
+		if ( ! is_array( $raw_lines ) ) {
+			return array(
+				'groups'   => array(),
+				'sitemaps' => array(),
+				'hosts'    => array(),
+			);
+		}
+
+		foreach ( $raw_lines as $line_num => $raw_line ) {
+			$line    = trim( (string) $raw_line );
+			$line_no = (int) $line_num + 1;
+			if ( '' === $line || '#' === $line[0] ) {
+				continue;
+			}
+			if ( ! preg_match( '/^([^:]+):\s*(.*)$/', $line, $matches ) ) {
+				continue;
+			}
+
+			$key   = strtolower( trim( $matches[1] ) );
+			$value = trim( $matches[2] );
+
+			switch ( $key ) {
+				case 'user-agent':
+					if ( null !== $current && ! empty( $current['rules'] ) ) {
+						$groups[] = $current;
+						$current  = array(
+							'user_agents' => array( $value ),
+							'rules'       => array(),
+						);
+					} elseif ( null === $current ) {
+						$current = array(
+							'user_agents' => array( $value ),
+							'rules'       => array(),
+						);
+					} else {
+						$current['user_agents'][] = $value;
+					}
+					break;
+
+				case 'disallow':
+				case 'allow':
+				case 'crawl-delay':
+					if ( null === $current ) {
+						$current = array(
+							'user_agents' => array( '*' ),
+							'rules'       => array(),
+						);
+					}
+					$current['rules'][] = array(
+						'type' => $key,
+						'path' => $value,
+						'line' => $line_no,
+						'raw'  => $line,
+					);
+					break;
+
+				case 'sitemap':
+					if ( '' !== $value ) {
+						$sitemaps[] = $value;
+					}
+					break;
+
+				case 'host':
+					if ( '' !== $value ) {
+						$hosts[] = $value;
+					}
+					break;
+			}
+		}
+
+		if ( null !== $current ) {
+			$groups[] = $current;
+		}
+
+		return array(
+			'groups'   => $groups,
+			'sitemaps' => $sitemaps,
+			'hosts'    => $hosts,
+		);
+	}
+
+	/**
+	 * Whether a Disallow value blocks the entire site (exact "/" only).
+	 *
+	 * @param string $path Disallow path value.
+	 */
+	private function is_robots_root_disallow( string $path ): bool {
+		return '/' === trim( $path );
+	}
+
+	/**
+	 * @param string[] $user_agents User-agent tokens for one rule group.
+	 */
+	private function robots_group_targets_all_crawlers( array $user_agents ): bool {
+		foreach ( $user_agents as $agent ) {
+			if ( '*' === trim( (string) $agent ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private function review_htaccess( string $content ): array {
-		$notices = array();
-		if ( false === strpos( $content, '# BEGIN WordPress' ) ) {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'The standard WordPress block was not found. This is normal with custom server rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		$notices          = array();
+		$has_wp_block     = false !== strpos( $content, '# BEGIN WordPress' );
+		$has_rewrite_use  = (bool) preg_match( '/^\s*Rewrite(?:Rule|Cond|Base)\b/im', $content );
+		$has_rewrite_on   = (bool) preg_match( '/^\s*RewriteEngine\s+On\b/im', $content );
+		$has_global_deny  = $this->htaccess_has_top_level_deny( $content );
+		$has_forbid_rule  = (bool) preg_match( '/^\s*RewriteRule\b.+\[(?:[^\]]*\bF\b|\bFORBIDDEN\b|\b403\b)/im', $content );
+
+		if ( ! $has_wp_block ) {
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'The standard WordPress block was not found. This is normal with custom server rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
-		if ( ! preg_match( '/^\s*RewriteEngine\s+On/im', $content ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'RewriteEngine On was not found. Pretty permalinks may not work on Apache.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		if ( $has_rewrite_use && ! $has_rewrite_on ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'RewriteRule/RewriteCond directives were found but RewriteEngine On is missing. Pretty permalinks may not work on Apache.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		} elseif ( ! $has_rewrite_use && ! $has_wp_block ) {
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'No RewriteRule directives were found. This file may only contain redirects or security headers.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
+
+		if ( $has_global_deny ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'A top-level “deny all” rule was found. Unless it is scoped to a sensitive file, it can block public access to the site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		if ( $has_forbid_rule ) {
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'At least one RewriteRule returns forbidden (403). Review that it targets the intended URLs only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
 		if ( preg_match( '/^\s*Options\s+\+Indexes/im', $content ) ) {
-			$notices[] = array( 'type' => 'warn', 'message' => __( 'Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
+
 		if ( preg_match( '/wp-config\.php/im', $content ) ) {
-			$notices[] = array( 'type' => 'ok', 'message' => __( 'A wp-config.php protection rule was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$notices[] = array(
+				'type'    => 'ok',
+				'message' => __( 'A wp-config.php protection rule was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		} else {
-			$notices[] = array( 'type' => 'info', 'message' => __( 'No explicit wp-config.php protection rule was found in this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'No explicit wp-config.php protection rule was found in this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
+
 		return $notices;
+	}
+
+	/**
+	 * Detect deny-all directives outside Files/FilesMatch/Directory blocks.
+	 *
+	 * @param string $content Raw .htaccess contents.
+	 */
+	private function htaccess_has_top_level_deny( string $content ): bool {
+		$lines   = preg_split( '/\R/', $content );
+		$context = 0;
+
+		if ( ! is_array( $lines ) ) {
+			return false;
+		}
+
+		foreach ( $lines as $line ) {
+			$trim = trim( (string) $line );
+			if ( '' === $trim || '#' === $trim[0] ) {
+				continue;
+			}
+			if ( preg_match( '/^<(?:Files|FilesMatch|Directory)\b/i', $trim ) ) {
+				++$context;
+				continue;
+			}
+			if ( preg_match( '/^<\/(?:Files|FilesMatch|Directory)>/i', $trim ) ) {
+				$context = max( 0, $context - 1 );
+				continue;
+			}
+			if ( 0 === $context && preg_match( '/^(Deny from all|Require all denied)\s*$/i', $trim ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private function active_lines( string $content ): array {

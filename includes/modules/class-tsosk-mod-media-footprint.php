@@ -29,6 +29,8 @@ class TSOSK_Mod_Media_Footprint {
 
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_media_footprint_scan', array( $this, 'ajax_scan' ) );
+		add_action( 'wp_ajax_tsosk_media_hygiene_scan', array( $this, 'ajax_hygiene_scan' ) );
+		add_action( 'wp_ajax_tsosk_media_hygiene_delete', array( $this, 'ajax_hygiene_delete' ) );
 	}
 
 	/**
@@ -56,13 +58,97 @@ class TSOSK_Mod_Media_Footprint {
 	}
 
 	/**
+	 * AJAX: scan uploads for removable folders.
+	 */
+	public function ajax_hygiene_scan(): void {
+		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$result = TSOSK_Uploads_Scanner::scan_hygiene();
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		set_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE, $result, TSOSK_Uploads_Scanner::CACHE_TTL );
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Folder hygiene scan completed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'    => $this->render_hygiene_html( $result ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: delete one allowlisted hygiene folder.
+	 */
+	public function ajax_hygiene_delete(): void {
+		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$folder_id = isset( $_POST['folder_id'] ) ? sanitize_key( wp_unslash( $_POST['folder_id'] ) ) : '';
+		if ( '' === $folder_id ) {
+			wp_send_json_error( __( 'Invalid folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$scan = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE );
+		if ( ! is_array( $scan ) ) {
+			wp_send_json_error( __( 'Scan data expired. Run the hygiene scan again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$relative = '';
+		foreach ( $scan['items'] as $item ) {
+			if ( is_array( $item ) && ( $item['id'] ?? '' ) === $folder_id ) {
+				$relative = (string) ( $item['relative'] ?? '' );
+				break;
+			}
+		}
+
+		$result = TSOSK_Uploads_Scanner::delete_hygiene_folder( $folder_id, $scan );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		TSOSK_Activity_Log::log(
+			'media-footprint',
+			'delete',
+			sprintf(
+				/* translators: %s: folder path */
+				__( 'Removable folder deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$relative
+			),
+			array( 'folder_id' => $folder_id )
+		);
+
+		$scan = TSOSK_Uploads_Scanner::scan_hygiene();
+		if ( ! is_wp_error( $scan ) ) {
+			set_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE, $scan, TSOSK_Uploads_Scanner::CACHE_TTL );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Folder deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'    => is_wp_error( $scan ) ? '' : $this->render_hygiene_html( $scan ),
+			)
+		);
+	}
+
+	/**
 	 * Render module UI.
 	 */
 	public function render(): void {
-		$nonce = wp_create_nonce( 'tsosk_media_footprint_nonce' );
-		$stats = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_FOOTPRINT );
+		$nonce   = wp_create_nonce( 'tsosk_media_footprint_nonce' );
+		$stats   = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_FOOTPRINT );
+		$hygiene = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE );
 		if ( ! is_array( $stats ) ) {
 			$stats = null;
+		}
+		if ( ! is_array( $hygiene ) ) {
+			$hygiene = null;
 		}
 		?>
 		<p class="tsosk-desc">
@@ -93,6 +179,33 @@ class TSOSK_Mod_Media_Footprint {
 				echo $this->render_stats_html( $stats ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method.
 			} else {
 				$this->render_empty_state();
+			}
+			?>
+		</div>
+
+		<hr style="margin:28px 0;">
+
+		<h2><?php esc_html_e( 'Folder hygiene', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
+		<p class="description">
+			<?php esc_html_e( 'Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be deleted from here — others are recommendations only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</p>
+		<p>
+			<button type="button" class="button button-secondary" id="tsosk-media-hygiene-scan"
+			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				<?php esc_html_e( 'Scan removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</button>
+			<span class="tsosk-ajax-msg" id="tsosk-media-hygiene-msg"></span>
+		</p>
+		<div id="tsosk-media-hygiene-results">
+			<?php
+			if ( is_array( $hygiene ) ) {
+				echo $this->render_hygiene_html( $hygiene ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method.
+			} else {
+				?>
+				<div class="tsosk-notice tsosk-notice-info">
+					<?php esc_html_e( 'No hygiene scan yet. Click “Scan removable folders” to classify uploads subfolders and .tmb caches.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</div>
+				<?php
 			}
 			?>
 		</div>
@@ -248,6 +361,89 @@ class TSOSK_Mod_Media_Footprint {
 		<?php endif; ?>
 		<?php
 
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * @param array<string, mixed> $scan Hygiene scan results.
+	 * @return string
+	 */
+	private function render_hygiene_html( array $scan ): string {
+		$items      = is_array( $scan['items'] ?? null ) ? $scan['items'] : array();
+		$scanned_at = (int) ( $scan['scanned_at'] ?? 0 );
+		$nonce      = wp_create_nonce( 'tsosk_media_footprint_nonce' );
+
+		ob_start();
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<?php if ( $scanned_at > 0 ) : ?>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: %s: localized datetime */
+					esc_html__( 'Last scan: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					esc_html( wp_date( 'Y-m-d H:i', $scanned_at ) )
+				);
+				?>
+			</p>
+			<?php endif; ?>
+
+			<?php if ( empty( $items ) ) : ?>
+			<p><?php esc_html_e( 'No classified folders were found under uploads or known cache paths.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+			<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table" id="tsosk-media-hygiene-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Confidence', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $items as $item ) : ?>
+						<?php
+						$confidence = (string) ( $item['confidence'] ?? 'review' );
+						$badge      = 'tsosk-badge-info';
+						$label      = __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						if ( 'safe' === $confidence ) {
+							$badge = 'tsosk-badge-ok';
+							$label = __( 'Safe', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						} elseif ( 'keep' === $confidence ) {
+							$badge = 'tsosk-badge-warn';
+							$label = __( 'Keep', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						}
+						?>
+						<tr id="tsosk-hygiene-<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>">
+							<td class="tsosk-code"><?php echo esc_html( (string) ( $item['relative'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( size_format( (int) ( $item['size'] ?? 0 ), 2 ) ); ?></td>
+							<td><?php echo esc_html( number_format_i18n( (int) ( $item['files'] ?? 0 ) ) ); ?></td>
+							<td><span class="tsosk-badge <?php echo esc_attr( $badge ); ?>"><?php echo esc_html( $label ); ?></span></td>
+							<td><?php echo esc_html( (string) ( $item['reason'] ?? '' ) ); ?></td>
+							<td>
+								<?php if ( ! empty( $item['deletable'] ) ) : ?>
+								<button type="button" class="button button-small button-link-delete tsosk-media-hygiene-delete"
+								        data-folder-id="<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>"
+								        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+								        data-label="<?php echo esc_attr( (string) ( $item['relative'] ?? '' ) ); ?>">
+									<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+								<?php else : ?>
+								<span class="description"><?php esc_html_e( 'Manual only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endif; ?>
+		</div>
+		<?php
 		return (string) ob_get_clean();
 	}
 }

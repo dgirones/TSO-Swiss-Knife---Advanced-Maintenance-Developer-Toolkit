@@ -256,6 +256,8 @@ class TSOSK_Admin {
 					'media_full_review'    => __( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review_starting' => __( 'Starting full media review…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_footprint_scan' => __( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_hygiene_scan'   => __( 'Scan removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_hygiene_delete_confirm' => __( 'Delete this folder? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_scan'     => __( 'Run image sizes audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_save'     => __( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'send_test'       => __( 'Send Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -272,6 +274,8 @@ class TSOSK_Admin {
 					'lp_unlock_all'   => __( 'Unlock All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'lp_unlock_all_confirm' => __( 'Unlock all currently locked IP addresses?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'lp_clear_log_confirm'  => __( 'Clear the entire lockout log? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %d: pending language pack count */
+					'um_install_translations_confirm' => __( 'Install %d pending wordpress.org language pack(s) now? Files will be written under wp-content/languages/. Bundled .mo files inside plugins are not changed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'lp_clear_log'    => __( 'Clear Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'lp_generate'     => __( 'Generate', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'oe_edit'         => __( 'Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

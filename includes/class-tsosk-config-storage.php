@@ -93,7 +93,7 @@ class TSOSK_Config_Storage {
 	 */
 	public static function read_json( string $filename ): array {
 		$path = self::path_for( $filename );
-		if ( ! is_readable( $path ) ) {
+		if ( '' === $path || ! is_readable( $path ) ) {
 			return array();
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
@@ -122,6 +122,9 @@ class TSOSK_Config_Storage {
 		}
 
 		$path = self::path_for( $filename );
+		if ( '' === $path ) {
+			return new WP_Error( 'invalid_config', __( 'Invalid config file name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- non-executable JSON in uploads.
 		if ( false === file_put_contents( $path, $json . "\n" ) ) {
 			return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -229,7 +232,7 @@ class TSOSK_Config_Storage {
 	 */
 	public static function delete_json( string $filename ): bool {
 		$path = self::path_for( $filename );
-		if ( file_exists( $path ) ) {
+		if ( '' !== $path && file_exists( $path ) ) {
 			wp_delete_file( $path );
 		}
 		return true;
@@ -242,7 +245,8 @@ class TSOSK_Config_Storage {
 	 * @return bool
 	 */
 	public static function json_exists( string $filename ): bool {
-		return file_exists( self::path_for( $filename ) );
+		$path = self::path_for( $filename );
+		return '' !== $path && file_exists( $path );
 	}
 
 	/**
@@ -501,7 +505,19 @@ class TSOSK_Config_Storage {
 	 * @return string
 	 */
 	private static function path_for( string $filename ): string {
-		return trailingslashit( self::get_dir() ) . $filename;
+		$allowed = array(
+			self::DEBUG_JSON,
+			self::SECURITY_JSON,
+			self::PROFILES_JSON,
+		);
+		if ( ! in_array( $filename, $allowed, true ) ) {
+			return '';
+		}
+		$dir = self::get_dir();
+		if ( '' === $dir ) {
+			return '';
+		}
+		return trailingslashit( $dir ) . $filename;
 	}
 
 	/**

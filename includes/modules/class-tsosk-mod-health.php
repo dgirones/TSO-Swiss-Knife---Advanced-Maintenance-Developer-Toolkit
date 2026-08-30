@@ -483,7 +483,7 @@ class TSOSK_Mod_Health {
 			$url,
 			array(
 				'timeout'     => 8,
-				'redirection' => 3,
+				'redirection' => 0,
 				'sslverify'   => true,
 			)
 		);

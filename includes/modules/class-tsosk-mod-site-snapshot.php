@@ -1183,6 +1183,10 @@ class TSOSK_Mod_Site_Snapshot {
 				<?php wp_nonce_field( 'tsosk_snapshot_export' ); ?>
 				<input type="hidden" name="tsosk_snapshot_export" value="1">
 				<p class="description"><?php esc_html_e( 'Select sections to include in the JSON file. Operational logs are unchecked by default.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<p class="description tsosk-snapshot-secrets-notice">
+					<strong><?php esc_html_e( 'Sensitive data:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					<?php esc_html_e( 'The exported file may contain third-party API keys (for example Comment Anti-Spam). Store it securely, do not commit it to public repositories, and treat shared copies like a password export.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
 				<ul class="tsosk-snapshot-section-list">
 					<?php foreach ( $labels as $id => $label ) : ?>
 					<li>

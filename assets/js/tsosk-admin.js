@@ -256,6 +256,19 @@
 		} );
 	} );
 
+	function tsoskScrollLogPreviewToEnd( path ) {
+		var $preview = path
+			? tsoskFindLogTargets( path ).card.find( '.tsosk-log-preview' )
+			: $( [] );
+
+		if ( ! $preview.length ) {
+			return;
+		}
+
+		var el = $preview.get( 0 );
+		el.scrollTop = el.scrollHeight;
+	}
+
 	function tsoskFindLogTargets( path ) {
 		return {
 			card: $( '.tsosk-log-card' ).filter( function () {
@@ -310,6 +323,7 @@
 				if ( r.success && r.data ) {
 					tsoskApplyLogRefresh( path, r.data );
 					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+					tsoskScrollLogPreviewToEnd( path );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
@@ -320,6 +334,20 @@
 				targets.buttons.prop( 'disabled', false ).text( label );
 			}
 		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-log-scroll-end', function () {
+		var $card = $( this ).closest( '.tsosk-log-card' );
+		var path  = $card.attr( 'data-log-path' ) || '';
+
+		if ( path ) {
+			tsoskScrollLogPreviewToEnd( path );
+		}
+
+		var $preview = $card.find( '.tsosk-log-preview' );
+		if ( $preview.length && $preview.get( 0 ).scrollIntoView ) {
+			$preview.get( 0 ).scrollIntoView( { block: 'nearest', behavior: 'smooth' } );
+		}
 	} );
 
 	$( document ).on( 'input change', '.tsosk-log-search, .tsosk-log-level', function () {
@@ -922,6 +950,48 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false ).text( label );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-um-install-translations', function () {
+		var $btn     = $( this );
+		var nonce    = $btn.data( 'nonce' );
+		var pending  = parseInt( $btn.data( 'pending' ), 10 ) || 0;
+		var $msg     = $( '#tsosk-um-run-msg' );
+		var label    = $btn.text();
+		var confirmMsg = tsosk.i18n.um_install_translations_confirm;
+
+		if ( pending > 0 && confirmMsg ) {
+			confirmMsg = confirmMsg.replace( '%d', String( pending ) );
+		}
+
+		if ( ! window.confirm( confirmMsg || label ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		$( '#tsosk-um-run-updates' ).prop( 'disabled', true );
+		$btn.text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_um_install_translations',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				if ( r.success ) {
+					var text = ( r.data && r.data.message ) ? r.data.message : ( r.data || tsosk.i18n.done );
+					showMsg( $msg, text, 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1800 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( label );
+					$( '#tsosk-um-run-updates' ).prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( label );
+				$( '#tsosk-um-run-updates' ).prop( 'disabled', false );
 			}
 		} );
 	} );
@@ -3565,6 +3635,74 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.media_footprint_scan || 'Scan uploads folder' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-media-hygiene-scan', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-media-hygiene-msg' );
+		var $out = $( '#tsosk-media-hygiene-results' );
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		showMsg( $msg, '', '' );
+
+		ajaxPost( {
+			action : 'tsosk_media_hygiene_scan',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				if ( r.success && r.data && r.data.html ) {
+					$out.html( r.data.html );
+					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.media_hygiene_scan || 'Scan removable folders' );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.media_hygiene_scan || 'Scan removable folders' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-media-hygiene-delete', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-media-hygiene-msg' );
+		var $out = $( '#tsosk-media-hygiene-results' );
+		var label = $btn.data( 'label' ) || '';
+		var confirmMsg = tsosk.i18n.media_hygiene_delete_confirm || 'Delete this folder?';
+
+		if ( label ) {
+			confirmMsg = label + '\n\n' + confirmMsg;
+		}
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, '' );
+
+		ajaxPost( {
+			action : 'tsosk_media_hygiene_delete',
+			data   : {
+				nonce     : $btn.data( 'nonce' ),
+				folder_id : $btn.data( 'folder-id' )
+			},
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.html ) {
+						$out.html( r.data.html );
+					}
+					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
 			}
 		} );
 	} );

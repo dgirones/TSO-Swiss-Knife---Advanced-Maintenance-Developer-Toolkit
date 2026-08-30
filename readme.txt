@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -188,6 +188,14 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.0.7 =
+* Debug: clearer developer-mode vs wp-config debug state; scroll-to-end on log toolbar; wp-content/debug.log policy copy and managed-log workaround.
+* Server Files: smarter robots.txt parser (line-specific full-site block vs path prefixes); scoped .htaccess deny detection.
+* Media Footprint: folder hygiene scan for legacy TSO uploads folders and .tmb caches, with safe delete allowlist.
+* Update Manager: install pending wordpress.org language packs button; removed auto_all updates preset.
+* Security: Login Protect 2FA rate limit; Meta Editor protected-key preview and serialized validation.
+* Health Report and config export hardening; refreshed CA/ES translations.
+
 = 1.0.6 =
 * New: Staging Mode (admin-bar label, noindex without touching blog_public, hold email, pause WP-Cron, database mail log + CSV).
 * New: URL & HTTPS Doctor (read-only diagnostics, loopback without following redirects, leftover http:// count with Search & Replace prefill).
@@ -237,6 +245,9 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Debug UX, robots/.htaccess review, uploads folder hygiene, language-pack install button, and security hardening. Refreshed translations.
 
 = 1.0.6 =
 Adds Staging Mode, URL & HTTPS Doctor, and Server & Runtime, plus hardening for cron, rewrites, transients, meta, export/import, language downloads, and uninstall cleanup.

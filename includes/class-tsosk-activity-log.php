@@ -265,6 +265,7 @@ class TSOSK_Activity_Log {
 			'execute' => __( 'Execute', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'toggle'  => __( 'Toggle', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'run'     => __( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'install-translations' => __( 'Install translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'flush'   => __( 'Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'import'  => __( 'Import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'export'  => __( 'Export', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

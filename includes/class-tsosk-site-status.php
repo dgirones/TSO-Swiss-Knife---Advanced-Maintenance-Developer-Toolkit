@@ -171,15 +171,19 @@ class TSOSK_Site_Status {
 	}
 
 	/**
-	 * Whether developer preset is active (debug+log+queries, no display).
+	 * Whether the plugin's developer preset JSON (or legacy PHP) is saved and matches the preset.
 	 */
 	public static function is_developer_mode_active(): bool {
+		if ( class_exists( 'TSOSK_Config_Storage' ) ) {
+			$data = TSOSK_Config_Storage::read_json( TSOSK_Config_Storage::DEBUG_JSON );
+			if ( ! empty( $data['flags'] ) && is_array( $data['flags'] ) ) {
+				return self::flags_match_developer_preset( $data['flags'] );
+			}
+		}
+
 		$path = trailingslashit( TSOSK_CONFIG_DIR ) . 'tsosk-debug-flags.php';
 		if ( ! file_exists( $path ) ) {
-			return defined( 'WP_DEBUG' ) && WP_DEBUG
-				&& defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG
-				&& ( ! defined( 'WP_DEBUG_DISPLAY' ) || ! WP_DEBUG_DISPLAY )
-				&& defined( 'SAVEQUERIES' ) && SAVEQUERIES;
+			return false;
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$src = (string) file_get_contents( $path );
@@ -187,6 +191,17 @@ class TSOSK_Site_Status {
 			&& (bool) preg_match( "/define\(\s*'WP_DEBUG_LOG'\s*,\s*true\s*\)/i", $src )
 			&& (bool) preg_match( "/define\(\s*'WP_DEBUG_DISPLAY'\s*,\s*false\s*\)/i", $src )
 			&& (bool) preg_match( "/define\(\s*'SAVEQUERIES'\s*,\s*true\s*\)/i", $src );
+	}
+
+	/**
+	 * @param array<string, mixed> $flags Saved debug flag map.
+	 */
+	private static function flags_match_developer_preset( array $flags ): bool {
+		return ! empty( $flags['WP_DEBUG'] )
+			&& ! empty( $flags['WP_DEBUG_LOG'] )
+			&& empty( $flags['WP_DEBUG_DISPLAY'] )
+			&& empty( $flags['SCRIPT_DEBUG'] )
+			&& ! empty( $flags['SAVEQUERIES'] );
 	}
 
 	/**

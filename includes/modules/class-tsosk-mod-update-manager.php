@@ -37,6 +37,7 @@ class TSOSK_Mod_Update_Manager {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_um_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_um_run_updates', array( $this, 'ajax_run_updates' ) );
+		add_action( 'wp_ajax_tsosk_um_install_translations', array( $this, 'ajax_install_translations' ) );
 	}
 
 	/**
@@ -692,6 +693,47 @@ class TSOSK_Mod_Update_Manager {
 			'details' => $module_detail,
 		);
 
+		if ( $this->is_blocking_translation_checks() ) {
+			$items[] = array(
+				'label'   => __( 'Translation update checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => __( 'Blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'badge'   => 'tsosk-badge-warn',
+				'details' => __( 'This module is blocking wordpress.org translation lookups. Disable “Block translation updates” (or change the preset) so language packs can be detected and installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		} else {
+			$items[] = array(
+				'label'   => __( 'Translation update checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => __( 'Allowed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'badge'   => 'tsosk-badge-ok',
+				'details' => __( 'WordPress can query translate.wordpress.org for language packs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		$lang_dir = defined( 'WP_LANG_DIR' ) ? WP_LANG_DIR : trailingslashit( WP_CONTENT_DIR ) . 'languages';
+		$lang_ok  = is_dir( $lang_dir ) && wp_is_writable( $lang_dir );
+		$items[]  = array(
+			'label'   => __( 'Language packs directory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $lang_ok ? __( 'Writable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Not writable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'badge'   => $lang_ok ? 'tsosk-badge-ok' : 'tsosk-badge-warn',
+			'details' => $lang_ok
+				? wp_normalize_path( $lang_dir )
+				: sprintf(
+					/* translators: %s: languages directory path */
+					__( 'WordPress installs language packs under %s. Fix permissions so the web server can write there.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'<code>' . esc_html( wp_normalize_path( $lang_dir ) ) . '</code>'
+				),
+		);
+
+		$bundled = $this->count_active_plugins_with_bundled_languages();
+		$items[] = array(
+			'label'   => __( 'Bundled plugin translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => (string) $bundled,
+			'badge'   => $bundled > 0 ? 'tsosk-badge-info' : 'tsosk-badge-ok',
+			'details' => $bundled > 0
+				? __( 'Active plugins with .mo files in their own languages/ folder. Those catalogs update when you update the plugin ZIP — not via language packs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'No active plugins with bundled .mo catalogs detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+
 		$next_plugins = $this->get_next_cron_timestamp( 'wp_update_plugins' );
 		$items[]      = array(
 			'label'   => __( 'Next plugin check (cron)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -744,6 +786,122 @@ class TSOSK_Mod_Update_Manager {
 		return $next;
 	}
 
+	/**
+	 * Whether translation update API checks are blocked by this module.
+	 */
+	private function is_blocking_translation_checks(): bool {
+		if ( 'disable_all' === $this->settings['preset'] ) {
+			return true;
+		}
+		return 'custom' === $this->settings['preset'] && ! empty( $this->settings['block_translations'] );
+	}
+
+	/**
+	 * Contact wordpress.org and refresh plugin/theme update transients (includes translation offers).
+	 */
+	private function refresh_update_transients(): void {
+		wp_version_check( array(), true );
+		wp_update_plugins();
+		wp_update_themes();
+
+		wp_clean_plugins_cache( true );
+		wp_clean_themes_cache( true );
+		delete_site_transient( 'update_plugins' );
+		delete_site_transient( 'update_themes' );
+		wp_update_plugins();
+		wp_update_themes();
+	}
+
+	/**
+	 * Count active plugins that ship .mo files inside their own languages/ folder.
+	 *
+	 * Bundled catalogs are updated with the plugin ZIP, not via wordpress.org language packs.
+	 */
+	private function count_active_plugins_with_bundled_languages(): int {
+		$active = get_option( 'active_plugins', array() );
+		if ( ! is_array( $active ) || empty( $active ) ) {
+			return 0;
+		}
+
+		$plugins_root = function_exists( 'tsosk_get_plugins_dir' )
+			? tsosk_get_plugins_dir()
+			: trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+
+		$count = 0;
+		foreach ( $active as $plugin_file ) {
+			if ( ! is_string( $plugin_file ) || '' === $plugin_file ) {
+				continue;
+			}
+			$lang_dir = $plugins_root . dirname( $plugin_file ) . '/languages';
+			if ( ! is_dir( $lang_dir ) ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_glob -- read-only admin diagnostic scan.
+			$mos = glob( trailingslashit( wp_normalize_path( $lang_dir ) ) . '*.mo' );
+			if ( is_array( $mos ) && ! empty( $mos ) ) {
+				++$count;
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Prepare the filesystem for core upgraders (direct writes when allowed).
+	 *
+	 * @return bool
+	 */
+	private function init_upgrade_filesystem(): bool {
+		tsosk_require_wp_admin( 'includes/file.php' );
+		tsosk_require_wp_admin( 'includes/class-wp-upgrader.php' );
+		tsosk_require_wp_admin( 'includes/class-language-pack-upgrader.php' );
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			return false;
+		}
+
+		global $wp_filesystem;
+		ob_start();
+		$ready = WP_Filesystem();
+		ob_end_clean();
+
+		return $ready && isset( $wp_filesystem ) && $wp_filesystem instanceof WP_Filesystem_Base;
+	}
+
+	/**
+	 * @param mixed $bulk_result Return value from Language_Pack_Upgrader::bulk_upgrade().
+	 * @return array{installed:int,failed:int}
+	 */
+	private function summarize_language_bulk_upgrade( $bulk_result ): array {
+		if ( is_wp_error( $bulk_result ) ) {
+			return array(
+				'installed' => 0,
+				'failed'    => 1,
+			);
+		}
+		if ( ! is_array( $bulk_result ) ) {
+			return array(
+				'installed' => 0,
+				'failed'    => 0,
+			);
+		}
+
+		$installed = 0;
+		$failed    = 0;
+		foreach ( $bulk_result as $result ) {
+			if ( true === $result ) {
+				++$installed;
+			} else {
+				++$failed;
+			}
+		}
+
+		return array(
+			'installed' => $installed,
+			'failed'    => $failed,
+		);
+	}
+
 	/** AJAX: refresh update transients from wordpress.org (does not install updates). */
 	public function ajax_run_updates(): void {
 		check_ajax_referer( 'tsosk_um_nonce', 'nonce' );
@@ -766,16 +924,7 @@ class TSOSK_Mod_Update_Manager {
 
 		$before = $this->count_pending_updates();
 
-		wp_version_check( array(), true );
-		wp_update_plugins();
-		wp_update_themes();
-
-		wp_clean_plugins_cache( true );
-		wp_clean_themes_cache( true );
-		delete_site_transient( 'update_plugins' );
-		delete_site_transient( 'update_themes' );
-		wp_update_plugins();
-		wp_update_themes();
+		$this->refresh_update_transients();
 
 		$this->restore_update_block_filters( $lifted );
 
@@ -810,11 +959,107 @@ class TSOSK_Mod_Update_Manager {
 		);
 	}
 
+	/** AJAX: install pending wordpress.org language packs (explicit admin action). */
+	public function ajax_install_translations(): void {
+		check_ajax_referer( 'tsosk_um_nonce', 'nonce' );
+		if ( ! current_user_can( 'update_languages' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		if ( 'disable_all' === $this->settings['preset'] ) {
+			wp_send_json_error( __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS ) {
+			wp_send_json_error( __( 'File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot install language packs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! wp_is_file_mod_allowed( 'automatic_updater' ) ) {
+			wp_send_json_error( __( 'WordPress blocked automatic file updates on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$lifted = $this->temporarily_lift_update_block_filters();
+
+		tsosk_require_wp_admin( 'includes/admin.php' );
+		tsosk_require_wp_admin( 'includes/update.php' );
+		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
+			tsosk_require_wp_admin( 'includes/translation-install.php' );
+		}
+
+		$before = $this->count_pending_updates();
+		$this->refresh_update_transients();
+
+		$updates = wp_get_translation_updates();
+		if ( ! is_array( $updates ) || empty( $updates ) ) {
+			$this->restore_update_block_filters( $lifted );
+			wp_send_json_success(
+				array(
+					'message' => __( 'No pending wordpress.org language packs to install. Plugins that ship .mo files inside their ZIP are updated when you update the plugin itself.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'before'  => $before,
+					'after'   => $this->count_pending_updates(),
+				)
+			);
+		}
+
+		if ( ! $this->init_upgrade_filesystem() ) {
+			$this->restore_update_block_filters( $lifted );
+			wp_send_json_error( __( 'Could not initialize the WordPress filesystem. Check file permissions or FTP credentials.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Language_Pack_Upgrader( $skin );
+		$result   = $upgrader->bulk_upgrade( $updates, array( 'clear_update_cache' => true ) );
+
+		$this->restore_update_block_filters( $lifted );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		$summary = $this->summarize_language_bulk_upgrade( $result );
+		$after   = $this->count_pending_updates();
+
+		TSOSK_Activity_Log::log(
+			'update-manager',
+			'install-translations',
+			sprintf(
+				/* translators: 1: installed count, 2: failed count, 3: pending after */
+				__( 'Language packs installed: %1$d succeeded, %2$d failed. Pending now: %3$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$summary['installed'],
+				$summary['failed'],
+				$after['translations']
+			)
+		);
+
+		if ( 0 === $summary['installed'] && $summary['failed'] > 0 ) {
+			wp_send_json_error(
+				__( 'Could not install the pending language packs. Check file permissions and try Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: installed count, 2: failed count, 3: translations pending after */
+					__( 'Language pack install finished: %1$d installed, %2$d failed. Translations still pending: %3$d. Bundled plugin translations (.mo inside the plugin folder) update only with a plugin version bump.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$summary['installed'],
+					$summary['failed'],
+					$after['translations']
+				),
+				'before'  => $before,
+				'after'   => $after,
+				'summary' => $summary,
+			)
+		);
+	}
+
 	public function render(): void {
-		$nonce       = wp_create_nonce( 'tsosk_um_nonce' );
-		$settings    = self::get_settings();
-		$preset      = $settings['preset'];
-		$environment = $this->get_update_environment();
+		$nonce            = wp_create_nonce( 'tsosk_um_nonce' );
+		$settings         = self::get_settings();
+		$preset           = $settings['preset'];
+		$environment      = $this->get_update_environment();
+		$pending_updates  = $this->count_pending_updates();
+		$translations_pending = (int) $pending_updates['translations'];
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Monitor WordPress update status, optionally block update checks (staging), hide specific plugin updates, and control update email notifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -837,6 +1082,9 @@ class TSOSK_Mod_Update_Manager {
 				);
 				?>
 			</p>
+			<p class="description" style="margin:0 0 12px;">
+				<?php esc_html_e( 'Two translation sources: (1) wordpress.org language packs installed under wp-content/languages/ — use the buttons below; (2) .mo files bundled inside a plugin folder — updated only when that plugin is updated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
 			<div class="tsosk-notice tsosk-notice-warn" style="margin:0;">
 				<strong><?php esc_html_e( 'Security note:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php esc_html_e( 'Blocking updates removes security patches from appearing in the dashboard. Only disable updates on staging, managed hosts with external patching, or when you update manually on a schedule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -845,7 +1093,7 @@ class TSOSK_Mod_Update_Manager {
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Update status & troubleshooting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. Use the button to contact wordpress.org and refresh the pending update list (does not install updates).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. “Check for updates now” refreshes the pending list from wordpress.org. “Install pending translations” downloads language packs into wp-content/languages/ (does not update bundled .mo files inside plugins).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -866,6 +1114,18 @@ class TSOSK_Mod_Update_Manager {
 				<button type="button" class="button button-primary" id="tsosk-um-run-updates"
 				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Check for updates now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<button type="button" class="button" id="tsosk-um-install-translations"
+				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+				        data-pending="<?php echo esc_attr( (string) $translations_pending ); ?>"
+					<?php disabled( 0 === $translations_pending ); ?>>
+					<?php
+					printf(
+						/* translators: %d: pending language pack count */
+						esc_html__( 'Install pending translations (%d)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						absint( $translations_pending )
+					);
+					?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-um-run-msg"></span>
 			</p>

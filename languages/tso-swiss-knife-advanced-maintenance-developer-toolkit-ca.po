@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: TSO Swiss Knife 1.0.6\n"
+"Project-Id-Version: TSO Swiss Knife 1.0.7\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
 "POT-Creation-Date: 2026-08-24 13:55+0000\n"
 "PO-Revision-Date: 2026-08-24 13:56+0000\n"
@@ -9928,6 +9928,14 @@ msgstr ""
 "Buidar o reduir només s’aplica als registres de la carpeta uploads del "
 "plugin."
 
+#: includes/modules/class-tsosk-mod-debug.php:925
+msgid ""
+"Created by PHP/your hosting server when PHP error logging is active. The "
+"plugin can preview and download these files."
+msgstr ""
+"Creat per PHP o el servidor d’allotjament quan el registre d’errors de PHP "
+"està actiu. El plugin pot previsualitzar i descarregar aquests fitxers."
+
 #: includes/modules/class-tsosk-mod-health.php:62
 msgid "Health alert settings saved."
 msgstr "Configuració d'alertes de salut desada."
@@ -9989,6 +9997,16 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-login-protect.php:577
 msgid "Invalid or expired verification code."
 msgstr "Codi de verificació no vàlid o caducat."
+
+#: includes/modules/class-tsosk-mod-login-protect.php
+msgid "Too many invalid verification codes. Sign in again to receive a new code."
+msgstr ""
+"Massa codis de verificació incorrectes. Torna a iniciar sessió per rebre'n "
+"un de nou."
+
+#: includes/modules/class-tsosk-mod-meta-editor.php
+msgid "Invalid serialized meta value."
+msgstr "Valor de meta serialitzat no vàlid."
 
 #: includes/modules/class-tsosk-mod-login-protect.php:589
 msgid "Email verification code"
@@ -10822,6 +10840,20 @@ msgstr ""
 "Selecciona les seccions a incloure al JSON. Els registres operatius van "
 "desmarcats per defecte."
 
+#: includes/modules/class-tsosk-mod-site-snapshot.php
+msgid "Sensitive data:"
+msgstr "Dades sensibles:"
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php
+msgid ""
+"The exported file may contain third-party API keys (for example Comment "
+"Anti-Spam). Store it securely, do not commit it to public repositories, "
+"and treat shared copies like a password export."
+msgstr ""
+"L’exportació pot contenir claus API de tercers (per exemple Comment "
+"Anti-Spam). Guarda el fitxer de forma segura, no el pengis a repositoris "
+"públics i tracta les còpies compartides com un export de contrasenyes."
+
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1186
 msgid ""
 "Paste JSON from a previous export or upload a .json file. You can choose "
@@ -11649,6 +11681,10 @@ msgstr "No es pot escriure al directori de registres."
 #: includes/class-tsosk-config-storage.php:183
 msgid "Invalid log file name."
 msgstr "Nom de fitxer de registre no vàlid."
+
+#: includes/class-tsosk-config-storage.php
+msgid "Invalid config file name."
+msgstr "Nom de fitxer de configuració no vàlid."
 
 #: includes/class-tsosk-config-storage.php:188
 msgid "Could not encode log data."
@@ -12488,3 +12524,297 @@ msgstr ""
 
 msgid "Could not probe the home page (%s)."
 msgstr "No s'ha pogut comprovar la pàgina d'inici (%s)."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid ""
+"Two translation sources: (1) wordpress.org language packs installed under "
+"wp-content/languages/ — use the buttons below; (2) .mo files bundled inside "
+"a plugin folder — updated only when that plugin is updated."
+msgstr ""
+"Dues fonts de traduccions: (1) language packs de wordpress.org a wp-content/"
+"languages/ — usa els botons de sota; (2) fitxers .mo dins del connector — "
+"s'actualitzen només en actualitzar el connector."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid ""
+"If updates stay pending for days, check the blockers below. “Check for "
+"updates now” refreshes the pending list from wordpress.org. “Install "
+"pending translations” downloads language packs into wp-content/languages/ "
+"(does not update bundled .mo files inside plugins)."
+msgstr ""
+"Si les actualitzacions es queden pendents dies, revisa els bloquejos. "
+"«Comprovar actualitzacions ara» refresca la llista des de wordpress.org. "
+"«Instal·lar traduccions pendents» baixa language packs a wp-content/"
+"languages/ (no actualitza .mo inclosos dins dels connectors)."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid "Install pending translations (%d)"
+msgstr "Instal·lar traduccions pendents (%d)"
+
+#: includes/class-tsosk-admin.php
+msgid ""
+"Install %d pending wordpress.org language pack(s) now? Files will be written "
+"under wp-content/languages/. Bundled .mo files inside plugins are not "
+"changed."
+msgstr ""
+"Vols instal·lar %d language pack(s) pendents de wordpress.org ara? Els "
+"fitxers s'escriuran a wp-content/languages/. No es modifiquen els .mo "
+"inclosos dins dels connectors."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid "Translation update checks"
+msgstr "Comprovacions de traduccions"
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid ""
+"This module is blocking wordpress.org translation lookups. Disable “Block "
+"translation updates” (or change the preset) so language packs can be "
+"detected and installed."
+msgstr ""
+"Aquest mòdul bloqueja les consultes de traduccions a wordpress.org. "
+"Desactiva «Bloquejar actualitzacions de traduccions» (o canvia el preset) "
+"per detectar i instal·lar language packs."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid "WordPress can query translate.wordpress.org for language packs."
+msgstr "WordPress pot consultar translate.wordpress.org per obtenir language packs."
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid "Language packs directory"
+msgstr "Directori de language packs"
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid "Bundled plugin translations"
+msgstr "Traduccions incloses al connector"
+
+#: includes/modules/class-tsosk-mod-update-manager.php
+msgid ""
+"Active plugins with .mo files in their own languages/ folder. Those "
+"catalogs update when you update the plugin ZIP — not via language packs."
+msgstr ""
+"Connectors actius amb fitxers .mo a la seva carpeta languages/. Aquests "
+"catàlegs s'actualitzen en actualitzar el ZIP del connector — no via language "
+"packs."
+
+#: includes/class-tsosk-activity-log.php
+msgid "Install translations"
+msgstr "Instal·lar traduccions"
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid "Scroll to end"
+msgstr "Anar al final"
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid "Read-only here"
+msgstr "Només lectura aquí"
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid ""
+"Shrink / empty actions are allowed only for log files inside the plugin "
+"uploads logs folder (WordPress.org write policy). wp-content/debug.log can be "
+"previewed and downloaded, but not truncated by the plugin."
+msgstr ""
+"Reduir/buidar només es permet en fitxers dins uploads/logs/ del connector "
+"(política WordPress.org). wp-content/debug.log es pot previsualitzar i "
+"descarregar, però el connector no el pot truncar."
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid ""
+"Workaround: in wp-config.php you can point WP_DEBUG_LOG to %s so shrink/"
+"empty works from here."
+msgstr ""
+"Alternativa: a wp-config.php pots definir WP_DEBUG_LOG com a %s per poder "
+"reduir/buidar des d'aquí."
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid ""
+"WordPress.org policy prevents this plugin from rewriting wp-content/debug.log."
+" Use Download, then clear the file on the server, or point WP_DEBUG_LOG to "
+"the managed uploads path shown above to enable Shrink here."
+msgstr ""
+"La política de WordPress.org impedeix reescriure wp-content/debug.log des "
+"d'aquest connector. Descarrega'l i esborra'l al servidor, o apunta "
+"WP_DEBUG_LOG al path d'uploads indicat a dalt per habilitar Reduir."
+
+#: includes/modules/class-tsosk-mod-debug.php
+msgid "TSO managed debug log (uploads)"
+msgstr "Log de depuració gestionat TSO (uploads)"
+
+#: includes/modules/class-tsosk-mod-debug.php:767
+msgid ""
+"Debug constants are already active on this site (usually from wp-config.php)."
+" That is separate from this plugin preset — the bar above shows site-wide "
+"debug, while Developer mode here only reflects the saved JSON preset."
+msgstr ""
+"Les constants de depuració ja estan actives en aquest lloc (normalment des "
+"de wp-config.php). Això és independent del preset del connector: la barra "
+"superior indica depuració global, mentre que el mode desenvolupador aquí "
+"només reflecteix el preset JSON desat."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "Line %2$d blocks the entire site for User-agent: %1$s (%3$s)."
+msgstr "La línia %2$d bloqueja tot el lloc per a User-agent: %1$s (%3$s)."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid " …and %d more"
+msgstr " …i %d més"
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "User-agent: * blocks %1$d path prefix(es), not the whole site: %2$s."
+msgstr "User-agent: * bloqueja %1$d prefixos de ruta, no tot el lloc: %2$s."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "RewriteRule/RewriteCond directives were found but RewriteEngine On is missing. Pretty permalinks may not work on Apache."
+msgstr "S'han trobat directives RewriteRule/RewriteCond però falta RewriteEngine On. Els enllaços bonics poden no funcionar a Apache."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "No RewriteRule directives were found. This file may only contain redirects or security headers."
+msgstr "No s'han trobat directives RewriteRule. Aquest fitxer pot contenir només redireccions o capçaleres de seguretat."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "A top-level “deny all” rule was found. Unless it is scoped to a sensitive file, it can block public access to the site."
+msgstr "S'ha trobat una regla «deny all» a nivell arrel. Si no està limitada a un fitxer sensible, pot bloquejar l'accés públic al lloc."
+
+#: includes/modules/class-tsosk-mod-server-files.php
+msgid "At least one RewriteRule returns forbidden (403). Review that it targets the intended URLs only."
+msgstr "Almenys una RewriteRule retorna forbidden (403). Revisa que només afecti les URL previstes."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Folder hygiene"
+msgstr "Higiene de carpetes"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be deleted from here — others are recommendations only."
+msgstr "Escaneja uploads i carpetes cache conegudes (legacy TSO, miniatures .tmb). Només es poden esborrar des d'aquí els elements marcats Segur — la resta són recomanacions."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Scan removable folders"
+msgstr "Escanejar carpetes eliminables"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "No hygiene scan yet. Click “Scan removable folders” to classify uploads subfolders and .tmb caches."
+msgstr "Encara no hi ha escaneig. Fes clic a «Escanejar carpetes eliminables» per classificar subcarpetes d'uploads i caches .tmb."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Folder hygiene scan completed."
+msgstr "Escaneig d'higiene de carpetes completat."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Removable folders"
+msgstr "Carpetes eliminables"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Confidence"
+msgstr "Confiança"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Safe"
+msgstr "Segur"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Keep"
+msgstr "Conservar"
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Manual only"
+msgstr "Només manual"
+
+#: includes/class-tsosk-admin.php
+msgid "Delete this folder? This cannot be undone."
+msgstr "Esborrar aquesta carpeta? Aquesta acció no es pot desfer."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Active Swiss Knife data folder (config, logs). Do not delete."
+msgstr "Carpeta activa de Swiss Knife (config, logs). No l'esborris."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife folder from an older version. Data was migrated to the long slug folder — safe to remove if empty or duplicate."
+msgstr "Carpeta legacy de Swiss Knife d'una versió antiga. Les dades s'han migrat a la carpeta amb slug llarg — es pot eliminar si està buida o duplicada."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife folder. Confirm the new config folder exists before deleting."
+msgstr "Carpeta legacy de Swiss Knife. Confirma que existeix la carpeta config nova abans d'esborrar."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "elFinder / file-manager thumbnail cache (.tmb). Safe to delete — thumbnails regenerate when you browse files in that tool."
+msgstr "Cache de miniatures elFinder / gestor de fitxers (.tmb). Es pot esborrar — es regeneren en tornar a obrir el gestor."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Folder belongs to an active TSO plugin — keep it."
+msgstr "Carpeta d'un plugin TSO actiu — conserva-la."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Folder matches a TSO plugin slug but that plugin is not active. Review before deleting — may contain backups or exports."
+msgstr "La carpeta coincideix amb un plugin TSO inactiu. Revisa abans d'esborrar — pot contenir còpies o exportacions."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Known plugin folder — not classified as disposable cache."
+msgstr "Carpeta de plugin coneguda — no es classifica com a cache eliminable."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Custom or third-party folder under uploads. Verify what created it before deleting."
+msgstr "Carpeta personalitzada o de tercers dins uploads. Verifica l'origen abans d'esborrar."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife config folder. JSON was migrated to the long slug folder — safe to remove if empty or duplicate."
+msgstr "Carpeta config legacy de Swiss Knife. El JSON s'ha migrat a la carpeta amb slug llarg — es pot eliminar si està buida o duplicada."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife config folder. Confirm the new config folder exists before deleting."
+msgstr "Carpeta config legacy de Swiss Knife. Confirma que existeix la carpeta config nova abans d'esborrar."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Obsolete language-cache folder from an older Swiss Knife version. Safe to delete — not used by current releases."
+msgstr "Carpeta obsoleta de cache d'idiomes d'una versió antiga de Swiss Knife. Es pot esborrar — les versions actuals no la fan servir."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife logs folder. Current logs use uploads/{plugin-slug}/logs/ — safe to remove if you no longer need these files."
+msgstr "Carpeta legacy de logs de Swiss Knife. Els logs actuals van a uploads/{plugin-slug}/logs/ — es pot eliminar si ja no necessites aquests fitxers."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Legacy Swiss Knife logs folder. Review contents before deleting — may contain log files not copied elsewhere."
+msgstr "Carpeta legacy de logs de Swiss Knife. Revisa el contingut abans d'esborrar — pot contenir fitxers de log no copiats en un altre lloc."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Unknown folder."
+msgstr "Carpeta desconeguda."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "This folder cannot be deleted from here."
+msgstr "Aquesta carpeta no es pot esborrar des d'aquí."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "The folder path is outside the allowed locations."
+msgstr "La ruta de la carpeta queda fora de les ubicacions permeses."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "The folder no longer exists."
+msgstr "La carpeta ja no existeix."
+
+#: includes/class-tsosk-uploads-scanner.php
+msgid "Could not delete the folder."
+msgstr "No s'ha pogut esborrar la carpeta."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Scan data expired. Run the hygiene scan again."
+msgstr "Les dades de l'escaneig han caducat. Torna a executar l'escaneig d'higiene."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Removable folder deleted: %s."
+msgstr "Carpeta eliminable esborrada: %s."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Invalid folder."
+msgstr "Carpeta no vàlida."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Folder deleted."
+msgstr "Carpeta esborrada."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "No classified folders were found under uploads or known cache paths."
+msgstr "No s'han trobat carpetes classificades a uploads ni als paths cache coneguts."
+
+#: includes/modules/class-tsosk-mod-media-footprint.php
+msgid "Last scan: %s"
+msgstr "Darrer escaneig: %s"

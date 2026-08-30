@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit 1.0.6\n"
+"Project-Id-Version: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit 1.0.7\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
 "POT-Creation-Date: 2026-08-24T14:40:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -1512,6 +1512,10 @@ msgstr ""
 
 #: includes/class-tsosk-config-storage.php:183
 msgid "Invalid log file name."
+msgstr ""
+
+#: includes/class-tsosk-config-storage.php
+msgid "Invalid config file name."
 msgstr ""
 
 #: includes/class-tsosk-config-storage.php:188
@@ -5677,6 +5681,14 @@ msgstr ""
 msgid "Invalid or expired verification code."
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-login-protect.php
+msgid "Too many invalid verification codes. Sign in again to receive a new code."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php
+msgid "Invalid serialized meta value."
+msgstr ""
+
 #: includes/modules/class-tsosk-mod-login-protect.php:589
 msgid "Email verification code"
 msgstr ""
@@ -9440,6 +9452,17 @@ msgstr ""
 msgid ""
 "Select sections to include in the JSON file. Operational logs are unchecked "
 "by default."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php
+msgid "Sensitive data:"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php
+msgid ""
+"The exported file may contain third-party API keys (for example Comment "
+"Anti-Spam). Store it securely, do not commit it to public repositories, "
+"and treat shared copies like a password export."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1180
