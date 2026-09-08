@@ -375,17 +375,29 @@ class TSOSK_Mod_Slug_Manager {
 		}
 
 		$message = sprintf(
-			/* translators: 1: number of slugs to change, 2: threshold, 3: skipped count */
+			/* translators: 1: number of slugs to change, 2: threshold */
 			_n(
-				'%1$d slug will be shortened to a maximum of %2$d characters. %3$d item will be skipped.',
-				'%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items will be skipped.',
+				'%1$d slug will be shortened to a maximum of %2$d characters.',
+				'%1$d slugs will be shortened to a maximum of %2$d characters.',
 				$change_count,
 				'tso-swiss-knife-advanced-maintenance-developer-toolkit'
 			),
 			$change_count,
-			$threshold,
-			$skipped_count
+			$threshold
 		);
+
+		if ( $skipped_count > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of items skipped */
+				_n(
+					'%d item will be skipped.',
+					'%d items will be skipped.',
+					$skipped_count,
+					'tso-swiss-knife-advanced-maintenance-developer-toolkit'
+				),
+				$skipped_count
+			);
+		}
 
 		if ( $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ) ) {
 			$message .= ' ' . __( '301 redirects will be created from the old URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
