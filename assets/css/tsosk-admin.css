@@ -999,6 +999,12 @@
     color: #7a4100;
 }
 
+.tsosk-notice-error {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #3c434a;
+}
+
 /* ── TSO companion plugin promos ───────────────────────────────────────────── */
 .tsosk-promo-link-inspector,
 .tsosk-promo-options-cleaner {

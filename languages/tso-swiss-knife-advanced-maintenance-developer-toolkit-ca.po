@@ -5488,10 +5488,15 @@ msgstr "— Cap (404 del tema) —"
 #: includes/modules/class-tsosk-mod-custom-404.php:635
 msgid ""
 "Create the page under Pages → Add New, then pick it here. Permalinks must "
-"not be set to “Plain”."
+"not be set to “Plain”. If pretty URLs show a bare server “404 Not Found” "
+"(not your design), open Settings → Permalinks and click Save — otherwise "
+"visitors never reach WordPress on missing links."
 msgstr ""
 "Crea la pàgina a Pàgines → Afegeix-ne una de nova i tria-la aquí. Els "
-"enllaços permanents no poden estar en mode «Simple»."
+"enllaços permanents no han d'estar en «Plain». Si les URL boniques mostren "
+"un «404 Not Found» nu del servidor (no el teu disseny), ves a Configuració →"
+" Enllaços permanents i Desa — si no, els visitants no arriben a WordPress "
+"amb enllaços trencats."
 
 #: includes/modules/class-tsosk-mod-custom-404.php:641
 msgid "Edit page"
@@ -9999,7 +10004,8 @@ msgid "Invalid or expired verification code."
 msgstr "Codi de verificació no vàlid o caducat."
 
 #: includes/modules/class-tsosk-mod-login-protect.php
-msgid "Too many invalid verification codes. Sign in again to receive a new code."
+msgid ""
+"Too many invalid verification codes. Sign in again to receive a new code."
 msgstr ""
 "Massa codis de verificació incorrectes. Torna a iniciar sessió per rebre'n "
 "un de nou."
@@ -10847,12 +10853,12 @@ msgstr "Dades sensibles:"
 #: includes/modules/class-tsosk-mod-site-snapshot.php
 msgid ""
 "The exported file may contain third-party API keys (for example Comment "
-"Anti-Spam). Store it securely, do not commit it to public repositories, "
-"and treat shared copies like a password export."
+"Anti-Spam). Store it securely, do not commit it to public repositories, and "
+"treat shared copies like a password export."
 msgstr ""
-"L’exportació pot contenir claus API de tercers (per exemple Comment "
-"Anti-Spam). Guarda el fitxer de forma segura, no el pengis a repositoris "
-"públics i tracta les còpies compartides com un export de contrasenyes."
+"L’exportació pot contenir claus API de tercers (per exemple Comment Anti-"
+"Spam). Guarda el fitxer de forma segura, no el pengis a repositoris públics "
+"i tracta les còpies compartides com un export de contrasenyes."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1186
 msgid ""
@@ -12531,21 +12537,21 @@ msgid ""
 "wp-content/languages/ — use the buttons below; (2) .mo files bundled inside "
 "a plugin folder — updated only when that plugin is updated."
 msgstr ""
-"Dues fonts de traduccions: (1) language packs de wordpress.org a wp-content/"
-"languages/ — usa els botons de sota; (2) fitxers .mo dins del connector — "
-"s'actualitzen només en actualitzar el connector."
+"Dues fonts de traduccions: (1) language packs de wordpress.org a wp-"
+"content/languages/ — usa els botons de sota; (2) fitxers .mo dins del "
+"connector — s'actualitzen només en actualitzar el connector."
 
 #: includes/modules/class-tsosk-mod-update-manager.php
 msgid ""
 "If updates stay pending for days, check the blockers below. “Check for "
-"updates now” refreshes the pending list from wordpress.org. “Install "
-"pending translations” downloads language packs into wp-content/languages/ "
-"(does not update bundled .mo files inside plugins)."
+"updates now” refreshes the pending list from wordpress.org. “Install pending"
+" translations” downloads language packs into wp-content/languages/ (does not"
+" update bundled .mo files inside plugins)."
 msgstr ""
 "Si les actualitzacions es queden pendents dies, revisa els bloquejos. "
 "«Comprovar actualitzacions ara» refresca la llista des de wordpress.org. "
-"«Instal·lar traduccions pendents» baixa language packs a wp-content/"
-"languages/ (no actualitza .mo inclosos dins dels connectors)."
+"«Instal·lar traduccions pendents» baixa language packs a wp-"
+"content/languages/ (no actualitza .mo inclosos dins dels connectors)."
 
 #: includes/modules/class-tsosk-mod-update-manager.php
 msgid "Install pending translations (%d)"
@@ -12553,8 +12559,8 @@ msgstr "Instal·lar traduccions pendents (%d)"
 
 #: includes/class-tsosk-admin.php
 msgid ""
-"Install %d pending wordpress.org language pack(s) now? Files will be written "
-"under wp-content/languages/. Bundled .mo files inside plugins are not "
+"Install %d pending wordpress.org language pack(s) now? Files will be written"
+" under wp-content/languages/. Bundled .mo files inside plugins are not "
 "changed."
 msgstr ""
 "Vols instal·lar %d language pack(s) pendents de wordpress.org ara? Els "
@@ -12577,7 +12583,8 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php
 msgid "WordPress can query translate.wordpress.org for language packs."
-msgstr "WordPress pot consultar translate.wordpress.org per obtenir language packs."
+msgstr ""
+"WordPress pot consultar translate.wordpress.org per obtenir language packs."
 
 #: includes/modules/class-tsosk-mod-update-manager.php
 msgid "Language packs directory"
@@ -12589,12 +12596,12 @@ msgstr "Traduccions incloses al connector"
 
 #: includes/modules/class-tsosk-mod-update-manager.php
 msgid ""
-"Active plugins with .mo files in their own languages/ folder. Those "
-"catalogs update when you update the plugin ZIP — not via language packs."
+"Active plugins with .mo files in their own languages/ folder. Those catalogs"
+" update when you update the plugin ZIP — not via language packs."
 msgstr ""
 "Connectors actius amb fitxers .mo a la seva carpeta languages/. Aquests "
-"catàlegs s'actualitzen en actualitzar el ZIP del connector — no via language "
-"packs."
+"catàlegs s'actualitzen en actualitzar el ZIP del connector — no via language"
+" packs."
 
 #: includes/class-tsosk-activity-log.php
 msgid "Install translations"
@@ -12611,8 +12618,8 @@ msgstr "Només lectura aquí"
 #: includes/modules/class-tsosk-mod-debug.php
 msgid ""
 "Shrink / empty actions are allowed only for log files inside the plugin "
-"uploads logs folder (WordPress.org write policy). wp-content/debug.log can be "
-"previewed and downloaded, but not truncated by the plugin."
+"uploads logs folder (WordPress.org write policy). wp-content/debug.log can "
+"be previewed and downloaded, but not truncated by the plugin."
 msgstr ""
 "Reduir/buidar només es permet en fitxers dins uploads/logs/ del connector "
 "(política WordPress.org). wp-content/debug.log es pot previsualitzar i "
@@ -12620,17 +12627,17 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-debug.php
 msgid ""
-"Workaround: in wp-config.php you can point WP_DEBUG_LOG to %s so shrink/"
-"empty works from here."
+"Workaround: in wp-config.php you can point WP_DEBUG_LOG to %s so "
+"shrink/empty works from here."
 msgstr ""
 "Alternativa: a wp-config.php pots definir WP_DEBUG_LOG com a %s per poder "
 "reduir/buidar des d'aquí."
 
 #: includes/modules/class-tsosk-mod-debug.php
 msgid ""
-"WordPress.org policy prevents this plugin from rewriting wp-content/debug.log."
-" Use Download, then clear the file on the server, or point WP_DEBUG_LOG to "
-"the managed uploads path shown above to enable Shrink here."
+"WordPress.org policy prevents this plugin from rewriting wp-"
+"content/debug.log. Use Download, then clear the file on the server, or point"
+" WP_DEBUG_LOG to the managed uploads path shown above to enable Shrink here."
 msgstr ""
 "La política de WordPress.org impedeix reescriure wp-content/debug.log des "
 "d'aquest connector. Descarrega'l i esborra'l al servidor, o apunta "
@@ -12642,9 +12649,10 @@ msgstr "Log de depuració gestionat TSO (uploads)"
 
 #: includes/modules/class-tsosk-mod-debug.php:767
 msgid ""
-"Debug constants are already active on this site (usually from wp-config.php)."
-" That is separate from this plugin preset — the bar above shows site-wide "
-"debug, while Developer mode here only reflects the saved JSON preset."
+"Debug constants are already active on this site (usually from wp-"
+"config.php). That is separate from this plugin preset — the bar above shows "
+"site-wide debug, while Developer mode here only reflects the saved JSON "
+"preset."
 msgstr ""
 "Les constants de depuració ja estan actives en aquest lloc (normalment des "
 "de wp-config.php). Això és independent del preset del connector: la barra "
@@ -12664,36 +12672,62 @@ msgid "User-agent: * blocks %1$d path prefix(es), not the whole site: %2$s."
 msgstr "User-agent: * bloqueja %1$d prefixos de ruta, no tot el lloc: %2$s."
 
 #: includes/modules/class-tsosk-mod-server-files.php
-msgid "RewriteRule/RewriteCond directives were found but RewriteEngine On is missing. Pretty permalinks may not work on Apache."
-msgstr "S'han trobat directives RewriteRule/RewriteCond però falta RewriteEngine On. Els enllaços bonics poden no funcionar a Apache."
+msgid ""
+"RewriteRule/RewriteCond directives were found but RewriteEngine On is "
+"missing. Pretty permalinks may not work on Apache."
+msgstr ""
+"S'han trobat directives RewriteRule/RewriteCond però falta RewriteEngine On."
+" Els enllaços bonics poden no funcionar a Apache."
 
 #: includes/modules/class-tsosk-mod-server-files.php
-msgid "No RewriteRule directives were found. This file may only contain redirects or security headers."
-msgstr "No s'han trobat directives RewriteRule. Aquest fitxer pot contenir només redireccions o capçaleres de seguretat."
+msgid ""
+"No RewriteRule directives were found. This file may only contain redirects "
+"or security headers."
+msgstr ""
+"No s'han trobat directives RewriteRule. Aquest fitxer pot contenir només "
+"redireccions o capçaleres de seguretat."
 
 #: includes/modules/class-tsosk-mod-server-files.php
-msgid "A top-level “deny all” rule was found. Unless it is scoped to a sensitive file, it can block public access to the site."
-msgstr "S'ha trobat una regla «deny all» a nivell arrel. Si no està limitada a un fitxer sensible, pot bloquejar l'accés públic al lloc."
+msgid ""
+"A top-level “deny all” rule was found. Unless it is scoped to a sensitive "
+"file, it can block public access to the site."
+msgstr ""
+"S'ha trobat una regla «deny all» a nivell arrel. Si no està limitada a un "
+"fitxer sensible, pot bloquejar l'accés públic al lloc."
 
 #: includes/modules/class-tsosk-mod-server-files.php
-msgid "At least one RewriteRule returns forbidden (403). Review that it targets the intended URLs only."
-msgstr "Almenys una RewriteRule retorna forbidden (403). Revisa que només afecti les URL previstes."
+msgid ""
+"At least one RewriteRule returns forbidden (403). Review that it targets the"
+" intended URLs only."
+msgstr ""
+"Almenys una RewriteRule retorna forbidden (403). Revisa que només afecti les"
+" URL previstes."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Folder hygiene"
 msgstr "Higiene de carpetes"
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
-msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be deleted from here — others are recommendations only."
-msgstr "Escaneja uploads i carpetes cache conegudes (legacy TSO, miniatures .tmb). Només es poden esborrar des d'aquí els elements marcats Segur — la resta són recomanacions."
+msgid ""
+"Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). "
+"Only items marked Safe can be deleted from here — others are recommendations"
+" only."
+msgstr ""
+"Escaneja uploads i carpetes cache conegudes (legacy TSO, miniatures .tmb). "
+"Només es poden esborrar des d'aquí els elements marcats Segur — la resta són"
+" recomanacions."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Scan removable folders"
 msgstr "Escanejar carpetes eliminables"
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
-msgid "No hygiene scan yet. Click “Scan removable folders” to classify uploads subfolders and .tmb caches."
-msgstr "Encara no hi ha escaneig. Fes clic a «Escanejar carpetes eliminables» per classificar subcarpetes d'uploads i caches .tmb."
+msgid ""
+"No hygiene scan yet. Click “Scan removable folders” to classify uploads "
+"subfolders and .tmb caches."
+msgstr ""
+"Encara no hi ha escaneig. Fes clic a «Escanejar carpetes eliminables» per "
+"classificar subcarpetes d'uploads i caches .tmb."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Folder hygiene scan completed."
@@ -12728,52 +12762,93 @@ msgid "Active Swiss Knife data folder (config, logs). Do not delete."
 msgstr "Carpeta activa de Swiss Knife (config, logs). No l'esborris."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife folder from an older version. Data was migrated to the long slug folder — safe to remove if empty or duplicate."
-msgstr "Carpeta legacy de Swiss Knife d'una versió antiga. Les dades s'han migrat a la carpeta amb slug llarg — es pot eliminar si està buida o duplicada."
+msgid ""
+"Legacy Swiss Knife folder from an older version. Data was migrated to the "
+"long slug folder — safe to remove if empty or duplicate."
+msgstr ""
+"Carpeta legacy de Swiss Knife d'una versió antiga. Les dades s'han migrat a "
+"la carpeta amb slug llarg — es pot eliminar si està buida o duplicada."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife folder. Confirm the new config folder exists before deleting."
-msgstr "Carpeta legacy de Swiss Knife. Confirma que existeix la carpeta config nova abans d'esborrar."
+msgid ""
+"Legacy Swiss Knife folder. Confirm the new config folder exists before "
+"deleting."
+msgstr ""
+"Carpeta legacy de Swiss Knife. Confirma que existeix la carpeta config nova "
+"abans d'esborrar."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "elFinder / file-manager thumbnail cache (.tmb). Safe to delete — thumbnails regenerate when you browse files in that tool."
-msgstr "Cache de miniatures elFinder / gestor de fitxers (.tmb). Es pot esborrar — es regeneren en tornar a obrir el gestor."
+msgid ""
+"elFinder / file-manager thumbnail cache (.tmb). Safe to delete — thumbnails "
+"regenerate when you browse files in that tool."
+msgstr ""
+"Cache de miniatures elFinder / gestor de fitxers (.tmb). Es pot esborrar — "
+"es regeneren en tornar a obrir el gestor."
 
 #: includes/class-tsosk-uploads-scanner.php
 msgid "Folder belongs to an active TSO plugin — keep it."
 msgstr "Carpeta d'un plugin TSO actiu — conserva-la."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Folder matches a TSO plugin slug but that plugin is not active. Review before deleting — may contain backups or exports."
-msgstr "La carpeta coincideix amb un plugin TSO inactiu. Revisa abans d'esborrar — pot contenir còpies o exportacions."
+msgid ""
+"Folder matches a TSO plugin slug but that plugin is not active. Review "
+"before deleting — may contain backups or exports."
+msgstr ""
+"La carpeta coincideix amb un plugin TSO inactiu. Revisa abans d'esborrar — "
+"pot contenir còpies o exportacions."
 
 #: includes/class-tsosk-uploads-scanner.php
 msgid "Known plugin folder — not classified as disposable cache."
 msgstr "Carpeta de plugin coneguda — no es classifica com a cache eliminable."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Custom or third-party folder under uploads. Verify what created it before deleting."
-msgstr "Carpeta personalitzada o de tercers dins uploads. Verifica l'origen abans d'esborrar."
+msgid ""
+"Custom or third-party folder under uploads. Verify what created it before "
+"deleting."
+msgstr ""
+"Carpeta personalitzada o de tercers dins uploads. Verifica l'origen abans "
+"d'esborrar."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife config folder. JSON was migrated to the long slug folder — safe to remove if empty or duplicate."
-msgstr "Carpeta config legacy de Swiss Knife. El JSON s'ha migrat a la carpeta amb slug llarg — es pot eliminar si està buida o duplicada."
+msgid ""
+"Legacy Swiss Knife config folder. JSON was migrated to the long slug folder "
+"— safe to remove if empty or duplicate."
+msgstr ""
+"Carpeta config legacy de Swiss Knife. El JSON s'ha migrat a la carpeta amb "
+"slug llarg — es pot eliminar si està buida o duplicada."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife config folder. Confirm the new config folder exists before deleting."
-msgstr "Carpeta config legacy de Swiss Knife. Confirma que existeix la carpeta config nova abans d'esborrar."
+msgid ""
+"Legacy Swiss Knife config folder. Confirm the new config folder exists "
+"before deleting."
+msgstr ""
+"Carpeta config legacy de Swiss Knife. Confirma que existeix la carpeta "
+"config nova abans d'esborrar."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Obsolete language-cache folder from an older Swiss Knife version. Safe to delete — not used by current releases."
-msgstr "Carpeta obsoleta de cache d'idiomes d'una versió antiga de Swiss Knife. Es pot esborrar — les versions actuals no la fan servir."
+msgid ""
+"Obsolete language-cache folder from an older Swiss Knife version. Safe to "
+"delete — not used by current releases."
+msgstr ""
+"Carpeta obsoleta de cache d'idiomes d'una versió antiga de Swiss Knife. Es "
+"pot esborrar — les versions actuals no la fan servir."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife logs folder. Current logs use uploads/{plugin-slug}/logs/ — safe to remove if you no longer need these files."
-msgstr "Carpeta legacy de logs de Swiss Knife. Els logs actuals van a uploads/{plugin-slug}/logs/ — es pot eliminar si ja no necessites aquests fitxers."
+msgid ""
+"Legacy Swiss Knife logs folder. Current logs use uploads/{plugin-slug}/logs/"
+" — safe to remove if you no longer need these files."
+msgstr ""
+"Carpeta legacy de logs de Swiss Knife. Els logs actuals van a "
+"uploads/{plugin-slug}/logs/ — es pot eliminar si ja no necessites aquests "
+"fitxers."
 
 #: includes/class-tsosk-uploads-scanner.php
-msgid "Legacy Swiss Knife logs folder. Review contents before deleting — may contain log files not copied elsewhere."
-msgstr "Carpeta legacy de logs de Swiss Knife. Revisa el contingut abans d'esborrar — pot contenir fitxers de log no copiats en un altre lloc."
+msgid ""
+"Legacy Swiss Knife logs folder. Review contents before deleting — may "
+"contain log files not copied elsewhere."
+msgstr ""
+"Carpeta legacy de logs de Swiss Knife. Revisa el contingut abans d'esborrar "
+"— pot contenir fitxers de log no copiats en un altre lloc."
 
 #: includes/class-tsosk-uploads-scanner.php
 msgid "Unknown folder."
@@ -12797,7 +12872,8 @@ msgstr "No s'ha pogut esborrar la carpeta."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Scan data expired. Run the hygiene scan again."
-msgstr "Les dades de l'escaneig han caducat. Torna a executar l'escaneig d'higiene."
+msgstr ""
+"Les dades de l'escaneig han caducat. Torna a executar l'escaneig d'higiene."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Removable folder deleted: %s."
@@ -12813,8 +12889,146 @@ msgstr "Carpeta esborrada."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "No classified folders were found under uploads or known cache paths."
-msgstr "No s'han trobat carpetes classificades a uploads ni als paths cache coneguts."
+msgstr ""
+"No s'han trobat carpetes classificades a uploads ni als paths cache "
+"coneguts."
 
 #: includes/modules/class-tsosk-mod-media-footprint.php
 msgid "Last scan: %s"
 msgstr "Darrer escaneig: %s"
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid "HTTP status code"
+msgstr "Codi d'estat HTTP"
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid "404 Not Found"
+msgstr "404 Not Found"
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid "410 Gone"
+msgstr "410 Gone"
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid ""
+"Your custom page looks the same for visitors. Only the HTTP status changes. "
+"Use 404 for normal broken links. Use 410 when content was removed on purpose"
+" and you want search engines to drop those URLs faster."
+msgstr ""
+"La pàgina personalitzada es veu igual per als visitants. Només canvia "
+"l'estat HTTP. Usa 404 per a enllaços trencats normals. Usa 410 quan has "
+"eliminat contingut a propòsit i vols que els cercadors descarten aquestes "
+"URL més ràpid."
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid "410 Page"
+msgstr "Pàgina 410"
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid ""
+"If someone types the 404 page address in the browser (instead of landing on "
+"it from a bad link), they still get a “not found” response — but your custom"
+" page content is shown. Recommended: leave this on. To edit the design "
+"safely, use Edit page or Preview 404 page."
+msgstr ""
+"Si algú escriu l'adreça de la pàgina 404 al navegador (en lloc d'arribar-hi "
+"des d'un enllaç trencat), continua rebent una resposta «no trobat» — però es"
+" mostra el contingut de la teva pàgina. Recomanat: deixa-ho activat. Per "
+"editar el disseny amb seguretat, usa Editar pàgina o Previsualitzar pàgina "
+"404."
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid ""
+"This page’s slug is “%s”. Paths containing “404” often trigger a bare server"
+" error (not your custom page). Rename the slug under Edit page (e.g. pagina-"
+"error), then save permalinks if needed."
+msgstr ""
+"El slug d'aquesta pàgina és «%s». Les rutes amb «404» sovint disparen un "
+"error nu del servidor (no la teva pàgina). Canvia el slug a Editar pàgina "
+"(p. ex. pagina-error) i desa els enllaços permanents si cal."
+
+#: includes/modules/class-tsosk-mod-custom-404.php
+msgid ""
+"Edit page: change the content. Preview 404 page (below): see the design as a"
+" 404. Test 404 response: same custom page with a real HTTP 404/410 (admin-"
+"only link through WordPress)."
+msgstr ""
+"Editar pàgina: canviar el contingut. Previsualitzar pàgina 404 (a sota): "
+"veure el disseny com a 404. Provar resposta 404: la mateixa pàgina amb un "
+"HTTP 404/410 real (enllaç d'admin via WordPress)."
+
+msgid "Test 404"
+msgstr "Prova 404"
+
+msgid "Invalid test link."
+msgstr "Enllaç de prova no vàlid."
+
+msgid "Select and save a published 404 page first."
+msgstr "Selecciona i desa primer una pàgina 404 publicada."
+
+msgid "Pretty permalinks are not reaching WordPress"
+msgstr "Els enllaços permanents bonics no arriben a WordPress"
+
+msgid ""
+"A missing URL like /hola returns a bare server “404 Not Found” before "
+"WordPress loads, so this custom page never runs for visitors. Preview/Test "
+"can still work because they use ?query arguments."
+msgstr ""
+"Una URL inexistent com /hola retorna un «404 Not Found» nu del servidor "
+"abans que carregui WordPress, així que aquesta pàgina personalitzada no "
+"s’executa per als visitants. Previsualitzar/Provar encara poden funcionar "
+"perquè usen arguments ?query."
+
+msgid "Settings → Permalinks"
+msgstr "Configuració → Enllaços permanents"
+
+msgid "— choose a non-Plain structure and click Save (even if unchanged)."
+msgstr ""
+"— tria una estructura que no sigui Simple i fes clic a Desa (encara que no "
+"canviïs res)."
+
+msgid "Swiss Knife → Rewrite"
+msgstr "Swiss Knife → Rewrite"
+
+msgid "— Hard Flush (regenerates .htaccess / web.config)."
+msgstr "— Hard Flush (regenera .htaccess / web.config)."
+
+msgid "Swiss Knife → Server Files"
+msgstr "Swiss Knife → Server Files"
+
+msgid ""
+"— confirm the WordPress .htaccess contains RewriteEngine On and RewriteBase "
+"for your folder (e.g. /plugins/)."
+msgstr ""
+"— confirma que el .htaccess de WordPress té RewriteEngine On i RewriteBase "
+"de la teva carpeta (p. ex. /plugins/)."
+
+msgid ""
+"If it still fails after that, the host is blocking rewrites (AllowOverride /"
+" nginx). Ask them to route all non-file requests under the WordPress folder "
+"to index.php."
+msgstr ""
+"Si continua fallant, l'hosting bloqueja les reescriptures (AllowOverride / "
+"nginx). Demana'ls que enviïn totes les peticions que no siguin fitxers de la"
+" carpeta WordPress a index.php."
+
+msgid ""
+"Permalink structure is set to Plain. Missing URLs never reach WordPress, so "
+"this custom page will not run for visitors. Choose a pretty structure (e.g. "
+"Post name) and save."
+msgstr ""
+"L'estructura d'enllaços permanents és Simple. Les URL inexistents no arriben"
+" a WordPress, així que aquesta pàgina no s'executa per als visitants. Tria "
+"una estructura bonica (p. ex. Nom de l'entrada) i desa."
+
+msgid "Create the page under Pages → Add New, then pick it here."
+msgstr "Crea la pàgina a Pàgines → Afegeix-ne una de nova i tria-la aquí."
+
+msgid ""
+"If URLs show a bare server “404 Not Found” (not your design), go to Settings"
+" → Permalinks and click Save — otherwise visitors never reach WordPress on "
+"broken links."
+msgstr ""
+"Si les URL mostren un «404 Not Found» nu del servidor (no el teu disseny), "
+"ves a Configuració → Enllaços permanents i Desa — si no, els visitants no "
+"arriben a WordPress amb enllaços trencats."

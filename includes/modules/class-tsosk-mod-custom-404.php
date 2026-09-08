@@ -60,6 +60,7 @@ class TSOSK_Mod_Custom_404 {
 		add_filter( 'template_include', array( $this, 'filter_template_include' ), 99 );
 		add_filter( 'body_class', array( $this, 'add_body_classes' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_render_admin_preview' ), 1 );
+		add_action( 'template_redirect', array( $this, 'maybe_run_admin_selftest' ), 1 );
 	}
 
 	/**
@@ -374,6 +375,36 @@ class TSOSK_Mod_Custom_404 {
 	}
 
 	/**
+	 * Admin-only self-test: force a 404 via query args so WordPress always handles it
+	 * (pretty permalink test URLs may never reach WP on some hosts).
+	 */
+	public function maybe_run_admin_selftest(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified below.
+		if ( empty( $_GET['tsosk_404_selftest'] ) ) {
+			return;
+		}
+
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Test 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 403 ) );
+		}
+
+		$nonce = isset( $_GET['selftest_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['selftest_nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'tsosk_custom_404_selftest' ) ) {
+			wp_die( esc_html__( 'Invalid test link.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Test 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 403 ) );
+		}
+
+		if ( ! $this->is_active() ) {
+			wp_die( esc_html__( 'Select and save a published 404 page first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Test 404', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 400 ) );
+		}
+
+		self::$failed_url = home_url( '/tsosk-missing-example/' );
+
+		global $wp_query;
+		$wp_query->set_404();
+		// Let filter_template_include serve the custom page with a real HTTP 404/410.
+	}
+
+	/**
 	 * Admin-only preview: render the selected page as a 404 without saving settings.
 	 */
 	public function maybe_render_admin_preview(): void {
@@ -401,7 +432,7 @@ class TSOSK_Mod_Custom_404 {
 			wp_die( esc_html__( 'Page not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html__( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'response' => 404 ) );
 		}
 
-		self::$failed_url = home_url( '/tsosk-404-preview-example/' );
+		self::$failed_url = home_url( '/tsosk-missing-example/' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin preview only.
 		$status_code = ! empty( $_GET['send_410'] ) ? 410 : 404;
@@ -585,6 +616,16 @@ class TSOSK_Mod_Custom_404 {
 	}
 
 	/**
+	 * Whether pretty permalinks look usable (no remote HTTP — avoids Query Monitor noise).
+	 *
+	 * @return string ok|broken
+	 */
+	private function pretty_permalink_status(): string {
+		$structure = (string) get_option( 'permalink_structure', '' );
+		return '' === $structure ? 'broken' : 'ok';
+	}
+
+	/**
 	 * Render admin tab.
 	 */
 	public function render(): void {
@@ -592,14 +633,53 @@ class TSOSK_Mod_Custom_404 {
 		$settings = $this->get_settings();
 		$page_id  = absint( $settings['page_id'] );
 		$active   = $this->is_active();
-		$edit_url = $page_id ? get_edit_post_link( $page_id, 'raw' ) : '';
-		$view_url = $page_id ? get_permalink( $page_id ) : '';
-		$test_url       = home_url( '/tsosk-404-preview-' . wp_generate_password( 8, false, false ) . '/' );
+		$edit_url       = $page_id ? get_edit_post_link( $page_id, 'raw' ) : '';
 		$preview_nonce  = wp_create_nonce( 'tsosk_custom_404_preview' );
+		$selftest_nonce = wp_create_nonce( 'tsosk_custom_404_selftest' );
+		// Query-arg test always hits WordPress (pretty /missing/ paths often never reach WP on some hosts).
+		$test_url = add_query_arg(
+			array(
+				'tsosk_404_selftest' => '1',
+				'selftest_nonce'     => $selftest_nonce,
+			),
+			home_url( '/' )
+		);
+		$page_slug  = $page_id ? (string) get_post_field( 'post_name', $page_id ) : '';
+		$slug_risky = ( '' !== $page_slug && false !== stripos( $page_slug, '404' ) );
+		$plink      = $this->pretty_permalink_status();
+		$rewrite_url = admin_url( 'admin.php?page=tso-swiss-knife&tab=rewrite' );
+		$server_url  = admin_url( 'admin.php?page=tso-swiss-knife&tab=server-files' );
+		$plink_url   = admin_url( 'options-permalink.php' );
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Create a custom 404 page like any normal page, then select it here. Visitors see your page content while the server still returns a real 404 code (no redirect). Search engines are told the URL does not exist.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
+
+		<?php if ( 'broken' === $plink ) : ?>
+		<div class="tsosk-notice tsosk-notice-error">
+			<p><strong><?php esc_html_e( 'Pretty permalinks are not reaching WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+			<p>
+				<?php esc_html_e( 'Permalink structure is set to Plain. Missing URLs never reach WordPress, so this custom page will not run for visitors. Choose a pretty structure (e.g. Post name) and save.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<ol style="margin:0.5em 0 0 1.25em;">
+				<li>
+					<a href="<?php echo esc_url( $plink_url ); ?>"><?php esc_html_e( 'Settings → Permalinks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					<?php esc_html_e( '— choose a non-Plain structure and click Save (even if unchanged).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</li>
+				<li>
+					<a href="<?php echo esc_url( $rewrite_url ); ?>"><?php esc_html_e( 'Swiss Knife → Rewrite', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					<?php esc_html_e( '— Hard Flush (regenerates .htaccess / web.config).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</li>
+				<li>
+					<a href="<?php echo esc_url( $server_url ); ?>"><?php esc_html_e( 'Swiss Knife → Server Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					<?php esc_html_e( '— confirm the WordPress .htaccess contains RewriteEngine On and RewriteBase for your folder (e.g. /plugins/).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</li>
+			</ol>
+			<p class="description" style="margin-top:8px;margin-bottom:0;">
+				<?php esc_html_e( 'If it still fails after that, the host is blocking rewrites (AllowOverride / nginx). Ask them to route all non-file requests under the WordPress folder to index.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+		</div>
+		<?php endif; ?>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( '404 Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
@@ -632,22 +712,35 @@ class TSOSK_Mod_Custom_404 {
 			</div>
 
 			<p class="description">
-				<?php esc_html_e( 'Create the page under Pages → Add New, then pick it here. Permalinks must not be set to “Plain”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Create the page under Pages → Add New, then pick it here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<p class="description">
+				<?php esc_html_e( 'If URLs show a bare server “404 Not Found” (not your design), go to Settings → Permalinks and click Save — otherwise visitors never reach WordPress on broken links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+
+			<?php if ( $slug_risky ) : ?>
+			<div class="tsosk-notice tsosk-notice-warn">
+				<?php
+				printf(
+					/* translators: %s: page slug */
+					esc_html__( 'This page’s slug is “%s”. Paths containing “404” often trigger a bare server error (not your custom page). Rename the slug under Edit page (e.g. pagina-error), then save permalinks if needed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					esc_html( $page_slug )
+				);
+				?>
+			</div>
+			<?php endif; ?>
 
 			<?php if ( $page_id && $edit_url ) : ?>
 			<p>
-				<a class="button button-secondary" href="<?php echo esc_url( $edit_url ); ?>">
+				<a class="button button-secondary" href="<?php echo esc_url( $edit_url ); ?>" target="_blank" rel="noopener noreferrer">
 					<?php esc_html_e( 'Edit page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
-				<?php if ( $view_url ) : ?>
-				<a class="button button-secondary" href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'View page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</a>
-				<?php endif; ?>
 				<a class="button button-secondary" href="<?php echo esc_url( $test_url ); ?>" target="_blank" rel="noopener noreferrer">
 					<?php esc_html_e( 'Test 404 response', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
+			</p>
+			<p class="description">
+				<?php esc_html_e( 'Edit page: change the content. Preview 404 page (below): see the design as a 404. Test 404 response: same custom page with a real HTTP 404/410 (admin-only link through WordPress).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php endif; ?>
 		</div>

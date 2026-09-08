@@ -362,7 +362,7 @@ class TSOSK_Mod_Url_Doctor {
 	 * Count content rows that still contain a needle (posts, postmeta, options, comments).
 	 *
 	 * @param string $needle Plain substring (not regex).
-	 * @return array{posts:int,postmeta:int,options:int,comments:int,total:int}
+	 * @return array Counts keyed by posts, postmeta, options, comments, and total.
 	 */
 	public static function count_leftover_rows( string $needle ): array {
 		$empty = array(
