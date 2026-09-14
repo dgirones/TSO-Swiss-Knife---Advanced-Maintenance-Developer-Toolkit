@@ -324,6 +324,22 @@ class TSOSK_Mod_Options_Editor {
 	}
 
 	/**
+	 * Append an autoload-bucket filter (yes/no), covering every value WP's
+	 * autoload column can hold (legacy 'yes'/'no' and WP 6.6+'s
+	 * 'on'/'off'/'auto-on'/'auto-off').
+	 *
+	 * @param string $filter_autoload 'yes', 'no', or '' (no filter).
+	 * @param string $where           WHERE clause (by ref).
+	 */
+	private function append_options_autoload_filter_sql( string $filter_autoload, string &$where ): void {
+		if ( 'yes' === $filter_autoload ) {
+			$where .= " AND autoload NOT IN ( 'no', 'off', 'auto-off' )";
+		} elseif ( 'no' === $filter_autoload ) {
+			$where .= " AND autoload IN ( 'no', 'off', 'auto-off' )";
+		}
+	}
+
+	/**
 	 * Append transient / protected-option exclusions with prepare placeholders.
 	 *
 	 * @param bool              $show_protected Include protected names.
@@ -466,6 +482,9 @@ class TSOSK_Mod_Options_Editor {
 		$sort_col    = sanitize_key( wp_unslash( $_POST['sort_col']  ?? 'option_name' ) );
 		$sort_dir    = strtoupper( sanitize_key( wp_unslash( $_POST['sort_dir']  ?? 'ASC' ) ) ) === 'DESC' ? 'DESC' : 'ASC';
 		$filter_type = sanitize_key( wp_unslash( $_POST['filter_type'] ?? '' ) );
+		$filter_autoload = sanitize_key( wp_unslash( $_POST['filter_autoload'] ?? '' ) );
+		$filter_autoload = in_array( $filter_autoload, array( 'yes', 'no' ), true ) ? $filter_autoload : '';
+		$min_size_kb = isset( $_POST['min_size_kb'] ) ? absint( wp_unslash( $_POST['min_size_kb'] ) ) : 0;
 		$show_protected = ! empty( $_POST['show_protected'] );
 		$exact          = ! empty( $_POST['exact'] );
 		$offset      = ( $page - 1 ) * self::PER_PAGE;
@@ -490,6 +509,11 @@ class TSOSK_Mod_Options_Editor {
 		}
 
 		$this->append_options_type_filter_sql( $filter_type, $where, $args );
+		$this->append_options_autoload_filter_sql( $filter_autoload, $where );
+		if ( $min_size_kb > 0 ) {
+			$where .= ' AND LENGTH(option_value) >= %d';
+			$args[] = $min_size_kb * 1024;
+		}
 		$this->append_options_exclusion_sql( $show_protected, $where, $args );
 
 		$orderby = $this->get_options_list_order_by_sql( $sort_col, $sort_dir );
@@ -893,6 +917,14 @@ class TSOSK_Mod_Options_Editor {
 						<option value="text"><?php esc_html_e( 'Text', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 					<button type="button" class="button" id="tsosk-oe-toggle-protected" aria-pressed="false"><?php esc_html_e( 'Show protected options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<select id="tsosk-oe-filter-autoload" style="min-width:150px;">
+						<option value=""><?php esc_html_e( 'Autoload: all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="yes"><?php esc_html_e( 'Autoload: yes only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="no"><?php esc_html_e( 'Autoload: no only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					</select>
+					<input type="number" id="tsosk-oe-min-size" min="0" step="1"
+					       placeholder="<?php esc_attr_e( 'Min size (KB)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+					       style="width:130px;" title="<?php esc_attr_e( 'Show only options at least this large — useful to spot large autoloaded options that slow down every page load.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					<button class="button button-small" id="tsosk-oe-clear-filters" title="<?php esc_attr_e( 'Clear all filters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">✕</button>
 					<span class="tsosk-ajax-msg" id="tsosk-oe-search-msg"></span>
 				</div>

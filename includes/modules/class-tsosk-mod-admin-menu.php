@@ -542,6 +542,7 @@ class TSOSK_Mod_Admin_Menu {
 
 		update_option( self::MANIFEST_OPTION, $manifest, false );
 		self::$manifest_cache = $manifest;
+		wp_cache_set( self::MANIFEST_OPTION, $manifest, 'options' );
 	}
 
 	/**
@@ -591,6 +592,15 @@ class TSOSK_Mod_Admin_Menu {
 			return self::$manifest_cache;
 		}
 
+		// Standard WP object cache: works transparently with any persistent
+		// object-cache backend (Redis, Memcached, LiteSpeed's object cache) and
+		// degrades to per-request only when none is active — same as core.
+		$cached = wp_cache_get( self::MANIFEST_OPTION, 'options', false, $tsosk_manifest_found );
+		if ( $tsosk_manifest_found && is_array( $cached ) ) {
+			self::$manifest_cache = $cached;
+			return self::$manifest_cache;
+		}
+
 		$raw = $this->get_manifest_option_raw();
 		if ( '' === $raw ) {
 			self::$manifest_cache = array();
@@ -605,6 +615,7 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		self::$manifest_cache = $manifest;
+		wp_cache_set( self::MANIFEST_OPTION, $manifest, 'options' );
 		return self::$manifest_cache;
 	}
 
@@ -2328,7 +2339,7 @@ class TSOSK_Mod_Admin_Menu {
 			$stored = array();
 		}
 		$stored['sub_order_resolved'] = $resolved;
-		update_option( self::OPTION, $stored, false );
+		update_option( self::OPTION, $stored, true ); // Read on every admin_menu/admin_init/admin_head hook — must autoload.
 	}
 
 	/**
@@ -3127,7 +3138,7 @@ class TSOSK_Mod_Admin_Menu {
 				'relocations'    => $relocations,
 				'nested_tops'    => $nested_tops,
 			),
-			false
+			true // Read on every admin_menu/admin_init/admin_head hook — must autoload.
 		);
 
 		$this->persist_menu_manifest( $known );
@@ -3422,7 +3433,7 @@ class TSOSK_Mod_Admin_Menu {
 		$needs_save = ( $repaired['sub_order'] ?? array() ) !== ( $settings['sub_order'] ?? array() )
 			|| ( $repaired['sub_order_ids'] ?? array() ) !== ( $settings['sub_order_ids'] ?? array() );
 		if ( $needs_save ) {
-			update_option( self::OPTION, $repaired, false );
+			update_option( self::OPTION, $repaired, true ); // Read on every admin_menu/admin_init/admin_head hook — must autoload.
 			$settings     = $repaired;
 			$display_rows = $this->get_display_rows();
 		}

@@ -929,7 +929,7 @@ class TSOSK_Mod_Login_Protect {
 			wp_send_json_error( __( 'Add at least one trusted IP (maintenance list or whitelist) before enabling login maintenance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		update_option( self::OPTION_SETTINGS, $new, false );
+		update_option( self::OPTION_SETTINGS, $new, true ); // Read on every request via init() — must autoload.
 
 		// Flush rewrite rules if slug changed — register the NEW rule first (init already passed).
 		if ( $old_settings['login_slug'] !== $new['login_slug'] || $old_settings['custom_url'] !== $new['custom_url'] ) {

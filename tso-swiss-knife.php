@@ -2,14 +2,13 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.0.7
+ * Version:     1.0.8
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
  * Domain Path: /languages
  * Requires at least: 6.1
  * Requires PHP: 8.0
- * Tested up to: 7.1
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
@@ -21,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.0.7' );
+define( 'TSOSK_VERSION',  '1.0.8' );
 define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
@@ -322,6 +321,7 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
 add_action( 'plugins_loaded', 'tsosk_boot_staging_runtime', 1 );
+add_action( 'plugins_loaded', 'tsosk_maybe_upgrade', 5 );
 add_action( 'plugins_loaded', 'tsosk_init' );
 
 /**
@@ -362,6 +362,36 @@ function tsosk_boot_staging_runtime(): void {
 	if ( class_exists( 'TSOSK_Mod_Staging' ) ) {
 		TSOSK_Mod_Staging::get_instance()->init();
 	}
+}
+
+/**
+ * One-time upgrade tasks, run once per version bump (covers sites that
+ * auto-update without a deactivate/reactivate cycle).
+ */
+function tsosk_maybe_upgrade(): void {
+	if ( get_option( 'tsosk_version' ) === TSOSK_VERSION ) {
+		return;
+	}
+
+	// 1.0.8: tsosk_login_protect is read on every request (Login Protect's
+	// init() runs on plugins_loaded) but was stored with autoload = false,
+	// forcing a dedicated SELECT per page load instead of a cached read.
+	// Re-save it with autoload enabled for installs that already have it.
+	$tsosk_login_protect = get_option( 'tsosk_login_protect', false );
+	if ( false !== $tsosk_login_protect ) {
+		delete_option( 'tsosk_login_protect' );
+		add_option( 'tsosk_login_protect', $tsosk_login_protect, '', 'yes' );
+	}
+
+	// 1.0.8: same issue for tsosk_admin_menu_settings — read on every
+	// admin_menu/admin_init/admin_head hook, also stored with autoload = false.
+	$tsosk_admin_menu_settings = get_option( 'tsosk_admin_menu_settings', false );
+	if ( false !== $tsosk_admin_menu_settings ) {
+		delete_option( 'tsosk_admin_menu_settings' );
+		add_option( 'tsosk_admin_menu_settings', $tsosk_admin_menu_settings, '', 'yes' );
+	}
+
+	update_option( 'tsosk_version', TSOSK_VERSION, false );
 }
 
 /**

@@ -2170,6 +2170,8 @@
 				sort_col         : tsosk_oe.sortCol,
 				sort_dir         : tsosk_oe.sortDir,
 				filter_type      : $( '#tsosk-oe-filter-type' ).val() || '',
+				filter_autoload  : $( '#tsosk-oe-filter-autoload' ).val() || '',
+				min_size_kb      : $( '#tsosk-oe-min-size' ).val() || 0,
 				show_protected   : tsosk_oe.showProtected ? 1 : 0,
 				exact            : tsosk_oe.exactSearch ? 1 : 0,
 			},
@@ -2241,6 +2243,12 @@
 	$( document ).on( 'change', '#tsosk-oe-filter-type', function () {
 		tsosk_oe_search( $( '#tsosk-oe-search' ).val().trim(), 1 );
 	} );
+	$( document ).on( 'change', '#tsosk-oe-filter-autoload', function () {
+		tsosk_oe_search( $( '#tsosk-oe-search' ).val().trim(), 1 );
+	} );
+	$( document ).on( 'input', '#tsosk-oe-min-size', function () {
+		tsosk_oe_schedule_search();
+	} );
 	$( document ).on( 'click', '#tsosk-oe-toggle-protected', function () {
 		tsosk_oe.showProtected = ! tsosk_oe.showProtected;
 		var $btn = $( this );
@@ -2253,6 +2261,8 @@
 	$( document ).on( 'click', '#tsosk-oe-clear-filters', function () {
 		$( '#tsosk-oe-search' ).val( '' );
 		$( '#tsosk-oe-filter-type' ).val( '' );
+		$( '#tsosk-oe-filter-autoload' ).val( '' );
+		$( '#tsosk-oe-min-size' ).val( '' );
 		tsosk_oe.sortCol = 'option_name';
 		tsosk_oe.sortDir = 'ASC';
 		$( '.tsosk-oe-sortable .tsosk-sort-icon' ).text( '' );

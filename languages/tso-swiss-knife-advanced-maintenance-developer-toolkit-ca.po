@@ -13032,3 +13032,54 @@ msgstr ""
 "Si les URL mostren un «404 Not Found» nu del servidor (no el teu disseny), "
 "ves a Configuració → Enllaços permanents i Desa — si no, els visitants no "
 "arriben a WordPress amb enllaços trencats."
+
+#: includes/modules/class-tsosk-mod-options-editor.php:921
+msgid "Autoload: all"
+msgstr "Autoload: tots"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:922
+msgid "Autoload: yes only"
+msgstr "Autoload: només sí"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:923
+msgid "Autoload: no only"
+msgstr "Autoload: només no"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:926
+msgid "Min size (KB)"
+msgstr "Mida mínima (KB)"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:927
+msgid ""
+"Show only options at least this large — useful to spot large autoloaded "
+"options that slow down every page load."
+msgstr ""
+"Mostra només les opcions amb almenys aquesta mida — útil per detectar "
+"opcions grans amb autoload que alenteixen cada càrrega de pàgina."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:495
+msgid "Backend"
+msgstr "Backend"
+
+#. translators: %s: PHP extension name (redis, memcached)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:504
+#, php-format
+msgid ""
+"The %s PHP extension is not loaded — this cache is likely not actually "
+"working even though the drop-in is present."
+msgstr ""
+"L'extensió PHP %s no està carregada — és probable que aquesta cache no "
+"funcioni realment encara que el drop-in hi sigui present."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:484
+msgid ""
+"Without a persistent backend (Redis, Memcached, or your host's own object "
+"cache), values this plugin caches — like the Admin Menu manifest — and every"
+" WordPress option are re-read from the database on every request instead of "
+"being reused between them. Ask your hosting provider if one is available."
+msgstr ""
+"Sense un backend persistent (Redis, Memcached, o el propi object cache del "
+"teu hosting), els valors que aquest plugin guarda en cache —com el manifest "
+"del menú d'admin— i totes les opcions de WordPress es tornen a llegir de la "
+"base de dades a cada petició en lloc de reutilitzar-se entre elles. Pregunta"
+" al teu proveïdor d'hosting si en té algun de disponible."

@@ -41,6 +41,12 @@ def parse_po(path: Path) -> list[dict]:
 			idx = int(mm.group(1)) if mm.group(1) is not None else 0
 			val = mm.group(2)
 			after = chunk[mm.end() :]
+			if after.startswith( "\n" ):
+				# The matched line ends right before its own newline, so the
+				# remainder starts with it; splitlines() would otherwise yield a
+				# leading empty line and break the loop before it reads any of
+				# the actual continuation lines of a wrapped (multi-line) value.
+				after = after[1:]
 			for line in after.splitlines():
 				cm = re.match(r'^"(.*)"\s*$', line)
 				if cm:
@@ -68,6 +74,11 @@ def _grab(chunk: str, kind: str) -> str | None:
 		return "".join(re.findall(r'"([^"]*)"', m2.group(1)))
 	s = m.group(1)
 	rest = chunk[m.end() :]
+	if rest.startswith( "\n" ):
+		# Same off-by-one as the msgstr loop below: strip the matched line's
+		# own newline first or a wrapped (multi-line) value's continuation
+		# lines are never read.
+		rest = rest[1:]
 	for line in rest.splitlines():
 		mm = re.match(r'^"(.*)"\s*$', line)
 		if mm:

@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -192,6 +192,10 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.0.8 =
+* Fixed slow queries flagged by Query Monitor: Login Protect and Admin Menu settings options are now autoloaded (both are read on every request/admin screen), instead of triggering a dedicated DB query each time. Existing installs are migrated automatically.
+* Admin Menu: the menu manifest (previously an uncached direct DB query on every admin screen) is now cached via the standard WP object cache, compatible with any persistent object-cache backend (Redis, Memcached, LiteSpeed object cache).
+
 = 1.0.7 =
 * Debug: clearer developer-mode vs wp-config debug state; scroll-to-end on log toolbar; wp-content/debug.log policy copy and managed-log workaround.
 * Server Files: smarter robots.txt parser (line-specific full-site block vs path prefixes); scoped .htaccess deny detection.
@@ -247,29 +251,3 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 = 1.0.0 =
 * Initial release.
-
-== Upgrade Notice ==
-
-= 1.0.7 =
-Debug UX, robots/.htaccess review, uploads folder hygiene, language-pack install button, and security hardening. Refreshed translations.
-
-= 1.0.6 =
-Adds Staging Mode, URL & HTTPS Doctor, and Server & Runtime, plus hardening for cron, rewrites, transients, meta, export/import, language downloads, and uninstall cleanup.
-
-= 1.0.5 =
-Cron Manager core-hook protection, site-transient purge, role template confirm, search race fixes, Debug Mode docs, and refreshed translations.
-
-= 1.0.4 =
-Fixes double-serialize in Meta/Options editors, redirect subdirectory sources, 404 prefill queue, shortcode removal, transients LIKE matching, and Slow Query duplicate snapshot.
-
-= 1.0.3 =
-Safer cron, meta, and search-replace; redirects and 404 alerts fixed; Options Editor and Content Audit hardened.
-
-= 1.0.2 =
-Health, redirects, snapshot, and translation fixes. Tested with WordPress 7.1.
-
-= 1.0.1 =
-Fixed bugs in modules.
-
-= 1.0.0 =
-Initial release.

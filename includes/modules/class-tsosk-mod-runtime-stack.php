@@ -216,6 +216,56 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Identify the persistent object-cache backend from the drop-in's own
+	 * header and the loaded driver class, and whether the PHP extension it
+	 * needs is actually present (a drop-in can be left behind after a host
+	 * migration with its extension missing, silently losing the cache).
+	 *
+	 * @param string $oc_file  Path to wp-content/object-cache.php.
+	 * @param bool   $oc_exists Whether that file exists.
+	 * @param string $driver   get_class( $GLOBALS['wp_object_cache'] ).
+	 * @return array{label:string, ext:string, ext_ok:?bool}
+	 */
+	private static function detect_object_cache_backend( string $oc_file, bool $oc_exists, string $driver ): array {
+		$label = '';
+		$ext   = '';
+
+		if ( $oc_exists && is_readable( $oc_file ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local drop-in header read, not a remote request.
+			$head = (string) file_get_contents( $oc_file, false, null, 0, 4096 );
+
+			if ( false !== stripos( $head, 'litespeed' ) ) {
+				$label = 'LiteSpeed Cache (object cache)';
+			} elseif ( false !== stripos( $head, 'w3 total cache' ) || false !== stripos( $head, 'w3-total-cache' ) ) {
+				$label = 'W3 Total Cache';
+			} elseif ( false !== stripos( $head, 'wp engine' ) || false !== stripos( $head, 'wpengine' ) ) {
+				$label = 'WP Engine (built-in)';
+			} elseif ( false !== stripos( $head, 'kinsta' ) ) {
+				$label = 'Kinsta (built-in)';
+			} elseif ( false !== stripos( $head, 'pantheon' ) ) {
+				$label = 'Pantheon (built-in)';
+			} elseif ( false !== stripos( $head, 'redis object cache' ) || false !== stripos( $driver, 'redis' ) ) {
+				$label = 'Redis Object Cache';
+				$ext   = 'redis';
+			} elseif ( false !== stripos( $head, 'memcached' ) || false !== stripos( $driver, 'memcache' ) ) {
+				$label = 'Memcached Object Cache';
+				$ext   = 'memcached';
+			}
+		}
+
+		$ext_ok = null;
+		if ( '' !== $ext ) {
+			$ext_ok = extension_loaded( $ext ) || ( 'memcached' === $ext && extension_loaded( 'memcache' ) );
+		}
+
+		return array(
+			'label'  => $label,
+			'ext'    => $ext,
+			'ext_ok' => $ext_ok,
+		);
+	}
+
+	/**
 	 * Whether opcache_reset() can be called.
 	 */
 	public static function can_reset_opcache(): bool {
@@ -279,6 +329,7 @@ class TSOSK_Mod_Runtime_Stack {
 		$oc_exists = file_exists( $oc_file );
 		global $wp_object_cache;
 		$driver  = is_object( $wp_object_cache ) ? get_class( $wp_object_cache ) : '';
+		$backend = self::detect_object_cache_backend( $oc_file, $oc_exists, $driver );
 		$nonce   = wp_create_nonce( 'tsosk_runtime_nonce' );
 		$summary = self::build_summary_text( $limits );
 		?>
@@ -429,6 +480,9 @@ class TSOSK_Mod_Runtime_Stack {
 							<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php else : ?>
 							<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'No — WordPress is using its default in-memory cache for this request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<p class="description" style="margin-top:6px;">
+								<?php esc_html_e( 'Without a persistent backend (Redis, Memcached, or your host\'s own object cache), values this plugin caches — like the Admin Menu manifest — and every WordPress option are re-read from the database on every request instead of being reused between them. Ask your hosting provider if one is available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</p>
 						<?php endif; ?>
 					</td>
 				</tr>
@@ -436,6 +490,27 @@ class TSOSK_Mod_Runtime_Stack {
 					<th><?php esc_html_e( 'Driver class', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td><code><?php echo esc_html( $driver ); ?></code></td>
 				</tr>
+				<?php if ( '' !== $backend['label'] ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Backend', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<span class="tsosk-badge tsosk-badge-ok"><?php echo esc_html( $backend['label'] ); ?></span>
+						<?php if ( false === $backend['ext_ok'] ) : ?>
+							<br><span class="tsosk-badge tsosk-badge-warn">
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: %s: PHP extension name (redis, memcached) */
+									__( 'The %s PHP extension is not loaded — this cache is likely not actually working even though the drop-in is present.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									$backend['ext']
+								)
+							);
+							?>
+							</span>
+						<?php endif; ?>
+					</td>
+				</tr>
+				<?php endif; ?>
 				<tr>
 					<th><?php esc_html_e( 'object-cache.php drop-in', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>

@@ -3540,12 +3540,6 @@ msgstr ""
 msgid "— None (theme default) —"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-custom-404.php:635
-msgid ""
-"Create the page under Pages → Add New, then pick it here. Permalinks must "
-"not be set to “Plain”."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-custom-404.php:641
 msgid "Edit page"
 msgstr ""
@@ -9421,15 +9415,6 @@ msgstr ""
 msgid "set"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-site-snapshot.php:1147
-msgid ""
-"Save and restore site snapshots of selected TSO Swiss Knife settings as JSON"
-" for staging, backups, or migrations. Includes plugin wp_options settings "
-"(Slow Query Monitor, Comment Anti-Spam, etc.). Does not include "
-"Debug/Security JSON flags under uploads, sandbox sessions, or the Slow Query"
-" log."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1151
 msgid ""
 "Import overwrites existing settings for the selected sections. Always export"
@@ -10250,13 +10235,6 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-staging.php:696
-msgid ""
-"Use this on a test copy of the site so it is obvious it is not production, "
-"so search engines skip it, and so customer emails are not sent by mistake. "
-"Everything stays off until you tick a box."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-staging.php:701
 msgid ""
 "This address looks like a test copy (staging host, .local, or WordPress "
@@ -10339,13 +10317,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-staging.php:774
 msgid "Recent emails"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-staging.php:776
-msgid ""
-"Stored as JSON under the plugin uploads folder (not in the public media "
-"library listing). The last 100 messages are kept. Full HTML bodies are not "
-"stored."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-staging.php:779
@@ -11279,4 +11250,66 @@ msgstr ""
 msgid ""
 "Staging Mode switches were imported as enabled. Confirm this is a test site,"
 " or turn them off under Staging Mode before going live."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:921
+msgid "Autoload: all"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:922
+msgid "Autoload: yes only"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:923
+msgid "Autoload: no only"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:926
+msgid "Min size (KB)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:927
+msgid ""
+"Show only options at least this large — useful to spot large autoloaded "
+"options that slow down every page load."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:495
+msgid "Backend"
+msgstr ""
+
+#. translators: %s: PHP extension name (redis, memcached)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:504
+#, php-format
+msgid ""
+"The %s PHP extension is not loaded — this cache is likely not actually "
+"working even though the drop-in is present."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:484
+msgid ""
+"Without a persistent backend (Redis, Memcached, or your host's own object "
+"cache), values this plugin caches — like the Admin Menu manifest — and every"
+" WordPress option are re-read from the database on every request instead of "
+"being reused between them. Ask your hosting provider if one is available."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:715
+msgid "Create the page under Pages → Add New, then pick it here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:718
+msgid ""
+"If URLs show a bare server “404 Not Found” (not your design), go to Settings"
+" → Permalinks and click Save — otherwise visitors never reach WordPress on "
+"broken links."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1164
+msgid ""
+"Save and restore selected TSO Swiss Knife settings as JSON for staging, "
+"backups, or migrations. Includes plugin options such as Redirects, Staging "
+"Mode switches, Slow Query Monitor, Comment Anti-Spam, and Login Protect. "
+"Does not include Debug/Security JSON under uploads, sandbox sessions, the "
+"Staging mail log, or the Slow Query log."
 msgstr ""

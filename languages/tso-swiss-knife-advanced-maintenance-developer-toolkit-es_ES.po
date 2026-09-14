@@ -13068,3 +13068,54 @@ msgstr ""
 "Si las URL muestran un «404 Not Found» desnudo del servidor (no tu diseño), "
 "ve a Ajustes → Enlaces permanentes y Guarda — si no, los visitantes no "
 "llegan a WordPress con enlaces rotos."
+
+#: includes/modules/class-tsosk-mod-options-editor.php:921
+msgid "Autoload: all"
+msgstr "Autoload: todas"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:922
+msgid "Autoload: yes only"
+msgstr "Autoload: solo sí"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:923
+msgid "Autoload: no only"
+msgstr "Autoload: solo no"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:926
+msgid "Min size (KB)"
+msgstr "Tamaño mínimo (KB)"
+
+#: includes/modules/class-tsosk-mod-options-editor.php:927
+msgid ""
+"Show only options at least this large — useful to spot large autoloaded "
+"options that slow down every page load."
+msgstr ""
+"Muestra solo las opciones con al menos este tamaño — útil para detectar "
+"opciones grandes con autoload que ralentizan cada carga de página."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:495
+msgid "Backend"
+msgstr "Backend"
+
+#. translators: %s: PHP extension name (redis, memcached)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:504
+#, php-format
+msgid ""
+"The %s PHP extension is not loaded — this cache is likely not actually "
+"working even though the drop-in is present."
+msgstr ""
+"La extensión PHP %s no está cargada — es probable que esta caché no esté "
+"funcionando realmente aunque el drop-in esté presente."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:484
+msgid ""
+"Without a persistent backend (Redis, Memcached, or your host's own object "
+"cache), values this plugin caches — like the Admin Menu manifest — and every"
+" WordPress option are re-read from the database on every request instead of "
+"being reused between them. Ask your hosting provider if one is available."
+msgstr ""
+"Sin un backend persistente (Redis, Memcached, o la propia caché de objetos "
+"de tu hosting), los valores que este plugin guarda en caché —como el "
+"manifiesto del menú de administración— y todas las opciones de WordPress se "
+"vuelven a leer de la base de datos en cada petición en lugar de reutilizarse"
+" entre ellas. Pregunta a tu proveedor de hosting si tiene alguna disponible."
