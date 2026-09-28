@@ -74,7 +74,7 @@ class TSOSK_Mod_Hooks {
 			<input type="hidden" name="tab"  value="hooks">
 			<input type="text" name="tsosk_hook_search" value="<?php echo esc_attr( $search ); ?>"
 			       placeholder="<?php esc_attr_e( 'Filter hook name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-			       class="tsosk-hooks-search-input">
+			       class="tsosk-hooks-search-input" id="tsosk-hooks-search">
 			<?php submit_button( __( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'secondary', '', false ); ?>
 			<?php if ( $search ) : ?>
 				<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'tso-swiss-knife', 'tab' => 'hooks' ), admin_url( 'tools.php' ) ) ); ?>" class="button">

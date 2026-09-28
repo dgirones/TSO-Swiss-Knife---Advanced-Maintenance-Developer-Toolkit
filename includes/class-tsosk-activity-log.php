@@ -149,6 +149,7 @@ class TSOSK_Activity_Log {
 		$user = wp_get_current_user();
 
 		$entry = array(
+			'id'      => self::generate_id(),
 			'module'  => sanitize_key( $module ),
 			'action'  => sanitize_key( $action ),
 			'summary' => sanitize_text_field( $summary ),
@@ -170,6 +171,65 @@ class TSOSK_Activity_Log {
 	}
 
 	/**
+	 * Generate a short unique id for a new log entry.
+	 *
+	 * @return string
+	 */
+	private static function generate_id(): string {
+		return function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : md5( uniqid( 'tsosk', true ) );
+	}
+
+	/**
+	 * Look up one entry by its id.
+	 *
+	 * @param string $id Entry id.
+	 * @return array<string, mixed>|null
+	 */
+	public static function find( string $id ): ?array {
+		if ( '' === $id ) {
+			return null;
+		}
+		$log = get_option( self::OPTION, array() );
+		if ( ! is_array( $log ) ) {
+			return null;
+		}
+		foreach ( $log as $entry ) {
+			if ( is_array( $entry ) && ( $entry['id'] ?? '' ) === $id ) {
+				return $entry;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Mark a stored entry as reverted (used by "Undo" actions) so it is not offered again.
+	 *
+	 * @param string $id Entry id.
+	 * @return bool True if an entry was found and updated.
+	 */
+	public static function mark_reverted( string $id ): bool {
+		if ( '' === $id ) {
+			return false;
+		}
+		$log = get_option( self::OPTION, array() );
+		if ( ! is_array( $log ) ) {
+			return false;
+		}
+		$found = false;
+		foreach ( $log as $i => $entry ) {
+			if ( is_array( $entry ) && ( $entry['id'] ?? '' ) === $id ) {
+				$log[ $i ]['reverted'] = true;
+				$found                 = true;
+				break;
+			}
+		}
+		if ( $found ) {
+			update_option( self::OPTION, $log, false );
+		}
+		return $found;
+	}
+
+	/**
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function get_entries(): array {
@@ -179,6 +239,8 @@ class TSOSK_Activity_Log {
 		if ( ! is_array( $log ) ) {
 			return array();
 		}
+		// Skip malformed rows (e.g. after a partial import or manual DB edit).
+		$log = array_values( array_filter( $log, 'is_array' ) );
 
 		usort(
 			$log,
@@ -263,6 +325,7 @@ class TSOSK_Activity_Log {
 			'enable'  => __( 'Enable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'disable' => __( 'Disable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'execute' => __( 'Execute', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'restore' => __( 'Restore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'toggle'  => __( 'Toggle', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'run'     => __( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'install-translations' => __( 'Install translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -277,6 +340,10 @@ class TSOSK_Activity_Log {
 			'clone'   => __( 'Clone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'send'    => __( 'Send', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'error'   => __( 'Error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-start'  => __( 'Bisection start', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-step'   => __( 'Bisection step', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-result' => __( 'Bisection result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-cancel' => __( 'Bisection cancelled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$action = sanitize_key( $action );
@@ -416,6 +483,46 @@ class TSOSK_Activity_Log {
 					$m[1],
 					$m[2]
 				);
+			},
+			'/^Backup restored: "(.+)" → "(.+)" undone \((\d+) cell\(s\) restored, (\d+) skipped\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: search string, 2: replace string, 3: restored cells, 4: skipped cells */
+					__( 'Backup restored: "%1$s" → "%2$s" undone (%3$d cell(s) restored, %4$d skipped).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$m[1],
+					$m[2],
+					(int) $m[3],
+					(int) $m[4]
+				);
+			},
+			'/^Plugin bisection started \((\d+) candidates, testing (\d+)\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: total candidate plugins, 2: plugins in the first test */
+					__( 'Plugin bisection started (%1$d candidates, testing %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1],
+					(int) $m[2]
+				);
+			},
+			'/^Plugin bisection step (\d+) \((\d+) candidates left, testing (\d+)\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: step number, 2: remaining candidates, 3: plugins in this test */
+					__( 'Plugin bisection step %1$d (%2$d candidates left, testing %3$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1],
+					(int) $m[2],
+					(int) $m[3]
+				);
+			},
+			'/^Plugin bisection isolated the likely conflicting plugin: (.+)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: %s: plugin name */
+					__( 'Plugin bisection isolated the likely conflicting plugin: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$m[1]
+				);
+			},
+			'/^Plugin bisection finished without isolating a plugin\.$/' => static function (): string {
+				return __( 'Plugin bisection finished without isolating a plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			},
+			'/^Plugin bisection cancelled; sandbox exited\.$/' => static function (): string {
+				return __( 'Plugin bisection cancelled; sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^Cron event executed: (.+)\.$/' => static function ( array $m ): string {
 				return sprintf(

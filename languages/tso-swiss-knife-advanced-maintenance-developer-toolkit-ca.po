@@ -3657,11 +3657,11 @@ msgstr "Salut de WP-Cron"
 
 #: includes/modules/class-tsosk-mod-rewrite.php:95
 msgid "Permalink & Routing Simulator"
-msgstr "Simulador d enllacos permanents i routing"
+msgstr "Simulador d’enllaços permanents i routing"
 
 #: includes/modules/class-tsosk-mod-constants.php:94
 msgid "Environment Overrides"
-msgstr "Sobreescriptures d entorn"
+msgstr "Sobreescriptures d’entorn"
 
 #: includes/class-tsosk-activity-log.php:227
 #: includes/class-tsosk-admin.php:972
@@ -3671,12 +3671,12 @@ msgstr "Rols i capacitats"
 
 #: includes/modules/class-tsosk-mod-users.php:446
 msgid "User Summary"
-msgstr "Resum d usuaris"
+msgstr "Resum d’usuaris"
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:215
 #: includes/modules/class-tsosk-mod-media-cleaner.php:746
 msgid "Uploads Files Not Referenced in Database"
-msgstr "Fitxers d uploads no referenciats a la base de dades"
+msgstr "Fitxers d’uploads no referenciats a la base de dades"
 
 #: includes/modules/class-tsosk-mod-security.php:316
 msgid "Security Checks"
@@ -3684,7 +3684,7 @@ msgstr "Comprovacions de seguretat"
 
 #: includes/modules/class-tsosk-mod-email.php:231
 msgid "Mail Configuration"
-msgstr "Configuracio de correu"
+msgstr "Configuració de correu"
 
 #: includes/modules/class-tsosk-mod-email.php:281
 msgid "Send Test Email"
@@ -3692,7 +3692,7 @@ msgstr "Enviar email de prova"
 
 #: includes/modules/class-tsosk-mod-email.php:334
 msgid "Last Test Result"
-msgstr "Ultim resultat de prova"
+msgstr "Últim resultat de prova"
 
 #: includes/modules/class-tsosk-mod-content-audit.php:208
 msgid "Broken Shortcodes"
@@ -3713,7 +3713,7 @@ msgstr "Capacitats"
 
 #: includes/modules/class-tsosk-mod-users.php:448
 msgid "Total Users"
-msgstr "Total d usuaris"
+msgstr "Total d’usuaris"
 
 #: includes/modules/class-tsosk-mod-users.php:449
 msgid "Administrators"
@@ -3721,7 +3721,7 @@ msgstr "Administradors"
 
 #: includes/modules/class-tsosk-mod-users.php:474
 msgid "No users found."
-msgstr "No s han trobat usuaris."
+msgstr "No s’han trobat usuaris."
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:765
 msgid "Relative File"
@@ -3737,23 +3737,23 @@ msgstr "Nom remitent de wp_mail"
 
 #: includes/modules/class-tsosk-mod-email.php:246
 msgid "PHP mail function"
-msgstr "Funcio mail de PHP"
+msgstr "Funció mail de PHP"
 
 #: includes/modules/class-tsosk-mod-email.php:336
 msgid "No test email has been sent yet."
-msgstr "Encara no s ha enviat cap email de prova."
+msgstr "Encara no s’ha enviat cap email de prova."
 
 #: includes/modules/class-tsosk-mod-content-audit.php:124
 msgid ""
 "Find hidden content problems: empty titles, missing featured images, old "
 "pending/private content, long slugs and broken shortcodes."
 msgstr ""
-"Troba problemes amagats de contingut: titols buits, imatges destacades "
+"Troba problemes amagats de contingut: títols buits, imatges destacades "
 "absents, contingut pendent/privat antic, slugs llargs i shortcodes trencats."
 
 #: includes/modules/class-tsosk-mod-content-audit.php:221
 msgid "No broken shortcodes detected in the sampled content."
-msgstr "No s han detectat shortcodes trencats en el contingut mostrejat."
+msgstr "No s’han detectat shortcodes trencats en el contingut mostrejat."
 
 #: includes/modules/class-tsosk-mod-content-audit.php:226
 msgid "Shortcodes"
@@ -3818,7 +3818,7 @@ msgstr "Arguments"
 
 #: includes/modules/class-tsosk-mod-cron.php:319
 msgid "Next Run"
-msgstr "Proxima execucio"
+msgstr "Pròxima execució"
 
 #: includes/modules/class-tsosk-mod-cron.php:320
 #: includes/modules/class-tsosk-mod-cron.php:418
@@ -3827,11 +3827,11 @@ msgstr "Interval"
 
 #: includes/modules/class-tsosk-mod-cron.php:312
 msgid "No cron events found."
-msgstr "No s han trobat esdeveniments cron."
+msgstr "No s’han trobat esdeveniments cron."
 
 #: includes/modules/class-tsosk-mod-debug.php:767
 msgid "Debug Constants"
-msgstr "Constants de depuracio"
+msgstr "Constants de depuració"
 
 #: includes/modules/class-tsosk-mod-debug.php:425
 msgid "Developer mode (staging)"
@@ -3843,17 +3843,17 @@ msgid ""
 "content/debug.log, hide errors from visitors, and record DB queries for the "
 "Slow Query Monitor."
 msgstr ""
-"Mateix preset que el boto Mode desenvolupador de dalt: activa la depuracio, "
+"Mateix preset que el botó Mode desenvolupador de dalt: activa la depuració, "
 "desa a wp-content/debug.log, amaga errors als visitants i registra consultes"
 " SQL per al Monitor de consultes lentes."
 
 #: includes/modules/class-tsosk-mod-debug.php:430
 msgid "Production (debug off)"
-msgstr "Produccio (depuracio desactivada)"
+msgstr "Producció (depuració desactivada)"
 
 #: includes/modules/class-tsosk-mod-debug.php:431
 msgid "Disable all debug constants on live sites."
-msgstr "Desactiva totes les constants de depuracio en llocs en produccio."
+msgstr "Desactiva totes les constants de depuració en llocs en producció."
 
 #: includes/modules/class-tsosk-mod-debug.php:435
 msgid "Show PHP errors on screen"
@@ -3933,19 +3933,19 @@ msgid ""
 msgstr ""
 "Aquest plugin també pot aplicar el preset desenvolupador mitjançant JSON a "
 "la carpeta uploads (sense editar wp-config.php). Les constants definides a "
-"wp-config.php sempre tenen prioritat i no es poden canviar des d aquí."
+"wp-config.php sempre tenen prioritat i no es poden canviar des d’aquí."
 
 #: includes/modules/class-tsosk-mod-debug.php:887
 msgid "Available Error Logs"
-msgstr "Logs d errors disponibles"
+msgstr "Logs d’errors disponibles"
 
 #: includes/modules/class-tsosk-mod-debug.php:889
 msgid ""
 "Shows readable WordPress/PHP error logs detected inside this WordPress "
 "installation. Previews are limited to the end of each file."
 msgstr ""
-"Mostra logs d errors WordPress/PHP llegibles detectats dins d aquesta instal"
-" lacio. Les previsualitzacions es limiten al final de cada fitxer."
+"Mostra logs d’errors WordPress/PHP llegibles detectats dins d’aquesta "
+"instal·lació. Les previsualitzacions es limiten al final de cada fitxer."
 
 #: includes/modules/class-tsosk-mod-debug.php:902
 msgid "Log"
@@ -3956,13 +3956,13 @@ msgid ""
 "Read-only view of the most relevant WordPress constants. Sensitive values "
 "(DB_USER, DB_PASSWORD, auth keys) are intentionally omitted."
 msgstr ""
-"Vista nomes de lectura de les constants mes rellevants de WordPress. Els "
-"valors sensibles (DB_USER, DB_PASSWORD, claus auth) s ometen "
+"Vista només de lectura de les constants més rellevants de WordPress. Els "
+"valors sensibles (DB_USER, DB_PASSWORD, claus auth) s’ometen "
 "intencionadament."
 
 #: includes/modules/class-tsosk-mod-constants.php:82
 msgid "Useful System Information"
-msgstr "Informacio util del sistema"
+msgstr "Informació útil del sistema"
 
 #: includes/modules/class-tsosk-mod-constants.php:123
 msgid "Filter constants…"
@@ -3974,7 +3974,7 @@ msgid ""
 " the .htaccess / web.config file."
 msgstr ""
 "Buida i inspecciona les regles de reescriptura de WordPress. Un buidat dur "
-"tambe regenera el fitxer .htaccess / web.config."
+"també regenera el fitxer .htaccess / web.config."
 
 #: includes/modules/class-tsosk-mod-rewrite.php:81
 msgid "Flush Rewrite Rules"
@@ -3985,13 +3985,13 @@ msgid ""
 "Soft flush: regenerates rules in the database. Hard flush: also updates the "
 "server rewrite configuration file."
 msgstr ""
-"Buidat suau: regenera les regles a la base de dades. Buidat dur: tambe "
-"actualitza el fitxer de configuracio de reescriptura del servidor."
+"Buidat suau: regenera les regles a la base de dades. Buidat dur: també "
+"actualitza el fitxer de configuració de reescriptura del servidor."
 
 #: includes/modules/class-tsosk-mod-rewrite.php:126
 msgid "No rewrite rules stored. Have you flushed permalinks?"
 msgstr ""
-"No hi ha regles de reescriptura desades. Has buidat els enllacos permanents?"
+"No hi ha regles de reescriptura desades. Has buidat els enllaços permanents?"
 
 #: includes/modules/class-tsosk-mod-rewrite.php:129
 msgid "Filter rules…"
@@ -3999,7 +3999,7 @@ msgstr "Filtrar regles..."
 
 #: includes/modules/class-tsosk-mod-rewrite.php:136
 msgid "Redirect"
-msgstr "Redireccio"
+msgstr "Redirecció"
 
 #: includes/modules/class-tsosk-mod-redirects.php:271
 msgid ""
@@ -4007,11 +4007,11 @@ msgid ""
 "prefixed option and are applied before the theme renders."
 msgstr ""
 "Crea i revisa redireccions segures a nivell de WordPress. Les regles es "
-"desen en una opcio prefixada i s apliquen abans que es renderitzi el tema."
+"desen en una opció prefixada i s’apliquen abans que es renderitzi el tema."
 
 #: includes/modules/class-tsosk-mod-redirects.php:282
 msgid "Add or Edit Redirect"
-msgstr "Afegir o editar redireccio"
+msgstr "Afegir o editar redirecció"
 
 #: includes/modules/class-tsosk-mod-redirects.php:285
 msgid "Source Path"
@@ -4019,15 +4019,15 @@ msgstr "Ruta origen"
 
 #: includes/modules/class-tsosk-mod-redirects.php:299
 msgid "Target URL or Path"
-msgstr "URL o ruta de desti"
+msgstr "URL o ruta de destí"
 
 #: includes/modules/class-tsosk-mod-redirects.php:304
 msgid "Status Code"
-msgstr "Codi d estat"
+msgstr "Codi d’estat"
 
 #: includes/modules/class-tsosk-mod-redirects.php:316
 msgid "Enable this redirect"
-msgstr "Activar aquesta redireccio"
+msgstr "Activar aquesta redirecció"
 
 #: includes/modules/class-tsosk-mod-redirects.php:322
 msgid "Clear Form"
@@ -4035,15 +4035,15 @@ msgstr "Netejar formulari"
 
 #: includes/modules/class-tsosk-mod-redirects.php:328
 msgid "Redirect Review"
-msgstr "Revisio de redireccions"
+msgstr "Revisió de redireccions"
 
 #: includes/modules/class-tsosk-mod-redirects.php:330
 msgid "No redirect issues detected."
-msgstr "No s han detectat problemes de redireccio."
+msgstr "No s’han detectat problemes de redirecció."
 
 #: includes/modules/class-tsosk-mod-redirects.php:431
 msgid "No redirects have been created yet."
-msgstr "Encara no s ha creat cap redireccio."
+msgstr "Encara no s’ha creat cap redirecció."
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2283
 #: includes/modules/class-tsosk-mod-cron.php:321
@@ -4056,7 +4056,7 @@ msgstr "Origen"
 #: includes/modules/class-tsosk-mod-redirects.php:448
 #: includes/modules/class-tsosk-mod-redirects.php:464
 msgid "Target"
-msgstr "Desti"
+msgstr "Destí"
 
 #: includes/modules/class-tsosk-mod-redirects.php:449
 #: includes/modules/class-tsosk-mod-redirects.php:465
@@ -4072,7 +4072,7 @@ msgstr "Editar"
 
 #: includes/modules/class-tsosk-mod-redirects.php:287
 msgid "Use a site-relative path only. Example: /old-page/."
-msgstr "Usa nomes una ruta relativa al lloc. Exemple: /pagina-antiga/."
+msgstr "Usa només una ruta relativa al lloc. Exemple: /pagina-antiga/."
 
 #: includes/modules/class-tsosk-mod-redirects.php:306
 msgid "301 Permanent"
@@ -4092,7 +4092,7 @@ msgstr "308 Permanent"
 
 #: includes/modules/class-tsosk-mod-redirects.php:290
 msgid "Match Type"
-msgstr "Tipus de coincidencia"
+msgstr "Tipus de coincidència"
 
 #: includes/modules/class-tsosk-mod-redirects.php:292
 msgid "Exact path"
@@ -4100,15 +4100,15 @@ msgstr "Ruta exacta"
 
 #: includes/modules/class-tsosk-mod-redirects.php:293
 msgid "Wildcard (*)"
-msgstr "Comodi (*)"
+msgstr "Comodí (*)"
 
 #: includes/modules/class-tsosk-mod-redirects.php:296
 msgid ""
 "Wildcard captures can be used in the target as $1, $2, etc. Regex rules "
 "should not include delimiters."
 msgstr ""
-"Les captures amb comodis es poden usar al desti com $1, $2, etc. Les regles "
-"regex no han d incloure delimitadors."
+"Les captures amb comodins es poden usar al destí com $1, $2, etc. Les regles"
+" regex no han d’incloure delimitadors."
 
 #: includes/modules/class-tsosk-mod-redirects.php:301
 msgid ""
@@ -4137,12 +4137,12 @@ msgstr "Referent"
 
 #: includes/modules/class-tsosk-mod-redirects.php:409
 msgid "Create Redirect"
-msgstr "Crear redireccio"
+msgstr "Crear redirecció"
 
 #: includes/modules/class-tsosk-mod-redirects.php:447
 #: includes/modules/class-tsosk-mod-redirects.php:463
 msgid "Match"
-msgstr "Coincidencia"
+msgstr "Coincidència"
 
 #: includes/modules/class-tsosk-mod-debug.php:968
 msgid "Search this log..."
@@ -4189,7 +4189,7 @@ msgid ""
 "logs, broken links and maintenance issues."
 msgstr ""
 "Un informe de salut compacte amb comprovacions per detectar configuracions "
-"de risc, logs sorollosos, enllacos trencats i problemes de manteniment."
+"de risc, logs sorollosos, enllaços trencats i problemes de manteniment."
 
 #: includes/modules/class-tsosk-mod-health.php:235
 msgid "Download JSON Report"
@@ -4213,7 +4213,7 @@ msgstr "Activar alertes per email"
 
 #: includes/modules/class-tsosk-mod-health.php:306
 msgid "Alert Email"
-msgstr "Email d alerta"
+msgstr "Email d’alerta"
 
 #: includes/modules/class-tsosk-mod-sandbox.php:207
 msgid "Exit Sandbox"
@@ -4250,7 +4250,7 @@ msgid ""
 "site normally. All other visitors get a 503 page."
 msgstr ""
 "Posa el lloc en mode de manteniment. Els administradors connectats sempre "
-"veuen el lloc normalment. La resta de visitants reben una pagina 503."
+"veuen el lloc normalment. La resta de visitants reben una pàgina 503."
 
 #: includes/modules/class-tsosk-mod-maintenance.php:286
 msgid "Maintenance Mode Status"
@@ -4258,7 +4258,7 @@ msgstr "Estat del mode de manteniment"
 
 #: includes/modules/class-tsosk-mod-maintenance.php:301
 msgid "Maintenance Page Settings"
-msgstr "Configuracio de la pagina de manteniment"
+msgstr "Configuració de la pàgina de manteniment"
 
 #: includes/modules/class-tsosk-mod-maintenance.php:338
 msgid "Message to Visitors"
@@ -4266,7 +4266,7 @@ msgstr "Missatge per als visitants"
 
 #: includes/modules/class-tsosk-mod-maintenance.php:354
 msgid "Whitelisted IP Addresses (one per line)"
-msgstr "Adreces IP permeses (una per linia)"
+msgstr "Adreces IP permeses (una per línia)"
 
 #: includes/modules/class-tsosk-mod-hooks.php:112
 msgid "Priority"
@@ -4286,7 +4286,7 @@ msgstr "Interval personalitzat (segons)"
 
 #: includes/modules/class-tsosk-mod-rest-api.php:215
 msgid "REST API Access"
-msgstr "Acces a l API REST"
+msgstr "Accés a l’API REST"
 
 #: includes/modules/class-tsosk-mod-rest-api.php:224
 msgid "Enabled (default)"
@@ -4301,8 +4301,8 @@ msgid ""
 "Manage WordPress transients stored in the options table. This view works on "
 "sites without an external object cache."
 msgstr ""
-"Gestiona transitoris de WordPress desats a la taula d opcions. Aquesta vista"
-" funciona en llocs sense cache d objectes externa."
+"Gestiona transitoris de WordPress desats a la taula d’opcions. Aquesta vista"
+" funciona en llocs sense cache d’objectes externa."
 
 #: includes/modules/class-tsosk-mod-transients.php:272
 msgid "Search transients…"
@@ -4324,7 +4324,7 @@ msgstr "Caduca"
 
 #: includes/modules/class-tsosk-mod-transients.php:310
 msgid "No transients found."
-msgstr "No s han trobat transitoris."
+msgstr "No s’han trobat transitoris."
 
 #: includes/modules/class-tsosk-mod-transients.php:324
 msgid "No expiry"
@@ -8089,20 +8089,20 @@ msgstr "Visites"
 #: includes/modules/class-tsosk-mod-redirects.php:371
 #: includes/modules/class-tsosk-mod-redirects.php:385
 msgid "Last visit"
-msgstr "Ultima visita"
+msgstr "Última visita"
 
 #. translators: %s: formatted date
 #: includes/modules/class-tsosk-mod-redirects.php:478
 #, php-format
 msgid "Last visit: %s"
-msgstr "Ultima visita: %s"
+msgstr "Última visita: %s"
 
 #: includes/modules/class-tsosk-mod-redirects.php:347
 msgid ""
 "Recent 404 visits are captured so you can create redirects from missing "
 "URLs."
 msgstr ""
-"Es capturen les visites 404 recents per crear redireccions des d URLs "
+"Es capturen les visites 404 recents per crear redireccions des d’URLs "
 "inexistents."
 
 #: includes/modules/class-tsosk-mod-redirects.php:349
@@ -8117,8 +8117,8 @@ msgid ""
 "bots and bookmarks often send none)."
 msgstr ""
 "Visites compta quantes vegades s'ha demanat cada URL inexistent. Referent "
-"conserva l'ultima pagina anterior coneguda (HTTP Referer). Si mai no se n'ha"
-" enviat cap, es mostra Directe / desconegut i, si esta disponible, l'ultim "
+"conserva l'última pàgina anterior coneguda (HTTP Referer). Si mai no se n'ha"
+" enviat cap, es mostra Directe / desconegut i, si està disponible, l'últim "
 "User-Agent (visites directes, bots i marcadors sovint no n'envien cap)."
 
 #: includes/modules/class-tsosk-mod-redirects.php:944
@@ -8127,7 +8127,7 @@ msgstr "Directe / desconegut"
 
 #: includes/modules/class-tsosk-mod-history.php:151
 msgid "Logging preferences"
-msgstr "Preferencies de registre"
+msgstr "Preferències de registre"
 
 #: includes/modules/class-tsosk-mod-history.php:157
 msgid "Log all tools (ignore checklist below)"
@@ -8135,15 +8135,15 @@ msgstr "Registrar totes les eines (ignorar llista inferior)"
 
 #: includes/modules/class-tsosk-mod-history.php:160
 msgid "Maximum entries"
-msgstr "Entrades maximes"
+msgstr "Entrades màximes"
 
 #: includes/modules/class-tsosk-mod-history.php:181
 msgid "Save logging preferences"
-msgstr "Desar preferencies de registre"
+msgstr "Desar preferències de registre"
 
 #: includes/modules/class-tsosk-mod-history.php:72
 msgid "Activity log settings saved."
-msgstr "Preferencies de l historial desades."
+msgstr "Preferències de l’historial desades."
 
 #. translators: %s: shortcode tag
 #: includes/modules/class-tsosk-mod-content-audit.php:244
@@ -8153,23 +8153,23 @@ msgstr "Eliminar [%s]"
 
 #: includes/class-tsosk-admin.php:312
 msgid "Remove this broken shortcode from the post content?"
-msgstr "Eliminar aquest shortcode trencat del contingut de l article?"
+msgstr "Eliminar aquest shortcode trencat del contingut de l’article?"
 
 #: includes/class-tsosk-admin.php:313
 msgid "Remove all broken shortcodes from this post?"
-msgstr "Eliminar tots els shortcodes trencats d aquest article?"
+msgstr "Eliminar tots els shortcodes trencats d’aquest article?"
 
 #: includes/class-tsosk-admin.php:314
 msgid "Cancel this scheduled action?"
-msgstr "Cancel·lar aquesta accio programada?"
+msgstr "Cancel·lar aquesta acció programada?"
 
 #: includes/class-tsosk-admin.php:307
 msgid ""
 "Truncate the selected slugs and create redirects where enabled? This changes"
 " permalinks immediately."
 msgstr ""
-"Escurcar els slugs seleccionats i crear redireccions si esta activat? Aixo "
-"canvia els enllacos permanents immediatament."
+"Escurçar els slugs seleccionats i crear redireccions si està activat? Això "
+"canvia els enllaços permanents immediatament."
 
 #: includes/modules/class-tsosk-mod-history.php:153
 msgid ""
@@ -8177,9 +8177,9 @@ msgid ""
 "“Log all tools” for the default, or uncheck it and select only the modules "
 "you want recorded."
 msgstr ""
-"Tria quines eines escriuen a l historial i quantes entrades conservar. Usa "
-"\"Registrar totes les eines\" per defecte, o desmarca-ho i selecciona nomes "
-"els moduls que vulguis registrar."
+"Tria quines eines escriuen a l’historial i quantes entrades conservar. Usa "
+"\"Registrar totes les eines\" per defecte, o desmarca-ho i selecciona només "
+"els mòduls que vulguis registrar."
 
 #: includes/modules/class-tsosk-mod-history.php:177
 msgid ""
@@ -8187,15 +8187,15 @@ msgid ""
 "uncheck modules you want to exclude — or clear history after changing "
 "filters."
 msgstr ""
-"Consell: marca nomes els moduls que t interessen per reduir soroll. Desa, "
-"despres desmarca els que vulguis excloure, o neteja l historial despres de "
+"Consell: marca només els mòduls que t’interessen per reduir soroll. Desa, "
+"després desmarca els que vulguis excloure, o neteja l’historial després de "
 "canviar els filtres."
 
 #. translators: %d: maximum number of history entries
 #: includes/modules/class-tsosk-mod-history.php:111
 #, php-format
 msgid "Shows the last %d actions across enabled plugin tools."
-msgstr "Mostra les ultimes %d accions de les eines actives del plugin."
+msgstr "Mostra les últimes %d accions de les eines actives del plugin."
 
 #. translators: 1: fixed count, 2: skipped count, 3: threshold
 #: includes/modules/class-tsosk-mod-slug-manager.php:275
@@ -8204,18 +8204,18 @@ msgid ""
 "%1$d slug(s) shortened to max %3$d characters. %2$d item(s) were skipped "
 "(already short enough or could not be changed)."
 msgstr ""
-"%1$d slug(s) escurcats a maxim %3$d caracters. %2$d element(s) omesos (ja "
-"eren curts o no s han pogut canviar)."
+"%1$d slug(s) escurçats a màxim %3$d caràcters. %2$d element(s) omesos (ja "
+"eren curts o no s’han pogut canviar)."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:259
 msgid "301 redirects were created for updated slugs."
-msgstr "S han creat redireccions 301 pels slugs actualitzats."
+msgstr "S’han creat redireccions 301 pels slugs actualitzats."
 
 #. translators: %d: number of errors
 #: includes/modules/class-tsosk-mod-slug-manager.php:286
 #, php-format
 msgid "%d error(s) occurred."
-msgstr "S han produit %d error(s)."
+msgstr "S’han produït %d error(s)."
 
 #: includes/class-tsosk-admin.php:309
 msgid "Before"
@@ -8223,21 +8223,21 @@ msgstr "Abans"
 
 #: includes/class-tsosk-admin.php:310
 msgid "After"
-msgstr "Despres"
+msgstr "Després"
 
 #. translators: 1: shortcode tag, 2: post ID
 #: includes/class-tsosk-activity-log.php:323
 #: includes/modules/class-tsosk-mod-content-audit.php:92
 #, php-format
 msgid "Removed broken shortcode [%1$s] from post #%2$d."
-msgstr "Shortcode trencat [%1$s] eliminat de l article #%2$d."
+msgstr "Shortcode trencat [%1$s] eliminat de l’article #%2$d."
 
 #. translators: 1: fixed count, 2: skipped count
 #: includes/class-tsosk-activity-log.php:331
 #: includes/modules/class-tsosk-mod-slug-manager.php:267
 #, php-format
 msgid "Bulk slug fix: %1$d updated, %2$d skipped."
-msgstr "Correccio massiva de slugs: %1$d actualitzats, %2$d omesos."
+msgstr "Correcció massiva de slugs: %1$d actualitzats, %2$d omesos."
 
 #. translators: 1: old slug, 2: new slug
 #: includes/class-tsosk-activity-log.php:339
@@ -8257,7 +8257,7 @@ msgstr "Configuració del gestor d'actualitzacions desada (preajuste: %s)."
 #: includes/class-tsosk-activity-log.php:363
 #, php-format
 msgid "Debug log shrunk to last 500 lines (archive: %s)."
-msgstr "Registre de depuracio reduit a les ultimes 500 linies (arxiu: %s)."
+msgstr "Registre de depuració reduït a les últimes 500 línies (arxiu: %s)."
 
 #. translators: %d: number of transients
 #: includes/class-tsosk-activity-log.php:370
@@ -8269,14 +8269,14 @@ msgstr "Transients caducats eliminats: %d."
 #: includes/class-tsosk-activity-log.php:375
 #: includes/modules/class-tsosk-mod-file-integrity.php:162
 msgid "File added to ignore list."
-msgstr "Fitxer afegit a la llista d ignorats."
+msgstr "Fitxer afegit a la llista d’ignorats."
 
 #. translators: %d: number of issues
 #: includes/class-tsosk-activity-log.php:383
 #: includes/modules/class-tsosk-mod-file-integrity.php:99
 #, php-format
 msgid "File integrity scan completed (%d issue(s))."
-msgstr "Escaneig d integritat de fitxers completat (%d incidencia/es)."
+msgstr "Escaneig d’integritat de fitxers completat (%d incidència/es)."
 
 #. translators: %s: cron hook name
 #: includes/class-tsosk-activity-log.php:422
@@ -8287,7 +8287,7 @@ msgstr "Esdeveniment cron executat: %s."
 
 #: includes/class-tsosk-admin.php:303
 msgid "Bulk slug fix preview"
-msgstr "Previsualitzacio de correccio massiva de slugs"
+msgstr "Previsualització de correcció massiva de slugs"
 
 #: includes/class-tsosk-admin.php:304
 msgid "Confirm changes"
@@ -8304,7 +8304,7 @@ msgstr "Motiu"
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:374
 msgid "No slugs would change with the current selection and threshold."
-msgstr "Cap slug canviaria amb la seleccio i el llindar actuals."
+msgstr "Cap slug canviaria amb la selecció i el llindar actuals."
 
 #. translators: 1: number of slugs to change, 2: threshold, 3: skipped count
 #: includes/modules/class-tsosk-mod-slug-manager.php:379
@@ -8316,9 +8316,9 @@ msgid_plural ""
 "%1$d slugs will be shortened to a maximum of %2$d characters. %3$d items "
 "will be skipped."
 msgstr[0] ""
-"Es escurcara %1$d slug a un maxim de %2$d caracters. S ometra %3$d element."
+"Es escurcara %1$d slug a un màxim de %2$d caràcters. S’ometra %3$d element."
 msgstr[1] ""
-"Es escurcaran %1$d slugs a un maxim de %2$d caracters. S ometran %3$d "
+"Es escurcaran %1$d slugs a un màxim de %2$d caràcters. S’ometran %3$d "
 "elements."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:391
@@ -8327,23 +8327,23 @@ msgstr "Es crearan redireccions 301 des de les URL antigues."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:328
 msgid "Already within the character limit."
-msgstr "Ja esta dins del limit de caracters."
+msgstr "Ja està dins del límit de caràcters."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:338
 msgid "Could not shorten this slug."
-msgstr "No s ha pogut escurcar aquest slug."
+msgstr "No s’ha pogut escurçar aquest slug."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:82
 msgid "You do not have permission to edit this post."
-msgstr "No tens permis per editar aquest article."
+msgstr "No tens permís per editar aquest article."
 
 #: includes/modules/class-tsosk-mod-slug-manager.php:226
 msgid "Permission denied."
-msgstr "Permis denegat."
+msgstr "Permís denegat."
 
 #: includes/modules/class-tsosk-mod-options-editor.php:614
 msgid "This option is marked as caution and cannot be edited here."
-msgstr "Aquesta opcio esta marcada com a precaucio i no es pot editar aqui."
+msgstr "Aquesta opció està marcada com a precaució i no es pot editar aquí."
 
 #: includes/class-tsosk-sandbox-mu.php:137
 msgid ""
@@ -8351,28 +8351,28 @@ msgid ""
 "before using sandbox mode."
 msgstr ""
 "El sandbox de plugins requereix AUTH_KEY a wp-config.php. Genera claus "
-"segures abans d usar el mode sandbox."
+"segures abans d’usar el mode sandbox."
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:55
 msgid "You do not have permission to edit this attachment."
-msgstr "No tens permis per editar aquest adjunt."
+msgstr "No tens permís per editar aquest adjunt."
 
 #: includes/modules/class-tsosk-mod-file-integrity.php:149
 msgid "Invalid file path. Only files from the latest scan can be ignored."
 msgstr ""
-"Ruta de fitxer invalida. Nomes es poden ignorar fitxers de l ultim escaneig."
+"Ruta de fitxer invàlida. Només es poden ignorar fitxers de l’últim escaneig."
 
 #: includes/modules/class-tsosk-mod-custom-404.php:762
 msgid "Preview 404 page"
-msgstr "Previsualitzar pagina 404"
+msgstr "Previsualitzar pàgina 404"
 
 #: includes/class-tsosk-admin.php:379
 msgid "Select a published page to preview."
-msgstr "Selecciona una pagina publicada per previsualitzar."
+msgstr "Selecciona una pàgina publicada per previsualitzar."
 
 #: includes/modules/class-tsosk-mod-custom-404.php:391
 msgid "Invalid preview link."
-msgstr "Enllac de previsualitzacio invalid."
+msgstr "Enllaç de previsualització invàlid."
 
 #: includes/modules/class-tsosk-mod-roles.php:548
 msgid "read-only"
@@ -8385,7 +8385,7 @@ msgstr "Donar"
 #: includes/modules/class-tsosk-mod-users.php:402
 msgid "Administrators cannot be forced to change their password from here."
 msgstr ""
-"No es pot forcar el canvi de contrasenya als administradors des d aqui."
+"No es pot forçar el canvi de contrasenya als administradors des d’aquí."
 
 #. translators: %s: skipped section errors
 #: includes/modules/class-tsosk-mod-site-snapshot.php:330
@@ -8395,11 +8395,11 @@ msgstr "Seccions invalides omeses: %s"
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:427
 msgid "Redirects section must be an object."
-msgstr "La seccio de redireccions ha de ser un objecte."
+msgstr "La secció de redireccions ha de ser un objecte."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:644
 msgid "Login protection section must be an object."
-msgstr "La seccio de proteccio d acces ha de ser un objecte."
+msgstr "La secció de protecció d’accés ha de ser un objecte."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:685
 msgid "Login lockout log must be an array."
@@ -8407,37 +8407,37 @@ msgstr "El registre de bloquejos ha de ser una llista."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:688
 msgid "Login lockout log exceeds the maximum allowed entries."
-msgstr "El registre de bloquejos supera el nombre maxim d entrades permes."
+msgstr "El registre de bloquejos supera el nombre màxim d’entrades permès."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:715
 msgid "Login attempt counters must be an object."
-msgstr "Els comptadors d intents han de ser un objecte."
+msgstr "Els comptadors d’intents han de ser un objecte."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:718
 msgid "Login attempt counters exceed the maximum allowed entries."
-msgstr "Els comptadors d intents superen el nombre maxim d entrades permes."
+msgstr "Els comptadors d’intents superen el nombre màxim d’entrades permès."
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1047
 msgid "Expected a list of strings."
-msgstr "S esperava una llista de textos."
+msgstr "S’esperava una llista de textos."
 
 #. translators: %d: maximum items
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1054
 #, php-format
 msgid "List exceeds the maximum of %d items."
-msgstr "La llista supera el maxim de %d elements."
+msgstr "La llista supera el màxim de %d elements."
 
 #: includes/modules/class-tsosk-mod-roles.php:591
 msgid ""
 "Replaces the role capabilities with the template (caps not in the template "
 "are removed; blocked caps are never granted)."
 msgstr ""
-"Substitueix les capacitats del rol per les de la plantilla (s eliminen les "
-"que no hi son; les capacitats bloquejades no s assignen mai)."
+"Substitueix les capacitats del rol per les de la plantilla (s’eliminen les "
+"que no hi són; les capacitats bloquejades no s’assignen mai)."
 
 #: includes/modules/class-tsosk-mod-login-protect.php:1234
 msgid "XML-RPC is still enabled."
-msgstr "XML-RPC encara esta actiu."
+msgstr "XML-RPC encara està actiu."
 
 #. translators: %s: Security tab URL
 #: includes/modules/class-tsosk-mod-login-protect.php:1239
@@ -8447,9 +8447,9 @@ msgid ""
 "<code>xmlrpc.php</code>. Disable XML-RPC in the <a href=\"%s\">Security</a> "
 "tab for stronger protection."
 msgstr ""
-"La URL d acces personalitzada no bloqueja l autenticacio via "
+"La URL d’accés personalitzada no bloqueja l’autenticació via "
 "<code>xmlrpc.php</code>. Desactiva XML-RPC a la pestanya <a "
-"href=\"%s\">Seguretat</a> per a mes proteccio."
+"href=\"%s\">Seguretat</a> per a més protecció."
 
 #: includes/class-tsosk-uploads-scanner.php:120
 #: includes/class-tsosk-uploads-scanner.php:258
@@ -9316,8 +9316,8 @@ msgid ""
 "ignored. Not case-sensitive."
 msgstr ""
 "Una paraula o frase per línia. Si alguna línia apareix al text del "
-"comentari, nom d'autor, email o URL, l'enviament es bloqueja. Es ignoren les"
-" línies que comencen per #. No distingeix majúscules/minúscules."
+"comentari, nom d'autor, email o URL, l'enviament es bloqueja. S’ignoren les "
+"línies que comencen per #. No distingeix majúscules/minúscules."
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2255
 msgid ""
@@ -13083,3 +13083,1770 @@ msgstr ""
 "del menú d'admin— i totes les opcions de WordPress es tornen a llegir de la "
 "base de dades a cada petició en lloc de reutilitzar-se entre elles. Pregunta"
 " al teu proveïdor d'hosting si en té algun de disponible."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Views"
+msgstr "Visites"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter"
+msgstr "Comptador de visites"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter settings updated."
+msgstr "S'ha actualitzat la configuració del Comptador de visites."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Unknown import source."
+msgstr "Origen d'importació desconegut."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Total post/page views"
+msgstr "Visites totals a entrades/pàgines"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Total outbound link clicks"
+msgstr "Clics totals a enllaços sortints"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Settings"
+msgstr "Configuració"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Track"
+msgstr "Registra"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Logged-in users"
+msgstr "Usuaris connectats"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Outbound links"
+msgstr "Enllaços sortints"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Count clicks on external links inside post/page content"
+msgstr ""
+"Compta els clics als enllaços externs dins del contingut d'entrades/pàgines"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Import previous counters"
+msgstr "Importa comptadors anteriors"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Post Views Counter"
+msgstr "Post Views Counter"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "WP-PostViews"
+msgstr "WP-PostViews"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "WP Statistics"
+msgstr "WP Statistics"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Import Now"
+msgstr "Importa ara"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Delete all recorded views and clicks"
+msgstr "Elimina totes les visites i clics registrats"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Delete ALL recorded views and clicks? This cannot be undone."
+msgstr ""
+"Vols eliminar TOTES les visites i clics registrats? Aquesta acció no es pot "
+"desfer."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter data reset."
+msgstr "S'han restablert les dades del Comptador de visites."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "All view data has been reset."
+msgstr "S'han restablert totes les dades de visites."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Don't count views from logged-in users"
+msgstr "No comptis les visites d'usuaris connectats"
+
+#. translators: 1: import source, 2: number of imported posts
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "View Counter: imported %2$d post(s) from %1$s."
+msgstr "Comptador de visites: s'han importat %2$d entrada(es) des de %1$s."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Counts post, page and outbound-link-click visits with a small front-end "
+"beacon so counting keeps working even behind a full-page cache. No cookies "
+"are used — de-duplication happens with a short-lived, server-side "
+"fingerprint only."
+msgstr ""
+"Compta les visites a entrades, pàgines i clics a enllaços sortints amb un "
+"petit senyal des del navegador, de manera que el recompte segueix funcionant"
+" fins i tot amb una cache de pàgina completa. No s'utilitzen cookies — la "
+"deduplicació es fa només amb una empremta temporal al servidor."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Once Weekly (TSO View Counter)"
+msgstr "Un cop per setmana (TSO View Counter)"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top posts/pages:"
+msgstr "Entrades/pàgines més vistes:"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top outbound links:"
+msgstr "Enllaços sortints més clicats:"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top Content"
+msgstr "Contingut més popular"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Reporting period"
+msgstr "Període de l'informe"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 7 days"
+msgstr "Últims 7 dies"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 30 days"
+msgstr "Últims 30 dies"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 90 days"
+msgstr "Últims 90 dies"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "All time"
+msgstr "Des de sempre"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Most viewed posts/pages"
+msgstr "Entrades/pàgines més vistes"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Most clicked outbound links"
+msgstr "Enllaços sortints més clicats"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Clicks"
+msgstr "Clics"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Weekly summary email"
+msgstr "Correu de resum setmanal"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Download CSV (daily detail)"
+msgstr "Descarrega CSV (detall diari)"
+
+#: includes/class-tsosk-admin.php:1
+msgid "No data for this period yet."
+msgstr "Encara no hi ha dades per a aquest període."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "TSO Views"
+msgstr "TSO Visites"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d Application Password(s) active — review them below."
+msgstr "%d contrasenya(es) d'aplicació activa(es): revisa-les a sota."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d Application Password(s) revoked."
+msgstr "%d contrasenya(es) d'aplicació revocada(es)."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"%d administrator account(s) created in the last 7 days — make sure you "
+"recognize them."
+msgstr ""
+"%d compte(s) d'administrador creat(s) en els últims 7 dies: assegura't que "
+"els reconeixes."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "(unnamed)"
+msgstr "(sense nom)"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Application Password revoked for user #%d."
+msgstr "Contrasenya d'aplicació revocada per a l'usuari #%d."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Password revoked."
+msgstr "Contrasenya d'aplicació revocada."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Passwords"
+msgstr "Contrasenyes d'aplicació"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Passwords are not available on this site."
+msgstr "Les contrasenyes d'aplicació no estan disponibles en aquest lloc."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not revoke that Application Password."
+msgstr "No s'ha pogut revocar aquesta contrasenya d'aplicació."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Invalid request."
+msgstr "Sol·licitud no vàlida."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Never"
+msgstr "Mai"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "New user \"%1$s\" created (role: %2$s) from IP %3$s via %4$s."
+msgstr ""
+"S'ha creat el nou usuari \"%1$s\" (rol: %2$s) des de la IP %3$s mitjançant "
+"%4$s."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No Application Passwords are active."
+msgstr "No hi ha cap contrasenya d'aplicació activa."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No new administrators in the last 7 days."
+msgstr "Cap administrador nou en els últims 7 dies."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "REST API request"
+msgstr "Sol·licitud de l'API REST"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Recent administrator accounts"
+msgstr "Comptes d'administrador recents"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Revoked %d Application Password(s) across all users."
+msgstr "S'han revocat %d contrasenya(es) d'aplicació de tots els usuaris."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Security alert settings saved."
+msgstr "S'ha desat la configuració d'alertes de seguretat."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "User \"%1$s\" was promoted to Administrator from IP %2$s via %3$s."
+msgstr ""
+"L'usuari \"%1$s\" ha estat promogut a Administrador des de la IP %2$s "
+"mitjançant %3$s."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "XML-RPC request"
+msgstr "Sol·licitud XML-RPC"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "[%s] A user was promoted to Administrator"
+msgstr "[%s] S'ha promogut un usuari a Administrador"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "[%s] New administrator account created"
+msgstr "[%s] S'ha creat un nou compte d'administrador"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "background AJAX request (admin-ajax.php)"
+msgstr "sol·licitud AJAX en segon pla (admin-ajax.php)"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "front-end request"
+msgstr "sol·licitud del front-end"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "none"
+msgstr "cap"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "normal wp-admin form"
+msgstr "formulari normal de wp-admin"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "unknown"
+msgstr "desconegut"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "User & Admin Alerts"
+msgstr "Alertes d'usuaris i administradors"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Get an email the moment a new user is created or an existing user is "
+"promoted to Administrator — the exact moment a rogue-admin attack happens. "
+"The alert also records how the request reached WordPress (normal admin form,"
+" or a silent background request), which is often the clearest sign something"
+" is wrong."
+msgstr ""
+"Rep un correu just en el moment en què es crea un usuari nou o un usuari "
+"existent és promogut a Administrador, exactament el moment en què passa un "
+"atac d'administrador maliciós. L'alerta també registra com ha arribat la "
+"sol·licitud a WordPress (formulari normal o una sol·licitud silenciosa en "
+"segon pla), que sovint és el senyal més clar que alguna cosa va malament."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Email me on new administrators"
+msgstr "Envia'm un correu amb nous administradors"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Covers both a brand-new account created as Administrator and any existing "
+"user promoted to Administrator."
+msgstr ""
+"Cobreix tant un compte nou creat com a Administrador com qualsevol usuari "
+"existent promogut a Administrador."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Notification email"
+msgstr "Correu de notificació"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"A compromised browser extension can create a hidden admin user or issue "
+"other authenticated requests using your own logged-in session — without "
+"touching your server or triggering a firewall rule, because the request "
+"looks like it came from you. No WordPress plugin can inspect or block what "
+"runs inside your browser. If you ever see an account, Application Password, "
+"or Search Console user you do not recognize, the safest first steps are: "
+"remove any suspicious browser extensions, scan your computer for malware, "
+"then rotate your WordPress, hosting and email passwords from a clean device "
+"or profile."
+msgstr ""
+"Una extensió de navegador compromesa pot crear un usuari administrador ocult"
+" o fer altres sol·licituds autenticades utilitzant la teva pròpia sessió "
+"iniciada, sense tocar el teu servidor ni activar cap regla de tallafocs, "
+"perquè la sol·licitud sembla venir de tu. Cap plugin de WordPress pot "
+"inspeccionar ni bloquejar el que s'executa dins del teu navegador. Si mai "
+"veus un compte, una contrasenya d'aplicació o un usuari de Search Console "
+"que no reconeixes, els primers passos més segurs són: elimina qualsevol "
+"extensió de navegador sospitosa, escaneja el teu ordinador a la recerca de "
+"programari maliciós i després canvia les contrasenyes de WordPress, "
+"allotjament i correu des d'un dispositiu o perfil net."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Application Passwords let a script or app authenticate as a user via the "
+"REST API without a normal login — and, unlike a hidden user account, they "
+"survive deletion of the account that created them if not revoked directly. "
+"Review the list below and revoke anything you do not recognize."
+msgstr ""
+"Les contrasenyes d'aplicació permeten que un script o una app s'autentiqui "
+"com un usuari mitjançant l'API REST sense un inici de sessió normal, i, a "
+"diferència d'un compte d'usuari ocult, sobreviuen a l'eliminació del compte "
+"que les va crear si no es revoquen directament. Revisa la llista de sota i "
+"revoca qualsevol cosa que no reconeguis."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Application Passwords are not available on this site (requires WordPress "
+"5.6+ and HTTPS, or the feature has been disabled)."
+msgstr ""
+"Les contrasenyes d'aplicació no estan disponibles en aquest lloc (requereix "
+"WordPress 5.6+ i HTTPS, o la funció s'ha desactivat)."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No Application Passwords are currently active on this site."
+msgstr ""
+"Actualment no hi ha cap contrasenya d'aplicació activa en aquest lloc."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Created"
+msgstr "Creat"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Last used"
+msgstr "Últim ús"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Last IP"
+msgstr "Última IP"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Revoke"
+msgstr "Revoca"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Revoke All Application Passwords"
+msgstr "Revoca totes les contrasenyes d'aplicació"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Revoke ALL Application Passwords for ALL users? Any app or script currently "
+"using one will stop working immediately. This cannot be undone."
+msgstr ""
+"Vols revocar TOTES les contrasenyes d'aplicació de TOTS els usuaris? "
+"Qualsevol app o script que n'utilitzi una ara mateix deixarà de funcionar "
+"immediatament. Aquesta acció no es pot desfer."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "PHP Execution in Uploads"
+msgstr "Execució de PHP a Uploads"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The single control that most often stops an arbitrary-file-upload attack "
+"from becoming a full takeover: even if a vulnerable plugin lets an attacker "
+"write a PHP file into wp-content/uploads, the file can never run if the "
+"server refuses to execute PHP there. This test writes a harmless temporary "
+"PHP file, requests it over HTTP, then deletes it."
+msgstr ""
+"El control que amb més freqüència evita que un atac de pujada de fitxers "
+"arbitrària esdevingui una presa total del lloc: encara que un plugin "
+"vulnerable permeti a un atacant escriure un fitxer PHP dins de wp-"
+"content/uploads, el fitxer mai podrà executar-se si el servidor es nega a "
+"executar PHP allà. Aquesta prova escriu un fitxer PHP temporal inofensiu, el"
+" sol·licita per HTTP i després l'elimina."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested yet."
+msgstr "Encara no s'ha provat."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested"
+msgstr "No provat"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested yet — run the test below."
+msgstr "Encara no s'ha provat: executa la prova de sota."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "PHP execution in uploads"
+msgstr "Execució de PHP a uploads"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Last tested: %1$s at %2$s"
+msgstr "Última prova: %1$s a les %2$s"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"A PHP-execution block was found in wp-content/uploads/.htaccess (added by "
+"this plugin or already present)."
+msgstr ""
+"S'ha trobat un bloqueig d'execució de PHP a wp-content/uploads/.htaccess "
+"(afegit per aquest plugin o ja present)."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Test Now"
+msgstr "Prova ara"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Enable Protection (Apache/LiteSpeed)"
+msgstr "Activa la protecció (Apache/LiteSpeed)"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"This writes a rule into wp-content/uploads/.htaccess. It only works on "
+"Apache or LiteSpeed. On Nginx, ask your host to add: location ~* /wp-"
+"content/uploads/.*\\.php$ { deny all; }"
+msgstr ""
+"Això escriu una regla dins de wp-content/uploads/.htaccess. Només funciona a"
+" Apache o LiteSpeed. A Nginx, demana al teu allotjament que afegeixi: "
+"location ~* /wp-content/uploads/.*\\.php$ { deny all; }"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Administrators with a Shared Creation Date"
+msgstr "Administradors amb data de creació compartida"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Some malware hides a rogue administrator account by copying another existing"
+" user's exact registration timestamp, so \"sort users by newest\" never "
+"reveals it. These administrator accounts share their creation timestamp, "
+"down to the second, with at least one other user on this site — review each "
+"one."
+msgstr ""
+"Alguns programes maliciosos amaguen un compte d'administrador maliciós "
+"copiant la marca de temps de registre exacta d'un altre usuari existent, de "
+"manera que \"ordenar usuaris per més recents\" mai ho revela. Aquests "
+"comptes d'administrador comparteixen la seva marca de temps de creació, fins"
+" al segon, amb almenys un altre usuari d'aquest lloc: revisa'ls tots."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Registration date"
+msgstr "Data de registre"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Shared with"
+msgstr "Compartit amb"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d other user(s)"
+msgstr "%d altre(s) usuari(s)"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not write a test file to the uploads folder to run this check."
+msgstr ""
+"No s'ha pogut escriure un fitxer de prova a la carpeta d'uploads per "
+"executar aquesta comprovació."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"Could not reach the test file over HTTP to verify: %s. Test manually if in "
+"doubt."
+msgstr ""
+"No s'ha pogut accedir al fitxer de prova per HTTP per verificar-ho: %s. "
+"Prova-ho manualment si tens dubtes."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"PHP files placed inside wp-content/uploads are executed by your server. If "
+"any plugin ever allows an unvalidated file upload there, an uploaded PHP "
+"file could run immediately. Use \"Enable protection\" below to block this."
+msgstr ""
+"El teu servidor executa els fitxers PHP col·locats dins de wp-"
+"content/uploads. Si algun plugin permetés mai una pujada de fitxers no "
+"validada allà, un fitxer PHP pujat podria executar-se immediatament. Fes "
+"servir \"Activa la protecció\" de sota per bloquejar-ho."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"PHP execution inside wp-content/uploads is blocked (HTTP %d). Even if a "
+"malicious file were ever uploaded there, it could not run."
+msgstr ""
+"L'execució de PHP dins de wp-content/uploads està bloquejada (HTTP %d). "
+"Encara que algun dia s'hi pugés un fitxer maliciós, no podria executar-se."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The test file did not execute (its PHP source was not run). PHP execution "
+"inside wp-content/uploads appears to be blocked."
+msgstr ""
+"El fitxer de prova no s'ha executat (el seu codi font PHP no s'ha executat)."
+" Sembla que l'execució de PHP dins de wp-content/uploads està bloquejada."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Tested whether PHP executes inside wp-content/uploads (result: %s)."
+msgstr ""
+"S'ha provat si el PHP s'executa dins de wp-content/uploads (resultat: %s)."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not locate the uploads folder."
+msgstr "No s'ha pogut localitzar la carpeta d'uploads."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The uploads folder is not writable by PHP. Add the rule manually via "
+"FTP/SFTP."
+msgstr ""
+"PHP no pot escriure a la carpeta d'uploads. Afegeix la regla manualment via "
+"FTP/SFTP."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Could not write wp-content/uploads/.htaccess. Check folder permissions."
+msgstr ""
+"No s'ha pogut escriure wp-content/uploads/.htaccess. Revisa els permisos de "
+"la carpeta."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Wrote PHP-execution protection into wp-content/uploads/.htaccess."
+msgstr ""
+"S'ha escrit la protecció d'execució de PHP a wp-content/uploads/.htaccess."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Protection added. Re-test to confirm your server (Apache/LiteSpeed) applies "
+"it — Nginx requires a manual server-block rule instead."
+msgstr ""
+"Protecció afegida. Torna a provar-ho per confirmar que el teu servidor "
+"(Apache/LiteSpeed) l'aplica; a Nginx cal una regla manual al bloc de "
+"servidor."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Administrator accounts with a shared creation date"
+msgstr "Comptes d'administrador amb data de creació compartida"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"No administrator shares its exact creation timestamp with another user."
+msgstr ""
+"Cap administrador comparteix la seva marca de temps de creació exacta amb un"
+" altre usuari."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"%d administrator account(s) share their exact creation timestamp with "
+"another user — a known trick to hide a rogue admin from \"sort by newest\". "
+"Review them below."
+msgstr ""
+"%d compte(s) d'administrador comparteixen la seva marca de temps de creació "
+"exacta amb un altre usuari, un truc conegut per amagar un administrador "
+"maliciós d'\"ordenar per més recents\". Revisa'ls a sota."
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Scan wp-content/uploads for files with an executable script extension (.php,"
+" .phtml, .phar…) — uploads should never contain code, and this is exactly "
+"where file-upload exploits drop their payload. The harmless, empty "
+"\"index.php\" stub that many plugins place in upload subfolders to block "
+"directory listing is recognized and skipped."
+msgstr ""
+"Escaneja wp-content/uploads a la recerca de fitxers amb extensió de script "
+"executable (.php, .phtml, .phar…) — les uploads mai haurien de contenir "
+"codi, i aquí és exactament on els exploits de pujada de fitxers deixen la "
+"seva càrrega. El fitxer buit i inofensiu «index.php» que moltes extensions "
+"col·loquen a les subcarpetes d'uploads per bloquejar el llistat de "
+"directoris es reconeix i s'omet."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid ""
+"Scan custom plugin/theme file contents for malware, or check any wp-content/"
+" folder beyond the official core checksum list and the uploads-folder script"
+" check above."
+msgstr ""
+"Escanejar el contingut de fitxers de plugins/temes personalitzats a la "
+"recerca de programari maliciós, ni revisar cap carpeta de wp-content/ més "
+"enllà de la llista oficial de checksums del nucli i la comprovació de "
+"scripts a uploads d'aquí sobre."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid "Suspicious files in wp-content/uploads"
+msgstr "Fitxers sospitosos a wp-content/uploads"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"These files inside wp-content/uploads have an executable script extension "
+"(.php, .phtml, .phar, .cgi…). Uploads should only ever contain media and "
+"data, never code — a script here is a strong sign of a compromise, often "
+"disguised with a double extension such as \"photo_400x400.jpg.php\". Review "
+"each one immediately: if you did not put it there yourself, delete it, then "
+"also check the Security tab's Application Passwords and Recent Administrator"
+" checks."
+msgstr ""
+"Aquests fitxers dins de wp-content/uploads tenen una extensió de script "
+"executable (.php, .phtml, .phar, .cgi…). Uploads només hauria de contenir "
+"mèdia i dades, mai codi: un script aquí és un senyal fort de compromís, "
+"sovint disfressat amb una doble extensió com \"photo_400x400.jpg.php\". "
+"Revisa'ls tots immediatament: si no els hi vas posar tu mateix, elimina'ls, "
+"i després revisa també les comprovacions d'Application Passwords i "
+"Administradors Recents de la pestanya de Seguretat."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+#, php-format
+msgid "%d suspicious file(s) in uploads"
+msgstr "%d fitxer(s) sospitós(os) a uploads"
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "Block User Enumeration"
+msgstr "Bloqueja l'enumeració d'usuaris"
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid ""
+"The /wp-json/wp/v2/users endpoint lists every username on the site to "
+"anyone, logged in or not — it is step one of many automated attacks (guess "
+"the admin username, then brute-force or target it). This blocks only that "
+"specific endpoint for logged-out requests; the rest of wp/v2 (posts, pages, "
+"media, the Block Editor) keeps working normally."
+msgstr ""
+"L'endpoint /wp-json/wp/v2/users llista tots els noms d'usuari del lloc a "
+"qualsevol persona, connectada o no; és el primer pas de molts atacs "
+"automatitzats (endevinar el nom d'usuari admin i després fer força bruta o "
+"atacar-lo directament). Això només bloqueja aquest endpoint específic per a "
+"les sol·licituds no autenticades; la resta de wp/v2 (entrades, pàgines, "
+"mèdia, l'editor de blocs) continua funcionant amb normalitat."
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "Block anonymous access to /wp/v2/users"
+msgstr "Bloqueja l'accés anònim a /wp/v2/users"
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Recommended for most sites. Logged-in users are never affected. Skip this "
+"only if a front-end feature on your site (e.g. a public author directory "
+"widget) reads this endpoint while logged out."
+msgstr ""
+"Recomanat per a la majoria de llocs. Els usuaris connectats mai es veuen "
+"afectats. Omet-ho només si alguna funció del front-end del teu lloc (p. ex. "
+"un widget de directori públic d'autors) llegeix aquest endpoint sense estar "
+"connectat."
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "User listing via the REST API is disabled on this site."
+msgstr ""
+"El llistat d'usuaris mitjançant l'API REST està desactivat en aquest lloc."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid ""
+"Read-only security check: compares WordPress core files (wp-admin/, wp-"
+"includes/, root PHP) against official MD5 checksums from WordPress.org, and "
+"separately scans wp-content/uploads for executable script files. It reports "
+"differences — it never installs, deletes, restores or downloads any file on "
+"your server."
+msgstr ""
+"Comprovació de seguretat de només lectura: compara els fitxers del nucli de "
+"WordPress (wp-admin/, wp-includes/, arrel) amb els checksums MD5 oficials de"
+" WordPress.org, i per separat escaneja wp-content/uploads a la recerca de "
+"fitxers de script executables. Informa de les diferències: mai instal·la, "
+"elimina, restaura ni descarrega cap fitxer al teu servidor."
+
+# 1: first date, 2: last date
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Daily data covers %1$s to %2$s."
+msgstr "Les dades diàries cobreixen del %1$s al %2$s."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Email a weekly summary (totals + top 5 posts and links) covering the last"
+msgstr ""
+"Envia un resum setmanal (totals + les 5 entrades i enllaços principals) amb "
+"els darrers"
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid ""
+"Imported from %1$s: %2$d posts/pages, %3$s views in total (%4$s with real "
+"daily dates, %5$s as previous history counted only in \"All time\")."
+msgstr ""
+"Importat de %1$s: %2$d entrades/pàgines, %3$s visites en total (%4$s amb "
+"dates diàries reals, %5$s com a historial anterior comptat només a «Des de "
+"sempre»)."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Imported on %s."
+msgstr "Importat el %s."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid ""
+"Nothing imported: no view data from %s was found (or it does not match any "
+"post/page on this site)."
+msgstr ""
+"No s'ha importat res: no s'han trobat dades de visites de %s (o no "
+"coincideixen amb cap entrada/pàgina d'aquest web)."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Only posts and pages are counted. Media files (images, PDFs, downloads) and "
+"other attachments are not tracked."
+msgstr ""
+"Només es compten entrades i pàgines. Els fitxers multimèdia (imatges, PDF, "
+"descàrregues) i altres adjunts no es registren."
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Recover totals already collected by another plugin. Totals are added to the "
+"counter (Post Views Counter and WP Statistics keep their real daily dates; "
+"totals without a known date count for \"All time\" only, not for the "
+"7/30/90-day filters). Running an import again adds on top, so only import a "
+"given source once."
+msgstr ""
+"Recupera els totals ja recollits per un altre plugin. Els totals se sumen al"
+" comptador (Post Views Counter i WP Statistics conserven les dates diàries "
+"reals; els totals sense data coneguda només compten a «Des de sempre», no "
+"als filtres de 7/30/90 dies). Si tornes a importar, se sumen de nou, així "
+"que importa cada font una sola vegada."
+
+# 1: number of days, 2: total outbound link clicks
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Total outbound link clicks (last %1$d days): %2$s"
+msgstr "Total de clics en enllaços sortints (darrers %1$d dies): %2$s"
+
+# 1: number of days, 2: total views
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Total post/page views (last %1$d days): %2$s"
+msgstr "Total de visites a entrades/pàgines (darrers %1$d dies): %2$s"
+
+# %s: site name
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "View Counter summary for %s"
+msgstr "Resum del Comptador de visites per a %s"
+
+# %s: site name
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "[%s] View Counter summary"
+msgstr "[%s] Resum del Comptador de visites"
+
+# translators: %d: number of days
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d dia"
+msgstr[1] "%d dies"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Looking good"
+msgstr "Tot en ordre"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Some things to review"
+msgstr "Hi ha coses a revisar"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid ""
+"A quick read of this site: an overall score built from the Health Report and"
+" Security Review checks, what needs attention, and shortcuts to the most "
+"used tools. Nothing here changes your site."
+msgstr ""
+"Una lectura ràpida d'aquest lloc: una puntuació global basada en les "
+"comprovacions de l'Informe de salut i la Revisió de seguretat, què cal "
+"revisar i dreceres a les eines més usades. Res d'aquí modifica el teu lloc."
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Site score: %d out of 100"
+msgstr "Puntuació del lloc: %d de 100"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "%1$d checks passed, %2$d need review."
+msgstr "%1$d comprovacions correctes, %2$d per revisar."
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Scan again"
+msgstr "Torna a analitzar"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Nothing to review right now."
+msgstr "Res per revisar ara mateix."
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Open tool"
+msgstr "Obre l'eina"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "PHP"
+msgstr "PHP"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Memory limit %s"
+msgstr "Límit de memòria %s"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Active plugins"
+msgstr "Connectors actius"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Pending updates"
+msgstr "Actualitzacions pendents"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Core %1$d · Plugins %2$d · Themes %3$d"
+msgstr "Nucli %1$d · Connectors %2$d · Temes %3$d"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Shortcuts"
+msgstr "Dreceres"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Recent activity"
+msgstr "Activitat recent"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "No activity recorded yet."
+msgstr "Encara no hi ha activitat registrada."
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "View full history"
+msgstr "Veure l'historial complet"
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Overview"
+msgstr "Resum"
+
+#: includes/modules/class-tsosk-mod-security.php
+#, php-format
+msgid ""
+"XML-RPC is enabled and these active plugins rely on it: %s. Keep it on while"
+" you use them; otherwise disable it."
+msgstr ""
+"XML-RPC està activat i aquests connectors actius el necessiten: %s. Deixa'l "
+"activat mentre els usis; si no, desactiva'l."
+
+#: includes/modules/class-tsosk-mod-security.php
+msgid ""
+"Some plugins and apps need XML-RPC to work: Jetpack, the WordPress mobile "
+"apps, and remote-management tools such as MainWP, ManageWP or InfiniteWP. "
+"Check before disabling."
+msgstr ""
+"Alguns connectors i aplicacions necessiten XML-RPC per funcionar: Jetpack, "
+"les aplicacions mòbils de WordPress i eines de gestió remota com MainWP, "
+"ManageWP o InfiniteWP. Comprova-ho abans de desactivar-lo."
+
+#: includes/modules/class-tsosk-mod-security.php
+#, php-format
+msgid "Needed by: %s. Do not disable it while these plugins are active."
+msgstr ""
+"Necessari per: %s. No el desactivis mentre aquests connectors estiguin "
+"actius."
+
+#: includes/modules/class-tsosk-mod-health.php
+msgid "PHP errors shown to visitors"
+msgstr "Errors PHP visibles per als visitants"
+
+#: includes/modules/class-tsosk-mod-health.php
+msgid ""
+"Controlled by the WP_DEBUG_DISPLAY constant. When on, PHP errors and "
+"warnings can appear directly on pages for any visitor, which can leak file "
+"paths and other details."
+msgstr ""
+"Controlat per la constant WP_DEBUG_DISPLAY. Si està activada, els errors i "
+"avisos de PHP poden aparèixer directament a les pàgines per a qualsevol "
+"visitant, cosa que pot filtrar rutes de fitxers i altres detalls."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Undo"
+msgstr "Desfer"
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Reverted"
+msgstr "Revertit"
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Revert this option back to its previous value?"
+msgstr "Vols revertir aquesta opció al seu valor anterior?"
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This change was already reverted."
+msgstr "Aquest canvi ja s'havia revertit."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This change cannot be safely undone (the stored value was too long or "
+"contained structured data)."
+msgstr ""
+"Aquest canvi no es pot desfer amb seguretat (el valor desat era massa llarg "
+"o contenia dades estructurades)."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This change cannot be undone."
+msgstr "Aquest canvi no es pot desfer."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This option is protected and cannot be changed here."
+msgstr "Aquesta opció està protegida i no es pot canviar des d'aquí."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This option no longer exists."
+msgstr "Aquesta opció ja no existeix."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This option has changed since then; undo it manually to avoid losing the "
+"newer value."
+msgstr ""
+"Aquesta opció ha canviat des de llavors; desfés-la manualment per no perdre "
+"el valor més recent."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"An option with this name already exists again; restore it manually to avoid "
+"overwriting it."
+msgstr ""
+"Ja torna a existir una opció amb aquest nom; restaura-la manualment per no "
+"sobreescriure-la."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This option has changed since then; edit it manually to avoid losing the "
+"newer value."
+msgstr ""
+"Aquesta opció ha canviat des de llavors; edita-la manualment per no perdre "
+"el valor més recent."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Change reverted."
+msgstr "Canvi revertit."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+#, php-format
+msgid "Reverted change to option: %s"
+msgstr "Canvi revertit a l'opció: %s"
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This history entry can no longer be found."
+msgstr "Ja no es pot trobar aquesta entrada de l'historial."
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Invalid history entry."
+msgstr "Entrada de l'historial no vàlida."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "No backup available to restore."
+msgstr "No hi ha cap còpia de seguretat disponible per restaurar."
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid ""
+"Backup restored: \"%1$s\" → \"%2$s\" undone (%3$d cell(s) restored, %4$d "
+"skipped)."
+msgstr ""
+"Còpia de seguretat restaurada: \"%1$s\" → \"%2$s\" desfet (%3$d cel·la(es) "
+"restaurada(es), %4$d omeses)."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid ""
+"Restore complete: %1$d cell(s) restored, %2$d skipped (changed since), "
+"across %3$d row(s)."
+msgstr ""
+"Restauració completa: %1$d cel·la(es) restaurada(es), %2$d omeses (canviades"
+" des de llavors), en %3$d fila(es)."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "No backup available."
+msgstr "No hi ha cap còpia de seguretat disponible."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Automatic backup"
+msgstr "Còpia de seguretat automàtica"
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid ""
+"No automatic backup yet. One is created automatically the next time you run "
+"Execute replace, so that operation can be undone."
+msgstr ""
+"Encara no hi ha cap còpia de seguretat automàtica. Se'n crearà una "
+"automàticament la propera vegada que executis Executar reemplaçament, perquè"
+" aquesta operació es pugui desfer."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid "Backup from %1$s: \"%2$s\" → \"%3$s\"."
+msgstr "Còpia de seguretat de %1$s: \"%2$s\" → \"%3$s\"."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid "%1$d cell(s) captured across %2$d row(s)."
+msgstr "%1$d cel·la(es) capturada(es) en %2$d fila(es)."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid ""
+"Only the first %d changed cells were captured for this backup (the operation"
+" affected more). Restore will still work for those — for very large "
+"operations, also keep a full manual database backup."
+msgstr ""
+"Només s'han capturat les primeres %d cel·les modificades per a aquesta còpia"
+" de seguretat (l'operació n'ha afectat més). La restauració seguirà "
+"funcionant per a aquestes — per a operacions molt grans, mantén també una "
+"còpia de seguretat completa manual de la base de dades."
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Restore backup"
+msgstr "Restaurar còpia de seguretat"
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Download backup (JSON)"
+msgstr "Descarregar còpia de seguretat (JSON)"
+
+#: includes/class-tsosk-activity-log.php
+msgid "Restore"
+msgstr "Restaurar"
+
+#: includes/class-tsosk-admin.php
+msgid ""
+"Restore the automatic backup? This overwrites the current values with the "
+"ones saved before your last replace operation. Rows changed by something "
+"else since then are safely skipped."
+msgstr ""
+"Vols restaurar la còpia de seguretat automàtica? Això sobreescriurà els "
+"valors actuals amb els que es van desar abans de la darrera operació de "
+"reemplaçament. Les files modificades per una altra cosa des de llavors "
+"s'ometen de manera segura."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection needs at least 2 other normally active plugins to narrow down."
+msgstr ""
+"La bisecció necessita almenys 2 altres plugins normalment actius per acotar."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection started. Reloading applies the first test set — go check the site,"
+" then come back and answer."
+msgstr ""
+"Bisecció iniciada. En recarregar s'aplica el primer conjunt de prova — ves a"
+" comprovar el lloc i després torna i respon."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "No bisection is currently in progress."
+msgstr "Actualment no hi ha cap bisecció en curs."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"No plugin could be isolated — the problem did not reproduce with either "
+"half. It may not be caused by a single plugin, or may be intermittent. Try "
+"the manual selector below instead."
+msgstr ""
+"No s'ha pogut aïllar cap plugin — el problema no s'ha reproduït amb cap de "
+"les dues meitats. Potser no el causa un sol plugin, o és intermitent. Prova "
+"el selector manual de sota."
+
+#: includes/class-tsosk-activity-log.php
+msgid "Plugin bisection finished without isolating a plugin."
+msgstr "La bisecció de plugins ha acabat sense aïllar cap plugin."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection finished: no single plugin could be isolated. Reloading returns to"
+" the manual selector."
+msgstr ""
+"Bisecció acabada: no s'ha pogut aïllar cap plugin. En recarregar es torna al"
+" selector manual."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Likely culprit: %s. Sandbox now runs with only that plugin active (plus this"
+" toolkit) so you can confirm."
+msgstr ""
+"Sospitós probable: %s. El sandbox ara només executa aquest plugin (a més "
+"d'aquesta eina) perquè ho puguis confirmar."
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection isolated the likely conflicting plugin: %s."
+msgstr ""
+"La bisecció de plugins ha aïllat el plugin probablement conflictiu: %s."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Likely culprit: %s. Reloading applies a sandbox with only that plugin "
+"active."
+msgstr ""
+"Sospitós probable: %s. En recarregar s'aplica un sandbox amb només aquest "
+"plugin actiu."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Next test applied. Reload, check the site again, then answer."
+msgstr ""
+"S'ha aplicat la següent prova. Recarrega, comprova el lloc de nou i després "
+"respon."
+
+#: includes/class-tsosk-activity-log.php
+msgid "Plugin bisection cancelled; sandbox exited."
+msgstr "Bisecció de plugins cancel·lada; s'ha sortit del sandbox."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Bisection cancelled and sandbox exited."
+msgstr "Bisecció cancel·lada i s'ha sortit del sandbox."
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection started (%1$d candidates, testing %2$d)."
+msgstr "Bisecció de plugins iniciada (%1$d candidats, provant-ne %2$d)."
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection step %1$d (%2$d candidates left, testing %3$d)."
+msgstr ""
+"Pas %1$d de la bisecció de plugins (queden %2$d candidats, provant-ne %3$d)."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Plugin bisection in progress"
+msgstr "Bisecció de plugins en curs"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Step %1$d — testing %2$d of %3$d remaining candidate plugin(s) (plus this "
+"toolkit). Everything else is switched off for your account only."
+msgstr ""
+"Pas %1$d — provant %2$d de %3$d plugin(s) candidat(s) restant(s) (a més "
+"d'aquesta eina). Tota la resta està apagada només per al teu compte."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Plugins active in this test"
+msgstr "Plugins actius en aquesta prova"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Go check the site now. Does the problem still happen with only those plugins"
+" active?"
+msgstr ""
+"Ves a comprovar el lloc ara. Segueix passant el problema amb només aquests "
+"plugins actius?"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Yes, it still happens"
+msgstr "Sí, encara passa"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "No, it's gone"
+msgstr "No, ha desaparegut"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Cancel bisection"
+msgstr "Cancel·la la bisecció"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Automatic bisection"
+msgstr "Bisecció automàtica"
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Binary-search your normally active plugins to narrow down which one is "
+"causing a problem: each round halves the candidates based on whether the "
+"issue is still there, so you reach the likely culprit in a handful of steps "
+"instead of testing one by one. Assumes a single conflicting plugin."
+msgstr ""
+"Fes una cerca binaria entre els teus plugins normalment actius per acotar "
+"quin causa un problema: cada ronda redueix a la meitat els candidats segons "
+"si el problema encara hi és, de manera que arribes al sospitós probable en "
+"pocs passos en lloc de provar-los un per un. Assumeix un sol plugin "
+"conflictiu."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Needs at least 2 other normally active plugins to bisect."
+msgstr "Cal almenys 2 altres plugins normalment actius per fer la bisecció."
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Start bisection"
+msgstr "Inicia la bisecció"
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection start"
+msgstr "Inici de bisecció"
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection step"
+msgstr "Pas de bisecció"
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection result"
+msgstr "Resultat de bisecció"
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection cancelled"
+msgstr "Bisecció cancel·lada"
+
+#: includes/class-tsosk-admin.php
+msgid ""
+"This starts a binary-search test: only half of your normally active plugins "
+"will load for your account, and you will be asked a yes/no question after "
+"each reload. Continue?"
+msgstr ""
+"Això inicia una prova de cerca binaria: només es carregarà la meitat dels "
+"teus plugins normalment actius per al teu compte, i se't farà una pregunta "
+"de sí/no després de cada recarrega. Vols continuar?"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:596
+msgid "Unknown origin"
+msgstr "Origen desconegut"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:707
+msgid "Consider an index on %1$s (table %2$s)."
+msgstr "Considereu un índex a %1$s (taula %2$s)."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2478
+msgid "Possible N+1: this pattern repeated %1$d times (%2$s ms total) — %3$s"
+msgstr ""
+"Possible N+1: aquest patró s'ha repetit %1$d vegades (%2$s ms en total) — "
+"%3$s"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1917
+msgid "Origin detection"
+msgstr "Detecció d'origen"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1922
+msgid ""
+"Record which plugin, theme, or WordPress core each slow query came from"
+msgstr ""
+"Registra de quin plugin, tema o nucli de WordPress prové cada consulta lenta"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1925
+msgid ""
+"Adds a small backtrace per query while this is on — leave it off unless you "
+"are actively investigating."
+msgstr ""
+"Afegeix una petita traça per consulta mentre això estigui actiu — deixeu-ho "
+"desactivat tret que estigueu investigant activament."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1995
+msgid "Index hint"
+msgstr "Suggeriment d'índex"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2052
+msgid "Slow Queries by Origin"
+msgstr "Consultes lentes per origen"
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2054
+msgid ""
+"Which plugin, theme, or WordPress core the slow queries came from (only "
+"counted while origin detection is on)."
+msgstr ""
+"De quin plugin, tema o nucli de WordPress provenen les consultes lentes "
+"(només es compta mentre la detecció d'origen estigui activa)."
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2059
+msgid "Origin"
+msgstr "Origen"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:257
+msgid "This hour"
+msgstr "Aquesta hora"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:261
+msgid "Last 24 hours"
+msgstr "Últimes 24 hores"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:265
+msgid "Avg. requests / hour"
+msgstr "Mitjana de peticions / hora"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:270
+msgid "Screen"
+msgstr "Pantalla"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:271
+msgid "Requests (24h)"
+msgstr "Peticions (24h)"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:286
+msgid "No Heartbeat requests measured yet in the last 24 hours."
+msgstr ""
+"Encara no s'ha mesurat cap petició de Heartbeat en les últimes 24 hores."
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:253
+msgid "Measured Traffic"
+msgstr "Trànsit mesurat"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:255
+msgid ""
+"Real Heartbeat requests hitting this site, counted as they happen (rolling "
+"24-hour window). Use this before changing the mode or interval above, "
+"instead of guessing."
+msgstr ""
+"Peticions reals de Heartbeat que arriben a aquest lloc, comptades a mesura "
+"que passen (finestra mòbil de 24 hores). Fes servir aquestes dades abans de "
+"canviar el mode o l'interval de dalt, en lloc d'endevinar."
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:144
+msgid "Front end (public site)"
+msgstr "Part pública (lloc web)"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:145
+msgid "Post/page editor"
+msgstr "Editor d'entrades/pàgines"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:146
+msgid "Dashboard"
+msgstr "Escriptori"
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:147
+msgid "Site editor"
+msgstr "Editor del lloc"
+
+msgid "The quarantine folder is unavailable."
+msgstr "La carpeta de quarantena no està disponible."
+
+msgid "Could not move the folder to quarantine."
+msgstr "No s'ha pogut moure la carpeta a la quarantena."
+
+msgid "Unknown quarantine entry."
+msgstr "Entrada de quarantena desconeguda."
+
+msgid "The quarantined folder no longer exists."
+msgstr "La carpeta en quarantena ja no existeix."
+
+msgid "The original location is unknown."
+msgstr "Es desconeix la ubicació original."
+
+msgid "A folder already exists at the original location — restore manually."
+msgstr ""
+"Ja existeix una carpeta a la ubicació original — restaureu-la manualment."
+
+msgid "Could not restore the folder."
+msgstr "No s'ha pogut restaurar la carpeta."
+
+msgid "Folder moved to quarantine. It can be restored for 30 days."
+msgstr "Carpeta moguda a la quarantena. Es pot restaurar durant 30 dies."
+
+msgid "Removable folder moved to quarantine: %s."
+msgstr "Carpeta eliminable moguda a la quarantena: %s."
+
+msgid "Folder restored to its original location."
+msgstr "Carpeta restaurada a la seva ubicació original."
+
+msgid "Quarantined folder restored: %s."
+msgstr "Carpeta en quarantena restaurada: %s."
+
+msgid "Folder permanently deleted."
+msgstr "Carpeta eliminada permanentment."
+
+msgid "Quarantined folder permanently deleted: %s."
+msgstr "Carpeta en quarantena eliminada permanentment: %s."
+
+msgid "Quarantine (recoverable trash)"
+msgstr "Quarantena (paperera recuperable)"
+
+msgid ""
+"Folders removed via Folder hygiene above are moved here first and kept for "
+"30 days before automatic permanent deletion, so you can restore them if "
+"something breaks."
+msgstr ""
+"Les carpetes eliminades des de la Higiene de carpetes anterior es mouen "
+"primer aquí i es conserven durant 30 dies abans de l'eliminació permanent "
+"automàtica, perquè pugueu restaurar-les si alguna cosa falla."
+
+msgid "Space that would be freed by moving all Safe folders to quarantine: %s"
+msgstr ""
+"Espai que s'alliberaria en moure totes les carpetes Segures a la quarantena:"
+" %s"
+
+msgid "Move to quarantine"
+msgstr "Mou a la quarantena"
+
+msgid "Quarantine is empty."
+msgstr "La quarantena està buida."
+
+msgid "Folder"
+msgstr "Carpeta"
+
+msgid "Quarantined"
+msgstr "En quarantena"
+
+msgid "Auto-deletes on"
+msgstr "S'elimina automàticament el"
+
+msgid "Delete now"
+msgstr "Elimina ara"
+
+msgid "Space by file type"
+msgstr "Espai per tipus de fitxer"
+
+msgid "Proportional disk usage by file type"
+msgstr "Ús proporcional del disc per tipus de fitxer"
+
+msgid ""
+"Each block is proportional to the disk space that file type uses. Hover a "
+"block for the exact size."
+msgstr ""
+"Cada bloc és proporcional a l'espai de disc que utilitza aquest tipus de "
+"fitxer. Passeu el cursor per un bloc per veure la mida exacta."
+
+msgid "Other file types"
+msgstr "Altres tipus de fitxer"
+
+msgid ""
+"Move this folder to quarantine? It will be kept for 30 days and can be "
+"restored."
+msgstr ""
+"Voleu moure aquesta carpeta a la quarantena? Es conservarà durant 30 dies i "
+"es podrà restaurar."
+
+msgid "Restore this folder to its original location?"
+msgstr "Voleu restaurar aquesta carpeta a la seva ubicació original?"
+
+msgid "Permanently delete this folder now? This cannot be undone."
+msgstr ""
+"Voleu eliminar aquesta carpeta permanentment ara? Aquesta acció no es pot "
+"desfer."
+
+msgid "Learning mode"
+msgstr "Mode d'aprenentatge"
+
+msgid ""
+"Nothing is actually blocked. Every submission that would have been rejected "
+"is logged instead, so you can check for false positives before turning on "
+"real enforcement."
+msgstr ""
+"No es bloqueja res realment. Cada tramesa que s'hauria rebutjat es registra "
+"en el seu lloc, perquè pugueu comprovar si hi ha falsos positius abans "
+"d'activar l'aplicació real."
+
+msgid "Would block (24 h)"
+msgstr "Bloquejaria (24 h)"
+
+msgid "Would block (log)"
+msgstr "Bloquejaria (registre)"
+
+msgid "Learning log (would-be blocks)"
+msgstr "Registre d'aprenentatge (bloquejos hipotètics)"
+
+msgid ""
+"Submissions that were let through while Learning mode is on, but that the "
+"current rules would otherwise have blocked. Review this list before "
+"disabling Learning mode."
+msgstr ""
+"Trameses que s'han deixat passar mentre el mode d'aprenentatge estava actiu,"
+" però que les regles actuals haurien bloquejat. Reviseu aquesta llista abans"
+" de desactivar el mode d'aprenentatge."
+
+msgid "Learning log cleared."
+msgstr "S'ha netejat el registre d'aprenentatge."
+
+msgid "Comment anti-spam learning log cleared."
+msgstr "S'ha netejat el registre d'aprenentatge de l'anti-spam de comentaris."
+
+msgid "Recently blocked requests"
+msgstr "Peticions bloquejades recentment"
+
+msgid ""
+"Requests actually rejected by the settings above (disabled access, blocked "
+"user listing, or a disabled namespace). Nothing is recorded here while "
+"everything is left at its default, unrestricted settings."
+msgstr ""
+"Peticions rebutjades realment per la configuració anterior (accés "
+"desactivat, llistat d'usuaris bloquejat o un espai de noms desactivat). No "
+"es registra res aquí mentre tot es deixa amb la configuració predeterminada,"
+" sense restriccions."
+
+msgid "Route"
+msgstr "Ruta"
+
+msgid "REST API blocked-request log cleared."
+msgstr "S'ha netejat el registre de peticions bloquejades de la REST API."
+
+msgid ""
+"Not set in wp-config.php: this is the value WordPress assigns by default."
+msgstr ""
+"No definida a wp-config.php: és el valor que WordPress assigna per defecte."
+
+msgid "No effect: WP_DEBUG is off"
+msgstr "Sense efecte: WP_DEBUG desactivat"
+
+msgid "Disabled (WP_DEBUG is off)"
+msgstr "Desactivat (WP_DEBUG desactivat)"
+
+msgid "No effect"
+msgstr "Sense efecte"
+
+msgid ""
+"WordPress writes it to wp-content/ when WP_DEBUG and WP_DEBUG_LOG are both "
+"true (for example with Developer mode above). You can preview and download "
+"it, but WordPress.org rules do not allow this plugin to empty or shrink it."
+msgstr ""
+"WordPress l'escriu a wp-content/ quan WP_DEBUG i WP_DEBUG_LOG són tots dos "
+"true (per exemple amb el mode desenvolupador de dalt). El pots "
+"previsualitzar i descarregar, però les normes de WordPress.org no permeten "
+"que aquest plugin el buidi ni el redueixi."
+
+msgid ""
+"Written by PHP or your hosting when PHP error logging is on. You can preview"
+" and download it."
+msgstr ""
+"L'escriu PHP o el teu allotjament quan el registre d'errors de PHP està "
+"activat. El pots previsualitzar i descarregar."
+
+msgid "Want to empty or shrink the log from here?"
+msgstr "Vols poder buidar o reduir el log des d'aquí?"
+
+#. translators: %s: the "That's all, stop editing!" comment line in wp-
+#. config.php
+#, php-format
+msgid "Open wp-config.php and paste this line just above %s:"
+msgstr "Obre wp-config.php i enganxa aquesta línia just a sobre de %s:"
+
+msgid "Copy"
+msgstr "Copia"
+
+msgid ""
+"If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it "
+"with this one instead of adding a second one."
+msgstr ""
+"Si wp-config.php ja té una línia <code>WP_DEBUG_LOG</code>, substitueix-la "
+"per aquesta en lloc d'afegir-ne una segona."
+
+msgid ""
+"<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log "
+"inside this plugin's uploads folder, which can be emptied and shrunk from "
+"this screen."
+msgstr ""
+"<code>WP_DEBUG</code> també ha de ser true. Llavors els errors es guardaran "
+"en un log dins la carpeta d'uploads d'aquest plugin, que es pot buidar i "
+"reduir des d'aquesta pantalla."
+
+msgid "Copied to clipboard."
+msgstr "Copiat al porta-retalls."
+
+msgid "Edit the debug constants in wp-config.php manually"
+msgstr "Edita manualment a wp-config.php els codis de depuració"
+
+msgid ""
+"Recommended for staging: enable debugging, log to wp-content/debug.log, hide"
+" errors from visitors, and record DB queries for the Slow Query Monitor."
+msgstr ""
+"Recomanat per a staging: activa la depuració, desa els errors a wp-"
+"content/debug.log, amaga els errors als visitants i registra les consultes a"
+" la BD per al Monitor de consultes lentes."
+
+msgid ""
+"Loads non-minified WordPress core assets. Combine with the Developer mode "
+"(staging) lines when debugging front-end scripts."
+msgstr ""
+"Carrega els recursos del nucli de WordPress sense minificar. Combina-ho amb "
+"les línies de Mode desenvolupador (staging) quan depuris scripts del "
+"frontal."
+
+msgid ""
+"Recommended on staging: one click turns on SAVEQUERIES so the Slow Query "
+"Monitor can record database queries. It is saved as JSON in your uploads "
+"folder (no wp-config.php edit); reload the page to apply. WordPress sets "
+"WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY and SCRIPT_DEBUG before any plugin "
+"loads, so those can only be changed in wp-config.php — see the guide below "
+"the constants table."
+msgstr ""
+"Recomanat en staging: amb un clic s’activa SAVEQUERIES perquè el Monitor de "
+"consultes lentes pugui registrar les consultes a la base de dades. Es desa "
+"com a JSON a la carpeta uploads (sense editar wp-config.php); recarrega la "
+"pàgina per aplicar-ho. WordPress defineix WP_DEBUG, WP_DEBUG_LOG, "
+"WP_DEBUG_DISPLAY i SCRIPT_DEBUG abans de carregar cap plugin, així que només"
+" es poden canviar a wp-config.php — consulta la guia de sota la taula de "
+"constants."
+
+msgid ""
+"Values active on this page load. Developer mode above only controls "
+"SAVEQUERIES; the other constants come from wp-config.php or are WordPress "
+"defaults, and their source is shown below."
+msgstr ""
+"Valors actius en aquesta càrrega de pàgina. El mode desenvolupador de dalt "
+"només controla SAVEQUERIES; la resta de constants venen de wp-config.php o "
+"són valors per defecte de WordPress, i n’indiquem l’origen a sota."
+
+msgid ""
+"The Developer mode button above can only turn on SAVEQUERIES. WordPress sets"
+" the other debug constants before plugins load, so they can only be changed "
+"here, in wp-config.php."
+msgstr ""
+"El botó Mode desenvolupador de dalt només pot activar SAVEQUERIES. WordPress"
+" defineix la resta de constants de depuració abans de carregar els plugins, "
+"així que només es poden canviar aquí, a wp-config.php."
+
+msgid ""
+"WordPress writes it to wp-content/ when WP_DEBUG and WP_DEBUG_LOG are both "
+"true in wp-config.php. You can preview and download it, but WordPress.org "
+"rules do not allow this plugin to empty or shrink it."
+msgstr ""
+"WordPress l’escriu a wp-content/ quan WP_DEBUG i WP_DEBUG_LOG són tots dos "
+"true a wp-config.php. El pots previsualitzar i descarregar, però les normes "
+"de WordPress.org no permeten que aquest plugin el buidi ni el redueixi."
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:403
+msgid ""
+"OPcache keeps PHP files compiled in memory so the server does not have to "
+"re-read and re-compile them on every request — good for speed, but it means "
+"a file changed on disk (e.g. uploaded via FTP) can keep running its old, "
+"cached version for a while. Most hosts detect the change automatically "
+"within seconds; some do not, especially with an unusually large number of "
+"PHP files. \"Reset OPcache\" clears the compiled cache for the PHP process "
+"handling this page only — other PHP worker processes on the server may still"
+" be running old code until they naturally recycle (usually within minutes) "
+"or the host restarts PHP. If a change you just uploaded does not seem to "
+"take effect, this button is worth trying, but a full PHP/PHP-FPM restart "
+"from your hosting panel is the only way to force it immediately everywhere."
+msgstr ""
+"OPcache manté els fitxers PHP compilats en memòria perquè el servidor no els"
+" hagi de tornar a llegir i compilar a cada petició — bo per a la velocitat, "
+"però vol dir que un fitxer canviat al disc (p. ex. pujat per FTP) pot "
+"continuar executant la seva versió antiga en caché durant una estona. La "
+"majoria d'allotjaments detecten el canvi automàticament en segons; alguns no"
+" ho fan, especialment amb un nombre inusualment gran de fitxers PHP. "
+"\"Reinicia l’OPcache\" neteja la caché compilada només del procés PHP que "
+"atén aquesta pàgina — altres processos (\"workers\") PHP del servidor poden "
+"seguir executant codi antic fins que es reciclin sols (normalment en pocs "
+"minuts) o l'allotjament reiniciï PHP. Si un canvi que acabes de pujar no "
+"sembla fer efecte, val la pena provar aquest botó, però un reinici complet "
+"de PHP/PHP-FPM des del panell del teu allotjament és l'única manera de "
+"forçar-ho immediatament arreu."
+
+#: includes/modules/class-tsosk-mod-redirects.php:488
+msgid "Already covered"
+msgstr "Ja coberta"
+
+#: includes/modules/class-tsosk-mod-redirects.php:1240
+msgid "Possible bot"
+msgstr "Possible bot"
+
+#: includes/modules/class-tsosk-mod-redirects.php:318
+msgid "No URLs selected."
+msgstr "No s'ha seleccionat cap URL."
+
+#. translators: %s: source path
+#: includes/modules/class-tsosk-mod-redirects.php:182
+msgid ""
+"A redirect for %s already exists. Edit that rule instead of creating a "
+"duplicate."
+msgstr ""
+"Ja existeix una redirecció per a %s. Edita aquesta regla en comptes de "
+"crear-ne un duplicat."
+
+#: includes/modules/class-tsosk-mod-redirects.php:488
+msgid ""
+"An active redirect rule already matches this exact path. If it still shows "
+"up here, the rule is not actually catching this request — check its match "
+"type and target."
+msgstr ""
+"Ja hi ha una regla de redirecció activa que coincideix exactament amb "
+"aquesta ruta. Si continua apareixent aquí, la regla no està interceptant "
+"realment aquesta petició: revisa el seu tipus de coincidència i la seva "
+"destinació."
+
+#. translators: 1: source path of the shadowed rule, 2: source pattern of the
+#. rule above it that already matches it
+#: includes/modules/class-tsosk-mod-redirects.php:797
+msgid ""
+"Redirect for %1$s is already covered by the %2$s rule above it and will "
+"never run."
+msgstr ""
+"La redirecció de %1$s ja queda coberta per la regla %2$s que té per sobre i "
+"no s'arribarà a executar mai."
+
+#: includes/modules/class-tsosk-mod-redirects.php:1240
+msgid ""
+"Same IP requested several different missing URLs within a short window."
+msgstr ""
+"La mateixa IP ha sol·licitat diverses URL inexistents diferents en poc "
+"temps."
+
+#: includes/modules/class-tsosk-mod-redirects.php:451
+msgid ""
+"Visits counts how many times each missing URL was requested. Referrer keeps "
+"the last known previous page (HTTP Referer). If none was ever sent, Direct /"
+" unknown is shown, plus the last User-Agent when available (direct visits, "
+"bots and bookmarks often send none). IP shows the last known requester "
+"address; Possible bot is flagged when the same IP requested several "
+"different missing URLs within about a minute (User-Agent strings are easily "
+"faked, so this is based on request behavior instead)."
+msgstr ""
+"Visites compta quantes vegades s'ha sol·licitat cada URL inexistent. "
+"Referència guarda l'última pàgina anterior coneguda (HTTP Referer). Si mai "
+"no se'n va enviar cap, es mostra Directe / desconegut, juntament amb l'últim"
+" User-Agent disponible (les visites directes, els bots i les adreces "
+"d'interès sovint no n'envien cap). IP mostra l'última adreça coneguda del "
+"sol·licitant; es marca Possible bot quan la mateixa IP ha sol·licitat "
+"diverses URL inexistents diferents en aproximadament un minut (les cadenes "
+"de User-Agent es falsifiquen amb facilitat, així que això es basa en el "
+"comportament de les peticions)."
+
+#. translators: %d: number of removed 404 log entries
+#: includes/modules/class-tsosk-mod-redirects.php:334
+msgid "%d 404 log entry removed."
+msgid_plural "%d 404 log entries removed."
+msgstr[0] "%d entrada del registre 404 eliminada."
+msgstr[1] "%d entrades del registre 404 eliminades."
+
+#. translators: %d: number of removed 404 log entries
+#: includes/modules/class-tsosk-mod-redirects.php:342
+msgid "%d entry removed."
+msgid_plural "%d entries removed."
+msgstr[0] "%d entrada eliminada."
+msgstr[1] "%d entrades eliminades."

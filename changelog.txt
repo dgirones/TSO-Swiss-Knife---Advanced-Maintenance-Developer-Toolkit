@@ -1,0 +1,84 @@
+Tu Soporte Online — Swiss Knife: Advanced Maintenance & Developer Toolkit
+Changelog (older versions). The three latest versions are in readme.txt.
+
+= 1.1.0 =
+* Slow Query Monitor: redesigned admin-bar item (severity dot, count pills, sectioned submenu, compact SQL with full text on hover); the slow-query log, live counters and duplicate detection now all ignore queries fired by the admin bar itself; fixed singular/plural wording.
+* Security: capped the number of outbound-link URLs the public View Counter beacon will track, and fixed Staging Mode mail log CSV formula injection.
+* Fixed: Database Search & Replace infinite loop, regex preview mismatch and serialized-object corruption.
+* Fixed: Redirects wildcard loop detection, Content Audit shortcode removal stripping block backslashes, Admin Menu rules hitting the wrong plugin page, robots.txt "Allow: /" override, Image Sizes Audit core-size validation, and leftover legacy .php flag files.
+* Fixed: several View Counter issues (table upgrade on admin_init, import sources, CSV in Excel, timezone date range, mobile overflow); added a 7/15/30-day summary email period and persistent import results; removed the unused "Keep daily detail for" setting.
+* Removed an unused module file (File Footprint).
+* Docs: FAQ explains that debug.log lives inside the web root (wp-content/debug.log), what it can leak, and how to block it or move it outside the web root via wp-config.php.
+
+= 1.0.9 =
+* New: View Counter module. Counts post, page and outbound-link-click visits with a small front-end beacon, so counting keeps working even behind a full-page cache (LiteSpeed, etc.). No cookies — de-duplication uses a short-lived, server-side fingerprint only. Adds a "TSO Views" column (with icon) to the Posts/Pages list, sortable by total views, and an importer for totals previously collected by Post Views Counter, WP-PostViews or WP Statistics (WP Statistics' real per-day history is preserved; the other two only expose a lifetime total, so that one lands dated today). Includes a Top Content report (most viewed posts/pages and most clicked outbound links, filterable by period), a CSV export of the daily detail, and an optional weekly summary email.
+* Security: real-time email alert when a new Administrator account is created or a user is promoted to Administrator, including the IP address and how the request reached WordPress (normal admin form vs. a silent REST/AJAX/XML-RPC request) — the same pattern seen in real-world "hidden rogue admin" incidents caused by a compromised browser extension.
+* Security: Application Passwords audit — lists every active Application Password site-wide with its owner, name, creation and last-used dates and last IP, with per-item and "Revoke All" buttons, since these survive deletion of the user account that created them.
+* Security: added "Application Passwords" and "Recent administrator accounts" checks to the Security Checks table, plus an informational notice explaining that a compromised browser extension can act with a logged-in admin's session without touching the server, which is outside any WordPress plugin's control.
+* Security: new "PHP Execution in Uploads" test and one-click protection — probes whether the server executes PHP files placed inside wp-content/uploads (the single control that most often stops an arbitrary-file-upload exploit from becoming a full takeover) and can write the blocking rule into wp-content/uploads/.htaccess on Apache/LiteSpeed.
+* Security: detects administrator accounts that share their exact creation timestamp with another user — a known technique some malware uses to hide a rogue admin from "sort users by newest".
+* File Integrity: now also scans wp-content/uploads for files with an executable script extension (.php, .phtml, .phar…), since uploads should only ever contain media/data and this is exactly where file-upload exploits drop their payload.
+* REST API: added an option to block anonymous access to /wp-json/wp/v2/users specifically (user enumeration), without disabling the rest of the wp/v2 namespace that the Block Editor needs.
+* Fixed slow queries flagged by Query Monitor: Login Protect and Admin Menu settings options are now autoloaded (both are read on every request/admin screen), instead of triggering a dedicated DB query each time. Existing installs are migrated automatically.
+* Security fix: Login Protect's custom login URL could be revealed to a logged-out visitor on the first request to any wp-admin page, since WordPress core's own redirect used the same filtered login URL. Direct /wp-admin/ access is now blocked for logged-out visitors before that redirect can happen.
+* Fixed: the REST API namespace-blocking option could also block an unrelated namespace that happened to start with the same text (e.g. blocking "foo/v1" also blocked "foo/v10").
+* Security: the "user promoted to Administrator" alert now also fires when a role is added via WP_User::add_role(), not only via the classic role-change dropdown.
+
+= 1.0.8 =
+* Admin Menu: the menu manifest (previously an uncached direct DB query on every admin screen) is now cached via the standard WP object cache, compatible with any persistent object-cache backend (Redis, Memcached, LiteSpeed object cache).
+
+= 1.0.7 =
+* Debug: clearer developer-mode vs wp-config debug state; scroll-to-end on log toolbar; wp-content/debug.log policy copy and managed-log workaround.
+* Server Files: smarter robots.txt parser (line-specific full-site block vs path prefixes); scoped .htaccess deny detection.
+* Media Footprint: folder hygiene scan for legacy TSO uploads folders and .tmb caches, with safe delete allowlist.
+* Update Manager: install pending wordpress.org language packs button; removed auto_all updates preset.
+* Security: Login Protect 2FA rate limit; Meta Editor protected-key preview and serialized validation.
+* Health Report and config export hardening; refreshed CA/ES translations.
+
+= 1.0.6 =
+* New: Staging Mode (admin-bar label, noindex without touching blog_public, hold email, pause WP-Cron, database mail log + CSV).
+* New: URL & HTTPS Doctor (read-only diagnostics, loopback without following redirects, leftover http:// count with Search & Replace prefill).
+* New: Server & Runtime panel (PHP limits, drop-ins, MU-plugins, clock skew, optional OPcache reset).
+* Incomplete plugin uploads show an admin notice listing missing files.
+* Language switcher (CAT/ES/ENG) also applies to plugin AJAX and Health Report downloads.
+* Cron: core hooks are fully read-only (no Run / Edit / Delete); detection uses an explicit list only.
+* Transients: multisite site-transient purge uses sitemeta and requires super/network admin.
+* Meta Editor: key-only search without object ID; adding serialized values no longer double-serializes.
+* Login Protect: purge custom login rewrite before flush on deactivate, settings save, and snapshot import.
+* Export/Import: clearer exclusions; warn if Staging switches import enabled; Staging option stays autoloaded.
+* Uninstall: remove activity log settings, email diagnostics history, and staging mail log; force rewrite regeneration.
+* Health headers probe caches raw data / error codes (not mixed-language strings).
+
+= 1.0.5 =
+* Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.
+* Transients: purge expired/all also clears site transients.
+* Roles: confirm before applying a capability template.
+* Meta Editor and Slug Manager: ignore stale search AJAX responses.
+* Debug Mode readme matches the Developer mode preset (no per-constant toggles).
+* Regenerated CA/ES translations; removed leftover Recovery Mode strings.
+
+= 1.0.4 =
+* Prefill queue no longer cleared when loading the next 404 redirect form.
+* Meta and Options editors: avoid double-serializing values; meta delete clears object cache.
+* Redirects and Slug Manager: strip home subdirectory on source paths and loop detection.
+* Content Audit: shortcode removal uses a tag boundary so [foo] does not match [foobar].
+* Transients listing and purge: escape LIKE wildcards correctly.
+* Slow Query Monitor: ignore admin-bar stacks for duplicate detection (like Query Monitor); keep last-page duplicate SQL at the top of the tab.
+
+= 1.0.3 =
+* Safer cron reschedule, meta edits by row ID, and search-replace primary-key handling.
+* Redirects: subdirectory path matching, 404 alert counters, and prefill queue fixes.
+* Options Editor protections, Content Audit empty-title query, uninstall cleanup, Requires at least 6.1.
+
+= 1.0.2 =
+* Health: site URL details on separate lines; autoload total includes yes/on/auto; accurate overdue cron count; security headers probe cached 15 minutes.
+* Redirects: 404 log checkbox alignment; bulk prefill queue advances automatically after each save; 404 hit counts stay in sync under write throttling.
+* Site Snapshot: environment diff panel clears after import.
+* Content Audit: duplicate titles and shortcode inventory.
+* Cron Manager: missed scheduled posts panel.
+
+= 1.0.1 =
+* Fixed bugs in modules.
+
+= 1.0.0 =
+* Initial release.

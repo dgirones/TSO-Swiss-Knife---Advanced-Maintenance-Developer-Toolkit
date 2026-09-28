@@ -111,7 +111,7 @@ class TSOSK_Mod_Custom_404 {
 			return;
 		}
 
-		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		$request_uri = TSOSK_Support::get_request_uri_for_display();
 		if ( is_string( $request_uri ) && '' !== $request_uri ) {
 			self::$failed_url = home_url( $request_uri );
 			return;

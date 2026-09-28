@@ -521,8 +521,8 @@ class TSOSK_Mod_Meta_Editor {
 	 */
 	private function render_guide(): void {
 		?>
-		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is meta data?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<details class="tsosk-guide-card tsosk-guide-collapse">
+			<summary class="tsosk-guide-title"><?php esc_html_e( 'What is meta data?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
 			<p class="tsosk-guide-lead">
 				<?php esc_html_e( 'Meta is extra information stored in the database for each post or user — not visible in the normal editor. Plugins and themes use it for settings, layout data, SEO fields, featured images, and much more.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
@@ -586,7 +586,7 @@ class TSOSK_Mod_Meta_Editor {
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</details>
 		<?php
 	}
 

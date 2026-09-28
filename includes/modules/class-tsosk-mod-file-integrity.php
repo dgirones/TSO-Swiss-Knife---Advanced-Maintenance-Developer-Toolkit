@@ -121,7 +121,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$known = array();
-		foreach ( array( 'modified', 'missing', 'missing_optional', 'added' ) as $bucket ) {
+		foreach ( array( 'modified', 'missing', 'missing_optional', 'added', 'uploads_suspicious' ) as $bucket ) {
 			foreach ( $cached[ $bucket ] ?? array() as $row ) {
 				if ( ! empty( $row['file'] ) ) {
 					$known[] = (string) $row['file'];
@@ -443,22 +443,146 @@ class TSOSK_Mod_File_Integrity {
 			}
 		}
 
+		// ── Scan wp-content/uploads for executable script files ────────────
+		$uploads_suspicious = array_values(
+			array_filter(
+				$this->scan_uploads_for_php(),
+				static function ( $row ) use ( $ignored ) {
+					return ! in_array( $row['file'], $ignored, true );
+				}
+			)
+		);
+
 		$result = array(
-			'modified'          => $modified,
-			'missing'           => $missing,
-			'missing_optional'  => $missing_optional,
-			'added'             => $added,
-			'total'             => count( $checksums ),
-			'n_issues'          => count( $modified ) + count( $missing ),
-			'scanned_at'        => time(),
-			'wp_version'        => get_bloginfo( 'version' ),
-			'core_root'         => $core_root,
-			'from_cache'        => false,
+			'modified'           => $modified,
+			'missing'            => $missing,
+			'missing_optional'   => $missing_optional,
+			'added'              => $added,
+			'uploads_suspicious' => $uploads_suspicious,
+			'total'              => count( $checksums ),
+			'n_issues'           => count( $modified ) + count( $missing ) + count( $uploads_suspicious ),
+			'scanned_at'         => time(),
+			'wp_version'         => get_bloginfo( 'version' ),
+			'core_root'          => $core_root,
+			'from_cache'         => false,
 		);
 
 		$this->store_results( $result );
 
 		return $result;
+	}
+
+	/**
+	 * Scan wp-content/uploads recursively for executable script files.
+	 *
+	 * Uploads should only ever hold media/data, never executable code — this
+	 * is exactly where an arbitrary-file-upload exploit drops its payload
+	 * (often disguised with a double extension like "photo_400x400.jpg.php").
+	 *
+	 * @return array<int,array{file:string,size:int,mtime:int}>
+	 */
+	private function scan_uploads_for_php(): array {
+		$dirs = wp_upload_dir();
+		if ( ! is_array( $dirs ) || ! empty( $dirs['error'] ) ) {
+			return array();
+		}
+		$base = wp_normalize_path( trailingslashit( (string) $dirs['basedir'] ) );
+		if ( ! is_dir( $base ) ) {
+			return array();
+		}
+
+		// Label paths relative to ABSPATH when the uploads folder lives inside
+		// the WordPress install (the normal case: wp-content/uploads). Some
+		// sites move uploads outside the install (custom UPLOADS constant,
+		// some multisite setups) — fall back to the absolute path so the
+		// label never lies about where the file actually is.
+		$abspath_n = defined( 'ABSPATH' ) ? wp_normalize_path( ABSPATH ) : '';
+		if ( '' !== $abspath_n && 0 === strpos( $base, $abspath_n ) ) {
+			$label_root = trailingslashit( ltrim( substr( $base, strlen( $abspath_n ) ), '/' ) );
+		} else {
+			$label_root = trailingslashit( $base );
+		}
+
+		$found     = array();
+		$extension = '/\.(?:php[3-8]?|phtml|phar|pht|cgi|shtml)$/i';
+
+		try {
+			$iterator = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator( $base, RecursiveDirectoryIterator::SKIP_DOTS ),
+				RecursiveIteratorIterator::SELF_FIRST
+			);
+		} catch ( Exception $e ) {
+			return array();
+		}
+
+		foreach ( $iterator as $file_info ) {
+			try {
+				if ( ! $file_info->isFile() ) {
+					continue;
+				}
+			} catch ( RuntimeException $e ) {
+				continue; // Unreadable entry — skip.
+			}
+			// Safety cap: never report more than 500 matches.
+			if ( count( $found ) >= 500 ) {
+				break;
+			}
+			$name = $file_info->getFilename();
+			if ( ! preg_match( $extension, $name ) ) {
+				continue;
+			}
+			$abs = wp_normalize_path( (string) $file_info->getPathname() );
+
+			// Skip the ubiquitous, benign "Silence is golden." style stub that
+			// countless plugins (including our own) drop as index.php inside
+			// every upload subfolder purely to block directory listing. It is
+			// tiny and holds no executable statements — real attacks (per the
+			// case that prompted this scan) disguise payloads with deceptive
+			// names like "photo_400x400.jpg.php", never the literal filename
+			// "index.php", so excluding this exact, verified pattern does not
+			// reopen the attack surface this feature exists to catch.
+			if ( 'index.php' === $name && $this->is_benign_index_stub( $abs ) ) {
+				continue;
+			}
+
+			$rel = $label_root . ltrim( str_replace( $base, '', $abs ), '/' );
+
+			$found[] = array(
+				'file'  => $rel,
+				'size'  => (int) $file_info->getSize(),
+				'mtime' => (int) $file_info->getMTime(),
+			);
+		}
+
+		return $found;
+	}
+
+	/**
+	 * Whether a file named index.php is the standard, inert directory-listing
+	 * stub (e.g. "<?php // Silence is golden." or "<?php // Silence is golden.\n")
+	 * rather than real, executable code.
+	 *
+	 * Deliberately strict: only a tiny file containing nothing but a PHP open
+	 * tag and, optionally, a comment is treated as benign. Anything with real
+	 * statements — however short — is still reported.
+	 *
+	 * @param string $abs Absolute path to the file.
+	 * @return bool
+	 */
+	private function is_benign_index_stub( string $abs ): bool {
+		// Generous but bounded: legitimate stubs are a few dozen bytes.
+		// Anything larger is read and rejected rather than trusted blindly.
+		if ( ! is_readable( $abs ) || filesize( $abs ) > 512 ) {
+			return false;
+		}
+		$contents = file_get_contents( $abs );
+		if ( false === $contents ) {
+			return false;
+		}
+		$contents = trim( $contents );
+		// Must be nothing more than a PHP open tag optionally followed by a
+		// single-line "//" or "#" comment (no closing tag, no other code).
+		return (bool) preg_match( '/^<\?php\s*(?:(?:\/\/|#)[^\r\n]*)?$/s', $contents );
 	}
 
 	/**
@@ -498,15 +622,17 @@ class TSOSK_Mod_File_Integrity {
 			$missing = $core_missing;
 		}
 
-		$modified = is_array( $data['modified'] ?? null ) ? $data['modified'] : array();
-		$added    = is_array( $data['added'] ?? null ) ? $data['added'] : array();
+		$modified           = is_array( $data['modified'] ?? null ) ? $data['modified'] : array();
+		$added              = is_array( $data['added'] ?? null ) ? $data['added'] : array();
+		$uploads_suspicious = is_array( $data['uploads_suspicious'] ?? null ) ? $data['uploads_suspicious'] : array();
 
-		$data['missing']          = $missing;
-		$data['missing_optional'] = $missing_optional;
-		$data['modified']         = $modified;
-		$data['added']            = $added;
-		// Real issues: modified core + missing core only (not optional removals, not extra files).
-		$data['n_issues'] = count( $modified ) + count( $missing );
+		$data['missing']            = $missing;
+		$data['missing_optional']   = $missing_optional;
+		$data['modified']           = $modified;
+		$data['added']              = $added;
+		$data['uploads_suspicious'] = $uploads_suspicious;
+		// Real issues: modified/missing core files, plus any executable script found in uploads.
+		$data['n_issues'] = count( $modified ) + count( $missing ) + count( $uploads_suspicious );
 
 		return $data;
 	}
@@ -705,17 +831,18 @@ class TSOSK_Mod_File_Integrity {
 		}
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org. It reports differences — it never installs, deletes, restores or downloads any file on your server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Read-only security check: compares WordPress core files (wp-admin/, wp-includes/, root PHP) against official MD5 checksums from WordPress.org, and separately scans wp-content/uploads for executable script files. It reports differences — it never installs, deletes, restores or downloads any file on your server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What this tool does and does NOT do', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<details class="tsosk-guide-card tsosk-guide-collapse">
+			<summary class="tsosk-guide-title"><?php esc_html_e( 'What this tool does and does NOT do', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
 			<div class="tsosk-guide-grid">
 				<div class="tsosk-guide-block">
 					<h4><?php esc_html_e( 'It does', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 					<ul>
 						<li><?php esc_html_e( 'Fetch checksums from WordPress.org (cached 24 h).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Compare hashes and list modified or missing core files, plus files not in the official release.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Scan wp-content/uploads for files with an executable script extension (.php, .phtml, .phar…) — uploads should never contain code, and this is exactly where file-upload exploits drop their payload. The harmless, empty "index.php" stub that many plugins place in upload subfolders to block directory listing is recognized and skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Let you ignore known false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Remember the last scan when you leave and return to this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
@@ -725,12 +852,12 @@ class TSOSK_Mod_File_Integrity {
 					<ul>
 						<li><?php esc_html_e( 'Replace a dedicated malware scanner — use a security plugin for deep malware analysis.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Treat removed default themes/plugins from the release ZIP as problems — those are listed separately as informational.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-						<li><?php esc_html_e( 'Scan custom plugins, uploads or other wp-content/ folders beyond the official checksum list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+						<li><?php esc_html_e( 'Scan custom plugin/theme file contents for malware, or check any wp-content/ folder beyond the official core checksum list and the uploads-folder script check above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 						<li><?php esc_html_e( 'Automatically restore or download files — you must fix issues manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 					</ul>
 				</div>
 			</div>
-		</div>
+		</details>
 
 		<div class="tsosk-notice tsosk-notice-info">
 			<?php esc_html_e( 'Default WordPress themes and plugins listed in the release checksums (Hello Dolly, Akismet, Twenty Twenty-*, etc.) are often removed on purpose. Missing those files is not counted as an issue. Only modified core files and missing files under wp-admin/, wp-includes/, or the WordPress root count as real problems.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -842,6 +969,7 @@ class TSOSK_Mod_File_Integrity {
 		$missing           = $data['missing'];
 		$missing_optional  = $data['missing_optional'];
 		$added             = $data['added'];
+		$uploads_suspicious = $data['uploads_suspicious'];
 		$total             = (int) ( $data['total'] ?? 0 );
 		$scanned           = (int) ( $data['scanned_at'] ?? 0 );
 		$from_c            = ! empty( $data['from_cache'] );
@@ -943,6 +1071,17 @@ class TSOSK_Mod_File_Integrity {
 					?>
 				</span>
 				<?php endif; ?>
+				<?php if ( count( $uploads_suspicious ) > 0 ) : ?>
+				<span class="tsosk-badge" style="background:#fcebeb;color:#a32d2d;">
+					<?php
+					printf(
+						/* translators: %d: count of suspicious files found in uploads */
+						esc_html__( '%d suspicious file(s) in uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						count( $uploads_suspicious )
+					);
+					?>
+				</span>
+				<?php endif; ?>
 			</div>
 			<?php if ( 0 === $n_issues && $n_info > 0 ) : ?>
 			<p class="description" style="margin:10px 0 0;">
@@ -955,6 +1094,43 @@ class TSOSK_Mod_File_Integrity {
 		<div class="tsosk-notice tsosk-notice-info">
 			<strong>✓ <?php esc_html_e( 'All WordPress core files are intact.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 			<?php esc_html_e( 'No modified or missing core files were found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $uploads_suspicious ) ) : ?>
+		<div class="tsosk-card">
+			<h3 style="color:#a32d2d;">
+				✕ <?php esc_html_e( 'Suspicious files in wp-content/uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $uploads_suspicious ) ); ?>)
+			</h3>
+			<div class="tsosk-notice tsosk-notice-warn">
+				<?php esc_html_e( 'These files inside wp-content/uploads have an executable script extension (.php, .phtml, .phar, .cgi…). Uploads should only ever contain media and data, never code — a script here is a strong sign of a compromise, often disguised with a double extension such as "photo_400x400.jpg.php". Review each one immediately: if you did not put it there yourself, delete it, then also check the Security tab\'s Application Passwords and Recent Administrator checks.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+			<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table">
+					<thead><tr>
+						<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $uploads_suspicious as $f ) : ?>
+						<tr class="tsosk-row-warn">
+							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
+							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
+							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
+							<td>
+								<button class="button button-small tsosk-fi-ignore"
+								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
+								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		</div>
 		<?php endif; ?>
 

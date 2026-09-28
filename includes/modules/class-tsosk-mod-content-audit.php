@@ -75,7 +75,7 @@ class TSOSK_Mod_Content_Audit {
 		$result = wp_update_post(
 			array(
 				'ID'           => $post_id,
-				'post_content' => $new,
+				'post_content' => wp_slash( $new ), // wp_update_post() expects slashed data; unslashed content strips backslashes from block JSON attributes.
 			),
 			true
 		);

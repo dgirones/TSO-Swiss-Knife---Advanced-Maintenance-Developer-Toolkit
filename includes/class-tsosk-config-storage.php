@@ -509,6 +509,15 @@ class TSOSK_Config_Storage {
 			self::DEBUG_JSON,
 			self::SECURITY_JSON,
 			self::PROFILES_JSON,
+			// Legacy .php flag-file names: also allowed here (never passed in
+			// from user input, only from the class's own constants) so that
+			// legacy_path() can locate them and delete_legacy() can remove
+			// them from the current config directory during migration —
+			// without this, both silently no-op and the executable legacy
+			// file is left behind indefinitely under uploads/.
+			self::LEGACY_DEBUG,
+			self::LEGACY_SECURITY,
+			self::LEGACY_PROFILES,
 		);
 		if ( ! in_array( $filename, $allowed, true ) ) {
 			return '';

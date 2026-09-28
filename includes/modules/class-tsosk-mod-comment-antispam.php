@@ -24,6 +24,9 @@ class TSOSK_Mod_Comment_Antispam {
 	/** Block log option key. */
 	private const OPTION_LOG = 'tsosk_cas_log';
 
+	/** Learning-mode log option key (would-have-blocked entries). */
+	private const OPTION_LEARNING_LOG = 'tsosk_cas_learning_log';
+
 	/** Per-IP rate counter option key. */
 	private const OPTION_RATE = 'tsosk_cas_rate';
 
@@ -96,6 +99,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_cas_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_cas_clear_log', array( $this, 'ajax_clear_log' ) );
+		add_action( 'wp_ajax_tsosk_cas_clear_learning_log', array( $this, 'ajax_clear_learning_log' ) );
 	}
 
 	/**
@@ -169,6 +173,7 @@ class TSOSK_Mod_Comment_Antispam {
 	public static function get_defaults(): array {
 		return array(
 			'enabled'                   => false,
+			'learning_mode'             => false,
 			'protect_comments'          => true,
 			'protect_contact_forms'     => true,
 			'honeypot'                  => true,
@@ -603,6 +608,12 @@ class TSOSK_Mod_Comment_Antispam {
 			return false;
 		}
 
+		if ( ! empty( $this->settings['learning_mode'] ) ) {
+			$this->log_learning_block( $data, $check );
+			$this->record_successful_submission( $data );
+			return false;
+		}
+
 		if ( ! empty( $this->settings['log_blocks'] ) ) {
 			$this->log_block( $data, $check );
 		}
@@ -778,8 +789,8 @@ class TSOSK_Mod_Comment_Antispam {
 				? GFFormsModel::get_field_value( $field, $post_data )
 				: null;
 
+			$input_key = 'input_' . (string) $field->id;
 			if ( null === $raw_value ) {
-				$input_key = 'input_' . (string) $field->id;
 				if ( ! isset( $post_data[ $input_key ] ) ) {
 					continue;
 				}
@@ -910,6 +921,12 @@ class TSOSK_Mod_Comment_Antispam {
 		$commentdata['source'] = 'comment';
 		$check = $this->evaluate_submission( $commentdata );
 		if ( $check['allow'] ) {
+			$this->record_successful_submission( $commentdata );
+			return $commentdata;
+		}
+
+		if ( ! empty( $this->settings['learning_mode'] ) ) {
+			$this->log_learning_block( $commentdata, $check );
 			$this->record_successful_submission( $commentdata );
 			return $commentdata;
 		}
@@ -1677,6 +1694,46 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Record a submission that would have been blocked, while Learning mode lets it through.
+	 *
+	 * @param array<string, mixed> $data  Submission data.
+	 * @param array<string, mixed> $check Check result.
+	 */
+	private function log_learning_block( array $data, array $check ): void {
+		$log = get_option( self::OPTION_LEARNING_LOG, array() );
+		if ( ! is_array( $log ) ) {
+			$log = array();
+		}
+
+		array_unshift(
+			$log,
+			array(
+				'time'    => time(),
+				'ip'      => $this->get_client_ip(),
+				'source'  => sanitize_key( (string) ( $data['source'] ?? 'comment' ) ),
+				'author'  => sanitize_text_field( (string) ( $data['comment_author'] ?? '' ) ),
+				'email'   => sanitize_email( (string) ( $data['comment_author_email'] ?? '' ) ),
+				'reason'  => sanitize_key( (string) ( $check['reason'] ?? 'unknown' ) ),
+				'excerpt' => $this->substr_safe( sanitize_text_field( (string) ( $data['comment_content'] ?? '' ) ), 120 ),
+			)
+		);
+
+		if ( count( $log ) > self::MAX_LOG ) {
+			$log = array_slice( $log, 0, self::MAX_LOG );
+		}
+
+		update_option( self::OPTION_LEARNING_LOG, $log, false );
+	}
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_learning_log(): array {
+		$log = get_option( self::OPTION_LEARNING_LOG, array() );
+		return is_array( $log ) ? $log : array();
+	}
+
+	/**
 	 * Create signed timestamp token for time trap.
 	 */
 	private function create_time_token(): string {
@@ -1824,6 +1881,32 @@ class TSOSK_Mod_Comment_Antispam {
 		);
 	}
 
+	/**
+	 * Stats for submissions that Learning mode would have blocked.
+	 *
+	 * @return array{total:int,last_24h:int,by_reason:array<string,int>}
+	 */
+	public function get_learning_stats(): array {
+		$log     = $this->get_learning_log();
+		$cutoff  = time() - DAY_IN_SECONDS;
+		$last24  = 0;
+		$reasons = array();
+
+		foreach ( $log as $entry ) {
+			$reason = (string) ( $entry['reason'] ?? 'unknown' );
+			$reasons[ $reason ] = ( $reasons[ $reason ] ?? 0 ) + 1;
+			if ( ! empty( $entry['time'] ) && (int) $entry['time'] >= $cutoff ) {
+				++$last24;
+			}
+		}
+
+		return array(
+			'total'     => count( $log ),
+			'last_24h'  => $last24,
+			'by_reason' => $reasons,
+		);
+	}
+
 	/** AJAX: save settings. */
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
@@ -1843,6 +1926,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		$new = array(
 			'enabled'                   => ! empty( $_POST['enabled'] ),
+			'learning_mode'             => ! empty( $_POST['learning_mode'] ),
 			'protect_comments'          => ! empty( $_POST['protect_comments'] ),
 			'protect_contact_forms'     => ! empty( $_POST['protect_contact_forms'] ),
 			'honeypot'                  => ! empty( $_POST['honeypot'] ),
@@ -1938,13 +2022,27 @@ class TSOSK_Mod_Comment_Antispam {
 		wp_send_json_success( __( 'Block log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/** AJAX: clear learning-mode log. */
+	public function ajax_clear_learning_log(): void {
+		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		update_option( self::OPTION_LEARNING_LOG, array(), false );
+		TSOSK_Activity_Log::log( 'comment-antispam', 'clear-learning', __( 'Comment anti-spam learning log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( __( 'Learning log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
 	/**
 	 * Render admin tab.
 	 */
 	public function render(): void {
-		$s       = self::get_settings();
-		$stats   = $this->get_stats();
-		$log     = $this->get_log();
+		$s              = self::get_settings();
+		$stats          = $this->get_stats();
+		$log            = $this->get_log();
+		$learning_stats = $this->get_learning_stats();
+		$learning_log   = $this->get_learning_log();
 		$nonce   = wp_create_nonce( 'tsosk_cas_nonce' );
 		$plugins = $this->get_detected_form_plugins();
 		$akismet_active = class_exists( 'Akismet' );
@@ -1987,6 +2085,14 @@ class TSOSK_Mod_Comment_Antispam {
 				</span>
 			</label>
 
+			<label class="tsosk-toggle-row">
+				<input type="checkbox" id="tsosk-cas-learning-mode" <?php checked( ! empty( $s['learning_mode'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'Learning mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Nothing is actually blocked. Every submission that would have been rejected is logged instead, so you can check for false positives before turning on real enforcement.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</span>
+			</label>
+
 			<div class="tsosk-notice tsosk-notice-info" style="margin-top:12px;">
 				<strong><?php esc_html_e( 'Supported form plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
 				<?php
@@ -2014,6 +2120,16 @@ class TSOSK_Mod_Comment_Antispam {
 					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $stats['total'] ); ?></span>
 				</div>
+				<?php if ( ! empty( $s['learning_mode'] ) || $learning_stats['total'] > 0 ) : ?>
+				<div class="tsosk-kv-item">
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Would block (24 h)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<span class="tsosk-kv-value"><?php echo esc_html( (string) $learning_stats['last_24h'] ); ?></span>
+				</div>
+				<div class="tsosk-kv-item">
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Would block (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<span class="tsosk-kv-value"><?php echo esc_html( (string) $learning_stats['total'] ); ?></span>
+				</div>
+				<?php endif; ?>
 			</div>
 		</div>
 
@@ -2303,6 +2419,44 @@ class TSOSK_Mod_Comment_Antispam {
 			</div>
 			<p style="margin-top:12px;">
 				<button type="button" class="button" id="tsosk-cas-clear-log" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( 'Clear log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+			</p>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $learning_log ) ) : ?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Learning log (would-be blocks)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Submissions that were let through while Learning mode is on, but that the current rules would otherwise have blocked. Review this list before disabling Learning mode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<div class="tsosk-table-wrap">
+				<table class="widefat striped tsosk-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Author', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Excerpt', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( array_slice( $learning_log, 0, 25 ) as $entry ) : ?>
+						<tr>
+							<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) ( $entry['time'] ?? 0 ) ) ); ?></td>
+							<td><code><?php echo esc_html( (string) ( $entry['source'] ?? 'comment' ) ); ?></code></td>
+							<td><code><?php echo esc_html( (string) ( $entry['ip'] ?? '' ) ); ?></code></td>
+							<td><?php echo esc_html( (string) ( $entry['author'] ?? '' ) ); ?></td>
+							<td><code><?php echo esc_html( (string) ( $entry['reason'] ?? '' ) ); ?></code></td>
+							<td><?php echo esc_html( (string) ( $entry['excerpt'] ?? '' ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<p style="margin-top:12px;">
+				<button type="button" class="button" id="tsosk-cas-clear-learning-log" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 			</p>

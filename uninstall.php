@@ -55,6 +55,15 @@ $tsosk_options = array(
 	'tsosk_health_suppress',
 	'tsosk_staging_settings',
 	'tsosk_staging_mail_log',
+	'tsosk_view_counter_settings',
+	'tsosk_view_counter_db_version',
+	'tsosk_security_alerts',
+	'tsosk_security_uploads_php_test',
+	'tsosk_cas_learning_log',
+	'tsosk_media_quarantine',
+	'tsosk_rest_blocked_log',
+	'tsosk_sr_last_backup',
+	'tsosk_view_counter_last_import',
 );
 
 foreach ( $tsosk_options as $tsosk_option ) {
@@ -163,6 +172,15 @@ foreach ( array_unique( $tsosk_upload_targets ) as $tsosk_upload_dir ) {
 
 // Force rewrite regeneration on the next request (plugin code is not loaded during uninstall).
 delete_option( 'rewrite_rules' );
+
+// ── View Counter custom tables ───────────────────────────────────────────────
+
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_views" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
+
+wp_clear_scheduled_hook( 'tsosk_vc_weekly_email' );
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 

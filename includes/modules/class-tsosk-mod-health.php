@@ -50,7 +50,7 @@ class TSOSK_Mod_Health {
 
 		$settings = array(
 			'enabled'             => ! empty( $_POST['enabled'] ),
-			'email'               => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : get_option( 'admin_email' ),
+			'email'               => isset( $_POST['email'] ) && is_string( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : get_option( 'admin_email' ),
 			'not_found_threshold' => isset( $_POST['not_found_threshold'] ) ? max( 1, absint( wp_unslash( $_POST['not_found_threshold'] ) ) ) : 25,
 		);
 
@@ -162,7 +162,12 @@ class TSOSK_Mod_Health {
 			$cls    = 'status-' . sanitize_html_class( $status );
 			?>
 			<tr>
-				<td><?php echo esc_html( $check['label'] ?? '' ); ?></td>
+				<td>
+					<?php echo esc_html( $check['label'] ?? '' ); ?>
+					<?php if ( ! empty( $check['desc'] ) ) : ?>
+						<br><small><?php echo esc_html( $check['desc'] ); ?></small>
+					<?php endif; ?>
+				</td>
 				<td class="<?php echo esc_attr( $cls ); ?>"><?php echo esc_html( strtoupper( $status ) ); ?></td>
 				<td><?php echo esc_html( $check['details'] ?? '' ); ?></td>
 			</tr>
@@ -215,7 +220,6 @@ class TSOSK_Mod_Health {
 	public function render(): void {
 		$nonce = wp_create_nonce( 'tsosk_health_nonce' );
 		$settings = $this->get_settings();
-		$suppress = $this->get_suppress_settings();
 		$checks              = $this->get_checks();
 		$top_autoload        = $this->get_top_autoload_options();
 		$download_base = add_query_arg( 'action', 'tsosk_health_download_report', admin_url( 'admin-post.php' ) );
@@ -251,7 +255,12 @@ class TSOSK_Mod_Health {
 					<tbody>
 						<?php foreach ( $checks as $check ) : ?>
 							<tr>
-								<td><?php echo esc_html( $check['label'] ); ?></td>
+								<td>
+									<?php echo esc_html( $check['label'] ); ?>
+									<?php if ( ! empty( $check['desc'] ) ) : ?>
+										<span class="tsosk-check-desc"><?php echo esc_html( $check['desc'] ); ?></span>
+									<?php endif; ?>
+								</td>
 								<td>
 									<span class="tsosk-badge <?php echo esc_attr( $this->badge_class( $check['status'] ) ); ?>">
 										<?php echo esc_html( strtoupper( $check['status'] ) ); ?>
@@ -265,7 +274,7 @@ class TSOSK_Mod_Health {
 			</div>
 		</div>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-health-autoload">
 			<h3><?php esc_html_e( 'Top autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'Largest wp_options rows loaded on every request (autoload = yes). Review heavy options in Options Editor if total autoload size is high.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -327,7 +336,17 @@ class TSOSK_Mod_Health {
 			<span class="tsosk-ajax-msg" id="tsosk-health-msg"></span>
 		</div>
 
-		<div class="tsosk-card">
+		<?php
+	}
+
+	/**
+	 * Render the "Hide WordPress Site Health notices" card (shown on the Overview tab).
+	 */
+	public function render_suppress_card(): void {
+		$nonce    = wp_create_nonce( 'tsosk_health_nonce' );
+		$suppress = $this->get_suppress_settings();
+		?>
+		<div class="tsosk-card" id="tsosk-health-suppress">
 			<h3><?php esc_html_e( 'Hide WordPress Site Health notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'On staging or private test sites, WordPress may show heavy warnings on Tools › Site Health about search-engine visibility or debug.log being public. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -367,11 +386,39 @@ class TSOSK_Mod_Health {
 	}
 
 	/**
-	 * Build health checks.
+	 * Health checks for the Overview dashboard (skips the remote header probe), with a target tab per check.
 	 *
 	 * @return array
 	 */
-	private function get_checks(): array {
+	public function get_dashboard_checks(): array {
+		// Each entry: check label => [ tab, anchor id in that tab (optional) ].
+		$targets = array(
+			__( 'Site URL consistency', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => array( 'url-doctor', 'tsosk-url-doctor-addresses' ),
+			__( 'PHP errors shown to visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'debug', 'tsosk-debug-constants' ),
+			__( 'Object cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => array( 'runtime-stack', 'tsosk-runtime-object-cache' ),
+			__( 'Overdue cron events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )     => array( 'cron', 'tsosk-cron-health' ),
+			__( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => array( 'debug', 'tsosk-debug-logs' ),
+			__( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => array( 'redirects', 'tsosk-404-monitor' ),
+			__( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )      => array( 'health', 'tsosk-health-autoload' ),
+		);
+		$checks = $this->get_checks( false );
+		foreach ( $checks as $i => $check ) {
+			$label = (string) ( $check['label'] ?? '' );
+			if ( isset( $targets[ $label ] ) ) {
+				$checks[ $i ]['tab']    = $targets[ $label ][0];
+				$checks[ $i ]['anchor'] = $targets[ $label ][1];
+			}
+		}
+		return $checks;
+	}
+
+	/**
+	 * Build health checks.
+	 *
+	 * @param bool $with_headers Include the security-headers probe (home URL HEAD request).
+	 * @return array
+	 */
+	private function get_checks( bool $with_headers = true ): array {
 		$checks = array();
 		$checks[] = array(
 			'label'   => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -384,10 +431,21 @@ class TSOSK_Mod_Health {
 			'details' => PHP_VERSION,
 		);
 		$checks[] = $this->site_urls_check();
+		// Core only applies WP_DEBUG_DISPLAY when WP_DEBUG is true (wp_debug_mode()).
+		$wp_debug_on           = defined( 'WP_DEBUG' ) && WP_DEBUG;
+		$debug_display_on      = $wp_debug_on && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
+		if ( $debug_display_on ) {
+			$debug_display_details = __( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} elseif ( ! $wp_debug_on ) {
+			$debug_display_details = __( 'Disabled (WP_DEBUG is off)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$debug_display_details = __( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
 		$checks[] = array(
-			'label'   => __( 'WP_DEBUG_DISPLAY', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ? 'warn' : 'ok',
-			'details' => defined( 'WP_DEBUG_DISPLAY' ) ? ( WP_DEBUG_DISPLAY ? __( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) : __( 'Not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'label'   => __( 'PHP errors shown to visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'desc'    => __( 'Controlled by the WP_DEBUG_DISPLAY constant. When on, PHP errors and warnings can appear directly on pages for any visitor, which can leak file paths and other details.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $debug_display_on ? 'warn' : 'ok',
+			'details' => $debug_display_details,
 		);
 		$checks[] = array(
 			'label'   => __( 'Object cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -398,7 +456,9 @@ class TSOSK_Mod_Health {
 		$checks[] = $this->debug_log_check();
 		$checks[] = $this->not_found_check();
 		$checks[] = $this->autoload_check();
-		$checks[] = $this->security_headers_check();
+		if ( $with_headers ) {
+			$checks[] = $this->security_headers_check();
+		}
 
 		return $checks;
 	}

@@ -100,6 +100,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		$disabled = array();
 		if ( isset( $_POST['disabled'] ) && is_array( $_POST['disabled'] ) ) {
 			foreach ( wp_unslash( $_POST['disabled'] ) as $name ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				if ( ! is_scalar( $name ) ) {
+					continue;
+				}
 				$name = sanitize_key( (string) $name );
 				if ( '' !== $name ) {
 					$disabled[] = $name;
@@ -107,7 +110,13 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			}
 		}
 
-		$disabled = array_values( array_unique( $disabled ) );
+		// The UI disables the checkbox for these via the "disabled" HTML
+		// attribute only — that's a client-side convenience, not a security
+		// boundary. Re-validate server-side so a crafted request can't disable
+		// generation of the thumbnail sizes WordPress core and most themes
+		// depend on being present.
+		$core_sizes = array( 'thumbnail', 'medium', 'medium_large', 'large' );
+		$disabled   = array_values( array_diff( array_unique( $disabled ), $core_sizes ) );
 		update_option( self::OPTION_DISABLED_SIZES, $disabled, false );
 
 		TSOSK_Activity_Log::log(

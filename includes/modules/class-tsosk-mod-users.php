@@ -442,7 +442,7 @@ class TSOSK_Mod_Users {
 			<?php esc_html_e( 'Inspect sessions, login history, inactive accounts and manage user security actions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-users-summary">
 			<h3><?php esc_html_e( 'User Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
 				<tr><th><?php esc_html_e( 'Total Users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) $total_users ); ?></code></td></tr>

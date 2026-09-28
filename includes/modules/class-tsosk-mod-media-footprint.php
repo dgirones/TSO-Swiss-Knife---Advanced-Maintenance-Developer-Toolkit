@@ -31,6 +31,8 @@ class TSOSK_Mod_Media_Footprint {
 		add_action( 'wp_ajax_tsosk_media_footprint_scan', array( $this, 'ajax_scan' ) );
 		add_action( 'wp_ajax_tsosk_media_hygiene_scan', array( $this, 'ajax_hygiene_scan' ) );
 		add_action( 'wp_ajax_tsosk_media_hygiene_delete', array( $this, 'ajax_hygiene_delete' ) );
+		add_action( 'wp_ajax_tsosk_media_quarantine_restore', array( $this, 'ajax_quarantine_restore' ) );
+		add_action( 'wp_ajax_tsosk_media_quarantine_purge', array( $this, 'ajax_quarantine_purge' ) );
 	}
 
 	/**
@@ -82,7 +84,7 @@ class TSOSK_Mod_Media_Footprint {
 	}
 
 	/**
-	 * AJAX: delete one allowlisted hygiene folder.
+	 * AJAX: move one allowlisted hygiene folder into quarantine (recoverable for 30 days).
 	 */
 	public function ajax_hygiene_delete(): void {
 		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
@@ -108,17 +110,17 @@ class TSOSK_Mod_Media_Footprint {
 			}
 		}
 
-		$result = TSOSK_Uploads_Scanner::delete_hygiene_folder( $folder_id, $scan );
+		$result = TSOSK_Uploads_Scanner::quarantine_hygiene_folder( $folder_id, $scan );
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( $result->get_error_message() );
 		}
 
 		TSOSK_Activity_Log::log(
 			'media-footprint',
-			'delete',
+			'quarantine',
 			sprintf(
 				/* translators: %s: folder path */
-				__( 'Removable folder deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				__( 'Removable folder moved to quarantine: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$relative
 			),
 			array( 'folder_id' => $folder_id )
@@ -131,8 +133,91 @@ class TSOSK_Mod_Media_Footprint {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Folder deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'html'    => is_wp_error( $scan ) ? '' : $this->render_hygiene_html( $scan ),
+				'message'         => __( 'Folder moved to quarantine. It can be restored for 30 days.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'            => is_wp_error( $scan ) ? '' : $this->render_hygiene_html( $scan ),
+				'quarantine_html' => $this->render_quarantine_html(),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: restore a quarantined folder to its original location.
+	 */
+	public function ajax_quarantine_restore(): void {
+		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$entry_id = isset( $_POST['entry_id'] ) ? sanitize_key( wp_unslash( $_POST['entry_id'] ) ) : '';
+		if ( '' === $entry_id ) {
+			wp_send_json_error( __( 'Invalid entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entries = TSOSK_Uploads_Scanner::get_quarantine_entries();
+		$label   = (string) ( $entries[ $entry_id ]['label'] ?? '' );
+
+		$result = TSOSK_Uploads_Scanner::restore_quarantine_entry( $entry_id );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		TSOSK_Activity_Log::log(
+			'media-footprint',
+			'quarantine-restore',
+			sprintf(
+				/* translators: %s: folder path */
+				__( 'Quarantined folder restored: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$label
+			),
+			array( 'entry_id' => $entry_id )
+		);
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Folder restored to its original location.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'    => $this->render_quarantine_html(),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: permanently delete one quarantined folder now, before its 30-day window ends.
+	 */
+	public function ajax_quarantine_purge(): void {
+		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$entry_id = isset( $_POST['entry_id'] ) ? sanitize_key( wp_unslash( $_POST['entry_id'] ) ) : '';
+		if ( '' === $entry_id ) {
+			wp_send_json_error( __( 'Invalid entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entries = TSOSK_Uploads_Scanner::get_quarantine_entries();
+		$label   = (string) ( $entries[ $entry_id ]['label'] ?? '' );
+
+		$result = TSOSK_Uploads_Scanner::purge_quarantine_entry( $entry_id );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		TSOSK_Activity_Log::log(
+			'media-footprint',
+			'quarantine-purge',
+			sprintf(
+				/* translators: %s: folder path */
+				__( 'Quarantined folder permanently deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$label
+			),
+			array( 'entry_id' => $entry_id )
+		);
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Folder permanently deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'    => $this->render_quarantine_html(),
 			)
 		);
 	}
@@ -141,6 +226,8 @@ class TSOSK_Mod_Media_Footprint {
 	 * Render module UI.
 	 */
 	public function render(): void {
+		TSOSK_Uploads_Scanner::purge_expired_quarantine();
+
 		$nonce   = wp_create_nonce( 'tsosk_media_footprint_nonce' );
 		$stats   = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_FOOTPRINT );
 		$hygiene = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE );
@@ -208,6 +295,16 @@ class TSOSK_Mod_Media_Footprint {
 				<?php
 			}
 			?>
+		</div>
+
+		<hr style="margin:28px 0;">
+
+		<h2><?php esc_html_e( 'Quarantine (recoverable trash)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
+		<p class="description">
+			<?php esc_html_e( 'Folders removed via Folder hygiene above are moved here first and kept for 30 days before automatic permanent deletion, so you can restore them if something breaks.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</p>
+		<div id="tsosk-media-quarantine-results">
+			<?php echo $this->render_quarantine_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
 		</div>
 		<?php
 	}
@@ -304,6 +401,11 @@ class TSOSK_Mod_Media_Footprint {
 
 		<?php if ( ! empty( $stats['by_extension'] ) && is_array( $stats['by_extension'] ) ) : ?>
 		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Space by file type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<?php echo $this->render_treemap_html( $stats['by_extension'], $total ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
+		</div>
+
+		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Usage by file type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
@@ -365,6 +467,71 @@ class TSOSK_Mod_Media_Footprint {
 	}
 
 	/**
+	 * Pure CSS proportional-width "treemap" of disk usage by file extension.
+	 *
+	 * @param array<string, array{files: int, bytes: int}> $by_extension Extension => stats.
+	 * @param int                                           $total        Total bytes (for percentages).
+	 * @return string
+	 */
+	private function render_treemap_html( array $by_extension, int $total ): string {
+		if ( $total <= 0 ) {
+			return '';
+		}
+
+		$palette = array( '#2271b1', '#72aee6', '#00a32a', '#dba617', '#d63638', '#8c8f94', '#a7aaad', '#3582c4' );
+
+		uasort(
+			$by_extension,
+			static function ( array $a, array $b ): int {
+				return (int) ( $b['bytes'] ?? 0 ) <=> (int) ( $a['bytes'] ?? 0 );
+			}
+		);
+		$top   = array_slice( $by_extension, 0, 10, true );
+		$shown = 0;
+		foreach ( $top as $row ) {
+			$shown += (int) ( $row['bytes'] ?? 0 );
+		}
+		$other = max( 0, $total - $shown );
+
+		ob_start();
+		?>
+		<div class="tsosk-treemap" role="img" aria-label="<?php esc_attr_e( 'Proportional disk usage by file type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			<?php
+			$tsosk_tm_index = 0;
+			foreach ( $top as $tsosk_tm_ext => $tsosk_tm_row ) :
+				$tsosk_tm_bytes = (int) ( $tsosk_tm_row['bytes'] ?? 0 );
+				if ( $tsosk_tm_bytes <= 0 ) {
+					continue;
+				}
+				$tsosk_tm_pct   = round( ( $tsosk_tm_bytes / $total ) * 100, 1 );
+				$tsosk_tm_color = $palette[ $tsosk_tm_index % count( $palette ) ];
+				++$tsosk_tm_index;
+				?>
+				<div class="tsosk-treemap-block"
+				     style="width:<?php echo esc_attr( (string) $tsosk_tm_pct ); ?>%;background:<?php echo esc_attr( $tsosk_tm_color ); ?>;"
+				     title="<?php echo esc_attr( '.' . $tsosk_tm_ext . ' — ' . size_format( $tsosk_tm_bytes, 2 ) . ' (' . $tsosk_tm_pct . '%)' ); ?>">
+					<?php if ( $tsosk_tm_pct >= 6 ) : ?>
+					<span class="tsosk-treemap-label">.<?php echo esc_html( (string) $tsosk_tm_ext ); ?> <?php echo esc_html( $tsosk_tm_pct . '%' ); ?></span>
+					<?php endif; ?>
+				</div>
+			<?php endforeach; ?>
+			<?php if ( $other > 0 ) : ?>
+				<?php $tsosk_tm_other_pct = round( ( $other / $total ) * 100, 1 ); ?>
+				<div class="tsosk-treemap-block tsosk-treemap-other"
+				     style="width:<?php echo esc_attr( (string) $tsosk_tm_other_pct ); ?>%;"
+				     title="<?php echo esc_attr( __( 'Other file types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' — ' . size_format( $other, 2 ) . ' (' . $tsosk_tm_other_pct . '%)' ); ?>">
+					<?php if ( $tsosk_tm_other_pct >= 6 ) : ?>
+					<span class="tsosk-treemap-label"><?php esc_html_e( 'Other', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <?php echo esc_html( $tsosk_tm_other_pct . '%' ); ?></span>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<p class="description"><?php esc_html_e( 'Each block is proportional to the disk space that file type uses. Hover a block for the exact size.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
 	 * @param array<string, mixed> $scan Hygiene scan results.
 	 * @return string
 	 */
@@ -384,6 +551,26 @@ class TSOSK_Mod_Media_Footprint {
 					/* translators: %s: localized datetime */
 					esc_html__( 'Last scan: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					esc_html( wp_date( 'Y-m-d H:i', $scanned_at ) )
+				);
+				?>
+			</p>
+			<?php endif; ?>
+
+			<?php
+			$tsosk_hygiene_deletable_total = 0;
+			foreach ( $items as $tsosk_hygiene_item ) {
+				if ( ! empty( $tsosk_hygiene_item['deletable'] ) ) {
+					$tsosk_hygiene_deletable_total += (int) ( $tsosk_hygiene_item['size'] ?? 0 );
+				}
+			}
+			?>
+			<?php if ( $tsosk_hygiene_deletable_total > 0 ) : ?>
+			<p>
+				<?php
+				printf(
+					/* translators: %s: formatted size */
+					esc_html__( 'Space that would be freed by moving all Safe folders to quarantine: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'<strong>' . esc_html( size_format( $tsosk_hygiene_deletable_total, 2 ) ) . '</strong>'
 				);
 				?>
 			</p>
@@ -430,11 +617,77 @@ class TSOSK_Mod_Media_Footprint {
 								        data-folder-id="<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>"
 								        data-nonce="<?php echo esc_attr( $nonce ); ?>"
 								        data-label="<?php echo esc_attr( (string) ( $item['relative'] ?? '' ) ); ?>">
-									<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									<?php esc_html_e( 'Move to quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php else : ?>
 								<span class="description"><?php esc_html_e( 'Manual only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endif; ?>
+		</div>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * @return string
+	 */
+	private function render_quarantine_html(): string {
+		$entries = TSOSK_Uploads_Scanner::get_quarantine_entries();
+		$nonce   = wp_create_nonce( 'tsosk_media_footprint_nonce' );
+
+		usort(
+			$entries,
+			static function ( array $a, array $b ): int {
+				return (int) ( $b['quarantined_at'] ?? 0 ) <=> (int) ( $a['quarantined_at'] ?? 0 );
+			}
+		);
+
+		ob_start();
+		?>
+		<div class="tsosk-card">
+			<?php if ( empty( $entries ) ) : ?>
+			<p><?php esc_html_e( 'Quarantine is empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+			<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table" id="tsosk-media-quarantine-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Quarantined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Auto-deletes on', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $entries as $entry ) : ?>
+						<?php
+						$tsosk_q_at      = (int) ( $entry['quarantined_at'] ?? 0 );
+						$tsosk_q_expires = $tsosk_q_at + ( TSOSK_Uploads_Scanner::QUARANTINE_DAYS * DAY_IN_SECONDS );
+						?>
+						<tr id="tsosk-quarantine-<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>">
+							<td class="tsosk-code"><?php echo esc_html( (string) ( $entry['label'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( size_format( (int) ( $entry['size'] ?? 0 ), 2 ) ); ?></td>
+							<td><?php echo esc_html( $tsosk_q_at > 0 ? wp_date( 'Y-m-d H:i', $tsosk_q_at ) : '—' ); ?></td>
+							<td><?php echo esc_html( $tsosk_q_at > 0 ? wp_date( 'Y-m-d', $tsosk_q_expires ) : '—' ); ?></td>
+							<td>
+								<button type="button" class="button button-small tsosk-media-quarantine-restore"
+								        data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
+								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'Restore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+								<button type="button" class="button button-small button-link-delete tsosk-media-quarantine-purge"
+								        data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
+								        data-nonce="<?php echo esc_attr( $nonce ); ?>"
+								        data-label="<?php echo esc_attr( (string) ( $entry['label'] ?? '' ) ); ?>">
+									<?php esc_html_e( 'Delete now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
 							</td>
 						</tr>
 					<?php endforeach; ?>

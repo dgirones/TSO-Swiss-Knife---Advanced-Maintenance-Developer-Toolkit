@@ -21,6 +21,7 @@ class TSOSK_Site_Status {
 	 */
 	private static function get_tab_keyword_map(): array {
 		return array(
+			'dashboard'        => 'overview home score summary panel resumen resum puntuacion puntuacio inicio inici',
 			'hidden-profiles'  => 'emoji xmlrpc rss cron revisions autoload perfiles ocultos',
 			'cron'             => 'wp-cron schedule events programador tareas',
 			'debug'            => 'wp_debug log developer errors depuracion',

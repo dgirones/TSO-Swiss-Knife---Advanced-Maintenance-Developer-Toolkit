@@ -1282,7 +1282,7 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( (string) $_POST['action'] ) ) : '';
+		$action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( ( is_scalar( $_POST['action'] ) ? (string) $_POST['action'] : '' ) ) ) : '';
 		return in_array( $action, array( 'tsosk_am_save', 'tsosk_am_reset' ), true );
 	}
 
@@ -2630,8 +2630,14 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		// Basename-only match is unsafe when either slug has a query string
-		// (themes.php vs themes.php?page=…, customize.php?return=… vs autofocus variants).
-		if ( ! str_contains( $entry_slug, '?' ) && ! str_contains( $order_slug, '?' ) && ! str_contains( $entry_slug, 'page=' ) && ! str_contains( $order_slug, 'page=' ) ) {
+		// (themes.php vs themes.php?page=…, customize.php?return=… vs autofocus variants)
+		// or a directory prefix: two unrelated plugins that each register a
+		// submenu using their own file as the slug (e.g. "plugin-a/settings.php"
+		// and "plugin-b/settings.php" — the classic pre-add_menu_page() style,
+		// still used by some older plugins) would otherwise basename-match each
+		// other and let a saved reorder/hide/rename rule apply to the wrong
+		// plugin's page. Only bare core-style filenames (no "/") are eligible.
+		if ( ! str_contains( $entry_slug, '?' ) && ! str_contains( $order_slug, '?' ) && ! str_contains( $entry_slug, 'page=' ) && ! str_contains( $order_slug, 'page=' ) && ! str_contains( $entry_slug, '/' ) && ! str_contains( $order_slug, '/' ) ) {
 			$base_entry = basename( $entry_slug );
 			$base_order = basename( $order_slug );
 			if ( '' !== $base_entry && $base_entry === $base_order ) {

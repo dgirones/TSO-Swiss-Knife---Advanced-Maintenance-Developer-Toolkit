@@ -124,7 +124,7 @@ class TSOSK_Admin {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only legacy page slug redirect.
-		$page = sanitize_key( wp_unslash( (string) $_GET['page'] ) );
+		$page = sanitize_key( wp_unslash( ( is_scalar( $_GET['page'] ) ? (string) $_GET['page'] : '' ) ) );
 		if ( 'tso-swiss-knife' !== $page ) {
 			return;
 		}
@@ -255,13 +255,16 @@ class TSOSK_Admin {
 					'regenerate'           => __( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review'    => __( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review_starting' => __( 'Starting full media review…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'media_footprint_scan' => __( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'media_hygiene_scan'   => __( 'Scan removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'media_hygiene_delete_confirm' => __( 'Delete this folder? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_footprint_scan'             => __( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_hygiene_scan'               => __( 'Scan removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_hygiene_delete_confirm'     => __( 'Move this folder to quarantine? It will be kept for 30 days and can be restored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_quarantine_restore_confirm' => __( 'Restore this folder to its original location?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_quarantine_purge_confirm'   => __( 'Permanently delete this folder now? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_scan'     => __( 'Run image sizes audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_save'     => __( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'send_test'       => __( 'Send Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'email_copied'    => __( 'Report copied to clipboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'copied'          => __( 'Copied to clipboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'fi_connecting'   => __( 'Connecting to WordPress.org API…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'fi_clean'        => __( 'All core files are intact.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'fi_issues'       => __( 'issue(s) found — review the results below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -332,6 +335,8 @@ class TSOSK_Admin {
 					'sr_preview_btn'   => __( 'Preview changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_tables'        => __( 'tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_confirm_hint'  => __( 'Review below and click "Execute replace" to commit changes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sr_backup_confirm_restore' => __( 'Restore the automatic backup? This overwrites the current values with the ones saved before your last replace operation. Rows changed by something else since then are safely skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'confirm_bisect_start' => __( 'This starts a binary-search test: only half of your normally active plugins will load for your account, and you will be asked a yes/no question after each reload. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_confirm_import' => __( 'Import will overwrite settings for the sections in this snapshot. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_no_sections'    => __( 'Select at least one section.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_invalid_json'   => __( 'Paste or upload a valid TSO snapshot JSON first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -350,6 +355,9 @@ class TSOSK_Admin {
 					'sr_pk'            => __( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_execute_btn'   => __( 'Execute replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'history_clear'    => __( 'Clear all activity history? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'history_undo_confirm' => __( 'Revert this option back to its previous value?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'history_reverted' => __( 'Reverted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'undo'             => __( 'Undo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'delete'           => __( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'loading'          => __( 'Loading…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'no_title'         => __( '(no title)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -391,6 +399,13 @@ class TSOSK_Admin {
 					/* translators: %s: log file label shown in the confirmation dialog. */
 					'debug_shrink_log_confirm' => __( 'Keep only the last 500 lines of %s? Older lines will be archived.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'refresh_log'              => __( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'vc_reset_confirm'         => __( 'Delete ALL recorded views and clicks? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'vc_no_data'               => __( 'No data for this period yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_revoke'               => __( 'Revoke', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_revoke_all'           => __( 'Revoke All Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_revoke_all_confirm'   => __( 'Revoke ALL Application Passwords for ALL users? Any app or script currently using one will stop working immediately. This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_test_now'             => __( 'Test Now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_enable_protection'    => __( 'Enable Protection (Apache/LiteSpeed)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			)
 		);
@@ -531,6 +546,9 @@ class TSOSK_Admin {
 		if ( isset( $_POST['groups_json'] ) ) {
 			$decoded = TSOSK_Support::get_post_json_array( 'groups_json' );
 			foreach ( $decoded as $slug => $group ) {
+				if ( ! is_scalar( $group ) ) {
+					continue;
+				}
 				$slug  = sanitize_key( (string) $slug );
 				$group = sanitize_key( (string) $group );
 				if ( '' !== $slug && '' !== $group ) {
@@ -611,6 +629,9 @@ class TSOSK_Admin {
 		$cleaned = array();
 
 		foreach ( $favorites as $slug ) {
+			if ( ! is_scalar( $slug ) ) {
+				continue;
+			}
 			$slug = sanitize_key( (string) $slug );
 			if ( ! $slug || isset( $seen[ $slug ] ) ) {
 				continue;
@@ -639,7 +660,7 @@ class TSOSK_Admin {
 
 		$out = array();
 		foreach ( $this->normalize_favorites_list( $favorites ) as $slug ) {
-			if ( isset( $tabs[ $slug ] ) ) {
+			if ( 'dashboard' !== $slug && isset( $tabs[ $slug ] ) ) {
 				$out[] = $slug;
 			}
 		}
@@ -751,6 +772,7 @@ class TSOSK_Admin {
 	 */
 	private function get_tab_group_map(): array {
 		return array(
+			'dashboard'       => 'site',
 			'hidden-profiles' => 'profiles',
 			'constants'       => 'profiles',
 			'internals'       => 'profiles',
@@ -794,6 +816,7 @@ class TSOSK_Admin {
 			'staging'         => 'site',
 			'url-doctor'      => 'content',
 			'runtime-stack'   => 'development',
+			'view-counter'    => 'content',
 		);
 	}
 
@@ -832,6 +855,11 @@ class TSOSK_Admin {
 	private function get_tabs(): array {
 		$group_map = $this->get_tab_group_map();
 		$tabs      = array(
+			'dashboard' => array(
+				'label' => __( 'Overview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-chart-pie',
+				'class' => 'TSOSK_Mod_Dashboard',
+			),
 			'history' => array(
 				'label' => __( 'Activity History', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-backup',
@@ -886,6 +914,11 @@ class TSOSK_Admin {
 				'label' => __( 'Transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-database-remove',
 				'class' => 'TSOSK_Mod_Transients',
+			),
+			'view-counter' => array(
+				'label' => __( 'View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-visibility',
+				'class' => 'TSOSK_Mod_View_Counter',
 			),
 			'constants'  => array(
 				'label' => __( 'WP Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1172,9 +1205,9 @@ class TSOSK_Admin {
 		$tabs     = $this->apply_saved_order( $tabs_raw );
 
 		// Determine active tab from query param, default to Hidden Profiles.
-		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'hidden-profiles'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab navigation.
+		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab navigation.
 		if ( ! array_key_exists( $current, $tabs ) ) {
-			$current = 'hidden-profiles';
+			$current = 'dashboard';
 		}
 
 		$grouped_tabs     = $this->group_tabs_for_sidebar( $tabs );
@@ -1217,6 +1250,16 @@ class TSOSK_Admin {
 				<p class="tsosk-favorites-hint" id="tsosk-favorites-hint">
 					<?php esc_html_e( 'Use Organise on the tools list, then drag tabs here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
+				<?php if ( isset( $tabs['dashboard'] ) ) : ?>
+				<div class="tsosk-fav-fixed">
+					<a href="<?php echo esc_url( add_query_arg( 'tab', 'dashboard', $base_url ) ); ?>"
+					   class="<?php echo esc_attr( 'tsosk-nav-item' . ( 'dashboard' === $current ? ' is-active' : '' ) ); ?>"
+					   aria-current="<?php echo esc_attr( 'dashboard' === $current ? 'page' : 'false' ); ?>">
+						<span class="dashicons <?php echo esc_attr( $tabs['dashboard']['icon'] ); ?>" aria-hidden="true"></span>
+						<span class="tsosk-nav-label"><?php echo esc_html( $tabs['dashboard']['label'] ); ?></span>
+					</a>
+				</div>
+				<?php endif; ?>
 				<div id="tsosk-favorites-list" class="<?php echo empty( $favorite_slugs ) ? 'is-empty' : ''; ?>">
 					<?php foreach ( $favorite_slugs as $slug ) : ?>
 						<?php $this->render_sidebar_nav_row( $slug, $tabs[ $slug ], $base_url, $current, true ); ?>
@@ -1269,6 +1312,9 @@ class TSOSK_Admin {
 						<?php endif; ?>
 						<?php foreach ( $group_tabs as $slug => $tab ) : ?>
 							<?php
+							if ( 'dashboard' === $slug ) {
+								continue; // Pinned above the favorites list.
+							}
 							$this->render_sidebar_nav_row(
 								$slug,
 								$tab,

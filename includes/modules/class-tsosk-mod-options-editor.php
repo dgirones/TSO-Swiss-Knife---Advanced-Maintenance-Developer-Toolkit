@@ -32,6 +32,112 @@ class TSOSK_Mod_Options_Editor {
 		add_action( 'wp_ajax_tsosk_oe_save',   array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_oe_add',    array( $this, 'ajax_add' ) );
 		add_action( 'wp_ajax_tsosk_oe_delete', array( $this, 'ajax_delete' ) );
+		// Undo button on the Activity History tab; scoped to Options Editor entries only.
+		add_action( 'wp_ajax_tsosk_history_undo', array( $this, 'ajax_undo_from_history' ) );
+	}
+
+	/**
+	 * Decode a stored raw value for re-storage via add_option()/update_option()
+	 * (both maybe_serialize() their argument, so a serialized string must be
+	 * unserialized first to avoid double-encoding it).
+	 *
+	 * @param string $raw Raw value as read from (or logged for) wp_options.
+	 * @return mixed
+	 */
+	private function decode_for_storage( string $raw ) {
+		if ( $this->looks_serialized( $raw ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			$decoded = @unserialize( $raw, array( 'allowed_classes' => false ) );
+			if ( false !== $decoded || serialize( false ) === $raw ) {
+				return $decoded;
+			}
+		}
+		return $raw;
+	}
+
+	/**
+	 * AJAX: undo one Options Editor entry from the Activity History tab.
+	 *
+	 * Only entries flagged 'undoable' at log time are accepted (short, plain
+	 * values only — see log_activity()). Also refuses when the option is
+	 * currently protected, or has changed again since the logged entry, so an
+	 * old undo can never silently clobber a newer edit.
+	 */
+	public function ajax_undo_from_history(): void {
+		check_ajax_referer( 'tsosk_history_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$id = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( $_POST['id'] ) ) : '';
+		if ( '' === $id ) {
+			wp_send_json_error( __( 'Invalid history entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entry = TSOSK_Activity_Log::find( $id );
+		if ( null === $entry || 'options-editor' !== (string) ( $entry['module'] ?? '' ) ) {
+			wp_send_json_error( __( 'This history entry can no longer be found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( ! empty( $entry['reverted'] ) ) {
+			wp_send_json_error( __( 'This change was already reverted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$details = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
+		if ( empty( $details['undoable'] ) ) {
+			wp_send_json_error( __( 'This change cannot be safely undone (the stored value was too long or contained structured data).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$action   = (string) ( $entry['action'] ?? '' );
+		$name     = (string) ( $details['name'] ?? '' );
+		$old      = (string) ( $details['old'] ?? '' );
+		$new      = (string) ( $details['new'] ?? '' );
+		$autoload = (string) ( $details['autoload'] ?? '' );
+
+		if ( '' === $name || ! in_array( $action, array( 'update', 'add', 'delete' ), true ) ) {
+			wp_send_json_error( __( 'This change cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( $this->is_protected_core( $name ) || $this->is_secret_option( $name ) || $this->is_caution_option( $name ) ) {
+			wp_send_json_error( __( 'This option is protected and cannot be changed here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$autoload_final = in_array( $autoload, array( 'yes', 'no', 'on', 'off', '1', '0', 'true', 'false' ), true ) ? $autoload : 'no';
+
+		if ( 'add' === $action ) {
+			if ( ! $this->option_exists( $name ) ) {
+				wp_send_json_error( __( 'This option no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+			if ( $this->fetch_option_value_from_db( $name ) !== $new ) {
+				wp_send_json_error( __( 'This option has changed since then; undo it manually to avoid losing the newer value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+			delete_option( $name );
+		} elseif ( 'delete' === $action ) {
+			if ( $this->option_exists( $name ) ) {
+				wp_send_json_error( __( 'An option with this name already exists again; restore it manually to avoid overwriting it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+			add_option( $name, $this->decode_for_storage( $old ), '', $autoload_final );
+		} else {
+			if ( ! $this->option_exists( $name ) ) {
+				wp_send_json_error( __( 'This option no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+			if ( $this->fetch_option_value_from_db( $name ) !== $new ) {
+				wp_send_json_error( __( 'This option has changed since then; edit it manually to avoid losing the newer value.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+			update_option( $name, $this->decode_for_storage( $old ), $autoload_final );
+		}
+
+		TSOSK_Activity_Log::mark_reverted( $id );
+		TSOSK_Activity_Log::log(
+			'options-editor',
+			'update',
+			sprintf(
+				/* translators: %s: option name */
+				__( 'Reverted change to option: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$name
+			),
+			array( 'name' => $name )
+		);
+
+		wp_send_json_success( __( 'Change reverted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -169,6 +275,10 @@ class TSOSK_Mod_Options_Editor {
 	 * @return bool
 	 */
 	public static function is_protected_option_name( string $name ): bool {
+		// Longer than the wp_options.option_name column (191): not a real option, never editable.
+		if ( strlen( $name ) > 191 ) {
+			return true;
+		}
 		if ( in_array( $name, self::get_protected_option_names(), true ) ) {
 			return true;
 		}
@@ -262,6 +372,24 @@ class TSOSK_Mod_Options_Editor {
 			)
 		);
 		return is_string( $value ) ? $value : '';
+	}
+
+	/**
+	 * Current autoload flag for an option, straight from the database.
+	 *
+	 * @param string $name Option name.
+	 * @return string 'yes'/'no' (or whatever the row stores), empty when the option does not exist.
+	 */
+	private function fetch_option_autoload_from_db( string $name ): string {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$autoload = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT autoload FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+				$name
+			)
+		);
+		return is_string( $autoload ) ? $autoload : '';
 	}
 
 	/**
@@ -691,8 +819,8 @@ class TSOSK_Mod_Options_Editor {
 		$this->log_activity( array(
 			'action'   => 'update',
 			'name'     => $name,
-			'old'      => mb_substr( TSOSK_Support::sanitize_stored_scalar( $old_raw ), 0, 200 ),
-			'new'      => mb_substr( is_string( $log_new ) ? $log_new : TSOSK_Support::sanitize_stored_scalar( (string) $log_new ), 0, 200 ),
+			'old'      => TSOSK_Support::sanitize_stored_scalar( $old_raw ),
+			'new'      => is_string( $log_new ) ? $log_new : TSOSK_Support::sanitize_stored_scalar( (string) $log_new ),
 			'autoload' => $autoload,
 			'time'     => time(),
 			'user'     => wp_get_current_user()->user_login,
@@ -741,7 +869,7 @@ class TSOSK_Mod_Options_Editor {
 			'action'   => 'add',
 			'name'     => $name,
 			'old'      => '',
-			'new'      => mb_substr( (string) $log_new, 0, 200 ),
+			'new'      => (string) $log_new,
 			'autoload' => $autoload,
 			'time'     => time(),
 			'user'     => wp_get_current_user()->user_login,
@@ -767,15 +895,16 @@ class TSOSK_Mod_Options_Editor {
 			wp_send_json_error( __( 'This option cannot be deleted here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$old_raw = $this->fetch_option_value_from_db( $name );
+		$old_raw      = $this->fetch_option_value_from_db( $name );
+		$old_autoload = $this->fetch_option_autoload_from_db( $name );
 
 		delete_option( $name );
 		$this->log_activity( array(
 			'action'   => 'delete',
 			'name'     => $name,
-			'old'      => mb_substr( (string) $old_raw, 0, 200 ),
+			'old'      => (string) $old_raw,
 			'new'      => '',
-			'autoload' => '',
+			'autoload' => $old_autoload,
 			'time'     => time(),
 			'user'     => wp_get_current_user()->user_login,
 		) );
@@ -853,9 +982,27 @@ class TSOSK_Mod_Options_Editor {
 		return '?';
 	}
 
+	/**
+	 * Write one Options Editor change to the central Activity Log.
+	 *
+	 * @param array<string, mixed> $entry Change data (action, name, old, new, autoload).
+	 */
 	private function log_activity( array $entry ): void {
-		$name   = (string) ( $entry['name'] ?? '' );
-		$action = (string) ( $entry['action'] ?? 'update' );
+		$name     = (string) ( $entry['name'] ?? '' );
+		$action   = (string) ( $entry['action'] ?? 'update' );
+		$autoload = (string) ( $entry['autoload'] ?? '' );
+		$old_full = (string) ( $entry['old'] ?? '' );
+		$new_full = (string) ( $entry['new'] ?? '' );
+
+		// Only offer "Undo" from Activity History when both values are short, plain
+		// strings: nothing was truncated and sanitize_text_field() left them untouched
+		// (a serialized/multi-line value could otherwise be corrupted on restore).
+		$undoable = '' !== $name
+			&& mb_strlen( $old_full ) <= TSOSK_Activity_Log::DETAIL_TRUNCATE
+			&& mb_strlen( $new_full ) <= TSOSK_Activity_Log::DETAIL_TRUNCATE
+			&& $old_full === sanitize_text_field( $old_full )
+			&& $new_full === sanitize_text_field( $new_full );
+
 		TSOSK_Activity_Log::log(
 			'options-editor',
 			$action,
@@ -866,9 +1013,11 @@ class TSOSK_Mod_Options_Editor {
 				$name
 			),
 			array(
-				'name' => $name,
-				'old'  => (string) ( $entry['old'] ?? '' ),
-				'new'  => (string) ( $entry['new'] ?? '' ),
+				'name'     => $name,
+				'old'      => mb_substr( $old_full, 0, TSOSK_Activity_Log::DETAIL_TRUNCATE ),
+				'new'      => mb_substr( $new_full, 0, TSOSK_Activity_Log::DETAIL_TRUNCATE ),
+				'autoload' => $autoload,
+				'undoable' => $undoable,
 			)
 		);
 	}

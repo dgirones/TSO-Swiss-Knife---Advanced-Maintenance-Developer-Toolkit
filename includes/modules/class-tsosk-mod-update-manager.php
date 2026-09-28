@@ -329,12 +329,12 @@ class TSOSK_Mod_Update_Manager {
 	 */
 	private function sanitize_plugin_rules_from_post(): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified in ajax_save().
-		if ( empty( $_POST['plugin_rules'] ) ) {
+		if ( empty( $_POST['plugin_rules'] ) || ! is_string( $_POST['plugin_rules'] ) ) {
 			return array();
 		}
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$raw = json_decode( wp_unslash( (string) $_POST['plugin_rules'] ), true );
+		$raw = json_decode( wp_unslash( ( is_scalar( $_POST['plugin_rules'] ) ? (string) $_POST['plugin_rules'] : '' ) ), true );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 		if ( ! is_array( $raw ) ) {
 			return array();
@@ -662,7 +662,11 @@ class TSOSK_Mod_Update_Manager {
 				: __( 'The updater can write plugin, theme and translation files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
-		$auto_allowed = wp_is_file_mod_allowed( 'auto_updater' );
+		// Use the same context string WordPress core's automatic updater uses
+		// (see wp-admin/includes/class-wp-automatic-updater.php) so a host or
+		// filter gating that specific context is reflected accurately here,
+		// instead of a different, unused context string.
+		$auto_allowed = wp_is_file_mod_allowed( 'automatic_updater' );
 		$items[]      = array(
 			'label'   => __( 'Automatic updater', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $auto_allowed ? __( 'Allowed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1065,8 +1069,8 @@ class TSOSK_Mod_Update_Manager {
 			<?php esc_html_e( 'Monitor WordPress update status, optionally block update checks (staging), hide specific plugin updates, and control update email notifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What does this module do?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<details class="tsosk-guide-card tsosk-guide-collapse">
+			<summary class="tsosk-guide-title"><?php esc_html_e( 'What does this module do?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
 			<p class="tsosk-guide-lead">
 				<?php esc_html_e( 'WordPress checks wordpress.org for core, plugin, theme and translation updates, can install some automatically, and sends email when updates happen. This module helps you troubleshoot update issues, block update checks when needed, and manage notification emails.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
@@ -1089,9 +1093,9 @@ class TSOSK_Mod_Update_Manager {
 				<strong><?php esc_html_e( 'Security note:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<?php esc_html_e( 'Blocking updates removes security patches from appearing in the dashboard. Only disable updates on staging, managed hosts with external patching, or when you update manually on a schedule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
-		</div>
+		</details>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-um-status">
 			<h3><?php esc_html_e( 'Update status & troubleshooting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. “Check for updates now” refreshes the pending list from wordpress.org. “Install pending translations” downloads language packs into wp-content/languages/ (does not update bundled .mo files inside plugins).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<table class="widefat tsosk-table">
@@ -1188,7 +1192,7 @@ class TSOSK_Mod_Update_Manager {
 			</label>
 		</div>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-um-plugins">
 			<h3><?php esc_html_e( 'Individual plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'Hide available updates for specific plugins in the dashboard. Does not change WordPress auto-update settings — use Dashboard → Updates for that.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>

@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.0.8
+Stable tag: 1.1.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,11 +17,12 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 = Included modules =
 
+* **Overview** — Landing dashboard with a 0–100 site score built from the Health Report and Security Review checks, the items that need attention (each linked to the right tool), quick vitals, shortcuts and recent activity. Read-only; nothing is sent off-site.
 * **Activity History** — Central log of changes across all plugin tools (options edited, database replacements, maintenance mode, admin menu, and more). Pinned as the default favorite for quick access.
 * **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
 * **Cron Manager** — List scheduled WP-Cron events, run or delete non-core hooks, and keep WordPress core cron events read-only (no manual Run / Edit / Delete).
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
-* **Debug Mode** — One-click **Developer mode** preset for staging (`WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`; errors hidden from visitors), saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. The tab shows the constants currently in effect (read-only) and copy-paste `wp-config.php` snippets. Constants already defined in `wp-config.php` cannot be overridden.
+* **Debug Mode** — One-click **Developer mode** for staging that turns on `SAVEQUERIES` for the Slow Query Monitor, saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` and `SCRIPT_DEBUG` are set by WordPress before plugins load, so the tab shows their current value and source (read-only) plus copy-paste `wp-config.php` snippets to change them.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
 * **Meta Editor** — Browse and edit post and user meta. Without an object ID, search matches meta keys only (not values).
 * **Option Library** — Save named option presets and re-apply them across environments.
@@ -165,7 +166,11 @@ No. Debug flags, security constants, and hidden-profile toggles are saved as JSO
 
 = Does Debug Mode create or manage wp-content/debug.log? =
 
-No. Debug Mode does not create, truncate, or rotate `wp-content/debug.log`. Enabling **Developer mode** only stores JSON flags (`WP_DEBUG`, `WP_DEBUG_LOG`, `SAVEQUERIES`, and related) in the plugin uploads config folder; WordPress or the server then writes `debug.log` as usual if logging is on. The Debug tab can list and preview common log paths when they already exist. Empty and shrink actions apply only to logs the plugin owns under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/` — never to `wp-content/debug.log`.
+No. Debug Mode does not create, truncate, or rotate `wp-content/debug.log`. Enabling **Developer mode** only turns on `SAVEQUERIES` (stored as JSON in the plugin uploads config folder); `WP_DEBUG` and `WP_DEBUG_LOG` must be set in `wp-config.php`, and WordPress then writes `debug.log` as usual. The Debug tab can list and preview common log paths when they already exist. Empty and shrink actions apply only to logs the plugin owns under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/` — never to `wp-content/debug.log`.
+
+= Is debug.log safe to leave on a live site? =
+
+Not by default. With `WP_DEBUG_LOG` set to `true`, WordPress writes `wp-content/debug.log`, which is inside the web root under a predictable name. Depending on your server it may be downloadable by URL, and it can contain absolute server paths, SQL queries and, occasionally, credentials or tokens printed by other plugins. This plugin cannot move the log outside the web root: it only saves `WP_DEBUG_LOG` as `true`/`false`, and a log path must be defined in `wp-config.php` before plugins load. Recommended: use Developer mode only on staging, block direct access to `debug.log` at the server level (Apache/nginx rule), or set `define( 'WP_DEBUG_LOG', '/path/outside/webroot/debug.log' );` in `wp-config.php`. Delete or empty the file when you finish debugging. The plugin's own protected folder under uploads (`.htaccess` deny rules) does not cover `wp-content/debug.log`.
 
 = Can Server Files write robots.txt or .htaccess? =
 
@@ -192,62 +197,50 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
-= 1.0.8 =
-* Fixed slow queries flagged by Query Monitor: Login Protect and Admin Menu settings options are now autoloaded (both are read on every request/admin screen), instead of triggering a dedicated DB query each time. Existing installs are migrated automatically.
-* Admin Menu: the menu manifest (previously an uncached direct DB query on every admin screen) is now cached via the standard WP object cache, compatible with any persistent object-cache backend (Redis, Memcached, LiteSpeed object cache).
+= 1.1.4 =
+* Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.
+* View Counter: fixed several legacy-table cleanup issues (stale opcode cache after a plain file upload, wrong table-prefix detection, incomplete removal on DB errors) and improved visibility when a leftover table can't be removed.
+* Server & Runtime: added a plain-language explanation of what the OPcache "Reset OPcache" button actually does and its limits.
 
-= 1.0.7 =
-* Debug: clearer developer-mode vs wp-config debug state; scroll-to-end on log toolbar; wp-content/debug.log policy copy and managed-log workaround.
-* Server Files: smarter robots.txt parser (line-specific full-site block vs path prefixes); scoped .htaccess deny detection.
-* Media Footprint: folder hygiene scan for legacy TSO uploads folders and .tmb caches, with safe delete allowlist.
-* Update Manager: install pending wordpress.org language packs button; removed auto_all updates preset.
-* Security: Login Protect 2FA rate limit; Meta Editor protected-key preview and serialized validation.
-* Health Report and config export hardening; refreshed CA/ES translations.
+= 1.1.3 =
+* Maintenance mode: visitors and search engines now really receive "503 Service Unavailable" (it was answering 200 OK, so the maintenance page could be indexed as the real site).
+* Login Protect: failed logins with usernames such as "admin" now count toward the brute-force lockout when "Block forbidden usernames" is off (they were silently ignored).
+* Login Protect: custom login URLs with accents or ñ (e.g. "acceso-administración") are now converted to plain letters and work; existing accented slugs are fixed automatically on the next page load (they made the login page unreachable).
+* Redirects and 404 monitor: URLs with accents or ñ are now matched and logged correctly (they were stripped, so "/ñandú/" was treated as "/and/").
+* Rewrite Rules: fixed a fatal error on sites using Plain permalinks.
+* Search & Replace: table and column lists now work with database drivers that return upper-case column names.
+* Robustness: saving settings or calling the public view counter with malformed input (arrays, very large numbers, very long names) no longer triggers PHP errors or warnings; corrupted log entries (History, 404 monitor, login lockouts) are skipped instead of breaking the screen.
+* View Counter: recovers automatically from duplicate views/links tables left over by an old, removed table-naming scheme (a stale PHP opcode cache after a manual FTP upload could keep that old code running for a while); any such leftover table is merged into the real one and then dropped, instead of splitting the view count between two tables.
 
-= 1.0.6 =
-* New: Staging Mode (admin-bar label, noindex without touching blog_public, hold email, pause WP-Cron, database mail log + CSV).
-* New: URL & HTTPS Doctor (read-only diagnostics, loopback without following redirects, leftover http:// count with Search & Replace prefill).
-* New: Server & Runtime panel (PHP limits, drop-ins, MU-plugins, clock skew, optional OPcache reset).
-* Incomplete plugin uploads show an admin notice listing missing files.
-* Language switcher (CAT/ES/ENG) also applies to plugin AJAX and Health Report downloads.
-* Cron: core hooks are fully read-only (no Run / Edit / Delete); detection uses an explicit list only.
-* Transients: multisite site-transient purge uses sitemeta and requires super/network admin.
-* Meta Editor: key-only search without object ID; adding serialized values no longer double-serializes.
-* Login Protect: purge custom login rewrite before flush on deactivate, settings save, and snapshot import.
-* Export/Import: clearer exclusions; warn if Staging switches import enabled; Staging option stays autoloaded.
-* Uninstall: remove activity log settings, email diagnostics history, and staging mail log; force rewrite regeneration.
-* Health headers probe caches raw data / error codes (not mixed-language strings).
+= 1.1.2 =
+* Debug: WP_DEBUG_LOG / WP_DEBUG_DISPLAY values that WordPress sets by default are now labelled "WordPress default" and "No effect: WP_DEBUG is off" instead of looking active; the Health Report no longer warns about on-screen errors while WP_DEBUG is off.
+* Debug: the Debug Constants list is now a clean table with Value, Source (wp-config.php, Developer mode or WordPress default) and Status columns.
+* Debug: the error-log help box is rewritten in plain language and now shows the exact wp-config.php line (with a Copy button) needed to empty/shrink the log from the plugin.
+* Debug: the wp-config.php debug constants guide is now a highlighted, collapsed panel below the constants table, and the "Read-only here" badge next to wp-content/debug.log was removed.
+* UI: the explanatory guide boxes (File Integrity, Meta Editor, Redirects, REST API, Rewrite Rules, Search & Replace, Update Manager) are now collapsed by default and open with one click.
+* Overview: the "Hide WordPress Site Health notices" options moved from the Health Report tab to the Overview tab.
+* Redirects: fixed the 404 monitor table so the "Last visit" date no longer overlaps the Referrer column; the User-Agent hint is now easier to read.
+* Redirects: fixed the check that blocks capture tokens ($1, $2…) in the host of an absolute redirect target; a broken pattern meant it never ran.
+* Media Footprint / Image Sizes Audit: fixed a fatal error when the uploads folder is missing or unreadable (the scan now shows the error message instead).
+* Comment Anti-Spam: fixed a PHP warning when checking Gravity Forms fields without a label.
+* Hooks Inspector: the filter box now also narrows the current page instantly while typing.
+* Debug: Developer mode texts now say what it really does — it only turns on SAVEQUERIES, because WordPress sets WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY and SCRIPT_DEBUG before plugins load; the constants table no longer labels those as coming from Developer mode.
+* Spanish and Catalan translations: restored missing accents and ñ across the interface.
+* Uninstall now also removes the Anti-Spam learning log, REST blocked-requests log, Search & Replace backup, media quarantine list and View Counter import marker.
 
-= 1.0.5 =
-* Cron Manager: core events are read-only in the UI and blocked from delete/reschedule in AJAX.
-* Transients: purge expired/all also clears site transients.
-* Roles: confirm before applying a capability template.
-* Meta Editor and Slug Manager: ignore stale search AJAX responses.
-* Debug Mode readme matches the Developer mode preset (no per-constant toggles).
-* Regenerated CA/ES translations; removed leftover Recovery Mode strings.
+= 1.1.1 =
+* New: REST API Controls now keeps a log of actually blocked requests (disabled access, blocked user listing, disabled namespaces) with time, IP and route, so you can review real traffic instead of guessing what the settings above are doing.
+* New: Comment Anti-Spam now has a Learning mode: nothing is blocked, but every submission that would have been rejected is logged (with counts and a "would block" log) so you can check for false positives before turning on real enforcement.
+* New: Media Cleaner / Uploads Disk Footprint: folders removed via Folder hygiene now go through a 30-day recoverable Quarantine (restore or delete permanently) instead of being deleted immediately, expired entries purge automatically, and disk usage by file type is now shown as a proportional space chart alongside the existing table.
+* New: Heartbeat Controls now measures real Heartbeat traffic (this hour, last 24 hours, average per hour, and a breakdown by screen) so you can see actual numbers before changing the mode or interval, instead of guessing.
+* New: Slow Query Monitor can now attribute slow queries to the plugin, theme, or WordPress core they came from (opt-in, off by default due to the extra overhead), flag likely N+1 query patterns within a request, and suggest a missing index for common WHERE/ORDER BY shapes.
+* New: Plugin Sandbox can now bisect your normally active plugins automatically (binary search) to narrow down which one is causing a problem, instead of testing combinations by hand; ends with the likely culprit isolated and sandboxed on its own for confirmation.
+* New: Search & Replace now keeps an automatic backup of the last operation's original values (on top of the existing mandatory Preview step), with one-click Restore and a JSON download from the tool's own tab; Restore skips any row changed by something else since the replace ran.
+* New: Options Editor entries in Activity History now offer an "Undo" button for simple value changes (update, add, delete), guarded against protected options and against overwriting a newer edit.
+* Health Report: the PHP-errors-on-screen check now has a plain-language title and a short explanation instead of the bare WP_DEBUG_DISPLAY constant name; small hint text under toggles is now easier to read.
+* Dashboard "Needs attention" and Health/Security check links now jump straight to the relevant section of each tool instead of just the top of the tab.
+* Security: the XML-RPC check and toggle now name active plugins that need it (Jetpack, MainWP Child, ManageWP, InfiniteWP) instead of just warning.
+* New: Overview dashboard (now the landing tab) with a site score, items needing attention, quick vitals, shortcuts and recent activity.
 
-= 1.0.4 =
-* Prefill queue no longer cleared when loading the next 404 redirect form.
-* Meta and Options editors: avoid double-serializing values; meta delete clears object cache.
-* Redirects and Slug Manager: strip home subdirectory on source paths and loop detection.
-* Content Audit: shortcode removal uses a tag boundary so [foo] does not match [foobar].
-* Transients listing and purge: escape LIKE wildcards correctly.
-* Slow Query Monitor: ignore admin-bar stacks for duplicate detection (like Query Monitor); keep last-page duplicate SQL at the top of the tab.
 
-= 1.0.3 =
-* Safer cron reschedule, meta edits by row ID, and search-replace primary-key handling.
-* Redirects: subdirectory path matching, 404 alert counters, and prefill queue fixes.
-* Options Editor protections, Content Audit empty-title query, uninstall cleanup, Requires at least 6.1.
-
-= 1.0.2 =
-* Health: site URL details on separate lines; autoload total includes yes/on/auto; accurate overdue cron count; security headers probe cached 15 minutes.
-* Redirects: 404 log checkbox alignment; bulk prefill queue advances automatically after each save; 404 hit counts stay in sync under write throttling.
-* Site Snapshot: environment diff panel clears after import.
-* Content Audit: duplicate titles and shortcode inventory.
-* Cron Manager: missed scheduled posts panel.
-
-= 1.0.1 =
-* Fixed bugs in modules.
-
-= 1.0.0 =
-* Initial release.
+Older versions: see changelog.txt in the plugin folder.

@@ -246,7 +246,7 @@ class TSOSK_Mod_Cron {
 			</span>
 		</div>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-cron-health">
 			<h3><?php esc_html_e( 'WP-Cron Health', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="widefat tsosk-table">
 				<thead><tr>
@@ -611,7 +611,11 @@ class TSOSK_Mod_Cron {
 		if ( false !== strpos( $hook, '_' . $prefix . '_' ) || false !== strpos( $hook, '-' . $prefix . '-' ) ) {
 			return true;
 		}
-		return false !== strpos( $hook, '_' . $prefix ) || false !== strpos( $hook, $prefix . '_' );
+		// Deliberately no looser fallback here: a one-sided boundary match
+		// anywhere in the string (e.g. "_gf" matching inside "..._gfizzle_...")
+		// previously misattributed unrelated hooks to a plugin's prefix in this
+		// read-only diagnostics table.
+		return false;
 	}
 
 	/**

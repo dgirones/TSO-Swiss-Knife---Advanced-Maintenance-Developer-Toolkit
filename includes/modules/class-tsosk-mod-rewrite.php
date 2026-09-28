@@ -46,15 +46,19 @@ class TSOSK_Mod_Rewrite {
 
 		$nonce = wp_create_nonce( 'tsosk_rewrite_nonce' );
 		$rules = get_option( 'rewrite_rules', array() );
+		if ( ! is_array( $rules ) ) {
+			// Plain permalinks store an empty string here.
+			$rules = array();
+		}
 		$route_url = isset( $_GET['tsosk_route_url'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_route_url'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostic form.
-		$route = '' !== $route_url ? $this->get_route_diagnostics( $route_url, is_array( $rules ) ? $rules : array() ) : array();
+		$route = '' !== $route_url ? $this->get_route_diagnostics( $route_url, $rules ) : array();
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Flush and inspect WordPress rewrite rules. A "hard flush" also regenerates the .htaccess / web.config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'When and how to flush rewrite rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<details class="tsosk-guide-card tsosk-guide-collapse">
+			<summary class="tsosk-guide-title"><?php esc_html_e( 'When and how to flush rewrite rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
 			<p class="tsosk-guide-lead">
 				<?php esc_html_e( 'WordPress stores URL routing rules in the database. Plugins and custom post types register rules when they load; those rules must be rebuilt after permalink or routing changes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
@@ -75,7 +79,7 @@ class TSOSK_Mod_Rewrite {
 			<div class="tsosk-notice tsosk-notice-warn" style="margin-top:12px;margin-bottom:0;">
 				<?php esc_html_e( 'Avoid flushing on every page load — it is expensive. Only flush when something actually changed. A hard flush can overwrite custom server rules if WordPress does not detect them; back up .htaccess first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
-		</div>
+		</details>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Flush Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>

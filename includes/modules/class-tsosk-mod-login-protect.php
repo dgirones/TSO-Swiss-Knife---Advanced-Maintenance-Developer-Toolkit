@@ -127,6 +127,13 @@ class TSOSK_Mod_Login_Protect {
 			add_action( 'template_redirect', array( $this, 'handle_custom_login_url' ), 1 );
 			// Block direct wp-login.php access (returns 404).
 			add_action( 'login_init', array( $this, 'block_direct_login_access' ), 1 );
+			// Block direct /wp-admin/ access before WordPress core's own
+			// auth_redirect() gets a chance to run. Without this, a logged-out
+			// visitor requesting any wp-admin page still triggers core's
+			// auth_redirect(), which builds its redirect target via
+			// wp_login_url() — the very filter below — and so would leak the
+			// "secret" login slug in a Location header on the very first probe.
+			add_action( 'init', array( $this, 'block_direct_wp_admin_access' ), 0 );
 			// Rewrite generated login links so forms and emails use the secret slug.
 			add_filter( 'login_url', array( $this, 'filter_login_url' ), 10, 3 );
 			add_filter( 'site_url', array( $this, 'filter_site_url_for_login' ), 10, 4 );
@@ -159,7 +166,27 @@ class TSOSK_Mod_Login_Protect {
 				'index.php?' . self::QUERY_VAR . '=' . $slug,
 				'top'
 			);
+			// One-time migration: slugs saved with accents (stored percent-encoded) never matched.
+			$stored = get_option( self::OPTION_SETTINGS, array() );
+			if ( is_array( $stored ) && isset( $stored['login_slug'] ) && is_string( $stored['login_slug'] ) && $stored['login_slug'] !== $slug ) {
+				$stored['login_slug'] = $slug;
+				update_option( self::OPTION_SETTINGS, $stored );
+				flush_rewrite_rules( false );
+			}
 		}
+	}
+
+	/**
+	 * Normalize a custom login slug to plain ASCII (accents removed).
+	 *
+	 * A slug with accents was stored percent-encoded by sanitize_title_with_dashes()
+	 * and never matched the decoded request, locking the login page.
+	 *
+	 * @param string $slug Raw slug.
+	 * @return string
+	 */
+	public static function normalize_login_slug( string $slug ): string {
+		return sanitize_title_with_dashes( remove_accents( rawurldecode( $slug ) ) );
 	}
 
 	/**
@@ -220,6 +247,42 @@ class TSOSK_Mod_Login_Protect {
 			}
 			exit;
 		}
+	}
+
+	/**
+	 * Block direct /wp-admin/ requests from logged-out, non-whitelisted
+	 * visitors before WordPress core's auth_redirect() can run and leak the
+	 * secret login slug via its redirect Location header.
+	 *
+	 * Fires on init, priority 0 — earlier than core's auth_redirect() call in
+	 * wp-admin/admin.php, but after WP_ADMIN/DOING_AJAX/DOING_CRON are already
+	 * defined, so is_admin()/wp_doing_ajax()/wp_doing_cron() are reliable here.
+	 */
+	public function block_direct_wp_admin_access(): void {
+		if ( ! is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+
+		// admin-post.php is the standard "logged-out POST to wp-admin" pattern
+		// (the same role admin-ajax.php plays for AJAX) — never block it.
+		if ( isset( $GLOBALS['pagenow'] ) && 'admin-post.php' === $GLOBALS['pagenow'] ) {
+			return;
+		}
+
+		if ( is_user_logged_in() ) {
+			return;
+		}
+
+		$s = $this->get_settings();
+		if ( $this->is_ip_whitelisted( $this->get_client_ip(), $s['whitelist_ips'] ) ) {
+			return;
+		}
+
+		wp_die(
+			esc_html__( 'Page not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			esc_html__( 'Not Found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			array( 'response' => 404 )
+		);
 	}
 
 	/**
@@ -315,7 +378,8 @@ class TSOSK_Mod_Login_Protect {
 	 * @return bool
 	 */
 	private function request_uses_login_slug( string $slug ): bool {
-		$slug = trim( $slug, '/' );
+		// Slugs with accents are stored percent-encoded by sanitize_title(); the request path is decoded.
+		$slug = trim( rawurldecode( $slug ), '/' );
 		if ( '' === $slug ) {
 			return false;
 		}
@@ -329,12 +393,10 @@ class TSOSK_Mod_Login_Protect {
 	 * @return string
 	 */
 	private function get_request_path(): string {
-		if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+		$path = TSOSK_Support::get_request_path_decoded();
+		if ( '' === $path ) {
 			return '';
 		}
-
-		$uri  = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
-		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 		$path = '/' . trim( $path, '/' );
 
 		$home_path = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
@@ -475,12 +537,14 @@ class TSOSK_Mod_Login_Protect {
 				return;
 			}
 		}
-		if ( $this->is_forbidden_username( $username ) ) {
-			return;
-		}
-
 		$s   = $this->get_settings();
 		$ip  = $this->get_client_ip();
+
+		// Forbidden usernames are handled (and locked out) by block_forbidden_username() — but only
+		// when that option is on. Otherwise attacks on "admin" must still count toward the lockout.
+		if ( $s['block_forbidden_usernames'] && $this->is_forbidden_username( $username ) ) {
+			return;
+		}
 
 		if ( $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) ) {
 			return;
@@ -867,7 +931,7 @@ class TSOSK_Mod_Login_Protect {
 		$new = array(
 			'custom_url'       => ! empty( $_POST['custom_url'] ),
 			'login_slug'       => isset( $_POST['login_slug'] )
-				? sanitize_title_with_dashes( sanitize_text_field( wp_unslash( $_POST['login_slug'] ) ) )
+				? self::normalize_login_slug( sanitize_text_field( wp_unslash( $_POST['login_slug'] ) ) )
 				: '',
 			'brute_force'              => ! empty( $_POST['brute_force'] ),
 			'block_forbidden_usernames'=> ! empty( $_POST['block_forbidden_usernames'] ),
@@ -884,7 +948,7 @@ class TSOSK_Mod_Login_Protect {
 				? $this->sanitize_whitelist_ips( sanitize_textarea_field( wp_unslash( $_POST['whitelist_ips'] ) ) )
 				: '',
 			'notify_email'     => ! empty( $_POST['notify_email'] ),
-			'notify_address'   => isset( $_POST['notify_address'] )
+			'notify_address'   => isset( $_POST['notify_address'] ) && is_string( $_POST['notify_address'] )
 				? sanitize_email( wp_unslash( $_POST['notify_address'] ) )
 				: get_option( 'admin_email' ),
 			'login_maintenance'      => ! empty( $_POST['login_maintenance'] ),
@@ -1071,7 +1135,7 @@ class TSOSK_Mod_Login_Protect {
 		}
 		return array(
 			'custom_url'       => (bool) ( $s['custom_url']       ?? false ),
-			'login_slug'       => sanitize_title_with_dashes( (string) ( $s['login_slug'] ?? '' ) ),
+			'login_slug'       => self::normalize_login_slug( is_string( $s['login_slug'] ?? null ) ? $s['login_slug'] : '' ),
 			'brute_force'               => (bool) ( $s['brute_force']               ?? false ),
 			'block_forbidden_usernames' => (bool) ( $s['block_forbidden_usernames'] ?? false ),
 			'max_attempts'     => max( 1, min( 50, (int) ( $s['max_attempts']     ?? 5  ) ) ),
@@ -1103,6 +1167,9 @@ class TSOSK_Mod_Login_Protect {
 		$roles = array_keys( wp_roles()->roles );
 		$out   = array();
 		foreach ( $raw as $role ) {
+			if ( ! is_scalar( $role ) ) {
+				continue;
+			}
 			$role = sanitize_key( (string) $role );
 			if ( in_array( $role, $roles, true ) ) {
 				$out[] = $role;
@@ -1118,7 +1185,25 @@ class TSOSK_Mod_Login_Protect {
 	 */
 	private function get_lockout_log(): array {
 		$v = get_option( self::OPTION_LOCKOUTS, array() );
-		return is_array( $v ) ? $v : array();
+		if ( ! is_array( $v ) ) {
+			return array();
+		}
+		// Drop malformed rows and make sure every field exists (reindexed so unlock indexes stay aligned).
+		$defaults = array(
+			'ip'        => '',
+			'username'  => '',
+			'count'     => 0,
+			'locked_at' => 0,
+			'until'     => 0,
+			'active'    => false,
+		);
+		$clean = array();
+		foreach ( $v as $row ) {
+			if ( is_array( $row ) ) {
+				$clean[] = array_merge( $defaults, $row );
+			}
+		}
+		return $clean;
 	}
 
 	/**
@@ -1128,7 +1213,16 @@ class TSOSK_Mod_Login_Protect {
 	 */
 	private function get_all_attempts(): array {
 		$v = get_option( self::OPTION_ATTEMPTS, array() );
-		return is_array( $v ) ? $v : array();
+		if ( ! is_array( $v ) ) {
+			return array();
+		}
+		$clean = array();
+		foreach ( $v as $ip => $row ) {
+			if ( is_array( $row ) ) {
+				$clean[ $ip ] = array_merge( array( 'count' => 0, 'first' => 0 ), $row );
+			}
+		}
+		return $clean;
 	}
 
 	/**
@@ -1585,10 +1679,10 @@ class TSOSK_Mod_Login_Protect {
 						</td>
 						<td>
 							<span style="font-weight:600;color:#b45309;">
-								<?php echo esc_html( (string) (int) $entry['count'] ); ?>
+								<?php echo esc_html( (string) (int) ( $entry['count'] ?? 0 ) ); ?>
 							</span> / <?php echo esc_html( (string) $s['max_attempts'] ); ?>
 						</td>
-						<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', (int) $entry['first'] ) ); ?> UTC</td>
+						<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', (int) ( $entry['first'] ?? 0 ) ) ); ?> UTC</td>
 						<td>
 							<button class="button button-small tsosk-lp-reset-counter"
 							        data-ip="<?php echo esc_attr( (string) $ip ); ?>"

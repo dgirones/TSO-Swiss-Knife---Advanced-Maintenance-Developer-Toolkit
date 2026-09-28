@@ -31,6 +31,12 @@ class TSOSK_Mod_Search_Replace {
 	/** Max rows previewed per table in dry-run. */
 	private const PREVIEW_LIMIT = 50;
 
+	/** Non-autoloaded option holding a full snapshot of the last Execute run. */
+	private const BACKUP_OPTION = 'tsosk_sr_last_backup';
+
+	/** Max number of changed cells kept in the automatic backup snapshot. */
+	private const BACKUP_CELL_CAP = 5000;
+
 	/** @var TSOSK_Mod_Search_Replace|null */
 	private static $instance = null;
 
@@ -44,6 +50,8 @@ class TSOSK_Mod_Search_Replace {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sr_preview', array( $this, 'ajax_preview' ) );
 		add_action( 'wp_ajax_tsosk_sr_execute', array( $this, 'ajax_execute' ) );
+		add_action( 'wp_ajax_tsosk_sr_restore_backup', array( $this, 'ajax_restore_backup' ) );
+		add_action( 'admin_post_tsosk_sr_download_backup', array( $this, 'download_backup' ) );
 	}
 
 	// ── Table / column discovery ──────────────────────────────────────────────
@@ -102,15 +110,20 @@ class TSOSK_Mod_Search_Replace {
 
 		$tables = array();
 		foreach ( (array) $results as $row ) {
-			$name     = (string) $row['name'];
-			$bytes    = (int) $row['total_bytes'];
+			// Some drivers return the column aliases in upper case (or the raw column names).
+			$row      = array_change_key_case( (array) $row, CASE_LOWER );
+			$name     = (string) ( $row['name'] ?? $row['table_name'] ?? '' );
+			if ( '' === $name ) {
+				continue;
+			}
+			$bytes    = (int) ( $row['total_bytes'] ?? 0 );
 			$size_str = $bytes > 1048576
 				? round( $bytes / 1048576, 1 ) . ' MB'
 				: ( $bytes > 1024 ? round( $bytes / 1024, 1 ) . ' KB' : $bytes . ' B' );
 
 			$tables[] = array(
 				'name'  => $name,
-				'rows'  => (int) $row['table_rows'],
+				'rows'  => (int) ( $row['table_rows'] ?? 0 ),
 				'size'  => $size_str,
 				'is_wp' => ( 0 === strpos( $name, $wpdb->prefix ) ),
 			);
@@ -151,9 +164,10 @@ class TSOSK_Mod_Search_Replace {
 		$text_types = array( 'text', 'tinytext', 'mediumtext', 'longtext', 'varchar', 'char', 'blob', 'tinyblob', 'mediumblob', 'longblob' );
 		$result     = array();
 		foreach ( $cols as $col ) {
-			$base_type = strtolower( (string) ( $col['Type'] ?? '' ) );
+			$col       = array_change_key_case( (array) $col, CASE_LOWER );
+			$base_type = strtolower( (string) ( $col['type'] ?? $col['data_type'] ?? '' ) );
 			if ( in_array( $base_type, $text_types, true ) ) {
-				$field = (string) ( $col['Field'] ?? '' );
+				$field = (string) ( $col['field'] ?? $col['column_name'] ?? '' );
 				if ( '' !== $this->sql_ident( $field ) ) {
 					$result[] = $field;
 				}
@@ -215,12 +229,52 @@ class TSOSK_Mod_Search_Replace {
 
 		$data = @unserialize( $subject, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 		if ( false !== $data || 'b:0;' === $subject ) {
+			// allowed_classes => false already turned any serialized PHP object
+			// into a __PHP_Incomplete_Class stand-in at unserialize time. Its
+			// original class identity/property mangling is gone the moment that
+			// happened — re-serializing it would write back a corrupted blob,
+			// not a preserved one, even if we never touch its properties. Treat
+			// it exactly like an opaque blob we can't safely round-trip.
+			if ( $this->contains_incomplete_class( $data ) ) {
+				return $subject;
+			}
 			$replaced = $this->replace_in_data( $data, $search, $replace_str, $case, $is_regex );
 			return serialize( $replaced ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		}
 
 		// Do not rewrite opaque serialized blobs with string heuristics — lengths break easily.
 		return $subject;
+	}
+
+	/**
+	 * Whether a decoded serialized value contains a __PHP_Incomplete_Class
+	 * anywhere in its structure (i.e. it held a serialized PHP object before
+	 * being unserialized with allowed_classes => false).
+	 *
+	 * @param mixed $data Decoded value.
+	 * @return bool
+	 */
+	private function contains_incomplete_class( $data ): bool {
+		if ( $data instanceof __PHP_Incomplete_Class ) {
+			return true;
+		}
+		if ( is_array( $data ) ) {
+			foreach ( $data as $value ) {
+				if ( $this->contains_incomplete_class( $value ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		if ( is_object( $data ) ) {
+			foreach ( get_object_vars( $data ) as $value ) {
+				if ( $this->contains_incomplete_class( $value ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return false;
 	}
 
 	/**
@@ -411,7 +465,9 @@ class TSOSK_Mod_Search_Replace {
 		}
 
 		global $wpdb;
-		$stats = array( 'tables' => 0, 'rows' => 0, 'cells' => 0, 'errors' => array() );
+		$stats            = array( 'tables' => 0, 'rows' => 0, 'cells' => 0, 'errors' => array() );
+		$backup_cells     = array();
+		$backup_truncated = false;
 
 		foreach ( $params['tables'] as $table ) {
 			if ( ! $this->table_exists( $table ) ) {
@@ -430,7 +486,7 @@ class TSOSK_Mod_Search_Replace {
 				);
 				continue;
 			}
-			$table_stats = $this->replace_in_table( $table, $cols, $pk, $params );
+			$table_stats = $this->replace_in_table( $table, $cols, $pk, $params, $backup_cells, $backup_truncated );
 			if ( $table_stats['rows'] > 0 ) {
 				$stats['tables']++;
 				$stats['rows']  += $table_stats['rows'];
@@ -439,6 +495,32 @@ class TSOSK_Mod_Search_Replace {
 			if ( ! empty( $table_stats['errors'] ) ) {
 				$stats['errors'] = array_merge( $stats['errors'], $table_stats['errors'] );
 			}
+		}
+
+		// Snapshot the original + new value of every changed cell (capped) so the
+		// whole operation can be undone from the "Automatic backup" panel, even
+		// though every match already went through the mandatory Preview step.
+		$backup_created = ! empty( $backup_cells );
+		if ( $backup_created ) {
+			$current_user = wp_get_current_user();
+			update_option(
+				self::BACKUP_OPTION,
+				array(
+					'id'             => function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : md5( uniqid( 'tsosksr', true ) ),
+					'time'           => time(),
+					'user'           => sanitize_user( (string) $current_user->user_login, true ),
+					'search'         => $params['search'],
+					'replace'        => $params['replace'],
+					'case_sensitive' => (bool) $params['case_sensitive'],
+					'is_regex'       => (bool) $params['is_regex'],
+					'rows'           => $stats['rows'],
+					'cells'          => count( $backup_cells ),
+					'cells_total'    => $stats['cells'],
+					'truncated'      => $backup_truncated,
+					'cells_data'     => $backup_cells,
+				),
+				false
+			);
 		}
 
 		// Record in central activity log.
@@ -453,11 +535,13 @@ class TSOSK_Mod_Search_Replace {
 				$params['replace']
 			),
 			array(
-				'search'  => $params['search'],
-				'replace' => $params['replace'],
-				'tables'  => count( $params['tables'] ),
-				'rows'    => $stats['rows'],
-				'cells'   => $stats['cells'],
+				'search'           => $params['search'],
+				'replace'          => $params['replace'],
+				'tables'           => count( $params['tables'] ),
+				'rows'             => $stats['rows'],
+				'cells'            => $stats['cells'],
+				'backup'           => $backup_created,
+				'backup_truncated' => $backup_truncated,
 			)
 		);
 
@@ -474,6 +558,136 @@ class TSOSK_Mod_Search_Replace {
 				$stats['cells']
 			),
 		) );
+	}
+
+	/**
+	 * AJAX: restore the automatic backup of the last Execute run.
+	 *
+	 * Re-applies each cell's pre-replace value, but only where the cell still
+	 * holds the value the replace wrote (guards against clobbering an edit
+	 * made by someone else after the search/replace ran). The backup is
+	 * consumed (deleted) once a restore has been attempted.
+	 */
+	public function ajax_restore_backup(): void {
+		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$backup = get_option( self::BACKUP_OPTION );
+		if ( ! is_array( $backup ) || empty( $backup['cells_data'] ) || ! is_array( $backup['cells_data'] ) ) {
+			wp_send_json_error( __( 'No backup available to restore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		global $wpdb;
+		$restored      = 0;
+		$skipped       = 0;
+		$errors        = array();
+		$restored_rows = array();
+		$pk_cache      = array();
+
+		foreach ( $backup['cells_data'] as $cell ) {
+			$table  = sanitize_text_field( (string) ( $cell['table'] ?? '' ) );
+			$col    = sanitize_text_field( (string) ( $cell['col'] ?? '' ) );
+			$pk_val = $cell['pk'] ?? null;
+			$before = (string) ( $cell['before'] ?? '' );
+			$after  = (string) ( $cell['after'] ?? '' );
+
+			if ( '' === $table || '' === $col || null === $pk_val || ! $this->table_exists( $table ) ) {
+				++$skipped;
+				continue;
+			}
+
+			if ( ! array_key_exists( $table, $pk_cache ) ) {
+				$pk_cache[ $table ] = $this->get_primary_key( $table );
+			}
+			$pk = $pk_cache[ $table ];
+
+			$safe_table = $this->sql_ident( $table );
+			$safe_col   = $this->sql_ident( $col );
+			$safe_pk    = $this->sql_ident( $pk );
+			if ( '' === $pk || '' === $safe_table || '' === $safe_col || '' === $safe_pk ) {
+				++$skipped;
+				continue;
+			}
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); value uses a prepare placeholder.
+			$current = $wpdb->get_var( $wpdb->prepare( "SELECT {$safe_col} FROM {$safe_table} WHERE {$safe_pk} = %s", $pk_val ) );
+			if ( null === $current || (string) $current !== $after ) {
+				// Row gone, or changed by something else since the replace ran — never clobber it.
+				++$skipped;
+				continue;
+			}
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$result = $wpdb->update( $table, array( $col => $before ), array( $pk => $pk_val ), array( '%s' ), array( '%s' ) );
+			if ( false === $result ) {
+				$errors[] = "Table {$table} PK {$pk_val}: " . $wpdb->last_error;
+				continue;
+			}
+			++$restored;
+			$restored_rows[ $table . '|' . $pk_val ] = true;
+		}
+
+		// Consumed: a backup can only be restored once, so a stale snapshot can't be reapplied twice.
+		delete_option( self::BACKUP_OPTION );
+
+		TSOSK_Activity_Log::log(
+			'search-replace',
+			'restore',
+			sprintf(
+				/* translators: 1: search string, 2: replace string, 3: restored cells, 4: skipped cells */
+				__( 'Backup restored: "%1$s" → "%2$s" undone (%3$d cell(s) restored, %4$d skipped).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$backup['search'] ?? '',
+				$backup['replace'] ?? '',
+				$restored,
+				$skipped
+			),
+			array(
+				'search'         => $backup['search'] ?? '',
+				'replace'        => $backup['replace'] ?? '',
+				'cells_restored' => $restored,
+				'cells_skipped'  => $skipped,
+				'rows_restored'  => count( $restored_rows ),
+			)
+		);
+
+		wp_send_json_success(
+			array(
+				'restored' => $restored,
+				'skipped'  => $skipped,
+				'errors'   => $errors,
+				'message'  => sprintf(
+					/* translators: 1: restored cells, 2: skipped cells, 3: restored rows */
+					__( 'Restore complete: %1$d cell(s) restored, %2$d skipped (changed since), across %3$d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$restored,
+					$skipped,
+					count( $restored_rows )
+				),
+			)
+		);
+	}
+
+	/**
+	 * Download the current automatic backup as a JSON file.
+	 */
+	public function download_backup(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		check_admin_referer( 'tsosk_sr_download_backup' );
+
+		$backup = get_option( self::BACKUP_OPTION );
+		if ( ! is_array( $backup ) || empty( $backup['cells_data'] ) ) {
+			wp_die( esc_html__( 'No backup available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tsosk-search-replace-backup-' . gmdate( 'Y-m-d-His', (int) $backup['time'] ) . '.json"' );
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON download body.
+		echo wp_json_encode( $backup, JSON_PRETTY_PRINT );
+		exit;
 	}
 
 	// ── Core search/replace logic ─────────────────────────────────────────────
@@ -506,23 +720,75 @@ class TSOSK_Mod_Search_Replace {
 
 		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); values use prepare placeholders.
 		if ( $is_regex ) {
-			$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' LIMIT %d';
-			$rows = $wpdb->get_results( $wpdb->prepare( $sql, $limit ), ARRAY_A );
-		} else {
-			$like_parts = array();
-			foreach ( $cols as $col ) {
-				$col_sql = $this->sql_ident( (string) $col );
-				if ( '' === $col_sql ) {
-					return array();
+			// Regex can't be pushed into SQL, so every row has to be paged
+			// through and checked in PHP — exactly what replace_in_table()
+			// does for Execute. Previewing a single arbitrary LIMIT-50 window
+			// (the old behaviour) could report "0 matches" while Execute went
+			// on to scan and modify the entire table. Page through the table
+			// in the same ascending-PK order Execute uses, stopping once
+			// enough sample matches are collected. Preview additionally caps
+			// the total rows scanned so a huge table can't stall the AJAX
+			// request; Execute (replace_in_table) has no such cap.
+			$matches  = array();
+			$offset   = 0;
+			$batch    = 500;
+			$scan_cap = $preview ? 20000 : PHP_INT_MAX;
+			$scanned  = 0;
+
+			do {
+				$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d OFFSET %d';
+				$rows = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
+				if ( ! $rows ) {
+					break;
 				}
-				$like_parts[] = $col_sql . ' LIKE %s';
-			}
-			$like_term = '%' . $wpdb->esc_like( $search ) . '%';
-			$where     = '(' . implode( ' OR ', $like_parts ) . ')';
-			$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
-			$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $limit ) );
-			$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
+				$scanned += count( $rows );
+
+				foreach ( $rows as $row ) {
+					$pk_val  = $row[ $pk ] ?? null;
+					$changes = array();
+					foreach ( $cols as $col ) {
+						$orig = (string) ( $row[ $col ] ?? '' );
+						if ( '' === $orig || ! $this->value_contains( $search, $orig, $case, $is_regex ) ) {
+							continue;
+						}
+						$after = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
+						if ( $after !== $orig ) {
+							$changes[ $col ] = array(
+								'before' => $preview ? mb_substr( $orig, 0, 300 ) : '',
+								'after'  => $preview ? mb_substr( $after, 0, 300 ) : '',
+							);
+						}
+					}
+					if ( ! empty( $changes ) ) {
+						$matches[] = array(
+							'pk'      => $pk_val,
+							'changes' => $changes,
+						);
+						if ( $preview && count( $matches ) >= $limit ) {
+							return $matches;
+						}
+					}
+				}
+
+				$offset += $batch;
+			} while ( count( $rows ) === $batch && $scanned < $scan_cap );
+
+			return $matches;
 		}
+
+		$like_parts = array();
+		foreach ( $cols as $col ) {
+			$col_sql = $this->sql_ident( (string) $col );
+			if ( '' === $col_sql ) {
+				return array();
+			}
+			$like_parts[] = $col_sql . ' LIKE %s';
+		}
+		$like_term = '%' . $wpdb->esc_like( $search ) . '%';
+		$where     = '(' . implode( ' OR ', $like_parts ) . ')';
+		$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
+		$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $limit ) );
+		$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 		// phpcs:enable
 
 		$matches = array();
@@ -555,13 +821,15 @@ class TSOSK_Mod_Search_Replace {
 	/**
 	 * Execute replace on one table.
 	 *
-	 * @param string $table  Table name.
-	 * @param array  $cols   Text columns.
-	 * @param string $pk     Primary key column.
-	 * @param array  $params Parameters.
+	 * @param string $table            Table name.
+	 * @param array  $cols             Text columns.
+	 * @param string $pk               Primary key column.
+	 * @param array  $params           Parameters.
+	 * @param array  $backup_cells     Backup snapshot accumulator (by reference, capped).
+	 * @param bool   $backup_truncated Set true once the backup cap is reached (by reference).
 	 * @return array{rows:int,cells:int,errors:array}
 	 */
-	private function replace_in_table( string $table, array $cols, string $pk, array $params ): array {
+	private function replace_in_table( string $table, array $cols, string $pk, array $params, array &$backup_cells, bool &$backup_truncated ): array {
 		global $wpdb;
 		$search   = $params['search'];
 		$replace  = $params['replace'];
@@ -592,7 +860,7 @@ class TSOSK_Mod_Search_Replace {
 					break;
 				}
 
-				$this->apply_row_updates( $table, $cols, $pk, $rows, $search, $replace, $case, $is_regex, $stats );
+				$this->apply_row_updates( $table, $cols, $pk, $rows, $search, $replace, $case, $is_regex, $stats, $backup_cells, $backup_truncated );
 				$offset += $batch;
 			} while ( count( $rows ) === $batch );
 			// phpcs:enable
@@ -600,9 +868,10 @@ class TSOSK_Mod_Search_Replace {
 			return $stats;
 		}
 
-		$batch = 500;
+		$batch   = 500;
+		$last_pk = null;
 
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); LIKE values use prepare placeholders.
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); LIKE/PK values use prepare placeholders.
 		do {
 			$like_parts = array();
 			foreach ( $cols as $col ) {
@@ -615,16 +884,38 @@ class TSOSK_Mod_Search_Replace {
 			}
 			$like_term = '%' . $wpdb->esc_like( $search ) . '%';
 			$where     = '(' . implode( ' OR ', $like_parts ) . ')';
-			$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
-			$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $batch ) );
-			$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
+			$args      = array_fill( 0, count( $cols ), $like_term );
+
+			// Keyset pagination (PK > last seen), not a plain re-query from the
+			// start: re-querying "WHERE ... LIKE ..." with no lower bound
+			// assumes updated rows always drop out of the LIKE match — false
+			// whenever the replacement text still contains the search text
+			// (e.g. search "example.com" → replace "www.example.com"). That
+			// assumption previously caused the same batch to be re-matched and
+			// re-replaced forever. Requiring PK > last_pk guarantees each row
+			// is visited at most once, regardless of what the update does to
+			// its own LIKE-match status.
+			if ( null !== $last_pk ) {
+				$where .= ' AND ' . $safe_pk . ' > %s';
+				$args[] = (string) $last_pk;
+			}
+
+			$sql    = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d';
+			$args[] = $batch;
+			$rows   = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 			// phpcs:enable
 
 			if ( ! $rows ) {
 				break;
 			}
 
-			$this->apply_row_updates( $table, $cols, $pk, $rows, $search, $replace, $case, $is_regex, $stats );
+			$this->apply_row_updates( $table, $cols, $pk, $rows, $search, $replace, $case, $is_regex, $stats, $backup_cells, $backup_truncated );
+
+			$last_row = end( $rows );
+			$last_pk  = $last_row[ $pk ] ?? null;
+			if ( null === $last_pk ) {
+				break;
+			}
 		} while ( count( $rows ) === $batch );
 
 		return $stats;
@@ -633,17 +924,19 @@ class TSOSK_Mod_Search_Replace {
 	/**
 	 * Apply search-replace updates to a batch of rows.
 	 *
-	 * @param string               $table    Table name.
-	 * @param array                $cols     Text columns.
-	 * @param string               $pk       Primary key column.
-	 * @param array                $rows     Fetched rows.
-	 * @param string               $search   Search term.
-	 * @param string               $replace  Replacement.
-	 * @param bool                 $case     Case-sensitive.
-	 * @param bool                 $is_regex Regex mode.
-	 * @param array<string,mixed>  $stats    Stats array passed by reference.
+	 * @param string              $table            Table name.
+	 * @param array               $cols             Text columns.
+	 * @param string              $pk               Primary key column.
+	 * @param array               $rows             Fetched rows.
+	 * @param string              $search           Search term.
+	 * @param string              $replace          Replacement.
+	 * @param bool                $case             Case-sensitive.
+	 * @param bool                $is_regex         Regex mode.
+	 * @param array<string,mixed> $stats            Stats array passed by reference.
+	 * @param array               $backup_cells     Backup snapshot accumulator (by reference, capped).
+	 * @param bool                $backup_truncated Set true once the backup cap is reached (by reference).
 	 */
-	private function apply_row_updates( string $table, array $cols, string $pk, array $rows, string $search, string $replace, bool $case, bool $is_regex, array &$stats ): void {
+	private function apply_row_updates( string $table, array $cols, string $pk, array $rows, string $search, string $replace, bool $case, bool $is_regex, array &$stats, array &$backup_cells, bool &$backup_truncated ): void {
 		global $wpdb;
 
 		foreach ( $rows as $row ) {
@@ -664,6 +957,18 @@ class TSOSK_Mod_Search_Replace {
 					$updates[ $col ] = $new;
 					$formats[]       = '%s';
 					$stats['cells']++;
+
+					if ( count( $backup_cells ) < self::BACKUP_CELL_CAP ) {
+						$backup_cells[] = array(
+							'table'  => $table,
+							'pk'     => $pk_val,
+							'col'    => $col,
+							'before' => $orig,
+							'after'  => $new,
+						);
+					} else {
+						$backup_truncated = true;
+					}
 				}
 			}
 
@@ -774,10 +1079,11 @@ class TSOSK_Mod_Search_Replace {
 		}
 		$primary = array();
 		foreach ( $cols as $col ) {
-			if ( 'PRI' !== ( $col['Key'] ?? '' ) ) {
+			$col = array_change_key_case( (array) $col, CASE_LOWER );
+			if ( 'PRI' !== strtoupper( (string) ( $col['key'] ?? $col['column_key'] ?? '' ) ) ) {
 				continue;
 			}
-			$field = (string) ( $col['Field'] ?? '' );
+			$field = (string) ( $col['field'] ?? $col['column_name'] ?? '' );
 			if ( '' !== $this->sql_ident( $field ) ) {
 				$primary[] = $field;
 			}
@@ -796,8 +1102,8 @@ class TSOSK_Mod_Search_Replace {
 	private function parse_request_params() {
 		// Nonce verified in ajax_preview() / ajax_execute() before this runs.
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		$search    = isset( $_POST['search'] ) ? wp_unslash( $_POST['search'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw search term required
-		$replace   = isset( $_POST['replace'] ) ? wp_unslash( $_POST['replace'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw replace term required
+		$search    = isset( $_POST['search'] ) && is_string( $_POST['search'] ) ? wp_unslash( $_POST['search'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw search term required
+		$replace   = isset( $_POST['replace'] ) && is_string( $_POST['replace'] ) ? wp_unslash( $_POST['replace'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw replace term required
 		$case      = ! empty( $_POST['case_sensitive'] );
 		$is_regex  = ! empty( $_POST['is_regex'] );
 		$tables_in = isset( $_POST['tables'] ) ? map_deep( wp_unslash( (array) $_POST['tables'] ), 'sanitize_text_field' ) : array();
@@ -846,8 +1152,8 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	private function render_guide(): void {
 		?>
-		<div class="tsosk-guide-card">
-			<h3 class="tsosk-guide-title"><?php esc_html_e( 'What is this tool for?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<details class="tsosk-guide-card tsosk-guide-collapse">
+			<summary class="tsosk-guide-title"><?php esc_html_e( 'What is this tool for?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
 			<p class="tsosk-guide-lead">
 				<?php esc_html_e( 'It finds a piece of text inside your database and replaces it with another — across posts, options, meta, and other tables. Think of it as “Find & Replace” in a text editor, but for the whole WordPress database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
@@ -882,6 +1188,70 @@ class TSOSK_Mod_Search_Replace {
 					<code>https://new-site.com</code>
 				</p>
 			</div>
+		</details>
+		<?php
+	}
+
+	/**
+	 * Render the "Automatic backup" panel: status of the last Execute run's
+	 * snapshot, with Restore and Download actions when one is available.
+	 *
+	 * @param string $nonce Shared tsosk_sr_nonce for the AJAX actions.
+	 */
+	private function render_backup_panel( string $nonce ): void {
+		$backup     = get_option( self::BACKUP_OPTION );
+		$has_backup = is_array( $backup ) && ! empty( $backup['cells_data'] );
+		?>
+		<div class="tsosk-card" id="tsosk-sr-backup-card">
+			<h3><?php esc_html_e( 'Automatic backup', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+
+			<?php if ( ! $has_backup ) : ?>
+				<p class="description">
+					<?php esc_html_e( 'No automatic backup yet. One is created automatically the next time you run Execute replace, so that operation can be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+			<?php else : ?>
+				<p>
+					<?php
+					printf(
+						/* translators: 1: date/time, 2: search term, 3: replace term */
+						esc_html__( 'Backup from %1$s: "%2$s" → "%3$s".', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						esc_html( wp_date( 'Y-m-d H:i', (int) $backup['time'] ) ),
+						esc_html( (string) $backup['search'] ),
+						esc_html( (string) $backup['replace'] )
+					);
+					?>
+					<br>
+					<?php
+					printf(
+						/* translators: 1: number of cells, 2: number of rows */
+						esc_html__( '%1$d cell(s) captured across %2$d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						(int) $backup['cells'],
+						(int) $backup['rows']
+					);
+					?>
+				</p>
+				<?php if ( ! empty( $backup['truncated'] ) ) : ?>
+				<div class="tsosk-notice tsosk-notice-warn">
+					<?php
+					printf(
+						/* translators: %d: max cells kept in the backup */
+						esc_html__( 'Only the first %d changed cells were captured for this backup (the operation affected more). Restore will still work for those — for very large operations, also keep a full manual database backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						(int) self::BACKUP_CELL_CAP
+					);
+					?>
+				</div>
+				<?php endif; ?>
+				<p>
+					<button type="button" class="button button-primary" id="tsosk-sr-backup-restore-btn"
+					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Restore backup', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tsosk_sr_download_backup' ), 'tsosk_sr_download_backup' ) ); ?>">
+						<?php esc_html_e( 'Download backup (JSON)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</a>
+					<span class="tsosk-ajax-msg" id="tsosk-sr-backup-msg"></span>
+				</p>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -930,6 +1300,8 @@ class TSOSK_Mod_Search_Replace {
 				<?php esc_html_e( 'Search and replace were filled from URL & HTTPS Doctor. Preview is still required before anything is written.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 		<?php endif; ?>
+
+		<?php $this->render_backup_panel( $nonce ); ?>
 
 		<?php /* ── Search form ── */ ?>
 		<div class="tsosk-card">

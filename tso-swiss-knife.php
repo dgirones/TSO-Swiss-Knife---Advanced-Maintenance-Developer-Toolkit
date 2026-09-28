@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.0.8
+ * Version:     1.1.4
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.0.8' );
+define( 'TSOSK_VERSION',  '1.1.4' );
 define( 'TSOSK_FILE',     __FILE__ );
 define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
@@ -285,7 +285,47 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-staging',
 	'includes/modules/class-tsosk-mod-url-doctor',
 	'includes/modules/class-tsosk-mod-runtime-stack',
+	'includes/modules/class-tsosk-mod-view-counter',
+	'includes/modules/class-tsosk-mod-dashboard',
 );
+
+// ── Stale-OPcache guard ────────────────────────────────────────────────────
+// A manual FTP upload does not go through WordPress's own upgrader, so it
+// never calls wp_opcache_invalidate(). On hosts with opcache.validate_timestamps
+// disabled, PHP can keep executing an old cached copy of a module file for a
+// long time after it was overwritten on disk — and since every module below
+// is require_once'd unconditionally, that stale copy is what actually runs,
+// self-heal code included (a self-heal routine added to a module file can't
+// help if the running process never sees the version that contains it).
+// Force a fresh compile of any module whose on-disk mtime moved since the
+// last request, before requiring it, so the current, correct code is always
+// what executes — no manual OPcache/PHP restart needed after a plain file
+// upload.
+if ( function_exists( 'opcache_invalidate' ) ) {
+	$tsosk_cached_mtimes = get_option( 'tsosk_module_mtimes', array() );
+	if ( ! is_array( $tsosk_cached_mtimes ) ) {
+		$tsosk_cached_mtimes = array();
+	}
+	$tsosk_mtimes_changed = false;
+
+	foreach ( $tsosk_includes as $tsosk_watch_file ) {
+		$tsosk_watch_path = TSOSK_PATH . $tsosk_watch_file . '.php';
+		$tsosk_watch_mtime = @filemtime( $tsosk_watch_path );
+		if ( false === $tsosk_watch_mtime ) {
+			continue;
+		}
+		if ( ! isset( $tsosk_cached_mtimes[ $tsosk_watch_file ] ) || (int) $tsosk_cached_mtimes[ $tsosk_watch_file ] !== $tsosk_watch_mtime ) {
+			opcache_invalidate( $tsosk_watch_path, true );
+			$tsosk_cached_mtimes[ $tsosk_watch_file ] = $tsosk_watch_mtime;
+			$tsosk_mtimes_changed = true;
+		}
+	}
+
+	if ( $tsosk_mtimes_changed ) {
+		update_option( 'tsosk_module_mtimes', $tsosk_cached_mtimes, false );
+	}
+	unset( $tsosk_cached_mtimes, $tsosk_mtimes_changed, $tsosk_watch_file, $tsosk_watch_path, $tsosk_watch_mtime );
+}
 
 foreach ( $tsosk_includes as $tsosk_file ) {
 	$tsosk_path = TSOSK_PATH . $tsosk_file . '.php';
@@ -422,6 +462,7 @@ function tsosk_init() {
 		'TSOSK_Mod_Admin_Menu',
 		'TSOSK_Mod_Slow_Queries',
 		'TSOSK_Mod_Staging',
+		'TSOSK_Mod_View_Counter',
 	);
 
 	foreach ( $tsosk_runtime_modules as $tsosk_class ) {
@@ -487,6 +528,7 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Staging',
 		'TSOSK_Mod_Url_Doctor',
 		'TSOSK_Mod_Runtime_Stack',
+		'TSOSK_Mod_View_Counter',
 	);
 
 	foreach ( $tsosk_admin_modules as $tsosk_class ) {
@@ -509,6 +551,11 @@ function tsosk_activate() {
 	$login_protect = get_option( 'tsosk_login_protect', array() );
 	if ( is_array( $login_protect ) && ! empty( $login_protect['custom_url'] ) && ! empty( $login_protect['login_slug'] ) ) {
 		flush_rewrite_rules( false );
+	}
+
+	if ( class_exists( 'TSOSK_Mod_View_Counter' ) ) {
+		TSOSK_Mod_View_Counter::create_tables();
+		update_option( TSOSK_Mod_View_Counter::OPTION_DB_VERSION, TSOSK_Mod_View_Counter::DB_VERSION, false );
 	}
 }
 
@@ -540,5 +587,9 @@ function tsosk_deactivate() {
 			TSOSK_Mod_Login_Protect::purge_custom_login_rewrite( (string) $login_protect['login_slug'] );
 		}
 		flush_rewrite_rules( false );
+	}
+
+	if ( class_exists( 'TSOSK_Mod_View_Counter' ) ) {
+		TSOSK_Mod_View_Counter::unschedule_weekly_email();
 	}
 }

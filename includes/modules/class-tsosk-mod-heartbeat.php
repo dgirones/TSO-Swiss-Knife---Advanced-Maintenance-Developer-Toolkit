@@ -66,6 +66,88 @@ class TSOSK_Mod_Heartbeat {
 				return $s;
 			} );
 		}
+
+		// Measure real Heartbeat traffic regardless of mode, so a later change
+		// of mode/interval can be justified with actual numbers instead of guesses.
+		add_action( 'heartbeat_tick', array( $this, 'record_heartbeat_tick' ), 1, 2 );
+	}
+
+	/**
+	 * 'heartbeat_tick' callback: count this request in the current UTC-hour
+	 * bucket, broken down by screen_id, so admins can see real traffic before
+	 * changing the mode or interval.
+	 *
+	 * @param array<string,mixed> $response  Heartbeat response (unused, read-only).
+	 * @param string              $screen_id Screen that sent the tick ('front' on the public site).
+	 */
+	public function record_heartbeat_tick( $response, $screen_id ): void {
+		$screen_id = is_string( $screen_id ) && '' !== $screen_id ? sanitize_key( $screen_id ) : 'front';
+
+		$key    = 'tsosk_hb_hits_' . gmdate( 'YmdH' );
+		$bucket = get_transient( $key );
+		if ( ! is_array( $bucket ) ) {
+			$bucket = array(
+				'total'     => 0,
+				'by_screen' => array(),
+			);
+		}
+		$bucket['total']                   = absint( $bucket['total'] ?? 0 ) + 1;
+		$bucket['by_screen'][ $screen_id ] = absint( $bucket['by_screen'][ $screen_id ] ?? 0 ) + 1;
+
+		// 25 h: a little past the 24 h window we read, so the oldest bucket a
+		// render() call needs is never gone right before it would roll off.
+		set_transient( $key, $bucket, 25 * HOUR_IN_SECONDS );
+	}
+
+	/**
+	 * Real Heartbeat traffic measured over the last rolling 24 hours (hourly
+	 * transient buckets; no persistent log, so history is always "now - 24h").
+	 *
+	 * @return array{this_hour:int,last_24h:int,avg_per_hour:float,by_screen:array<string,int>}
+	 */
+	private function get_traffic_stats(): array {
+		$now       = time();
+		$total_24h = 0;
+		$by_screen = array();
+
+		for ( $i = 0; $i < 24; $i++ ) {
+			$bucket = get_transient( 'tsosk_hb_hits_' . gmdate( 'YmdH', $now - ( $i * HOUR_IN_SECONDS ) ) );
+			if ( ! is_array( $bucket ) ) {
+				continue;
+			}
+			$total_24h += absint( $bucket['total'] ?? 0 );
+			foreach ( (array) ( $bucket['by_screen'] ?? array() ) as $screen => $count ) {
+				$screen               = sanitize_key( (string) $screen );
+				$by_screen[ $screen ] = ( $by_screen[ $screen ] ?? 0 ) + absint( $count );
+			}
+		}
+		arsort( $by_screen );
+
+		$this_hour_bucket = get_transient( 'tsosk_hb_hits_' . gmdate( 'YmdH', $now ) );
+		$this_hour        = is_array( $this_hour_bucket ) ? absint( $this_hour_bucket['total'] ?? 0 ) : 0;
+
+		return array(
+			'this_hour'    => $this_hour,
+			'last_24h'     => $total_24h,
+			'avg_per_hour' => $total_24h > 0 ? round( $total_24h / 24, 1 ) : 0.0,
+			'by_screen'    => $by_screen,
+		);
+	}
+
+	/**
+	 * Human-readable label for a Heartbeat screen_id.
+	 *
+	 * @param string $screen_id Raw screen_id from the tick.
+	 * @return string
+	 */
+	private function format_screen_label( string $screen_id ): string {
+		$known = array(
+			'front'       => __( 'Front end (public site)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'post'        => __( 'Post/page editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'dashboard'   => __( 'Dashboard', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'site-editor' => __( 'Site editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+		return $known[ $screen_id ] ?? $screen_id;
 	}
 
 	/** AJAX: save heartbeat settings. */
@@ -168,6 +250,46 @@ class TSOSK_Mod_Heartbeat {
 			<input type="number" id="tsosk-heartbeat-interval" min="0" max="300" step="5"
 			       value="<?php echo esc_attr( (string) $interval ); ?>" style="width:100px;">
 			<span class="description">&nbsp;<?php esc_html_e( '0 = WordPress default (15 s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+		</div>
+
+		<?php $tsosk_hb_traffic = $this->get_traffic_stats(); ?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Measured Traffic', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Real Heartbeat requests hitting this site, counted as they happen (rolling 24-hour window). Use this before changing the mode or interval above, instead of guessing.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;">
+				<div class="tsosk-stat-tile">
+					<span class="tsosk-stat-val"><?php echo esc_html( (string) $tsosk_hb_traffic['this_hour'] ); ?></span>
+					<span class="tsosk-stat-lbl"><?php esc_html_e( 'This hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-stat-tile">
+					<span class="tsosk-stat-val"><?php echo esc_html( (string) $tsosk_hb_traffic['last_24h'] ); ?></span>
+					<span class="tsosk-stat-lbl"><?php esc_html_e( 'Last 24 hours', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-stat-tile">
+					<span class="tsosk-stat-val"><?php echo esc_html( (string) $tsosk_hb_traffic['avg_per_hour'] ); ?></span>
+					<span class="tsosk-stat-lbl"><?php esc_html_e( 'Avg. requests / hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+			</div>
+			<?php if ( ! empty( $tsosk_hb_traffic['by_screen'] ) ) : ?>
+			<table class="widefat tsosk-table" style="max-width:520px;">
+				<thead><tr>
+					<th><?php esc_html_e( 'Screen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th style="width:30%;"><?php esc_html_e( 'Requests (24h)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				</tr></thead>
+				<tbody>
+				<?php foreach ( $tsosk_hb_traffic['by_screen'] as $tsosk_hb_screen => $tsosk_hb_count ) : ?>
+					<tr>
+						<td><?php echo esc_html( $this->format_screen_label( (string) $tsosk_hb_screen ) ); ?></td>
+						<td><?php echo esc_html( (string) $tsosk_hb_count ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php else : ?>
+			<p class="description"><?php esc_html_e( 'No Heartbeat requests measured yet in the last 24 hours.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php endif; ?>
 		</div>
 
 		<button class="button button-primary" id="tsosk-heartbeat-save"

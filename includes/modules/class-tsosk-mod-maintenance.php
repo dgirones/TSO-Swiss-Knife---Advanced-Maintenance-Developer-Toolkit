@@ -90,7 +90,8 @@ class TSOSK_Mod_Maintenance {
 		);
 		wp_enqueue_style( 'tsosk-maintenance' );
 
-		http_response_code( 503 );
+		// status_header() replaces the "HTTP/1.1 200 OK" line WordPress already sent; http_response_code() does not.
+		status_header( $is_preview ? 200 : 503 );
 		header( 'Retry-After: 3600' );
 		header( 'Content-Type: text/html; charset=utf-8' );
 		nocache_headers();
@@ -257,13 +258,13 @@ class TSOSK_Mod_Maintenance {
 		}
 
 		$message = isset( $_POST['message'] )
-			? sanitize_textarea_field( wp_unslash( (string) $_POST['message'] ) )
+			? sanitize_textarea_field( wp_unslash( ( is_scalar( $_POST['message'] ) ? (string) $_POST['message'] : '' ) ) )
 			: '';
 		$logo_id = $this->sanitize_logo_id(
 			isset( $_POST['logo_id'] ) ? absint( wp_unslash( $_POST['logo_id'] ) ) : 0
 		);
 		$page_title = isset( $_POST['page_title'] )
-			? sanitize_text_field( wp_unslash( (string) $_POST['page_title'] ) )
+			? sanitize_text_field( wp_unslash( ( is_scalar( $_POST['page_title'] ) ? (string) $_POST['page_title'] : '' ) ) )
 			: '';
 
 		$this->render_maintenance_html( $message, true, $logo_id, $page_title );

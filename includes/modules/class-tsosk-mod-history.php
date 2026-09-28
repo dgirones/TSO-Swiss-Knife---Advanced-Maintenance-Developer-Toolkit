@@ -135,6 +135,7 @@ class TSOSK_Mod_History {
 							<th class="tsosk-history-col-action"><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th class="tsosk-history-col-user"><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-history-col-undo"><?php esc_html_e( 'Undo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -190,16 +191,26 @@ class TSOSK_Mod_History {
 	 * @return string
 	 */
 	private function render_row( array $entry ): string {
+		$id      = sanitize_text_field( (string) ( $entry['id'] ?? '' ) );
 		$module  = sanitize_key( (string) ( $entry['module'] ?? '' ) );
 		$action  = sanitize_key( (string) ( $entry['action'] ?? '' ) );
 		$time    = (int) ( $entry['time'] ?? 0 );
 		$user    = sanitize_user( (string) ( $entry['user'] ?? '' ), true );
 		$summary = (string) ( $entry['summary'] ?? '' );
 		$details = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
+		$reverted = ! empty( $entry['reverted'] );
 
 		$badge_class = 'delete' === $action ? 'tsosk-badge-warn' : ( 'enable' === $action || 'add' === $action ? 'tsosk-badge-ok' : 'tsosk-badge-info' );
 
 		$detail_html = $this->format_details( $details );
+
+		// Undo is currently only offered for Options Editor entries flagged
+		// 'undoable' at log time (see TSOSK_Mod_Options_Editor::log_activity()).
+		$can_undo = '' !== $id
+			&& ! $reverted
+			&& 'options-editor' === $module
+			&& in_array( $action, array( 'update', 'add', 'delete' ), true )
+			&& ! empty( $details['undoable'] );
 
 		ob_start();
 		?>
@@ -214,6 +225,17 @@ class TSOSK_Mod_History {
 				<?php endif; ?>
 			</td>
 			<td class="tsosk-code tsosk-history-user"><?php echo esc_html( $user ); ?></td>
+			<td class="tsosk-history-undo">
+				<?php if ( $can_undo ) : ?>
+					<button type="button" class="button button-small tsosk-history-undo-btn"
+					        data-id="<?php echo esc_attr( $id ); ?>"
+					        data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_history_nonce' ) ); ?>">
+						<?php esc_html_e( 'Undo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+				<?php elseif ( $reverted ) : ?>
+					<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Reverted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				<?php endif; ?>
+			</td>
 		</tr>
 		<?php
 		return (string) ob_get_clean();

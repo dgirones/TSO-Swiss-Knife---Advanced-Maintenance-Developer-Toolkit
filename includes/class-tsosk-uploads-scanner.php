@@ -25,6 +25,12 @@ class TSOSK_Uploads_Scanner {
 	/** Cache lifetime in seconds. */
 	public const CACHE_TTL = 600;
 
+	/** Option storing quarantine entries metadata (moved-but-not-yet-purged hygiene folders). */
+	public const OPTION_QUARANTINE = 'tsosk_media_quarantine';
+
+	/** Days a quarantined folder is kept before it becomes eligible for automatic purge. */
+	public const QUARANTINE_DAYS = 30;
+
 	/** Directory names under uploads to skip (plugin-owned, not media). */
 	private const SKIP_DIRS = array(
 		'tso-swiss-knife-advanced-maintenance-developer-toolkit',
@@ -110,7 +116,7 @@ class TSOSK_Uploads_Scanner {
 	 *
 	 * @return array<string, mixed>|WP_Error
 	 */
-	public static function scan_footprint(): array {
+	public static function scan_footprint(): array|WP_Error {
 		$uploads = wp_upload_dir();
 		if ( ! empty( $uploads['error'] ) ) {
 			return new WP_Error( 'tsosk_uploads', (string) $uploads['error'] );
@@ -144,12 +150,15 @@ class TSOSK_Uploads_Scanner {
 				continue;
 			}
 
-			$handle = @opendir( $dir );
+			if ( ! is_readable( $dir ) ) {
+				continue;
+			}
+			$handle = opendir( $dir );
 			if ( ! $handle ) {
 				continue;
 			}
 
-			while ( false !== ( $entry = readdir( $handle ) ) ) {
+			for ( $entry = readdir( $handle ); false !== $entry; $entry = readdir( $handle ) ) {
 				if ( '.' === $entry || '..' === $entry ) {
 					continue;
 				}
@@ -211,11 +220,14 @@ class TSOSK_Uploads_Scanner {
 					++$stats['by_extension'][ $ext ]['files'];
 				}
 
-				self::track_largest_file( $largest_heap, array(
-					'relative'      => $relative,
-					'size'          => $size,
-					'is_derivative' => $is_deriv,
-				) );
+				self::track_largest_file(
+					$largest_heap,
+					array(
+						'relative'      => $relative,
+						'size'          => $size,
+						'is_derivative' => $is_deriv,
+					)
+				);
 			}
 
 			closedir( $handle );
@@ -246,7 +258,7 @@ class TSOSK_Uploads_Scanner {
 	 *
 	 * @return array<string, mixed>|WP_Error
 	 */
-	public static function scan_image_sizes(): array {
+	public static function scan_image_sizes(): array|WP_Error {
 		global $wpdb;
 
 		$uploads = wp_upload_dir();
@@ -304,9 +316,9 @@ class TSOSK_Uploads_Scanner {
 				++$attachments;
 				$attached = get_attached_file( $post_id );
 				if ( $attached && file_exists( $attached ) ) {
-					$norm = wp_normalize_path( $attached );
+					$norm                 = wp_normalize_path( $attached );
 					$known_files[ $norm ] = true;
-					$full_stats['files']++;
+					++$full_stats['files'];
 					$full_stats['bytes'] += (int) filesize( $attached );
 				}
 
@@ -327,8 +339,8 @@ class TSOSK_Uploads_Scanner {
 					}
 
 					$known_files[ $file_path ] = true;
-					$file_size = (int) filesize( $file_path );
-					$key       = sanitize_key( (string) $size_name );
+					$file_size                 = (int) filesize( $file_path );
+					$key                       = sanitize_key( (string) $size_name );
 
 					if ( isset( $size_stats[ $key ] ) ) {
 						++$size_stats[ $key ]['files'];
@@ -351,12 +363,15 @@ class TSOSK_Uploads_Scanner {
 				continue;
 			}
 
-			$handle = @opendir( $dir );
+			if ( ! is_readable( $dir ) ) {
+				continue;
+			}
+			$handle = opendir( $dir );
 			if ( ! $handle ) {
 				continue;
 			}
 
-			while ( false !== ( $entry = readdir( $handle ) ) ) {
+			for ( $entry = readdir( $handle ); false !== $entry; $entry = readdir( $handle ) ) {
 				if ( '.' === $entry || '..' === $entry ) {
 					continue;
 				}
@@ -414,10 +429,10 @@ class TSOSK_Uploads_Scanner {
 		);
 
 		return array(
-			'registered'          => $registered,
-			'attachments_scanned' => $attachments,
-			'full'                => $full_stats,
-			'by_size'             => $size_stats,
+			'registered'            => $registered,
+			'attachments_scanned'   => $attachments,
+			'full'                  => $full_stats,
+			'by_size'               => $size_stats,
 			'unmatched_derivatives' => $unmatched,
 			'scanned_at'            => time(),
 			'truncated'             => $walked >= self::MAX_FILES,
@@ -450,6 +465,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Extract the YYYY/MM month key from a relative uploads path, if present.
+	 *
 	 * @param string $relative Path relative to uploads root.
 	 * @return string Month key YYYY/MM or empty.
 	 */
@@ -461,6 +478,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a filename looks like a generated image-size derivative (e.g. -150x150).
+	 *
 	 * @param string $filename File basename.
 	 * @return bool
 	 */
@@ -469,6 +488,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a file extension is a likely original media type.
+	 *
 	 * @param string $extension Lowercase extension.
 	 * @return bool
 	 */
@@ -477,6 +498,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Build a map of "widthxheight" dimension keys to their registered image size names.
+	 *
 	 * @param array<string, array{width:int, height:int, crop?:bool}> $registered Registered subsizes.
 	 * @return array<string, string> Dimension key => size name.
 	 */
@@ -493,6 +516,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a path is safely contained within the allowed scan base.
+	 *
 	 * @param string $path Full path.
 	 * @param string $base Uploads base path.
 	 * @return bool
@@ -504,6 +529,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a directory should be skipped during the uploads scan.
+	 *
 	 * @param string $path Directory path.
 	 * @param string $base Uploads base path.
 	 * @return bool
@@ -521,7 +548,7 @@ class TSOSK_Uploads_Scanner {
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, scanned_at: int}|WP_Error
 	 */
-	public static function scan_hygiene(): array {
+	public static function scan_hygiene(): array|WP_Error {
 		$uploads = wp_upload_dir();
 		if ( ! empty( $uploads['error'] ) ) {
 			return new WP_Error( 'tsosk_uploads', (string) $uploads['error'] );
@@ -544,7 +571,7 @@ class TSOSK_Uploads_Scanner {
 				if ( ! is_dir( $path ) ) {
 					continue;
 				}
-				$item = self::classify_uploads_top_folder( (string) $entry, $path, $uploads_base );
+				$item = self::classify_uploads_top_folder( (string) $entry, $path );
 				if ( null !== $item ) {
 					$items[] = $item;
 				}
@@ -564,7 +591,11 @@ class TSOSK_Uploads_Scanner {
 		usort(
 			$items,
 			static function ( array $a, array $b ): int {
-				$order = array( 'safe' => 0, 'review' => 1, 'keep' => 2 );
+				$order = array(
+					'safe'   => 0,
+					'review' => 1,
+					'keep'   => 2,
+				);
 				$ca    = $order[ $a['confidence'] ?? 'review' ] ?? 1;
 				$cb    = $order[ $b['confidence'] ?? 'review' ] ?? 1;
 				if ( $ca !== $cb ) {
@@ -634,11 +665,278 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Lazily initialise WP_Filesystem for quarantine move/restore operations.
+	 *
+	 * @return WP_Filesystem_Base|null
+	 */
+	private static function init_quarantine_filesystem() {
+		global $wp_filesystem;
+		if ( $wp_filesystem instanceof WP_Filesystem_Base ) {
+			return $wp_filesystem;
+		}
+
+		if ( ! function_exists( 'WP_Filesystem' ) && function_exists( 'tsosk_require_wp_admin' ) ) {
+			tsosk_require_wp_admin( 'includes/file.php' );
+		}
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			return null;
+		}
+
+		ob_start();
+		$ready = WP_Filesystem();
+		ob_end_clean();
+
+		return ( $ready && $wp_filesystem instanceof WP_Filesystem_Base ) ? $wp_filesystem : null;
+	}
+
+	/**
+	 * Move a folder previously returned by scan_hygiene() into quarantine instead of deleting it immediately.
+	 *
+	 * @param string               $folder_id Folder id from scan results.
+	 * @param array<string, mixed> $scan      Cached scan payload.
+	 * @return true|WP_Error
+	 */
+	public static function quarantine_hygiene_folder( string $folder_id, array $scan ) {
+		$folder_id = sanitize_key( $folder_id );
+		if ( '' === $folder_id || empty( $scan['items'] ) || ! is_array( $scan['items'] ) ) {
+			return new WP_Error( 'invalid_folder', __( 'Unknown folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$target = null;
+		foreach ( $scan['items'] as $item ) {
+			if ( ! is_array( $item ) || ( $item['id'] ?? '' ) !== $folder_id ) {
+				continue;
+			}
+			$target = $item;
+			break;
+		}
+
+		if ( null === $target || empty( $target['deletable'] ) || empty( $target['path'] ) ) {
+			return new WP_Error( 'not_deletable', __( 'This folder cannot be deleted from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$path = wp_normalize_path( (string) $target['path'] );
+		$real = realpath( $path );
+		if ( false === $real ) {
+			return new WP_Error( 'missing', __( 'The folder no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$path = wp_normalize_path( $real );
+
+		if ( ! self::is_allowed_hygiene_delete_path( $path ) ) {
+			return new WP_Error( 'invalid_path', __( 'The folder path is outside the allowed locations.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! is_dir( $path ) ) {
+			return new WP_Error( 'missing', __( 'The folder no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$quarantine_base = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'quarantine' ) : '';
+		if ( '' === $quarantine_base ) {
+			return new WP_Error( 'quarantine_unavailable', __( 'The quarantine folder is unavailable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( ! is_dir( $quarantine_base ) ) {
+			wp_mkdir_p( $quarantine_base );
+		}
+		self::protect_quarantine_dir( $quarantine_base );
+
+		$entry_id      = wp_generate_uuid4();
+		$dest_basename = $entry_id . '-' . sanitize_file_name( basename( $path ) );
+		$dest          = wp_normalize_path( trailingslashit( $quarantine_base ) . $dest_basename );
+
+		$fs = self::init_quarantine_filesystem();
+		if ( ! $fs || ! $fs->move( $path, $dest ) ) {
+			return new WP_Error( 'quarantine_failed', __( 'Could not move the folder to quarantine.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entries              = self::get_quarantine_entries();
+		$entries[ $entry_id ] = array(
+			'id'              => $entry_id,
+			'original_path'   => $path,
+			'quarantine_path' => $dest,
+			'label'           => (string) ( $target['relative'] ?? basename( $path ) ),
+			'size'            => (int) ( $target['size'] ?? 0 ),
+			'files'           => (int) ( $target['files'] ?? 0 ),
+			'quarantined_at'  => time(),
+		);
+		update_option( self::OPTION_QUARANTINE, $entries, false );
+
+		return true;
+	}
+
+	/**
+	 * All current quarantine entries, keyed by entry id.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function get_quarantine_entries(): array {
+		$entries = get_option( self::OPTION_QUARANTINE, array() );
+		if ( ! is_array( $entries ) ) {
+			return array();
+		}
+
+		$clean = array();
+		foreach ( $entries as $id => $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$id           = sanitize_key( (string) $id );
+			$entry['id']  = $id;
+			$clean[ $id ] = $entry;
+		}
+		return $clean;
+	}
+
+	/**
+	 * Aggregate stats over all quarantine entries.
+	 *
+	 * @return array{count: int, size: int}
+	 */
+	public static function get_quarantine_summary(): array {
+		$entries = self::get_quarantine_entries();
+		$size    = 0;
+		foreach ( $entries as $entry ) {
+			$size += (int) ( $entry['size'] ?? 0 );
+		}
+		return array(
+			'count' => count( $entries ),
+			'size'  => $size,
+		);
+	}
+
+	/**
+	 * Move a quarantined folder back to its original location.
+	 *
+	 * @param string $entry_id Quarantine entry id.
+	 * @return true|WP_Error
+	 */
+	public static function restore_quarantine_entry( string $entry_id ) {
+		$entry_id = sanitize_key( $entry_id );
+		$entries  = self::get_quarantine_entries();
+		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
+			return new WP_Error( 'invalid_entry', __( 'Unknown quarantine entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entry = $entries[ $entry_id ];
+		$src   = wp_normalize_path( (string) ( $entry['quarantine_path'] ?? '' ) );
+		$dest  = wp_normalize_path( (string) ( $entry['original_path'] ?? '' ) );
+
+		if ( '' === $src || ! self::is_within_quarantine_dir( $src ) || ! is_dir( $src ) ) {
+			unset( $entries[ $entry_id ] );
+			update_option( self::OPTION_QUARANTINE, $entries, false );
+			return new WP_Error( 'missing', __( 'The quarantined folder no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( '' === $dest ) {
+			return new WP_Error( 'invalid_entry', __( 'The original location is unknown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( is_dir( $dest ) || file_exists( $dest ) ) {
+			return new WP_Error( 'destination_exists', __( 'A folder already exists at the original location — restore manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$fs = self::init_quarantine_filesystem();
+		if ( ! $fs || ! $fs->move( $src, $dest ) ) {
+			return new WP_Error( 'restore_failed', __( 'Could not restore the folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		unset( $entries[ $entry_id ] );
+		update_option( self::OPTION_QUARANTINE, $entries, false );
+
+		return true;
+	}
+
+	/**
+	 * Permanently delete one quarantined folder right now.
+	 *
+	 * @param string $entry_id Quarantine entry id.
+	 * @return true|WP_Error
+	 */
+	public static function purge_quarantine_entry( string $entry_id ) {
+		$entry_id = sanitize_key( $entry_id );
+		$entries  = self::get_quarantine_entries();
+		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
+			return new WP_Error( 'invalid_entry', __( 'Unknown quarantine entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entry = $entries[ $entry_id ];
+		$path  = wp_normalize_path( (string) ( $entry['quarantine_path'] ?? '' ) );
+
+		if ( '' !== $path && self::is_within_quarantine_dir( $path ) && is_dir( $path ) ) {
+			self::remove_directory_tree( $path );
+		}
+
+		unset( $entries[ $entry_id ] );
+		update_option( self::OPTION_QUARANTINE, $entries, false );
+
+		return true;
+	}
+
+	/**
+	 * Purge quarantine entries older than QUARANTINE_DAYS. Safe to call opportunistically.
+	 *
+	 * @return int Number of entries purged.
+	 */
+	public static function purge_expired_quarantine(): int {
+		$entries = self::get_quarantine_entries();
+		if ( empty( $entries ) ) {
+			return 0;
+		}
+
+		$cutoff = time() - ( self::QUARANTINE_DAYS * DAY_IN_SECONDS );
+		$purged = 0;
+
+		foreach ( $entries as $id => $entry ) {
+			$quarantined_at = (int) ( $entry['quarantined_at'] ?? 0 );
+			if ( $quarantined_at > 0 && $quarantined_at <= $cutoff && true === self::purge_quarantine_entry( $id ) ) {
+				++$purged;
+			}
+		}
+
+		return $purged;
+	}
+
+	/**
+	 * Whether a path is inside this plugin's own quarantine folder (write-safety guard).
+	 *
+	 * @param string $path Absolute path.
+	 */
+	private static function is_within_quarantine_dir( string $path ): bool {
+		$base = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'quarantine' ) : '';
+		if ( '' === $base ) {
+			return false;
+		}
+		$base = wp_normalize_path( trailingslashit( $base ) );
+		$path = wp_normalize_path( $path );
+		return str_starts_with( $path, $base );
+	}
+
+	/**
+	 * Deny direct web access to the quarantine folder (.htaccess + blank index).
+	 *
+	 * @param string $dir Absolute quarantine directory path.
+	 */
+	private static function protect_quarantine_dir( string $dir ): void {
+		$htaccess = trailingslashit( $dir ) . '.htaccess';
+		$rules    = "Order deny,allow\nDeny from all\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n";
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		file_put_contents( $htaccess, $rules );
+
+		$index = trailingslashit( $dir ) . 'index.html';
+		if ( ! file_exists( $index ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			file_put_contents( $index, '' );
+		}
+	}
+
+	/**
+	 * Collect extra known cache/legacy folders (e.g. .tmb) outside the uploads directory.
+	 *
 	 * @return array<int, array{path: string, relative: string, scope: string}>
 	 */
 	private static function get_extra_hygiene_paths(): array {
-		$paths  = array();
-		$roots  = array();
+		$paths   = array();
+		$roots   = array();
 		$wp_root = function_exists( 'tsosk_get_wp_root_dir' ) ? tsosk_get_wp_root_dir() : ABSPATH;
 		$wp_root = wp_normalize_path( untrailingslashit( (string) $wp_root ) );
 
@@ -693,12 +991,13 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * @param string $name        Top-level uploads folder name.
-	 * @param string $path        Absolute path.
-	 * @param string $uploads_base Uploads base path.
+	 * Classify a top-level uploads folder for the hygiene report.
+	 *
+	 * @param string $name Top-level uploads folder name.
+	 * @param string $path Absolute path.
 	 * @return array<string, mixed>|null
 	 */
-	private static function classify_uploads_top_folder( string $name, string $path, string $uploads_base ): ?array {
+	private static function classify_uploads_top_folder( string $name, string $path ): ?array {
 		if ( preg_match( '/^\d{4}$/', $name ) ) {
 			return null;
 		}
@@ -812,9 +1111,11 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * @param string               $relative Display path.
-	 * @param string               $path     Absolute path.
-	 * @param string               $scope    uploads|wp_root|wp_subdir|wp_content.
+	 * Classify a known cache folder (e.g. elFinder .tmb) for the hygiene report.
+	 *
+	 * @param string $relative Display path.
+	 * @param string $path     Absolute path.
+	 * @param string $scope    uploads|wp_root|wp_subdir|wp_content.
 	 * @return array<string, mixed>|null
 	 */
 	private static function classify_known_cache_folder( string $relative, string $path, string $scope ): ?array {
@@ -837,13 +1138,15 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * @param string               $path       Absolute path.
-	 * @param string               $relative   Relative label.
-	 * @param string               $scope      Scope id.
+	 * Build a single hygiene report item array.
+	 *
+	 * @param string                    $path       Absolute path.
+	 * @param string                    $relative   Relative label.
+	 * @param string                    $scope      Scope id.
 	 * @param array{size:int,files:int} $stats Directory stats.
-	 * @param string               $confidence safe|review|keep.
-	 * @param string               $reason     Human reason.
-	 * @param bool                 $deletable  Whether delete is offered.
+	 * @param string                    $confidence safe|review|keep.
+	 * @param string                    $reason     Human reason.
+	 * @param bool                      $deletable  Whether delete is offered.
 	 * @return array<string, mixed>
 	 */
 	private static function build_hygiene_item( string $path, string $relative, string $scope, array $stats, string $confidence, string $reason, bool $deletable ): array {
@@ -891,7 +1194,10 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether the legacy Swiss Knife logs folder can be safely removed.
+	 *
 	 * @param string $legacy_logs_path Absolute legacy logs directory.
+	 * @return bool
 	 */
 	private static function is_swiss_knife_logs_legacy_removable( string $legacy_logs_path ): bool {
 		if ( ! class_exists( 'TSOSK_Config_Storage' ) ) {
@@ -908,6 +1214,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a top-level uploads folder name matches an installed plugin.
+	 *
 	 * @param string $folder_name Top-level uploads folder name.
 	 * @return bool|null True active, false inactive, null not a plugin folder.
 	 */
@@ -933,6 +1241,8 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Recursively measure a directory's total size and file count.
+	 *
 	 * @param string $path Directory path.
 	 * @return array{size: int, files: int}
 	 */
@@ -944,11 +1254,14 @@ class TSOSK_Uploads_Scanner {
 
 		while ( $queue && $files < $cap ) {
 			$dir = array_shift( $queue );
-			$handle = @opendir( $dir );
+			if ( ! is_readable( $dir ) ) {
+				continue;
+			}
+			$handle = opendir( $dir );
 			if ( ! $handle ) {
 				continue;
 			}
-			while ( false !== ( $entry = readdir( $handle ) ) ) {
+			for ( $entry = readdir( $handle ); false !== $entry; $entry = readdir( $handle ) ) {
 				if ( '.' === $entry || '..' === $entry ) {
 					continue;
 				}
@@ -972,7 +1285,10 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Determine whether a path is one of the specific folders hygiene delete/quarantine is allowed to touch.
+	 *
 	 * @param string $path Absolute normalized path.
+	 * @return bool
 	 */
 	private static function is_allowed_hygiene_delete_path( string $path ): bool {
 		$path = wp_normalize_path( $path );
@@ -1011,8 +1327,11 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Recursively delete a directory tree, restricted to the given root.
+	 *
 	 * @param string $dir        Absolute directory path.
 	 * @param string $root_real  Resolved root path (internal recursion guard).
+	 * @return bool
 	 */
 	private static function remove_directory_tree( string $dir, string $root_real = '' ): bool {
 		if ( is_link( $dir ) ) {
@@ -1067,8 +1386,12 @@ class TSOSK_Uploads_Scanner {
 			}
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- plugin-owned cache/legacy dirs only.
-		return @rmdir( $dir );
+		if ( ! is_dir( $dir ) ) {
+			return true;
+		}
+
+		$fs = self::init_quarantine_filesystem();
+		return $fs ? $fs->rmdir( $dir ) : false;
 	}
 
 	/**

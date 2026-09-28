@@ -1527,6 +1527,7 @@ msgid "Could not write the log file."
 msgstr ""
 
 #: includes/class-tsosk-option-library.php:31
+#: includes/modules/class-tsosk-mod-slow-queries.php:594
 msgid "WordPress core"
 msgstr ""
 
@@ -3378,6 +3379,7 @@ msgstr ""
 #. translators: %s: theme folder name
 #: includes/modules/class-tsosk-mod-cron.php:361
 #: includes/modules/class-tsosk-mod-staging.php:589
+#: includes/modules/class-tsosk-mod-slow-queries.php:589
 #, php-format
 msgid "Theme: %s"
 msgstr ""
@@ -5676,7 +5678,8 @@ msgid "Invalid or expired verification code."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-login-protect.php
-msgid "Too many invalid verification codes. Sign in again to receive a new code."
+msgid ""
+"Too many invalid verification codes. Sign in again to receive a new code."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-meta-editor.php
@@ -9446,8 +9449,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-site-snapshot.php
 msgid ""
 "The exported file may contain third-party API keys (for example Comment "
-"Anti-Spam). Store it securely, do not commit it to public repositories, "
-"and treat shared copies like a password export."
+"Anti-Spam). Store it securely, do not commit it to public repositories, and "
+"treat shared copies like a password export."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-site-snapshot.php:1180
@@ -10211,6 +10214,7 @@ msgstr ""
 
 #. translators: %s: plugin folder name
 #: includes/modules/class-tsosk-mod-staging.php:582
+#: includes/modules/class-tsosk-mod-slow-queries.php:582
 #, php-format
 msgid "Plugin: %s"
 msgstr ""
@@ -11313,3 +11317,1482 @@ msgid ""
 "Does not include Debug/Security JSON under uploads, sandbox sessions, the "
 "Staging mail log, or the Slow Query log."
 msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Views"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter settings updated."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Unknown import source."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Total post/page views"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Total outbound link clicks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Settings"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Track"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Logged-in users"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Outbound links"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Count clicks on external links inside post/page content"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Import previous counters"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Post Views Counter"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "WP-PostViews"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "WP Statistics"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Import Now"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Delete all recorded views and clicks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Delete ALL recorded views and clicks? This cannot be undone."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "View Counter data reset."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "All view data has been reset."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Don't count views from logged-in users"
+msgstr ""
+
+#. translators: 1: import source, 2: number of imported posts
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "View Counter: imported %2$d post(s) from %1$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Counts post, page and outbound-link-click visits with a small front-end "
+"beacon so counting keeps working even behind a full-page cache. No cookies "
+"are used — de-duplication happens with a short-lived, server-side "
+"fingerprint only."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Once Weekly (TSO View Counter)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top posts/pages:"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top outbound links:"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Top Content"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Reporting period"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 7 days"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 30 days"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Last 90 days"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "All time"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Most viewed posts/pages"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Most clicked outbound links"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Clicks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Weekly summary email"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "Download CSV (daily detail)"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:1
+msgid "No data for this period yet."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid "TSO Views"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d Application Password(s) active — review them below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d Application Password(s) revoked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"%d administrator account(s) created in the last 7 days — make sure you "
+"recognize them."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "(unnamed)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Application Password revoked for user #%d."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Password revoked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Passwords"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Application Passwords are not available on this site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not revoke that Application Password."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Invalid request."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Never"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "New user \"%1$s\" created (role: %2$s) from IP %3$s via %4$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No Application Passwords are active."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No new administrators in the last 7 days."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "REST API request"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Recent administrator accounts"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Revoked %d Application Password(s) across all users."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Security alert settings saved."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "User \"%1$s\" was promoted to Administrator from IP %2$s via %3$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "XML-RPC request"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "[%s] A user was promoted to Administrator"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "[%s] New administrator account created"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "background AJAX request (admin-ajax.php)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "front-end request"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "none"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "normal wp-admin form"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "unknown"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "User & Admin Alerts"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Get an email the moment a new user is created or an existing user is "
+"promoted to Administrator — the exact moment a rogue-admin attack happens. "
+"The alert also records how the request reached WordPress (normal admin form,"
+" or a silent background request), which is often the clearest sign something"
+" is wrong."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Email me on new administrators"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Covers both a brand-new account created as Administrator and any existing "
+"user promoted to Administrator."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Notification email"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"A compromised browser extension can create a hidden admin user or issue "
+"other authenticated requests using your own logged-in session — without "
+"touching your server or triggering a firewall rule, because the request "
+"looks like it came from you. No WordPress plugin can inspect or block what "
+"runs inside your browser. If you ever see an account, Application Password, "
+"or Search Console user you do not recognize, the safest first steps are: "
+"remove any suspicious browser extensions, scan your computer for malware, "
+"then rotate your WordPress, hosting and email passwords from a clean device "
+"or profile."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Application Passwords let a script or app authenticate as a user via the "
+"REST API without a normal login — and, unlike a hidden user account, they "
+"survive deletion of the account that created them if not revoked directly. "
+"Review the list below and revoke anything you do not recognize."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Application Passwords are not available on this site (requires WordPress "
+"5.6+ and HTTPS, or the feature has been disabled)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "No Application Passwords are currently active on this site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Created"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Last used"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Last IP"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Revoke"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Revoke All Application Passwords"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Revoke ALL Application Passwords for ALL users? Any app or script currently "
+"using one will stop working immediately. This cannot be undone."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "PHP Execution in Uploads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The single control that most often stops an arbitrary-file-upload attack "
+"from becoming a full takeover: even if a vulnerable plugin lets an attacker "
+"write a PHP file into wp-content/uploads, the file can never run if the "
+"server refuses to execute PHP there. This test writes a harmless temporary "
+"PHP file, requests it over HTTP, then deletes it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested yet."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Not tested yet — run the test below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "PHP execution in uploads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Last tested: %1$s at %2$s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"A PHP-execution block was found in wp-content/uploads/.htaccess (added by "
+"this plugin or already present)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Test Now"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Enable Protection (Apache/LiteSpeed)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"This writes a rule into wp-content/uploads/.htaccess. It only works on "
+"Apache or LiteSpeed. On Nginx, ask your host to add: location ~* /wp-"
+"content/uploads/.*\\.php$ { deny all; }"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Administrators with a Shared Creation Date"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Some malware hides a rogue administrator account by copying another existing"
+" user's exact registration timestamp, so \"sort users by newest\" never "
+"reveals it. These administrator accounts share their creation timestamp, "
+"down to the second, with at least one other user on this site — review each "
+"one."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Registration date"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Shared with"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "%d other user(s)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not write a test file to the uploads folder to run this check."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"Could not reach the test file over HTTP to verify: %s. Test manually if in "
+"doubt."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"PHP files placed inside wp-content/uploads are executed by your server. If "
+"any plugin ever allows an unvalidated file upload there, an uploaded PHP "
+"file could run immediately. Use \"Enable protection\" below to block this."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"PHP execution inside wp-content/uploads is blocked (HTTP %d). Even if a "
+"malicious file were ever uploaded there, it could not run."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The test file did not execute (its PHP source was not run). PHP execution "
+"inside wp-content/uploads appears to be blocked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid "Tested whether PHP executes inside wp-content/uploads (result: %s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Could not locate the uploads folder."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"The uploads folder is not writable by PHP. Add the rule manually via "
+"FTP/SFTP."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Could not write wp-content/uploads/.htaccess. Check folder permissions."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Wrote PHP-execution protection into wp-content/uploads/.htaccess."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Protection added. Re-test to confirm your server (Apache/LiteSpeed) applies "
+"it — Nginx requires a manual server-block rule instead."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid "Administrator accounts with a shared creation date"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"No administrator shares its exact creation timestamp with another user."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+#, php-format
+msgid ""
+"%d administrator account(s) share their exact creation timestamp with "
+"another user — a known trick to hide a rogue admin from \"sort by newest\". "
+"Review them below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Scan wp-content/uploads for files with an executable script extension (.php,"
+" .phtml, .phar…) — uploads should never contain code, and this is exactly "
+"where file-upload exploits drop their payload. The harmless, empty "
+"\"index.php\" stub that many plugins place in upload subfolders to block "
+"directory listing is recognized and skipped."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid ""
+"Scan custom plugin/theme file contents for malware, or check any wp-content/"
+" folder beyond the official core checksum list and the uploads-folder script"
+" check above."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid "Suspicious files in wp-content/uploads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"These files inside wp-content/uploads have an executable script extension "
+"(.php, .phtml, .phar, .cgi…). Uploads should only ever contain media and "
+"data, never code — a script here is a strong sign of a compromise, often "
+"disguised with a double extension such as \"photo_400x400.jpg.php\". Review "
+"each one immediately: if you did not put it there yourself, delete it, then "
+"also check the Security tab's Application Passwords and Recent Administrator"
+" checks."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+#, php-format
+msgid "%d suspicious file(s) in uploads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "Block User Enumeration"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid ""
+"The /wp-json/wp/v2/users endpoint lists every username on the site to "
+"anyone, logged in or not — it is step one of many automated attacks (guess "
+"the admin username, then brute-force or target it). This blocks only that "
+"specific endpoint for logged-out requests; the rest of wp/v2 (posts, pages, "
+"media, the Block Editor) keeps working normally."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "Block anonymous access to /wp/v2/users"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1
+msgid ""
+"Recommended for most sites. Logged-in users are never affected. Skip this "
+"only if a front-end feature on your site (e.g. a public author directory "
+"widget) reads this endpoint while logged out."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rest-api.php:1
+msgid "User listing via the REST API is disabled on this site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1
+msgid ""
+"Read-only security check: compares WordPress core files (wp-admin/, wp-"
+"includes/, root PHP) against official MD5 checksums from WordPress.org, and "
+"separately scans wp-content/uploads for executable script files. It reports "
+"differences — it never installs, deletes, restores or downloads any file on "
+"your server."
+msgstr ""
+
+# 1: first date, 2: last date
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Daily data covers %1$s to %2$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Email a weekly summary (totals + top 5 posts and links) covering the last"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid ""
+"Imported from %1$s: %2$d posts/pages, %3$s views in total (%4$s with real "
+"daily dates, %5$s as previous history counted only in \"All time\")."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Imported on %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid ""
+"Nothing imported: no view data from %s was found (or it does not match any "
+"post/page on this site)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Only posts and pages are counted. Media files (images, PDFs, downloads) and "
+"other attachments are not tracked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+msgid ""
+"Recover totals already collected by another plugin. Totals are added to the "
+"counter (Post Views Counter and WP Statistics keep their real daily dates; "
+"totals without a known date count for \"All time\" only, not for the "
+"7/30/90-day filters). Running an import again adds on top, so only import a "
+"given source once."
+msgstr ""
+
+# 1: number of days, 2: total outbound link clicks
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Total outbound link clicks (last %1$d days): %2$s"
+msgstr ""
+
+# 1: number of days, 2: total views
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "Total post/page views (last %1$d days): %2$s"
+msgstr ""
+
+# %s: site name
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "View Counter summary for %s"
+msgstr ""
+
+# %s: site name
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "[%s] View Counter summary"
+msgstr ""
+
+# translators: %d: number of days
+#: includes/modules/class-tsosk-mod-view-counter.php:1
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Looking good"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Some things to review"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid ""
+"A quick read of this site: an overall score built from the Health Report and"
+" Security Review checks, what needs attention, and shortcuts to the most "
+"used tools. Nothing here changes your site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Site score: %d out of 100"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "%1$d checks passed, %2$d need review."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Last scan: %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Scan again"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Nothing to review right now."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Open tool"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "PHP"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Memory limit %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Active plugins"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Pending updates"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+#, php-format
+msgid "Core %1$d · Plugins %2$d · Themes %3$d"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Shortcuts"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Recent activity"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "No activity recorded yet."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "View full history"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "Overview"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+#, php-format
+msgid ""
+"XML-RPC is enabled and these active plugins rely on it: %s. Keep it on while"
+" you use them; otherwise disable it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+msgid ""
+"Some plugins and apps need XML-RPC to work: Jetpack, the WordPress mobile "
+"apps, and remote-management tools such as MainWP, ManageWP or InfiniteWP. "
+"Check before disabling."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+#, php-format
+msgid "Needed by: %s. Do not disable it while these plugins are active."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php
+msgid "PHP errors shown to visitors"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php
+msgid ""
+"Controlled by the WP_DEBUG_DISPLAY constant. When on, PHP errors and "
+"warnings can appear directly on pages for any visitor, which can leak file "
+"paths and other details."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Undo"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Reverted"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Revert this option back to its previous value?"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This change was already reverted."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This change cannot be safely undone (the stored value was too long or "
+"contained structured data)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This change cannot be undone."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This option is protected and cannot be changed here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This option no longer exists."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This option has changed since then; undo it manually to avoid losing the "
+"newer value."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"An option with this name already exists again; restore it manually to avoid "
+"overwriting it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This option has changed since then; edit it manually to avoid losing the "
+"newer value."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Change reverted."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+#, php-format
+msgid "Reverted change to option: %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "This history entry can no longer be found."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid "Invalid history entry."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "No backup available to restore."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid ""
+"Backup restored: \"%1$s\" → \"%2$s\" undone (%3$d cell(s) restored, %4$d "
+"skipped)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid ""
+"Restore complete: %1$d cell(s) restored, %2$d skipped (changed since), "
+"across %3$d row(s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "No backup available."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Automatic backup"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid ""
+"No automatic backup yet. One is created automatically the next time you run "
+"Execute replace, so that operation can be undone."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid "Backup from %1$s: \"%2$s\" → \"%3$s\"."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid "%1$d cell(s) captured across %2$d row(s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+#, php-format
+msgid ""
+"Only the first %d changed cells were captured for this backup (the operation"
+" affected more). Restore will still work for those — for very large "
+"operations, also keep a full manual database backup."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Restore backup"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid "Download backup (JSON)"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Restore"
+msgstr ""
+
+#: includes/class-tsosk-admin.php
+msgid ""
+"Restore the automatic backup? This overwrites the current values with the "
+"ones saved before your last replace operation. Rows changed by something "
+"else since then are safely skipped."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection needs at least 2 other normally active plugins to narrow down."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection started. Reloading applies the first test set — go check the site,"
+" then come back and answer."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "No bisection is currently in progress."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"No plugin could be isolated — the problem did not reproduce with either "
+"half. It may not be caused by a single plugin, or may be intermittent. Try "
+"the manual selector below instead."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Plugin bisection finished without isolating a plugin."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Bisection finished: no single plugin could be isolated. Reloading returns to"
+" the manual selector."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Likely culprit: %s. Sandbox now runs with only that plugin active (plus this"
+" toolkit) so you can confirm."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection isolated the likely conflicting plugin: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Likely culprit: %s. Reloading applies a sandbox with only that plugin "
+"active."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Next test applied. Reload, check the site again, then answer."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Plugin bisection cancelled; sandbox exited."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Bisection cancelled and sandbox exited."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection started (%1$d candidates, testing %2$d)."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+#, php-format
+msgid "Plugin bisection step %1$d (%2$d candidates left, testing %3$d)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Plugin bisection in progress"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+#, php-format
+msgid ""
+"Step %1$d — testing %2$d of %3$d remaining candidate plugin(s) (plus this "
+"toolkit). Everything else is switched off for your account only."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Plugins active in this test"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Go check the site now. Does the problem still happen with only those plugins"
+" active?"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Yes, it still happens"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "No, it's gone"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Cancel bisection"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Automatic bisection"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid ""
+"Binary-search your normally active plugins to narrow down which one is "
+"causing a problem: each round halves the candidates based on whether the "
+"issue is still there, so you reach the likely culprit in a handful of steps "
+"instead of testing one by one. Assumes a single conflicting plugin."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Needs at least 2 other normally active plugins to bisect."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-sandbox.php
+msgid "Start bisection"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection start"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection step"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection result"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php
+msgid "Bisection cancelled"
+msgstr ""
+
+#: includes/class-tsosk-admin.php
+msgid ""
+"This starts a binary-search test: only half of your normally active plugins "
+"will load for your account, and you will be asked a yes/no question after "
+"each reload. Continue?"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:596
+msgid "Unknown origin"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:707
+msgid "Consider an index on %1$s (table %2$s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2478
+msgid "Possible N+1: this pattern repeated %1$d times (%2$s ms total) — %3$s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1917
+msgid "Origin detection"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1922
+msgid ""
+"Record which plugin, theme, or WordPress core each slow query came from"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1925
+msgid ""
+"Adds a small backtrace per query while this is on — leave it off unless you "
+"are actively investigating."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1995
+msgid "Index hint"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2052
+msgid "Slow Queries by Origin"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2054
+msgid ""
+"Which plugin, theme, or WordPress core the slow queries came from (only "
+"counted while origin detection is on)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2059
+msgid "Origin"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:257
+msgid "This hour"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:261
+msgid "Last 24 hours"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:265
+msgid "Avg. requests / hour"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:270
+msgid "Screen"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:271
+msgid "Requests (24h)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:286
+msgid "No Heartbeat requests measured yet in the last 24 hours."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:253
+msgid "Measured Traffic"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:255
+msgid ""
+"Real Heartbeat requests hitting this site, counted as they happen (rolling "
+"24-hour window). Use this before changing the mode or interval above, "
+"instead of guessing."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:144
+msgid "Front end (public site)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:145
+msgid "Post/page editor"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:146
+msgid "Dashboard"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-heartbeat.php:147
+msgid "Site editor"
+msgstr ""
+
+msgid "The quarantine folder is unavailable."
+msgstr ""
+
+msgid "Could not move the folder to quarantine."
+msgstr ""
+
+msgid "Unknown quarantine entry."
+msgstr ""
+
+msgid "The quarantined folder no longer exists."
+msgstr ""
+
+msgid "The original location is unknown."
+msgstr ""
+
+msgid "A folder already exists at the original location — restore manually."
+msgstr ""
+
+msgid "Could not restore the folder."
+msgstr ""
+
+msgid "Folder moved to quarantine. It can be restored for 30 days."
+msgstr ""
+
+msgid "Removable folder moved to quarantine: %s."
+msgstr ""
+
+msgid "Folder restored to its original location."
+msgstr ""
+
+msgid "Quarantined folder restored: %s."
+msgstr ""
+
+msgid "Folder permanently deleted."
+msgstr ""
+
+msgid "Quarantined folder permanently deleted: %s."
+msgstr ""
+
+msgid "Quarantine (recoverable trash)"
+msgstr ""
+
+msgid ""
+"Folders removed via Folder hygiene above are moved here first and kept for "
+"30 days before automatic permanent deletion, so you can restore them if "
+"something breaks."
+msgstr ""
+
+msgid "Space that would be freed by moving all Safe folders to quarantine: %s"
+msgstr ""
+
+msgid "Move to quarantine"
+msgstr ""
+
+msgid "Quarantine is empty."
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "Quarantined"
+msgstr ""
+
+msgid "Auto-deletes on"
+msgstr ""
+
+msgid "Delete now"
+msgstr ""
+
+msgid "Space by file type"
+msgstr ""
+
+msgid "Proportional disk usage by file type"
+msgstr ""
+
+msgid ""
+"Each block is proportional to the disk space that file type uses. Hover a "
+"block for the exact size."
+msgstr ""
+
+msgid "Other file types"
+msgstr ""
+
+msgid ""
+"Move this folder to quarantine? It will be kept for 30 days and can be "
+"restored."
+msgstr ""
+
+msgid "Restore this folder to its original location?"
+msgstr ""
+
+msgid "Permanently delete this folder now? This cannot be undone."
+msgstr ""
+
+msgid "Learning mode"
+msgstr ""
+
+msgid ""
+"Nothing is actually blocked. Every submission that would have been rejected "
+"is logged instead, so you can check for false positives before turning on "
+"real enforcement."
+msgstr ""
+
+msgid "Would block (24 h)"
+msgstr ""
+
+msgid "Would block (log)"
+msgstr ""
+
+msgid "Learning log (would-be blocks)"
+msgstr ""
+
+msgid ""
+"Submissions that were let through while Learning mode is on, but that the "
+"current rules would otherwise have blocked. Review this list before "
+"disabling Learning mode."
+msgstr ""
+
+msgid "Learning log cleared."
+msgstr ""
+
+msgid "Comment anti-spam learning log cleared."
+msgstr ""
+
+msgid "Recently blocked requests"
+msgstr ""
+
+msgid ""
+"Requests actually rejected by the settings above (disabled access, blocked "
+"user listing, or a disabled namespace). Nothing is recorded here while "
+"everything is left at its default, unrestricted settings."
+msgstr ""
+
+msgid "Route"
+msgstr ""
+
+msgid "REST API blocked-request log cleared."
+msgstr ""
+
+msgid ""
+"Not set in wp-config.php: this is the value WordPress assigns by default."
+msgstr ""
+
+msgid "No effect: WP_DEBUG is off"
+msgstr ""
+
+msgid "Disabled (WP_DEBUG is off)"
+msgstr ""
+
+msgid "No effect"
+msgstr ""
+
+msgid ""
+"WordPress writes it to wp-content/ when WP_DEBUG and WP_DEBUG_LOG are both "
+"true (for example with Developer mode above). You can preview and download "
+"it, but WordPress.org rules do not allow this plugin to empty or shrink it."
+msgstr ""
+
+msgid ""
+"Written by PHP or your hosting when PHP error logging is on. You can preview"
+" and download it."
+msgstr ""
+
+msgid "Want to empty or shrink the log from here?"
+msgstr ""
+
+#. translators: %s: the "That's all, stop editing!" comment line in wp-
+#. config.php
+#, php-format
+msgid "Open wp-config.php and paste this line just above %s:"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid ""
+"If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it "
+"with this one instead of adding a second one."
+msgstr ""
+
+msgid ""
+"<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log "
+"inside this plugin's uploads folder, which can be emptied and shrunk from "
+"this screen."
+msgstr ""
+
+msgid "Copied to clipboard."
+msgstr ""
+
+msgid "Edit the debug constants in wp-config.php manually"
+msgstr ""
+
+msgid ""
+"Recommended for staging: enable debugging, log to wp-content/debug.log, hide"
+" errors from visitors, and record DB queries for the Slow Query Monitor."
+msgstr ""
+
+msgid ""
+"Loads non-minified WordPress core assets. Combine with the Developer mode "
+"(staging) lines when debugging front-end scripts."
+msgstr ""
+
+msgid ""
+"Recommended on staging: one click turns on SAVEQUERIES so the Slow Query "
+"Monitor can record database queries. It is saved as JSON in your uploads "
+"folder (no wp-config.php edit); reload the page to apply. WordPress sets "
+"WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY and SCRIPT_DEBUG before any plugin "
+"loads, so those can only be changed in wp-config.php — see the guide below "
+"the constants table."
+msgstr ""
+
+msgid ""
+"Values active on this page load. Developer mode above only controls "
+"SAVEQUERIES; the other constants come from wp-config.php or are WordPress "
+"defaults, and their source is shown below."
+msgstr ""
+
+msgid ""
+"The Developer mode button above can only turn on SAVEQUERIES. WordPress sets"
+" the other debug constants before plugins load, so they can only be changed "
+"here, in wp-config.php."
+msgstr ""
+
+msgid ""
+"WordPress writes it to wp-content/ when WP_DEBUG and WP_DEBUG_LOG are both "
+"true in wp-config.php. You can preview and download it, but WordPress.org "
+"rules do not allow this plugin to empty or shrink it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:403
+msgid ""
+"OPcache keeps PHP files compiled in memory so the server does not have to "
+"re-read and re-compile them on every request — good for speed, but it means "
+"a file changed on disk (e.g. uploaded via FTP) can keep running its old, "
+"cached version for a while. Most hosts detect the change automatically "
+"within seconds; some do not, especially with an unusually large number of "
+"PHP files. \"Reset OPcache\" clears the compiled cache for the PHP process "
+"handling this page only — other PHP worker processes on the server may still"
+" be running old code until they naturally recycle (usually within minutes) "
+"or the host restarts PHP. If a change you just uploaded does not seem to "
+"take effect, this button is worth trying, but a full PHP/PHP-FPM restart "
+"from your hosting panel is the only way to force it immediately everywhere."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:488
+msgid "Already covered"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1240
+msgid "Possible bot"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:318
+msgid "No URLs selected."
+msgstr ""
+
+#. translators: %s: source path
+#: includes/modules/class-tsosk-mod-redirects.php:182
+msgid ""
+"A redirect for %s already exists. Edit that rule instead of creating a "
+"duplicate."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:488
+msgid ""
+"An active redirect rule already matches this exact path. If it still shows "
+"up here, the rule is not actually catching this request — check its match "
+"type and target."
+msgstr ""
+
+#. translators: 1: source path of the shadowed rule, 2: source pattern of the
+#. rule above it that already matches it
+#: includes/modules/class-tsosk-mod-redirects.php:797
+msgid ""
+"Redirect for %1$s is already covered by the %2$s rule above it and will "
+"never run."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1240
+msgid ""
+"Same IP requested several different missing URLs within a short window."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:451
+msgid ""
+"Visits counts how many times each missing URL was requested. Referrer keeps "
+"the last known previous page (HTTP Referer). If none was ever sent, Direct /"
+" unknown is shown, plus the last User-Agent when available (direct visits, "
+"bots and bookmarks often send none). IP shows the last known requester "
+"address; Possible bot is flagged when the same IP requested several "
+"different missing URLs within about a minute (User-Agent strings are easily "
+"faked, so this is based on request behavior instead)."
+msgstr ""
+
+#. translators: %d: number of removed 404 log entries
+#: includes/modules/class-tsosk-mod-redirects.php:334
+msgid "%d 404 log entry removed."
+msgid_plural "%d 404 log entries removed."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of removed 404 log entries
+#: includes/modules/class-tsosk-mod-redirects.php:342
+msgid "%d entry removed."
+msgid_plural "%d entries removed."
+msgstr[0] ""
+msgstr[1] ""

@@ -400,6 +400,7 @@ class TSOSK_Mod_Runtime_Stack {
 						<?php else : ?>
 							<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Off or unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php endif; ?>
+						<br><span class="description"><?php esc_html_e( 'OPcache keeps PHP files compiled in memory so the server does not have to re-read and re-compile them on every request — good for speed, but it means a file changed on disk (e.g. uploaded via FTP) can keep running its old, cached version for a while. Most hosts detect the change automatically within seconds; some do not, especially with an unusually large number of PHP files. "Reset OPcache" clears the compiled cache for the PHP process handling this page only — other PHP worker processes on the server may still be running old code until they naturally recycle (usually within minutes) or the host restarts PHP. If a change you just uploaded does not seem to take effect, this button is worth trying, but a full PHP/PHP-FPM restart from your hosting panel is the only way to force it immediately everywhere.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					</td>
 				</tr>
 				<tr>
@@ -470,7 +471,7 @@ class TSOSK_Mod_Runtime_Stack {
 			<textarea id="tsosk-runtime-summary" class="large-text code" rows="8" readonly><?php echo esc_textarea( $summary ); ?></textarea>
 		</div>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-runtime-object-cache">
 			<h3><?php esc_html_e( 'Object cache (fast database memory)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
 				<tr>

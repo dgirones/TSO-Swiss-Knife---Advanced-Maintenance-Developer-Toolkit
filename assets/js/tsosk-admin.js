@@ -857,6 +857,7 @@
 		var $msg       = $( '#tsosk-rest-msg' );
 		var mode       = $( 'input[name="tsosk_rest_mode"]:checked' ).val();
 		var disabled_ns = [];
+		var blockUserEnum = $( '#tsosk-rest-block-user-enum' ).prop( 'checked' ) ? 1 : 0;
 
 		$( '.tsosk-ns-cb:checked' ).each( function () {
 			disabled_ns.push( $( this ).val() );
@@ -866,7 +867,7 @@
 
 		ajaxPost( {
 			action : 'tsosk_rest_save',
-			data   : { nonce: nonce, mode: mode, disabled_namespaces: disabled_ns },
+			data   : { nonce: nonce, mode: mode, disabled_namespaces: disabled_ns, block_user_enumeration: blockUserEnum },
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, tsosk.i18n.done, 'ok' );
@@ -877,6 +878,28 @@
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-rest-clear-log', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+
+		$btn.prop( 'disabled', true );
+
+		ajaxPost( {
+			action : 'tsosk_rest_clear_log',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+				} else {
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
 				$btn.prop( 'disabled', false );
 			}
 		} );
@@ -1342,6 +1365,59 @@
 		} );
 	} );
 
+	// ── Plugin Sandbox: automatic bisection ─────────────────────────────────
+
+	function tsoskBisectPost( action, extra, $btn, $msg, origText ) {
+		var data = { nonce: $btn.data( 'nonce' ) };
+		if ( extra ) {
+			$.extend( data, extra );
+		}
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : action,
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					setTimeout( function () {
+						window.location.reload();
+					}, 1200 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( origText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( origText );
+			}
+		} );
+	}
+
+	$( document ).on( 'click', '#tsosk-bisect-start', function () {
+		if ( ! window.confirm( tsosk.i18n.confirm_bisect_start ) ) {
+			return;
+		}
+		var $btn = $( this );
+		tsoskBisectPost( 'tsosk_sandbox_bisect_start', null, $btn, $( '#tsosk-bisect-start-msg' ), $btn.text() );
+	} );
+
+	$( document ).on( 'click', '#tsosk-bisect-yes', function () {
+		var $btn = $( this );
+		tsoskBisectPost( 'tsosk_sandbox_bisect_vote', { reproduced: 'yes' }, $btn, $( '#tsosk-bisect-msg' ), $btn.text() );
+	} );
+
+	$( document ).on( 'click', '#tsosk-bisect-no', function () {
+		var $btn = $( this );
+		tsoskBisectPost( 'tsosk_sandbox_bisect_vote', { reproduced: 'no' }, $btn, $( '#tsosk-bisect-msg' ), $btn.text() );
+	} );
+
+	$( document ).on( 'click', '#tsosk-bisect-cancel', function () {
+		var $btn = $( this );
+		tsoskBisectPost( 'tsosk_sandbox_bisect_cancel', null, $btn, $( '#tsosk-bisect-msg' ), $btn.text() );
+	} );
+
 	// ── Redirects ──────────────────────────────────────────────────────────
 
 	var TSOSK_404_PREFILL_KEY = 'tsosk_404_prefill_queue';
@@ -1594,6 +1670,54 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-404-delete-selected', function () {
+		var $btn     = $( this );
+		var $checked = $( '#tsosk-404-table .tsosk-404-select:checked' );
+		if ( ! $checked.length ) {
+			window.alert( tsosk.i18n.redirects_select_404 || tsosk.i18n.error );
+			return;
+		}
+		var paths = [];
+		$checked.each( function () {
+			var source = String( $( this ).data( 'source' ) || '' );
+			if ( source ) {
+				paths.push( source );
+			}
+		} );
+		if ( ! paths.length ) {
+			return;
+		}
+
+		var $msg         = $( '#tsosk-404-msg' );
+		var originalText = $btn.text();
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_404_delete_selected',
+			data   : { nonce: $btn.data( 'nonce' ), paths: paths },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					$checked.each( function () {
+						$( this ).closest( 'tr' ).fadeOut( 300, function () {
+							$( this ).remove();
+						} );
+					} );
+					$( '#tsosk-404-select-all' ).prop( 'checked', false );
+					$btn.prop( 'disabled', false ).text( originalText );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( originalText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	} );
+
 	// ── File Integrity ────────────────────────────────────────────────────
 
 	$( document ).on( 'click', '#tsosk-fi-scan, #tsosk-fi-force-scan', function () {
@@ -1745,6 +1869,147 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-security-save-alerts', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-alerts-msg' );
+		var saveLabel = $btn.data( 'save-label' ) || $btn.text();
+		var data = {
+			nonce  : $btn.data( 'nonce' ),
+			enabled: $( '#tsosk-sec-alerts-enabled' ).prop( 'checked' ) ? 1 : 0,
+			email  : $( '#tsosk-sec-alerts-email' ).val()
+		};
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_save_alerts',
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false ).text( saveLabel );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( saveLabel );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-security-revoke-app-password', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-app-passwords-msg' );
+		var data = {
+			nonce  : $btn.data( 'nonce' ),
+			user_id: $btn.data( 'user-id' ),
+			uuid   : $btn.data( 'uuid' )
+		};
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_revoke_app_password',
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					$btn.closest( 'tr' ).fadeOut( 300, function () { $( this ).remove(); } );
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_revoke );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_revoke );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-security-test-uploads-php', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-uploads-msg' );
+		var data = { nonce: $btn.data( 'nonce' ) };
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_test_uploads_php',
+			data   : data,
+			success: function ( r ) {
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_test_now );
+				if ( r.success ) {
+					showMsg( $msg, r.data.message || tsosk.i18n.done, r.data.status === 'executed' ? 'error' : 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1200 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_test_now );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-security-protect-uploads', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-uploads-msg' );
+		var data = { nonce: $btn.data( 'nonce' ) };
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_protect_uploads',
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1200 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_enable_protection );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_enable_protection );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-security-revoke-all-app-passwords', function () {
+		if ( ! window.confirm( tsosk.i18n.sec_revoke_all_confirm ) ) {
+			return;
+		}
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-app-passwords-msg' );
+		var data = { nonce: $btn.data( 'nonce' ) };
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_revoke_all_app_passwords',
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1200 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_revoke_all );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.sec_revoke_all );
+			}
+		} );
+	} );
+
 	// ── Hidden WordPress Profiles ─────────────────────────────────────────
 	var tsoskHpPresets = {
 		performance: [
@@ -1892,6 +2157,7 @@
 			data   : {
 				nonce                   : nonce,
 				enabled                 : $( '#tsosk-cas-enabled' ).prop( 'checked' ) ? 1 : 0,
+				learning_mode           : $( '#tsosk-cas-learning-mode' ).prop( 'checked' ) ? 1 : 0,
 				protect_comments        : $( '#tsosk-cas-protect-comments' ).prop( 'checked' ) ? 1 : 0,
 				protect_contact_forms   : $( '#tsosk-cas-protect-forms' ).prop( 'checked' ) ? 1 : 0,
 				honeypot                : $( '#tsosk-cas-honeypot' ).prop( 'checked' ) ? 1 : 0,
@@ -1948,6 +2214,28 @@
 
 		ajaxPost( {
 			action : 'tsosk_cas_clear_log',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+				} else {
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-cas-clear-learning-log', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+
+		$btn.prop( 'disabled', true );
+
+		ajaxPost( {
+			action : 'tsosk_cas_clear_learning_log',
 			data   : { nonce: nonce },
 			success: function ( r ) {
 				if ( r.success ) {
@@ -3680,8 +3968,9 @@
 		var $btn = $( this );
 		var $msg = $( '#tsosk-media-hygiene-msg' );
 		var $out = $( '#tsosk-media-hygiene-results' );
+		var $quarantineOut = $( '#tsosk-media-quarantine-results' );
 		var label = $btn.data( 'label' ) || '';
-		var confirmMsg = tsosk.i18n.media_hygiene_delete_confirm || 'Delete this folder?';
+		var confirmMsg = tsosk.i18n.media_hygiene_delete_confirm || 'Move this folder to quarantine?';
 
 		if ( label ) {
 			confirmMsg = label + '\n\n' + confirmMsg;
@@ -3698,6 +3987,86 @@
 			data   : {
 				nonce     : $btn.data( 'nonce' ),
 				folder_id : $btn.data( 'folder-id' )
+			},
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.html ) {
+						$out.html( r.data.html );
+					}
+					if ( r.data && r.data.quarantine_html ) {
+						$quarantineOut.html( r.data.quarantine_html );
+					}
+					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-media-quarantine-restore', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-media-hygiene-msg' );
+		var $out = $( '#tsosk-media-quarantine-results' );
+
+		if ( ! window.confirm( tsosk.i18n.media_quarantine_restore_confirm || 'Restore this folder?' ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, '' );
+
+		ajaxPost( {
+			action : 'tsosk_media_quarantine_restore',
+			data   : {
+				nonce    : $btn.data( 'nonce' ),
+				entry_id : $btn.data( 'entry-id' )
+			},
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.html ) {
+						$out.html( r.data.html );
+					}
+					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-media-quarantine-purge', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-media-hygiene-msg' );
+		var $out = $( '#tsosk-media-quarantine-results' );
+		var label = $btn.data( 'label' ) || '';
+		var confirmMsg = tsosk.i18n.media_quarantine_purge_confirm || 'Permanently delete this folder now?';
+
+		if ( label ) {
+			confirmMsg = label + '\n\n' + confirmMsg;
+		}
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, '' );
+
+		ajaxPost( {
+			action : 'tsosk_media_quarantine_purge',
+			data   : {
+				nonce    : $btn.data( 'nonce' ),
+				entry_id : $btn.data( 'entry-id' )
 			},
 			success: function ( r ) {
 				if ( r.success ) {
@@ -3821,6 +4190,7 @@
 				exclude_ajax : $( '#tsosk-sq-exclude-ajax' ).prop( 'checked' ) ? 1 : 0,
 				exclude_cron : $( '#tsosk-sq-exclude-cron' ).prop( 'checked' ) ? 1 : 0,
 				show_admin_bar : $( '#tsosk-sq-show-admin-bar' ).prop( 'checked' ) ? 1 : 0,
+				capture_origin : $( '#tsosk-sq-capture-origin' ).prop( 'checked' ) ? 1 : 0,
 				ignore_patterns : $( '#tsosk-sq-ignore-patterns' ).val() || ''
 			},
 			success: function ( r ) {
@@ -4286,6 +4656,58 @@
 	$( document ).on( 'click', '#tsosk-sr-cancel-btn', function () {
 		tsosk_sr_invalidate_preview();
 		$( '#tsosk-sr-preview-wrap' ).hide();
+	} );
+
+	// ── Restore automatic backup ──
+	$( document ).on( 'click', '#tsosk-sr-backup-restore-btn', function () {
+		var $btn     = $( this );
+		var origText = $btn.text();
+		var $msg     = $( '#tsosk-sr-backup-msg' );
+
+		if ( ! confirm( tsosk.i18n.sr_backup_confirm_restore ) ) { return; }
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.loading );
+		ajaxPost( {
+			action : 'tsosk_sr_restore_backup',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data.message, 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1500 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( origText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( origText );
+			}
+		} );
+	} );
+
+	// ── Activity History: undo one entry ──
+	$( document ).on( 'click', '.tsosk-history-undo-btn', function () {
+		var $btn = $( this );
+		var $cell = $btn.closest( 'td' );
+		if ( ! confirm( tsosk.i18n.history_undo_confirm ) ) { return; }
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.loading );
+		ajaxPost( {
+			action : 'tsosk_history_undo',
+			data   : { nonce: $btn.data( 'nonce' ), id: $btn.data( 'id' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					$cell.html( '<span class="tsosk-badge tsosk-badge-info">' + tsosk.i18n.history_reverted + '</span>' );
+				} else {
+					alert( r.data || tsosk.i18n.error );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.undo );
+				}
+			},
+			error: function () {
+				alert( tsosk.i18n.error );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.undo );
+			}
+		} );
 	} );
 
 	// ── Activity History: clear log ──
@@ -6115,6 +6537,32 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-log-snippet-copy', function () {
+		var $msg = $( '#tsosk-log-snippet-msg' );
+		var text = $.trim( $( '#tsosk-log-snippet' ).text() );
+		var doneLabel = ( tsosk.i18n && tsosk.i18n.copied ) ? tsosk.i18n.copied : 'Copied';
+		function fallback() {
+			var range = document.createRange();
+			range.selectNodeContents( document.getElementById( 'tsosk-log-snippet' ) );
+			var sel = window.getSelection();
+			sel.removeAllRanges();
+			sel.addRange( range );
+			try {
+				document.execCommand( 'copy' );
+				showMsg( $msg, doneLabel, 'ok' );
+			} catch ( e ) {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
+		}
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( text ).then( function () {
+				showMsg( $msg, doneLabel, 'ok' );
+			} ).catch( fallback );
+		} else {
+			fallback();
+		}
+	} );
+
 	$( document ).on( 'click', '#tsosk-runtime-copy-summary', function () {
 		var $msg = $( '#tsosk-runtime-copy-msg' );
 		var text = $( '#tsosk-runtime-summary' ).val() || '';
@@ -6142,5 +6590,139 @@
 			}
 		}
 	} );
+
+	// ── View Counter ───────────────────────────────────────────────────────
+
+	$( document ).on( 'click', '#tsosk-vc-save', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-vc-settings-msg' );
+		var types = [];
+
+		$( '.tsosk-vc-post-type:checked' ).each( function () {
+			types.push( $( this ).val() );
+		} );
+
+		ajaxPost( {
+			action : 'tsosk_vc_save_settings',
+			data   : {
+				nonce                 : nonce,
+				post_types            : types,
+				exclude_logged_in     : $( '#tsosk-vc-exclude-logged-in' ).is( ':checked' ) ? 1 : '',
+				track_outbound_links  : $( '#tsosk-vc-track-links' ).is( ':checked' ) ? 1 : '',
+				email_weekly_summary  : $( '#tsosk-vc-email-weekly' ).is( ':checked' ) ? 1 : '',
+				email_period_days     : $( '#tsosk-vc-email-period' ).val(),
+				email_recipient       : $( '#tsosk-vc-email-recipient' ).val()
+			},
+			success: function ( r ) {
+				showMsg( $msg, ( r && r.data ) || tsosk.i18n.done, r && r.success ? 'ok' : 'error' );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-vc-import', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-vc-import-msg' );
+
+		ajaxPost( {
+			action : 'tsosk_vc_import',
+			data   : {
+				nonce : nonce,
+				source: $( '#tsosk-vc-import-source' ).val()
+			},
+			success: function ( r ) {
+				// Persistent (non-fading) result so the outcome of the import stays readable.
+				var $result = $( '#tsosk-vc-import-result' );
+				$result.text( ( r && r.data ) || tsosk.i18n.done ).toggleClass( 'is-error', ! ( r && r.success ) ).prop( 'hidden', false );
+				if ( r && r.success ) {
+					tsooskVcLoadTopContent( $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' ) );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-vc-reset', function () {
+		if ( ! window.confirm( tsosk.i18n.vc_reset_confirm ) ) {
+			return;
+		}
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-vc-reset-msg' );
+
+		ajaxPost( {
+			action : 'tsosk_vc_reset',
+			data   : { nonce: nonce },
+			success: function ( r ) {
+				showMsg( $msg, ( r && r.data ) || tsosk.i18n.done, r && r.success ? 'ok' : 'error' );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
+		} );
+	} );
+
+	// View Counter: Top Content report (period pills, built entirely with DOM
+	// methods below — never string-concatenated HTML — since row values come
+	// from the site's own titles/URLs and must be treated as untrusted text).
+	function tsooskVcLoadTopContent( $pills ) {
+		var nonce  = $pills.data( 'nonce' );
+		var period = $pills.find( '.tsosk-filter-active' ).data( 'period' ) || '30';
+
+		ajaxPost( {
+			action : 'tsosk_vc_top_content',
+			data   : { nonce: nonce, period: period },
+			success: function ( r ) {
+				if ( ! r || ! r.success ) {
+					return;
+				}
+				var $postsBody = $( '#tsosk-vc-top-posts-table tbody' ).empty();
+				var $linksBody = $( '#tsosk-vc-top-links-table tbody' ).empty();
+
+				if ( ! r.data.posts.length ) {
+					$postsBody.append( $( '<tr>' ).append( $( '<td colspan="2">' ).text( tsosk.i18n.vc_no_data ) ) );
+				}
+				$.each( r.data.posts, function ( i, row ) {
+					var $link = $( '<a>' ).attr( 'href', row.edit_url ).text( row.title );
+					$postsBody.append(
+						$( '<tr>' ).append(
+							$( '<td>' ).append( $link ),
+							$( '<td>' ).text( row.total )
+						)
+					);
+				} );
+
+				if ( ! r.data.links.length ) {
+					$linksBody.append( $( '<tr>' ).append( $( '<td colspan="2">' ).text( tsosk.i18n.vc_no_data ) ) );
+				}
+				$.each( r.data.links, function ( i, row ) {
+					var $link = $( '<a>' ).attr( { href: row.url, target: '_blank', rel: 'noopener noreferrer' } ).text( row.url );
+					$linksBody.append(
+						$( '<tr>' ).append(
+							$( '<td>' ).append( $link ),
+							$( '<td>' ).text( row.total )
+						)
+					);
+				} );
+			}
+		} );
+	}
+
+	$( document ).on( 'click', '.tsosk-vc-period', function () {
+		var $pills = $( this ).closest( '.tsosk-filter-pills' );
+		$pills.find( '.tsosk-vc-period' ).removeClass( 'tsosk-filter-active' );
+		$( this ).addClass( 'tsosk-filter-active' );
+		tsooskVcLoadTopContent( $pills );
+	} );
+
+	if ( $( '#tsosk-vc-top-posts-table' ).length ) {
+		tsooskVcLoadTopContent( $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' ) );
+	}
 
 } )( jQuery );

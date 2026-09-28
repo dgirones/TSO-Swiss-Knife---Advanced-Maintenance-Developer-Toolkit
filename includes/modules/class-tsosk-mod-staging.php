@@ -647,6 +647,25 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Prefix CSV cells that Excel/Sheets may treat as formulas.
+	 *
+	 * Mail subject/excerpt can carry attacker-influenced text (e.g. a
+	 * contact-form submission), so — same as the View Counter's CSV
+	 * export — a leading =, +, -, @, tab or CR is neutralized before
+	 * writing the cell.
+	 *
+	 * @param mixed $value Cell value.
+	 * @return string
+	 */
+	private function csv_safe_cell( $value ): string {
+		$s = (string) $value;
+		if ( '' !== $s && in_array( $s[0], array( '=', '+', '-', '@', "\t", "\r" ), true ) ) {
+			return "'" . $s;
+		}
+		return $s;
+	}
+
+	/**
 	 * CSV download of the mail log.
 	 */
 	public function download_mail_log(): void {
@@ -681,11 +700,11 @@ class TSOSK_Mod_Staging {
 				$out,
 				array(
 					$row['time'] ? gmdate( 'Y-m-d H:i:s', $row['time'] ) : '',
-					$row['to'],
-					$row['subject'],
-					$row['excerpt'],
+					$this->csv_safe_cell( $row['to'] ),
+					$this->csv_safe_cell( $row['subject'] ),
+					$this->csv_safe_cell( $row['excerpt'] ),
 					$row['blocked'] ? '1' : '0',
-					$row['source'],
+					$this->csv_safe_cell( $row['source'] ),
 					$row['kind'],
 				)
 			);

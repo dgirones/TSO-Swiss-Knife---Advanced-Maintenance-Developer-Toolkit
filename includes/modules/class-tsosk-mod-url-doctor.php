@@ -600,7 +600,7 @@ class TSOSK_Mod_Url_Doctor {
 			<?php esc_html_e( 'This screen explains whether the two addresses WordPress has saved still match how you open the site (https, www, folder). It does not change the database. Use Search & Replace only after you know the correct address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-url-doctor-addresses">
 			<h3><?php esc_html_e( 'Addresses WordPress has saved', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
 				<tr>

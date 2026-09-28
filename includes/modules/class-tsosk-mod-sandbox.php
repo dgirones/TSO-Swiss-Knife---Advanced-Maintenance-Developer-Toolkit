@@ -20,6 +20,12 @@ class TSOSK_Mod_Sandbox {
 	/** @var TSOSK_Mod_Sandbox|null */
 	private static $instance = null;
 
+	/** User meta: bisection session state (array) or absent when idle. */
+	private const META_BISECT = 'tsosk_sandbox_bisect';
+
+	/** User meta: one-shot flash result shown after bisection finishes. */
+	private const META_BISECT_RESULT = 'tsosk_sandbox_bisect_result';
+
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -30,6 +36,9 @@ class TSOSK_Mod_Sandbox {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sandbox_apply', array( $this, 'ajax_apply' ) );
 		add_action( 'wp_ajax_tsosk_sandbox_reset', array( $this, 'ajax_reset' ) );
+		add_action( 'wp_ajax_tsosk_sandbox_bisect_start', array( $this, 'ajax_bisect_start' ) );
+		add_action( 'wp_ajax_tsosk_sandbox_bisect_vote', array( $this, 'ajax_bisect_vote' ) );
+		add_action( 'wp_ajax_tsosk_sandbox_bisect_cancel', array( $this, 'ajax_bisect_cancel' ) );
 	}
 
 	/**
@@ -114,6 +123,50 @@ class TSOSK_Mod_Sandbox {
 		return is_array( $plugins );
 	}
 
+	// ── Bisection ─────────────────────────────────────────────────────────────
+
+	/**
+	 * Read the current bisection state for a user.
+	 *
+	 * @param int $user_id User ID.
+	 * @return array<string,mixed>
+	 */
+	private function get_bisect_state( int $user_id ): array {
+		$state = get_user_meta( $user_id, self::META_BISECT, true );
+		return is_array( $state ) ? $state : array();
+	}
+
+	/**
+	 * Persist the bisection state for a user.
+	 *
+	 * @param int                 $user_id User ID.
+	 * @param array<string,mixed> $state   State to store.
+	 */
+	private function save_bisect_state( int $user_id, array $state ): void {
+		update_user_meta( $user_id, self::META_BISECT, $state );
+	}
+
+	/**
+	 * Clear the bisection state for a user.
+	 *
+	 * @param int $user_id User ID.
+	 */
+	private function clear_bisect_state( int $user_id ): void {
+		delete_user_meta( $user_id, self::META_BISECT );
+	}
+
+	/**
+	 * Split a candidate plugin list in half for the next bisection test.
+	 *
+	 * @param array<int,string> $candidates Plugin basenames.
+	 * @return array{0:array<int,string>,1:array<int,string>} [testing half, remaining half].
+	 */
+	private function bisect_split( array $candidates ): array {
+		$candidates = array_values( $candidates );
+		$half       = (int) ceil( count( $candidates ) / 2 );
+		return array( array_slice( $candidates, 0, $half ), array_slice( $candidates, $half ) );
+	}
+
 	// ── AJAX ──────────────────────────────────────────────────────────────────
 
 	/**
@@ -124,6 +177,9 @@ class TSOSK_Mod_Sandbox {
 		if ( ! current_user_can( 'activate_plugins' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
+
+		// A manual apply supersedes any bisection in progress.
+		$this->clear_bisect_state( get_current_user_id() );
 
 		$plugins = array();
 		if ( isset( $_POST['plugins'] ) && is_array( $_POST['plugins'] ) ) {
@@ -166,11 +222,195 @@ class TSOSK_Mod_Sandbox {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
+		$this->clear_bisect_state( get_current_user_id() );
 		TSOSK_Sandbox_Mu::end_session( get_current_user_id() );
 
 		TSOSK_Activity_Log::log( 'sandbox', 'disable', __( 'Plugin sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
 		wp_send_json_success( __( 'Sandbox exited. Reloading restores the normal plugin set.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/**
+	 * AJAX: start an automatic bisection of the normally active plugins.
+	 */
+	public function ajax_bisect_start(): void {
+		check_ajax_referer( 'tsosk_sandbox_nonce', 'nonce' );
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$normal     = (array) get_option( 'active_plugins', array() );
+		$candidates = array_values( array_filter( $normal, static fn( $p ) => TSOSK_BASENAME !== $p ) );
+
+		if ( count( $candidates ) < 2 ) {
+			wp_send_json_error( __( 'Bisection needs at least 2 other normally active plugins to narrow down.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		list( $testing, $remaining ) = $this->bisect_split( $candidates );
+
+		$result = TSOSK_Sandbox_Mu::start_session( get_current_user_id(), $this->normalize_plugin_list( $testing ) );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		$user_id = get_current_user_id();
+		delete_user_meta( $user_id, self::META_BISECT_RESULT );
+		$this->save_bisect_state(
+			$user_id,
+			array(
+				'candidates' => $candidates,
+				'testing'    => $testing,
+				'remaining'  => $remaining,
+				'step'       => 1,
+				'started'    => time(),
+			)
+		);
+
+		TSOSK_Activity_Log::log(
+			'sandbox',
+			'bisect-start',
+			sprintf(
+				/* translators: 1: total candidate plugins, 2: plugins in the first test */
+				__( 'Plugin bisection started (%1$d candidates, testing %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				count( $candidates ),
+				count( $testing )
+			)
+		);
+
+		wp_send_json_success(
+			__( 'Bisection started. Reloading applies the first test set — go check the site, then come back and answer.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+		);
+	}
+
+	/**
+	 * AJAX: record whether the problem reproduced with the current test set,
+	 * and either narrow the candidates further or report the likely culprit.
+	 */
+	public function ajax_bisect_vote(): void {
+		check_ajax_referer( 'tsosk_sandbox_nonce', 'nonce' );
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$user_id = get_current_user_id();
+		$state   = $this->get_bisect_state( $user_id );
+		if ( empty( $state ) || empty( $state['testing'] ) ) {
+			wp_send_json_error( __( 'No bisection is currently in progress.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$reproduced = isset( $_POST['reproduced'] ) && 'yes' === sanitize_key( wp_unslash( $_POST['reproduced'] ) );
+
+		$testing   = (array) $state['testing'];
+		$remaining = (array) $state['remaining'];
+		$next_pool = array_values( $reproduced ? $testing : $remaining );
+
+		if ( count( $next_pool ) <= 1 ) {
+			$culprit = $next_pool[0] ?? '';
+			$this->clear_bisect_state( $user_id );
+
+			if ( '' === $culprit ) {
+				update_user_meta(
+					$user_id,
+					self::META_BISECT_RESULT,
+					array(
+						'culprit' => '',
+						'message' => __( 'No plugin could be isolated — the problem did not reproduce with either half. It may not be caused by a single plugin, or may be intermittent. Try the manual selector below instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					)
+				);
+
+				TSOSK_Activity_Log::log( 'sandbox', 'bisect-result', __( 'Plugin bisection finished without isolating a plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+				wp_send_json_success( __( 'Bisection finished: no single plugin could be isolated. Reloading returns to the manual selector.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+
+			$all  = get_plugins();
+			$name = isset( $all[ $culprit ]['Name'] ) ? $all[ $culprit ]['Name'] : $culprit;
+
+			// Keep only the isolated plugin active so the admin can confirm it.
+			TSOSK_Sandbox_Mu::start_session( $user_id, $this->normalize_plugin_list( array( $culprit ) ) );
+
+			update_user_meta(
+				$user_id,
+				self::META_BISECT_RESULT,
+				array(
+					'culprit' => $culprit,
+					/* translators: %s: plugin name */
+					'message' => sprintf( __( 'Likely culprit: %s. Sandbox now runs with only that plugin active (plus this toolkit) so you can confirm.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $name ),
+				)
+			);
+
+			TSOSK_Activity_Log::log(
+				'sandbox',
+				'bisect-result',
+				sprintf(
+					/* translators: %s: plugin name */
+					__( 'Plugin bisection isolated the likely conflicting plugin: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$name
+				)
+			);
+
+			wp_send_json_success(
+				sprintf(
+					/* translators: %s: plugin name */
+					__( 'Likely culprit: %s. Reloading applies a sandbox with only that plugin active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$name
+				)
+			);
+		}
+
+		list( $testing_next, $remaining_next ) = $this->bisect_split( $next_pool );
+
+		$result = TSOSK_Sandbox_Mu::start_session( $user_id, $this->normalize_plugin_list( $testing_next ) );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		$step = isset( $state['step'] ) ? (int) $state['step'] + 1 : 2;
+		$this->save_bisect_state(
+			$user_id,
+			array(
+				'candidates' => $next_pool,
+				'testing'    => $testing_next,
+				'remaining'  => $remaining_next,
+				'step'       => $step,
+				'started'    => $state['started'] ?? time(),
+			)
+		);
+
+		TSOSK_Activity_Log::log(
+			'sandbox',
+			'bisect-step',
+			sprintf(
+				/* translators: 1: step number, 2: remaining candidates, 3: plugins in this test */
+				__( 'Plugin bisection step %1$d (%2$d candidates left, testing %3$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$step,
+				count( $next_pool ),
+				count( $testing_next )
+			)
+		);
+
+		wp_send_json_success(
+			__( 'Next test applied. Reload, check the site again, then answer.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+		);
+	}
+
+	/**
+	 * AJAX: cancel an in-progress bisection and exit the sandbox entirely.
+	 */
+	public function ajax_bisect_cancel(): void {
+		check_ajax_referer( 'tsosk_sandbox_nonce', 'nonce' );
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$user_id = get_current_user_id();
+		$this->clear_bisect_state( $user_id );
+		delete_user_meta( $user_id, self::META_BISECT_RESULT );
+		TSOSK_Sandbox_Mu::end_session( $user_id );
+
+		TSOSK_Activity_Log::log( 'sandbox', 'bisect-cancel', __( 'Plugin bisection cancelled; sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+
+		wp_send_json_success( __( 'Bisection cancelled and sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	// ── Render ────────────────────────────────────────────────────────────────
@@ -188,6 +428,17 @@ class TSOSK_Mod_Sandbox {
 			: array();
 		$active_set = is_array( $sandboxed ) ? $sandboxed : $normal;
 		$mu_active  = TSOSK_Sandbox_Mu::is_loader_installed();
+
+		$user_id      = get_current_user_id();
+		$bisect_state = $this->get_bisect_state( $user_id );
+		$in_bisect    = ! empty( $bisect_state );
+
+		$bisect_result = get_user_meta( $user_id, self::META_BISECT_RESULT, true );
+		if ( is_array( $bisect_result ) && ! empty( $bisect_result ) ) {
+			delete_user_meta( $user_id, self::META_BISECT_RESULT );
+		} else {
+			$bisect_result = array();
+		}
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Test plugin conflicts with real isolation: a must-use loader makes WordPress load only your selected plugins on the next request. Other visitors are not affected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -209,6 +460,69 @@ class TSOSK_Mod_Sandbox {
 		</div>
 		<?php endif; ?>
 
+		<?php if ( ! empty( $bisect_result ) && ! empty( $bisect_result['message'] ) ) : ?>
+		<div class="tsosk-notice <?php echo esc_attr( ! empty( $bisect_result['culprit'] ) ? 'tsosk-notice-warn' : 'tsosk-notice-info' ); ?>">
+			<?php echo esc_html( $bisect_result['message'] ); ?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( $in_bisect ) : ?>
+		<div class="tsosk-card tsosk-sandbox-bisect-card">
+			<h3><?php esc_html_e( 'Plugin bisection in progress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p>
+				<?php
+				printf(
+					/* translators: 1: step number, 2: number of plugins active in this test, 3: total remaining candidate plugins */
+					esc_html__( 'Step %1$d — testing %2$d of %3$d remaining candidate plugin(s) (plus this toolkit). Everything else is switched off for your account only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) ( $bisect_state['step'] ?? 1 ),
+					count( (array) ( $bisect_state['testing'] ?? array() ) ),
+					count( (array) ( $bisect_state['candidates'] ?? array() ) )
+				);
+				?>
+			</p>
+			<details class="tsosk-bisect-details">
+				<summary><?php esc_html_e( 'Plugins active in this test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
+				<ul class="tsosk-bisect-testing-list">
+					<?php foreach ( (array) ( $bisect_state['testing'] ?? array() ) as $file ) : ?>
+						<li><?php echo esc_html( isset( $all[ $file ]['Name'] ) ? $all[ $file ]['Name'] : $file ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</details>
+			<p><strong><?php esc_html_e( 'Go check the site now. Does the problem still happen with only those plugins active?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+			<div class="tsosk-bisect-actions">
+				<button class="button button-primary" id="tsosk-bisect-yes" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( 'Yes, it still happens', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<button class="button button-secondary" id="tsosk-bisect-no" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( "No, it's gone", 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<button class="button" id="tsosk-bisect-cancel" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( 'Cancel bisection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-bisect-msg"></span>
+			</div>
+		</div>
+		<?php else : ?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Automatic bisection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Binary-search your normally active plugins to narrow down which one is causing a problem: each round halves the candidates based on whether the issue is still there, so you reach the likely culprit in a handful of steps instead of testing one by one. Assumes a single conflicting plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<?php
+			$bisect_pool = array_values( array_filter( $normal, static fn( $p ) => TSOSK_BASENAME !== $p ) );
+			if ( count( $bisect_pool ) < 2 ) :
+				?>
+				<p class="description"><?php esc_html_e( 'Needs at least 2 other normally active plugins to bisect.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+				<button class="button button-secondary" id="tsosk-bisect-start" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					<?php esc_html_e( 'Start bisection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-bisect-start-msg"></span>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( ! $in_bisect ) : ?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Select Active Plugins for Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 
@@ -251,6 +565,7 @@ class TSOSK_Mod_Sandbox {
 				<span class="tsosk-ajax-msg" id="tsosk-sandbox-msg"></span>
 			</div>
 		</div>
+		<?php endif; ?>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'How Sandbox Works', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>

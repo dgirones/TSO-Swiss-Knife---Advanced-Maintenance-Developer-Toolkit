@@ -15,6 +15,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TSOSK_Support {
 
 	/**
+	 * Current request path, percent-decoded (UTF-8 kept) and sanitized.
+	 *
+	 * Decoding must happen before sanitize_text_field(): that function strips
+	 * percent-encoded octets, which turned "/%C3%B1and%C3%BA/" into "/and/".
+	 *
+	 * @return string Path such as "/ñandú/", or '' when unavailable.
+	 */
+	public static function get_request_path_decoded(): string {
+		if ( ! isset( $_SERVER['REQUEST_URI'] ) || ! is_string( $_SERVER['REQUEST_URI'] ) ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized below after decoding.
+		$path = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH );
+		return sanitize_text_field( rawurldecode( $path ) );
+	}
+
+	/**
+	 * Current request URI (path + query) for logs and display, percent-decoded and sanitized.
+	 *
+	 * @return string
+	 */
+	public static function get_request_uri_for_display(): string {
+		if ( ! isset( $_SERVER['REQUEST_URI'] ) || ! is_string( $_SERVER['REQUEST_URI'] ) ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized after decoding.
+		return sanitize_text_field( rawurldecode( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+	}
+
+	/**
 	 * Blog / donations URL (TSO brand).
 	 *
 	 * @return string

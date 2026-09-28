@@ -727,11 +727,30 @@ class TSOSK_Mod_Server_Files {
 
 		foreach ( $parsed['groups'] as $group ) {
 			$ua_label = implode( ', ', array_map( 'trim', $group['user_agents'] ) );
+
+			// A "Disallow: /" is overridden within the same group by an
+			// equally-broad "Allow: /" (or "Allow:" with an empty path, which
+			// also means "allow everything") — per the robots.txt spec, a tie
+			// in match length is won by Allow. Without this check, a robots.txt
+			// like "User-agent: *\nDisallow: /\nAllow: /" (unusual, but valid,
+			// and something some CDN/plugin-generated files do produce) was
+			// misreported as blocking the entire site.
+			$group_allows_root = false;
+			foreach ( $group['rules'] as $rule ) {
+				if ( 'allow' === $rule['type'] && $this->is_robots_root_disallow( $rule['path'] ) ) {
+					$group_allows_root = true;
+					break;
+				}
+			}
+
 			foreach ( $group['rules'] as $rule ) {
 				if ( 'disallow' !== $rule['type'] ) {
 					continue;
 				}
 				if ( $this->is_robots_root_disallow( $rule['path'] ) ) {
+					if ( $group_allows_root ) {
+						continue;
+					}
 					$full_site_blocks[] = array(
 						'ua'   => $ua_label,
 						'line' => $rule['line'],

@@ -55,6 +55,14 @@ class TSOSK_Mod_Slow_Queries {
 	/** @var TSOSK_Mod_Slow_Queries|null */
 	private static $instance = null;
 
+	/**
+	 * Per-query raw backtraces captured this request (only populated when
+	 * the "capture origin" setting is on), keyed by $wpdb->queries index.
+	 *
+	 * @var array<int,array<int,array<string,mixed>>>
+	 */
+	private $query_backtraces = array();
+
 	/** @return TSOSK_Mod_Slow_Queries */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -67,6 +75,12 @@ class TSOSK_Mod_Slow_Queries {
 		// Register shutdown hook only when monitoring is active AND SAVEQUERIES is on.
 		if ( $this->is_monitoring_active() ) {
 			add_action( 'shutdown', array( $this, 'capture_slow_queries' ), 999 );
+		}
+
+		// Opt-in: record a lightweight backtrace per query so slow ones can be
+		// attributed to a plugin, theme, or WordPress core.
+		if ( $this->is_monitoring_active() && ! empty( $this->get_settings()['capture_origin'] ) ) {
+			add_filter( 'query', array( $this, 'capture_query_backtrace' ), 0 );
 		}
 
 		// Persist exact duplicate SQL from the last admin request (for the live viewer).
@@ -93,7 +107,7 @@ class TSOSK_Mod_Slow_Queries {
 	/**
 	 * Return settings with safe defaults.
 	 *
-	 * @return array{enabled:bool,threshold_ms:int,max_entries:int,exclude_ajax:bool,exclude_cron:bool,show_admin_bar:bool,ignore_patterns:array<int,string>}
+	 * @return array{enabled:bool,threshold_ms:int,max_entries:int,exclude_ajax:bool,exclude_cron:bool,show_admin_bar:bool,capture_origin:bool,ignore_patterns:array<int,string>}
 	 */
 	private function get_settings(): array {
 		$s = get_option( self::SETTINGS_OPTION, array() );
@@ -140,7 +154,8 @@ class TSOSK_Mod_Slow_Queries {
 			'max_entries'     => max( 50, min( 2000, (int) ( $s['max_entries'] ?? self::MAX_ENTRIES ) ) ),
 			'exclude_ajax'    => (bool) ( $s['exclude_ajax'] ?? false ),
 			'exclude_cron'    => (bool) ( $s['exclude_cron'] ?? true ),
-			'show_admin_bar'   => $show_admin_bar,
+			'show_admin_bar'  => $show_admin_bar,
+			'capture_origin'  => (bool) ( $s['capture_origin'] ?? false ),
 			'ignore_patterns' => $patterns,
 		);
 	}
@@ -184,9 +199,14 @@ class TSOSK_Mod_Slow_Queries {
 		// Collect slow queries from this request.
 		$slow     = array();
 		$patterns = $s['ignore_patterns'];
-		foreach ( $wpdb->queries as $q ) {
+		foreach ( $wpdb->queries as $qi => $q ) {
 			$time = (float) ( $q[1] ?? 0 );
 			if ( $time < $threshold_sec ) {
+				continue;
+			}
+			$caller = (string) ( $q[2] ?? '' );
+			// Queries fired while rendering the admin bar are not the site's own load.
+			if ( $this->caller_is_admin_bar( $caller ) ) {
 				continue;
 			}
 			$sql = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
@@ -196,7 +216,6 @@ class TSOSK_Mod_Slow_Queries {
 			if ( $this->is_ignored_sql( $sql, $patterns ) ) {
 				continue;
 			}
-			$caller = (string) ( $q[2] ?? '' );
 			// Strip internal wpdb frames from caller.
 			$frames = array_filter(
 				array_map( 'trim', explode( ',', $caller ) ),
@@ -206,11 +225,16 @@ class TSOSK_Mod_Slow_Queries {
 						&& 0 !== strpos( $f, 'require(' );
 				}
 			);
+			$origin = '';
+			if ( ! empty( $s['capture_origin'] ) && isset( $this->query_backtraces[ $qi ] ) ) {
+				$origin = $this->resolve_query_origin( $this->query_backtraces[ $qi ] );
+			}
 			$slow[] = array(
 				'sql'         => $this->redact_sql_for_storage( $sql ),
 				'fingerprint' => $this->fingerprint_sql( $sql ),
 				'time'        => round( $time * 1000, 3 ), // ms
 				'caller'      => implode( ' → ', array_slice( array_values( $frames ), -3 ) ),
+				'origin'      => $origin,
 			);
 			if ( count( $slow ) >= self::MAX_QUERIES_PER_BATCH ) {
 				break;
@@ -230,7 +254,7 @@ class TSOSK_Mod_Slow_Queries {
 			$action      = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
 			$request_url = 'AJAX: ' . $action;
 		} elseif ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$request_url = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+			$request_url = TSOSK_Support::get_request_uri_for_display();
 		}
 
 		// Total page load time.
@@ -495,6 +519,203 @@ class TSOSK_Mod_Slow_Queries {
 			|| false !== stripos( $stack, 'admin_bar_menu' );
 	}
 
+	// ── Origin detection (opt-in) ────────────────────────────────────────────
+
+	/**
+	 * 'query' filter callback: record a lightweight backtrace for each query
+	 * so capture_slow_queries() can later resolve which plugin, theme, or
+	 * WordPress core file it came from. Only registered while the "capture
+	 * origin" setting is on, since a backtrace per query has real overhead.
+	 *
+	 * @param string $query SQL, returned unmodified.
+	 * @return string
+	 */
+	public function capture_query_backtrace( $query ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- opt-in diagnostic capture (admin-gated setting), not left on by default.
+		$this->query_backtraces[] = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 25 );
+		return $query;
+	}
+
+	/**
+	 * Resolve which plugin, theme, or WordPress core area a captured
+	 * backtrace originated from.
+	 *
+	 * @param array<int,array<string,mixed>> $frames debug_backtrace() frames.
+	 * @return string 'plugin:<slug>' | 'theme:<slug>' | 'core' | 'unknown'
+	 */
+	private function resolve_query_origin( array $frames ): string {
+		$plugin_dir = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+		$theme_root = trailingslashit( wp_normalize_path( get_theme_root() ) );
+		$core_dir   = wp_normalize_path( ABSPATH );
+
+		foreach ( $frames as $frame ) {
+			$file = isset( $frame['file'] ) ? wp_normalize_path( (string) $frame['file'] ) : '';
+			if ( '' === $file ) {
+				continue;
+			}
+			if ( 0 === strpos( $file, $plugin_dir ) ) {
+				$slug = strtok( substr( $file, strlen( $plugin_dir ) ), '/' );
+				return 'plugin:' . ( is_string( $slug ) && '' !== $slug ? $slug : 'unknown' );
+			}
+			if ( 0 === strpos( $file, $theme_root ) ) {
+				$slug = strtok( substr( $file, strlen( $theme_root ) ), '/' );
+				return 'theme:' . ( is_string( $slug ) && '' !== $slug ? $slug : 'unknown' );
+			}
+			if ( 0 === strpos( $file, $core_dir ) ) {
+				return 'core';
+			}
+		}
+
+		return 'unknown';
+	}
+
+	/**
+	 * Human-readable label for a resolved query origin.
+	 *
+	 * @param string $origin Value from resolve_query_origin().
+	 * @return string
+	 */
+	private function format_origin_label( string $origin ): string {
+		if ( 0 === strpos( $origin, 'plugin:' ) ) {
+			return sprintf(
+				/* translators: %s: plugin folder slug */
+				__( 'Plugin: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				substr( $origin, 7 )
+			);
+		}
+		if ( 0 === strpos( $origin, 'theme:' ) ) {
+			return sprintf(
+				/* translators: %s: theme folder slug */
+				__( 'Theme: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				substr( $origin, 6 )
+			);
+		}
+		if ( 'core' === $origin ) {
+			return __( 'WordPress core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		return __( 'Unknown origin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+	}
+
+	// ── N+1 detection ─────────────────────────────────────────────────────────
+
+	/**
+	 * Detect repeated identical-fingerprint queries within one request batch —
+	 * a common N+1 symptom (the same query pattern fired many times in a row).
+	 *
+	 * @param array<int,array<string,mixed>> $queries Batch queries.
+	 * @return array<int,array{fingerprint:string,sql:string,count:int,total_ms:float}>
+	 */
+	private function detect_nplus1( array $queries ): array {
+		$groups = array();
+		foreach ( $queries as $q ) {
+			if ( ! is_array( $q ) ) {
+				continue;
+			}
+			$fp = isset( $q['fingerprint'] ) && is_string( $q['fingerprint'] ) && '' !== $q['fingerprint']
+				? $q['fingerprint']
+				: (string) ( $q['sql'] ?? '' );
+			if ( '' === $fp ) {
+				continue;
+			}
+			$key  = md5( $fp );
+			$prev = $groups[ $key ] ?? array(
+				'fingerprint' => $fp,
+				'sql'         => (string) ( $q['sql'] ?? '' ),
+				'count'       => 0,
+				'total_ms'    => 0.0,
+			);
+			++$prev['count'];
+			$prev['total_ms'] += (float) ( $q['time'] ?? 0 );
+			$groups[ $key ]    = $prev;
+		}
+
+		$suspects = array_values(
+			array_filter(
+				$groups,
+				static function ( array $g ): bool {
+					return $g['count'] >= 3;
+				}
+			)
+		);
+
+		usort(
+			$suspects,
+			static function ( array $a, array $b ): int {
+				return $b['count'] <=> $a['count'];
+			}
+		);
+
+		return $suspects;
+	}
+
+	// ── Index suggestions ────────────────────────────────────────────────────
+
+	/**
+	 * Best-effort "consider an index" hint for a slow query, based on the
+	 * first table plus the column used in its WHERE/ORDER BY clause. Read-only
+	 * (SHOW TABLES / SHOW INDEX), results cached briefly per table. Returns
+	 * null when the query shape isn't recognised or a matching index exists.
+	 *
+	 * @param string $sql Stored SQL (identifiers intact; literal values may be redacted).
+	 * @return string|null
+	 */
+	private function suggest_index_for_sql( string $sql ): ?string {
+		if ( ! preg_match( '/\bFROM\s+`?(\w+)`?/i', $sql, $tm ) ) {
+			return null;
+		}
+		$table = $tm[1];
+		if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $table ) ) {
+			return null;
+		}
+
+		$column = '';
+		if ( preg_match( '/\bWHERE\s+`?(\w+)`?\.?`?(\w*)`?\s*[=<>]/i', $sql, $wm ) ) {
+			$column = '' !== $wm[2] ? $wm[2] : $wm[1];
+		} elseif ( preg_match( '/\bORDER\s+BY\s+`?(\w+)`?\.?`?(\w*)`?/i', $sql, $om ) ) {
+			$column = '' !== $om[2] ? $om[2] : $om[1];
+		}
+		if ( '' === $column || ! preg_match( '/^[A-Za-z0-9_]+$/', $column ) ) {
+			return null;
+		}
+		// Reject purely numeric matches: WordPress core generates boilerplate like
+		// "WHERE 1=1 AND (...)" (WP_Query/WP_Meta_Query/WP_Tax_Query) and "ORDER BY 1";
+		// a column name is never just digits, so this is never a real match.
+		if ( preg_match( '/^\d+$/', $column ) ) {
+			return null;
+		}
+
+		global $wpdb;
+		$cache_key = 'tsosk_sq_idx_' . md5( $table );
+		$indexed   = get_transient( $cache_key );
+		if ( ! is_array( $indexed ) ) {
+			$indexed = array();
+			$exists  = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- read-only existence check, prepared.
+			if ( $exists ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name validated as [A-Za-z0-9_]+ above; read-only SHOW INDEX.
+				$rows = $wpdb->get_results( "SHOW INDEX FROM `{$table}`", ARRAY_A );
+				if ( is_array( $rows ) ) {
+					foreach ( $rows as $row ) {
+						if ( isset( $row['Column_name'] ) ) {
+							$indexed[ strtolower( (string) $row['Column_name'] ) ] = true;
+						}
+					}
+				}
+			}
+			set_transient( $cache_key, $indexed, HOUR_IN_SECONDS );
+		}
+
+		if ( isset( $indexed[ strtolower( $column ) ] ) ) {
+			return null;
+		}
+
+		return sprintf(
+			/* translators: 1: column name, 2: table name */
+			__( 'Consider an index on %1$s (table %2$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'`' . $column . '`',
+			'`' . $table . '`'
+		);
+	}
+
 	/**
 	 * Persist a duplicate-query snapshot for the Slow Query Monitor tab.
 	 *
@@ -527,7 +748,7 @@ class TSOSK_Mod_Slow_Queries {
 
 		$url = '';
 		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$url = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+			$url = TSOSK_Support::get_request_uri_for_display();
 		}
 
 		set_transient(
@@ -758,7 +979,7 @@ class TSOSK_Mod_Slow_Queries {
 	 * Compute summary statistics from the log.
 	 *
 	 * @param array $log Full log.
-	 * @return array{total_slow:int,total_batches:int,slowest_ms:float,slowest_sql:string,top_callers:array,top_sqls:array}
+	 * @return array{total_slow:int,total_batches:int,slowest_ms:float,slowest_sql:string,top_callers:array,top_sqls:array,top_origins:array}
 	 */
 	private function compute_stats( array $log ): array {
 		$total_slow    = 0;
@@ -766,6 +987,7 @@ class TSOSK_Mod_Slow_Queries {
 		$slowest_sql   = '';
 		$caller_counts = array();
 		$sql_counts    = array();
+		$origin_counts = array();
 		$patterns      = $this->get_settings()['ignore_patterns'];
 
 		foreach ( $log as $batch ) {
@@ -811,6 +1033,17 @@ class TSOSK_Mod_Slow_Queries {
 				if ( $cal ) {
 					$caller_counts[ $cal ] = ( $caller_counts[ $cal ] ?? 0 ) + 1;
 				}
+
+				$origin = (string) ( $q['origin'] ?? '' );
+				if ( '' !== $origin ) {
+					$oprev = $origin_counts[ $origin ] ?? array(
+						'count'    => 0,
+						'total_ms' => 0.0,
+					);
+					$oprev['count']++;
+					$oprev['total_ms']       += $t;
+					$origin_counts[ $origin ] = $oprev;
+				}
 			}
 		}
 
@@ -824,6 +1057,12 @@ class TSOSK_Mod_Slow_Queries {
 			}
 		);
 		arsort( $caller_counts );
+		uasort(
+			$origin_counts,
+			static function ( array $a, array $b ): int {
+				return $b['count'] <=> $a['count'];
+			}
+		);
 
 		$top = array();
 		foreach ( array_slice( $sql_counts, 0, 10, true ) as $entry ) {
@@ -838,7 +1077,27 @@ class TSOSK_Mod_Slow_Queries {
 			'slowest_sql'   => $slowest_sql,
 			'top_callers'   => array_slice( $caller_counts, 0, 5, true ),
 			'top_sqls'      => $top,
+			'top_origins'   => array_slice( $origin_counts, 0, 8, true ),
 		);
+	}
+
+	/**
+	 * Build a "label … value" row for the admin-bar submenu.
+	 *
+	 * @param string $label Row label (plain text).
+	 * @param string $value Row value (plain text).
+	 * @param string $tone  Optional tone: '', 'warn' or 'bad'.
+	 * @param string $code  Optional SQL/code line shown under the row (plain text).
+	 * @return string HTML (already escaped).
+	 */
+	private function admin_bar_row( string $label, string $value, string $tone = '', string $code = '' ): string {
+		$value_class = 'tsosk-sq-v' . ( '' !== $tone ? ' tsosk-sq-v--' . sanitize_html_class( $tone ) : '' );
+		$html        = '<span class="tsosk-sq-kvline"><span class="tsosk-sq-k">' . esc_html( $label ) . '</span>'
+			. '<span class="' . esc_attr( $value_class ) . '">' . esc_html( $value ) . '</span></span>';
+		if ( '' !== $code ) {
+			$html .= '<span class="tsosk-sq-code">' . esc_html( $code ) . '</span>';
+		}
+		return $html;
 	}
 
 	/**
@@ -851,13 +1110,13 @@ class TSOSK_Mod_Slow_Queries {
 			return;
 		}
 
-		$settings   = $this->get_settings();
+		$settings    = $this->get_settings();
 		$savequeries = defined( 'SAVEQUERIES' ) && SAVEQUERIES;
 		if ( ! $savequeries && ! $settings['enabled'] ) {
 			return;
 		}
 
-		$live       = $this->get_current_request_query_stats();
+		$live = $this->get_current_request_query_stats();
 		if (
 			$live
 			&& (int) $live['dupe_patterns'] > 0
@@ -868,132 +1127,170 @@ class TSOSK_Mod_Slow_Queries {
 			// Persist early so the Monitor tab can show these SQL statements after navigation.
 			$this->store_duplicate_snapshot_from_queries( $GLOBALS['wpdb']->queries );
 		}
-		$log        = $this->get_log();
-		$log_stats  = array() !== $log ? $this->compute_stats( $log ) : array(
+		$log       = $this->get_log();
+		$log_stats = array() !== $log ? $this->compute_stats( $log ) : array(
 			'total_slow'    => 0,
 			'total_batches' => 0,
 			'slowest_ms'    => 0.0,
 			'slowest_sql'   => '',
 			'top_callers'   => array(),
 			'top_sqls'      => array(),
+			'top_origins'   => array(),
 		);
-		$tab_url    = admin_url( 'tools.php?page=tso-swiss-knife&tab=slow-queries' );
-		$debug_url  = admin_url( 'tools.php?page=tso-swiss-knife&tab=debug' );
+		$tab_url   = admin_url( 'tools.php?page=tso-swiss-knife&tab=slow-queries' );
+		$debug_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=debug' );
 
 		$load_s  = $live ? round( $live['load_ms'] / 1000, 2 ) : 0;
-		$q_count = $live ? $live['query_count'] : 0;
+		$q_count = $live ? (int) $live['query_count'] : 0;
 		$d_count = $live ? (int) $live['dupe_patterns'] : 0;
 		$s_count = $live ? (int) $live['slow_count'] : 0;
-		if ( $savequeries && $d_count > 0 ) {
-			$title = sprintf(
-				/* translators: 1: page load seconds, 2: query count, 3: distinct duplicate SQL patterns */
-				__( '%1$ss · %2$dQ · %3$dD', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				number_format_i18n( $load_s, 2 ),
-				$q_count,
-				$d_count
-			);
-		} elseif ( $savequeries ) {
-			$title = sprintf(
-				/* translators: 1: page load seconds, 2: query count */
-				__( '%1$ss · %2$dQ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				number_format_i18n( $load_s, 2 ),
-				$q_count
-			);
-		} else {
-			$title = __( 'Slow queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-		}
 
+		$severity     = 'ok';
 		$root_classes = array( 'tsosk-sq-admin-bar-root' );
 		if ( $d_count > 0 && $s_count > 0 ) {
+			$severity       = 'alert';
 			$root_classes[] = 'tsosk-sq-ab-alert';
 		} elseif ( $d_count > 0 || $s_count > 0 ) {
+			$severity       = 'warn';
 			$root_classes[] = 'tsosk-sq-ab-warn';
+		}
+
+		if ( $savequeries ) {
+			$title = '<span class="tsosk-sq-dot tsosk-sq-dot--' . esc_attr( $severity ) . '" aria-hidden="true"></span>'
+				. '<span class="tsosk-sq-load">'
+				/* translators: %s: page load time in seconds */
+				. esc_html( sprintf( __( '%s s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $load_s, 2 ) ) )
+				. '</span>'
+				. '<span class="tsosk-sq-pill">'
+				/* translators: %d: number of database queries */
+				. esc_html( sprintf( __( '%d Q', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $q_count ) )
+				. '</span>';
+			if ( $d_count > 0 ) {
+				$title .= '<span class="tsosk-sq-pill tsosk-sq-pill--bad">'
+					/* translators: %d: number of duplicated query patterns */
+					. esc_html( sprintf( _n( '%d dup', '%d dups', $d_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $d_count ) )
+					. '</span>';
+			}
+			if ( $s_count > 0 ) {
+				$title .= '<span class="tsosk-sq-pill tsosk-sq-pill--warn">'
+					/* translators: %d: number of slow queries */
+					. esc_html( sprintf( __( '%d slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $s_count ) )
+					. '</span>';
+			}
+			$tooltip = sprintf(
+				/* translators: 1: page load seconds, 2: query count, 3: duplicate patterns, 4: slow queries */
+				__( 'Slow Query Monitor — this request: %1$s s load, %2$d queries, %3$d duplicate patterns, %4$d slow queries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				number_format_i18n( $load_s, 2 ),
+				$q_count,
+				$d_count,
+				$s_count
+			);
+		} else {
+			$title   = '<span class="tsosk-sq-dot tsosk-sq-dot--off" aria-hidden="true"></span>'
+				. '<span class="tsosk-sq-load">' . esc_html__( 'Slow queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+			$tooltip = __( 'Slow Query Monitor — SAVEQUERIES is off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		$wp_admin_bar->add_node(
 			array(
 				'id'    => 'tsosk-slow-queries',
-				'title' => esc_html( $title ),
+				'title' => $title, // Built above from escaped parts.
 				'href'  => $tab_url,
 				'meta'  => array(
 					'class' => implode( ' ', $root_classes ),
-					'title' => ( $d_count > 0 || $s_count > 0 )
-						? esc_attr__( 'Slow Query Monitor: issues detected on this request (duplicates and/or slow queries).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-						: esc_attr__( 'Slow Query Monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'title' => $tooltip,
 				),
 			)
 		);
 
 		if ( $live ) {
+			// Section: this request.
 			$wp_admin_bar->add_node(
 				array(
 					'parent' => 'tsosk-slow-queries',
-					'id'     => 'tsosk-sq-ab-overview',
-					'title'  => esc_html(
-						sprintf(
-							/* translators: 1: load ms, 2: memory MB, 3: query time ms */
-							__( 'Page %1$s ms · Memory %2$s MB · DB %3$s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							number_format_i18n( $live['load_ms'], 1 ),
-							number_format_i18n( $live['memory_mb'], 1 ),
-							number_format_i18n( $live['query_time_ms'], 1 )
-						)
-					),
+					'id'     => 'tsosk-sq-ab-h-request',
+					'title'  => esc_html__( 'This request', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'meta'   => array( 'class' => 'tsosk-sq-ab-head' ),
 				)
 			);
-
-			$wp_admin_bar->add_node(
-				array(
+			$rows = array(
+				'tsosk-sq-ab-load'    => array( __( 'Page time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $live['load_ms'], 0 ) . ' ms', '' ),
+				'tsosk-sq-ab-dbtime'  => array( __( 'Database time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $live['query_time_ms'], 0 ) . ' ms', '' ),
+				'tsosk-sq-ab-memory'  => array( __( 'Peak memory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $live['memory_mb'], 1 ) . ' MB', '' ),
+				'tsosk-sq-ab-queries' => array( __( 'Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $q_count ), '' ),
+				'tsosk-sq-ab-slow'    => array(
+					/* translators: %d: slow threshold in milliseconds */
+					sprintf( __( 'Slow (≥ %d ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $settings['threshold_ms'] ),
+					number_format_i18n( $s_count ),
+					$s_count > 0 ? 'warn' : '',
+				),
+				'tsosk-sq-ab-dupcnt'  => array( __( 'Duplicate patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $d_count ), $d_count > 0 ? 'bad' : '' ),
+			);
+			foreach ( $rows as $row_id => $row ) {
+				$node = array(
 					'parent' => 'tsosk-slow-queries',
-					'id'     => 'tsosk-sq-ab-queries',
-					'title'  => esc_html(
-						sprintf(
-							/* translators: 1: query count, 2: slow count, 3: threshold ms, 4: distinct duplicate patterns */
-							__( 'This request: %1$d queries (%2$d slow ≥ %3$d ms, %4$d duplicates)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							$live['query_count'],
-							$live['slow_count'],
-							$settings['threshold_ms'],
-							(int) $live['dupe_patterns']
-						)
-					),
-					'href'   => $tab_url . '#tsosk-sq-last-dupes',
-				)
-			);
+					'id'     => $row_id,
+					'title'  => $this->admin_bar_row( $row[0], $row[1], $row[2] ), // Escaped inside admin_bar_row().
+					'meta'   => array( 'class' => 'tsosk-sq-ab-kv' ),
+				);
+				if ( 'tsosk-sq-ab-queries' === $row_id || 'tsosk-sq-ab-dupcnt' === $row_id ) {
+					$node['href'] = $tab_url . '#tsosk-sq-last-dupes';
+				} elseif ( 'tsosk-sq-ab-slow' === $row_id ) {
+					$node['href'] = $tab_url . '#tsosk-sq-live-viewer';
+				}
+				$wp_admin_bar->add_node( $node );
+			}
 
-			if ( $live['dupe_patterns'] > 0 && '' !== $live['top_dupe_sql'] ) {
+			// Section: worst queries.
+			$has_dupe    = $d_count > 0 && '' !== $live['top_dupe_sql'];
+			$has_slowest = $live['slowest_ms'] > 0;
+			if ( $has_dupe || $has_slowest ) {
+				$wp_admin_bar->add_node(
+					array(
+						'parent' => 'tsosk-slow-queries',
+						'id'     => 'tsosk-sq-ab-h-worst',
+						'title'  => esc_html__( 'Worst queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'meta'   => array( 'class' => 'tsosk-sq-ab-head' ),
+					)
+				);
+			}
+			if ( $has_dupe ) {
 				$wp_admin_bar->add_node(
 					array(
 						'parent' => 'tsosk-slow-queries',
 						'id'     => 'tsosk-sq-ab-dupes',
-						'title'  => esc_html(
-							sprintf(
-								/* translators: 1: times executed, 2: SQL excerpt */
-								__( 'Most duplicated: %1$d× — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								(int) $live['top_dupe_count'],
-								$this->admin_bar_excerpt( $live['top_dupe_sql'], 56 )
-							)
+						'title'  => $this->admin_bar_row(
+							/* translators: %d: times the same query ran */
+							sprintf( __( 'Duplicated %d×', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $live['top_dupe_count'] ),
+							__( 'View', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'bad',
+							$this->admin_bar_excerpt( $this->fingerprint_sql( $live['top_dupe_sql'] ), 64 )
 						),
 						'href'   => $tab_url . '#tsosk-sq-last-dupes',
 						'meta'   => array(
-							'class' => 'tsosk-sq-ab-item-warn',
+							'class' => 'tsosk-sq-ab-kv tsosk-sq-ab-item-warn',
+							'title' => $live['top_dupe_sql'],
 						),
 					)
 				);
 			}
-
-			if ( $live['slowest_ms'] > 0 ) {
+			if ( $has_slowest ) {
 				$wp_admin_bar->add_node(
 					array(
 						'parent' => 'tsosk-slow-queries',
 						'id'     => 'tsosk-sq-ab-slowest',
-						'title'  => esc_html(
-							sprintf(
-								/* translators: 1: milliseconds, 2: SQL excerpt */
-								__( 'Slowest: %1$s ms — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								number_format_i18n( $live['slowest_ms'], 2 ),
-								$this->admin_bar_excerpt( $live['slowest_sql'], 72 )
-							)
+						'title'  => $this->admin_bar_row(
+							/* translators: %s: milliseconds */
+							sprintf( __( 'Slowest · %s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), number_format_i18n( $live['slowest_ms'], 0 ) ),
+							__( 'View', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'warn',
+							$this->admin_bar_excerpt( $this->fingerprint_sql( $live['slowest_sql'] ), 64 )
 						),
 						'href'   => $tab_url . '#tsosk-sq-live-viewer',
+						'meta'   => array(
+							'class' => 'tsosk-sq-ab-kv',
+							'title' => $live['slowest_sql'],
+						),
 					)
 				);
 			}
@@ -1008,20 +1305,34 @@ class TSOSK_Mod_Slow_Queries {
 			);
 		}
 
+		// Section: persistent log.
 		if ( $log_stats['total_slow'] > 0 ) {
 			$wp_admin_bar->add_node(
 				array(
 					'parent' => 'tsosk-slow-queries',
+					'id'     => 'tsosk-sq-ab-h-log',
+					'title'  => esc_html__( 'Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'meta'   => array( 'class' => 'tsosk-sq-ab-head' ),
+				)
+			);
+			$wp_admin_bar->add_node(
+				array(
+					'parent' => 'tsosk-slow-queries',
 					'id'     => 'tsosk-sq-ab-log',
-					'title'  => esc_html(
+					'title'  => $this->admin_bar_row(
 						sprintf(
-							/* translators: 1: slow query count, 2: batch count */
-							__( 'Logged slow queries: %1$d (%2$d requests)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							$log_stats['total_slow'],
-							$log_stats['total_batches']
+							/* translators: %d: logged slow queries */
+							_n( '%d slow query logged', '%d slow queries logged', (int) $log_stats['total_slow'], 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							(int) $log_stats['total_slow']
+						),
+						sprintf(
+							/* translators: %d: number of requests */
+							_n( '%d request', '%d requests', (int) $log_stats['total_batches'], 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							(int) $log_stats['total_batches']
 						)
 					),
 					'href'   => $tab_url . '#tsosk-sq-log',
+					'meta'   => array( 'class' => 'tsosk-sq-ab-kv' ),
 				)
 			);
 
@@ -1031,16 +1342,22 @@ class TSOSK_Mod_Slow_Queries {
 					array(
 						'parent' => 'tsosk-slow-queries',
 						'id'     => 'tsosk-sq-ab-top',
-						'title'  => esc_html(
+						'title'  => $this->admin_bar_row(
 							sprintf(
-								/* translators: 1: hit count, 2: max ms, 3: SQL excerpt */
-								__( 'Top pattern: %1$d× (max %2$s ms) — %3$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								/* translators: 1: hit count, 2: max ms */
+								__( 'Top pattern · %1$d× · max %2$s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								(int) $top['count'],
-								number_format_i18n( (float) $top['max'], 1 ),
-								$this->admin_bar_excerpt( (string) $top['fingerprint'], 48 )
-							)
+								number_format_i18n( (float) $top['max'], 0 )
+							),
+							__( 'View', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'',
+							$this->admin_bar_excerpt( (string) $top['fingerprint'], 64 )
 						),
 						'href'   => $tab_url . '#tsosk-sq-patterns',
+						'meta'   => array(
+							'class' => 'tsosk-sq-ab-kv',
+							'title' => (string) $top['fingerprint'],
+						),
 					)
 				);
 			}
@@ -1052,6 +1369,7 @@ class TSOSK_Mod_Slow_Queries {
 				'id'     => 'tsosk-sq-ab-open',
 				'title'  => esc_html__( 'Open Slow Query Monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'href'   => $tab_url,
+				'meta'   => array( 'class' => 'tsosk-sq-ab-link' ),
 			)
 		);
 
@@ -1061,12 +1379,13 @@ class TSOSK_Mod_Slow_Queries {
 				'id'     => 'tsosk-sq-ab-debug',
 				'title'  => esc_html__( 'Open Debug Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'href'   => $debug_url,
+				'meta'   => array( 'class' => 'tsosk-sq-ab-link' ),
 			)
 		);
 	}
 
 	/**
-	 * Enqueue minimal admin-bar submenu styles.
+	 * Enqueue admin-bar styles (dot, pills, sectioned submenu, mobile).
 	 */
 	public function enqueue_admin_bar_styles(): void {
 		if ( ! is_admin_bar_showing() || ! current_user_can( 'manage_options' ) ) {
@@ -1077,17 +1396,22 @@ class TSOSK_Mod_Slow_Queries {
 		if ( ! $savequeries && ! $settings['enabled'] ) {
 			return;
 		}
-		$css = '#wpadminbar #wp-admin-bar-tsosk-slow-queries-default{min-width:280px;max-width:min(92vw,420px)}'
+		$css = '#wpadminbar #wp-admin-bar-tsosk-slow-queries-default{min-width:300px;max-width:min(92vw,440px)}'
+			. '#wpadminbar #wp-admin-bar-tsosk-slow-queries>.ab-item{display:flex!important;align-items:center;font-weight:600}'
+			. '#wpadminbar .tsosk-sq-dot{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#00a32a}'
+			. '#wpadminbar .tsosk-sq-dot--warn{background:#dba617}#wpadminbar .tsosk-sq-dot--alert{background:#d63638}#wpadminbar .tsosk-sq-dot--off{background:#8c8f94}'
+			. '#wpadminbar .tsosk-sq-pill{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;background:#3c434a;color:#fff;font-size:11px;line-height:16px;font-weight:600}'
+			. '#wpadminbar .tsosk-sq-pill--bad{background:#d63638}#wpadminbar .tsosk-sq-pill--warn{background:#dba617;color:#1d2327}'
 			. '#wpadminbar #wp-admin-bar-tsosk-slow-queries .ab-submenu .ab-item{'
-			. 'white-space:normal!important;overflow:hidden;word-break:break-word;overflow-wrap:anywhere;'
-			. 'height:auto!important;line-height:1.4;font-size:12px;padding-top:6px!important;padding-bottom:6px!important}'
+			. 'white-space:normal!important;word-break:break-word;overflow-wrap:anywhere;height:auto!important;line-height:1.4;font-size:12px;padding-top:6px!important;padding-bottom:6px!important}'
 			. '#wpadminbar #wp-admin-bar-tsosk-slow-queries .ab-submenu>li{height:auto}'
-			. '#wpadminbar .tsosk-sq-admin-bar-root>.ab-item{font-weight:600}'
-			. '#wpadminbar .tsosk-sq-ab-warn>.ab-item{background:#dba617!important;color:#1d2327!important}'
-			. '#wpadminbar .tsosk-sq-ab-warn:hover>.ab-item,#wpadminbar .tsosk-sq-ab-warn.hover>.ab-item{background:#c59200!important;color:#fff!important}'
-			. '#wpadminbar .tsosk-sq-ab-alert>.ab-item{background:#d63638!important;color:#fff!important}'
-			. '#wpadminbar .tsosk-sq-ab-alert:hover>.ab-item,#wpadminbar .tsosk-sq-ab-alert.hover>.ab-item{background:#b32d2e!important;color:#fff!important}'
-			. '#wpadminbar #wp-admin-bar-tsosk-sq-ab-dupes>.ab-item{color:#f0c33c!important;font-weight:600}';
+			. '#wpadminbar .tsosk-sq-ab-head>.ab-item{background:rgba(0,0,0,.18)!important;color:#a7aaad!important;font-size:10px!important;letter-spacing:.06em;text-transform:uppercase;cursor:default;padding-top:4px!important;padding-bottom:4px!important}'
+			. '#wpadminbar .tsosk-sq-kvline{display:flex;justify-content:space-between;gap:16px}'
+			. '#wpadminbar .tsosk-sq-v{font-weight:600}#wpadminbar .tsosk-sq-v--warn{color:#f0c33c}#wpadminbar .tsosk-sq-v--bad{color:#f86368}'
+			. '#wpadminbar .tsosk-sq-code{display:block;margin-top:2px;font-family:Consolas,Monaco,monospace;font-size:11px;color:#a7aaad}'
+			. '#wpadminbar .tsosk-sq-ab-link>.ab-item{color:#72aee6!important}'
+			. '@media screen and (max-width:782px){#wpadminbar #wp-admin-bar-tsosk-slow-queries{display:block!important}'
+			. '#wpadminbar #wp-admin-bar-tsosk-slow-queries>.ab-item{height:46px;padding:0 8px;font-size:12px}}';
 		wp_register_style( 'tsosk-sq-admin-bar', false, array(), TSOSK_VERSION );
 		wp_enqueue_style( 'tsosk-sq-admin-bar' );
 		wp_add_inline_style( 'tsosk-sq-admin-bar', $css );
@@ -1113,13 +1437,19 @@ class TSOSK_Mod_Slow_Queries {
 		$built         = $this->build_exact_dupe_map( $wpdb->queries );
 		$sql_map       = $built['map'];
 
+		$query_count   = 0;
+
 		foreach ( $wpdb->queries as $q ) {
 			$time  = (float) ( $q[1] ?? 0 );
 			$stack = (string) ( $q[2] ?? '' );
+			// Same rule as the duplicate map and the slow-query log: ignore admin-bar rendering.
+			if ( $this->caller_is_admin_bar( $stack ) ) {
+				continue;
+			}
+			++$query_count;
 			$query_time_ms += $time * 1000;
-			// Duplicates ignore admin-bar stacks; slowest may still include them for load context.
-			$sql = $this->normalize_sql_dupe_key( (string) ( $q[0] ?? '' ) );
-			if ( $time >= $threshold_sec && ! $this->caller_is_admin_bar( $stack ) ) {
+			$sql            = $this->normalize_sql_dupe_key( (string) ( $q[0] ?? '' ) );
+			if ( $time >= $threshold_sec ) {
 				++$slow_count;
 				$t_ms = $time * 1000;
 				if ( $t_ms > $slowest_ms ) {
@@ -1146,7 +1476,7 @@ class TSOSK_Mod_Slow_Queries {
 		return array(
 			'load_ms'        => round( $load_ms, 1 ),
 			'memory_mb'      => round( memory_get_peak_usage( true ) / 1048576, 1 ),
-			'query_count'    => count( $wpdb->queries ),
+			'query_count'    => $query_count,
 			'query_time_ms'  => round( $query_time_ms, 1 ),
 			'slow_count'     => $slow_count,
 			'slowest_ms'     => round( $slowest_ms, 2 ),
@@ -1206,7 +1536,8 @@ class TSOSK_Mod_Slow_Queries {
 			'max_entries'     => max( 50, min( 2000, absint( wp_unslash( $_POST['max_entries'] ?? 500 ) ) ) ),
 			'exclude_ajax'    => ! empty( $_POST['exclude_ajax'] ),
 			'exclude_cron'    => ! empty( $_POST['exclude_cron'] ),
-			'show_admin_bar'   => ! empty( $_POST['show_admin_bar'] ),
+			'show_admin_bar'  => ! empty( $_POST['show_admin_bar'] ),
+			'capture_origin'  => ! empty( $_POST['capture_origin'] ),
 			'ignore_patterns' => $ignore_patterns,
 		);
 
@@ -1459,6 +1790,8 @@ class TSOSK_Mod_Slow_Queries {
 		}
 
 		$total = count( $log );
+		// Clamp to the last page so an out-of-range page number cannot overflow the offset.
+		$page  = min( $page, max( 1, (int) ceil( $total / $per_page ) ) );
 		$items = array_slice( $log, ( $page - 1 ) * $per_page, $per_page );
 
 		$items_with_id = array();
@@ -1589,6 +1922,19 @@ class TSOSK_Mod_Slow_Queries {
 					</td>
 				</tr>
 				<tr>
+					<th><?php esc_html_e( 'Origin detection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" id="tsosk-sq-capture-origin" value="1"
+							       <?php checked( ! empty( $s['capture_origin'] ) ); ?>>
+							<?php esc_html_e( 'Record which plugin, theme, or WordPress core each slow query came from', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</label>
+						<p class="description" style="margin-top:4px;">
+							<?php esc_html_e( 'Adds a small backtrace per query while this is on — leave it off unless you are actively investigating.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
 					<th><?php esc_html_e( 'Ignore patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea id="tsosk-sq-ignore-patterns" rows="4" style="width:100%;max-width:520px;font-family:monospace;font-size:12px;"
@@ -1654,6 +2000,7 @@ class TSOSK_Mod_Slow_Queries {
 						<th style="width:10%;"><?php esc_html_e( 'Max', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<th style="width:10%;"><?php esc_html_e( 'Avg', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<th><?php esc_html_e( 'Fingerprint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:220px;"><?php esc_html_e( 'Index hint', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<th style="width:90px;"></th>
 					</tr></thead>
 					<tbody>
@@ -1685,6 +2032,12 @@ class TSOSK_Mod_Slow_Queries {
 							}
 							?>
 						</td>
+						<td style="font-size:11px;color:#6b7280;">
+							<?php
+							$idx_hint = $this->suggest_index_for_sql( (string) $entry['sql'] );
+							echo $idx_hint ? esc_html( $idx_hint ) : '—';
+							?>
+						</td>
 						<td>
 							<button type="button" class="button button-small tsosk-sq-ignore-pattern"
 							        data-nonce="<?php echo esc_attr( $nonce ); ?>"
@@ -1698,6 +2051,34 @@ class TSOSK_Mod_Slow_Queries {
 				</table>
 			</div>
 			<span class="tsosk-ajax-msg" id="tsosk-sq-pattern-msg"></span>
+		</div>
+		<?php endif; ?>
+
+		<?php /* ── By origin ── */ ?>
+		<?php if ( ! empty( $stats['top_origins'] ) ) : ?>
+		<div class="tsosk-card" id="tsosk-sq-origins">
+			<h3><?php esc_html_e( 'Slow Queries by Origin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Which plugin, theme, or WordPress core the slow queries came from (only counted while origin detection is on).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table">
+					<thead><tr>
+						<th><?php esc_html_e( 'Origin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:10%;"><?php esc_html_e( 'Count', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:15%;"><?php esc_html_e( 'Total time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $stats['top_origins'] as $origin_key => $o ) : ?>
+					<tr>
+						<td><?php echo esc_html( $this->format_origin_label( (string) $origin_key ) ); ?></td>
+						<td><?php echo esc_html( (string) $o['count'] ); ?></td>
+						<td><?php echo esc_html( number_format( (float) $o['total_ms'], 1 ) ); ?> ms</td>
+					</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		</div>
 		<?php endif; ?>
 
@@ -2050,6 +2431,7 @@ class TSOSK_Mod_Slow_Queries {
 			$queries
 		);
 		$max_time = $times ? max( $times ) : 0;
+		$nplus1   = $this->detect_nplus1( $queries );
 		?>
 		<div class="tsosk-sq-batch" id="tsosk-sq-batch-<?php echo esc_attr( $batch_id ); ?>" data-id="<?php echo esc_attr( $batch_id ); ?>">
 			<div class="tsosk-sq-batch-header" data-id="<?php echo esc_attr( $batch_id ); ?>">
@@ -2094,6 +2476,23 @@ class TSOSK_Mod_Slow_Queries {
 				<span class="tsosk-sq-toggle-icon">▼</span>
 			</div>
 			<div class="tsosk-sq-batch-body">
+				<?php if ( ! empty( $nplus1 ) ) : ?>
+				<div class="tsosk-notice tsosk-notice-warn tsosk-sq-nplus1-notice">
+					<?php foreach ( $nplus1 as $group ) : ?>
+					<p style="margin:4px 0;">
+						<?php
+						printf(
+							/* translators: 1: repeat count, 2: total time in ms, 3: SQL pattern excerpt */
+							esc_html__( 'Possible N+1: this pattern repeated %1$d times (%2$s ms total) — %3$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							(int) $group['count'],
+							esc_html( number_format( (float) $group['total_ms'], 1 ) ),
+							esc_html( mb_substr( (string) $group['sql'], 0, 140 ) )
+						);
+						?>
+					</p>
+					<?php endforeach; ?>
+				</div>
+				<?php endif; ?>
 				<?php
 				foreach ( $queries as $qi => $q ) :
 					if ( ! is_array( $q ) ) {
@@ -2122,6 +2521,9 @@ class TSOSK_Mod_Slow_Queries {
 							<?php echo esc_html( $kw ); ?>
 						</span>
 						<span class="tsosk-sq-query-num">#<?php echo esc_html( (string) ( $qi + 1 ) ); ?></span>
+						<?php if ( ! empty( $q['origin'] ) ) : ?>
+						<span class="tsosk-badge tsosk-sq-origin-badge"><?php echo esc_html( $this->format_origin_label( (string) $q['origin'] ) ); ?></span>
+						<?php endif; ?>
 					</div>
 					<div class="tsosk-sq-query-sql"><?php echo esc_html( $sql ); ?></div>
 					<?php if ( $cal ) : ?>

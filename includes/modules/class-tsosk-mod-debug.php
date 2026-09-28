@@ -452,7 +452,7 @@ class TSOSK_Mod_Debug {
 		return array(
 			'developer'   => array(
 				'title'   => __( 'Developer mode (staging)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'desc'    => __( 'Same preset as the Developer mode button above: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Recommended for staging: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', true );",
 			),
 			'production'  => array(
@@ -467,7 +467,7 @@ class TSOSK_Mod_Debug {
 			),
 			'script'      => array(
 				'title'   => __( 'Unminified core CSS/JS (SCRIPT_DEBUG)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'desc'    => __( 'Loads non-minified WordPress core assets. Combine with the developer preset when debugging front-end scripts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'desc'    => __( 'Loads non-minified WordPress core assets. Combine with the Developer mode (staging) lines when debugging front-end scripts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', true );\ndefine( 'SAVEQUERIES', false );",
 			),
 			'queries'     => array(
@@ -745,7 +745,7 @@ class TSOSK_Mod_Debug {
 		<div class="tsosk-card tsosk-dev-mode-card">
 			<h3><?php esc_html_e( 'Developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description tsosk-dev-mode-desc">
-				<?php esc_html_e( 'Recommended on staging: one click saves a debug preset (WP_DEBUG, debug.log, SAVEQUERIES; errors hidden from visitors) as JSON in your uploads folder. Reload the page to apply. Does not override constants already set in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Recommended on staging: one click turns on SAVEQUERIES so the Slow Query Monitor can record database queries. It is saved as JSON in your uploads folder (no wp-config.php edit); reload the page to apply. WordPress sets WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY and SCRIPT_DEBUG before any plugin loads, so those can only be changed in wp-config.php — see the guide below the constants table.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-dev-mode-actions">
 				<button type="button" class="button button-primary" id="tsosk-debug-developer-on"
@@ -799,55 +799,12 @@ class TSOSK_Mod_Debug {
 		</div>
 		<?php endif; ?>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-debug-constants">
 			<h3><?php esc_html_e( 'Debug Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Values active on this page load. Use Developer mode above to toggle the debug preset. Constants locked in wp-config.php are labelled below and cannot be overridden here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Values active on this page load. Developer mode above only controls SAVEQUERIES; the other constants come from wp-config.php or are WordPress defaults, and their source is shown below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
-			<div class="tsosk-guide-card" style="margin:14px 0 18px;">
-				<h4 class="tsosk-guide-title" style="font-size:14px;">
-					<?php esc_html_e( 'Edit wp-config.php manually', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</h4>
-				<p class="description" style="margin:0 0 10px;">
-					<?php
-					echo wp_kses(
-						sprintf(
-							/* translators: %s: marker line in wp-config.php */
-							__( 'Add or change these lines in %1$s before the line %2$s. If a constant is already defined, update its value — do not add a second define() for the same name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							'<code>wp-config.php</code>',
-							'<code>/* That\'s all, stop editing! Happy publishing. */</code>'
-						),
-						array( 'code' => array() )
-					);
-					?>
-				</p>
-				<?php if ( $wpconfig_exists ) : ?>
-				<p class="description" style="margin:0 0 12px;">
-					<?php
-					echo wp_kses(
-						sprintf(
-							/* translators: %s: absolute path to wp-config.php */
-							__( 'Detected file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							'<code>' . esc_html( $wpconfig_path ) . '</code>'
-						),
-						array( 'code' => array() )
-					);
-					?>
-				</p>
-				<?php endif; ?>
-				<p class="description" style="margin:0 0 12px;">
-					<?php esc_html_e( 'This plugin can also apply the developer preset via JSON in your uploads folder (no wp-config.php edit). Constants defined in wp-config.php always win and cannot be changed from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</p>
-
-				<?php foreach ( $this->wpconfig_debug_snippets() as $preset_key => $preset ) : ?>
-				<details class="tsosk-debug-advanced"<?php echo 'developer' === $preset_key ? ' open' : ''; ?>>
-					<summary><?php echo esc_html( $preset['title'] ); ?></summary>
-					<p class="description" style="margin:0 0 8px;"><?php echo esc_html( $preset['desc'] ); ?></p>
-					<pre class="tsosk-code" style="margin:0;padding:12px;background:#fff;border:1px solid #dcdcde;border-radius:3px;overflow:auto;white-space:pre;"><?php echo esc_html( $preset['snippet'] ); ?></pre>
-				</details>
-				<?php endforeach; ?>
-			</div>
 
 			<div class="tsosk-debug-flags" id="tsosk-debug-form">
 				<?php
@@ -878,75 +835,193 @@ class TSOSK_Mod_Debug {
 						'current' => defined( 'SAVEQUERIES' ) ? ( SAVEQUERIES ? 'true' : 'false' ) : __( 'not defined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 				);
+				?>
+				<div class="tsosk-dflags" role="table" aria-label="<?php esc_attr_e( 'Debug Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<div class="tsosk-dflags-head" role="row">
+						<span role="columnheader"><?php esc_html_e( 'Constant', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<span role="columnheader"><?php esc_html_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<span role="columnheader"><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<span role="columnheader"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</div>
+				<?php
 				foreach ( $flags as $key => $flag ) :
-					$actual_on     = in_array( $flag['current'], array( 'true', '1' ), true );
 					$flag_constant = $flag['label'];
+					$is_defined    = defined( $flag_constant );
+					$actual_on     = in_array( $flag['current'], array( 'true', '1' ), true );
 					$wc_state      = $wpconfig_state[ $flag_constant ] ?? array( 'defined' => false, 'value' => null, 'line' => 0 );
 					$in_wpconfig   = $wc_state['defined'];
 					$wc_val        = $wc_state['value'];
 					$wc_mismatch   = $in_wpconfig && $wc_val !== ( $actual_on ? 'true' : 'false' );
+					// WordPress core (wp_initial_constants) defines these before any plugin loads,
+					// so the plugin JSON preset can never set them; only wp-config.php can.
+					$core_predefined = in_array( $flag_constant, array( 'WP_DEBUG', 'WP_DEBUG_LOG', 'WP_DEBUG_DISPLAY', 'SCRIPT_DEBUG' ), true );
+					$from_tsosk      = ! $core_predefined && TSOSK_Config_Storage::constant_defined_in_tsosk_config( $flag_constant );
+					$is_core_default = ! $in_wpconfig && $is_defined && $core_predefined;
+					// WP_DEBUG_LOG / WP_DEBUG_DISPLAY are only applied by core when WP_DEBUG is true.
+					$no_effect     = $actual_on && ! $wp_debug_on && in_array( $key, array( 'log', 'display' ), true );
+
+					if ( ! $is_defined ) {
+						$val_mod = 'undef';
+					} elseif ( $no_effect ) {
+						$val_mod = 'muted';
+					} else {
+						$val_mod = $actual_on ? 'on' : 'off';
+					}
+
+					if ( $no_effect ) {
+						$status_mod   = 'warn';
+						$status_label = __( 'No effect', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						$status_title = __( 'No effect: WP_DEBUG is off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+					} elseif ( $actual_on ) {
+						$status_mod   = 'on';
+						$status_label = __( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						$status_title = '';
+					} else {
+						$status_mod   = 'off';
+						$status_label = __( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						$status_title = '';
+					}
 				?>
-				<div class="tsosk-flag-row<?php echo $wc_mismatch ? ' tsosk-flag-mismatch' : ''; ?>">
-
-					<?php /* ── Constant name ── */ ?>
-					<span class="tsosk-flag-label" style="min-width:160px;font-weight:600;">
-						<?php echo esc_html( $flag_constant ); ?>
-					</span>
-
-					<?php /* ── Description ── */ ?>
-					<span class="tsosk-flag-desc"><?php echo esc_html( $flag['desc'] ); ?></span>
-
-					<?php /* ── Current value badge ── */ ?>
-					<span class="tsosk-flag-current">
-						<?php esc_html_e( 'Actual:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-						<code class="<?php echo $actual_on ? 'tsosk-val-true' : 'tsosk-val-false'; ?>">
-							<?php echo esc_html( $flag['current'] ); ?>
-						</code>
-					</span>
-
-					<?php if ( $in_wpconfig ) : ?>
-					<span class="tsosk-badge tsosk-badge-<?php echo $wc_mismatch ? 'warn' : 'info'; ?>"
-					      style="font-size:11px;">
-						<?php
-						/* translators: %s: constant value in wp-config.php */
-						printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
-						?>
-					</span>
-					<?php endif; ?>
-
-				</div>
+					<div class="tsosk-dflags-row<?php echo $wc_mismatch ? ' tsosk-flag-mismatch' : ''; ?>" role="row">
+						<div class="tsosk-dflags-name" role="cell">
+							<code><?php echo esc_html( $flag_constant ); ?></code>
+							<span class="tsosk-dflags-desc"><?php echo esc_html( $flag['desc'] ); ?></span>
+						</div>
+						<div role="cell">
+							<span class="tsosk-dflags-val tsosk-dflags-val-<?php echo esc_attr( $val_mod ); ?>"><?php echo esc_html( $flag['current'] ); ?></span>
+						</div>
+						<div role="cell">
+							<?php if ( $in_wpconfig ) : ?>
+							<span class="tsosk-dflags-src tsosk-dflags-src-<?php echo $wc_mismatch ? 'warn' : 'config'; ?>">
+								<?php
+								/* translators: %s: constant value in wp-config.php */
+								printf( esc_html__( 'wp-config.php → %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), esc_html( (string) ( $wc_val ?? 'n/a' ) ) );
+								?>
+							</span>
+							<?php elseif ( $from_tsosk ) : ?>
+							<span class="tsosk-dflags-src tsosk-dflags-src-plugin"><?php esc_html_e( 'Developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<?php elseif ( $is_core_default ) : ?>
+							<span class="tsosk-dflags-src" title="<?php esc_attr_e( 'Not set in wp-config.php: this is the value WordPress assigns by default.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'WordPress default', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<?php else : ?>
+							<span class="tsosk-dflags-src tsosk-dflags-src-none">—</span>
+							<?php endif; ?>
+						</div>
+						<div role="cell">
+							<span class="tsosk-dflags-status tsosk-dflags-status-<?php echo esc_attr( $status_mod ); ?>"<?php echo '' !== $status_title ? ' title="' . esc_attr( $status_title ) . '"' : ''; ?>>
+								<?php echo esc_html( $status_label ); ?>
+							</span>
+						</div>
+					</div>
 				<?php endforeach; ?>
+				</div>
 			</div>
+
+			<details class="tsosk-guide-card tsosk-guide-collapse">
+				<summary class="tsosk-guide-title">
+					<span class="dashicons dashicons-editor-code" aria-hidden="true"></span>
+					<?php esc_html_e( 'Edit the debug constants in wp-config.php manually', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</summary>
+				<p class="description" style="margin:0 0 10px;">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: marker line in wp-config.php */
+							__( 'Add or change these lines in %1$s before the line %2$s. If a constant is already defined, update its value — do not add a second define() for the same name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>wp-config.php</code>',
+							'<code>/* That\'s all, stop editing! Happy publishing. */</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
+				<?php if ( $wpconfig_exists ) : ?>
+				<p class="description" style="margin:0 0 12px;">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: absolute path to wp-config.php */
+							__( 'Detected file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>' . esc_html( $wpconfig_path ) . '</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</p>
+				<?php endif; ?>
+				<p class="description" style="margin:0 0 12px;">
+					<?php esc_html_e( 'The Developer mode button above can only turn on SAVEQUERIES. WordPress sets the other debug constants before plugins load, so they can only be changed here, in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+
+				<?php foreach ( $this->wpconfig_debug_snippets() as $preset_key => $preset ) : ?>
+				<details class="tsosk-debug-advanced"<?php echo 'developer' === $preset_key ? ' open' : ''; ?>>
+					<summary><?php echo esc_html( $preset['title'] ); ?></summary>
+					<p class="description" style="margin:0 0 8px;"><?php echo esc_html( $preset['desc'] ); ?></p>
+					<pre class="tsosk-code" style="margin:0;padding:12px;background:#fff;border:1px solid #dcdcde;border-radius:3px;overflow:auto;white-space:pre;"><?php echo esc_html( $preset['snippet'] ); ?></pre>
+				</details>
+				<?php endforeach; ?>
+			</details>
 		</div>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-debug-logs">
 			<h3><?php esc_html_e( 'Available Error Logs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'Shows readable WordPress/PHP error logs detected inside this WordPress installation. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
-			<div class="tsosk-notice tsosk-notice-info">
-				<strong><?php esc_html_e( 'debug.log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
-				<?php esc_html_e( 'Created by WordPress when WP_DEBUG and WP_DEBUG_LOG are true. Enable them with Developer mode above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<br>
-				<strong><?php esc_html_e( 'error_log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong> —
-				<?php esc_html_e( 'Created by PHP/your hosting server when PHP error logging is active. The plugin can preview and download these files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<br>
-				<?php esc_html_e( 'Shrink / empty actions are allowed only for log files inside the plugin uploads logs folder (WordPress.org write policy). wp-content/debug.log can be previewed and downloaded, but not truncated by the plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<div class="tsosk-notice tsosk-notice-info tsosk-log-help">
+				<ul class="tsosk-log-help-list">
+					<li>
+						<strong>debug.log</strong> —
+						<?php esc_html_e( 'WordPress writes it to wp-content/ when WP_DEBUG and WP_DEBUG_LOG are both true in wp-config.php. You can preview and download it, but WordPress.org rules do not allow this plugin to empty or shrink it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</li>
+					<li>
+						<strong>error_log</strong> —
+						<?php esc_html_e( 'Written by PHP or your hosting when PHP error logging is on. You can preview and download it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</li>
+				</ul>
 				<?php
 				$managed_hint = $this->managed_debug_log_path();
 				if ( '' !== $managed_hint ) :
+					$managed_snippet = "define( 'WP_DEBUG_LOG', '" . addcslashes( $managed_hint, "'\\" ) . "' );";
 					?>
-				<br>
-				<?php
-				echo wp_kses_post(
-					sprintf(
-						/* translators: %s: absolute path to a plugin-owned debug log file */
-						__( 'Workaround: in wp-config.php you can point WP_DEBUG_LOG to %s so shrink/empty works from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'<code>' . esc_html( $managed_hint ) . '</code>'
-					)
-				);
-				endif;
-				?>
+				<div class="tsosk-log-help-tip">
+					<p class="tsosk-log-help-tip-title"><strong><?php esc_html_e( 'Want to empty or shrink the log from here?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+					<ol class="tsosk-log-help-steps">
+						<li>
+							<?php
+							echo wp_kses(
+								sprintf(
+									/* translators: %s: the "That's all, stop editing!" comment line in wp-config.php */
+									__( 'Open wp-config.php and paste this line just above %s:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									'<code>/* That\'s all, stop editing! Happy publishing. */</code>'
+								),
+								array( 'code' => array() )
+							);
+							?>
+							<div class="tsosk-log-snippet">
+								<pre class="tsosk-code" id="tsosk-log-snippet"><?php echo esc_html( $managed_snippet ); ?></pre>
+								<button type="button" class="button button-small" id="tsosk-log-snippet-copy"><?php esc_html_e( 'Copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+								<span class="tsosk-ajax-msg" id="tsosk-log-snippet-msg" aria-live="polite"></span>
+							</div>
+						</li>
+						<li>
+							<?php
+							echo wp_kses(
+								__( 'If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it with this one instead of adding a second one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								array( 'code' => array() )
+							);
+							?>
+						</li>
+						<li>
+							<?php
+							echo wp_kses(
+								__( '<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log inside this plugin\'s uploads folder, which can be emptied and shrunk from this screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								array( 'code' => array() )
+							);
+							?>
+						</li>
+					</ol>
+				</div>
+				<?php endif; ?>
 			</div>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
@@ -977,9 +1052,6 @@ class TSOSK_Mod_Debug {
 										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
 											<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
-									<?php endif; ?>
-									<?php if ( $log['exists'] && $log['readable'] && ! $log['modifiable'] && $this->is_wp_content_debug_log( $log['path'] ) ) : ?>
-										<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Read-only here', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 									<?php endif; ?>
 									<?php if ( $log['exists'] && $log['modifiable'] ) : ?>
 										<button type="button" class="button button-small tsosk-shrink-log"
