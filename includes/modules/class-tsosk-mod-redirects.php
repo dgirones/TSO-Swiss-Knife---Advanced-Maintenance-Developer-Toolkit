@@ -41,6 +41,10 @@ class TSOSK_Mod_Redirects {
 		add_action( 'wp_ajax_tsosk_redirect_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_redirect_delete', array( $this, 'ajax_delete' ) );
 		add_action( 'wp_ajax_tsosk_redirect_delete_selected', array( $this, 'ajax_delete_selected' ) );
+		add_action( 'wp_ajax_tsosk_redirect_bulk_toggle', array( $this, 'ajax_bulk_toggle' ) );
+		add_action( 'wp_ajax_tsosk_redirect_move', array( $this, 'ajax_move' ) );
+		add_action( 'wp_ajax_tsosk_redirect_export', array( $this, 'ajax_export' ) );
+		add_action( 'wp_ajax_tsosk_redirect_import', array( $this, 'ajax_import' ) );
 		add_action( 'wp_ajax_tsosk_redirect_toggle', array( $this, 'ajax_toggle' ) );
 		add_action( 'wp_ajax_tsosk_404_clear', array( $this, 'ajax_clear_404_log' ) );
 		add_action( 'wp_ajax_tsosk_404_delete_selected', array( $this, 'ajax_delete_selected_404' ) );
@@ -263,10 +267,7 @@ class TSOSK_Mod_Redirects {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$raw_ids = ( isset( $_POST['ids'] ) && is_array( $_POST['ids'] ) )
-			? array_map( 'sanitize_key', wp_unslash( $_POST['ids'] ) )
-			: array();
-		$ids     = array_slice( array_unique( array_filter( $raw_ids ) ), 0, 1000 );
+		$ids = $this->request_rule_ids();
 		if ( empty( $ids ) ) {
 			wp_send_json_error( __( 'No redirects selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -298,6 +299,242 @@ class TSOSK_Mod_Redirects {
 					$removed
 				),
 				'removed' => $removed,
+			)
+		);
+	}
+
+	/**
+	 * Read a sanitized list of rule ids from the request.
+	 *
+	 * @return array<int,string>
+	 */
+	private function request_rule_ids(): array {
+		// Nonce and capability are verified by the calling AJAX handler.
+		$raw_ids = ( isset( $_POST['ids'] ) && is_array( $_POST['ids'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			? array_map( 'sanitize_key', wp_unslash( $_POST['ids'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			: array();
+		return array_slice( array_unique( array_filter( $raw_ids ) ), 0, 1000 );
+	}
+
+	/**
+	 * AJAX: enable or disable several redirect rules at once.
+	 */
+	public function ajax_bulk_toggle(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$ids = $this->request_rule_ids();
+		if ( empty( $ids ) ) {
+			wp_send_json_error( __( 'No redirects selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$enabled = isset( $_POST['enabled'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['enabled'] ) );
+
+		$rules   = $this->get_rules();
+		$changed = 0;
+		foreach ( $ids as $id ) {
+			if ( isset( $rules[ $id ] ) && (bool) $rules[ $id ]['enabled'] !== $enabled ) {
+				$rules[ $id ]['enabled'] = $enabled;
+				++$changed;
+			}
+		}
+		if ( $changed > 0 ) {
+			update_option( self::OPTION, $rules, false );
+		}
+
+		$message = sprintf(
+			/* translators: %d: number of redirect rules changed */
+			_n( '%d redirect updated.', '%d redirects updated.', $changed, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$changed
+		);
+		TSOSK_Activity_Log::log( 'redirects', 'save', $message );
+		wp_send_json_success(
+			array(
+				'message' => $message,
+				'changed' => $changed,
+			)
+		);
+	}
+
+	/**
+	 * AJAX: move a rule one position up or down (rules are evaluated top to bottom).
+	 */
+	public function ajax_move(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$id        = isset( $_POST['redirect_id'] ) ? sanitize_key( wp_unslash( $_POST['redirect_id'] ) ) : '';
+		$direction = isset( $_POST['direction'] ) ? sanitize_key( wp_unslash( $_POST['direction'] ) ) : '';
+		if ( ! in_array( $direction, array( 'up', 'down' ), true ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$rules = $this->get_rules();
+		$keys  = array_keys( $rules );
+		$index = array_search( $id, $keys, true );
+		if ( false === $index ) {
+			wp_send_json_error( __( 'Redirect not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$swap = 'up' === $direction ? $index - 1 : $index + 1;
+		if ( $swap < 0 || $swap >= count( $keys ) ) {
+			wp_send_json_error( __( 'Already at the edge of the list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$moved          = $keys[ $index ];
+		$keys[ $index ] = $keys[ $swap ];
+		$keys[ $swap ]  = $moved;
+
+		$ordered = array();
+		foreach ( $keys as $key ) {
+			$ordered[ $key ] = $rules[ $key ];
+		}
+		update_option( self::OPTION, $ordered, false );
+		TSOSK_Activity_Log::log(
+			'redirects',
+			'save',
+			__( 'Redirect moved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			array( 'source' => (string) ( $rules[ $id ]['source'] ?? $id ) )
+		);
+		wp_send_json_success( array( 'message' => __( 'Redirect moved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) );
+	}
+
+	/**
+	 * Build one CSV line; cells that a spreadsheet could read as a formula get a leading apostrophe.
+	 *
+	 * @param array<int,string> $cells Cell values.
+	 * @return string
+	 */
+	private function csv_line( array $cells ): string {
+		$out = array();
+		foreach ( $cells as $cell ) {
+			$cell = (string) $cell;
+			if ( '' !== $cell && in_array( $cell[0], array( '=', '+', '-', '@', "\t", "\r" ), true ) ) {
+				$cell = "'" . $cell;
+			}
+			$out[] = '"' . str_replace( '"', '""', $cell ) . '"';
+		}
+		return implode( ',', $out );
+	}
+
+	/**
+	 * AJAX: return every rule as CSV text (the browser saves it as a file).
+	 */
+	public function ajax_export(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$rules = $this->get_rules();
+		$lines = array( $this->csv_line( array( 'source', 'match_type', 'target', 'status', 'enabled' ) ) );
+		foreach ( $rules as $rule ) {
+			$lines[] = $this->csv_line(
+				array(
+					(string) $rule['source'],
+					(string) $rule['match_type'],
+					(string) $rule['target'],
+					(string) $rule['status'],
+					$rule['enabled'] ? '1' : '0',
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'csv'      => implode( "\r\n", $lines ) . "\r\n",
+				'filename' => 'tsosk-redirects-' . gmdate( 'Ymd-His' ) . '.csv',
+				'count'    => count( $rules ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: import rules from CSV text (source, match_type, target, status, enabled).
+	 *
+	 * New rules are appended after the existing ones; a source that already exists is skipped.
+	 */
+	public function ajax_import(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$csv = isset( $_POST['csv'] ) ? sanitize_textarea_field( wp_unslash( $_POST['csv'] ) ) : '';
+		$csv = substr( $csv, 0, 1000000 );
+		if ( '' === trim( $csv ) ) {
+			wp_send_json_error( __( 'Nothing to import.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Undo the apostrophe csv_line() adds in front of formula-looking cells.
+		$unguard = static function ( string $value ): string {
+			return 1 === preg_match( "/^'[=+\-@]/", $value ) ? substr( $value, 1 ) : $value;
+		};
+
+		$rules   = $this->get_rules();
+		$lines   = array_slice( (array) preg_split( '/\r\n|\r|\n/', $csv ), 0, 2001 );
+		$created = 0;
+		$skipped = 0;
+		$failed  = 0;
+		foreach ( $lines as $line ) {
+			if ( '' === trim( (string) $line ) ) {
+				continue;
+			}
+			$cells = str_getcsv( (string) $line, ',', '"', '' );
+			if ( 'source' === strtolower( trim( (string) ( $cells[0] ?? '' ) ) ) ) {
+				continue;
+			}
+
+			$source     = sanitize_text_field( $unguard( trim( (string) ( $cells[0] ?? '' ) ) ) );
+			$match_type = sanitize_key( (string) ( $cells[1] ?? '' ) );
+			$target     = sanitize_text_field( $unguard( trim( (string) ( $cells[2] ?? '' ) ) ) );
+			$status     = ( isset( $cells[3] ) && '' !== trim( (string) $cells[3] ) ) ? absint( $cells[3] ) : 301;
+			$enabled    = ! isset( $cells[4] ) || ! in_array( strtolower( trim( (string) $cells[4] ) ), array( '0', 'no', 'false', 'off' ), true );
+			if ( '' === $source ) {
+				++$failed;
+				continue;
+			}
+
+			$result = $this->append_rule( $rules, $source, $target, '' === $match_type ? 'exact' : $match_type, $status, $enabled );
+			if ( is_wp_error( $result ) ) {
+				if ( 'duplicate' === $result->get_error_code() ) {
+					++$skipped;
+				} else {
+					++$failed;
+				}
+				continue;
+			}
+			++$created;
+		}
+
+		if ( $created > 0 ) {
+			update_option( self::OPTION, $rules, false );
+			TSOSK_Activity_Log::log(
+				'redirects',
+				'save',
+				sprintf(
+					/* translators: %d: number of imported redirect rules */
+					__( 'Redirect rules imported from CSV: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$created
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'created' => $created,
+				'skipped' => $skipped,
+				'failed'  => $failed,
+				'message' => sprintf(
+					/* translators: 1: number of rules imported, 2: number of rows skipped because the source already exists, 3: number of rows that were invalid */
+					__( 'Imported %1$d rule(s). Skipped %2$d duplicates. Failed: %3$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$created,
+					$skipped,
+					$failed
+				),
 			)
 		);
 	}
@@ -435,9 +672,10 @@ class TSOSK_Mod_Redirects {
 	 * @param string              $target     Target (empty for 410).
 	 * @param string              $match_type exact|wildcard|regex.
 	 * @param int                 $status     HTTP status.
+	 * @param bool                $enabled    Whether the new rule starts enabled.
 	 * @return string|WP_Error New rule id, or an error (code "duplicate" when the source already exists).
 	 */
-	private function append_rule( array &$rules, string $source, string $target, string $match_type, int $status ) {
+	private function append_rule( array &$rules, string $source, string $target, string $match_type, int $status, bool $enabled = true ) {
 		$validated = $this->sanitize_rule_for_storage(
 			array(
 				'id'         => '',
@@ -445,7 +683,7 @@ class TSOSK_Mod_Redirects {
 				'target'     => $target,
 				'match_type' => $match_type,
 				'status'     => $status,
-				'enabled'    => true,
+				'enabled'    => $enabled,
 			)
 		);
 		if ( is_wp_error( $validated ) ) {
@@ -479,7 +717,7 @@ class TSOSK_Mod_Redirects {
 			'target'     => $validated['target'],
 			'match_type' => $validated['match_type'],
 			'status'     => $validated['status'],
-			'enabled'    => true,
+			'enabled'    => $enabled,
 			'hits'       => 0,
 			'last_hit'   => 0,
 			'created'    => time(),
@@ -789,6 +1027,8 @@ class TSOSK_Mod_Redirects {
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
 				<div class="tsosk-404-bulk-bar">
+					<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
@@ -801,7 +1041,7 @@ class TSOSK_Mod_Redirects {
 					<div class="tsosk-404-suggestions">
 						<h4><?php esc_html_e( 'Suggested patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
 						<p class="description"><?php esc_html_e( 'Missing URLs that share the same first path segment. One rule can answer 410 (Gone) for the whole prefix, so you do not need to add them one by one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-						<div class="tsosk-table-wrap">
+						<div class="tsosk-404-suggestions-wrap">
 							<table class="widefat tsosk-table" id="tsosk-404-suggestions-table">
 								<thead>
 									<tr>
@@ -815,11 +1055,11 @@ class TSOSK_Mod_Redirects {
 								<tbody>
 									<?php foreach ( $suggestions as $suggestion ) : ?>
 										<tr>
-											<td class="tsosk-code"><?php echo esc_html( '/' . $suggestion['prefix'] . '/' ); ?></td>
-											<td><?php echo esc_html( number_format_i18n( $suggestion['urls'] ) ); ?></td>
-											<td><?php echo esc_html( number_format_i18n( $suggestion['hits'] ) ); ?></td>
-											<td class="tsosk-code"><?php echo esc_html( implode( ', ', $suggestion['examples'] ) ); ?></td>
-											<td>
+											<td class="tsosk-code" data-label="<?php esc_attr_e( 'Prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( '/' . $suggestion['prefix'] . '/' ); ?></td>
+											<td data-label="<?php esc_attr_e( 'Missing URLs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( $suggestion['urls'] ) ); ?></td>
+											<td data-label="<?php esc_attr_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( $suggestion['hits'] ) ); ?></td>
+											<td class="tsosk-code" data-label="<?php esc_attr_e( 'Examples', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( implode( ', ', $suggestion['examples'] ) ); ?></td>
+											<td class="tsosk-suggestion-actions" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 												<button class="button button-small tsosk-404-prefix-gone" type="button" data-prefix="<?php echo esc_attr( $suggestion['prefix'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 													<?php esc_html_e( 'Create 410 rule', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 												</button>
@@ -931,10 +1171,40 @@ class TSOSK_Mod_Redirects {
 			<?php if ( empty( $rules ) ) : ?>
 				<p><?php esc_html_e( 'No redirects have been created yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
-				<div class="tsosk-redirect-bulk-bar">
-					<button class="button button-secondary" id="tsosk-redirect-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
+				<p class="description"><?php esc_html_e( 'Rules are checked from top to bottom and the first match wins. Use the arrows to change the order; they are available while the list is unfiltered and in evaluation order.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<div class="tsosk-redirect-toolbar tsosk-redirect-filter-bar">
+					<input type="search" id="tsosk-redirect-search" class="regular-text" placeholder="<?php esc_attr_e( 'Search source or target…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" aria-label="<?php esc_attr_e( 'Search redirect rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<select id="tsosk-redirect-filter" aria-label="<?php esc_attr_e( 'Filter rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<option value="all"><?php esc_html_e( 'All rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="enabled"><?php esc_html_e( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="disabled"><?php esc_html_e( 'Disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="gone"><?php esc_html_e( '410 / 451 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="redirect"><?php esc_html_e( 'Redirects (3xx)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="pattern"><?php esc_html_e( 'Wildcard / regex rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					</select>
+					<select id="tsosk-redirect-sort" aria-label="<?php esc_attr_e( 'Sort rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<option value="default"><?php esc_html_e( 'Evaluation order', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="hits_desc"><?php esc_html_e( 'Most visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="hits_asc"><?php esc_html_e( 'Fewest visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="last_desc"><?php esc_html_e( 'Most recent visit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="last_asc"><?php esc_html_e( 'Oldest or never visited', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="source_az"><?php esc_html_e( 'Source A–Z', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					</select>
+					<span class="description" id="tsosk-redirect-count"></span>
+				</div>
+				<div class="tsosk-redirect-toolbar">
+					<button class="button button-secondary" id="tsosk-redirect-select-visible" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary" id="tsosk-redirect-select-none" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<label class="tsosk-redirect-unused" for="tsosk-redirect-unused-months">
+						<?php esc_html_e( 'Unused for (months)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						<input type="number" id="tsosk-redirect-unused-months" min="1" max="60" value="6">
+					</label>
+					<button class="button button-secondary" id="tsosk-redirect-select-unused" type="button"><?php esc_html_e( 'Select unused rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				</div>
+				<div class="tsosk-redirect-toolbar">
+					<button class="button button-secondary tsosk-redirect-bulk-toggle" data-enabled="1" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Enable selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary tsosk-redirect-bulk-toggle" data-enabled="0" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Disable selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary" id="tsosk-redirect-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<span class="tsosk-ajax-msg" id="tsosk-redirect-bulk-msg"></span>
 				</div>
 				<div class="tsosk-table-wrap tsosk-redirects-table-wrap">
@@ -965,16 +1235,26 @@ class TSOSK_Mod_Redirects {
 							</tr>
 						</thead>
 						<tbody>
+							<?php $position = 0; ?>
 							<?php foreach ( $rules as $rule ) : ?>
 								<?php
+								++$position;
 								$source_url = $this->rule_value_to_url( (string) $rule['source'], (string) $rule['match_type'], true );
 								$target_url = $this->rule_value_to_url( (string) $rule['target'], (string) $rule['match_type'], false );
 								?>
-								<tr>
+								<tr data-index="<?php echo esc_attr( (string) $position ); ?>"
+									data-hits="<?php echo esc_attr( (string) absint( $rule['hits'] ) ); ?>"
+									data-last-hit="<?php echo esc_attr( (string) absint( $rule['last_hit'] ) ); ?>"
+									data-created="<?php echo esc_attr( (string) absint( $rule['created'] ) ); ?>"
+									data-enabled="<?php echo esc_attr( $rule['enabled'] ? '1' : '0' ); ?>"
+									data-status="<?php echo esc_attr( (string) $rule['status'] ); ?>"
+									data-match="<?php echo esc_attr( (string) $rule['match_type'] ); ?>"
+									data-source="<?php echo esc_attr( (string) $rule['source'] ); ?>"
+									data-search="<?php echo esc_attr( $rule['source'] . ' ' . $rule['target'] ); ?>">
 									<td class="tsosk-redirect-col-select" data-label="<?php esc_attr_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 										<input type="checkbox" class="tsosk-redirect-select" data-id="<?php echo esc_attr( $rule['id'] ); ?>" aria-label="<?php echo esc_attr( (string) $rule['source'] ); ?>">
 									</td>
-									<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['source'], $source_url ) ); ?></td>
+									<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><span class="tsosk-redirect-pos">#<?php echo esc_html( (string) $position ); ?></span> <?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['source'], $source_url ) ); ?></td>
 									<td data-label="<?php esc_attr_e( 'Match', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $this->match_type_label( $rule['match_type'] ) ); ?></td>
 									<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'Target', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo wp_kses_post( $this->render_rule_url_cell( (string) $rule['target'], $target_url ) ); ?></td>
 									<td data-label="<?php esc_attr_e( 'HTTP code', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) $rule['status'] ); ?></td>
@@ -996,6 +1276,10 @@ class TSOSK_Mod_Redirects {
 										<?php endif; ?>
 									</td>
 									<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+										<div class="tsosk-redirect-move">
+											<button type="button" class="button button-small tsosk-redirect-move-btn" data-dir="up" data-id="<?php echo esc_attr( $rule['id'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" aria-label="<?php esc_attr_e( 'Move up', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" title="<?php esc_attr_e( 'Move up', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" <?php disabled( 1 === $position ); ?>>&uarr;</button>
+											<button type="button" class="button button-small tsosk-redirect-move-btn" data-dir="down" data-id="<?php echo esc_attr( $rule['id'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" aria-label="<?php esc_attr_e( 'Move down', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" title="<?php esc_attr_e( 'Move down', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" <?php disabled( count( $rules ) === $position ); ?>>&darr;</button>
+										</div>
 										<button class="button button-small tsosk-redirect-edit"
 										        data-id="<?php echo esc_attr( $rule['id'] ); ?>"
 										        data-source="<?php echo esc_attr( $rule['source'] ); ?>"
@@ -1021,7 +1305,22 @@ class TSOSK_Mod_Redirects {
 						</tbody>
 					</table>
 				</div>
+				<p id="tsosk-redirect-no-match" class="description" hidden><?php esc_html_e( 'No rules match your filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php endif; ?>
+			<details class="tsosk-guide-card tsosk-guide-collapse tsosk-redirect-io">
+				<summary class="tsosk-guide-title"><?php esc_html_e( 'Export / import (CSV)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
+				<p class="description tsosk-desc-flush"><?php esc_html_e( 'Export downloads every rule as CSV (source, match_type, target, status, enabled). To import, paste rows below or load a file; rules whose source already exists are skipped and new ones are added at the end.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<div class="tsosk-redirect-toolbar">
+					<button class="button button-secondary" id="tsosk-redirect-export" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Export CSV', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				</div>
+				<textarea id="tsosk-redirect-import-text" class="large-text code" rows="6" placeholder="source,match_type,target,status,enabled" aria-label="<?php esc_attr_e( 'CSV rows to import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></textarea>
+				<div class="tsosk-redirect-toolbar">
+					<label for="tsosk-redirect-import-file"><?php esc_html_e( 'CSV file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
+					<input type="file" id="tsosk-redirect-import-file" accept=".csv,text/csv,text/plain">
+					<button class="button button-secondary" id="tsosk-redirect-import" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Import CSV', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				</div>
+				<span class="tsosk-ajax-msg" id="tsosk-redirect-io-msg"></span>
+			</details>
 		</div>
 		<?php
 	}

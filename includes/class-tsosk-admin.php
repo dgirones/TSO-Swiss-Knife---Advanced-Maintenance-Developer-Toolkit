@@ -367,6 +367,13 @@ class TSOSK_Admin {
 					'redirects_select_rules'  => __( 'Select at least one redirect rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %1$d: number of selected redirect rules. */
 					'redirects_confirm_delete_selected' => __( 'Delete the %1$d selected redirect rule(s)? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: 1: number of rules shown, 2: total number of rules. */
+					'redirects_showing'        => __( 'Showing %1$d of %2$d rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: 1: number of unused rules selected, 2: number of months without visits. */
+					'redirects_unused_selected' => __( '%1$d unused rule(s) selected (no visits in the last %2$d month(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_unused_none'    => __( 'No unused rules found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_import_empty'   => __( 'Paste CSV rows or load a file first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_export_done'    => __( 'CSV downloaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_site_url'   => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_wp_version' => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_plugin'     => __( 'Snapshot schema', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

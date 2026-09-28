@@ -12915,3 +12915,132 @@ msgid "%d redirect deleted."
 msgid_plural "%d redirects deleted."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Rules are checked from top to bottom and the first match wins. Use the arrows to change the order; they are available while the list is unfiltered and in evaluation order."
+msgstr ""
+
+msgid "Search source or target…"
+msgstr ""
+
+msgid "Search redirect rules"
+msgstr ""
+
+msgid "Filter rules"
+msgstr ""
+
+msgid "All rules"
+msgstr ""
+
+msgid "410 / 451 (Gone)"
+msgstr ""
+
+msgid "Redirects (3xx)"
+msgstr ""
+
+msgid "Wildcard / regex rules"
+msgstr ""
+
+msgid "Sort rules"
+msgstr ""
+
+msgid "Evaluation order"
+msgstr ""
+
+msgid "Most visits"
+msgstr ""
+
+msgid "Fewest visits"
+msgstr ""
+
+msgid "Most recent visit"
+msgstr ""
+
+msgid "Oldest or never visited"
+msgstr ""
+
+msgid "Source A–Z"
+msgstr ""
+
+msgid "Select none"
+msgstr ""
+
+msgid "Unused for (months)"
+msgstr ""
+
+msgid "Select unused rules"
+msgstr ""
+
+msgid "Enable selected"
+msgstr ""
+
+msgid "Disable selected"
+msgstr ""
+
+msgid "Move up"
+msgstr ""
+
+msgid "Move down"
+msgstr ""
+
+msgid "No rules match your filters."
+msgstr ""
+
+msgid "Export / import (CSV)"
+msgstr ""
+
+msgid "Export downloads every rule as CSV (source, match_type, target, status, enabled). To import, paste rows below or load a file; rules whose source already exists are skipped and new ones are added at the end."
+msgstr ""
+
+msgid "CSV rows to import"
+msgstr ""
+
+msgid "CSV file"
+msgstr ""
+
+msgid "Import CSV"
+msgstr ""
+
+msgid "Redirect moved."
+msgstr ""
+
+msgid "Already at the edge of the list."
+msgstr ""
+
+msgid "Nothing to import."
+msgstr ""
+
+#. translators: %d: number of imported redirect rules
+#, php-format
+msgid "Redirect rules imported from CSV: %d."
+msgstr ""
+
+#. translators: 1: number of rules imported, 2: number of rows skipped because the source already exists, 3: number of rows that were invalid
+#, php-format
+msgid "Imported %1$d rule(s). Skipped %2$d duplicates. Failed: %3$d."
+msgstr ""
+
+#. translators: 1: number of rules shown, 2: total number of rules.
+#, php-format
+msgid "Showing %1$d of %2$d rules."
+msgstr ""
+
+#. translators: 1: number of unused rules selected, 2: number of months without visits.
+#, php-format
+msgid "%1$d unused rule(s) selected (no visits in the last %2$d month(s))."
+msgstr ""
+
+msgid "No unused rules found."
+msgstr ""
+
+msgid "Paste CSV rows or load a file first."
+msgstr ""
+
+msgid "CSV downloaded."
+msgstr ""
+
+#. translators: %d: number of redirect rules changed
+#, php-format
+msgid "%d redirect updated."
+msgid_plural "%d redirects updated."
+msgstr[0] ""
+msgstr[1] ""

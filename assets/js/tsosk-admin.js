@@ -1656,28 +1656,339 @@
 		} );
 	} );
 
-	// Redirect Rules list: select several rules and delete them in one go.
-	function tsosk404SyncRuleSelectAll() {
-		var $rows    = $( '#tsosk-redirects-table .tsosk-redirect-select' );
+	// ── Redirect Rules list: filter, sort, select, bulk actions, reorder, CSV ──
+
+	function tsosk404SyncSelectAll() {
+		var $rows    = $( '#tsosk-404-table .tsosk-404-select' );
 		var $checked = $rows.filter( ':checked' );
-		$( '#tsosk-redirect-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
+		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
 	}
 
-	$( document ).on( 'change', '#tsosk-redirect-select-all', function () {
-		$( '#tsosk-redirects-table .tsosk-redirect-select' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	function tsoskVisibleRuleBoxes() {
+		return $( '#tsosk-redirects-table tbody tr' ).not( '.tsosk-row-hidden' ).find( '.tsosk-redirect-select' );
+	}
+
+	function tsoskRulesCompare( sort ) {
+		var num = function ( el, key ) {
+			return parseInt( $( el ).attr( 'data-' + key ), 10 ) || 0;
+		};
+		return function ( a, b ) {
+			var diff = 0;
+			switch ( sort ) {
+				case 'hits_desc':
+					diff = num( b, 'hits' ) - num( a, 'hits' );
+					break;
+				case 'hits_asc':
+					diff = num( a, 'hits' ) - num( b, 'hits' );
+					break;
+				case 'last_desc':
+					diff = num( b, 'last-hit' ) - num( a, 'last-hit' );
+					break;
+				case 'last_asc':
+					diff = num( a, 'last-hit' ) - num( b, 'last-hit' );
+					break;
+				case 'source_az':
+					diff = String( $( a ).attr( 'data-source' ) ).localeCompare( String( $( b ).attr( 'data-source' ) ) );
+					break;
+				default:
+					break;
+			}
+			// Ties (and the default order) keep the real evaluation order.
+			return diff || ( num( a, 'index' ) - num( b, 'index' ) );
+		};
+	}
+
+	function tsoskRuleMatchesFilter( $row, filter ) {
+		var status = parseInt( $row.attr( 'data-status' ), 10 ) || 0;
+		switch ( filter ) {
+			case 'enabled':
+				return '1' === String( $row.attr( 'data-enabled' ) );
+			case 'disabled':
+				return '1' !== String( $row.attr( 'data-enabled' ) );
+			case 'gone':
+				return 410 === status || 451 === status;
+			case 'redirect':
+				return status >= 300 && status < 400;
+			case 'pattern':
+				return 'exact' !== String( $row.attr( 'data-match' ) );
+			default:
+				return true;
+		}
+	}
+
+	function tsoskRulesApply() {
+		var $table = $( '#tsosk-redirects-table' );
+		if ( ! $table.length ) {
+			return;
+		}
+		var query  = String( $( '#tsosk-redirect-search' ).val() || '' ).trim().toLowerCase();
+		var filter = String( $( '#tsosk-redirect-filter' ).val() || 'all' );
+		var sort   = String( $( '#tsosk-redirect-sort' ).val() || 'default' );
+		var $body  = $table.children( 'tbody' );
+		var rows   = $body.children( 'tr' ).get();
+
+		rows.sort( tsoskRulesCompare( sort ) );
+		$.each( rows, function ( i, row ) {
+			$body.append( row );
+		} );
+
+		var shown = 0;
+		$( rows ).each( function () {
+			var $row = $( this );
+			var hay  = String( $row.attr( 'data-search' ) || '' ).toLowerCase();
+			var ok   = ( '' === query || -1 !== hay.indexOf( query ) ) && tsoskRuleMatchesFilter( $row, filter );
+			$row.toggleClass( 'tsosk-row-hidden', ! ok );
+			if ( ok ) {
+				shown++;
+			} else {
+				// A hidden row must never stay selected: a bulk action would hit it unseen.
+				$row.find( '.tsosk-redirect-select' ).prop( 'checked', false );
+			}
+		} );
+
+		var viewActive = 'default' !== sort || '' !== query || 'all' !== filter;
+		$table.toggleClass( 'tsosk-rules-view-active', viewActive );
+		$( '#tsosk-redirect-no-match' ).prop( 'hidden', shown > 0 || ! rows.length );
+		if ( tsosk.i18n.redirects_showing ) {
+			$( '#tsosk-redirect-count' ).text( tsosk.i18n.redirects_showing.replace( '%1$d', String( shown ) ).replace( '%2$d', String( rows.length ) ) );
+		}
+		tsosk404SyncRuleSelectAll();
+	}
+
+	$( document ).on( 'input change', '#tsosk-redirect-search, #tsosk-redirect-filter, #tsosk-redirect-sort', tsoskRulesApply );
+
+	$( function () {
+		tsoskRulesApply();
 	} );
 
-	$( document ).on( 'change', '#tsosk-redirects-table .tsosk-redirect-select', tsosk404SyncRuleSelectAll );
+	$( document ).on( 'click', '#tsosk-redirect-select-visible', function () {
+		tsoskVisibleRuleBoxes().prop( 'checked', true );
+		tsosk404SyncRuleSelectAll();
+	} );
 
-	$( document ).on( 'click', '#tsosk-redirect-delete-selected', function () {
-		var $btn = $( this );
-		var ids  = [];
+	$( document ).on( 'click', '#tsosk-redirect-select-none', function () {
+		$( '#tsosk-redirects-table .tsosk-redirect-select' ).prop( 'checked', false );
+		tsosk404SyncRuleSelectAll();
+	} );
+
+	$( document ).on( 'click', '#tsosk-404-select-all-btn', function () {
+		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', true );
+		tsosk404SyncSelectAll();
+	} );
+
+	$( document ).on( 'click', '#tsosk-404-select-none-btn', function () {
+		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', false );
+		tsosk404SyncSelectAll();
+	} );
+
+	// Rules with no traffic for N months (or never hit and older than N months).
+	$( document ).on( 'click', '#tsosk-redirect-select-unused', function () {
+		var months = parseInt( $( '#tsosk-redirect-unused-months' ).val(), 10 );
+		if ( ! months || months < 1 ) {
+			months = 6;
+		}
+		var cutoff = Math.floor( Date.now() / 1000 ) - months * 30 * 86400;
+		var count  = 0;
+		var $msg   = $( '#tsosk-redirect-bulk-msg' );
+		$( '#tsosk-redirects-table .tsosk-redirect-select' ).prop( 'checked', false );
+		tsoskVisibleRuleBoxes().each( function () {
+			var $row    = $( this ).closest( 'tr' );
+			var hits    = parseInt( $row.attr( 'data-hits' ), 10 ) || 0;
+			var last    = parseInt( $row.attr( 'data-last-hit' ), 10 ) || 0;
+			var created = parseInt( $row.attr( 'data-created' ), 10 ) || 0;
+			var unused  = 0 === hits ? ( 0 === created || created < cutoff ) : ( last > 0 && last < cutoff );
+			if ( unused ) {
+				$( this ).prop( 'checked', true );
+				count++;
+			}
+		} );
+		tsosk404SyncRuleSelectAll();
+		if ( count && tsosk.i18n.redirects_unused_selected ) {
+			showMsg( $msg, tsosk.i18n.redirects_unused_selected.replace( '%1$d', String( count ) ).replace( '%2$d', String( months ) ), 'ok' );
+		} else {
+			showMsg( $msg, tsosk.i18n.redirects_unused_none || tsosk.i18n.done, 'ok' );
+		}
+	} );
+
+	// Shift+click selects the whole range between two checkboxes (both tables).
+	var tsoskLastClicked = {};
+	$( document ).on( 'click', '#tsosk-redirects-table .tsosk-redirect-select, #tsosk-404-table .tsosk-404-select', function ( e ) {
+		var is404 = $( this ).hasClass( 'tsosk-404-select' );
+		var key   = is404 ? '404' : 'rules';
+		var $all  = is404 ? $( '#tsosk-404-table .tsosk-404-select' ) : tsoskVisibleRuleBoxes();
+		var idx   = $all.index( this );
+		if ( e.shiftKey && undefined !== tsoskLastClicked[ key ] && tsoskLastClicked[ key ] < $all.length && idx > -1 ) {
+			var from = Math.min( idx, tsoskLastClicked[ key ] );
+			var to   = Math.max( idx, tsoskLastClicked[ key ] );
+			$all.slice( from, to + 1 ).prop( 'checked', $( this ).prop( 'checked' ) );
+		}
+		tsoskLastClicked[ key ] = idx;
+		if ( is404 ) {
+			tsosk404SyncSelectAll();
+		} else {
+			tsosk404SyncRuleSelectAll();
+		}
+	} );
+
+	function tsoskSelectedRuleIds() {
+		var ids = [];
 		$( '#tsosk-redirects-table .tsosk-redirect-select:checked' ).each( function () {
 			var id = String( $( this ).data( 'id' ) || '' );
 			if ( id ) {
 				ids.push( id );
 			}
 		} );
+		return ids;
+	}
+
+	$( document ).on( 'click', '.tsosk-redirect-bulk-toggle', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-redirect-bulk-msg' );
+		var ids  = tsoskSelectedRuleIds();
+		if ( ! ids.length ) {
+			showMsg( $msg, tsosk.i18n.redirects_select_rules || tsosk.i18n.error, 'error' );
+			return;
+		}
+		var originalText = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		ajaxPost( {
+			action : 'tsosk_redirect_bulk_toggle',
+			data   : { nonce: $btn.data( 'nonce' ), ids: ids, enabled: 1 === parseInt( $btn.data( 'enabled' ), 10 ) ? 1 : 0 },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					setTimeout( function () {
+						window.location.reload();
+					}, 700 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( originalText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-redirect-move-btn', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-redirect-bulk-msg' );
+		$( '.tsosk-redirect-move-btn' ).prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_redirect_move',
+			data   : { nonce: $btn.data( 'nonce' ), redirect_id: $btn.data( 'id' ), direction: $btn.data( 'dir' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$( '.tsosk-redirect-move-btn' ).prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$( '.tsosk-redirect-move-btn' ).prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-redirect-export', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-redirect-io-msg' );
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_redirect_export',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				$btn.prop( 'disabled', false );
+				if ( ! r.success || ! r.data || 'string' !== typeof r.data.csv ) {
+					showMsg( $msg, ( 'string' === typeof r.data && r.data ) || tsosk.i18n.error, 'error' );
+					return;
+				}
+				var blob = new window.Blob( [ '\ufeff' + r.data.csv ], { type: 'text/csv;charset=utf-8' } );
+				var url  = window.URL.createObjectURL( blob );
+				var a    = document.createElement( 'a' );
+				a.href     = url;
+				a.download = r.data.filename || 'tsosk-redirects.csv';
+				document.body.appendChild( a );
+				a.click();
+				document.body.removeChild( a );
+				setTimeout( function () {
+					window.URL.revokeObjectURL( url );
+				}, 1000 );
+				showMsg( $msg, tsosk.i18n.redirects_export_done || tsosk.i18n.done, 'ok' );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'change', '#tsosk-redirect-import-file', function () {
+		var file = this.files && this.files[ 0 ];
+		if ( ! file || ! window.FileReader ) {
+			return;
+		}
+		var reader = new window.FileReader();
+		reader.onload = function () {
+			$( '#tsosk-redirect-import-text' ).val( String( reader.result || '' ).replace( /^\ufeff/, '' ) );
+		};
+		reader.readAsText( file );
+	} );
+
+	$( document ).on( 'click', '#tsosk-redirect-import', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-redirect-io-msg' );
+		var csv  = String( $( '#tsosk-redirect-import-text' ).val() || '' ).trim();
+		if ( '' === csv ) {
+			showMsg( $msg, tsosk.i18n.redirects_import_empty || tsosk.i18n.error, 'error' );
+			return;
+		}
+		var originalText = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		ajaxPost( {
+			action : 'tsosk_redirect_import',
+			data   : { nonce: $btn.data( 'nonce' ), csv: csv },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					if ( r.data && r.data.created ) {
+						setTimeout( function () {
+							window.location.reload();
+						}, 1500 );
+						return;
+					}
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false ).text( originalText );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	} );
+
+	// Redirect Rules list: select several rules and delete them in one go.
+	function tsosk404SyncRuleSelectAll() {
+		var $rows    = tsoskVisibleRuleBoxes();
+		var $checked = $rows.filter( ':checked' );
+		$( '#tsosk-redirect-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
+	}
+
+	$( document ).on( 'change', '#tsosk-redirect-select-all', function () {
+		tsoskVisibleRuleBoxes().prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
+
+	$( document ).on( 'change', '#tsosk-redirects-table .tsosk-redirect-select', tsosk404SyncRuleSelectAll );
+
+	$( document ).on( 'click', '#tsosk-redirect-delete-selected', function () {
+		var $btn = $( this );
+		var ids  = tsoskSelectedRuleIds();
 		var $msg = $( '#tsosk-redirect-bulk-msg' );
 		if ( ! ids.length ) {
 			showMsg( $msg, tsosk.i18n.redirects_select_rules || tsosk.i18n.error, 'error' );
@@ -1779,7 +2090,7 @@
 		}
 		var target = '';
 		if ( 'redirect' === mode ) {
-			target = $.trim( String( $( '#tsosk-404-bulk-target' ).val() || '' ) );
+			target = String( $( '#tsosk-404-bulk-target' ).val() || '' ).trim();
 			if ( '' === target ) {
 				window.alert( tsosk.i18n.redirects_bulk_need_target || tsosk.i18n.error );
 				return;

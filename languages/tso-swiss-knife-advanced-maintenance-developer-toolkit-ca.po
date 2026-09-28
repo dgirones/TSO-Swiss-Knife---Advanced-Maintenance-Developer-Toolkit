@@ -14969,3 +14969,132 @@ msgid "%d redirect deleted."
 msgid_plural "%d redirects deleted."
 msgstr[0] "%d redirecció eliminada."
 msgstr[1] "%d redireccions eliminades."
+
+msgid "Rules are checked from top to bottom and the first match wins. Use the arrows to change the order; they are available while the list is unfiltered and in evaluation order."
+msgstr "Les regles es comproven de dalt a baix i guanya la primera que coincideix. Fes servir les fletxes per canviar l'ordre; només estan disponibles mentre la llista no està filtrada i està en ordre d'avaluació."
+
+msgid "Search source or target…"
+msgstr "Cerca per origen o destí…"
+
+msgid "Search redirect rules"
+msgstr "Cercar regles de redirecció"
+
+msgid "Filter rules"
+msgstr "Filtrar regles"
+
+msgid "All rules"
+msgstr "Totes les regles"
+
+msgid "410 / 451 (Gone)"
+msgstr "410 / 451 (Gone)"
+
+msgid "Redirects (3xx)"
+msgstr "Redireccions (3xx)"
+
+msgid "Wildcard / regex rules"
+msgstr "Regles wildcard / regex"
+
+msgid "Sort rules"
+msgstr "Ordenar regles"
+
+msgid "Evaluation order"
+msgstr "Ordre d'avaluació"
+
+msgid "Most visits"
+msgstr "Més visites"
+
+msgid "Fewest visits"
+msgstr "Menys visites"
+
+msgid "Most recent visit"
+msgstr "Visita més recent"
+
+msgid "Oldest or never visited"
+msgstr "Més antigues o mai visitades"
+
+msgid "Source A–Z"
+msgstr "Origen A–Z"
+
+msgid "Select none"
+msgstr "Deseleccionar tot"
+
+msgid "Unused for (months)"
+msgstr "Sense ús durant (mesos)"
+
+msgid "Select unused rules"
+msgstr "Seleccionar regles sense ús"
+
+msgid "Enable selected"
+msgstr "Activar seleccionades"
+
+msgid "Disable selected"
+msgstr "Desactivar seleccionades"
+
+msgid "Move up"
+msgstr "Pujar"
+
+msgid "Move down"
+msgstr "Baixar"
+
+msgid "No rules match your filters."
+msgstr "Cap regla coincideix amb els filtres."
+
+msgid "Export / import (CSV)"
+msgstr "Exportar / importar (CSV)"
+
+msgid "Export downloads every rule as CSV (source, match_type, target, status, enabled). To import, paste rows below or load a file; rules whose source already exists are skipped and new ones are added at the end."
+msgstr "L'exportació descarrega totes les regles en CSV (source, match_type, target, status, enabled). Per importar, enganxa les files a sota o carrega un fitxer; les regles amb un origen que ja existeix se salten i les noves s'afegeixen al final."
+
+msgid "CSV rows to import"
+msgstr "Files CSV a importar"
+
+msgid "CSV file"
+msgstr "Fitxer CSV"
+
+msgid "Import CSV"
+msgstr "Importar CSV"
+
+msgid "Redirect moved."
+msgstr "Redirecció moguda."
+
+msgid "Already at the edge of the list."
+msgstr "Ja és a l'extrem de la llista."
+
+msgid "Nothing to import."
+msgstr "No hi ha res per importar."
+
+#. translators: %d: number of imported redirect rules
+#, php-format
+msgid "Redirect rules imported from CSV: %d."
+msgstr "Regles de redirecció importades des de CSV: %d."
+
+#. translators: 1: number of rules imported, 2: number of rows skipped because the source already exists, 3: number of rows that were invalid
+#, php-format
+msgid "Imported %1$d rule(s). Skipped %2$d duplicates. Failed: %3$d."
+msgstr "S'han importat %1$d regla(es). Se n'han saltat %2$d duplicades. Errors: %3$d."
+
+#. translators: 1: number of rules shown, 2: total number of rules.
+#, php-format
+msgid "Showing %1$d of %2$d rules."
+msgstr "Mostrant %1$d de %2$d regles."
+
+#. translators: 1: number of unused rules selected, 2: number of months without visits.
+#, php-format
+msgid "%1$d unused rule(s) selected (no visits in the last %2$d month(s))."
+msgstr "S'han seleccionat %1$d regla(es) sense ús (sense visites en els últims %2$d mes(os))."
+
+msgid "No unused rules found."
+msgstr "No s'ha trobat cap regla sense ús."
+
+msgid "Paste CSV rows or load a file first."
+msgstr "Enganxa files CSV o carrega un fitxer primer."
+
+msgid "CSV downloaded."
+msgstr "CSV descarregat."
+
+#. translators: %d: number of redirect rules changed
+#, php-format
+msgid "%d redirect updated."
+msgid_plural "%d redirects updated."
+msgstr[0] "%d redirecció actualitzada."
+msgstr[1] "%d redireccions actualitzades."

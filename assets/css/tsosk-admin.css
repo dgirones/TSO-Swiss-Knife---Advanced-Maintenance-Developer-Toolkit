@@ -4479,8 +4479,8 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 	margin: 0 0 4px;
 }
 
-/* Redirects: bulk-select column and toolbar in the rules list. */
-.tsosk-redirect-bulk-bar {
+/* Redirects: toolbars (shared by the rules list and the 404 monitor). */
+.tsosk-redirect-toolbar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -4488,13 +4488,182 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 	margin: 0 0 12px;
 }
 
-#tsosk-redirects-table .tsosk-redirect-col-select {
-	width: 2.5rem;
-	text-align: center;
-	vertical-align: top;
+.tsosk-redirect-filter-bar input[type="search"] {
+	flex: 1 1 220px;
+	max-width: 320px;
 }
 
-#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
-	margin: 0;
+.tsosk-redirect-unused input[type="number"] {
+	width: 4.5rem;
 }
 
+.tsosk-redirect-pos {
+	display: inline-block;
+	min-width: 2.2em;
+	margin-right: 4px;
+	color: #646970;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.tsosk-redirect-move {
+	display: flex;
+	gap: 4px;
+}
+
+#tsosk-redirects-table .tsosk-redirect-move .button {
+	flex: 1 1 0;
+	width: auto;
+	min-width: 0;
+}
+
+/* Rows hidden by the filter: !important because the mobile card layout sets display:block on rows. */
+#tsosk-redirects-table tr.tsosk-row-hidden {
+	display: none !important;
+}
+
+/* Arrows only make sense against the real order, so hide them while a filter or sort is active. */
+#tsosk-redirects-table.tsosk-rules-view-active .tsosk-redirect-move {
+	display: none;
+}
+
+#tsosk-redirect-no-match[hidden] {
+	display: none;
+}
+
+.tsosk-redirect-io textarea {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin: 8px 0;
+}
+
+.tsosk-404-suggestions-wrap {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.tsosk-404-suggestions-wrap .tsosk-table {
+	table-layout: auto;
+	width: 100%;
+}
+
+.tsosk-suggestion-actions .button {
+	margin: 0 4px 4px 0;
+}
+
+@media (min-width: 783px) {
+	#tsosk-redirects-table .tsosk-redirect-col-select {
+		width: 2.5rem;
+		text-align: center;
+		vertical-align: top;
+	}
+
+	#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
+		margin: 0;
+	}
+}
+
+@media (max-width: 782px) {
+	/* The table header (with its select-all box) is hidden on phones, so the toolbars carry the controls. */
+	.tsosk-redirect-toolbar .button,
+	.tsosk-404-bulk-bar .button,
+	#tsosk-redirect-skip,
+	#tsosk-redirect-cancel-queue {
+		min-height: 40px;
+		flex: 1 1 calc(50% - 8px);
+		text-align: center;
+	}
+
+	.tsosk-redirect-filter-bar input[type="search"],
+	.tsosk-redirect-filter-bar select,
+	.tsosk-404-bulk-bar input[type="text"] {
+		flex: 1 1 100%;
+		max-width: none;
+		width: 100%;
+		min-height: 40px;
+		box-sizing: border-box;
+	}
+
+	.tsosk-redirect-unused {
+		flex: 1 1 100%;
+	}
+
+	.tsosk-redirect-unused input[type="number"] {
+		min-height: 40px;
+	}
+
+	.tsosk-redirect-io input[type="file"] {
+		flex: 1 1 100%;
+		max-width: 100%;
+	}
+
+	/* Keep the checkbox and its "Select" caption on one line instead of a stretched 2.5rem column. */
+	#tsosk-redirects-table td.tsosk-redirect-col-select,
+	#tsosk-404-table td.tsosk-404-col-select {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		text-align: left;
+	}
+
+	#tsosk-redirects-table td.tsosk-redirect-col-select::before,
+	#tsosk-404-table td.tsosk-404-col-select::before {
+		margin-bottom: 0;
+	}
+
+	#tsosk-redirects-table td.tsosk-redirect-col-select input[type="checkbox"],
+	#tsosk-404-table td.tsosk-404-col-select input[type="checkbox"] {
+		width: 22px;
+		height: 22px;
+		margin: 0;
+	}
+
+	#tsosk-redirects-table .tsosk-redirect-move .button {
+		min-height: 40px;
+	}
+
+	/* Suggested patterns: same card layout as the two main tables. */
+	#tsosk-404-suggestions-table thead {
+		display: none;
+	}
+
+	#tsosk-404-suggestions-table,
+	#tsosk-404-suggestions-table tbody,
+	#tsosk-404-suggestions-table tr,
+	#tsosk-404-suggestions-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	#tsosk-404-suggestions-table tr {
+		margin: 0 0 12px;
+		padding: 12px;
+		border: 1px solid #dcdcde;
+		border-radius: 4px;
+		background: #fff;
+	}
+
+	#tsosk-404-suggestions-table td {
+		padding: 6px 0;
+		border: 0;
+		overflow-wrap: anywhere;
+	}
+
+	#tsosk-404-suggestions-table td::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 4px;
+		color: #646970;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
+	.tsosk-suggestion-actions .button {
+		min-height: 40px;
+	}
+}
