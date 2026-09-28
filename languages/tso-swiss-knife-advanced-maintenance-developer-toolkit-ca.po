@@ -15098,3 +15098,101 @@ msgid "%d redirect updated."
 msgid_plural "%d redirects updated."
 msgstr[0] "%d redirecció actualitzada."
 msgstr[1] "%d redireccions actualitzades."
+
+msgid "How to read this table"
+msgstr "Com llegir aquesta taula"
+
+msgid "Audit and fix post slugs across all public post types. Renaming a slug changes its URL, so a 301 redirect from the old address (and from child pages) is created to keep links and rankings. Rename only when the new slug is clearly better."
+msgstr "Audita i corregeix els slugs de tots els tipus de contingut públics. Renomenar un slug canvia la seva URL, per això es crea una redirecció 301 des de l'adreça antiga (i des de les pàgines filles) per mantenir enllaços i posicionament. Renomena només quan el nou slug sigui clarament millor."
+
+#. translators: %d: threshold
+#, php-format
+msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 50 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
+msgstr "Entrades i pàgines amb un slug de més de %d caràcters. Google no fa servir la longitud de la URL com a factor de posicionament, així que això va de llegibilitat i de compartir; els 50 per defecte són una guia, no una regla de Google. Escurça un slug quan sigui clarament millor (contingut nou o amb poc trànsit) i deixa estar les URLs ben posicionades: cada canvi necessita una redirecció i els cercadors han de tornar a processar la URL. L'arranjament en bloc talla a l'última paraula i crea redireccions 301."
+
+msgid "Posts that share the same slug within the same post type (pages only clash under the same parent), and posts that share a slug with a top-level page when permalinks start with the post name, where only one of them can load. WordPress normally prevents this: it usually comes from imports, direct database edits or plugins."
+msgstr "Entrades que comparteixen el mateix slug dins del mateix tipus (les pàgines només xoquen sota el mateix pare) i entrades que comparteixen slug amb una pàgina de primer nivell quan els enllaços permanents comencen pel nom de l'entrada, on només una de les dues pot carregar. WordPress normalment ho evita: sol venir d'importacions, edicions directes a la base de dades o connectors."
+
+msgid "Slugs with uppercase letters, underscores or encoded characters. Paths are case-sensitive, so uppercase can create duplicate URLs, and Google recommends hyphens over underscores. Encoded characters (accents, non-Latin scripts) are valid for Google; change them only if you prefer readable, transliterated slugs."
+msgstr "Slugs amb majúscules, guions baixos o caràcters codificats. Les rutes distingeixen majúscules i minúscules, així que les majúscules poden crear URLs duplicades, i Google recomana guions en lloc de guions baixos. Els caràcters codificats (accents, alfabets no llatins) són vàlids per a Google; canvia'ls només si prefereixes slugs llegibles i transliterats."
+
+msgid "Same slug in the same post type"
+msgstr "Mateix slug dins del mateix tipus"
+
+msgid "Same URL as a post/page: only one of them can load"
+msgstr "Mateixa URL que una entrada/pàgina: només una de les dues pot carregar"
+
+msgid "Uppercase letters"
+msgstr "Lletres majúscules"
+
+msgid "Underscore (hyphens are preferred)"
+msgstr "Guió baix (es prefereixen guions)"
+
+msgid "Encoded characters"
+msgstr "Caràcters codificats"
+
+msgid "Other characters"
+msgstr "Altres caràcters"
+
+#. translators: %d: maximum number of rows shown
+#, php-format
+msgid "Showing the first %d results only. Fix these and reload to see the rest."
+msgstr "Es mostren només els primers %d resultats. Arregla'ls i recarrega per veure la resta."
+
+msgid "This content type cannot be edited here."
+msgstr "Aquest tipus de contingut no es pot editar aquí."
+
+#. translators: 1: slug, 2: content type that already uses it (post or page)
+#, php-format
+msgid "The URL /%1$s/ is already used by a %2$s, so only one of them could load. Choose a different slug."
+msgstr "La URL /%1$s/ ja la fa servir una %2$s, així que només una de les dues podria carregar. Tria un altre slug."
+
+#. translators: %s: slug WordPress actually saved
+#, php-format
+msgid "WordPress adjusted the slug to \"%s\" to keep it unique."
+msgstr "WordPress ha ajustat el slug a «%s» perquè sigui únic."
+
+#. translators: 1: redirects created or updated, 2: redirects that already existed
+#, php-format
+msgid "301 redirects: %1$d created or updated, %2$d already existed."
+msgstr "Redireccions 301: %1$d creades o actualitzades, %2$d ja existien."
+
+#. translators: %d: number of earlier redirects repointed
+#, php-format
+msgid "%d earlier redirect(s) were repointed to avoid redirect chains."
+msgstr "S'han redirigit %d redirecció(ns) anterior(s) directament al destí final per evitar cadenes."
+
+msgid "This item is not an editable public post."
+msgstr "Aquest element no és una entrada pública editable."
+
+msgid "No free slug was found within the limit."
+msgstr "No s'ha trobat cap slug lliure dins del límit."
+
+msgid "Slug updated. No redirect was needed because the post is not published."
+msgstr "Slug actualitzat. No calia cap redirecció perquè l'entrada no està publicada."
+
+msgid "Slug updated, but no redirect was created because the Redirects module is not active."
+msgstr "Slug actualitzat, però no s'ha creat cap redirecció perquè el mòdul de Redireccions no està actiu."
+
+msgid "Slug updated. A 301 redirect for the old URL already existed."
+msgstr "Slug actualitzat. Ja existia una redirecció 301 per a la URL antiga."
+
+msgid "Slug updated, but no redirect was created."
+msgstr "Slug actualitzat, però no s'ha creat cap redirecció."
+
+#. translators: %d: number of redirects removed because they pointed away from the now live URL
+#, php-format
+msgid "%d old redirect(s) for the new URL were removed."
+msgstr "S'han eliminat %d redirecció(ns) antiga(es) de la URL nova."
+
+#. translators: 1: old URL, 2: new URL.
+#, php-format
+msgid "Old URL %1$s now redirects to %2$s"
+msgstr "La URL antiga %1$s ara redirigeix a %2$s"
+
+#. translators: %d: number of child pages whose URL also changed
+#, php-format
+msgid "%d child page URL was also redirected."
+msgid_plural "%d child page URLs were also redirected."
+msgstr[0] "S'ha redirigit també la URL de %d pàgina filla."
+msgstr[1] "S'han redirigit també les URLs de %d pàgines filles."

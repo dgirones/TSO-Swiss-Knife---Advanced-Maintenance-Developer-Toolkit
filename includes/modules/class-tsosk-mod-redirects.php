@@ -1016,27 +1016,6 @@ class TSOSK_Mod_Redirects {
 			<?php if ( empty( $not_found_log ) ) : ?>
 				<p><?php esc_html_e( 'No 404 visits recorded yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
-				<button class="button button-secondary" id="tsosk-404-clear" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Clear 404 Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<button class="button button-secondary" id="tsosk-404-prefill-selected" type="button">
-					<?php esc_html_e( 'Prefill redirect form (selected)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<button class="button button-secondary" id="tsosk-404-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
-				<div class="tsosk-404-bulk-bar">
-					<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
-					<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
-					<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-					<input type="text" id="tsosk-404-bulk-target" class="regular-text" placeholder="/new-page/" aria-label="<?php esc_attr_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-					<button class="button button-secondary" id="tsosk-404-bulk-redirect" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Redirect selected to this target (301)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-				</div>
 				<?php if ( ! empty( $suggestions ) ) : ?>
 					<div class="tsosk-404-suggestions">
 						<h4><?php esc_html_e( 'Suggested patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
@@ -1074,9 +1053,35 @@ class TSOSK_Mod_Redirects {
 						</div>
 					</div>
 				<?php endif; ?>
-				<p class="description tsosk-desc-spaced">
-					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none). IP shows the last known requester address; Possible bot is flagged when the same IP requested several different missing URLs within about a minute (User-Agent strings are easily faked, so this is based on request behavior instead).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</p>
+				<details class="tsosk-guide-card tsosk-guide-collapse">
+					<summary class="tsosk-guide-title"><?php esc_html_e( 'How to read this table', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
+					<p class="description tsosk-desc-flush">
+						<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none). IP shows the last known requester address; Possible bot is flagged when the same IP requested several different missing URLs within about a minute (User-Agent strings are easily faked, so this is based on request behavior instead).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</p>
+				</details>
+				<div class="tsosk-404-bulk-bar">
+					<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					<button class="button button-secondary" id="tsosk-404-prefill-selected" type="button">
+						<?php esc_html_e( 'Prefill redirect form (selected)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<button class="button button-secondary" id="tsosk-404-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+				</div>
+				<div class="tsosk-404-bulk-bar">
+					<input type="text" id="tsosk-404-bulk-target" class="regular-text" placeholder="/new-page/" aria-label="<?php esc_attr_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<button class="button button-secondary" id="tsosk-404-bulk-redirect" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Redirect selected to this target (301)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<button class="button button-secondary tsosk-404-clear-log" id="tsosk-404-clear" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Clear 404 Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
+				</div>
 				<div class="tsosk-table-wrap tsosk-404-table-wrap tsosk-404-table-wrap-spaced">
 					<table class="widefat tsosk-table" id="tsosk-404-table">
 						<thead>

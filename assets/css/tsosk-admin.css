@@ -4464,7 +4464,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
-	margin: 12px 0;
+	margin: 0 0 8px;
 }
 
 .tsosk-404-bulk-bar input[type="text"] {
@@ -4667,3 +4667,108 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 		min-height: 40px;
 	}
 }
+
+/* 404 monitor: the toolbar sits right above the table it acts on. */
+.tsosk-404-bulk-bar .tsosk-404-clear-log {
+	margin-left: auto;
+}
+
+#tsosk-404-monitor .tsosk-404-table-wrap-spaced {
+	margin-top: 4px;
+}
+
+@media (max-width: 782px) {
+	.tsosk-404-bulk-bar .tsosk-404-clear-log {
+		margin-left: 0;
+	}
+}
+
+/* Slug Manager: row metadata, problem badges and phone layout. */
+.tsosk-sm-meta {
+	display: block;
+	margin-top: 2px;
+	color: #646970;
+	font-size: 11px;
+	font-weight: 400;
+	overflow-wrap: anywhere;
+}
+
+.tsosk-sm-reason {
+	display: inline-block;
+	margin: 0 4px 4px 0;
+	font-size: 11px;
+	white-space: normal;
+}
+
+.tsosk-sm-audit-table .tsosk-sm-slug-col a {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+@media (max-width: 782px) {
+	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-sm-audit-table {
+		min-width: 0;
+		width: 100%;
+		table-layout: auto;
+	}
+
+	.tsosk-sm-audit-table thead {
+		display: none;
+	}
+
+	.tsosk-sm-audit-table,
+	.tsosk-sm-audit-table tbody,
+	.tsosk-sm-audit-table tr,
+	.tsosk-sm-audit-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-sm-audit-table tr {
+		margin: 0 0 12px;
+		padding: 12px;
+		border: 1px solid #dcdcde;
+		border-radius: 4px;
+		background: #fff;
+	}
+
+	.tsosk-sm-audit-table td {
+		padding: 6px 0;
+		border: 0;
+	}
+
+	.tsosk-sm-audit-table td::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 4px;
+		color: #646970;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
+	.tsosk-sm-audit-table td.tsosk-actions .button {
+		min-height: 40px;
+		width: 100%;
+	}
+
+	#tsosk-sm-rename-panel .tsosk-kv-table,
+	#tsosk-sm-rename-panel .tsosk-kv-table tbody,
+	#tsosk-sm-rename-panel .tsosk-kv-table tr,
+	#tsosk-sm-rename-panel .tsosk-kv-table th,
+	#tsosk-sm-rename-panel .tsosk-kv-table td {
+		display: block;
+		width: 100%;
+		max-width: none;
+		box-sizing: border-box;
+	}
+
+	#tsosk-sm-rename-panel input[type="text"] {
+		max-width: none;
+		width: 100%;
+		min-height: 40px;
+	}
+}
+

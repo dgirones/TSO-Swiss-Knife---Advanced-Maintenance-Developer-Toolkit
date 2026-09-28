@@ -3368,6 +3368,11 @@
 		bulkPreview : null,
 	};
 
+	// Long-slug threshold currently set in the toolbar (same value the audit lists were built with).
+	function tsoskSmThreshold() {
+		return Math.max( 10, Math.min( 200, parseInt( $( '#tsosk-sm-threshold' ).val(), 10 ) || 50 ) );
+	}
+
 	function tsoskSmBuildBulkTable( changes, cols ) {
 		if ( ! changes || ! changes.length ) {
 			return null;
@@ -3495,6 +3500,7 @@
 		$( '#tsosk-sm-rename-new' ).val( slug );
 		$( '#tsosk-sm-rename-new-len' ).text( len + ' ' + tsosk.i18n.sm_chars );
 		$( '#tsosk-sm-rename-msg' ).text( '' ).removeClass( 'is-error' ).hide();
+		$( '#tsosk-sm-rename-urls' ).empty().hide();
 
 		$( '#tsosk-sm-rename-panel' ).show();
 		$( 'html, body' ).animate(
@@ -3507,7 +3513,8 @@
 	$( document ).on( 'input', '#tsosk-sm-rename-new', function () {
 		var len = $( this ).val().length;
 		var $lbl = $( '#tsosk-sm-rename-new-len' );
-		var color = len > 50 ? '#b45309' : ( len > 30 ? '#646970' : '#2271b1' );
+		var thr   = tsoskSmThreshold();
+		var color = len > thr ? '#b45309' : ( len > Math.round( thr * 0.6 ) ? '#646970' : '#2271b1' );
 		$lbl.text( len + ' ' + tsosk.i18n.sm_chars ).css( 'color', color );
 	} );
 
@@ -3535,17 +3542,34 @@
 			data   : { nonce: nonce, post_id: postId, new_slug: newSlug, auto_redirect: doRedir },
 			success: function ( r ) {
 				if ( r.success ) {
+					// The server reports the slug WordPress really saved (it may differ from what was typed).
+					var saved = String( r.data.new_slug );
+					var thr   = tsoskSmThreshold();
 					showMsg( $msg, r.data.message, 'ok' );
 					// Update the row in the table.
 					var $row = $( '#tsosk-sm-row-' + postId );
-					$row.find( '.tsosk-code a' ).text( r.data.new_slug ).attr( 'href', r.data.new_permalink );
-					$row.find( 'td:nth-last-child(2) span' ).text( r.data.new_slug.length );
-					$row.removeClass( 'tsosk-row-warn' );
-					$( '#tsosk-sm-rename-current' ).text( r.data.new_slug );
-					$( '#tsosk-sm-rename-len' ).text( r.data.new_slug.length );
+					$row.find( '.tsosk-sm-slug-col a' ).text( saved ).attr( { href: r.data.new_permalink, title: saved } );
+					$row.find( 'td[data-label]' ).has( 'span[style*="font-weight:600"]' ).find( 'span' ).first()
+						.text( saved.length ).css( 'color', saved.length > thr ? '#b45309' : '' );
+					$row.toggleClass( 'tsosk-row-warn', saved.length > thr );
+					$( '#tsosk-sm-rename-current' ).text( saved );
+					$( '#tsosk-sm-rename-len' ).text( saved.length );
+					$( '#tsosk-sm-rename-new' ).val( saved );
+					$( '#tsosk-sm-rename-new-len' ).text( saved.length + ' ' + tsosk.i18n.sm_chars );
+					// Keep the Rename buttons in sync so reopening the panel shows the new slug.
+					$( '#tsosk-sm-row-' + postId + ' .tsosk-sm-edit-btn, #tsosk-sm-tr-' + postId + ' .tsosk-sm-edit-btn' )
+						.attr( { 'data-slug': saved, 'data-len': saved.length } )
+						.data( { slug: saved, len: saved.length } );
 					// Also update search results row if present
-					$( '#tsosk-sm-tr-' + postId + ' .tsosk-sm-slug-cell' ).text( r.data.new_slug );
-					$( '#tsosk-sm-tr-' + postId + ' .tsosk-sm-len-cell' ).text( r.data.new_slug.length );
+					$( '#tsosk-sm-tr-' + postId + ' .tsosk-sm-slug-cell a' ).text( saved ).attr( { href: r.data.new_permalink, title: saved } );
+					$( '#tsosk-sm-tr-' + postId + ' .tsosk-sm-len-cell' ).text( saved.length )
+						.attr( 'style', saved.length > thr ? 'font-weight:600;color:#b45309;' : '' );
+					// Show exactly which URL moved where.
+					if ( r.data.old_permalink && tsosk.i18n.sm_url_moved ) {
+						$( '#tsosk-sm-rename-urls' )
+							.text( tsosk.i18n.sm_url_moved.replace( '%1$s', r.data.old_permalink ).replace( '%2$s', r.data.new_permalink ) )
+							.show();
+					}
 				} else {
 					showMsg( $msg, r.data, 'error' );
 				}
@@ -3722,10 +3746,10 @@
 			return;
 		}
 
+		var thr = tsoskSmThreshold();
 		$.each( items, function ( i, item ) {
-			var lenColor = item.len > 50 ? ' style="font-weight:600;color:#b45309;"' : '';
 			var $tr = $( '<tr id="tsosk-sm-tr-' + item.id + '"></tr>' );
-			var $titleCell = $( '<td></td>' );
+			var $titleCell = $( '<td></td>' ).attr( 'data-label', tsosk.i18n.sm_col_title || 'Title' );
 			$titleCell.append( $( '<strong></strong>' ).text( item.title || tsosk.i18n.no_title ) );
 			if ( item.edit_link ) {
 				$titleCell.append( ' ' ).append(
@@ -3734,15 +3758,22 @@
 						.text( tsosk.i18n.edit + ' ↗' )
 				);
 			}
+			if ( item.date ) {
+				$titleCell.append( $( '<span class="tsosk-sm-meta"></span>' ).text( item.date ) );
+			}
 			$tr.append( $titleCell );
-			$tr.append( $( '<td class="tsosk-code" style="font-size:12px;"></td>' ).text( item.type ) );
-			$tr.append( $( '<td></td>' ).text( item.status ) );
+			$tr.append( $( '<td class="tsosk-code" style="font-size:12px;"></td>' ).attr( 'data-label', tsosk.i18n.sm_col_type || 'Type' ).text( item.type ) );
+			$tr.append( $( '<td></td>' ).attr( 'data-label', tsosk.i18n.sm_col_status || 'Status' ).text( item.status ) );
 			var $slugLink = $( '<a target="_blank" rel="noopener noreferrer"></a>' )
 				.attr( 'href', item.permalink )
 				.attr( 'title', item.slug )
 				.text( item.slug );
-			$tr.append( $( '<td class="tsosk-code tsosk-sm-slug-cell tsosk-sm-slug-col"></td>' ).append( $slugLink ) );
-			$tr.append( $( '<td class="tsosk-sm-len-cell"></td>' ).attr( 'style', item.len > 50 ? 'font-weight:600;color:#b45309;' : '' ).text( item.len ) );
+			var $slugCell = $( '<td class="tsosk-code tsosk-sm-slug-cell tsosk-sm-slug-col"></td>' ).attr( 'data-label', tsosk.i18n.sm_col_slug || 'Slug' ).append( $slugLink );
+			if ( item.path && item.path !== item.slug ) {
+				$slugCell.append( $( '<span class="tsosk-sm-meta"></span>' ).text( '/' + item.path + '/' ) );
+			}
+			$tr.append( $slugCell );
+			$tr.append( $( '<td class="tsosk-sm-len-cell"></td>' ).attr( { 'data-label': tsosk.i18n.sm_col_chars || 'Chars', style: item.len > thr ? 'font-weight:600;color:#b45309;' : '' } ).text( item.len ) );
 			var $btn = $( '<button type="button" class="button button-small tsosk-sm-edit-btn"></button>' )
 				.text( tsosk.i18n.sm_rename )
 				.data( {
@@ -3753,7 +3784,7 @@
 					editLink : item.edit_link || '',
 					nonce    : nonce,
 				} );
-			$tr.append( $( '<td></td>' ).append( $btn ) );
+			$tr.append( $( '<td></td>' ).attr( 'data-label', tsosk.i18n.sm_col_actions || 'Actions' ).append( $btn ) );
 			$tbody.append( $tr );
 		} );
 
@@ -3780,6 +3811,26 @@
 				( data.page + 1 ) + '">' + tsosk.i18n.next + ' &rarr;</button>' );
 		}
 	}
+
+	// Threshold and post type filter the audit lists on the server, so reload with them in the URL.
+	// On the Search tab only the post type applies, and it is applied through the search request.
+	$( document ).on( 'change', '#tsosk-sm-threshold, #tsosk-sm-post-type', function () {
+		if ( $( '#tsosk-sm-search-input' ).length ) {
+			if ( 'tsosk-sm-post-type' === this.id && $( '#tsosk-sm-search-results' ).is( ':visible' ) ) {
+				tsosk_sm_search( tsosk_sm.lastSearch, 1 );
+			}
+			return;
+		}
+		var url  = new window.URL( window.location.href );
+		var type = String( $( '#tsosk-sm-post-type' ).val() || '' );
+		if ( type ) {
+			url.searchParams.set( 'sm_type', type );
+		} else {
+			url.searchParams.delete( 'sm_type' );
+		}
+		url.searchParams.set( 'sm_threshold', String( tsoskSmThreshold() ) );
+		window.location.href = url.toString();
+	} );
 
 	$( document ).on( 'click', '.tsosk-sm-page-btn', function () {
 		tsosk_sm_search( tsosk_sm.lastSearch, parseInt( $( this ).data( 'page' ), 10 ) );

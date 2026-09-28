@@ -13044,3 +13044,101 @@ msgid "%d redirect updated."
 msgid_plural "%d redirects updated."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "How to read this table"
+msgstr ""
+
+msgid "Audit and fix post slugs across all public post types. Renaming a slug changes its URL, so a 301 redirect from the old address (and from child pages) is created to keep links and rankings. Rename only when the new slug is clearly better."
+msgstr ""
+
+#. translators: %d: threshold
+#, php-format
+msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 50 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
+msgstr ""
+
+msgid "Posts that share the same slug within the same post type (pages only clash under the same parent), and posts that share a slug with a top-level page when permalinks start with the post name, where only one of them can load. WordPress normally prevents this: it usually comes from imports, direct database edits or plugins."
+msgstr ""
+
+msgid "Slugs with uppercase letters, underscores or encoded characters. Paths are case-sensitive, so uppercase can create duplicate URLs, and Google recommends hyphens over underscores. Encoded characters (accents, non-Latin scripts) are valid for Google; change them only if you prefer readable, transliterated slugs."
+msgstr ""
+
+msgid "Same slug in the same post type"
+msgstr ""
+
+msgid "Same URL as a post/page: only one of them can load"
+msgstr ""
+
+msgid "Uppercase letters"
+msgstr ""
+
+msgid "Underscore (hyphens are preferred)"
+msgstr ""
+
+msgid "Encoded characters"
+msgstr ""
+
+msgid "Other characters"
+msgstr ""
+
+#. translators: %d: maximum number of rows shown
+#, php-format
+msgid "Showing the first %d results only. Fix these and reload to see the rest."
+msgstr ""
+
+msgid "This content type cannot be edited here."
+msgstr ""
+
+#. translators: 1: slug, 2: content type that already uses it (post or page)
+#, php-format
+msgid "The URL /%1$s/ is already used by a %2$s, so only one of them could load. Choose a different slug."
+msgstr ""
+
+#. translators: %s: slug WordPress actually saved
+#, php-format
+msgid "WordPress adjusted the slug to \"%s\" to keep it unique."
+msgstr ""
+
+#. translators: 1: redirects created or updated, 2: redirects that already existed
+#, php-format
+msgid "301 redirects: %1$d created or updated, %2$d already existed."
+msgstr ""
+
+#. translators: %d: number of earlier redirects repointed
+#, php-format
+msgid "%d earlier redirect(s) were repointed to avoid redirect chains."
+msgstr ""
+
+msgid "This item is not an editable public post."
+msgstr ""
+
+msgid "No free slug was found within the limit."
+msgstr ""
+
+msgid "Slug updated. No redirect was needed because the post is not published."
+msgstr ""
+
+msgid "Slug updated, but no redirect was created because the Redirects module is not active."
+msgstr ""
+
+msgid "Slug updated. A 301 redirect for the old URL already existed."
+msgstr ""
+
+msgid "Slug updated, but no redirect was created."
+msgstr ""
+
+#. translators: %d: number of redirects removed because they pointed away from the now live URL
+#, php-format
+msgid "%d old redirect(s) for the new URL were removed."
+msgstr ""
+
+#. translators: 1: old URL, 2: new URL.
+#, php-format
+msgid "Old URL %1$s now redirects to %2$s"
+msgstr ""
+
+#. translators: %d: number of child pages whose URL also changed
+#, php-format
+msgid "%d child page URL was also redirected."
+msgid_plural "%d child page URLs were also redirected."
+msgstr[0] ""
+msgstr[1] ""

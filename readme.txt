@@ -203,6 +203,10 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Redirects: new bulk actions in the 404 monitor to mark the selected URLs as 410 or redirect them all to one target, skipping the ones already covered.
 * Redirects: the Redirect Rules list now has checkboxes and a "Delete selected" button to remove several rules at once; Suggested patterns no longer offers WordPress system folders such as /wp-content/.
 * Redirects: the rules list can now be searched, filtered (enabled, disabled, 410, redirects, wildcard/regex) and sorted (visits, last visit, source), rules can be selected with Shift+click or "Select unused rules", enabled/disabled in bulk, reordered with arrows, and exported/imported as CSV; the 404 monitor and rules list were reworked for phones (select all/none buttons, full-width fields, card layout).
+* Slug Manager: renaming a slug no longer strips accented letters (they are now transliterated), reports the slug WordPress really saved, and no longer blocks a page slug that only repeats under a different parent.
+* Slug Manager: renaming a page now also creates 301 redirects for its child pages, repoints earlier redirects to avoid chains, removes a leftover redirect that would hijack the restored URL, and skips redirects for unpublished posts.
+* Slug Manager: uppercase slugs are now detected, duplicates and post/page URL clashes are reported with a "Problem" column, the threshold and post type filters apply to every list, long lists show that they are capped, and the lists use a card layout on phones.
+* Slug Manager: the SEO notes were corrected (URL length is not a Google ranking factor; hyphens, lowercase and 301 redirects are).
 
 = 1.1.4 =
 * Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.
