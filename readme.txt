@@ -201,6 +201,7 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Redirects: fixed the 404 monitor queue stopping when one of the selected URLs already had a redirect — already covered URLs are now left out of the queue, duplicates are skipped automatically, and new "Skip this one" and "Cancel queue" buttons were added ("Clear Form" no longer empties the queue).
 * Redirects: new "Suggested patterns" panel in the 404 monitor that groups missing URLs by first path segment (e.g. /en/, /ca/) and creates one 410 (Gone) rule for the whole prefix in a click.
 * Redirects: new bulk actions in the 404 monitor to mark the selected URLs as 410 or redirect them all to one target, skipping the ones already covered.
+* Redirects: the Redirect Rules list now has checkboxes and a "Delete selected" button to remove several rules at once; Suggested patterns no longer offers WordPress system folders such as /wp-content/.
 
 = 1.1.4 =
 * Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.

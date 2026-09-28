@@ -14993,3 +14993,21 @@ msgstr "Introduce primero una URL o ruta de destino."
 #, php-format
 msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
 msgstr "¿Crear una sola regla que responda 410 (Gone) para todo lo que cuelga de %1$s?"
+
+msgid "No redirects selected."
+msgstr "No hay ninguna redirección seleccionada."
+
+msgid "Select at least one redirect rule."
+msgstr "Selecciona al menos una regla de redirección."
+
+#. translators: %1$d: number of selected redirect rules.
+#, php-format
+msgid "Delete the %1$d selected redirect rule(s)? This cannot be undone."
+msgstr "¿Eliminar las %1$d regla(s) de redirección seleccionada(s)? No se puede deshacer."
+
+#. translators: %d: number of deleted redirect rules
+#, php-format
+msgid "%d redirect deleted."
+msgid_plural "%d redirects deleted."
+msgstr[0] "%d redirección eliminada."
+msgstr[1] "%d redirecciones eliminadas."

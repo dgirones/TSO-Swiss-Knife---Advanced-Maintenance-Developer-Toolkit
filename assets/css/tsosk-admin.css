@@ -4478,3 +4478,23 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 .tsosk-404-suggestions h4 {
 	margin: 0 0 4px;
 }
+
+/* Redirects: bulk-select column and toolbar in the rules list. */
+.tsosk-redirect-bulk-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-select {
+	width: 2.5rem;
+	text-align: center;
+	vertical-align: top;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
+	margin: 0;
+}
+

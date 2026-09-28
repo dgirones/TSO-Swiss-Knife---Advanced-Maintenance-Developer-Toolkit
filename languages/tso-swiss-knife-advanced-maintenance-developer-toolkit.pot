@@ -12897,3 +12897,21 @@ msgstr ""
 #, php-format
 msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
 msgstr ""
+
+msgid "No redirects selected."
+msgstr ""
+
+msgid "Select at least one redirect rule."
+msgstr ""
+
+#. translators: %1$d: number of selected redirect rules.
+#, php-format
+msgid "Delete the %1$d selected redirect rule(s)? This cannot be undone."
+msgstr ""
+
+#. translators: %d: number of deleted redirect rules
+#, php-format
+msgid "%d redirect deleted."
+msgid_plural "%d redirects deleted."
+msgstr[0] ""
+msgstr[1] ""

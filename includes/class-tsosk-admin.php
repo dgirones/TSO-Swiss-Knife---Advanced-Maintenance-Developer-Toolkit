@@ -364,6 +364,9 @@ class TSOSK_Admin {
 					'redirects_bulk_need_target' => __( 'Enter a target URL or path first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %1$s: URL prefix such as /en/ */
 					'redirects_prefix_confirm' => __( 'Create one rule that answers 410 (Gone) for everything under %1$s?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_select_rules'  => __( 'Select at least one redirect rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of selected redirect rules. */
+					'redirects_confirm_delete_selected' => __( 'Delete the %1$d selected redirect rule(s)? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_site_url'   => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_wp_version' => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_plugin'     => __( 'Snapshot schema', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

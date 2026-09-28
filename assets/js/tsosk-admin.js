@@ -1656,6 +1656,60 @@
 		} );
 	} );
 
+	// Redirect Rules list: select several rules and delete them in one go.
+	function tsosk404SyncRuleSelectAll() {
+		var $rows    = $( '#tsosk-redirects-table .tsosk-redirect-select' );
+		var $checked = $rows.filter( ':checked' );
+		$( '#tsosk-redirect-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
+	}
+
+	$( document ).on( 'change', '#tsosk-redirect-select-all', function () {
+		$( '#tsosk-redirects-table .tsosk-redirect-select' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
+
+	$( document ).on( 'change', '#tsosk-redirects-table .tsosk-redirect-select', tsosk404SyncRuleSelectAll );
+
+	$( document ).on( 'click', '#tsosk-redirect-delete-selected', function () {
+		var $btn = $( this );
+		var ids  = [];
+		$( '#tsosk-redirects-table .tsosk-redirect-select:checked' ).each( function () {
+			var id = String( $( this ).data( 'id' ) || '' );
+			if ( id ) {
+				ids.push( id );
+			}
+		} );
+		var $msg = $( '#tsosk-redirect-bulk-msg' );
+		if ( ! ids.length ) {
+			showMsg( $msg, tsosk.i18n.redirects_select_rules || tsosk.i18n.error, 'error' );
+			return;
+		}
+		if ( tsosk.i18n.redirects_confirm_delete_selected && ! window.confirm( tsosk.i18n.redirects_confirm_delete_selected.replace( '%1$d', String( ids.length ) ) ) ) {
+			return;
+		}
+		var originalText = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_redirect_delete_selected',
+			data   : { nonce: $btn.data( 'nonce' ), ids: ids },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					setTimeout( function () {
+						window.location.reload();
+					}, 700 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( originalText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	} );
+
 	$( document ).on( 'click', '.tsosk-404-create-redirect', function () {
 		resetRedirectForm();
 		$( '#tsosk-redirect-source' ).val( $( this ).data( 'source' ) );
