@@ -254,6 +254,7 @@ class TSOSK_Admin {
 					'roles_apply_confirm' => __( 'Apply this template? Capabilities not in the template will be removed from the selected role.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'regenerate'           => __( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review'    => __( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'media_footprint_interrupted' => __( 'The scan was interrupted. Your progress is saved: press Resume to continue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_scan_interrupted'   => __( 'The review was interrupted. Your progress is saved: press Resume to continue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_resume'             => __( 'Resume', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'media_full_review_starting' => __( 'Starting full media review…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

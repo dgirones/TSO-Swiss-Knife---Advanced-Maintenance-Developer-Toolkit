@@ -14,11 +14,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Uploads_Scanner {
 
-	/** Max files to walk per scan (safety cap). */
-	public const MAX_FILES = 50000;
+	/** Max files to walk per scan (safety cap; the footprint scan runs in short batches, so this can be high). */
+	public const MAX_FILES = 500000;
+
+	/** Seconds of work per footprint batch (each batch is one AJAX request). */
+	public const FOOTPRINT_BATCH_SECONDS = 8.0;
 
 	/** Transient keys (prefixed by WordPress). */
-	public const TRANSIENT_FOOTPRINT = 'tsosk_media_footprint_v1';
+	public const TRANSIENT_FOOTPRINT       = 'tsosk_media_footprint_v2';
+	public const TRANSIENT_FOOTPRINT_STATE = 'tsosk_media_footprint_state';
+
+	/** How long the last footprint result is kept (seconds). */
+	public const FOOTPRINT_TTL = DAY_IN_SECONDS;
+
+	/** Cron hook that permanently deletes quarantined folders once their window is over. */
+	public const CRON_QUARANTINE_PURGE = 'tsosk_media_quarantine_purge';
 	public const TRANSIENT_SIZES     = 'tsosk_image_sizes_audit_v1';
 	public const TRANSIENT_HYGIENE   = 'tsosk_uploads_hygiene_v1';
 
@@ -112,145 +122,355 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * Scan uploads for disk footprint statistics.
+	 * Scan uploads for disk footprint statistics in one go (kept for callers that need a single call).
+	 *
+	 * The admin screen uses footprint_start() / footprint_step() / footprint_finish() so a large
+	 * library never depends on one request finishing in time.
 	 *
 	 * @return array<string, mixed>|WP_Error
 	 */
 	public static function scan_footprint(): array|WP_Error {
+		$state = self::footprint_start();
+		if ( is_wp_error( $state ) ) {
+			return $state;
+		}
+		$guard = 0;
+		while ( empty( $state['done'] ) && $guard++ < 10000 ) {
+			$state = self::footprint_step( $state, 5.0 );
+		}
+		return self::footprint_finish( $state );
+	}
+
+	/**
+	 * Create the state for a batched footprint scan.
+	 *
+	 * @return array<string, mixed>|WP_Error
+	 */
+	public static function footprint_start(): array|WP_Error {
 		$uploads = wp_upload_dir();
 		if ( ! empty( $uploads['error'] ) ) {
 			return new WP_Error( 'tsosk_uploads', (string) $uploads['error'] );
 		}
 
-		$base = wp_normalize_path( trailingslashit( $uploads['basedir'] ) );
+		$base = wp_normalize_path( trailingslashit( (string) $uploads['basedir'] ) );
 		if ( ! is_dir( $base ) ) {
 			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$stats = array(
-			'scanned_files'    => 0,
-			'total_bytes'      => 0,
-			'original_bytes'   => 0,
-			'derivative_bytes' => 0,
-			'other_bytes'      => 0,
-			'by_month'         => array(),
-			'by_extension'     => array(),
-			'largest'          => array(),
-			'base_dir'         => $base,
-			'scanned_at'       => time(),
-			'truncated'        => false,
+		return array(
+			'base'       => $base,
+			'queue'      => array( $base ),
+			'done'       => false,
+			'files'      => 0,
+			'dirs'       => 0,
+			'total'      => 0,
+			'original'   => 0,
+			'derivative' => 0,
+			'other'      => 0,
+			'by_month'   => array(),
+			'by_top'     => array(),
+			'by_ext'     => array(),
+			'largest'    => array(),
+			'unreadable' => array(),
+			'links'      => 0,
+			'truncated'  => false,
+			'started_at' => time(),
 		);
+	}
 
-		$largest_heap = array();
-		$queue        = array( $base );
+	/**
+	 * Walk directories until the time budget is used up.
+	 *
+	 * Everything under uploads is counted, including plugin folders and the quarantine: this screen
+	 * reports real disk usage. Symlinks are never followed (they can loop or leave uploads).
+	 *
+	 * @param array<string, mixed> $state   State from footprint_start().
+	 * @param float                $seconds Time budget for this batch.
+	 * @return array<string, mixed>
+	 */
+	public static function footprint_step( array $state, float $seconds = self::FOOTPRINT_BATCH_SECONDS ): array {
+		$base     = (string) $state['base'];
+		$queue    = (array) $state['queue'];
+		$deadline = microtime( true ) + max( 0.0, $seconds );
+		$slug     = defined( 'TSOSK_UPLOADS_SLUG' ) ? (string) TSOSK_UPLOADS_SLUG : '';
+		$visited  = 0;
 
-		while ( $queue && $stats['scanned_files'] < self::MAX_FILES ) {
-			$dir = array_shift( $queue );
+		while ( ! empty( $queue ) ) {
+			// Always finish at least one folder per batch so a tiny budget can never stall the scan.
+			if ( $visited > 0 && microtime( true ) >= $deadline ) {
+				break;
+			}
+			if ( (int) $state['files'] >= self::MAX_FILES ) {
+				$state['truncated'] = true;
+				$queue              = array();
+				break;
+			}
+
+			$dir = (string) array_shift( $queue );
+			++$visited;
 			if ( ! self::is_safe_scan_path( $dir, $base ) ) {
 				continue;
 			}
-
-			if ( ! is_readable( $dir ) ) {
-				continue;
-			}
-			$handle = opendir( $dir );
+			$handle = is_readable( $dir ) ? @opendir( $dir ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			if ( ! $handle ) {
+				if ( count( $state['unreadable'] ) < 20 ) {
+					$state['unreadable'][] = ltrim( str_replace( $base, '', wp_normalize_path( $dir ) ), '/' ) ?: '/';
+				}
 				continue;
 			}
+			++$state['dirs'];
 
+			$files    = array();
+			$siblings = array();
 			for ( $entry = readdir( $handle ); false !== $entry; $entry = readdir( $handle ) ) {
 				if ( '.' === $entry || '..' === $entry ) {
 					continue;
 				}
-
 				$path = wp_normalize_path( trailingslashit( $dir ) . $entry );
-
+				if ( is_link( $path ) ) {
+					++$state['links'];
+					continue;
+				}
 				if ( is_dir( $path ) ) {
-					if ( self::should_skip_dir( $path, $base ) ) {
-						continue;
-					}
 					$queue[] = $path;
 					continue;
 				}
-
-				if ( ! is_file( $path ) ) {
-					continue;
+				if ( is_file( $path ) ) {
+					$files[ $entry ]    = $path;
+					$siblings[ $entry ] = true;
 				}
+			}
+			closedir( $handle );
 
-				++$stats['scanned_files'];
-				if ( $stats['scanned_files'] > self::MAX_FILES ) {
-					$stats['truncated'] = true;
-					break 2;
+			foreach ( $files as $name => $path ) {
+				if ( (int) $state['files'] >= self::MAX_FILES ) {
+					$state['truncated'] = true;
+					$queue              = array();
+					break;
 				}
-
-				$size     = (int) filesize( $path );
+				$name     = (string) $name;
+				$size     = (int) @filesize( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 				$relative = ltrim( str_replace( $base, '', $path ), '/' );
-				$ext      = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
-				$month    = self::month_key_from_relative( $relative );
-				$is_deriv = self::is_derivative_filename( $entry );
+				$ext      = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+				$kind     = self::classify_footprint_file( $name, $siblings );
 
-				$stats['total_bytes'] += $size;
-				if ( $is_deriv ) {
-					$stats['derivative_bytes'] += $size;
-				} elseif ( self::is_likely_original_media( $ext ) ) {
-					$stats['original_bytes'] += $size;
-				} else {
-					$stats['other_bytes'] += $size;
-				}
+				++$state['files'];
+				$state['total'] += $size;
+				$state[ $kind ] += $size;
 
-				if ( '' !== $month ) {
-					if ( ! isset( $stats['by_month'][ $month ] ) ) {
-						$stats['by_month'][ $month ] = array(
-							'bytes' => 0,
-							'files' => 0,
-						);
-					}
-					$stats['by_month'][ $month ]['bytes'] += $size;
-					++$stats['by_month'][ $month ]['files'];
+				// Folder: first path segment; the plugin quarantine is reported apart because it still uses disk.
+				$top = ( false === strpos( $relative, '/' ) ) ? '' : (string) strstr( $relative, '/', true );
+				if ( '' !== $slug && 0 === strpos( $relative, $slug . '/quarantine/' ) ) {
+					$top = $slug . '/quarantine';
 				}
+				$state['by_top'][ $top ]['bytes'] = $size + (int) ( $state['by_top'][ $top ]['bytes'] ?? 0 );
+				$state['by_top'][ $top ]['files'] = 1 + (int) ( $state['by_top'][ $top ]['files'] ?? 0 );
+
+				$month = self::period_key_from_relative( $relative );
+				if ( '' === $month ) {
+					$month = '_other';
+				}
+				$state['by_month'][ $month ]['bytes'] = $size + (int) ( $state['by_month'][ $month ]['bytes'] ?? 0 );
+				$state['by_month'][ $month ]['files'] = 1 + (int) ( $state['by_month'][ $month ]['files'] ?? 0 );
 
 				if ( '' !== $ext ) {
-					if ( ! isset( $stats['by_extension'][ $ext ] ) ) {
-						$stats['by_extension'][ $ext ] = array(
-							'bytes' => 0,
-							'files' => 0,
-						);
-					}
-					$stats['by_extension'][ $ext ]['bytes'] += $size;
-					++$stats['by_extension'][ $ext ]['files'];
+					$state['by_ext'][ $ext ]['bytes'] = $size + (int) ( $state['by_ext'][ $ext ]['bytes'] ?? 0 );
+					$state['by_ext'][ $ext ]['files'] = 1 + (int) ( $state['by_ext'][ $ext ]['files'] ?? 0 );
 				}
 
 				self::track_largest_file(
-					$largest_heap,
+					$state['largest'],
 					array(
 						'relative'      => $relative,
 						'size'          => $size,
-						'is_derivative' => $is_deriv,
+						'is_derivative' => 'derivative' === $kind,
 					)
 				);
 			}
-
-			closedir( $handle );
 		}
 
+		$state['queue'] = $queue;
+		if ( empty( $queue ) ) {
+			$state['done'] = true;
+		}
+		return $state;
+	}
+
+	/**
+	 * Turn a finished scan state into the result stored and rendered by the screen.
+	 *
+	 * @param array<string, mixed> $state Finished state.
+	 * @return array<string, mixed>
+	 */
+	public static function footprint_finish( array $state ): array {
+		$slug   = defined( 'TSOSK_UPLOADS_SLUG' ) ? (string) TSOSK_UPLOADS_SLUG : '';
+		$by_top = array();
+		foreach ( (array) $state['by_top'] as $name => $row ) {
+			$name     = (string) $name;
+			$by_top[] = array(
+				'name'  => $name,
+				'kind'  => self::footprint_folder_kind( $name, $slug ),
+				'bytes' => (int) $row['bytes'],
+				'files' => (int) $row['files'],
+			);
+		}
 		usort(
-			$largest_heap,
-			static function ( array $a, array $b ): int {
-				return $b['size'] <=> $a['size'];
-			}
-		);
-
-		$stats['largest'] = $largest_heap;
-
-		krsort( $stats['by_month'] );
-		uasort(
-			$stats['by_extension'],
+			$by_top,
 			static function ( array $a, array $b ): int {
 				return $b['bytes'] <=> $a['bytes'];
 			}
 		);
 
-		return $stats;
+		$largest = (array) $state['largest'];
+		usort(
+			$largest,
+			static function ( array $a, array $b ): int {
+				return $b['size'] <=> $a['size'];
+			}
+		);
+		$largest = self::attach_library_items( $largest );
+
+		$by_month = (array) $state['by_month'];
+		krsort( $by_month );
+		if ( isset( $by_month['_other'] ) ) {
+			$other = $by_month['_other'];
+			unset( $by_month['_other'] );
+			$by_month['_other'] = $other;
+		}
+
+		$by_ext = (array) $state['by_ext'];
+		uasort(
+			$by_ext,
+			static function ( array $a, array $b ): int {
+				return $b['bytes'] <=> $a['bytes'];
+			}
+		);
+
+		$quarantine_bytes = 0;
+		foreach ( $by_top as $row ) {
+			if ( 'quarantine' === $row['kind'] ) {
+				$quarantine_bytes += $row['bytes'];
+			}
+		}
+
+		return array(
+			'scanned_files'    => (int) $state['files'],
+			'scanned_dirs'     => (int) $state['dirs'],
+			'total_bytes'      => (int) $state['total'],
+			'original_bytes'   => (int) $state['original'],
+			'derivative_bytes' => (int) $state['derivative'],
+			'other_bytes'      => (int) $state['other'],
+			'by_month'         => $by_month,
+			'by_extension'     => $by_ext,
+			'by_top'           => $by_top,
+			'largest'          => $largest,
+			'quarantine_bytes' => $quarantine_bytes,
+			'unreadable'       => (array) $state['unreadable'],
+			'skipped_links'    => (int) $state['links'],
+			'base_dir'         => (string) $state['base'],
+			'scanned_at'       => time(),
+			'duration'         => max( 0, time() - (int) $state['started_at'] ),
+			'truncated'        => ! empty( $state['truncated'] ),
+		);
+	}
+
+	/**
+	 * Group a top-level uploads folder: media (year folders, multisite sites), plugin data, quarantine or other.
+	 *
+	 * @param string $name Folder name ('' for files directly in uploads).
+	 * @param string $slug This plugin's uploads folder name.
+	 * @return string media|plugin|quarantine|root|other
+	 */
+	public static function footprint_folder_kind( string $name, string $slug = '' ): string {
+		if ( '' === $name ) {
+			return 'root';
+		}
+		if ( '' !== $slug && $name === $slug . '/quarantine' ) {
+			return 'quarantine';
+		}
+		if ( preg_match( '/^\d{4}$/', $name ) || 'sites' === $name ) {
+			return 'media';
+		}
+		$first = strstr( $name, '/', true );
+		$first = false === $first ? $name : $first;
+		if ( in_array( $first, self::get_protected_upload_prefixes(), true ) || preg_match( '/^(tso-|tsosk-)/', $first ) ) {
+			return 'plugin';
+		}
+		if ( in_array( strtolower( $first ), array( 'cache', 'elementor', 'wc-logs', 'woocommerce_uploads', 'fonts', 'custom-fonts', 'ai1wm-backups', 'updraft', 'litespeed', 'wpforms', 'smush', 'revslider', 'wflogs', 'wpallimport', 'gravity_forms', 'et_temp', 'sucuri', 'w3tc', 'breeze', 'autoptimize', 'wpcf7_uploads' ), true ) ) {
+			return 'plugin';
+		}
+		return 'other';
+	}
+
+	/**
+	 * Classify a file as an original, a derivative of a sibling file, or another kind of file.
+	 *
+	 * A "-300x200" name only counts as a derivative when the file it was cut from sits next to it, so
+	 * originals that simply have dimensions in their name are no longer counted as thumbnails. Also
+	 * recognised: WebP/AVIF copies (photo.jpg.webp, photo.webp beside photo.jpg) and PDF previews.
+	 *
+	 * @param string              $name     File basename.
+	 * @param array<string,bool>  $siblings Names of the files in the same folder.
+	 * @return string original|derivative|other
+	 */
+	public static function classify_footprint_file( string $name, array $siblings ): string {
+		$images = array( 'jpg', 'jpeg', 'png', 'gif', 'webp' );
+
+		if ( preg_match( '/^(.+\.[A-Za-z0-9]{2,5})\.(?:webp|avif)$/i', $name, $m ) && isset( $siblings[ $m[1] ] ) ) {
+			return 'derivative';
+		}
+		if ( preg_match( '/^(.+)\.(?:webp|avif)$/i', $name, $m ) ) {
+			foreach ( array( 'jpg', 'jpeg', 'png', 'gif' ) as $alt ) {
+				if ( isset( $siblings[ $m[1] . '.' . $alt ] ) ) {
+					return 'derivative';
+				}
+			}
+		}
+		if ( preg_match( '/^(.+)-\d+x\d+\.([A-Za-z0-9]+)$/', $name, $m ) ) {
+			$candidates = array( $m[1] . '.' . $m[2] );
+			foreach ( $images as $alt ) {
+				$candidates[] = $m[1] . '.' . $alt;
+			}
+			if ( preg_match( '/^(.+)-pdf$/i', $m[1], $p ) ) {
+				$candidates[] = $p[1] . '.pdf';
+			}
+			foreach ( $candidates as $candidate ) {
+				if ( isset( $siblings[ $candidate ] ) ) {
+					return 'derivative';
+				}
+			}
+		}
+		if ( preg_match( '/^(.+)-pdf\.(?:jpe?g|png)$/i', $name, $m ) && isset( $siblings[ $m[1] . '.pdf' ] ) ) {
+			return 'derivative';
+		}
+
+		return self::is_likely_original_media( strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) ) ? 'original' : 'other';
+	}
+
+	/**
+	 * Add the Media Library item (if any) that owns each file in the largest-files list.
+	 *
+	 * @param array<int,array<string,mixed>> $rows Largest files.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function attach_library_items( array $rows ): array {
+		global $wpdb;
+
+		foreach ( $rows as $i => $row ) {
+			$rows[ $i ]['attachment_id'] = 0;
+			if ( ! empty( $row['is_derivative'] ) ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s LIMIT 1",
+					(string) $row['relative']
+				)
+			);
+			$rows[ $i ]['attachment_id'] = $id;
+		}
+		return $rows;
 	}
 
 	/**
@@ -465,6 +685,22 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Period a file belongs to: YYYY/MM, or YYYY when the site does not organise uploads by month.
+	 *
+	 * @param string $relative Path relative to uploads root.
+	 * @return string '' when the file is not inside a year folder.
+	 */
+	private static function period_key_from_relative( string $relative ): string {
+		if ( preg_match( '#^(\d{4}/\d{2})/#', $relative, $m ) ) {
+			return $m[1];
+		}
+		if ( preg_match( '#^(\d{4})/#', $relative, $m ) ) {
+			return $m[1];
+		}
+		return '';
+	}
+
+	/**
 	 * Extract the YYYY/MM month key from a relative uploads path, if present.
 	 *
 	 * @param string $relative Path relative to uploads root.
@@ -569,6 +805,23 @@ class TSOSK_Uploads_Scanner {
 				}
 				$path = $uploads_base . $entry;
 				if ( ! is_dir( $path ) ) {
+					continue;
+				}
+				if ( is_link( $path ) ) {
+					// A symlink can point anywhere: list it, never offer to move or delete it.
+					$items[] = self::build_hygiene_item(
+						$path,
+						(string) $entry,
+						'uploads',
+						array(
+							'size'   => 0,
+							'files'  => 0,
+							'capped' => false,
+						),
+						'review',
+						__( 'Symbolic link. It is not followed or measured, and it cannot be removed from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						false
+					);
 					continue;
 				}
 				$item = self::classify_uploads_top_folder( (string) $entry, $path );
@@ -760,8 +1013,41 @@ class TSOSK_Uploads_Scanner {
 			'quarantined_at'  => time(),
 		);
 		update_option( self::OPTION_QUARANTINE, $entries, false );
+		self::schedule_quarantine_purge();
 
 		return true;
+	}
+
+	/**
+	 * Schedule a one-off cron event for the earliest quarantine expiry, so the promised automatic
+	 * deletion also happens when nobody opens this screen. No-op when nothing is quarantined.
+	 */
+	public static function schedule_quarantine_purge(): void {
+		$entries = self::get_quarantine_entries();
+		if ( empty( $entries ) || ! function_exists( 'wp_schedule_single_event' ) ) {
+			return;
+		}
+
+		$oldest = 0;
+		foreach ( $entries as $entry ) {
+			$at = (int) ( $entry['quarantined_at'] ?? 0 );
+			if ( $at > 0 && ( 0 === $oldest || $at < $oldest ) ) {
+				$oldest = $at;
+			}
+		}
+		if ( 0 === $oldest ) {
+			return;
+		}
+
+		$due  = max( time() + HOUR_IN_SECONDS, $oldest + ( self::QUARANTINE_DAYS * DAY_IN_SECONDS ) + 300 );
+		$next = wp_next_scheduled( self::CRON_QUARANTINE_PURGE );
+		if ( false !== $next && (int) $next <= $due ) {
+			return;
+		}
+		if ( false !== $next ) {
+			wp_clear_scheduled_hook( self::CRON_QUARANTINE_PURGE );
+		}
+		wp_schedule_single_event( $due, self::CRON_QUARANTINE_PURGE );
 	}
 
 	/**
@@ -831,8 +1117,17 @@ class TSOSK_Uploads_Scanner {
 			return new WP_Error( 'invalid_entry', __( 'The original location is unknown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		// The stored location must still be one hygiene is allowed to write to (the option could have been edited).
+		if ( ! self::is_allowed_hygiene_location( $dest ) ) {
+			return new WP_Error( 'invalid_path', __( 'The original location is outside the allowed folders, so it cannot be restored from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		if ( is_dir( $dest ) || file_exists( $dest ) ) {
 			return new WP_Error( 'destination_exists', __( 'A folder already exists at the original location — restore manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! is_dir( dirname( $dest ) ) ) {
+			wp_mkdir_p( dirname( $dest ) );
 		}
 
 		$fs = self::init_quarantine_filesystem();
@@ -849,6 +1144,9 @@ class TSOSK_Uploads_Scanner {
 	/**
 	 * Permanently delete one quarantined folder right now.
 	 *
+	 * The entry is only forgotten once the folder is really gone; if deletion fails it stays listed so the
+	 * files are not left behind on disk with no way to find them again.
+	 *
 	 * @param string $entry_id Quarantine entry id.
 	 * @return true|WP_Error
 	 */
@@ -862,8 +1160,10 @@ class TSOSK_Uploads_Scanner {
 		$entry = $entries[ $entry_id ];
 		$path  = wp_normalize_path( (string) ( $entry['quarantine_path'] ?? '' ) );
 
-		if ( '' !== $path && self::is_within_quarantine_dir( $path ) && is_dir( $path ) ) {
-			self::remove_directory_tree( $path );
+		if ( '' !== $path && self::is_within_quarantine_dir( $path ) && ( is_dir( $path ) || is_link( $path ) ) ) {
+			if ( ! self::remove_directory_tree( $path ) || is_dir( $path ) ) {
+				return new WP_Error( 'delete_failed', __( 'Could not delete the quarantined folder. It stays listed so you can try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
 		}
 
 		unset( $entries[ $entry_id ] );
@@ -892,6 +1192,8 @@ class TSOSK_Uploads_Scanner {
 				++$purged;
 			}
 		}
+
+		self::schedule_quarantine_purge();
 
 		return $purged;
 	}
@@ -1061,6 +1363,18 @@ class TSOSK_Uploads_Scanner {
 			return self::classify_known_cache_folder( $name, $path, 'uploads' );
 		}
 
+		if ( 'sites' === $name && is_multisite() ) {
+			return self::build_hygiene_item(
+				$path,
+				$name,
+				'uploads',
+				$stats,
+				'keep',
+				__( 'Multisite: this folder holds the media of the other sites in the network. Do not delete.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				false
+			);
+		}
+
 		if ( preg_match( '/^(tso-|tsosk-)/', $name ) ) {
 			$plugin_active = self::is_uploads_plugin_folder_active( $name );
 			if ( true === $plugin_active ) {
@@ -1156,6 +1470,7 @@ class TSOSK_Uploads_Scanner {
 			'scope'      => $scope,
 			'size'       => (int) ( $stats['size'] ?? 0 ),
 			'files'      => (int) ( $stats['files'] ?? 0 ),
+			'capped'     => ! empty( $stats['capped'] ),
 			'confidence' => $confidence,
 			'reason'     => $reason,
 			'deletable'  => $deletable && 'safe' === $confidence,
@@ -1241,23 +1556,28 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * Recursively measure a directory's total size and file count.
+	 * Recursively measure a directory's total size and file count (symlinks are not followed).
 	 *
 	 * @param string $path Directory path.
-	 * @return array{size: int, files: int}
+	 * @return array{size: int, files: int, capped: bool} capped is true when the walk stopped at the file limit.
 	 */
 	private static function measure_directory( string $path ): array {
-		$size  = 0;
-		$files = 0;
-		$queue = array( wp_normalize_path( $path ) );
-		$cap   = 10000;
+		$size   = 0;
+		$files  = 0;
+		$queue  = array( wp_normalize_path( $path ) );
+		$cap    = 10000;
+		$capped = false;
 
-		while ( $queue && $files < $cap ) {
+		while ( $queue ) {
+			if ( $files >= $cap ) {
+				$capped = true;
+				break;
+			}
 			$dir = array_shift( $queue );
 			if ( ! is_readable( $dir ) ) {
 				continue;
 			}
-			$handle = opendir( $dir );
+			$handle = @opendir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			if ( ! $handle ) {
 				continue;
 			}
@@ -1266,21 +1586,25 @@ class TSOSK_Uploads_Scanner {
 					continue;
 				}
 				$item = wp_normalize_path( trailingslashit( $dir ) . $entry );
+				if ( is_link( $item ) ) {
+					continue;
+				}
 				if ( is_dir( $item ) ) {
 					$queue[] = $item;
 					continue;
 				}
 				if ( is_file( $item ) ) {
 					++$files;
-					$size += (int) filesize( $item );
+					$size += (int) @filesize( $item ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 				}
 			}
 			closedir( $handle );
 		}
 
 		return array(
-			'size'  => $size,
-			'files' => $files,
+			'size'   => $size,
+			'files'  => $files,
+			'capped' => $capped,
 		);
 	}
 
@@ -1292,26 +1616,47 @@ class TSOSK_Uploads_Scanner {
 	 */
 	private static function is_allowed_hygiene_delete_path( string $path ): bool {
 		$path = wp_normalize_path( $path );
-		if ( '' === $path || ! is_dir( $path ) ) {
+		return '' !== $path && is_dir( $path ) && self::is_allowed_hygiene_location( $path );
+	}
+
+	/**
+	 * Whether a path (which may not exist yet) is inside the locations hygiene may touch.
+	 *
+	 * The caller passes real paths, so the uploads base is compared both as WordPress reports it and
+	 * resolved: on hosts where wp-content/uploads is a symlink the two differ.
+	 *
+	 * @param string $path Absolute normalized path.
+	 * @return bool
+	 */
+	private static function is_allowed_hygiene_location( string $path ): bool {
+		$path = wp_normalize_path( $path );
+		if ( '' === $path ) {
 			return false;
 		}
 
 		$uploads = wp_upload_dir();
 		if ( empty( $uploads['error'] ) && ! empty( $uploads['basedir'] ) ) {
-			$base = wp_normalize_path( trailingslashit( (string) $uploads['basedir'] ) );
-			if ( str_starts_with( $path, $base ) ) {
-				$relative = ltrim( substr( $path, strlen( $base ) ), '/' );
-				$top      = explode( '/', $relative )[0] ?? '';
-				if ( in_array( $top, array( 'tsosk-config', 'tsosk-l10n', 'tsosk-logs', '.tmb' ), true ) ) {
-					return true;
+			$bases = array( wp_normalize_path( trailingslashit( (string) $uploads['basedir'] ) ) );
+			$real  = realpath( (string) $uploads['basedir'] );
+			if ( false !== $real ) {
+				$bases[] = wp_normalize_path( trailingslashit( $real ) );
+			}
+			foreach ( array_unique( $bases ) as $base ) {
+				if ( str_starts_with( $path, $base ) ) {
+					$relative = ltrim( substr( $path, strlen( $base ) ), '/' );
+					$top      = explode( '/', $relative )[0] ?? '';
+					if ( in_array( $top, array( 'tsosk-config', 'tsosk-l10n', 'tsosk-logs', '.tmb' ), true ) ) {
+						return true;
+					}
 				}
 			}
 		}
 
 		if ( basename( $path ) === '.tmb' ) {
 			if ( defined( 'WP_CONTENT_DIR' ) ) {
-				$content_dir = wp_normalize_path( untrailingslashit( WP_CONTENT_DIR ) );
-				if ( dirname( $path ) === $content_dir ) {
+				$content_dir  = wp_normalize_path( untrailingslashit( WP_CONTENT_DIR ) );
+				$content_real = realpath( WP_CONTENT_DIR );
+				if ( dirname( $path ) === $content_dir || ( false !== $content_real && dirname( $path ) === wp_normalize_path( $content_real ) ) ) {
 					return true;
 				}
 			}

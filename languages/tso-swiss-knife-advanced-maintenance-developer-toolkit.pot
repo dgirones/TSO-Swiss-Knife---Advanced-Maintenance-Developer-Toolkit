@@ -13155,10 +13155,6 @@ msgstr ""
 msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
 msgstr ""
 
-#, php-format
-msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
-msgstr ""
-
 msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
 msgstr ""
 
@@ -13166,9 +13162,6 @@ msgid "A review was interrupted before it finished."
 msgstr ""
 
 msgid "Resume"
-msgstr ""
-
-msgid "Run a full media review to inspect every attachment in the Media Library."
 msgstr ""
 
 msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
@@ -13211,9 +13204,6 @@ msgid "The file exists but has 0 bytes, so it is corrupt or an interrupted uploa
 msgstr ""
 
 msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
-msgstr ""
-
-msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
 msgstr ""
 
 msgid "Missing or broken items"
@@ -13305,4 +13295,195 @@ msgid "Parent post deleted"
 msgstr ""
 
 msgid "The review was interrupted. Your progress is saved: press Resume to continue."
+msgstr ""
+
+msgid "No scan in progress. Start a new scan."
+msgstr ""
+
+msgid "The file limit was reached, so totals are partial."
+msgstr ""
+
+#, php-format
+msgid "Scanning uploads… %1$s files in %2$s folders (%3$s so far)"
+msgstr ""
+
+msgid "Folder hygiene scan completed."
+msgstr ""
+
+msgid "Invalid folder."
+msgstr ""
+
+msgid "This folder no longer appears in the scan. The list was refreshed."
+msgstr ""
+
+msgid "Folder moved to quarantine. It can be restored for 30 days, and it keeps using disk space until it is deleted."
+msgstr ""
+
+msgid "See how much disk space wp-content/uploads uses: totals by folder, month and file type, the largest files, and how much space thumbnails take compared to originals. Plugin folders and the quarantine are included, because they use real disk space."
+msgstr ""
+
+msgid "The scan runs in short batches, so large libraries do not time out. The last result is kept for 24 hours; scan again to refresh it."
+msgstr ""
+
+msgid "A scan was interrupted before it finished."
+msgstr ""
+
+msgid "Folder hygiene"
+msgstr ""
+
+msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be moved to quarantine from here; the others are recommendations only. A folder in quarantine still uses disk space until it is deleted."
+msgstr ""
+
+msgid "Scan removable folders"
+msgstr ""
+
+msgid "No hygiene scan yet. Click “Scan removable folders” to classify uploads subfolders and .tmb caches."
+msgstr ""
+
+msgid "Folders removed via Folder hygiene are moved here first and kept for 30 days before automatic permanent deletion, so you can restore them if something breaks. The deletion runs on a scheduled task, so it also happens when nobody opens this screen."
+msgstr ""
+
+#, php-format
+msgid "%1$s files · %2$s folders"
+msgstr ""
+
+msgid "Quarantine (still on disk)"
+msgstr ""
+
+#, php-format
+msgid "Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, not the space rounded up by the disk."
+msgstr ""
+
+msgid "The scan stopped at the file safety limit. Totals are partial and should be used for guidance only."
+msgstr ""
+
+#, php-format
+msgid "These folders could not be read, so their size is not included: %s"
+msgstr ""
+
+#, php-format
+msgid "%s symbolic link(s) were not followed, so what they point to is not counted."
+msgstr ""
+
+msgid "Space by folder"
+msgstr ""
+
+msgid "Where the disk space goes, by first-level folder. Year folders are your Media Library; the rest is plugin data or files that are not in the Media Library."
+msgstr ""
+
+msgid "Share"
+msgstr ""
+
+msgid "Media Library"
+msgstr ""
+
+msgid "Plugin data"
+msgstr ""
+
+msgid "Quarantine"
+msgstr ""
+
+msgid "Loose files"
+msgstr ""
+
+#, php-format
+msgid "The 24 most recent periods are shown; %s older ones are grouped in the totals above."
+msgstr ""
+
+msgid "Outside year/month folders"
+msgstr ""
+
+msgid "Not in Media Library"
+msgstr ""
+
+msgid "Removable folders"
+msgstr ""
+
+#, php-format
+msgid "Space that will be freed once all Safe folders are deleted: %s. Moving them to quarantine does not free it yet: that happens after 30 days, or with “Delete now”."
+msgstr ""
+
+msgid "No classified folders were found under uploads or known cache paths."
+msgstr ""
+
+msgid "Confidence"
+msgstr ""
+
+msgid "Safe"
+msgstr ""
+
+msgid "Keep"
+msgstr ""
+
+msgid "This folder is very large, so measuring stopped early: size and file count are a minimum."
+msgstr ""
+
+msgid "Manual only"
+msgstr ""
+
+#, php-format
+msgid "%1$s folder(s) in quarantine, %2$s still on disk."
+msgstr ""
+
+msgid "Symbolic link. It is not followed or measured, and it cannot be removed from here."
+msgstr ""
+
+msgid "Unknown folder."
+msgstr ""
+
+msgid "This folder cannot be deleted from here."
+msgstr ""
+
+msgid "The folder no longer exists."
+msgstr ""
+
+msgid "The folder path is outside the allowed locations."
+msgstr ""
+
+msgid "Could not delete the folder."
+msgstr ""
+
+msgid "The original location is outside the allowed folders, so it cannot be restored from here."
+msgstr ""
+
+msgid "Could not delete the quarantined folder. It stays listed so you can try again."
+msgstr ""
+
+msgid "Active Swiss Knife data folder (config, logs). Do not delete."
+msgstr ""
+
+msgid "Legacy Swiss Knife config folder. JSON was migrated to the long slug folder — safe to remove if empty or duplicate."
+msgstr ""
+
+msgid "Legacy Swiss Knife config folder. Confirm the new config folder exists before deleting."
+msgstr ""
+
+msgid "Obsolete language-cache folder from an older Swiss Knife version. Safe to delete — not used by current releases."
+msgstr ""
+
+msgid "Legacy Swiss Knife logs folder. Current logs use uploads/{plugin-slug}/logs/ — safe to remove if you no longer need these files."
+msgstr ""
+
+msgid "Legacy Swiss Knife logs folder. Review contents before deleting — may contain log files not copied elsewhere."
+msgstr ""
+
+msgid "Multisite: this folder holds the media of the other sites in the network. Do not delete."
+msgstr ""
+
+msgid "Folder belongs to an active TSO plugin — keep it."
+msgstr ""
+
+msgid "Folder matches a TSO plugin slug but that plugin is not active. Review before deleting — may contain backups or exports."
+msgstr ""
+
+msgid "Known plugin folder — not classified as disposable cache."
+msgstr ""
+
+msgid "Custom or third-party folder under uploads. Verify what created it before deleting."
+msgstr ""
+
+msgid "elFinder / file-manager thumbnail cache (.tmb). Safe to delete — thumbnails regenerate when you browse files in that tool."
+msgstr ""
+
+msgid "The scan was interrupted. Your progress is saved: press Resume to continue."
 msgstr ""

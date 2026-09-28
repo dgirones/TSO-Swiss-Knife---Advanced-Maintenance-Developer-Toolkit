@@ -4897,3 +4897,34 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 	}
 }
 
+/* Uploads Disk Footprint: share bars (tables and cards reuse the Media Cleaner classes). */
+.tsosk-share-bar {
+	display: inline-block;
+	width: 90px;
+	height: 8px;
+	margin-right: 6px;
+	border-radius: 4px;
+	background: #dcdcde;
+	vertical-align: middle;
+	overflow: hidden;
+}
+
+.tsosk-share-bar i {
+	display: block;
+	height: 100%;
+	background: #2271b1;
+}
+
+@media (max-width: 782px) {
+	.tsosk-share-bar {
+		width: 60%;
+		max-width: 220px;
+	}
+
+	#tsosk-media-footprint-scan,
+	#tsosk-media-footprint-resume,
+	#tsosk-media-hygiene-scan {
+		min-height: 40px;
+	}
+}
+

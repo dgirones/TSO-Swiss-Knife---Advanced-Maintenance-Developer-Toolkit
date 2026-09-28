@@ -4539,31 +4539,77 @@
 
 	// ── Media Footprint & Image Sizes Audit ───────────────────────────────────
 
-	$( document ).on( 'click', '#tsosk-media-footprint-scan', function () {
-		var $btn = $( this );
-		var $msg = $( '#tsosk-media-footprint-msg' );
-		var $out = $( '#tsosk-media-footprint-results' );
+	// Footprint scan: runs in short server batches; "Resume" continues an interrupted scan.
+	function tsoskFootprintRun( $btn, start ) {
+		var $main = $( '#tsosk-media-footprint-scan' );
+		var $msg  = $( '#tsosk-media-footprint-msg' );
+		var $prog = $( '#tsosk-media-footprint-progress' );
+		var $out  = $( '#tsosk-media-footprint-results' );
+		var nonce = $btn.data( 'nonce' );
+		var label = tsosk.i18n.media_footprint_scan || 'Scan uploads folder';
+		var fails = 0;
 
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
-		showMsg( $msg, '', '' );
+		function finish() {
+			$main.prop( 'disabled', false ).text( label );
+			$( '#tsosk-media-footprint-resume' ).prop( 'disabled', false );
+		}
 
-		ajaxPost( {
-			action : 'tsosk_media_footprint_scan',
-			data   : { nonce: $btn.data( 'nonce' ) },
-			success: function ( r ) {
-				if ( r.success && r.data && r.data.html ) {
-					$out.html( r.data.html );
-					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+		function tick( first ) {
+			ajaxPost( {
+				action : 'tsosk_media_footprint_scan',
+				data   : { nonce: nonce, start: first ? 1 : 0 },
+				success: function ( r ) {
+					fails = 0;
+					if ( ! r.success ) {
+						showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+						finish();
+						return;
+					}
+					if ( r.data.done ) {
+						$( '#tsosk-media-footprint-resume-note' ).remove();
+						if ( r.data.html ) {
+							$out.html( r.data.html );
+						}
+						$prog.text( '' );
+						showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
+						finish();
+						return;
+					}
+					if ( r.data.progress ) {
+						$prog.text( r.data.progress );
+					}
+					tick( false );
+				},
+				error: function () {
+					// The batch position is stored on the server: retry, then offer Resume instead of starting over.
+					fails++;
+					if ( fails <= 2 ) {
+						setTimeout( function () { tick( false ); }, 1500 * fails );
+						return;
+					}
+					showMsg( $msg, tsosk.i18n.media_footprint_interrupted || tsosk.i18n.error, 'error' );
+					finish();
+					if ( ! $( '#tsosk-media-footprint-resume' ).length ) {
+						$main.after( $( '<button type="button" class="button" id="tsosk-media-footprint-resume"></button>' )
+							.attr( 'data-nonce', nonce )
+							.text( tsosk.i18n.media_resume || 'Resume' ) );
+					}
 				}
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.media_footprint_scan || 'Scan uploads folder' );
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.media_footprint_scan || 'Scan uploads folder' );
-			}
-		} );
+			} );
+		}
+
+		$main.prop( 'disabled', true ).text( tsosk.i18n.running );
+		$( '#tsosk-media-footprint-resume' ).prop( 'disabled', true );
+		showMsg( $msg, '', '' );
+		tick( start );
+	}
+
+	$( document ).on( 'click', '#tsosk-media-footprint-scan', function () {
+		tsoskFootprintRun( $( this ), true );
+	} );
+
+	$( document ).on( 'click', '#tsosk-media-footprint-resume', function () {
+		tsoskFootprintRun( $( this ), false );
 	} );
 
 	$( document ).on( 'click', '#tsosk-media-hygiene-scan', function () {

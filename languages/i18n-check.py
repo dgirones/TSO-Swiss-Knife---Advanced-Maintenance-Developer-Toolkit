@@ -41,7 +41,7 @@ def parse_po(path: Path) -> list[dict]:
 			idx = int(mm.group(1)) if mm.group(1) is not None else 0
 			val = mm.group(2)
 			after = chunk[mm.end() :]
-			for line in after.splitlines():
+			for line in _continuation_lines(after):
 				cm = re.match(r'^"(.*)"\s*$', line)
 				if cm:
 					val += cm.group(1)
@@ -59,6 +59,12 @@ def parse_po(path: Path) -> list[dict]:
 	return entries
 
 
+def _continuation_lines(text: str) -> list[str]:
+	"""Lines after the current one (drops the remainder of the current line, which is empty)."""
+	parts = text.split("\n")
+	return parts[1:] if parts and parts[0].strip() == "" else parts
+
+
 def _grab(chunk: str, kind: str) -> str | None:
 	m = re.search(rf'^{kind} "(.*)"\s*$', chunk, re.M)
 	if not m:
@@ -68,7 +74,7 @@ def _grab(chunk: str, kind: str) -> str | None:
 		return "".join(re.findall(r'"([^"]*)"', m2.group(1)))
 	s = m.group(1)
 	rest = chunk[m.end() :]
-	for line in rest.splitlines():
+	for line in _continuation_lines(rest):
 		mm = re.match(r'^"(.*)"\s*$', line)
 		if mm:
 			s += mm.group(1)

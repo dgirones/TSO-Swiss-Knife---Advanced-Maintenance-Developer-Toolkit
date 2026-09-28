@@ -76,8 +76,12 @@ $tsosk_transients = array(
 	'tsosk_fi_results',
 	'tsosk_fi_checksums',
 	'tsosk_media_footprint_v1',
+	'tsosk_media_footprint_v2',
+	'tsosk_media_footprint_state',
+	'tsosk_uploads_hygiene_v1',
 	'tsosk_image_sizes_audit_v1',
 	'tsosk_media_full_review_v1',
+	'tsosk_media_full_review_v2',
 	'tsosk_media_full_review_state',
 	'tsosk_sq_log_lock',
 	'tsosk_health_security_headers_check',
@@ -181,6 +185,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_views" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
 
 wp_clear_scheduled_hook( 'tsosk_vc_weekly_email' );
+wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 

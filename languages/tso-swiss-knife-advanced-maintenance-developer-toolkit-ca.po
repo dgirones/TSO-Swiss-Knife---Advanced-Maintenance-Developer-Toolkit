@@ -15209,10 +15209,6 @@ msgstr "Algunes carpetes no s'han pogut llegir, així que la llista pot ser inco
 msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
 msgstr "Troba elements de la Mediateca amb el fitxer absent, buit o amb un camí incorrecte, media no adjuntat a cap entrada i fitxers de wp-content/uploads que cap element de la Mediateca referencia. Només informa: des d'aquesta pantalla no s'esborra ni es mou res."
 
-#, php-format
-msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
-msgstr "Última revisió completa: %1$s elements de la Mediateca i %2$s fitxers d'uploads revisats el %3$s."
-
 msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
 msgstr "Encara no hi ha cap revisió completa. Revisa tots els elements de la Mediateca i tots els fitxers elegibles de wp-content/uploads/, per lots, fins acabar."
 
@@ -15221,9 +15217,6 @@ msgstr "Una revisió es va interrompre abans d'acabar."
 
 msgid "Resume"
 msgstr "Reprendre"
-
-msgid "Run a full media review to inspect every attachment in the Media Library."
-msgstr "Executa una revisió completa per inspeccionar tots els adjunts de la Mediateca."
 
 msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
 msgstr "Executa una revisió completa per recórrer tota la carpeta d'uploads. Les miniatures, els originals escalats o editats, les previsualitzacions de PDF, les còpies WebP/AVIF i les carpetes de connectors es reconeixen i es deixen fora."
@@ -15266,9 +15259,6 @@ msgstr "El fitxer existeix però fa 0 bytes, així que està corrupte o és una 
 
 msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
 msgstr "El fitxer original existeix, però les mides generades que consten a la base de dades ja no hi són, així que algunes variants de la imatge donen 404. Regenerar les miniatures ho arregla."
-
-msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
-msgstr "L'entrada de la Mediateca existeix a la base de dades, però el fitxer no és al servidor al camí esperat."
 
 msgid "Missing or broken items"
 msgstr "Elements absents o trencats"
@@ -15360,3 +15350,113 @@ msgstr "Entrada pare esborrada"
 
 msgid "The review was interrupted. Your progress is saved: press Resume to continue."
 msgstr "La revisió s'ha interromput. El progrés està desat: prem Reprendre per continuar."
+
+msgid "No scan in progress. Start a new scan."
+msgstr "No hi ha cap escaneig en curs. Inicia'n un de nou."
+
+msgid "The file limit was reached, so totals are partial."
+msgstr "S'ha arribat al límit de fitxers, així que els totals són parcials."
+
+#, php-format
+msgid "Scanning uploads… %1$s files in %2$s folders (%3$s so far)"
+msgstr "Escanejant uploads… %1$s fitxers en %2$s carpetes (%3$s fins ara)"
+
+msgid "This folder no longer appears in the scan. The list was refreshed."
+msgstr "Aquesta carpeta ja no apareix a l'escaneig. S'ha actualitzat la llista."
+
+msgid "Folder moved to quarantine. It can be restored for 30 days, and it keeps using disk space until it is deleted."
+msgstr "Carpeta moguda a la quarantena. Es pot restaurar durant 30 dies i continua ocupant espai de disc fins que s'esborri."
+
+msgid "See how much disk space wp-content/uploads uses: totals by folder, month and file type, the largest files, and how much space thumbnails take compared to originals. Plugin folders and the quarantine are included, because they use real disk space."
+msgstr "Mira quant d'espai de disc fa servir wp-content/uploads: totals per carpeta, mes i tipus de fitxer, els fitxers més grans, i quant espai ocupen les miniatures comparat amb els originals. Les carpetes de connectors i la quarantena s'hi inclouen, perquè fan servir espai de disc real."
+
+msgid "The scan runs in short batches, so large libraries do not time out. The last result is kept for 24 hours; scan again to refresh it."
+msgstr "L'escaneig s'executa en lots curts, així que les biblioteques grans no fan timeout. L'últim resultat es guarda 24 hores; torna a escanejar per actualitzar-lo."
+
+msgid "A scan was interrupted before it finished."
+msgstr "Un escaneig es va interrompre abans d'acabar."
+
+msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be moved to quarantine from here; the others are recommendations only. A folder in quarantine still uses disk space until it is deleted."
+msgstr "Escaneja uploads i les carpetes de memòria cau conegudes (camins TSO antics, miniatures .tmb). Només els elements marcats com a Segur es poden moure a quarantena des d'aquí; la resta són només recomanacions. Una carpeta en quarantena continua ocupant espai fins que s'esborra."
+
+msgid "Folders removed via Folder hygiene are moved here first and kept for 30 days before automatic permanent deletion, so you can restore them if something breaks. The deletion runs on a scheduled task, so it also happens when nobody opens this screen."
+msgstr "Les carpetes eliminades des d'Higiene de carpetes es mouen primer aquí i es guarden 30 dies abans de l'esborrat permanent automàtic, així les pots restaurar si alguna cosa es trenca. L'esborrat s'executa amb una tasca programada, així que també passa quan ningú obre aquesta pantalla."
+
+#, php-format
+msgid "%1$s files · %2$s folders"
+msgstr "%1$s fitxers · %2$s carpetes"
+
+msgid "Quarantine (still on disk)"
+msgstr "Quarantena (encara al disc)"
+
+#, php-format
+msgid "Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, not the space rounded up by the disk."
+msgstr "Últim escaneig: %1$s (fa %2$s, ha trigat %3$s s). Les mides són els bytes de cada fitxer, no l'espai arrodonit pel disc."
+
+msgid "The scan stopped at the file safety limit. Totals are partial and should be used for guidance only."
+msgstr "L'escaneig s'ha aturat al límit de seguretat de fitxers. Els totals són parcials i només serveixen d'orientació."
+
+#, php-format
+msgid "These folders could not be read, so their size is not included: %s"
+msgstr "Aquestes carpetes no s'han pogut llegir, així que la seva mida no s'inclou: %s"
+
+#, php-format
+msgid "%s symbolic link(s) were not followed, so what they point to is not counted."
+msgstr "No s'han seguit %s enllaç(os) simbòlic(s), així que el que apunten no es compta."
+
+msgid "Space by folder"
+msgstr "Espai per carpeta"
+
+msgid "Where the disk space goes, by first-level folder. Year folders are your Media Library; the rest is plugin data or files that are not in the Media Library."
+msgstr "On va l'espai de disc, per carpeta de primer nivell. Les carpetes d'any són la teva Mediateca; la resta són dades de connectors o fitxers que no són a la Mediateca."
+
+msgid "Share"
+msgstr "Percentatge"
+
+msgid "Media Library"
+msgstr "Mediateca"
+
+msgid "Plugin data"
+msgstr "Dades de connectors"
+
+msgid "Quarantine"
+msgstr "Quarantena"
+
+msgid "Loose files"
+msgstr "Fitxers solts"
+
+#, php-format
+msgid "The 24 most recent periods are shown; %s older ones are grouped in the totals above."
+msgstr "Es mostren els 24 períodes més recents; els %s més antics compten als totals de dalt."
+
+msgid "Outside year/month folders"
+msgstr "Fora de carpetes any/mes"
+
+msgid "Not in Media Library"
+msgstr "No és a la Mediateca"
+
+#, php-format
+msgid "Space that will be freed once all Safe folders are deleted: %s. Moving them to quarantine does not free it yet: that happens after 30 days, or with “Delete now”."
+msgstr "Espai que s'alliberarà quan s'esborrin totes les carpetes Segures: %s. Moure-les a quarantena encara no l'allibera: passa als 30 dies, o amb «Esborrar ara»."
+
+msgid "This folder is very large, so measuring stopped early: size and file count are a minimum."
+msgstr "Aquesta carpeta és molt gran, així que la mesura s'ha aturat abans d'hora: la mida i el nombre de fitxers són un mínim."
+
+#, php-format
+msgid "%1$s folder(s) in quarantine, %2$s still on disk."
+msgstr "%1$s carpeta(es) en quarantena, %2$s encara al disc."
+
+msgid "Symbolic link. It is not followed or measured, and it cannot be removed from here."
+msgstr "Enllaç simbòlic. No se segueix ni es mesura, i no es pot eliminar des d'aquí."
+
+msgid "The original location is outside the allowed folders, so it cannot be restored from here."
+msgstr "La ubicació original és fora de les carpetes permeses, així que no es pot restaurar des d'aquí."
+
+msgid "Could not delete the quarantined folder. It stays listed so you can try again."
+msgstr "No s'ha pogut esborrar la carpeta en quarantena. Continua a la llista perquè ho puguis tornar a provar."
+
+msgid "Multisite: this folder holds the media of the other sites in the network. Do not delete."
+msgstr "Multisite: aquesta carpeta conté el media de la resta de llocs de la xarxa. No l'esborris."
+
+msgid "The scan was interrupted. Your progress is saved: press Resume to continue."
+msgstr "L'escaneig s'ha interromput. El progrés està desat: prem Reprendre per continuar."

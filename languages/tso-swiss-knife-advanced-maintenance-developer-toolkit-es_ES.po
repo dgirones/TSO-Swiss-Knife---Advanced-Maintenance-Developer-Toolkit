@@ -15251,10 +15251,6 @@ msgstr "Algunas carpetas no se han podido leer, así que la lista puede estar in
 msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
 msgstr "Encuentra elementos de la Biblioteca de medios con el archivo ausente, vacío o con una ruta incorrecta, medios no adjuntos a ninguna entrada y archivos de wp-content/uploads que ningún elemento de la Biblioteca referencia. Solo informa: desde esta pantalla no se borra ni se mueve nada."
 
-#, php-format
-msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
-msgstr "Última revisión completa: %1$s elementos de la Biblioteca y %2$s archivos de uploads revisados el %3$s."
-
 msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
 msgstr "Todavía no hay ninguna revisión completa. Revisa todos los elementos de la Biblioteca y todos los archivos elegibles de wp-content/uploads/, por lotes, hasta terminar."
 
@@ -15263,9 +15259,6 @@ msgstr "Una revisión se interrumpió antes de terminar."
 
 msgid "Resume"
 msgstr "Reanudar"
-
-msgid "Run a full media review to inspect every attachment in the Media Library."
-msgstr "Ejecuta una revisión completa para inspeccionar todos los adjuntos de la Biblioteca de medios."
 
 msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
 msgstr "Ejecuta una revisión completa para recorrer toda la carpeta de uploads. Las miniaturas, los originales escalados o editados, las vistas previas de PDF, las copias WebP/AVIF y las carpetas de plugins se reconocen y se dejan fuera."
@@ -15308,9 +15301,6 @@ msgstr "El archivo existe pero tiene 0 bytes, así que está corrupto o es una s
 
 msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
 msgstr "El archivo original existe, pero los tamaños generados que constan en la base de datos ya no están, así que algunas variantes de la imagen dan 404. Regenerar las miniaturas lo arregla."
-
-msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
-msgstr "La entrada de la Biblioteca existe en la base de datos, pero el archivo no está en el servidor en la ruta esperada."
 
 msgid "Missing or broken items"
 msgstr "Elementos ausentes o rotos"
@@ -15402,3 +15392,113 @@ msgstr "Entrada padre borrada"
 
 msgid "The review was interrupted. Your progress is saved: press Resume to continue."
 msgstr "La revisión se ha interrumpido. El progreso está guardado: pulsa Reanudar para continuar."
+
+msgid "No scan in progress. Start a new scan."
+msgstr "No hay ningún escaneo en curso. Inicia uno nuevo."
+
+msgid "The file limit was reached, so totals are partial."
+msgstr "Se ha alcanzado el límite de archivos, así que los totales son parciales."
+
+#, php-format
+msgid "Scanning uploads… %1$s files in %2$s folders (%3$s so far)"
+msgstr "Escaneando uploads… %1$s archivos en %2$s carpetas (%3$s hasta ahora)"
+
+msgid "This folder no longer appears in the scan. The list was refreshed."
+msgstr "Esta carpeta ya no aparece en el escaneo. Se ha actualizado la lista."
+
+msgid "Folder moved to quarantine. It can be restored for 30 days, and it keeps using disk space until it is deleted."
+msgstr "Carpeta movida a la cuarentena. Se puede restaurar durante 30 días y sigue ocupando espacio en disco hasta que se borre."
+
+msgid "See how much disk space wp-content/uploads uses: totals by folder, month and file type, the largest files, and how much space thumbnails take compared to originals. Plugin folders and the quarantine are included, because they use real disk space."
+msgstr "Mira cuánto espacio en disco usa wp-content/uploads: totales por carpeta, mes y tipo de archivo, los archivos más grandes, y cuánto espacio ocupan las miniaturas comparado con los originales. Las carpetas de plugins y la cuarentena se incluyen, porque usan espacio real de disco."
+
+msgid "The scan runs in short batches, so large libraries do not time out. The last result is kept for 24 hours; scan again to refresh it."
+msgstr "El escaneo se ejecuta en lotes cortos, así que las bibliotecas grandes no dan timeout. El último resultado se guarda 24 horas; vuelve a escanear para actualizarlo."
+
+msgid "A scan was interrupted before it finished."
+msgstr "Un escaneo se interrumpió antes de terminar."
+
+msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be moved to quarantine from here; the others are recommendations only. A folder in quarantine still uses disk space until it is deleted."
+msgstr "Escanea uploads y las carpetas de caché conocidas (rutas TSO antiguas, miniaturas .tmb). Solo los elementos marcados como Seguro se pueden mover a cuarentena desde aquí; el resto son solo recomendaciones. Una carpeta en cuarentena sigue ocupando espacio hasta que se borra."
+
+msgid "Folders removed via Folder hygiene are moved here first and kept for 30 days before automatic permanent deletion, so you can restore them if something breaks. The deletion runs on a scheduled task, so it also happens when nobody opens this screen."
+msgstr "Las carpetas eliminadas desde Higiene de carpetas se mueven primero aquí y se guardan 30 días antes del borrado permanente automático, así puedes restaurarlas si algo se rompe. El borrado se ejecuta con una tarea programada, así que también ocurre cuando nadie abre esta pantalla."
+
+#, php-format
+msgid "%1$s files · %2$s folders"
+msgstr "%1$s archivos · %2$s carpetas"
+
+msgid "Quarantine (still on disk)"
+msgstr "Cuarentena (aún en disco)"
+
+#, php-format
+msgid "Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, not the space rounded up by the disk."
+msgstr "Último escaneo: %1$s (hace %2$s, ha tardado %3$s s). Los tamaños son los bytes de cada archivo, no el espacio redondeado por el disco."
+
+msgid "The scan stopped at the file safety limit. Totals are partial and should be used for guidance only."
+msgstr "El escaneo se ha detenido en el límite de seguridad de archivos. Los totales son parciales y solo sirven de orientación."
+
+#, php-format
+msgid "These folders could not be read, so their size is not included: %s"
+msgstr "Estas carpetas no se han podido leer, así que su tamaño no se incluye: %s"
+
+#, php-format
+msgid "%s symbolic link(s) were not followed, so what they point to is not counted."
+msgstr "No se han seguido %s enlace(s) simbólico(s), así que lo que apuntan no se cuenta."
+
+msgid "Space by folder"
+msgstr "Espacio por carpeta"
+
+msgid "Where the disk space goes, by first-level folder. Year folders are your Media Library; the rest is plugin data or files that are not in the Media Library."
+msgstr "Dónde va el espacio en disco, por carpeta de primer nivel. Las carpetas de año son tu Biblioteca de medios; el resto son datos de plugins o archivos que no están en la Biblioteca."
+
+msgid "Share"
+msgstr "Porcentaje"
+
+msgid "Media Library"
+msgstr "Biblioteca de medios"
+
+msgid "Plugin data"
+msgstr "Datos de plugins"
+
+msgid "Quarantine"
+msgstr "Cuarentena"
+
+msgid "Loose files"
+msgstr "Archivos sueltos"
+
+#, php-format
+msgid "The 24 most recent periods are shown; %s older ones are grouped in the totals above."
+msgstr "Se muestran los 24 periodos más recientes; los %s más antiguos cuentan en los totales de arriba."
+
+msgid "Outside year/month folders"
+msgstr "Fuera de carpetas año/mes"
+
+msgid "Not in Media Library"
+msgstr "No está en la Biblioteca de medios"
+
+#, php-format
+msgid "Space that will be freed once all Safe folders are deleted: %s. Moving them to quarantine does not free it yet: that happens after 30 days, or with “Delete now”."
+msgstr "Espacio que se liberará cuando se borren todas las carpetas Seguras: %s. Moverlas a cuarentena todavía no lo libera: ocurre a los 30 días, o con «Borrar ahora»."
+
+msgid "This folder is very large, so measuring stopped early: size and file count are a minimum."
+msgstr "Esta carpeta es muy grande, así que la medición se ha detenido antes de tiempo: el tamaño y el número de archivos son un mínimo."
+
+#, php-format
+msgid "%1$s folder(s) in quarantine, %2$s still on disk."
+msgstr "%1$s carpeta(s) en cuarentena, %2$s aún en disco."
+
+msgid "Symbolic link. It is not followed or measured, and it cannot be removed from here."
+msgstr "Enlace simbólico. No se sigue ni se mide, y no se puede eliminar desde aquí."
+
+msgid "The original location is outside the allowed folders, so it cannot be restored from here."
+msgstr "La ubicación original está fuera de las carpetas permitidas, así que no se puede restaurar desde aquí."
+
+msgid "Could not delete the quarantined folder. It stays listed so you can try again."
+msgstr "No se ha podido borrar la carpeta en cuarentena. Sigue en la lista para que puedas volver a intentarlo."
+
+msgid "Multisite: this folder holds the media of the other sites in the network. Do not delete."
+msgstr "Multisite: esta carpeta contiene los medios del resto de sitios de la red. No la borres."
+
+msgid "The scan was interrupted. Your progress is saved: press Resume to continue."
+msgstr "El escaneo se ha interrumpido. El progreso está guardado: pulsa Reanudar para continuar."

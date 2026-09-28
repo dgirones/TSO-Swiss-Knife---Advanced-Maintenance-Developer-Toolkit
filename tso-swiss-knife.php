@@ -358,6 +358,9 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
+// Permanently deletes quarantined folders once their 30 days are over (also when nobody opens the screen).
+add_action( TSOSK_Uploads_Scanner::CRON_QUARANTINE_PURGE, array( 'TSOSK_Uploads_Scanner', 'purge_expired_quarantine' ) );
+
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
 add_action( 'plugins_loaded', 'tsosk_boot_staging_runtime', 1 );
@@ -592,4 +595,7 @@ function tsosk_deactivate() {
 	if ( class_exists( 'TSOSK_Mod_View_Counter' ) ) {
 		TSOSK_Mod_View_Counter::unschedule_weekly_email();
 	}
+
+	// The purge task is scheduled again from the Uploads Disk Footprint screen if folders are still quarantined.
+	wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
 }
