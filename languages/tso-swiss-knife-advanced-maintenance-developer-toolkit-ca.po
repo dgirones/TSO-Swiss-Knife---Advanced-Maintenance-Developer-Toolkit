@@ -15107,8 +15107,8 @@ msgstr "Audita i corregeix els slugs de tots els tipus de contingut públics. Re
 
 #. translators: %d: threshold
 #, php-format
-msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 50 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
-msgstr "Entrades i pàgines amb un slug de més de %d caràcters. Google no fa servir la longitud de la URL com a factor de posicionament, així que això va de llegibilitat i de compartir; els 50 per defecte són una guia, no una regla de Google. Escurça un slug quan sigui clarament millor (contingut nou o amb poc trànsit) i deixa estar les URLs ben posicionades: cada canvi necessita una redirecció i els cercadors han de tornar a processar la URL. L'arranjament en bloc talla a l'última paraula i crea redireccions 301."
+msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 75 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
+msgstr "Entrades i pàgines amb un slug de més de %d caràcters. Google no fa servir la longitud de la URL com a factor de posicionament, així que això va de llegibilitat i de compartir; els 75 per defecte són una guia, no una regla de Google. Escurça un slug quan sigui clarament millor (contingut nou o amb poc trànsit) i deixa estar les URLs ben posicionades: cada canvi necessita una redirecció i els cercadors han de tornar a processar la URL. L'arranjament en bloc talla a l'última paraula i crea redireccions 301."
 
 msgid "Posts that share the same slug within the same post type (pages only clash under the same parent), and posts that share a slug with a top-level page when permalinks start with the post name, where only one of them can load. WordPress normally prevents this: it usually comes from imports, direct database edits or plugins."
 msgstr "Entrades que comparteixen el mateix slug dins del mateix tipus (les pàgines només xoquen sota el mateix pare) i entrades que comparteixen slug amb una pàgina de primer nivell quan els enllaços permanents comencen pel nom de l'entrada, on només una de les dues pot carregar. WordPress normalment ho evita: sol venir d'importacions, edicions directes a la base de dades o connectors."
@@ -15196,3 +15196,167 @@ msgid "%d child page URL was also redirected."
 msgid_plural "%d child page URLs were also redirected."
 msgstr[0] "S'ha redirigit també la URL de %d pàgina filla."
 msgstr[1] "S'han redirigit també les URLs de %d pàgines filles."
+
+msgid "This item is not a Media Library attachment."
+msgstr "Aquest element no és un adjunt de la Mediateca."
+
+msgid "Full media review completed."
+msgstr "Revisió completa de la mediateca acabada."
+
+msgid "Some folders could not be read, so the list may be incomplete (see the notice below)."
+msgstr "Algunes carpetes no s'han pogut llegir, així que la llista pot ser incompleta (mira l'avís de sota)."
+
+msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
+msgstr "Troba elements de la Mediateca amb el fitxer absent, buit o amb un camí incorrecte, media no adjuntat a cap entrada i fitxers de wp-content/uploads que cap element de la Mediateca referencia. Només informa: des d'aquesta pantalla no s'esborra ni es mou res."
+
+#, php-format
+msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
+msgstr "Última revisió completa: %1$s elements de la Mediateca i %2$s fitxers d'uploads revisats el %3$s."
+
+msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
+msgstr "Encara no hi ha cap revisió completa. Revisa tots els elements de la Mediateca i tots els fitxers elegibles de wp-content/uploads/, per lots, fins acabar."
+
+msgid "A review was interrupted before it finished."
+msgstr "Una revisió es va interrompre abans d'acabar."
+
+msgid "Resume"
+msgstr "Reprendre"
+
+msgid "Run a full media review to inspect every attachment in the Media Library."
+msgstr "Executa una revisió completa per inspeccionar tots els adjunts de la Mediateca."
+
+msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
+msgstr "Executa una revisió completa per recórrer tota la carpeta d'uploads. Les miniatures, els originals escalats o editats, les previsualitzacions de PDF, les còpies WebP/AVIF i les carpetes de connectors es reconeixen i es deixen fora."
+
+msgid "Full URL stored"
+msgstr "URL completa desada"
+
+msgid "Old absolute path"
+msgstr "Camí absolut antic"
+
+msgid "No path stored"
+msgstr "Sense camí desat"
+
+msgid "Invalid path"
+msgstr "Camí no vàlid"
+
+msgid "Empty file (0 bytes)"
+msgstr "Fitxer buit (0 bytes)"
+
+msgid "Missing sizes"
+msgstr "Mides absents"
+
+msgid "File missing"
+msgstr "Fitxer absent"
+
+msgid "A full URL was stored instead of a relative path, so WordPress cannot find the file. The file exists in uploads."
+msgstr "S'ha desat una URL completa en lloc d'un camí relatiu, així que WordPress no troba el fitxer. El fitxer existeix a uploads."
+
+msgid "A full URL was stored instead of a relative path, and the file was not found on disk."
+msgstr "S'ha desat una URL completa en lloc d'un camí relatiu, i el fitxer no s'ha trobat al disc."
+
+msgid "The stored path is absolute and comes from another server. The file exists in the current uploads folder, so only the database path needs fixing."
+msgstr "El camí desat és absolut i ve d'un altre servidor. El fitxer existeix a la carpeta d'uploads actual, així que només cal arreglar el camí a la base de dades."
+
+msgid "The stored path is absolute and comes from another server, and the file was not found in the current uploads folder."
+msgstr "El camí desat és absolut i ve d'un altre servidor, i el fitxer no s'ha trobat a la carpeta d'uploads actual."
+
+msgid "The file exists but has 0 bytes, so it is corrupt or an interrupted upload."
+msgstr "El fitxer existeix però fa 0 bytes, així que està corrupte o és una pujada interrompuda."
+
+msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
+msgstr "El fitxer original existeix, però les mides generades que consten a la base de dades ja no hi són, així que algunes variants de la imatge donen 404. Regenerar les miniatures ho arregla."
+
+msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
+msgstr "L'entrada de la Mediateca existeix a la base de dades, però el fitxer no és al servidor al camí esperat."
+
+msgid "Missing or broken items"
+msgstr "Elements absents o trencats"
+
+msgid "Shared file references"
+msgstr "Referències a un fitxer compartit"
+
+msgid "Unattached media"
+msgstr "Media no adjuntat"
+
+msgid "Unreferenced media files"
+msgstr "Fitxers multimèdia no referenciats"
+
+msgid "Other unreferenced files"
+msgstr "Altres fitxers no referenciats"
+
+#, php-format
+msgid "%s item(s) live on remote storage (an offload plugin) and were not checked on disk."
+msgstr "%s element(s) són en un emmagatzematge remot (un connector d'offload) i no s'han comprovat al disc."
+
+#, php-format
+msgid "These folders could not be read, so their files were not checked: %s"
+msgstr "Aquestes carpetes no s'han pogut llegir, així que els seus fitxers no s'han revisat: %s"
+
+#, php-format
+msgid "Plugin folders left out: %s."
+msgstr "Carpetes de connectors deixades fora: %s."
+
+#, php-format
+msgid "%s file(s) were recognised as sizes, previews or copies of a Media Library item."
+msgstr "%s fitxer(s) s'han reconegut com a mides, previsualitzacions o còpies d'un element de la Mediateca."
+
+#, php-format
+msgid "%s symlinked folder(s) were not followed."
+msgstr "No s'han seguit %s carpeta(es) amb enllaç simbòlic."
+
+msgid "These are attachment records in the WordPress database. WordPress expects each one to point to a file under wp-content/uploads/. Red means the file cannot be served; amber means it works but some generated sizes are gone."
+msgstr "Són registres d'adjunts de la base de dades de WordPress. WordPress espera que cadascun apunti a un fitxer dins de wp-content/uploads/. Vermell vol dir que el fitxer no es pot servir; ambre vol dir que funciona però falten algunes mides generades."
+
+#, php-format
+msgid "Showing the first %1$s of %2$s. Fix these and run the review again to see the rest."
+msgstr "Es mostren els primers %1$s de %2$s. Arregla'ls i torna a executar la revisió per veure la resta."
+
+msgid "In trash"
+msgstr "A la paperera"
+
+msgid "Missing on disk:"
+msgstr "Absent al disc:"
+
+msgid "Media Library items sharing the same file"
+msgstr "Elements de la Mediateca que comparteixen el mateix fitxer"
+
+msgid "Several Media Library items point to one file. Deleting any of them from the Media Library deletes the file, and the others break. Keep one item per file before cleaning up."
+msgstr "Diversos elements de la Mediateca apunten a un mateix fitxer. Si n'esborres un de la Mediateca, s'esborra el fitxer i la resta es trenquen. Deixa un sol element per fitxer abans de netejar."
+
+msgid "Stored file"
+msgstr "Fitxer desat"
+
+msgid "Items"
+msgstr "Elements"
+
+msgid "Images, documents, audio and video in uploads that no Media Library item points to. Check them before removing anything: some themes and page builders link to uploads directly."
+msgstr "Imatges, documents, àudio i vídeo d'uploads als quals no apunta cap element de la Mediateca. Revisa'ls abans d'esborrar res: alguns temes i maquetadors enllacen directament a uploads."
+
+msgid "Files that are not media (text, code, archives…). Usually left by plugins or manual uploads."
+msgstr "Fitxers que no són multimèdia (text, codi, arxius…). Normalment els deixen connectors o pujades manuals."
+
+msgid "Full walk of wp-content/uploads. Sizes (-300x200), scaled or edited originals, PDF previews, WebP/AVIF copies, plugin folders and guard files are recognised and left out. Thumbnails whose original is gone are reported."
+msgstr "Recorregut complet de wp-content/uploads. Les mides (-300x200), els originals escalats o editats, les previsualitzacions de PDF, les còpies WebP/AVIF, les carpetes de connectors i els fitxers de protecció es reconeixen i es deixen fora. Es reporten les miniatures l'original de les quals ja no hi és."
+
+msgid "No unreferenced files found."
+msgstr "No s'ha trobat cap fitxer no referenciat."
+
+#, php-format
+msgid "Showing the %1$s largest of %2$s."
+msgstr "Es mostren els %1$s més grans de %2$s."
+
+msgid "Size without its original"
+msgstr "Mida sense el seu original"
+
+msgid "Media Library items with no parent post, or whose parent post was deleted. Unattached does not mean unused: featured images, widgets, page builders and custom fields often use media that is not attached. Regenerate thumbnails only applies to image attachments."
+msgstr "Elements de la Mediateca sense entrada pare, o amb l'entrada pare esborrada. No adjuntat no vol dir no utilitzat: les imatges destacades, els ginys, els maquetadors i els camps personalitzats sovint fan servir media no adjuntat. Regenerar miniatures només s'aplica a adjunts d'imatge."
+
+msgid "In use: featured image"
+msgstr "En ús: imatge destacada"
+
+msgid "Parent post deleted"
+msgstr "Entrada pare esborrada"
+
+msgid "The review was interrupted. Your progress is saved: press Resume to continue."
+msgstr "La revisió s'ha interromput. El progrés està desat: prem Reprendre per continuar."

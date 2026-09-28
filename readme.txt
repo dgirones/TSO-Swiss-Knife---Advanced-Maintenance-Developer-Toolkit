@@ -206,7 +206,11 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Slug Manager: renaming a slug no longer strips accented letters (they are now transliterated), reports the slug WordPress really saved, and no longer blocks a page slug that only repeats under a different parent.
 * Slug Manager: renaming a page now also creates 301 redirects for its child pages, repoints earlier redirects to avoid chains, removes a leftover redirect that would hijack the restored URL, and skips redirects for unpublished posts.
 * Slug Manager: uppercase slugs are now detected, duplicates and post/page URL clashes are reported with a "Problem" column, the threshold and post type filters apply to every list, long lists show that they are capped, and the lists use a card layout on phones.
-* Slug Manager: the SEO notes were corrected (URL length is not a Google ranking factor; hyphens, lowercase and 301 redirects are).
+* Slug Manager: the SEO notes were corrected (URL length is not a Google ranking factor; hyphens, lowercase and 301 redirects are) and the default long-slug threshold is now 75 characters.
+* Media Cleaner: the scan no longer stores the whole file map in each batch (large libraries could fail), continues from where it stopped if interrupted, and no longer skips or repeats items when the library changes mid-scan.
+* Media Cleaner: fixed false positives for scaled and edited originals, PDF previews, WebP/AVIF copies and plugin folders; leftover thumbnails whose original is gone are now reported, and symlinked folders are no longer followed.
+* Media Cleaner: now also detects wrong stored paths (full URL, old absolute path), empty files, missing generated sizes, items in every status (trash, private), shared file references, offloaded media (not reported as missing) and media whose parent post was deleted; the unattached list shows the real total with pages and flags featured images.
+* Media Cleaner: results show summary cards, fixed items disappear from the cached list, and the tables use a card layout on phones.
 
 = 1.1.4 =
 * Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.

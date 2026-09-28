@@ -12,7 +12,7 @@
  *    URL is automatically added to TSO Swiss Knife Redirects so no link
  *    ever breaks. If the Redirects module is not present a warning is shown.
  *  – Post-type filter: scan all public post types or pick one.
- *  – Configurable long-slug threshold (default 50 characters).
+ *  – Configurable long-slug threshold (default 75 characters).
  *  – Bulk-fix long slugs: truncates at a word boundary and auto-redirects.
  *
  * All DB access uses $wpdb->prepare(); no direct string interpolation.
@@ -35,7 +35,7 @@ class TSOSK_Mod_Slug_Manager {
 	private const PER_PAGE = 50;
 
 	/** Default long-slug threshold (characters). */
-	private const DEFAULT_THRESHOLD = 50;
+	private const DEFAULT_THRESHOLD = 75;
 
 	/** Maximum rows shown per audit list (one more is fetched to detect truncation). */
 	private const AUDIT_LIMIT = 200;
@@ -806,7 +806,7 @@ class TSOSK_Mod_Slug_Manager {
 				<?php
 				printf(
 					/* translators: %d: threshold */
-					esc_html__( 'Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 50 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					esc_html__( 'Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 75 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $threshold
 				);
 				?>

@@ -13053,7 +13053,7 @@ msgstr ""
 
 #. translators: %d: threshold
 #, php-format
-msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 50 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
+msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 75 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
 msgstr ""
 
 msgid "Posts that share the same slug within the same post type (pages only clash under the same parent), and posts that share a slug with a top-level page when permalinks start with the post name, where only one of them can load. WordPress normally prevents this: it usually comes from imports, direct database edits or plugins."
@@ -13142,3 +13142,167 @@ msgid "%d child page URL was also redirected."
 msgid_plural "%d child page URLs were also redirected."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "This item is not a Media Library attachment."
+msgstr ""
+
+msgid "Full media review completed."
+msgstr ""
+
+msgid "Some folders could not be read, so the list may be incomplete (see the notice below)."
+msgstr ""
+
+msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
+msgstr ""
+
+#, php-format
+msgid "Last full review: %1$s Media Library items and %2$s uploads files checked on %3$s."
+msgstr ""
+
+msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
+msgstr ""
+
+msgid "A review was interrupted before it finished."
+msgstr ""
+
+msgid "Resume"
+msgstr ""
+
+msgid "Run a full media review to inspect every attachment in the Media Library."
+msgstr ""
+
+msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
+msgstr ""
+
+msgid "Full URL stored"
+msgstr ""
+
+msgid "Old absolute path"
+msgstr ""
+
+msgid "No path stored"
+msgstr ""
+
+msgid "Invalid path"
+msgstr ""
+
+msgid "Empty file (0 bytes)"
+msgstr ""
+
+msgid "Missing sizes"
+msgstr ""
+
+msgid "File missing"
+msgstr ""
+
+msgid "A full URL was stored instead of a relative path, so WordPress cannot find the file. The file exists in uploads."
+msgstr ""
+
+msgid "A full URL was stored instead of a relative path, and the file was not found on disk."
+msgstr ""
+
+msgid "The stored path is absolute and comes from another server. The file exists in the current uploads folder, so only the database path needs fixing."
+msgstr ""
+
+msgid "The stored path is absolute and comes from another server, and the file was not found in the current uploads folder."
+msgstr ""
+
+msgid "The file exists but has 0 bytes, so it is corrupt or an interrupted upload."
+msgstr ""
+
+msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
+msgstr ""
+
+msgid "The Media Library entry exists in the database, but the file is not on the server at the expected path."
+msgstr ""
+
+msgid "Missing or broken items"
+msgstr ""
+
+msgid "Shared file references"
+msgstr ""
+
+msgid "Unattached media"
+msgstr ""
+
+msgid "Unreferenced media files"
+msgstr ""
+
+msgid "Other unreferenced files"
+msgstr ""
+
+#, php-format
+msgid "%s item(s) live on remote storage (an offload plugin) and were not checked on disk."
+msgstr ""
+
+#, php-format
+msgid "These folders could not be read, so their files were not checked: %s"
+msgstr ""
+
+#, php-format
+msgid "Plugin folders left out: %s."
+msgstr ""
+
+#, php-format
+msgid "%s file(s) were recognised as sizes, previews or copies of a Media Library item."
+msgstr ""
+
+#, php-format
+msgid "%s symlinked folder(s) were not followed."
+msgstr ""
+
+msgid "These are attachment records in the WordPress database. WordPress expects each one to point to a file under wp-content/uploads/. Red means the file cannot be served; amber means it works but some generated sizes are gone."
+msgstr ""
+
+#, php-format
+msgid "Showing the first %1$s of %2$s. Fix these and run the review again to see the rest."
+msgstr ""
+
+msgid "In trash"
+msgstr ""
+
+msgid "Missing on disk:"
+msgstr ""
+
+msgid "Media Library items sharing the same file"
+msgstr ""
+
+msgid "Several Media Library items point to one file. Deleting any of them from the Media Library deletes the file, and the others break. Keep one item per file before cleaning up."
+msgstr ""
+
+msgid "Stored file"
+msgstr ""
+
+msgid "Items"
+msgstr ""
+
+msgid "Images, documents, audio and video in uploads that no Media Library item points to. Check them before removing anything: some themes and page builders link to uploads directly."
+msgstr ""
+
+msgid "Files that are not media (text, code, archives…). Usually left by plugins or manual uploads."
+msgstr ""
+
+msgid "Full walk of wp-content/uploads. Sizes (-300x200), scaled or edited originals, PDF previews, WebP/AVIF copies, plugin folders and guard files are recognised and left out. Thumbnails whose original is gone are reported."
+msgstr ""
+
+msgid "No unreferenced files found."
+msgstr ""
+
+#, php-format
+msgid "Showing the %1$s largest of %2$s."
+msgstr ""
+
+msgid "Size without its original"
+msgstr ""
+
+msgid "Media Library items with no parent post, or whose parent post was deleted. Unattached does not mean unused: featured images, widgets, page builders and custom fields often use media that is not attached. Regenerate thumbnails only applies to image attachments."
+msgstr ""
+
+msgid "In use: featured image"
+msgstr ""
+
+msgid "Parent post deleted"
+msgstr ""
+
+msgid "The review was interrupted. Your progress is saved: press Resume to continue."
+msgstr ""

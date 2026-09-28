@@ -4772,3 +4772,128 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 	}
 }
 
+/* Media Cleaner: summary cards, pager and phone layout. */
+.tsosk-media-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 10px;
+	margin: 0 0 12px;
+}
+
+.tsosk-media-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 10px 12px;
+	border: 1px solid #dcdcde;
+	border-left-width: 4px;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.tsosk-media-stat strong {
+	font-size: 22px;
+	line-height: 1.1;
+}
+
+.tsosk-media-stat span {
+	color: #50575e;
+	font-size: 12px;
+}
+
+.tsosk-media-stat em {
+	color: #646970;
+	font-size: 11px;
+	font-style: normal;
+}
+
+.tsosk-media-stat-ok {
+	border-left-color: #00a32a;
+}
+
+.tsosk-media-stat-warn {
+	border-left-color: #dba617;
+}
+
+.tsosk-media-stat-info {
+	border-left-color: #72aee6;
+}
+
+.tsosk-media-table td .tsosk-badge {
+	margin: 0 4px 4px 0;
+	white-space: normal;
+}
+
+.tsosk-media-pager {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+@media (max-width: 782px) {
+	.tsosk-media-stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-media-table {
+		min-width: 0;
+		width: 100%;
+		table-layout: auto;
+	}
+
+	.tsosk-media-table thead {
+		display: none;
+	}
+
+	.tsosk-media-table,
+	.tsosk-media-table tbody,
+	.tsosk-media-table tr,
+	.tsosk-media-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-media-table tr {
+		margin: 0 0 12px;
+		padding: 12px;
+		border: 1px solid #dcdcde;
+		border-radius: 4px;
+		background: #fff;
+	}
+
+	.tsosk-media-table td {
+		padding: 6px 0;
+		border: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.tsosk-media-table td::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 4px;
+		color: #646970;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
+	.tsosk-media-table td.tsosk-actions .button {
+		min-height: 40px;
+		width: 100%;
+		margin: 0 0 6px;
+	}
+
+	#tsosk-media-full-review,
+	#tsosk-media-full-review-resume {
+		min-height: 40px;
+	}
+
+	.tsosk-media-pager .button {
+		min-height: 40px;
+	}
+}
+
