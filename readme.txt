@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -197,6 +197,11 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.1.5 =
+* Redirects: fixed the 404 monitor queue stopping when one of the selected URLs already had a redirect — already covered URLs are now left out of the queue, duplicates are skipped automatically, and new "Skip this one" and "Cancel queue" buttons were added ("Clear Form" no longer empties the queue).
+* Redirects: new "Suggested patterns" panel in the 404 monitor that groups missing URLs by first path segment (e.g. /en/, /ca/) and creates one 410 (Gone) rule for the whole prefix in a click.
+* Redirects: new bulk actions in the 404 monitor to mark the selected URLs as 410 or redirect them all to one target, skipping the ones already covered.
+
 = 1.1.4 =
 * Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.
 * View Counter: fixed several legacy-table cleanup issues (stale opcode cache after a plain file upload, wrong table-prefix detection, incomplete removal on DB errors) and improved visibility when a leftover table can't be removed.
@@ -211,36 +216,5 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Search & Replace: table and column lists now work with database drivers that return upper-case column names.
 * Robustness: saving settings or calling the public view counter with malformed input (arrays, very large numbers, very long names) no longer triggers PHP errors or warnings; corrupted log entries (History, 404 monitor, login lockouts) are skipped instead of breaking the screen.
 * View Counter: recovers automatically from duplicate views/links tables left over by an old, removed table-naming scheme (a stale PHP opcode cache after a manual FTP upload could keep that old code running for a while); any such leftover table is merged into the real one and then dropped, instead of splitting the view count between two tables.
-
-= 1.1.2 =
-* Debug: WP_DEBUG_LOG / WP_DEBUG_DISPLAY values that WordPress sets by default are now labelled "WordPress default" and "No effect: WP_DEBUG is off" instead of looking active; the Health Report no longer warns about on-screen errors while WP_DEBUG is off.
-* Debug: the Debug Constants list is now a clean table with Value, Source (wp-config.php, Developer mode or WordPress default) and Status columns.
-* Debug: the error-log help box is rewritten in plain language and now shows the exact wp-config.php line (with a Copy button) needed to empty/shrink the log from the plugin.
-* Debug: the wp-config.php debug constants guide is now a highlighted, collapsed panel below the constants table, and the "Read-only here" badge next to wp-content/debug.log was removed.
-* UI: the explanatory guide boxes (File Integrity, Meta Editor, Redirects, REST API, Rewrite Rules, Search & Replace, Update Manager) are now collapsed by default and open with one click.
-* Overview: the "Hide WordPress Site Health notices" options moved from the Health Report tab to the Overview tab.
-* Redirects: fixed the 404 monitor table so the "Last visit" date no longer overlaps the Referrer column; the User-Agent hint is now easier to read.
-* Redirects: fixed the check that blocks capture tokens ($1, $2…) in the host of an absolute redirect target; a broken pattern meant it never ran.
-* Media Footprint / Image Sizes Audit: fixed a fatal error when the uploads folder is missing or unreadable (the scan now shows the error message instead).
-* Comment Anti-Spam: fixed a PHP warning when checking Gravity Forms fields without a label.
-* Hooks Inspector: the filter box now also narrows the current page instantly while typing.
-* Debug: Developer mode texts now say what it really does — it only turns on SAVEQUERIES, because WordPress sets WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY and SCRIPT_DEBUG before plugins load; the constants table no longer labels those as coming from Developer mode.
-* Spanish and Catalan translations: restored missing accents and ñ across the interface.
-* Uninstall now also removes the Anti-Spam learning log, REST blocked-requests log, Search & Replace backup, media quarantine list and View Counter import marker.
-
-= 1.1.1 =
-* New: REST API Controls now keeps a log of actually blocked requests (disabled access, blocked user listing, disabled namespaces) with time, IP and route, so you can review real traffic instead of guessing what the settings above are doing.
-* New: Comment Anti-Spam now has a Learning mode: nothing is blocked, but every submission that would have been rejected is logged (with counts and a "would block" log) so you can check for false positives before turning on real enforcement.
-* New: Media Cleaner / Uploads Disk Footprint: folders removed via Folder hygiene now go through a 30-day recoverable Quarantine (restore or delete permanently) instead of being deleted immediately, expired entries purge automatically, and disk usage by file type is now shown as a proportional space chart alongside the existing table.
-* New: Heartbeat Controls now measures real Heartbeat traffic (this hour, last 24 hours, average per hour, and a breakdown by screen) so you can see actual numbers before changing the mode or interval, instead of guessing.
-* New: Slow Query Monitor can now attribute slow queries to the plugin, theme, or WordPress core they came from (opt-in, off by default due to the extra overhead), flag likely N+1 query patterns within a request, and suggest a missing index for common WHERE/ORDER BY shapes.
-* New: Plugin Sandbox can now bisect your normally active plugins automatically (binary search) to narrow down which one is causing a problem, instead of testing combinations by hand; ends with the likely culprit isolated and sandboxed on its own for confirmation.
-* New: Search & Replace now keeps an automatic backup of the last operation's original values (on top of the existing mandatory Preview step), with one-click Restore and a JSON download from the tool's own tab; Restore skips any row changed by something else since the replace ran.
-* New: Options Editor entries in Activity History now offer an "Undo" button for simple value changes (update, add, delete), guarded against protected options and against overwriting a newer edit.
-* Health Report: the PHP-errors-on-screen check now has a plain-language title and a short explanation instead of the bare WP_DEBUG_DISPLAY constant name; small hint text under toggles is now easier to read.
-* Dashboard "Needs attention" and Health/Security check links now jump straight to the relevant section of each tool instead of just the top of the tab.
-* Security: the XML-RPC check and toggle now name active plugins that need it (Jetpack, MainWP Child, ManageWP, InfiniteWP) instead of just warning.
-* New: Overview dashboard (now the landing tab) with a site score, items needing attention, quick vitals, shortcuts and recent activity.
-
 
 Older versions: see changelog.txt in the plugin folder.

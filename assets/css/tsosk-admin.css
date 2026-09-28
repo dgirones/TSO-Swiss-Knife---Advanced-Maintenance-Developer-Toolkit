@@ -4452,3 +4452,29 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 .tsosk-sidebar-favorites.tsosk-editing .tsosk-fav-fixed .tsosk-nav-item {
     pointer-events: auto;
 }
+
+/* Redirects: 404 monitor queue controls, bulk bar and suggested patterns. */
+#tsosk-redirect-skip[hidden],
+#tsosk-redirect-cancel-queue[hidden] {
+	display: none;
+}
+
+.tsosk-404-bulk-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0;
+}
+
+.tsosk-404-bulk-bar input[type="text"] {
+	max-width: 260px;
+}
+
+.tsosk-404-suggestions {
+	margin: 16px 0;
+}
+
+.tsosk-404-suggestions h4 {
+	margin: 0 0 4px;
+}

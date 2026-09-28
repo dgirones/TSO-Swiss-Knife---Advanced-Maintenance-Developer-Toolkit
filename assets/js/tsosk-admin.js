@@ -1432,12 +1432,21 @@
 		}
 	}
 
+	// Source currently shown in the form that came from the queue ('' when typed/edited by hand).
+	var tsosk404QueueCurrent = '';
+
+	function tsosk404RefreshQueueUi() {
+		var active = tsosk404GetPrefillQueue().length > 0 || '' !== tsosk404QueueCurrent;
+		$( '#tsosk-redirect-skip, #tsosk-redirect-cancel-queue' ).prop( 'hidden', ! active );
+	}
+
 	function tsosk404SetPrefillQueue( sources ) {
 		try {
 			sessionStorage.setItem( TSOSK_404_PREFILL_KEY, JSON.stringify( sources || [] ) );
 		} catch ( err ) {
 			// sessionStorage unavailable — queue falls back to single-row prefill.
 		}
+		tsosk404RefreshQueueUi();
 	}
 
 	function tsosk404UncheckSource( source ) {
@@ -1451,7 +1460,7 @@
 		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
 	}
 
-	function tsosk404PrefillFromQueue( introTotal ) {
+	function tsosk404PrefillFromQueue( introTotal, silent ) {
 		var queue = tsosk404GetPrefillQueue();
 		if ( ! queue.length ) {
 			return false;
@@ -1459,15 +1468,19 @@
 		var source = queue.shift();
 		tsosk404SetPrefillQueue( queue );
 		if ( ! source ) {
-			return tsosk404PrefillFromQueue( introTotal );
+			return tsosk404PrefillFromQueue( introTotal, silent );
 		}
 		// Do not clear the remaining queue when resetting fields.
 		resetRedirectForm( false );
+		tsosk404QueueCurrent = source;
+		tsosk404RefreshQueueUi();
 		$( '#tsosk-redirect-source' ).val( source );
 		tsosk404UncheckSource( source );
 		var remaining = queue.length;
 		var $msg      = $( '#tsosk-404-msg' );
-		if ( introTotal && introTotal > 1 && tsosk.i18n.redirects_prefill_queue ) {
+		if ( silent ) {
+			// The caller shows its own message (skip / duplicate).
+		} else if ( introTotal && introTotal > 1 && tsosk.i18n.redirects_prefill_queue ) {
 			showMsg( $msg, tsosk.i18n.redirects_prefill_queue.replace( '%1$d', String( introTotal ) ), 'ok' );
 		} else if ( remaining > 0 && tsosk.i18n.redirects_prefill_next ) {
 			showMsg( $msg, tsosk.i18n.redirects_prefill_next.replace( '%1$d', String( remaining ) ), 'ok' );
@@ -1481,6 +1494,8 @@
 		if ( false !== clearQueue ) {
 			tsosk404SetPrefillQueue( [] );
 		}
+		tsosk404QueueCurrent = '';
+		tsosk404RefreshQueueUi();
 		$( '#tsosk-redirect-id' ).val( '' );
 		$( '#tsosk-redirect-source' ).val( '' );
 		$( '#tsosk-redirect-target' ).val( '' );
@@ -1490,8 +1505,29 @@
 		$( '#tsosk-redirect-save' ).text( tsosk.i18n.save_redirect );
 	}
 
+	// "Clear Form" only empties the fields; the pending queue is kept (use Skip / Cancel queue).
 	$( document ).on( 'click', '#tsosk-redirect-reset-form', function () {
-		resetRedirectForm();
+		resetRedirectForm( false );
+	} );
+
+	$( document ).on( 'click', '#tsosk-redirect-skip', function () {
+		var $msg = $( '#tsosk-redirect-msg' );
+		if ( tsosk404PrefillFromQueue( 0, true ) ) {
+			var remaining = tsosk404GetPrefillQueue().length;
+			showMsg( $msg, ( tsosk.i18n.redirects_skipped_next || '' ).replace( '%1$d', String( remaining ) ), 'ok' );
+			return;
+		}
+		resetRedirectForm( false );
+		showMsg( $msg, tsosk.i18n.redirects_queue_done || tsosk.i18n.done, 'ok' );
+	} );
+
+	$( document ).on( 'click', '#tsosk-redirect-cancel-queue', function () {
+		resetRedirectForm( true );
+		showMsg( $( '#tsosk-redirect-msg' ), tsosk.i18n.redirects_queue_cancelled || tsosk.i18n.done, 'ok' );
+	} );
+
+	$( function () {
+		tsosk404RefreshQueueUi();
 	} );
 
 	$( document ).on( 'click', '.tsosk-redirect-edit', function () {
@@ -1536,7 +1572,23 @@
 						window.location.reload();
 					}, 700 );
 				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					var errData = r.data;
+					var isObj   = errData && 'object' === typeof errData;
+					var errText = isObj ? errData.message : errData;
+					// A queued URL that already has a rule must not block the rest of the batch.
+					if ( isObj && 'duplicate' === errData.code && '' !== tsosk404QueueCurrent && ! $( '#tsosk-redirect-id' ).val() && $( '#tsosk-redirect-source' ).val() === tsosk404QueueCurrent ) {
+						var dupSource = tsosk404QueueCurrent;
+						tsosk404UncheckSource( dupSource );
+						if ( tsosk404PrefillFromQueue( 0, true ) ) {
+							showMsg( $msg, ( tsosk.i18n.redirects_dup_skipped || '' ).replace( '%1$s', dupSource ).replace( '%2$d', String( tsosk404GetPrefillQueue().length ) ), 'ok' );
+						} else {
+							resetRedirectForm( false );
+							showMsg( $msg, ( tsosk.i18n.redirects_dup_skipped_last || '' ).replace( '%1$s', dupSource ), 'ok' );
+						}
+						$btn.prop( 'disabled', false ).text( tsosk.i18n.save_redirect );
+						return;
+					}
+					showMsg( $msg, errText || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false ).text( tsosk.i18n.save_redirect );
 				}
 			},
@@ -1627,18 +1679,143 @@
 			window.alert( tsosk.i18n.redirects_select_404 || tsosk.i18n.error );
 			return;
 		}
-		var sources = [];
+		var sources        = [];
+		var skippedCovered = 0;
+		var $prefillMsg    = $( '#tsosk-404-msg' );
 		$checked.each( function () {
-			var source = String( $( this ).data( 'source' ) || '' );
-			if ( source ) {
-				sources.push( source );
+			var $row   = $( this );
+			var source = String( $row.data( 'source' ) || '' );
+			if ( ! source ) {
+				return;
 			}
+			// Already covered by an enabled rule: saving would only fail as a duplicate.
+			if ( $row.data( 'covered' ) ) {
+				skippedCovered++;
+				$row.prop( 'checked', false );
+				return;
+			}
+			sources.push( source );
 		} );
 		if ( ! sources.length ) {
+			if ( skippedCovered ) {
+				showMsg( $prefillMsg, tsosk.i18n.redirects_all_covered || tsosk.i18n.error, 'error' );
+			}
 			return;
 		}
 		tsosk404SetPrefillQueue( sources.slice() );
 		tsosk404PrefillFromQueue( sources.length );
+		if ( skippedCovered && tsosk.i18n.redirects_skip_covered ) {
+			var note = tsosk.i18n.redirects_skip_covered.replace( '%1$d', String( skippedCovered ) );
+			showMsg( $prefillMsg, sources.length > 1 ? $prefillMsg.text() + ' ' + note : note, 'ok' );
+		}
+	} );
+
+	// Bulk: one exact rule per selected URL (410, or 301 to one target). Covered URLs are skipped.
+	function tsosk404Bulk( mode, $btn ) {
+		var paths = [];
+		$( '#tsosk-404-table .tsosk-404-select:checked' ).each( function () {
+			var source = String( $( this ).data( 'source' ) || '' );
+			if ( source ) {
+				paths.push( source );
+			}
+		} );
+		if ( ! paths.length ) {
+			window.alert( tsosk.i18n.redirects_select_404 || tsosk.i18n.error );
+			return;
+		}
+		var target = '';
+		if ( 'redirect' === mode ) {
+			target = $.trim( String( $( '#tsosk-404-bulk-target' ).val() || '' ) );
+			if ( '' === target ) {
+				window.alert( tsosk.i18n.redirects_bulk_need_target || tsosk.i18n.error );
+				return;
+			}
+		}
+		var confirmText = 'gone' === mode ? tsosk.i18n.redirects_bulk_confirm_gone : tsosk.i18n.redirects_bulk_confirm_redirect;
+		if ( confirmText && ! window.confirm( confirmText.replace( '%1$d', String( paths.length ) ) ) ) {
+			return;
+		}
+
+		var $msg         = $( '#tsosk-404-msg' );
+		var originalText = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_404_bulk_rules',
+			data   : { nonce: $btn.data( 'nonce' ), mode: mode, target: target, paths: paths },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					setTimeout( function () {
+						window.location.reload();
+					}, 1200 );
+				} else {
+					var text = r.data && 'object' === typeof r.data ? r.data.message : r.data;
+					showMsg( $msg, text || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( originalText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	}
+
+	$( document ).on( 'click', '#tsosk-404-bulk-gone', function () {
+		tsosk404Bulk( 'gone', $( this ) );
+	} );
+
+	$( document ).on( 'click', '#tsosk-404-bulk-redirect', function () {
+		tsosk404Bulk( 'redirect', $( this ) );
+	} );
+
+	// Suggested patterns: one 410 rule for a whole first-segment prefix (e.g. /en/, /ca/).
+	$( document ).on( 'click', '.tsosk-404-prefix-gone', function () {
+		var $btn   = $( this );
+		var prefix = String( $btn.data( 'prefix' ) || '' );
+		if ( ! prefix ) {
+			return;
+		}
+		if ( tsosk.i18n.redirects_prefix_confirm && ! window.confirm( tsosk.i18n.redirects_prefix_confirm.replace( '%1$s', '/' + prefix + '/' ) ) ) {
+			return;
+		}
+		var $msg         = $( '#tsosk-404-msg' );
+		var originalText = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_404_prefix_gone',
+			data   : { nonce: $btn.data( 'nonce' ), prefix: prefix },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					setTimeout( function () {
+						window.location.reload();
+					}, 900 );
+				} else {
+					var text = r.data && 'object' === typeof r.data ? r.data.message : r.data;
+					showMsg( $msg, text || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( originalText );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( originalText );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-404-prefix-prefill', function () {
+		var prefix = String( $( this ).data( 'prefix' ) || '' );
+		if ( ! prefix ) {
+			return;
+		}
+		resetRedirectForm();
+		$( '#tsosk-redirect-match-type' ).val( 'regex' );
+		$( '#tsosk-redirect-source' ).val( '^/' + prefix + '(/|$)' );
+		$( '#tsosk-redirect-target' ).focus();
+		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
 	} );
 
 	$( document ).on( 'click', '#tsosk-404-clear', function () {

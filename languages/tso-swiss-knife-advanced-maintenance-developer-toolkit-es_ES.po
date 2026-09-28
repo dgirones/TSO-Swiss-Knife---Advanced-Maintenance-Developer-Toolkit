@@ -14892,3 +14892,104 @@ msgid "%d entry removed."
 msgid_plural "%d entries removed."
 msgstr[0] "%d entrada eliminada."
 msgstr[1] "%d entradas eliminadas."
+
+#. translators: 1: number of rules created, 2: HTTP status code
+#, php-format
+msgid "Bulk redirect rules created from the 404 monitor: %1$d (%2$d)."
+msgstr "Reglas creadas en bloque desde el monitor 404: %1$d (%2$d)."
+
+#. translators: 1: number of rules created, 2: number of URLs skipped because a rule already covers them, 3: number of URLs that could not be processed
+#, php-format
+msgid "Created %1$d rule(s). Skipped %2$d already covered. Failed: %3$d."
+msgstr "Se han creado %1$d regla(s). Se han omitido %2$d por estar ya cubiertas. Errores: %3$d."
+
+#. translators: %s: URL prefix such as /en/
+#, php-format
+msgid "410 rule created for everything under %s."
+msgstr "Regla 410 creada para todo lo que cuelga de %s."
+
+msgid "Invalid prefix."
+msgstr "Prefijo no válido."
+
+msgid "A page with this slug exists, so a 410 for the whole prefix could hide real content."
+msgstr "Existe una página con este slug; un 410 para todo el prefijo podría ocultar contenido real."
+
+msgid "Skip this one"
+msgstr "Omitir esta"
+
+msgid "Cancel queue"
+msgstr "Cancelar la cola"
+
+msgid "Mark selected as 410 (Gone)"
+msgstr "Marcar seleccionadas como 410 (Gone)"
+
+msgid "Redirect selected to this target (301)"
+msgstr "Redirigir seleccionadas a este destino (301)"
+
+msgid "Suggested patterns"
+msgstr "Patrones sugeridos"
+
+msgid "Missing URLs that share the same first path segment. One rule can answer 410 (Gone) for the whole prefix, so you do not need to add them one by one."
+msgstr "URLs inexistentes que comparten el mismo primer segmento de ruta. Una sola regla puede responder 410 (Gone) para todo el prefijo, sin tener que añadirlas una a una."
+
+msgid "Prefix"
+msgstr "Prefijo"
+
+msgid "Missing URLs"
+msgstr "URLs inexistentes"
+
+msgid "Examples"
+msgstr "Ejemplos"
+
+msgid "Create 410 rule"
+msgstr "Crear regla 410"
+
+msgid "Prefill form"
+msgstr "Rellenar formulario"
+
+msgid "All selected URLs are already covered by an existing rule."
+msgstr "Todas las URLs seleccionadas ya están cubiertas por una regla existente."
+
+#. translators: %1$d: number of selected 404 URLs left out because a rule already covers them.
+#, php-format
+msgid "%1$d already covered URL(s) left out."
+msgstr "Se han dejado fuera %1$d URL(s) ya cubierta(s)."
+
+#. translators: %1$d: number of 404 paths still waiting in the redirect queue.
+#, php-format
+msgid "Skipped. %1$d path(s) remaining in the queue."
+msgstr "Omitida. Quedan %1$d ruta(s) en la cola."
+
+msgid "Queue finished."
+msgstr "Cola terminada."
+
+msgid "Queue cancelled."
+msgstr "Cola cancelada."
+
+#. translators: 1: source path that was skipped, 2: number of paths still waiting in the queue.
+#, php-format
+msgid "%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue."
+msgstr "%1$s ya tenía una redirección — omitida. Quedan %2$d ruta(s) en la cola."
+
+#. translators: %1$s: source path that was skipped.
+#, php-format
+msgid "%1$s already had a redirect — skipped. Queue finished."
+msgstr "%1$s ya tenía una redirección — omitida. Cola terminada."
+
+#. translators: %1$d: number of selected 404 URLs.
+#, php-format
+msgid "Create a 410 (Gone) rule for each of the %1$d selected URL(s)?"
+msgstr "¿Crear una regla 410 (Gone) para cada una de las %1$d URL(s) seleccionada(s)?"
+
+#. translators: %1$d: number of selected 404 URLs.
+#, php-format
+msgid "Create a 301 redirect to the target for each of the %1$d selected URL(s)?"
+msgstr "¿Crear una redirección 301 al destino para cada una de las %1$d URL(s) seleccionada(s)?"
+
+msgid "Enter a target URL or path first."
+msgstr "Introduce primero una URL o ruta de destino."
+
+#. translators: %1$s: URL prefix such as /en/
+#, php-format
+msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
+msgstr "¿Crear una sola regla que responda 410 (Gone) para todo lo que cuelga de %1$s?"

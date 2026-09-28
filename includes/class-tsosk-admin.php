@@ -346,6 +346,24 @@ class TSOSK_Admin {
 					'redirects_prefill_queue' => __( '%1$d paths queued. The form shows the first — save each redirect to advance automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %1$d: number of 404 paths still waiting in the redirect queue. */
 					'redirects_prefill_next'  => __( 'Redirect saved. %1$d path(s) remaining in the queue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_all_covered'   => __( 'All selected URLs are already covered by an existing rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of selected 404 URLs left out because a rule already covers them. */
+					'redirects_skip_covered'  => __( '%1$d already covered URL(s) left out.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of 404 paths still waiting in the redirect queue. */
+					'redirects_skipped_next'  => __( 'Skipped. %1$d path(s) remaining in the queue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_queue_done'    => __( 'Queue finished.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_queue_cancelled' => __( 'Queue cancelled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: 1: source path that was skipped, 2: number of paths still waiting in the queue. */
+					'redirects_dup_skipped'   => __( '%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$s: source path that was skipped. */
+					'redirects_dup_skipped_last' => __( '%1$s already had a redirect — skipped. Queue finished.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of selected 404 URLs. */
+					'redirects_bulk_confirm_gone' => __( 'Create a 410 (Gone) rule for each of the %1$d selected URL(s)?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of selected 404 URLs. */
+					'redirects_bulk_confirm_redirect' => __( 'Create a 301 redirect to the target for each of the %1$d selected URL(s)?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'redirects_bulk_need_target' => __( 'Enter a target URL or path first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$s: URL prefix such as /en/ */
+					'redirects_prefix_confirm' => __( 'Create one rule that answers 410 (Gone) for everything under %1$s?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_site_url'   => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_wp_version' => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_plugin'     => __( 'Snapshot schema', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

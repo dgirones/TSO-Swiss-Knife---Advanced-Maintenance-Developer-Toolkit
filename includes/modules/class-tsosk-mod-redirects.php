@@ -43,6 +43,8 @@ class TSOSK_Mod_Redirects {
 		add_action( 'wp_ajax_tsosk_redirect_toggle', array( $this, 'ajax_toggle' ) );
 		add_action( 'wp_ajax_tsosk_404_clear', array( $this, 'ajax_clear_404_log' ) );
 		add_action( 'wp_ajax_tsosk_404_delete_selected', array( $this, 'ajax_delete_selected_404' ) );
+		add_action( 'wp_ajax_tsosk_404_bulk_rules', array( $this, 'ajax_bulk_rules' ) );
+		add_action( 'wp_ajax_tsosk_404_prefix_gone', array( $this, 'ajax_prefix_gone' ) );
 	}
 
 	/**
@@ -177,10 +179,13 @@ class TSOSK_Mod_Redirects {
 			}
 			if ( ( $existing_rule['match_type'] ?? 'exact' ) === $match_type && ( $existing_rule['source'] ?? '' ) === $source ) {
 				wp_send_json_error(
-					sprintf(
-						/* translators: %s: source path */
-						__( 'A redirect for %s already exists. Edit that rule instead of creating a duplicate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						$source
+					array(
+						'code'    => 'duplicate',
+						'message' => sprintf(
+							/* translators: %s: source path */
+							__( 'A redirect for %s already exists. Edit that rule instead of creating a duplicate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							$source
+						),
 					)
 				);
 			}
@@ -348,6 +353,276 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * Whether an enabled rule already answers this request path.
+	 *
+	 * @param array<string,array> $rules Redirect rules.
+	 * @param string              $path  Request path as stored in the 404 log.
+	 * @return bool
+	 */
+	private function is_path_covered( array $rules, string $path ): bool {
+		foreach ( $rules as $rule ) {
+			if ( ! empty( $rule['enabled'] ) && $this->rule_source_matches_path( $rule, $path ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Validate and append a new enabled rule to the given map (not persisted here).
+	 *
+	 * @param array<string,array> $rules      Rules map, by reference.
+	 * @param string              $source     Source path or regex.
+	 * @param string              $target     Target (empty for 410).
+	 * @param string              $match_type exact|wildcard|regex.
+	 * @param int                 $status     HTTP status.
+	 * @return string|WP_Error New rule id, or an error (code "duplicate" when the source already exists).
+	 */
+	private function append_rule( array &$rules, string $source, string $target, string $match_type, int $status ) {
+		$validated = $this->sanitize_rule_for_storage(
+			array(
+				'id'         => '',
+				'source'     => $source,
+				'target'     => $target,
+				'match_type' => $match_type,
+				'status'     => $status,
+				'enabled'    => true,
+			)
+		);
+		if ( is_wp_error( $validated ) ) {
+			return $validated;
+		}
+
+		foreach ( $rules as $existing_rule ) {
+			if ( ( $existing_rule['match_type'] ?? 'exact' ) === $validated['match_type'] && ( $existing_rule['source'] ?? '' ) === $validated['source'] ) {
+				return new WP_Error(
+					'duplicate',
+					sprintf(
+						/* translators: %s: source path */
+						__( 'A redirect for %s already exists. Edit that rule instead of creating a duplicate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$validated['source']
+					)
+				);
+			}
+		}
+
+		if ( '' !== $validated['target_url'] && 'regex' !== $validated['match_type'] ) {
+			$sample_source = 'wildcard' === $validated['match_type'] ? str_replace( '*', 'x', $validated['source'] ) : $validated['source'];
+			if ( $this->is_loop( $sample_source, $validated['target_url'] ) ) {
+				return new WP_Error( 'loop', __( 'The target points back to the source and would create a loop.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+		}
+
+		$id           = $this->new_rule_id();
+		$rules[ $id ] = array(
+			'id'         => $id,
+			'source'     => $validated['source'],
+			'target'     => $validated['target'],
+			'match_type' => $validated['match_type'],
+			'status'     => $validated['status'],
+			'enabled'    => true,
+			'hits'       => 0,
+			'last_hit'   => 0,
+			'created'    => time(),
+		);
+		return $id;
+	}
+
+	/**
+	 * AJAX: create one exact rule per selected 404 path (410, or 301 to a single target).
+	 *
+	 * URLs already covered by an enabled rule, or that already have a rule with the
+	 * same source, are skipped instead of aborting the whole batch.
+	 */
+	public function ajax_bulk_rules(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! in_array( $mode, array( 'gone', 'redirect' ), true ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$status = 'gone' === $mode ? 410 : 301;
+		$target = ( 'redirect' === $mode && isset( $_POST['target'] ) ) ? sanitize_text_field( wp_unslash( $_POST['target'] ) ) : '';
+
+		$raw_paths = ( isset( $_POST['paths'] ) && is_array( $_POST['paths'] ) )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['paths'] ) )
+			: array();
+		$paths     = array();
+		foreach ( $raw_paths as $raw_path ) {
+			$path = (string) $raw_path;
+			if ( '' !== $path ) {
+				$paths[] = $path;
+			}
+		}
+		// The 404 log never holds more than 200 rows, so no legitimate selection exceeds that.
+		$paths = array_slice( array_unique( $paths ), 0, 200 );
+		if ( empty( $paths ) ) {
+			wp_send_json_error( __( 'No URLs selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$rules       = $this->get_rules();
+		$created     = 0;
+		$skipped     = 0;
+		$failed      = 0;
+		$first_error = '';
+		foreach ( $paths as $path ) {
+			if ( $this->is_path_covered( $rules, $path ) ) {
+				++$skipped;
+				continue;
+			}
+			$result = $this->append_rule( $rules, $path, $target, 'exact', $status );
+			if ( is_wp_error( $result ) ) {
+				if ( 'duplicate' === $result->get_error_code() ) {
+					++$skipped;
+				} else {
+					++$failed;
+					if ( '' === $first_error ) {
+						$first_error = $result->get_error_message();
+					}
+				}
+				continue;
+			}
+			++$created;
+		}
+
+		if ( 0 === $created && $failed > 0 ) {
+			wp_send_json_error( $first_error );
+		}
+
+		if ( $created > 0 ) {
+			update_option( self::OPTION, $rules, false );
+			TSOSK_Activity_Log::log(
+				'redirects',
+				'save',
+				sprintf(
+					/* translators: 1: number of rules created, 2: HTTP status code */
+					__( 'Bulk redirect rules created from the 404 monitor: %1$d (%2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$created,
+					$status
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'created' => $created,
+				'skipped' => $skipped,
+				'failed'  => $failed,
+				'message' => sprintf(
+					/* translators: 1: number of rules created, 2: number of URLs skipped because a rule already covers them, 3: number of URLs that could not be processed */
+					__( 'Created %1$d rule(s). Skipped %2$d already covered. Failed: %3$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$created,
+					$skipped,
+					$failed
+				),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: create a single 410 rule that answers Gone for everything under a first path segment.
+	 */
+	public function ajax_prefix_gone(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$prefix = isset( $_POST['prefix'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['prefix'] ) ), '/' ) : '';
+		if ( ! preg_match( '/^[A-Za-z0-9_-]{1,40}$/', $prefix ) || in_array( strtolower( $prefix ), array( 'wp-admin', 'wp-content', 'wp-includes', 'wp-json' ), true ) ) {
+			wp_send_json_error( __( 'Invalid prefix.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// A real page living at this slug means the prefix is not dead content.
+		if ( get_page_by_path( $prefix, OBJECT, 'page' ) instanceof WP_Post ) {
+			wp_send_json_error( __( 'A page with this slug exists, so a 410 for the whole prefix could hide real content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$rules  = $this->get_rules();
+		$source = '^/' . preg_quote( $prefix, '#' ) . '(/|$)';
+		$result = $this->append_rule( $rules, $source, '', 'regex', 410 );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		update_option( self::OPTION, $rules, false );
+		TSOSK_Activity_Log::log(
+			'redirects',
+			'save',
+			sprintf(
+				/* translators: %s: URL prefix such as /en/ */
+				__( '410 rule created for everything under %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'/' . $prefix . '/'
+			),
+			array( 'source' => $source )
+		);
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: %s: URL prefix such as /en/ */
+					__( '410 rule created for everything under %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'/' . $prefix . '/'
+				),
+			)
+		);
+	}
+
+	/**
+	 * Group uncovered 404 paths by first path segment (needs 2+ URLs under it).
+	 *
+	 * @param array<string,array> $log   404 log rows.
+	 * @param array<string,array> $rules Redirect rules.
+	 * @return array<int,array{prefix:string,urls:int,hits:int,examples:array<int,string>}>
+	 */
+	private function get_prefix_suggestions( array $log, array $rules ): array {
+		$groups = array();
+		foreach ( $log as $item ) {
+			$path = (string) ( $item['path'] ?? '' );
+			if ( '' === $path || $this->is_path_covered( $rules, $path ) ) {
+				continue;
+			}
+			$trimmed = trim( $path, '/' );
+			if ( false === strpos( $trimmed, '/' ) ) {
+				continue;
+			}
+			$segment = (string) strstr( $trimmed, '/', true );
+			if ( ! preg_match( '/^[A-Za-z0-9_-]{1,40}$/', $segment ) ) {
+				continue;
+			}
+			if ( ! isset( $groups[ $segment ] ) ) {
+				$groups[ $segment ] = array(
+					'prefix'   => $segment,
+					'urls'     => 0,
+					'hits'     => 0,
+					'examples' => array(),
+				);
+			}
+			++$groups[ $segment ]['urls'];
+			$groups[ $segment ]['hits'] += absint( $item['hits'] ?? 0 );
+			if ( count( $groups[ $segment ]['examples'] ) < 3 ) {
+				$groups[ $segment ]['examples'][] = $path;
+			}
+		}
+
+		$groups = array_filter(
+			$groups,
+			static function ( array $group ): bool {
+				return $group['urls'] >= 2;
+			}
+		);
+		usort(
+			$groups,
+			static function ( array $a, array $b ): int {
+				return $b['urls'] <=> $a['urls'];
+			}
+		);
+		return array_slice( $groups, 0, 8 );
+	}
+
+	/**
 	 * Render the Redirects tab.
 	 */
 	public function render(): void {
@@ -355,6 +630,7 @@ class TSOSK_Mod_Redirects {
 		$rules   = $this->get_rules();
 		$reviews = $this->review_rules( $rules );
 		$not_found_log = $this->get_404_log();
+		$suggestions   = $this->get_prefix_suggestions( $not_found_log, $rules );
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Create and review safe WordPress-level redirects. Rules are stored in a prefixed option and are applied before the theme renders.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -410,6 +686,12 @@ class TSOSK_Mod_Redirects {
 			<button class="button button-secondary" id="tsosk-redirect-reset-form" type="button">
 				<?php esc_html_e( 'Clear Form', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
+			<button class="button button-secondary" id="tsosk-redirect-skip" type="button" hidden>
+				<?php esc_html_e( 'Skip this one', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</button>
+			<button class="button button-secondary" id="tsosk-redirect-cancel-queue" type="button" hidden>
+				<?php esc_html_e( 'Cancel queue', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-redirect-msg"></span>
 		</div>
 
@@ -447,6 +729,52 @@ class TSOSK_Mod_Redirects {
 					<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
+				<div class="tsosk-404-bulk-bar">
+					<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<input type="text" id="tsosk-404-bulk-target" class="regular-text" placeholder="/new-page/" aria-label="<?php esc_attr_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<button class="button button-secondary" id="tsosk-404-bulk-redirect" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Redirect selected to this target (301)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+				</div>
+				<?php if ( ! empty( $suggestions ) ) : ?>
+					<div class="tsosk-404-suggestions">
+						<h4><?php esc_html_e( 'Suggested patterns', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+						<p class="description"><?php esc_html_e( 'Missing URLs that share the same first path segment. One rule can answer 410 (Gone) for the whole prefix, so you do not need to add them one by one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+						<div class="tsosk-table-wrap">
+							<table class="widefat tsosk-table" id="tsosk-404-suggestions-table">
+								<thead>
+									<tr>
+										<th><?php esc_html_e( 'Prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+										<th><?php esc_html_e( 'Missing URLs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+										<th><?php esc_html_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+										<th><?php esc_html_e( 'Examples', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+										<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ( $suggestions as $suggestion ) : ?>
+										<tr>
+											<td class="tsosk-code"><?php echo esc_html( '/' . $suggestion['prefix'] . '/' ); ?></td>
+											<td><?php echo esc_html( number_format_i18n( $suggestion['urls'] ) ); ?></td>
+											<td><?php echo esc_html( number_format_i18n( $suggestion['hits'] ) ); ?></td>
+											<td class="tsosk-code"><?php echo esc_html( implode( ', ', $suggestion['examples'] ) ); ?></td>
+											<td>
+												<button class="button button-small tsosk-404-prefix-gone" type="button" data-prefix="<?php echo esc_attr( $suggestion['prefix'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+													<?php esc_html_e( 'Create 410 rule', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+												</button>
+												<button class="button button-small tsosk-404-prefix-prefill" type="button" data-prefix="<?php echo esc_attr( $suggestion['prefix'] ); ?>">
+													<?php esc_html_e( 'Prefill form', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+												</button>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				<?php endif; ?>
 				<p class="description tsosk-desc-spaced">
 					<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none). IP shows the last known requester address; Possible bot is flagged when the same IP requested several different missing URLs within about a minute (User-Agent strings are easily faked, so this is based on request behavior instead).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -470,17 +798,11 @@ class TSOSK_Mod_Redirects {
 							<?php foreach ( $not_found_log as $item ) : ?>
 								<?php
 								$path_url        = $this->rule_value_to_url( (string) $item['path'], 'exact', true );
-								$already_covered = false;
-								foreach ( $rules as $existing_rule ) {
-									if ( ! empty( $existing_rule['enabled'] ) && $this->rule_source_matches_path( $existing_rule, (string) $item['path'] ) ) {
-										$already_covered = true;
-										break;
-									}
-								}
+								$already_covered = $this->is_path_covered( $rules, (string) $item['path'] );
 								?>
 							<tr>
 								<td class="tsosk-404-col-select" data-label="<?php esc_attr_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-									<input type="checkbox" class="tsosk-404-select" value="1" data-source="<?php echo esc_attr( $item['path'] ); ?>" aria-label="<?php echo esc_attr( $item['path'] ); ?>">
+									<input type="checkbox" class="tsosk-404-select" value="1" data-source="<?php echo esc_attr( $item['path'] ); ?>"<?php if ( $already_covered ) : ?> data-covered="1"<?php endif; ?> aria-label="<?php echo esc_attr( $item['path'] ); ?>">
 								</td>
 								<td class="tsosk-code tsosk-redirect-url-col" data-label="<?php esc_attr_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<?php echo wp_kses_post( $this->render_rule_url_cell( (string) $item['path'], $path_url ) ); ?>

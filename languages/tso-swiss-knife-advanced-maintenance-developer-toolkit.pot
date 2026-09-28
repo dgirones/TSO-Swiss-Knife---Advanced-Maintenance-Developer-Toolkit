@@ -12796,3 +12796,104 @@ msgid "%d entry removed."
 msgid_plural "%d entries removed."
 msgstr[0] ""
 msgstr[1] ""
+
+#. translators: 1: number of rules created, 2: HTTP status code
+#, php-format
+msgid "Bulk redirect rules created from the 404 monitor: %1$d (%2$d)."
+msgstr ""
+
+#. translators: 1: number of rules created, 2: number of URLs skipped because a rule already covers them, 3: number of URLs that could not be processed
+#, php-format
+msgid "Created %1$d rule(s). Skipped %2$d already covered. Failed: %3$d."
+msgstr ""
+
+#. translators: %s: URL prefix such as /en/
+#, php-format
+msgid "410 rule created for everything under %s."
+msgstr ""
+
+msgid "Invalid prefix."
+msgstr ""
+
+msgid "A page with this slug exists, so a 410 for the whole prefix could hide real content."
+msgstr ""
+
+msgid "Skip this one"
+msgstr ""
+
+msgid "Cancel queue"
+msgstr ""
+
+msgid "Mark selected as 410 (Gone)"
+msgstr ""
+
+msgid "Redirect selected to this target (301)"
+msgstr ""
+
+msgid "Suggested patterns"
+msgstr ""
+
+msgid "Missing URLs that share the same first path segment. One rule can answer 410 (Gone) for the whole prefix, so you do not need to add them one by one."
+msgstr ""
+
+msgid "Prefix"
+msgstr ""
+
+msgid "Missing URLs"
+msgstr ""
+
+msgid "Examples"
+msgstr ""
+
+msgid "Create 410 rule"
+msgstr ""
+
+msgid "Prefill form"
+msgstr ""
+
+msgid "All selected URLs are already covered by an existing rule."
+msgstr ""
+
+#. translators: %1$d: number of selected 404 URLs left out because a rule already covers them.
+#, php-format
+msgid "%1$d already covered URL(s) left out."
+msgstr ""
+
+#. translators: %1$d: number of 404 paths still waiting in the redirect queue.
+#, php-format
+msgid "Skipped. %1$d path(s) remaining in the queue."
+msgstr ""
+
+msgid "Queue finished."
+msgstr ""
+
+msgid "Queue cancelled."
+msgstr ""
+
+#. translators: 1: source path that was skipped, 2: number of paths still waiting in the queue.
+#, php-format
+msgid "%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue."
+msgstr ""
+
+#. translators: %1$s: source path that was skipped.
+#, php-format
+msgid "%1$s already had a redirect — skipped. Queue finished."
+msgstr ""
+
+#. translators: %1$d: number of selected 404 URLs.
+#, php-format
+msgid "Create a 410 (Gone) rule for each of the %1$d selected URL(s)?"
+msgstr ""
+
+#. translators: %1$d: number of selected 404 URLs.
+#, php-format
+msgid "Create a 301 redirect to the target for each of the %1$d selected URL(s)?"
+msgstr ""
+
+msgid "Enter a target URL or path first."
+msgstr ""
+
+#. translators: %1$s: URL prefix such as /en/
+#, php-format
+msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
+msgstr ""
