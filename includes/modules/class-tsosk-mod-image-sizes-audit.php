@@ -43,6 +43,36 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	 */
 	public function init(): void {
 		add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_disabled_image_sizes' ), 99 );
+
+		// Any change to the media library (from any plugin or screen) makes the cached audit stale.
+		add_action( 'add_attachment', array( $this, 'invalidate_cached_audit' ) );
+		add_action( 'delete_attachment', array( $this, 'invalidate_cached_audit' ) );
+		add_filter( 'wp_update_attachment_metadata', array( $this, 'invalidate_cached_audit_on_metadata' ), 99 );
+	}
+
+	/**
+	 * Drop the cached image sizes audit so the next visit does not show outdated counts.
+	 *
+	 * Runs at most once per request, even during bulk uploads, deletions or thumbnail regeneration.
+	 */
+	public function invalidate_cached_audit(): void {
+		static $done = false;
+		if ( $done ) {
+			return;
+		}
+		$done = true;
+		delete_transient( TSOSK_Uploads_Scanner::TRANSIENT_SIZES );
+	}
+
+	/**
+	 * Filter callback: invalidate the cached audit when attachment metadata changes.
+	 *
+	 * @param mixed $data Attachment metadata (returned unchanged).
+	 * @return mixed
+	 */
+	public function invalidate_cached_audit_on_metadata( $data ) {
+		$this->invalidate_cached_audit();
+		return $data;
 	}
 
 	/**
