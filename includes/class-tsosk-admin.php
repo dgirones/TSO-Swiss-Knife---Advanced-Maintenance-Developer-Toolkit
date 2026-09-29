@@ -265,6 +265,12 @@ class TSOSK_Admin {
 					'media_quarantine_purge_confirm'   => __( 'Permanently delete this folder now? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_scan'     => __( 'Run image sizes audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'image_sizes_save'     => __( 'Save image size settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'image_sizes_quarantine'         => __( 'Move files for selected sizes to quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'image_sizes_quarantine_none'    => __( 'Select at least one size first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %1$d: number of selected image sizes. */
+					'image_sizes_quarantine_confirm' => __( 'Move the existing files for %1$d selected image size(s) to quarantine? They will be kept for 30 days and can be restored, or deleted permanently at any time. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'image_sizes_quarantine_restore_confirm' => __( 'Restore these quarantined files to their original locations?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'image_sizes_quarantine_purge_confirm'   => __( 'Permanently delete these quarantined files now? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'send_test'       => __( 'Send Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'email_copied'    => __( 'Report copied to clipboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'copied'          => __( 'Copied to clipboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

@@ -687,8 +687,6 @@ msgstr "Entrada"
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:168
 #: includes/modules/class-tsosk-mod-history.php:43
 #: includes/modules/class-tsosk-mod-history.php:55
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:73
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:97
 #: includes/modules/class-tsosk-mod-login-protect.php:785
 #: includes/modules/class-tsosk-mod-login-protect.php:884
 #: includes/modules/class-tsosk-mod-login-protect.php:945
@@ -757,6 +755,11 @@ msgstr "Entrada"
 #: includes/modules/class-tsosk-mod-users.php:318
 #: includes/modules/class-tsosk-mod-users.php:391
 #: includes/modules/class-tsosk-mod-users.php:422
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:76
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:100
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:149
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:229
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:285
 msgid "Insufficient permissions."
 msgstr "Permisos insuficients."
 
@@ -2255,6 +2258,8 @@ msgstr "(buit)"
 #: includes/modules/class-tsosk-mod-redirects.php:407
 #: includes/modules/class-tsosk-mod-transients.php:305
 #: includes/modules/class-tsosk-mod-users.php:527
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:767
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:783
 msgid "Action"
 msgstr "Acció"
 
@@ -2454,6 +2459,8 @@ msgstr "Mostrar valor en brut"
 #: includes/modules/class-tsosk-mod-runtime-stack.php:500
 #: includes/modules/class-tsosk-mod-server-files.php:800
 #: includes/modules/class-tsosk-mod-transients.php:302
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:764
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:780
 msgid "Size"
 msgstr "Mida"
 
@@ -2515,8 +2522,9 @@ msgstr "Valor"
 msgid "JSON — must remain valid JSON after editing."
 msgstr "JSON — ha de mantenir un JSON vàlid després d'editar."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:301
 #: includes/modules/class-tsosk-mod-options-editor.php:969
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:513
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:575
 msgid "no"
 msgstr "no"
 
@@ -2532,8 +2540,9 @@ msgstr "de"
 msgid "options"
 msgstr "opcions"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:301
 #: includes/modules/class-tsosk-mod-options-editor.php:968
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:513
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:575
 msgid "yes"
 msgstr "sí"
 
@@ -4518,9 +4527,10 @@ msgstr ""
 msgid "Message"
 msgstr "Missatge"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:263
 #: includes/modules/class-tsosk-mod-internals.php:67
 #: includes/modules/class-tsosk-mod-runtime-stack.php:498
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:475
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:675
 msgid "Name"
 msgstr "Nom"
 
@@ -7304,21 +7314,21 @@ msgstr "Purgar"
 msgid "%1$s → %2$s"
 msgstr "%1$s → %2$s"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:262
 #: includes/modules/class-tsosk-mod-runtime-stack.php:340
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:474
 msgid "On"
 msgstr "Actiu"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:290
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:502
 msgid "core"
 msgstr "nucli"
 
 #: includes/class-tsosk-admin.php:260
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:331
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:599
 msgid "Save image size settings"
 msgstr "Desar ajustos de mides d'imatge"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:119
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:131
 msgid "Image size settings saved. New uploads will skip disabled sizes."
 msgstr ""
 "S'han desat els paràmetres de mides. Les noves pujades ometran les mides "
@@ -8494,8 +8504,8 @@ msgstr "Obrir Netejador de mitjans"
 msgid "Open Image Sizes Audit"
 msgstr "Obrir Auditoria de mides d'imatge"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:148
 #: includes/modules/class-tsosk-mod-media-cleaner.php:184
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:349
 msgid "Open Uploads Disk Footprint"
 msgstr "Obrir Petjada de disc d'uploads"
 
@@ -8575,15 +8585,15 @@ msgstr "Petjada de disc d'uploads"
 msgid "Image Sizes Audit"
 msgstr "Auditoria de mides d'imatge"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:85
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:88
 msgid "Image sizes audit completed."
 msgstr "Auditoria de mides d'imatge completada."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:116
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:128
 msgid "Image size generation settings saved."
 msgstr "S'han desat els paràmetres de generació de mides d'imatge."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:134
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:335
 msgid ""
 "Audit how much disk space each registered image size uses, estimate "
 "recoverable space from thumbnails, and disable sizes you do not need on new "
@@ -8594,11 +8604,11 @@ msgstr ""
 "pujades."
 
 #: includes/class-tsosk-admin.php:259
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:139
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:340
 msgid "Run image sizes audit"
 msgstr "Executar auditoria de mides d'imatge"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:144
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:345
 msgid ""
 "Counts are based on attachment metadata and a disk scan for unmatched "
 "derivative files. Disabling a size only affects new uploads — existing files"
@@ -8608,7 +8618,7 @@ msgstr ""
 "coincidents. Desactivar una mida només afecta noves pujades — no s'esborren "
 "fitxers existents."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:255
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:467
 msgid ""
 "Risks when disabling sizes: broken images in old content, missing srcset "
 "variants, and layout issues in themes or page builders that expect specific "
@@ -8618,70 +8628,73 @@ msgstr ""
 "srcset absents i problemes de disseny en temes o page builders que esperen "
 "dimensions concretes. Prova primer en staging."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:176
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:382
 msgid "Run the audit to see file counts and disk usage per size."
 msgstr ""
 "Executa l'auditoria per veure recomptes de fitxers i ús de disc per mida."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:197
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:404
 msgid "Audit summary"
 msgstr "Resum de l'auditoria"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:201
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:408
 msgid "Attachments with metadata"
 msgstr "Adjunts amb metadades"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:205
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:412
 msgid "Full-size files on disk"
 msgstr "Fitxers a mida completa al disc"
 
 #. translators: 1: file count, 2: formatted size
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:210
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:223
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:417
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:430
 #, php-format
 msgid "%1$s files — %2$s"
 msgstr "%1$s fitxers — %2$s"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:218
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:425
 msgid "Unmatched derivatives"
 msgstr "Derivats no coincidents"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:232
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
 msgid "Last audit"
 msgstr "Darrera auditoria"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:257
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:469
 msgid "Registered image sizes"
 msgstr "Mides d'imatge registrades"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:264
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:476
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:676
 msgid "Dimensions"
 msgstr "Mides"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:266
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:478
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:678
 msgid "Disk usage"
 msgstr "Ús de disc"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:267
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:479
 msgid "If disabled (new uploads)"
 msgstr "Si es desactiva (noves pujades)"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:310
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:522
 msgid "Always generated"
 msgstr "Sempre es generen"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:312
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:524
 msgid "Skipped on new uploads"
 msgstr "Omeses en noves pujades"
 
 #. translators: %s: formatted disk size
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:317
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:529
 #, php-format
 msgid "Could save ~%s on future uploads"
 msgstr "Podria estalviar ~%s en futures pujades"
 
 #. translators: 1: width, 2: height, 3: crop yes/no
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:298
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:510
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:572
 #, php-format
 msgid "%1$d × %2$d — crop: %3$s"
 msgstr "%1$d × %2$d — retall: %3$s"
@@ -9963,9 +9976,12 @@ msgstr ""
 "carreguen abans dels plugins. Els filtres en temps d’execució s’apliquen a "
 "la pàgina següent sense editar wp-config.php."
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:265
 #: includes/modules/class-tsosk-mod-media-footprint.php:174
 #: includes/modules/class-tsosk-mod-media-footprint.php:200
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:477
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:677
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:763
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:779
 msgid "Files"
 msgstr "Fitxers"
 
@@ -11636,6 +11652,8 @@ msgid "Could not open export stream."
 msgstr "No s’ha pogut obrir el flux d’exportació."
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1397
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:234
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:290
 msgid "Invalid entry."
 msgstr "Entrada no vàlida."
 
@@ -14157,6 +14175,7 @@ msgid "Download backup (JSON)"
 msgstr "Descarregar còpia de seguretat (JSON)"
 
 #: includes/class-tsosk-activity-log.php
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:787
 msgid "Restore"
 msgstr "Restaurar"
 
@@ -14515,18 +14534,24 @@ msgstr ""
 msgid "Move to quarantine"
 msgstr "Mou a la quarantena"
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:746
 msgid "Quarantine is empty."
 msgstr "La quarantena està buida."
 
 msgid "Folder"
 msgstr "Carpeta"
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:765
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:781
 msgid "Quarantined"
 msgstr "En quarantena"
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:766
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:782
 msgid "Auto-deletes on"
 msgstr "S'elimina automàticament el"
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:793
 msgid "Delete now"
 msgstr "Elimina ara"
 
@@ -14856,10 +14881,13 @@ msgstr[1] "%d entrades eliminades."
 msgid "Bulk redirect rules created from the 404 monitor: %1$d (%2$d)."
 msgstr "Regles creades en bloc des del monitor 404: %1$d (%2$d)."
 
-#. translators: 1: number of rules created, 2: number of URLs skipped because a rule already covers them, 3: number of URLs that could not be processed
+#. translators: 1: number of rules created, 2: number of URLs skipped because
+#. a rule already covers them, 3: number of URLs that could not be processed
 #, php-format
 msgid "Created %1$d rule(s). Skipped %2$d already covered. Failed: %3$d."
-msgstr "S'han creat %1$d regla(es). Se n'han saltat %2$d perquè ja estaven cobertes. Errors: %3$d."
+msgstr ""
+"S'han creat %1$d regla(es). Se n'han saltat %2$d perquè ja estaven cobertes."
+" Errors: %3$d."
 
 #. translators: %s: URL prefix such as /en/
 #, php-format
@@ -14869,8 +14897,12 @@ msgstr "Regla 410 creada per a tot el que penja de %s."
 msgid "Invalid prefix."
 msgstr "Prefix no vàlid."
 
-msgid "A page with this slug exists, so a 410 for the whole prefix could hide real content."
-msgstr "Hi ha una pàgina amb aquest slug; un 410 per a tot el prefix podria amagar contingut real."
+msgid ""
+"A page with this slug exists, so a 410 for the whole prefix could hide real "
+"content."
+msgstr ""
+"Hi ha una pàgina amb aquest slug; un 410 per a tot el prefix podria amagar "
+"contingut real."
 
 msgid "Skip this one"
 msgstr "Saltar aquesta"
@@ -14887,8 +14919,13 @@ msgstr "Redirigir seleccionades a aquest destí (301)"
 msgid "Suggested patterns"
 msgstr "Patrons suggerits"
 
-msgid "Missing URLs that share the same first path segment. One rule can answer 410 (Gone) for the whole prefix, so you do not need to add them one by one."
-msgstr "URLs inexistents que comparteixen el mateix primer segment de ruta. Una sola regla pot respondre 410 (Gone) per a tot el prefix, sense haver d'afegir-les una a una."
+msgid ""
+"Missing URLs that share the same first path segment. One rule can answer 410"
+" (Gone) for the whole prefix, so you do not need to add them one by one."
+msgstr ""
+"URLs inexistents que comparteixen el mateix primer segment de ruta. Una sola"
+" regla pot respondre 410 (Gone) per a tot el prefix, sense haver d'afegir-"
+"les una a una."
 
 msgid "Prefix"
 msgstr "Prefix"
@@ -14906,9 +14943,11 @@ msgid "Prefill form"
 msgstr "Emplenar formulari"
 
 msgid "All selected URLs are already covered by an existing rule."
-msgstr "Totes les URLs seleccionades ja estan cobertes per una regla existent."
+msgstr ""
+"Totes les URLs seleccionades ja estan cobertes per una regla existent."
 
-#. translators: %1$d: number of selected 404 URLs left out because a rule already covers them.
+#. translators: %1$d: number of selected 404 URLs left out because a rule
+#. already covers them.
 #, php-format
 msgid "%1$d already covered URL(s) left out."
 msgstr "S'han deixat fora %1$d URL(s) ja coberta(es)."
@@ -14924,10 +14963,13 @@ msgstr "Cua acabada."
 msgid "Queue cancelled."
 msgstr "Cua cancel·lada."
 
-#. translators: 1: source path that was skipped, 2: number of paths still waiting in the queue.
+#. translators: 1: source path that was skipped, 2: number of paths still
+#. waiting in the queue.
 #, php-format
-msgid "%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue."
-msgstr "%1$s ja tenia una redirecció — saltada. Queden %2$d ruta(es) a la cua."
+msgid ""
+"%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue."
+msgstr ""
+"%1$s ja tenia una redirecció — saltada. Queden %2$d ruta(es) a la cua."
 
 #. translators: %1$s: source path that was skipped.
 #, php-format
@@ -14937,12 +14979,17 @@ msgstr "%1$s ja tenia una redirecció — saltada. Cua acabada."
 #. translators: %1$d: number of selected 404 URLs.
 #, php-format
 msgid "Create a 410 (Gone) rule for each of the %1$d selected URL(s)?"
-msgstr "Crear una regla 410 (Gone) per a cadascuna de les %1$d URL(s) seleccionada(es)?"
+msgstr ""
+"Crear una regla 410 (Gone) per a cadascuna de les %1$d URL(s) "
+"seleccionada(es)?"
 
 #. translators: %1$d: number of selected 404 URLs.
 #, php-format
-msgid "Create a 301 redirect to the target for each of the %1$d selected URL(s)?"
-msgstr "Crear una redirecció 301 al destí per a cadascuna de les %1$d URL(s) seleccionada(es)?"
+msgid ""
+"Create a 301 redirect to the target for each of the %1$d selected URL(s)?"
+msgstr ""
+"Crear una redirecció 301 al destí per a cadascuna de les %1$d URL(s) "
+"seleccionada(es)?"
 
 msgid "Enter a target URL or path first."
 msgstr "Introdueix primer una URL o ruta de destí."
@@ -14950,7 +14997,9 @@ msgstr "Introdueix primer una URL o ruta de destí."
 #. translators: %1$s: URL prefix such as /en/
 #, php-format
 msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
-msgstr "Crear una sola regla que respongui 410 (Gone) per a tot el que penja de %1$s?"
+msgstr ""
+"Crear una sola regla que respongui 410 (Gone) per a tot el que penja de "
+"%1$s?"
 
 msgid "No redirects selected."
 msgstr "No hi ha cap redirecció seleccionada."
@@ -14961,7 +15010,9 @@ msgstr "Selecciona almenys una regla de redirecció."
 #. translators: %1$d: number of selected redirect rules.
 #, php-format
 msgid "Delete the %1$d selected redirect rule(s)? This cannot be undone."
-msgstr "Eliminar les %1$d regla(es) de redirecció seleccionada(es)? No es pot desfer."
+msgstr ""
+"Eliminar les %1$d regla(es) de redirecció seleccionada(es)? No es pot "
+"desfer."
 
 #. translators: %d: number of deleted redirect rules
 #, php-format
@@ -14970,8 +15021,14 @@ msgid_plural "%d redirects deleted."
 msgstr[0] "%d redirecció eliminada."
 msgstr[1] "%d redireccions eliminades."
 
-msgid "Rules are checked from top to bottom and the first match wins. Use the arrows to change the order; they are available while the list is unfiltered and in evaluation order."
-msgstr "Les regles es comproven de dalt a baix i guanya la primera que coincideix. Fes servir les fletxes per canviar l'ordre; només estan disponibles mentre la llista no està filtrada i està en ordre d'avaluació."
+msgid ""
+"Rules are checked from top to bottom and the first match wins. Use the "
+"arrows to change the order; they are available while the list is unfiltered "
+"and in evaluation order."
+msgstr ""
+"Les regles es comproven de dalt a baix i guanya la primera que coincideix. "
+"Fes servir les fletxes per canviar l'ordre; només estan disponibles mentre "
+"la llista no està filtrada i està en ordre d'avaluació."
 
 msgid "Search source or target…"
 msgstr "Cerca per origen o destí…"
@@ -15042,8 +15099,15 @@ msgstr "Cap regla coincideix amb els filtres."
 msgid "Export / import (CSV)"
 msgstr "Exportar / importar (CSV)"
 
-msgid "Export downloads every rule as CSV (source, match_type, target, status, enabled). To import, paste rows below or load a file; rules whose source already exists are skipped and new ones are added at the end."
-msgstr "L'exportació descarrega totes les regles en CSV (source, match_type, target, status, enabled). Per importar, enganxa les files a sota o carrega un fitxer; les regles amb un origen que ja existeix se salten i les noves s'afegeixen al final."
+msgid ""
+"Export downloads every rule as CSV (source, match_type, target, status, "
+"enabled). To import, paste rows below or load a file; rules whose source "
+"already exists are skipped and new ones are added at the end."
+msgstr ""
+"L'exportació descarrega totes les regles en CSV (source, match_type, target,"
+" status, enabled). Per importar, enganxa les files a sota o carrega un "
+"fitxer; les regles amb un origen que ja existeix se salten i les noves "
+"s'afegeixen al final."
 
 msgid "CSV rows to import"
 msgstr "Files CSV a importar"
@@ -15068,20 +15132,26 @@ msgstr "No hi ha res per importar."
 msgid "Redirect rules imported from CSV: %d."
 msgstr "Regles de redirecció importades des de CSV: %d."
 
-#. translators: 1: number of rules imported, 2: number of rows skipped because the source already exists, 3: number of rows that were invalid
+#. translators: 1: number of rules imported, 2: number of rows skipped because
+#. the source already exists, 3: number of rows that were invalid
 #, php-format
 msgid "Imported %1$d rule(s). Skipped %2$d duplicates. Failed: %3$d."
-msgstr "S'han importat %1$d regla(es). Se n'han saltat %2$d duplicades. Errors: %3$d."
+msgstr ""
+"S'han importat %1$d regla(es). Se n'han saltat %2$d duplicades. Errors: "
+"%3$d."
 
 #. translators: 1: number of rules shown, 2: total number of rules.
 #, php-format
 msgid "Showing %1$d of %2$d rules."
 msgstr "Mostrant %1$d de %2$d regles."
 
-#. translators: 1: number of unused rules selected, 2: number of months without visits.
+#. translators: 1: number of unused rules selected, 2: number of months
+#. without visits.
 #, php-format
 msgid "%1$d unused rule(s) selected (no visits in the last %2$d month(s))."
-msgstr "S'han seleccionat %1$d regla(es) sense ús (sense visites en els últims %2$d mes(os))."
+msgstr ""
+"S'han seleccionat %1$d regla(es) sense ús (sense visites en els últims %2$d "
+"mes(os))."
 
 msgid "No unused rules found."
 msgstr "No s'ha trobat cap regla sense ús."
@@ -15102,25 +15172,69 @@ msgstr[1] "%d redireccions actualitzades."
 msgid "How to read this table"
 msgstr "Com llegir aquesta taula"
 
-msgid "Audit and fix post slugs across all public post types. Renaming a slug changes its URL, so a 301 redirect from the old address (and from child pages) is created to keep links and rankings. Rename only when the new slug is clearly better."
-msgstr "Audita i corregeix els slugs de tots els tipus de contingut públics. Renomenar un slug canvia la seva URL, per això es crea una redirecció 301 des de l'adreça antiga (i des de les pàgines filles) per mantenir enllaços i posicionament. Renomena només quan el nou slug sigui clarament millor."
+msgid ""
+"Audit and fix post slugs across all public post types. Renaming a slug "
+"changes its URL, so a 301 redirect from the old address (and from child "
+"pages) is created to keep links and rankings. Rename only when the new slug "
+"is clearly better."
+msgstr ""
+"Audita i corregeix els slugs de tots els tipus de contingut públics. "
+"Renomenar un slug canvia la seva URL, per això es crea una redirecció 301 "
+"des de l'adreça antiga (i des de les pàgines filles) per mantenir enllaços i"
+" posicionament. Renomena només quan el nou slug sigui clarament millor."
 
 #. translators: %d: threshold
 #, php-format
-msgid "Posts and pages whose slug exceeds %d characters. Google does not use URL length as a ranking factor, so this is about readability and sharing; the default of 75 is a guideline, not a Google rule. Shorten a slug when it is clearly better (new or low-traffic content) and leave well-ranked URLs alone: every rename needs a redirect and search engines have to reprocess the URL. Bulk Fix truncates at the last word boundary and creates 301 redirects."
-msgstr "Entrades i pàgines amb un slug de més de %d caràcters. Google no fa servir la longitud de la URL com a factor de posicionament, així que això va de llegibilitat i de compartir; els 75 per defecte són una guia, no una regla de Google. Escurça un slug quan sigui clarament millor (contingut nou o amb poc trànsit) i deixa estar les URLs ben posicionades: cada canvi necessita una redirecció i els cercadors han de tornar a processar la URL. L'arranjament en bloc talla a l'última paraula i crea redireccions 301."
+msgid ""
+"Posts and pages whose slug exceeds %d characters. Google does not use URL "
+"length as a ranking factor, so this is about readability and sharing; the "
+"default of 75 is a guideline, not a Google rule. Shorten a slug when it is "
+"clearly better (new or low-traffic content) and leave well-ranked URLs "
+"alone: every rename needs a redirect and search engines have to reprocess "
+"the URL. Bulk Fix truncates at the last word boundary and creates 301 "
+"redirects."
+msgstr ""
+"Entrades i pàgines amb un slug de més de %d caràcters. Google no fa servir "
+"la longitud de la URL com a factor de posicionament, així que això va de "
+"llegibilitat i de compartir; els 75 per defecte són una guia, no una regla "
+"de Google. Escurça un slug quan sigui clarament millor (contingut nou o amb "
+"poc trànsit) i deixa estar les URLs ben posicionades: cada canvi necessita "
+"una redirecció i els cercadors han de tornar a processar la URL. "
+"L'arranjament en bloc talla a l'última paraula i crea redireccions 301."
 
-msgid "Posts that share the same slug within the same post type (pages only clash under the same parent), and posts that share a slug with a top-level page when permalinks start with the post name, where only one of them can load. WordPress normally prevents this: it usually comes from imports, direct database edits or plugins."
-msgstr "Entrades que comparteixen el mateix slug dins del mateix tipus (les pàgines només xoquen sota el mateix pare) i entrades que comparteixen slug amb una pàgina de primer nivell quan els enllaços permanents comencen pel nom de l'entrada, on només una de les dues pot carregar. WordPress normalment ho evita: sol venir d'importacions, edicions directes a la base de dades o connectors."
+msgid ""
+"Posts that share the same slug within the same post type (pages only clash "
+"under the same parent), and posts that share a slug with a top-level page "
+"when permalinks start with the post name, where only one of them can load. "
+"WordPress normally prevents this: it usually comes from imports, direct "
+"database edits or plugins."
+msgstr ""
+"Entrades que comparteixen el mateix slug dins del mateix tipus (les pàgines "
+"només xoquen sota el mateix pare) i entrades que comparteixen slug amb una "
+"pàgina de primer nivell quan els enllaços permanents comencen pel nom de "
+"l'entrada, on només una de les dues pot carregar. WordPress normalment ho "
+"evita: sol venir d'importacions, edicions directes a la base de dades o "
+"connectors."
 
-msgid "Slugs with uppercase letters, underscores or encoded characters. Paths are case-sensitive, so uppercase can create duplicate URLs, and Google recommends hyphens over underscores. Encoded characters (accents, non-Latin scripts) are valid for Google; change them only if you prefer readable, transliterated slugs."
-msgstr "Slugs amb majúscules, guions baixos o caràcters codificats. Les rutes distingeixen majúscules i minúscules, així que les majúscules poden crear URLs duplicades, i Google recomana guions en lloc de guions baixos. Els caràcters codificats (accents, alfabets no llatins) són vàlids per a Google; canvia'ls només si prefereixes slugs llegibles i transliterats."
+msgid ""
+"Slugs with uppercase letters, underscores or encoded characters. Paths are "
+"case-sensitive, so uppercase can create duplicate URLs, and Google "
+"recommends hyphens over underscores. Encoded characters (accents, non-Latin "
+"scripts) are valid for Google; change them only if you prefer readable, "
+"transliterated slugs."
+msgstr ""
+"Slugs amb majúscules, guions baixos o caràcters codificats. Les rutes "
+"distingeixen majúscules i minúscules, així que les majúscules poden crear "
+"URLs duplicades, i Google recomana guions en lloc de guions baixos. Els "
+"caràcters codificats (accents, alfabets no llatins) són vàlids per a Google;"
+" canvia'ls només si prefereixes slugs llegibles i transliterats."
 
 msgid "Same slug in the same post type"
 msgstr "Mateix slug dins del mateix tipus"
 
 msgid "Same URL as a post/page: only one of them can load"
-msgstr "Mateixa URL que una entrada/pàgina: només una de les dues pot carregar"
+msgstr ""
+"Mateixa URL que una entrada/pàgina: només una de les dues pot carregar"
 
 msgid "Uppercase letters"
 msgstr "Lletres majúscules"
@@ -15136,23 +15250,31 @@ msgstr "Altres caràcters"
 
 #. translators: %d: maximum number of rows shown
 #, php-format
-msgid "Showing the first %d results only. Fix these and reload to see the rest."
-msgstr "Es mostren només els primers %d resultats. Arregla'ls i recarrega per veure la resta."
+msgid ""
+"Showing the first %d results only. Fix these and reload to see the rest."
+msgstr ""
+"Es mostren només els primers %d resultats. Arregla'ls i recarrega per veure "
+"la resta."
 
 msgid "This content type cannot be edited here."
 msgstr "Aquest tipus de contingut no es pot editar aquí."
 
 #. translators: 1: slug, 2: content type that already uses it (post or page)
 #, php-format
-msgid "The URL /%1$s/ is already used by a %2$s, so only one of them could load. Choose a different slug."
-msgstr "La URL /%1$s/ ja la fa servir una %2$s, així que només una de les dues podria carregar. Tria un altre slug."
+msgid ""
+"The URL /%1$s/ is already used by a %2$s, so only one of them could load. "
+"Choose a different slug."
+msgstr ""
+"La URL /%1$s/ ja la fa servir una %2$s, així que només una de les dues "
+"podria carregar. Tria un altre slug."
 
 #. translators: %s: slug WordPress actually saved
 #, php-format
 msgid "WordPress adjusted the slug to \"%s\" to keep it unique."
 msgstr "WordPress ha ajustat el slug a «%s» perquè sigui únic."
 
-#. translators: 1: redirects created or updated, 2: redirects that already existed
+#. translators: 1: redirects created or updated, 2: redirects that already
+#. existed
 #, php-format
 msgid "301 redirects: %1$d created or updated, %2$d already existed."
 msgstr "Redireccions 301: %1$d creades o actualitzades, %2$d ja existien."
@@ -15160,7 +15282,9 @@ msgstr "Redireccions 301: %1$d creades o actualitzades, %2$d ja existien."
 #. translators: %d: number of earlier redirects repointed
 #, php-format
 msgid "%d earlier redirect(s) were repointed to avoid redirect chains."
-msgstr "S'han redirigit %d redirecció(ns) anterior(s) directament al destí final per evitar cadenes."
+msgstr ""
+"S'han redirigit %d redirecció(ns) anterior(s) directament al destí final per"
+" evitar cadenes."
 
 msgid "This item is not an editable public post."
 msgstr "Aquest element no és una entrada pública editable."
@@ -15168,11 +15292,18 @@ msgstr "Aquest element no és una entrada pública editable."
 msgid "No free slug was found within the limit."
 msgstr "No s'ha trobat cap slug lliure dins del límit."
 
-msgid "Slug updated. No redirect was needed because the post is not published."
-msgstr "Slug actualitzat. No calia cap redirecció perquè l'entrada no està publicada."
+msgid ""
+"Slug updated. No redirect was needed because the post is not published."
+msgstr ""
+"Slug actualitzat. No calia cap redirecció perquè l'entrada no està "
+"publicada."
 
-msgid "Slug updated, but no redirect was created because the Redirects module is not active."
-msgstr "Slug actualitzat, però no s'ha creat cap redirecció perquè el mòdul de Redireccions no està actiu."
+msgid ""
+"Slug updated, but no redirect was created because the Redirects module is "
+"not active."
+msgstr ""
+"Slug actualitzat, però no s'ha creat cap redirecció perquè el mòdul de "
+"Redireccions no està actiu."
 
 msgid "Slug updated. A 301 redirect for the old URL already existed."
 msgstr "Slug actualitzat. Ja existia una redirecció 301 per a la URL antiga."
@@ -15180,7 +15311,8 @@ msgstr "Slug actualitzat. Ja existia una redirecció 301 per a la URL antiga."
 msgid "Slug updated, but no redirect was created."
 msgstr "Slug actualitzat, però no s'ha creat cap redirecció."
 
-#. translators: %d: number of redirects removed because they pointed away from the now live URL
+#. translators: %d: number of redirects removed because they pointed away from
+#. the now live URL
 #, php-format
 msgid "%d old redirect(s) for the new URL were removed."
 msgstr "S'han eliminat %d redirecció(ns) antiga(es) de la URL nova."
@@ -15203,14 +15335,31 @@ msgstr "Aquest element no és un adjunt de la Mediateca."
 msgid "Full media review completed."
 msgstr "Revisió completa de la mediateca acabada."
 
-msgid "Some folders could not be read, so the list may be incomplete (see the notice below)."
-msgstr "Algunes carpetes no s'han pogut llegir, així que la llista pot ser incompleta (mira l'avís de sota)."
+msgid ""
+"Some folders could not be read, so the list may be incomplete (see the "
+"notice below)."
+msgstr ""
+"Algunes carpetes no s'han pogut llegir, així que la llista pot ser "
+"incompleta (mira l'avís de sota)."
 
-msgid "Finds Media Library items whose file is missing, empty or stored with a wrong path, media not attached to any post, and files in wp-content/uploads that no Media Library item references. It only reports: nothing is deleted or moved from this screen."
-msgstr "Troba elements de la Mediateca amb el fitxer absent, buit o amb un camí incorrecte, media no adjuntat a cap entrada i fitxers de wp-content/uploads que cap element de la Mediateca referencia. Només informa: des d'aquesta pantalla no s'esborra ni es mou res."
+msgid ""
+"Finds Media Library items whose file is missing, empty or stored with a "
+"wrong path, media not attached to any post, and files in wp-content/uploads "
+"that no Media Library item references. It only reports: nothing is deleted "
+"or moved from this screen."
+msgstr ""
+"Troba elements de la Mediateca amb el fitxer absent, buit o amb un camí "
+"incorrecte, media no adjuntat a cap entrada i fitxers de wp-content/uploads "
+"que cap element de la Mediateca referencia. Només informa: des d'aquesta "
+"pantalla no s'esborra ni es mou res."
 
-msgid "No full review yet. It checks every Media Library item and every eligible file under wp-content/uploads/, in batches, until finished."
-msgstr "Encara no hi ha cap revisió completa. Revisa tots els elements de la Mediateca i tots els fitxers elegibles de wp-content/uploads/, per lots, fins acabar."
+msgid ""
+"No full review yet. It checks every Media Library item and every eligible "
+"file under wp-content/uploads/, in batches, until finished."
+msgstr ""
+"Encara no hi ha cap revisió completa. Revisa tots els elements de la "
+"Mediateca i tots els fitxers elegibles de wp-content/uploads/, per lots, "
+"fins acabar."
 
 msgid "A review was interrupted before it finished."
 msgstr "Una revisió es va interrompre abans d'acabar."
@@ -15218,8 +15367,15 @@ msgstr "Una revisió es va interrompre abans d'acabar."
 msgid "Resume"
 msgstr "Reprendre"
 
-msgid "Run a full media review to walk the whole uploads folder. Thumbnails, scaled or edited originals, PDF previews, WebP/AVIF copies and plugin folders are recognised and left out."
-msgstr "Executa una revisió completa per recórrer tota la carpeta d'uploads. Les miniatures, els originals escalats o editats, les previsualitzacions de PDF, les còpies WebP/AVIF i les carpetes de connectors es reconeixen i es deixen fora."
+msgid ""
+"Run a full media review to walk the whole uploads folder. Thumbnails, scaled"
+" or edited originals, PDF previews, WebP/AVIF copies and plugin folders are "
+"recognised and left out."
+msgstr ""
+"Executa una revisió completa per recórrer tota la carpeta d'uploads. Les "
+"miniatures, els originals escalats o editats, les previsualitzacions de PDF,"
+" les còpies WebP/AVIF i les carpetes de connectors es reconeixen i es deixen"
+" fora."
 
 msgid "Full URL stored"
 msgstr "URL completa desada"
@@ -15242,23 +15398,48 @@ msgstr "Mides absents"
 msgid "File missing"
 msgstr "Fitxer absent"
 
-msgid "A full URL was stored instead of a relative path, so WordPress cannot find the file. The file exists in uploads."
-msgstr "S'ha desat una URL completa en lloc d'un camí relatiu, així que WordPress no troba el fitxer. El fitxer existeix a uploads."
+msgid ""
+"A full URL was stored instead of a relative path, so WordPress cannot find "
+"the file. The file exists in uploads."
+msgstr ""
+"S'ha desat una URL completa en lloc d'un camí relatiu, així que WordPress no"
+" troba el fitxer. El fitxer existeix a uploads."
 
-msgid "A full URL was stored instead of a relative path, and the file was not found on disk."
-msgstr "S'ha desat una URL completa en lloc d'un camí relatiu, i el fitxer no s'ha trobat al disc."
+msgid ""
+"A full URL was stored instead of a relative path, and the file was not found"
+" on disk."
+msgstr ""
+"S'ha desat una URL completa en lloc d'un camí relatiu, i el fitxer no s'ha "
+"trobat al disc."
 
-msgid "The stored path is absolute and comes from another server. The file exists in the current uploads folder, so only the database path needs fixing."
-msgstr "El camí desat és absolut i ve d'un altre servidor. El fitxer existeix a la carpeta d'uploads actual, així que només cal arreglar el camí a la base de dades."
+msgid ""
+"The stored path is absolute and comes from another server. The file exists "
+"in the current uploads folder, so only the database path needs fixing."
+msgstr ""
+"El camí desat és absolut i ve d'un altre servidor. El fitxer existeix a la "
+"carpeta d'uploads actual, així que només cal arreglar el camí a la base de "
+"dades."
 
-msgid "The stored path is absolute and comes from another server, and the file was not found in the current uploads folder."
-msgstr "El camí desat és absolut i ve d'un altre servidor, i el fitxer no s'ha trobat a la carpeta d'uploads actual."
+msgid ""
+"The stored path is absolute and comes from another server, and the file was "
+"not found in the current uploads folder."
+msgstr ""
+"El camí desat és absolut i ve d'un altre servidor, i el fitxer no s'ha "
+"trobat a la carpeta d'uploads actual."
 
-msgid "The file exists but has 0 bytes, so it is corrupt or an interrupted upload."
-msgstr "El fitxer existeix però fa 0 bytes, així que està corrupte o és una pujada interrompuda."
+msgid ""
+"The file exists but has 0 bytes, so it is corrupt or an interrupted upload."
+msgstr ""
+"El fitxer existeix però fa 0 bytes, així que està corrupte o és una pujada "
+"interrompuda."
 
-msgid "The original file exists, but generated sizes listed in the database are gone, so some image variants return 404. Regenerating thumbnails fixes it."
-msgstr "El fitxer original existeix, però les mides generades que consten a la base de dades ja no hi són, així que algunes variants de la imatge donen 404. Regenerar les miniatures ho arregla."
+msgid ""
+"The original file exists, but generated sizes listed in the database are "
+"gone, so some image variants return 404. Regenerating thumbnails fixes it."
+msgstr ""
+"El fitxer original existeix, però les mides generades que consten a la base "
+"de dades ja no hi són, així que algunes variants de la imatge donen 404. "
+"Regenerar les miniatures ho arregla."
 
 msgid "Missing or broken items"
 msgstr "Elements absents o trencats"
@@ -15276,31 +15457,52 @@ msgid "Other unreferenced files"
 msgstr "Altres fitxers no referenciats"
 
 #, php-format
-msgid "%s item(s) live on remote storage (an offload plugin) and were not checked on disk."
-msgstr "%s element(s) són en un emmagatzematge remot (un connector d'offload) i no s'han comprovat al disc."
+msgid ""
+"%s item(s) live on remote storage (an offload plugin) and were not checked "
+"on disk."
+msgstr ""
+"%s element(s) són en un emmagatzematge remot (un connector d'offload) i no "
+"s'han comprovat al disc."
 
 #, php-format
 msgid "These folders could not be read, so their files were not checked: %s"
-msgstr "Aquestes carpetes no s'han pogut llegir, així que els seus fitxers no s'han revisat: %s"
+msgstr ""
+"Aquestes carpetes no s'han pogut llegir, així que els seus fitxers no s'han "
+"revisat: %s"
 
 #, php-format
 msgid "Plugin folders left out: %s."
 msgstr "Carpetes de connectors deixades fora: %s."
 
 #, php-format
-msgid "%s file(s) were recognised as sizes, previews or copies of a Media Library item."
-msgstr "%s fitxer(s) s'han reconegut com a mides, previsualitzacions o còpies d'un element de la Mediateca."
+msgid ""
+"%s file(s) were recognised as sizes, previews or copies of a Media Library "
+"item."
+msgstr ""
+"%s fitxer(s) s'han reconegut com a mides, previsualitzacions o còpies d'un "
+"element de la Mediateca."
 
 #, php-format
 msgid "%s symlinked folder(s) were not followed."
 msgstr "No s'han seguit %s carpeta(es) amb enllaç simbòlic."
 
-msgid "These are attachment records in the WordPress database. WordPress expects each one to point to a file under wp-content/uploads/. Red means the file cannot be served; amber means it works but some generated sizes are gone."
-msgstr "Són registres d'adjunts de la base de dades de WordPress. WordPress espera que cadascun apunti a un fitxer dins de wp-content/uploads/. Vermell vol dir que el fitxer no es pot servir; ambre vol dir que funciona però falten algunes mides generades."
+msgid ""
+"These are attachment records in the WordPress database. WordPress expects "
+"each one to point to a file under wp-content/uploads/. Red means the file "
+"cannot be served; amber means it works but some generated sizes are gone."
+msgstr ""
+"Són registres d'adjunts de la base de dades de WordPress. WordPress espera "
+"que cadascun apunti a un fitxer dins de wp-content/uploads/. Vermell vol dir"
+" que el fitxer no es pot servir; ambre vol dir que funciona però falten "
+"algunes mides generades."
 
 #, php-format
-msgid "Showing the first %1$s of %2$s. Fix these and run the review again to see the rest."
-msgstr "Es mostren els primers %1$s de %2$s. Arregla'ls i torna a executar la revisió per veure la resta."
+msgid ""
+"Showing the first %1$s of %2$s. Fix these and run the review again to see "
+"the rest."
+msgstr ""
+"Es mostren els primers %1$s de %2$s. Arregla'ls i torna a executar la "
+"revisió per veure la resta."
 
 msgid "In trash"
 msgstr "A la paperera"
@@ -15311,8 +15513,14 @@ msgstr "Absent al disc:"
 msgid "Media Library items sharing the same file"
 msgstr "Elements de la Mediateca que comparteixen el mateix fitxer"
 
-msgid "Several Media Library items point to one file. Deleting any of them from the Media Library deletes the file, and the others break. Keep one item per file before cleaning up."
-msgstr "Diversos elements de la Mediateca apunten a un mateix fitxer. Si n'esborres un de la Mediateca, s'esborra el fitxer i la resta es trenquen. Deixa un sol element per fitxer abans de netejar."
+msgid ""
+"Several Media Library items point to one file. Deleting any of them from the"
+" Media Library deletes the file, and the others break. Keep one item per "
+"file before cleaning up."
+msgstr ""
+"Diversos elements de la Mediateca apunten a un mateix fitxer. Si n'esborres "
+"un de la Mediateca, s'esborra el fitxer i la resta es trenquen. Deixa un sol"
+" element per fitxer abans de netejar."
 
 msgid "Stored file"
 msgstr "Fitxer desat"
@@ -15320,14 +15528,32 @@ msgstr "Fitxer desat"
 msgid "Items"
 msgstr "Elements"
 
-msgid "Images, documents, audio and video in uploads that no Media Library item points to. Check them before removing anything: some themes and page builders link to uploads directly."
-msgstr "Imatges, documents, àudio i vídeo d'uploads als quals no apunta cap element de la Mediateca. Revisa'ls abans d'esborrar res: alguns temes i maquetadors enllacen directament a uploads."
+msgid ""
+"Images, documents, audio and video in uploads that no Media Library item "
+"points to. Check them before removing anything: some themes and page "
+"builders link to uploads directly."
+msgstr ""
+"Imatges, documents, àudio i vídeo d'uploads als quals no apunta cap element "
+"de la Mediateca. Revisa'ls abans d'esborrar res: alguns temes i maquetadors "
+"enllacen directament a uploads."
 
-msgid "Files that are not media (text, code, archives…). Usually left by plugins or manual uploads."
-msgstr "Fitxers que no són multimèdia (text, codi, arxius…). Normalment els deixen connectors o pujades manuals."
+msgid ""
+"Files that are not media (text, code, archives…). Usually left by plugins or"
+" manual uploads."
+msgstr ""
+"Fitxers que no són multimèdia (text, codi, arxius…). Normalment els deixen "
+"connectors o pujades manuals."
 
-msgid "Full walk of wp-content/uploads. Sizes (-300x200), scaled or edited originals, PDF previews, WebP/AVIF copies, plugin folders and guard files are recognised and left out. Thumbnails whose original is gone are reported."
-msgstr "Recorregut complet de wp-content/uploads. Les mides (-300x200), els originals escalats o editats, les previsualitzacions de PDF, les còpies WebP/AVIF, les carpetes de connectors i els fitxers de protecció es reconeixen i es deixen fora. Es reporten les miniatures l'original de les quals ja no hi és."
+msgid ""
+"Full walk of wp-content/uploads. Sizes (-300x200), scaled or edited "
+"originals, PDF previews, WebP/AVIF copies, plugin folders and guard files "
+"are recognised and left out. Thumbnails whose original is gone are reported."
+msgstr ""
+"Recorregut complet de wp-content/uploads. Les mides (-300x200), els "
+"originals escalats o editats, les previsualitzacions de PDF, les còpies "
+"WebP/AVIF, les carpetes de connectors i els fitxers de protecció es "
+"reconeixen i es deixen fora. Es reporten les miniatures l'original de les "
+"quals ja no hi és."
 
 msgid "No unreferenced files found."
 msgstr "No s'ha trobat cap fitxer no referenciat."
@@ -15339,8 +15565,16 @@ msgstr "Es mostren els %1$s més grans de %2$s."
 msgid "Size without its original"
 msgstr "Mida sense el seu original"
 
-msgid "Media Library items with no parent post, or whose parent post was deleted. Unattached does not mean unused: featured images, widgets, page builders and custom fields often use media that is not attached. Regenerate thumbnails only applies to image attachments."
-msgstr "Elements de la Mediateca sense entrada pare, o amb l'entrada pare esborrada. No adjuntat no vol dir no utilitzat: les imatges destacades, els ginys, els maquetadors i els camps personalitzats sovint fan servir media no adjuntat. Regenerar miniatures només s'aplica a adjunts d'imatge."
+msgid ""
+"Media Library items with no parent post, or whose parent post was deleted. "
+"Unattached does not mean unused: featured images, widgets, page builders and"
+" custom fields often use media that is not attached. Regenerate thumbnails "
+"only applies to image attachments."
+msgstr ""
+"Elements de la Mediateca sense entrada pare, o amb l'entrada pare esborrada."
+" No adjuntat no vol dir no utilitzat: les imatges destacades, els ginys, els"
+" maquetadors i els camps personalitzats sovint fan servir media no adjuntat."
+" Regenerar miniatures només s'aplica a adjunts d'imatge."
 
 msgid "In use: featured image"
 msgstr "En ús: imatge destacada"
@@ -15348,8 +15582,12 @@ msgstr "En ús: imatge destacada"
 msgid "Parent post deleted"
 msgstr "Entrada pare esborrada"
 
-msgid "The review was interrupted. Your progress is saved: press Resume to continue."
-msgstr "La revisió s'ha interromput. El progrés està desat: prem Reprendre per continuar."
+msgid ""
+"The review was interrupted. Your progress is saved: press Resume to "
+"continue."
+msgstr ""
+"La revisió s'ha interromput. El progrés està desat: prem Reprendre per "
+"continuar."
 
 msgid "No scan in progress. Start a new scan."
 msgstr "No hi ha cap escaneig en curs. Inicia'n un de nou."
@@ -15362,25 +15600,59 @@ msgid "Scanning uploads… %1$s files in %2$s folders (%3$s so far)"
 msgstr "Escanejant uploads… %1$s fitxers en %2$s carpetes (%3$s fins ara)"
 
 msgid "This folder no longer appears in the scan. The list was refreshed."
-msgstr "Aquesta carpeta ja no apareix a l'escaneig. S'ha actualitzat la llista."
+msgstr ""
+"Aquesta carpeta ja no apareix a l'escaneig. S'ha actualitzat la llista."
 
-msgid "Folder moved to quarantine. It can be restored for 30 days, and it keeps using disk space until it is deleted."
-msgstr "Carpeta moguda a la quarantena. Es pot restaurar durant 30 dies i continua ocupant espai de disc fins que s'esborri."
+msgid ""
+"Folder moved to quarantine. It can be restored for 30 days, and it keeps "
+"using disk space until it is deleted."
+msgstr ""
+"Carpeta moguda a la quarantena. Es pot restaurar durant 30 dies i continua "
+"ocupant espai de disc fins que s'esborri."
 
-msgid "See how much disk space wp-content/uploads uses: totals by folder, month and file type, the largest files, and how much space thumbnails take compared to originals. Plugin folders and the quarantine are included, because they use real disk space."
-msgstr "Mira quant d'espai de disc fa servir wp-content/uploads: totals per carpeta, mes i tipus de fitxer, els fitxers més grans, i quant espai ocupen les miniatures comparat amb els originals. Les carpetes de connectors i la quarantena s'hi inclouen, perquè fan servir espai de disc real."
+msgid ""
+"See how much disk space wp-content/uploads uses: totals by folder, month and"
+" file type, the largest files, and how much space thumbnails take compared "
+"to originals. Plugin folders and the quarantine are included, because they "
+"use real disk space."
+msgstr ""
+"Mira quant d'espai de disc fa servir wp-content/uploads: totals per carpeta,"
+" mes i tipus de fitxer, els fitxers més grans, i quant espai ocupen les "
+"miniatures comparat amb els originals. Les carpetes de connectors i la "
+"quarantena s'hi inclouen, perquè fan servir espai de disc real."
 
-msgid "The scan runs in short batches, so large libraries do not time out. The last result is kept for 24 hours; scan again to refresh it."
-msgstr "L'escaneig s'executa en lots curts, així que les biblioteques grans no fan timeout. L'últim resultat es guarda 24 hores; torna a escanejar per actualitzar-lo."
+msgid ""
+"The scan runs in short batches, so large libraries do not time out. The last"
+" result is kept for 24 hours; scan again to refresh it."
+msgstr ""
+"L'escaneig s'executa en lots curts, així que les biblioteques grans no fan "
+"timeout. L'últim resultat es guarda 24 hores; torna a escanejar per "
+"actualitzar-lo."
 
 msgid "A scan was interrupted before it finished."
 msgstr "Un escaneig es va interrompre abans d'acabar."
 
-msgid "Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). Only items marked Safe can be moved to quarantine from here; the others are recommendations only. A folder in quarantine still uses disk space until it is deleted."
-msgstr "Escaneja uploads i les carpetes de memòria cau conegudes (camins TSO antics, miniatures .tmb). Només els elements marcats com a Segur es poden moure a quarantena des d'aquí; la resta són només recomanacions. Una carpeta en quarantena continua ocupant espai fins que s'esborra."
+msgid ""
+"Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). "
+"Only items marked Safe can be moved to quarantine from here; the others are "
+"recommendations only. A folder in quarantine still uses disk space until it "
+"is deleted."
+msgstr ""
+"Escaneja uploads i les carpetes de memòria cau conegudes (camins TSO antics,"
+" miniatures .tmb). Només els elements marcats com a Segur es poden moure a "
+"quarantena des d'aquí; la resta són només recomanacions. Una carpeta en "
+"quarantena continua ocupant espai fins que s'esborra."
 
-msgid "Folders removed via Folder hygiene are moved here first and kept for 30 days before automatic permanent deletion, so you can restore them if something breaks. The deletion runs on a scheduled task, so it also happens when nobody opens this screen."
-msgstr "Les carpetes eliminades des d'Higiene de carpetes es mouen primer aquí i es guarden 30 dies abans de l'esborrat permanent automàtic, així les pots restaurar si alguna cosa es trenca. L'esborrat s'executa amb una tasca programada, així que també passa quan ningú obre aquesta pantalla."
+msgid ""
+"Folders removed via Folder hygiene are moved here first and kept for 30 days"
+" before automatic permanent deletion, so you can restore them if something "
+"breaks. The deletion runs on a scheduled task, so it also happens when "
+"nobody opens this screen."
+msgstr ""
+"Les carpetes eliminades des d'Higiene de carpetes es mouen primer aquí i es "
+"guarden 30 dies abans de l'esborrat permanent automàtic, així les pots "
+"restaurar si alguna cosa es trenca. L'esborrat s'executa amb una tasca "
+"programada, així que també passa quan ningú obre aquesta pantalla."
 
 #, php-format
 msgid "%1$s files · %2$s folders"
@@ -15390,25 +15662,44 @@ msgid "Quarantine (still on disk)"
 msgstr "Quarantena (encara al disc)"
 
 #, php-format
-msgid "Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, not the space rounded up by the disk."
-msgstr "Últim escaneig: %1$s (fa %2$s, ha trigat %3$s s). Les mides són els bytes de cada fitxer, no l'espai arrodonit pel disc."
+msgid ""
+"Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, "
+"not the space rounded up by the disk."
+msgstr ""
+"Últim escaneig: %1$s (fa %2$s, ha trigat %3$s s). Les mides són els bytes de"
+" cada fitxer, no l'espai arrodonit pel disc."
 
-msgid "The scan stopped at the file safety limit. Totals are partial and should be used for guidance only."
-msgstr "L'escaneig s'ha aturat al límit de seguretat de fitxers. Els totals són parcials i només serveixen d'orientació."
+msgid ""
+"The scan stopped at the file safety limit. Totals are partial and should be "
+"used for guidance only."
+msgstr ""
+"L'escaneig s'ha aturat al límit de seguretat de fitxers. Els totals són "
+"parcials i només serveixen d'orientació."
 
 #, php-format
 msgid "These folders could not be read, so their size is not included: %s"
-msgstr "Aquestes carpetes no s'han pogut llegir, així que la seva mida no s'inclou: %s"
+msgstr ""
+"Aquestes carpetes no s'han pogut llegir, així que la seva mida no s'inclou: "
+"%s"
 
 #, php-format
-msgid "%s symbolic link(s) were not followed, so what they point to is not counted."
-msgstr "No s'han seguit %s enllaç(os) simbòlic(s), així que el que apunten no es compta."
+msgid ""
+"%s symbolic link(s) were not followed, so what they point to is not counted."
+msgstr ""
+"No s'han seguit %s enllaç(os) simbòlic(s), així que el que apunten no es "
+"compta."
 
 msgid "Space by folder"
 msgstr "Espai per carpeta"
 
-msgid "Where the disk space goes, by first-level folder. Year folders are your Media Library; the rest is plugin data or files that are not in the Media Library."
-msgstr "On va l'espai de disc, per carpeta de primer nivell. Les carpetes d'any són la teva Mediateca; la resta són dades de connectors o fitxers que no són a la Mediateca."
+msgid ""
+"Where the disk space goes, by first-level folder. Year folders are your "
+"Media Library; the rest is plugin data or files that are not in the Media "
+"Library."
+msgstr ""
+"On va l'espai de disc, per carpeta de primer nivell. Les carpetes d'any són "
+"la teva Mediateca; la resta són dades de connectors o fitxers que no són a "
+"la Mediateca."
 
 msgid "Share"
 msgstr "Percentatge"
@@ -15426,8 +15717,12 @@ msgid "Loose files"
 msgstr "Fitxers solts"
 
 #, php-format
-msgid "The 24 most recent periods are shown; %s older ones are grouped in the totals above."
-msgstr "Es mostren els 24 períodes més recents; els %s més antics compten als totals de dalt."
+msgid ""
+"The 24 most recent periods are shown; %s older ones are grouped in the "
+"totals above."
+msgstr ""
+"Es mostren els 24 períodes més recents; els %s més antics compten als totals"
+" de dalt."
 
 msgid "Outside year/month folders"
 msgstr "Fora de carpetes any/mes"
@@ -15436,27 +15731,257 @@ msgid "Not in Media Library"
 msgstr "No és a la Mediateca"
 
 #, php-format
-msgid "Space that will be freed once all Safe folders are deleted: %s. Moving them to quarantine does not free it yet: that happens after 30 days, or with “Delete now”."
-msgstr "Espai que s'alliberarà quan s'esborrin totes les carpetes Segures: %s. Moure-les a quarantena encara no l'allibera: passa als 30 dies, o amb «Esborrar ara»."
+msgid ""
+"Space that will be freed once all Safe folders are deleted: %s. Moving them "
+"to quarantine does not free it yet: that happens after 30 days, or with "
+"“Delete now”."
+msgstr ""
+"Espai que s'alliberarà quan s'esborrin totes les carpetes Segures: %s. "
+"Moure-les a quarantena encara no l'allibera: passa als 30 dies, o amb "
+"«Esborrar ara»."
 
-msgid "This folder is very large, so measuring stopped early: size and file count are a minimum."
-msgstr "Aquesta carpeta és molt gran, així que la mesura s'ha aturat abans d'hora: la mida i el nombre de fitxers són un mínim."
+msgid ""
+"This folder is very large, so measuring stopped early: size and file count "
+"are a minimum."
+msgstr ""
+"Aquesta carpeta és molt gran, així que la mesura s'ha aturat abans d'hora: "
+"la mida i el nombre de fitxers són un mínim."
 
 #, php-format
 msgid "%1$s folder(s) in quarantine, %2$s still on disk."
 msgstr "%1$s carpeta(es) en quarantena, %2$s encara al disc."
 
-msgid "Symbolic link. It is not followed or measured, and it cannot be removed from here."
-msgstr "Enllaç simbòlic. No se segueix ni es mesura, i no es pot eliminar des d'aquí."
+msgid ""
+"Symbolic link. It is not followed or measured, and it cannot be removed from"
+" here."
+msgstr ""
+"Enllaç simbòlic. No se segueix ni es mesura, i no es pot eliminar des "
+"d'aquí."
 
-msgid "The original location is outside the allowed folders, so it cannot be restored from here."
-msgstr "La ubicació original és fora de les carpetes permeses, així que no es pot restaurar des d'aquí."
+msgid ""
+"The original location is outside the allowed folders, so it cannot be "
+"restored from here."
+msgstr ""
+"La ubicació original és fora de les carpetes permeses, així que no es pot "
+"restaurar des d'aquí."
 
-msgid "Could not delete the quarantined folder. It stays listed so you can try again."
-msgstr "No s'ha pogut esborrar la carpeta en quarantena. Continua a la llista perquè ho puguis tornar a provar."
+msgid ""
+"Could not delete the quarantined folder. It stays listed so you can try "
+"again."
+msgstr ""
+"No s'ha pogut esborrar la carpeta en quarantena. Continua a la llista perquè"
+" ho puguis tornar a provar."
 
-msgid "Multisite: this folder holds the media of the other sites in the network. Do not delete."
-msgstr "Multisite: aquesta carpeta conté el media de la resta de llocs de la xarxa. No l'esborris."
+msgid ""
+"Multisite: this folder holds the media of the other sites in the network. Do"
+" not delete."
+msgstr ""
+"Multisite: aquesta carpeta conté el media de la resta de llocs de la xarxa. "
+"No l'esborris."
 
-msgid "The scan was interrupted. Your progress is saved: press Resume to continue."
-msgstr "L'escaneig s'ha interromput. El progrés està desat: prem Reprendre per continuar."
+msgid ""
+"The scan was interrupted. Your progress is saved: press Resume to continue."
+msgstr ""
+"L'escaneig s'ha interromput. El progrés està desat: prem Reprendre per "
+"continuar."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:699
+msgid "%1$d × %2$d"
+msgstr "%1$d × %2$d"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:752
+msgid "%1$s batch(es) in quarantine, %2$s still on disk."
+msgstr "%1$s lot(s) en quarantena, %2$s encara al disc."
+
+#: includes/class-tsosk-uploads-scanner.php:1813
+msgid "Could not access the filesystem to move files to quarantine."
+msgstr ""
+"No s’ha pogut accedir al sistema de fitxers per moure els fitxers a la "
+"quarantena."
+
+#: includes/class-tsosk-uploads-scanner.php:2111
+msgid "Could not access the filesystem to restore files."
+msgstr ""
+"No s’ha pogut accedir al sistema de fitxers per restaurar els fitxers."
+
+#: includes/class-tsosk-uploads-scanner.php:1808
+msgid "Could not create the quarantine folder."
+msgstr "No s’ha pogut crear la carpeta de quarantena."
+
+#: includes/class-tsosk-uploads-scanner.php:2186
+msgid ""
+"Could not restore any files — their original locations already have a file, "
+"or are no longer valid."
+msgstr ""
+"No s’ha pogut restaurar cap fitxer: les seves ubicacions originals ja tenen "
+"un fitxer, o ja no són vàlides."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:661
+msgid "Free up space from disabled sizes"
+msgstr "Allibera espai de les mides desactivades"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:363
+msgid "Image sizes quarantine"
+msgstr "Quarantena de mides d’imatge"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:674
+msgid "Move"
+msgstr "Mou"
+
+#: includes/class-tsosk-admin.php:268
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:716
+msgid "Move files for selected sizes to quarantine"
+msgstr "Mou els fitxers de les mides seleccionades a la quarantena"
+
+#: includes/class-tsosk-admin.php:271
+msgid ""
+"Move the existing files for %1$d selected image size(s) to quarantine? They "
+"will be kept for 30 days and can be restored, or deleted permanently at any "
+"time. Continue?"
+msgstr ""
+"Voleu moure els fitxers existents de %1$d mida(es) d’imatge seleccionada(es)"
+" a la quarantena? Es conservaran durant 30 dies i es podran restaurar, o "
+"eliminar permanentment en qualsevol moment. Voleu continuar?"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:213
+msgid ""
+"Moved %1$d files (%2$s) to quarantine. They can be restored or permanently "
+"deleted below."
+msgstr ""
+"S’han mogut %1$d fitxers (%2$s) a la quarantena. Es poden restaurar o "
+"eliminar permanentment a continuació."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:192
+msgid ""
+"Moved existing files for image size(s) %1$s to quarantine: %2$d files, %3$s."
+msgstr ""
+"S’han mogut a la quarantena els fitxers existents de la(es) mida(es) "
+"d’imatge %1$s: %2$d fitxers, %3$s."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:667
+msgid ""
+"No disabled size currently has existing files on disk (or the audit has not "
+"run yet)."
+msgstr ""
+"Cap mida desactivada té actualment fitxers al disc (o encara no s’ha "
+"executat l’auditoria)."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:179
+msgid ""
+"No eligible sizes selected. Only sizes already turned off for new uploads "
+"can be quarantined here."
+msgstr ""
+"No s’ha seleccionat cap mida vàlida. Només es poden posar en quarantena aquí"
+" les mides ja desactivades per a noves pujades."
+
+#: includes/class-tsosk-uploads-scanner.php:2017
+msgid "No existing files were found for the selected sizes."
+msgstr "No s’ha trobat cap fitxer existent per a les mides seleccionades."
+
+#: includes/class-tsosk-uploads-scanner.php:1784
+msgid "No image sizes selected."
+msgstr "No s’ha seleccionat cap mida d’imatge."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:663
+msgid ""
+"Only sizes already turned off above are listed here, and turning a size off "
+"never deletes its files by itself — you choose which of those to move now. "
+"Files are moved to quarantine, not deleted: you can restore them or check "
+"the site is fine first, then delete them for good from the quarantine list "
+"below (or leave them — they are auto-deleted after 30 days)."
+msgstr ""
+"Aquí només es llisten les mides que ja heu desactivat a dalt, i desactivar "
+"una mida mai n’elimina els fitxers per si sol: vosaltres trieu quines voleu "
+"moure ara. Els fitxers es mouen a la quarantena, no s’eliminen: podeu "
+"restaurar-los o comprovar primer que el lloc funciona bé, i després "
+"eliminar-los definitivament des de la llista de quarantena de sota (o "
+"deixar-los — s’eliminen automàticament passats 30 dies)."
+
+#: includes/class-tsosk-admin.php:273
+msgid "Permanently delete these quarantined files now? This cannot be undone."
+msgstr ""
+"Voleu eliminar aquests fitxers en quarantena permanentment ara? Aquesta "
+"acció no es pot desfer."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:306
+msgid "Permanently deleted quarantined files for image size(s): %s."
+msgstr ""
+"S’han eliminat permanentment els fitxers en quarantena de la(es) mida(es) "
+"d’imatge: %s."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:313
+msgid "Quarantined files permanently deleted."
+msgstr "S’han eliminat permanentment els fitxers en quarantena."
+
+#: includes/class-tsosk-admin.php:272
+msgid "Restore these quarantined files to their original locations?"
+msgstr ""
+"Voleu restaurar aquests fitxers en quarantena a les seves ubicacions "
+"originals?"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:261
+msgid ""
+"Restored %1$d file(s). %2$d file(s) could not be restored (their original "
+"spot already has a file) and stay in quarantine."
+msgstr ""
+"S’han restaurat %1$d fitxer(s). %2$d fitxer(s) no s’han pogut restaurar (el "
+"seu lloc original ja té un fitxer) i romanen en quarantena."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:267
+msgid "Restored %d file(s) to their original location."
+msgstr "S’han restaurat %d fitxer(s) a la seva ubicació original."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:250
+msgid "Restored quarantined files for image size(s) %1$s: %2$d files."
+msgstr ""
+"S’han restaurat els fitxers en quarantena de la(es) mida(es) d’imatge %1$s: "
+"%2$d fitxers."
+
+#: includes/class-tsosk-admin.php:269
+msgid "Select at least one size first."
+msgstr "Seleccioneu primer almenys una mida."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:762
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:778
+msgid "Sizes"
+msgstr "Mides"
+
+#: includes/class-tsosk-uploads-scanner.php:2239
+msgid ""
+"Some quarantined files could not be deleted. They stay listed so you can try"
+" again."
+msgstr ""
+"Alguns fitxers en quarantena no s’han pogut eliminar. Romanen llistats "
+"perquè pugueu tornar-ho a provar."
+
+#: includes/class-tsosk-uploads-scanner.php:2103
+msgid "This quarantine entry has no files left."
+msgstr "Aquesta entrada de quarantena ja no té cap fitxer."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:555
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:691
+msgid "not registered"
+msgstr "no registrat"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:563
+msgid "%1$d × %2$d — crop: unknown"
+msgstr "%1$d × %2$d — retall: desconegut"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:584
+msgid ""
+"Not registered by any active theme or plugin — no new files are generated "
+"for it. Existing files can be moved to quarantine below."
+msgstr ""
+"No està registrat per cap tema o plugin actiu — no es genera cap fitxer nou "
+"per a aquesta mida. Els fitxers existents es poden moure a la quarantena a "
+"sota."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:593
+msgid ""
+"Rows marked \"not registered\" come from an old theme or a deactivated "
+"plugin. WordPress still stores their files even though nothing generates "
+"them any more."
+msgstr ""
+"Les files marcades \"no registrat\" provenen d’un tema antic o d’un plugin "
+"desactivat. WordPress encara conserva els seus fitxers tot i que ja no els "
+"genera ningú."

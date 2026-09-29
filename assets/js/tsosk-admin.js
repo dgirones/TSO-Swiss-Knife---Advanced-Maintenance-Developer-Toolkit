@@ -4815,6 +4815,134 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-image-sizes-quarantine', function () {
+		var $btn  = $( this );
+		var $msg  = $( '#tsosk-image-sizes-delete-msg' );
+		var $out  = $( '#tsosk-image-sizes-results' );
+		var $qout = $( '#tsosk-image-sizes-quarantine-results' );
+		var sizes = [];
+
+		$( '.tsosk-img-audit-delete-checkbox:checked' ).each( function () {
+			var name = $( this ).data( 'name' );
+			if ( name ) {
+				sizes.push( name );
+			}
+		} );
+
+		if ( ! sizes.length ) {
+			showMsg( $msg, tsosk.i18n.image_sizes_quarantine_none || 'Select at least one size first.', 'error' );
+			return;
+		}
+
+		var confirmMsg = ( tsosk.i18n.image_sizes_quarantine_confirm || 'Move the existing files for %1$d selected image size(s) to quarantine? They will be kept for 30 days and can be restored, or deleted permanently at any time. Continue?' ).replace( '%1$d', String( sizes.length ) );
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		showMsg( $msg, '', '' );
+
+		ajaxPost( {
+			action : 'tsosk_image_sizes_audit_quarantine',
+			data   : { nonce: $btn.data( 'nonce' ), sizes: sizes },
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.html ) {
+						$out.html( r.data.html );
+					}
+					if ( r.data && r.data.quarantine_html ) {
+						$qout.html( r.data.quarantine_html );
+					}
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.image_sizes_quarantine || 'Move files for selected sizes to quarantine' );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.image_sizes_quarantine || 'Move files for selected sizes to quarantine' );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-img-quarantine-restore', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-image-sizes-delete-msg' );
+		var $out = $( '#tsosk-image-sizes-quarantine-results' );
+
+		if ( ! window.confirm( tsosk.i18n.image_sizes_quarantine_restore_confirm || 'Restore these quarantined files to their original locations?' ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, '' );
+
+		ajaxPost( {
+			action : 'tsosk_image_sizes_audit_quarantine_restore',
+			data   : {
+				nonce    : $btn.data( 'nonce' ),
+				entry_id : $btn.data( 'entry-id' )
+			},
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.quarantine_html ) {
+						$out.html( r.data.quarantine_html );
+					}
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-img-quarantine-purge', function () {
+		var $btn      = $( this );
+		var $msg      = $( '#tsosk-image-sizes-delete-msg' );
+		var $out      = $( '#tsosk-image-sizes-quarantine-results' );
+		var label     = $btn.data( 'label' ) || '';
+		var confirmMsg = tsosk.i18n.image_sizes_quarantine_purge_confirm || 'Permanently delete these quarantined files now? This cannot be undone.';
+
+		if ( label ) {
+			confirmMsg = label + '\n\n' + confirmMsg;
+		}
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, '' );
+
+		ajaxPost( {
+			action : 'tsosk_image_sizes_audit_quarantine_purge',
+			data   : {
+				nonce    : $btn.data( 'nonce' ),
+				entry_id : $btn.data( 'entry-id' )
+			},
+			success: function ( r ) {
+				if ( r.success ) {
+					if ( r.data && r.data.quarantine_html ) {
+						$out.html( r.data.quarantine_html );
+					}
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
 	// ── Server Files ──────────────────────────────────────────────────────
 
 	$( document ).on( 'click', '.tsosk-sf-save', function () {

@@ -360,6 +360,8 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 // Permanently deletes quarantined folders once their 30 days are over (also when nobody opens the screen).
 add_action( TSOSK_Uploads_Scanner::CRON_QUARANTINE_PURGE, array( 'TSOSK_Uploads_Scanner', 'purge_expired_quarantine' ) );
+// Same, for image-size derivative files quarantined from the Image Sizes Audit module.
+add_action( TSOSK_Uploads_Scanner::CRON_SIZES_QUARANTINE_PURGE, array( 'TSOSK_Uploads_Scanner', 'purge_expired_sizes_quarantine' ) );
 
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );

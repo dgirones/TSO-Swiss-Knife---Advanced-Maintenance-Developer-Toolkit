@@ -41,6 +41,12 @@ class TSOSK_Uploads_Scanner {
 	/** Days a quarantined folder is kept before it becomes eligible for automatic purge. */
 	public const QUARANTINE_DAYS = 30;
 
+	/** Option storing quarantined image-size derivative files (moved-but-not-yet-purged). */
+	public const OPTION_SIZES_QUARANTINE = 'tsosk_image_sizes_quarantine';
+
+	/** Cron hook that permanently deletes quarantined image-size files once their window is over. */
+	public const CRON_SIZES_QUARANTINE_PURGE = 'tsosk_image_sizes_quarantine_purge';
+
 	/** Directory names under uploads to skip (plugin-owned, not media). */
 	private const SKIP_DIRS = array(
 		'tso-swiss-knife-advanced-maintenance-developer-toolkit',
@@ -495,11 +501,23 @@ class TSOSK_Uploads_Scanner {
 			? wp_get_registered_image_subsizes()
 			: array();
 
+		// Seeded from currently-registered sizes, but every size name actually found while
+		// scanning attachment metadata gets its own row too — including sizes no theme or
+		// plugin registers any more (an old theme's thumbnails, a deactivated plugin's crops).
+		// Those still take up real disk space, so they should not be silently lumped into
+		// "unmatched derivatives".
 		$size_stats = array();
-		foreach ( array_keys( $registered ) as $size_name ) {
+		$size_meta  = array();
+		foreach ( $registered as $size_name => $size ) {
 			$size_stats[ $size_name ] = array(
 				'files' => 0,
 				'bytes' => 0,
+			);
+			$size_meta[ $size_name ]  = array(
+				'width'      => (int) ( $size['width'] ?? 0 ),
+				'height'     => (int) ( $size['height'] ?? 0 ),
+				'crop'       => ! empty( $size['crop'] ),
+				'registered' => true,
 			);
 		}
 
@@ -562,20 +580,36 @@ class TSOSK_Uploads_Scanner {
 					$file_size                 = (int) filesize( $file_path );
 					$key                       = sanitize_key( (string) $size_name );
 
-					if ( isset( $size_stats[ $key ] ) ) {
-						++$size_stats[ $key ]['files'];
-						$size_stats[ $key ]['bytes'] += $file_size;
-					} else {
-						++$unmatched['files'];
-						$unmatched['bytes'] += $file_size;
+					if ( ! isset( $size_stats[ $key ] ) ) {
+						$size_stats[ $key ] = array(
+							'files' => 0,
+							'bytes' => 0,
+						);
+						$size_meta[ $key ]  = array(
+							'width'      => (int) ( $size_data['width'] ?? 0 ),
+							'height'     => (int) ( $size_data['height'] ?? 0 ),
+							'crop'       => null, // Not stored per-attachment; only known at registration time.
+							'registered' => false,
+						);
 					}
+
+					++$size_stats[ $key ]['files'];
+					$size_stats[ $key ]['bytes'] += $file_size;
 				}
 			}
 		}
 
-		$dim_map = self::build_dimension_to_size_map( $registered );
-		$queue   = array( $base );
-		$walked  = 0;
+		// Dimension → size-name lookup for the disk walk below, built from every size seen
+		// above (registered or not) so an orphaned file from a since-unregistered size can
+		// still be attributed by its filename dimensions, not dumped into "unmatched".
+		$dim_map = array();
+		foreach ( $size_meta as $name => $meta ) {
+			if ( $meta['width'] > 0 && $meta['height'] > 0 && ! isset( $dim_map[ $meta['width'] . 'x' . $meta['height'] ] ) ) {
+				$dim_map[ $meta['width'] . 'x' . $meta['height'] ] = $name;
+			}
+		}
+		$queue  = array( $base );
+		$walked = 0;
 
 		while ( $queue && $walked < self::MAX_FILES ) {
 			$dir = array_shift( $queue );
@@ -650,6 +684,7 @@ class TSOSK_Uploads_Scanner {
 
 		return array(
 			'registered'            => $registered,
+			'size_meta'             => $size_meta,
 			'attachments_scanned'   => $attachments,
 			'full'                  => $full_stats,
 			'by_size'               => $size_stats,
@@ -731,24 +766,6 @@ class TSOSK_Uploads_Scanner {
 	 */
 	private static function is_likely_original_media( string $extension ): bool {
 		return in_array( $extension, array( 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'ico', 'bmp', 'pdf', 'mp4', 'webm', 'mp3', 'wav', 'ogg' ), true );
-	}
-
-	/**
-	 * Build a map of "widthxheight" dimension keys to their registered image size names.
-	 *
-	 * @param array<string, array{width:int, height:int, crop?:bool}> $registered Registered subsizes.
-	 * @return array<string, string> Dimension key => size name.
-	 */
-	private static function build_dimension_to_size_map( array $registered ): array {
-		$map = array();
-		foreach ( $registered as $name => $size ) {
-			$width  = (int) ( $size['width'] ?? 0 );
-			$height = (int) ( $size['height'] ?? 0 );
-			if ( $width > 0 && $height > 0 ) {
-				$map[ $width . 'x' . $height ] = sanitize_key( (string) $name );
-			}
-		}
-		return $map;
 	}
 
 	/**
@@ -1747,5 +1764,569 @@ class TSOSK_Uploads_Scanner {
 	private static function delete_path_entry( string $path ): bool {
 		wp_delete_file( $path );
 		return ! is_link( $path ) && ! is_file( $path );
+	}
+
+	/**
+	 * Move existing derivative files for the given registered image sizes into quarantine,
+	 * instead of deleting them outright — so the admin can verify the site is fine and
+	 * either restore or permanently delete them afterwards.
+	 *
+	 * Two passes, mirroring scan_image_sizes():
+	 *  1. Attachments whose `_wp_attachment_metadata['sizes']` references one of the
+	 *     requested sizes: the file is moved (unless another size we are keeping shares
+	 *     the exact same file — WordPress dedupes identical-dimension crops) and the size
+	 *     entry is removed from the attachment metadata so WordPress stops treating it as
+	 *     available. The removed entry (post id, size name, original size data) is kept
+	 *     so restore can put it back exactly as it was.
+	 *  2. Orphaned derivative files on disk that match one of the requested sizes'
+	 *     dimensions but are not referenced by any attachment metadata.
+	 *
+	 * Callers are responsible for restricting $size_names to sizes the admin has
+	 * already disabled for new uploads — this method does not re-check that.
+	 *
+	 * @param string[] $size_names Sanitized registered size names to quarantine.
+	 * @return array{entry_id:string, files:int, bytes:int, updated_posts:int}|WP_Error
+	 */
+	public static function quarantine_image_size_files( array $size_names ): array|WP_Error {
+		global $wpdb;
+
+		$size_names = array_values( array_unique( array_filter( array_map( 'sanitize_key', $size_names ) ) ) );
+		if ( empty( $size_names ) ) {
+			return new WP_Error( 'tsosk_no_sizes', __( 'No image sizes selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$uploads = wp_upload_dir();
+		if ( ! empty( $uploads['error'] ) ) {
+			return new WP_Error( 'tsosk_uploads', (string) $uploads['error'] );
+		}
+		$base = wp_normalize_path( trailingslashit( $uploads['basedir'] ) );
+		if ( ! is_dir( $base ) ) {
+			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$quarantine_base = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'quarantine' ) : '';
+		if ( '' === $quarantine_base ) {
+			return new WP_Error( 'quarantine_unavailable', __( 'The quarantine folder is unavailable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( ! is_dir( $quarantine_base ) ) {
+			wp_mkdir_p( $quarantine_base );
+		}
+		self::protect_quarantine_dir( $quarantine_base );
+
+		$entry_id = wp_generate_uuid4();
+		$dest_dir = wp_normalize_path( trailingslashit( $quarantine_base ) . 'image-sizes/' . $entry_id );
+		if ( ! is_dir( $dest_dir ) && ! wp_mkdir_p( $dest_dir ) ) {
+			return new WP_Error( 'quarantine_failed', __( 'Could not create the quarantine folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$fs = self::init_quarantine_filesystem();
+		if ( ! $fs ) {
+			return new WP_Error( 'quarantine_failed', __( 'Could not access the filesystem to move files to quarantine.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$size_set      = array_flip( $size_names );
+		$items         = array();
+		$moved_files   = 0;
+		$moved_bytes   = 0;
+		$updated_posts = 0;
+		$seq           = 0;
+		$captured_dims = array(); // Dimensions learned from metadata, for sizes no theme/plugin registers any more.
+
+		// Pass 1: attachments that reference one of the requested sizes in their metadata.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''",
+				'_wp_attachment_metadata'
+			),
+			ARRAY_A
+		);
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$post_id  = absint( $row['post_id'] ?? 0 );
+				$metadata = maybe_unserialize( $row['meta_value'] ?? '' );
+				if ( ! $post_id || ! is_array( $metadata ) || empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ) {
+					continue;
+				}
+
+				$attached = get_attached_file( $post_id );
+				$dir      = $attached ? wp_normalize_path( trailingslashit( dirname( $attached ) ) ) : '';
+				if ( ! $dir ) {
+					continue;
+				}
+
+				$changed = false;
+
+				foreach ( $metadata['sizes'] as $size_name => $size_data ) {
+					$key = sanitize_key( (string) $size_name );
+					if ( ! isset( $size_set[ $key ] ) || ! is_array( $size_data ) || empty( $size_data['file'] ) ) {
+						continue;
+					}
+
+					if ( ! isset( $captured_dims[ $key ] ) && ! empty( $size_data['width'] ) && ! empty( $size_data['height'] ) ) {
+						$captured_dims[ $key ] = array(
+							'width'  => (int) $size_data['width'],
+							'height' => (int) $size_data['height'],
+						);
+					}
+
+					$file_path = wp_normalize_path( $dir . $size_data['file'] );
+					$real      = realpath( $file_path );
+
+					// Scope guard: only ever touch files that actually resolve inside the uploads dir.
+					if ( false === $real || 0 !== strpos( wp_normalize_path( $real ), $base ) ) {
+						unset( $metadata['sizes'][ $size_name ] );
+						$changed = true;
+						continue;
+					}
+
+					// Don't remove the physical file if a size we are KEEPING points at the
+					// same filename (WordPress dedupes identical width/height/crop sizes).
+					$shared = false;
+					foreach ( $metadata['sizes'] as $other_name => $other_data ) {
+						$other_key = sanitize_key( (string) $other_name );
+						if ( $other_key === $key || isset( $size_set[ $other_key ] ) ) {
+							continue;
+						}
+						if ( is_array( $other_data ) && ! empty( $other_data['file'] ) && $other_data['file'] === $size_data['file'] ) {
+							$shared = true;
+							break;
+						}
+					}
+
+					if ( ! $shared && file_exists( $file_path ) && self::is_derivative_filename( basename( $file_path ) ) ) {
+						++$seq;
+						$bytes = (int) filesize( $file_path );
+						$qpath = wp_normalize_path( trailingslashit( $dest_dir ) . $seq . '-' . sanitize_file_name( basename( $file_path ) ) );
+						if ( $fs->move( $file_path, $qpath ) ) {
+							$items[]      = array(
+								'post_id'         => $post_id,
+								'size_name'       => $key,
+								'size_data'       => $size_data,
+								'original_path'   => $file_path,
+								'quarantine_path' => $qpath,
+								'bytes'           => $bytes,
+							);
+							$moved_bytes += $bytes;
+							++$moved_files;
+						}
+					}
+
+					unset( $metadata['sizes'][ $size_name ] );
+					$changed = true;
+				}
+
+				if ( $changed ) {
+					wp_update_attachment_metadata( $post_id, $metadata );
+					++$updated_posts;
+				}
+			}
+		}
+
+		// Pass 2: orphaned derivative files on disk (no attachment metadata reference)
+		// whose dimensions match one of the requested sizes. Dimensions come from the
+		// current registration when the size is still registered, and otherwise from
+		// what was learned about it in pass 1 above (a size nothing registers any more
+		// has no other source of width/height).
+		$registered  = function_exists( 'wp_get_registered_image_subsizes' ) ? wp_get_registered_image_subsizes() : array();
+		$target_dims = array();
+		foreach ( $size_names as $name ) {
+			if ( isset( $registered[ $name ]['width'], $registered[ $name ]['height'] ) ) {
+				$width  = (int) $registered[ $name ]['width'];
+				$height = (int) $registered[ $name ]['height'];
+			} elseif ( isset( $captured_dims[ $name ] ) ) {
+				$width  = $captured_dims[ $name ]['width'];
+				$height = $captured_dims[ $name ]['height'];
+			} else {
+				continue;
+			}
+			if ( $width > 0 && $height > 0 ) {
+				$target_dims[ $width . 'x' . $height ] = $name;
+			}
+		}
+
+		if ( $target_dims ) {
+			$known_files = array();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows2 = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''",
+					'_wp_attachment_metadata'
+				),
+				ARRAY_A
+			);
+			if ( is_array( $rows2 ) ) {
+				foreach ( $rows2 as $row ) {
+					$post_id  = absint( $row['post_id'] ?? 0 );
+					$metadata = maybe_unserialize( $row['meta_value'] ?? '' );
+					if ( ! $post_id || ! is_array( $metadata ) ) {
+						continue;
+					}
+					$attached = get_attached_file( $post_id );
+					if ( $attached && file_exists( $attached ) ) {
+						$known_files[ wp_normalize_path( $attached ) ] = true;
+					}
+					if ( empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) || ! $attached ) {
+						continue;
+					}
+					$dir = wp_normalize_path( trailingslashit( dirname( $attached ) ) );
+					foreach ( $metadata['sizes'] as $size_data ) {
+						if ( is_array( $size_data ) && ! empty( $size_data['file'] ) ) {
+							$known_files[ wp_normalize_path( $dir . $size_data['file'] ) ] = true;
+						}
+					}
+				}
+			}
+
+			$queue  = array( $base );
+			$walked = 0;
+			while ( $queue && $walked < self::MAX_FILES ) {
+				$dir = array_shift( $queue );
+				if ( ! self::is_safe_scan_path( $dir, $base ) || ! is_readable( $dir ) ) {
+					continue;
+				}
+				$handle = opendir( $dir );
+				if ( ! $handle ) {
+					continue;
+				}
+				for ( $entry = readdir( $handle ); false !== $entry; $entry = readdir( $handle ) ) {
+					if ( '.' === $entry || '..' === $entry ) {
+						continue;
+					}
+					$path = wp_normalize_path( trailingslashit( $dir ) . $entry );
+					if ( is_dir( $path ) ) {
+						if ( ! self::should_skip_dir( $path, $base ) ) {
+							$queue[] = $path;
+						}
+						continue;
+					}
+					if ( ! is_file( $path ) || ! self::is_derivative_filename( $entry ) ) {
+						continue;
+					}
+					++$walked;
+					if ( isset( $known_files[ $path ] ) ) {
+						continue;
+					}
+					if ( ! preg_match( '/-(\d+)x(\d+)\.[^.]+$/i', $entry, $matches ) ) {
+						continue;
+					}
+					$dim_key = $matches[1] . 'x' . $matches[2];
+					if ( ! isset( $target_dims[ $dim_key ] ) ) {
+						continue;
+					}
+					$real = realpath( $path );
+					if ( false === $real || 0 !== strpos( wp_normalize_path( $real ), $base ) ) {
+						continue;
+					}
+					++$seq;
+					$bytes = (int) filesize( $path );
+					$qpath = wp_normalize_path( trailingslashit( $dest_dir ) . $seq . '-' . sanitize_file_name( $entry ) );
+					if ( $fs->move( $path, $qpath ) ) {
+						$items[]      = array(
+							'post_id'         => 0,
+							'size_name'       => $target_dims[ $dim_key ] ?? '',
+							'size_data'       => null,
+							'original_path'   => $path,
+							'quarantine_path' => $qpath,
+							'bytes'           => $bytes,
+						);
+						$moved_bytes += $bytes;
+						++$moved_files;
+					}
+				}
+				closedir( $handle );
+			}
+		}
+
+		if ( empty( $items ) ) {
+			// Nothing was moved; remove the now-empty per-entry quarantine folder.
+			if ( is_dir( $dest_dir ) ) {
+				self::remove_directory_tree( $dest_dir );
+			}
+			return new WP_Error( 'tsosk_nothing_moved', __( 'No existing files were found for the selected sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entries              = self::get_sizes_quarantine_entries();
+		$entries[ $entry_id ] = array(
+			'id'             => $entry_id,
+			'sizes'          => $size_names,
+			'items'          => $items,
+			'files'          => $moved_files,
+			'bytes'          => $moved_bytes,
+			'quarantined_at' => time(),
+		);
+		update_option( self::OPTION_SIZES_QUARANTINE, $entries, false );
+		self::schedule_sizes_quarantine_purge();
+
+		return array(
+			'entry_id'      => $entry_id,
+			'files'         => $moved_files,
+			'bytes'         => $moved_bytes,
+			'updated_posts' => $updated_posts,
+		);
+	}
+
+	/**
+	 * All current image-size quarantine entries, keyed by entry id.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function get_sizes_quarantine_entries(): array {
+		$entries = get_option( self::OPTION_SIZES_QUARANTINE, array() );
+		if ( ! is_array( $entries ) ) {
+			return array();
+		}
+
+		$clean = array();
+		foreach ( $entries as $id => $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$id           = sanitize_key( (string) $id );
+			$entry['id']  = $id;
+			$clean[ $id ] = $entry;
+		}
+		return $clean;
+	}
+
+	/**
+	 * Aggregate stats over all image-size quarantine entries.
+	 *
+	 * @return array{count: int, size: int}
+	 */
+	public static function get_sizes_quarantine_summary(): array {
+		$entries = self::get_sizes_quarantine_entries();
+		$size    = 0;
+		foreach ( $entries as $entry ) {
+			$size += (int) ( $entry['bytes'] ?? 0 );
+		}
+		return array(
+			'count' => count( $entries ),
+			'size'  => $size,
+		);
+	}
+
+	/**
+	 * Move a quarantined batch of image-size files back to their original locations and
+	 * restore the removed entries in each attachment's `_wp_attachment_metadata`.
+	 *
+	 * Partial success is possible (e.g. a thumbnail was regenerated in the meantime and
+	 * now occupies the original spot): whatever could not be restored stays quarantined
+	 * rather than being silently dropped or overwriting a newer file.
+	 *
+	 * @param string $entry_id Quarantine entry id.
+	 * @return array{restored:int, remaining:int}|WP_Error
+	 */
+	public static function restore_sizes_quarantine_entry( string $entry_id ): array|WP_Error {
+		$entry_id = sanitize_key( $entry_id );
+		$entries  = self::get_sizes_quarantine_entries();
+		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
+			return new WP_Error( 'invalid_entry', __( 'Unknown quarantine entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entry = $entries[ $entry_id ];
+		$items = is_array( $entry['items'] ?? null ) ? $entry['items'] : array();
+		if ( empty( $items ) ) {
+			unset( $entries[ $entry_id ] );
+			update_option( self::OPTION_SIZES_QUARANTINE, $entries, false );
+			return new WP_Error( 'missing', __( 'This quarantine entry has no files left.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$uploads = wp_upload_dir();
+		$base    = ! empty( $uploads['basedir'] ) ? wp_normalize_path( trailingslashit( $uploads['basedir'] ) ) : '';
+
+		$fs = self::init_quarantine_filesystem();
+		if ( ! $fs || '' === $base ) {
+			return new WP_Error( 'restore_failed', __( 'Could not access the filesystem to restore files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$remaining      = array();
+		$restored_posts = array();
+		$restored       = 0;
+
+		foreach ( $items as $item ) {
+			$src  = wp_normalize_path( (string) ( $item['quarantine_path'] ?? '' ) );
+			$dest = wp_normalize_path( (string) ( $item['original_path'] ?? '' ) );
+
+			if ( '' === $src || ! self::is_within_quarantine_dir( $src ) || ! file_exists( $src ) ) {
+				continue; // Already gone — nothing left to restore, drop this item.
+			}
+
+			if ( '' === $dest || 0 !== strpos( $dest, $base ) ) {
+				$remaining[] = $item; // Cannot safely restore outside uploads; keep it listed.
+				continue;
+			}
+
+			if ( file_exists( $dest ) ) {
+				// Something already occupies the original spot (e.g. thumbnails were
+				// regenerated since) — never overwrite it.
+				$remaining[] = $item;
+				continue;
+			}
+
+			if ( ! is_dir( dirname( $dest ) ) ) {
+				wp_mkdir_p( dirname( $dest ) );
+			}
+
+			if ( ! $fs->move( $src, $dest ) ) {
+				$remaining[] = $item;
+				continue;
+			}
+
+			$post_id   = absint( $item['post_id'] ?? 0 );
+			$size_name = sanitize_key( (string) ( $item['size_name'] ?? '' ) );
+			$size_data = is_array( $item['size_data'] ?? null ) ? $item['size_data'] : null;
+
+			if ( $post_id && '' !== $size_name && $size_data ) {
+				$restored_posts[ $post_id ][ $size_name ] = $size_data;
+			}
+
+			++$restored;
+		}
+
+		foreach ( $restored_posts as $post_id => $sizes_to_restore ) {
+			$metadata = wp_get_attachment_metadata( $post_id );
+			if ( ! is_array( $metadata ) ) {
+				continue;
+			}
+			if ( empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ) {
+				$metadata['sizes'] = array();
+			}
+			foreach ( $sizes_to_restore as $size_name => $size_data ) {
+				$metadata['sizes'][ $size_name ] = $size_data;
+			}
+			wp_update_attachment_metadata( $post_id, $metadata );
+		}
+
+		if ( empty( $remaining ) ) {
+			unset( $entries[ $entry_id ] );
+		} else {
+			$bytes = 0;
+			foreach ( $remaining as $item ) {
+				$bytes += (int) ( $item['bytes'] ?? 0 );
+			}
+			$entries[ $entry_id ]['items'] = $remaining;
+			$entries[ $entry_id ]['files'] = count( $remaining );
+			$entries[ $entry_id ]['bytes'] = $bytes;
+		}
+		update_option( self::OPTION_SIZES_QUARANTINE, $entries, false );
+
+		if ( 0 === $restored ) {
+			return new WP_Error( 'restore_failed', __( 'Could not restore any files — their original locations already have a file, or are no longer valid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		return array(
+			'restored'  => $restored,
+			'remaining' => count( $remaining ),
+		);
+	}
+
+	/**
+	 * Permanently delete one quarantined image-size batch right now.
+	 *
+	 * @param string $entry_id Quarantine entry id.
+	 * @return true|WP_Error
+	 */
+	public static function purge_sizes_quarantine_entry( string $entry_id ) {
+		$entry_id = sanitize_key( $entry_id );
+		$entries  = self::get_sizes_quarantine_entries();
+		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
+			return new WP_Error( 'invalid_entry', __( 'Unknown quarantine entry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$entry = $entries[ $entry_id ];
+		$items = is_array( $entry['items'] ?? null ) ? $entry['items'] : array();
+		$first = '';
+
+		$remaining = array();
+		foreach ( $items as $item ) {
+			$path = wp_normalize_path( (string) ( $item['quarantine_path'] ?? '' ) );
+			if ( '' === $first && '' !== $path ) {
+				$first = $path;
+			}
+			if ( '' !== $path && self::is_within_quarantine_dir( $path ) && ( is_file( $path ) || is_link( $path ) ) ) {
+				if ( ! self::delete_path_entry( $path ) ) {
+					$remaining[] = $item;
+				}
+			}
+		}
+
+		if ( empty( $remaining ) ) {
+			// Best effort: clean up the now-empty per-entry quarantine subfolder.
+			$dir = '' !== $first ? dirname( $first ) : '';
+			if ( '' !== $dir && self::is_within_quarantine_dir( $dir ) && is_dir( $dir ) ) {
+				self::remove_directory_tree( $dir );
+			}
+			unset( $entries[ $entry_id ] );
+		} else {
+			$entries[ $entry_id ]['items'] = $remaining;
+			$entries[ $entry_id ]['files'] = count( $remaining );
+		}
+		update_option( self::OPTION_SIZES_QUARANTINE, $entries, false );
+
+		if ( ! empty( $remaining ) ) {
+			return new WP_Error( 'delete_failed', __( 'Some quarantined files could not be deleted. They stay listed so you can try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Purge image-size quarantine entries older than QUARANTINE_DAYS. Safe to call opportunistically.
+	 *
+	 * @return int Number of entries purged.
+	 */
+	public static function purge_expired_sizes_quarantine(): int {
+		$entries = self::get_sizes_quarantine_entries();
+		if ( empty( $entries ) ) {
+			return 0;
+		}
+
+		$cutoff = time() - ( self::QUARANTINE_DAYS * DAY_IN_SECONDS );
+		$purged = 0;
+
+		foreach ( $entries as $id => $entry ) {
+			$quarantined_at = (int) ( $entry['quarantined_at'] ?? 0 );
+			if ( $quarantined_at > 0 && $quarantined_at <= $cutoff && true === self::purge_sizes_quarantine_entry( $id ) ) {
+				++$purged;
+			}
+		}
+
+		self::schedule_sizes_quarantine_purge();
+
+		return $purged;
+	}
+
+	/**
+	 * Schedule a one-off cron event for the earliest image-size quarantine expiry, so the
+	 * promised automatic deletion also happens when nobody opens this screen.
+	 */
+	public static function schedule_sizes_quarantine_purge(): void {
+		$entries = self::get_sizes_quarantine_entries();
+		if ( empty( $entries ) || ! function_exists( 'wp_schedule_single_event' ) ) {
+			return;
+		}
+
+		$oldest = 0;
+		foreach ( $entries as $entry ) {
+			$at = (int) ( $entry['quarantined_at'] ?? 0 );
+			if ( $at > 0 && ( 0 === $oldest || $at < $oldest ) ) {
+				$oldest = $at;
+			}
+		}
+		if ( 0 === $oldest ) {
+			return;
+		}
+
+		$due  = max( time() + HOUR_IN_SECONDS, $oldest + ( self::QUARANTINE_DAYS * DAY_IN_SECONDS ) + 300 );
+		$next = wp_next_scheduled( self::CRON_SIZES_QUARANTINE_PURGE );
+		if ( false !== $next && (int) $next <= $due ) {
+			return;
+		}
+		if ( false !== $next ) {
+			wp_clear_scheduled_hook( self::CRON_SIZES_QUARANTINE_PURGE );
+		}
+		wp_schedule_single_event( $due, self::CRON_SIZES_QUARANTINE_PURGE );
 	}
 }

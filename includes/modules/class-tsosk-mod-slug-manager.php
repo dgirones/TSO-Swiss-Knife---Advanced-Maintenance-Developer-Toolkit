@@ -1510,7 +1510,7 @@ class TSOSK_Mod_Slug_Manager {
 					'numberposts'      => 200,
 					'orderby'          => 'ID',
 					'order'            => 'ASC',
-					'suppress_filters' => true,
+					'suppress_filters' => false,
 				)
 			);
 			foreach ( $children as $child_id ) {

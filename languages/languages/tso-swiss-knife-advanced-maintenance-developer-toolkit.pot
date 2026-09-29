@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit 1.0.7\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tso-swiss-knife-advanced-maintenance-developer-toolkit\n"
-"POT-Creation-Date: 2026-09-28T19:43:01+00:00\n"
+"POT-Creation-Date: 2026-08-24T14:40:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -672,12 +672,12 @@ msgid "Scan uploads folder"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:259
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:340
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:139
 msgid "Run image sizes audit"
 msgstr ""
 
 #: includes/class-tsosk-admin.php:260
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:599
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:331
 msgid "Save image size settings"
 msgstr ""
 
@@ -1256,6 +1256,8 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:168
 #: includes/modules/class-tsosk-mod-history.php:43
 #: includes/modules/class-tsosk-mod-history.php:55
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:73
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:97
 #: includes/modules/class-tsosk-mod-login-protect.php:785
 #: includes/modules/class-tsosk-mod-login-protect.php:884
 #: includes/modules/class-tsosk-mod-login-protect.php:945
@@ -1324,11 +1326,6 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-users.php:318
 #: includes/modules/class-tsosk-mod-users.php:391
 #: includes/modules/class-tsosk-mod-users.php:422
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:76
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:100
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:149
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:229
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:285
 msgid "Insufficient permissions."
 msgstr ""
 
@@ -4127,8 +4124,6 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-runtime-stack.php:500
 #: includes/modules/class-tsosk-mod-server-files.php:800
 #: includes/modules/class-tsosk-mod-transients.php:302
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:764
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:780
 msgid "Size"
 msgstr ""
 
@@ -5347,8 +5342,6 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-redirects.php:407
 #: includes/modules/class-tsosk-mod-transients.php:305
 #: includes/modules/class-tsosk-mod-users.php:527
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:767
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:783
 msgid "Action"
 msgstr ""
 
@@ -5456,147 +5449,138 @@ msgstr ""
 msgid "Args"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:88
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:85
 msgid "Image sizes audit completed."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:128
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:116
 msgid "Image size generation settings saved."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:131
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:119
 msgid "Image size settings saved. New uploads will skip disabled sizes."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:335
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:134
 msgid ""
 "Audit how much disk space each registered image size uses, estimate "
 "recoverable space from thumbnails, and disable sizes you do not need on new "
 "uploads."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:345
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:144
 msgid ""
 "Counts are based on attachment metadata and a disk scan for unmatched "
 "derivative files. Disabling a size only affects new uploads — existing files"
 " are not deleted."
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:148
 #: includes/modules/class-tsosk-mod-media-cleaner.php:184
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:349
 msgid "Open Uploads Disk Footprint"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:382
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:176
 msgid "Run the audit to see file counts and disk usage per size."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:404
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:197
 msgid "Audit summary"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:408
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:201
 msgid "Attachments with metadata"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:412
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:205
 msgid "Full-size files on disk"
 msgstr ""
 
 #. translators: 1: file count, 2: formatted size
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:417
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:430
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:210
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:223
 #, php-format
 msgid "%1$s files — %2$s"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:425
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:218
 msgid "Unmatched derivatives"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:232
 msgid "Last audit"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:467
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:255
 msgid ""
 "Risks when disabling sizes: broken images in old content, missing srcset "
 "variants, and layout issues in themes or page builders that expect specific "
 "dimensions. Test on staging first."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:469
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:257
 msgid "Registered image sizes"
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:262
 #: includes/modules/class-tsosk-mod-runtime-stack.php:340
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:474
 msgid "On"
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:263
 #: includes/modules/class-tsosk-mod-internals.php:67
 #: includes/modules/class-tsosk-mod-runtime-stack.php:498
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:475
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:675
 msgid "Name"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:476
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:676
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:264
 msgid "Dimensions"
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:265
 #: includes/modules/class-tsosk-mod-media-footprint.php:174
 #: includes/modules/class-tsosk-mod-media-footprint.php:200
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:477
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:677
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:763
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:779
 msgid "Files"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:478
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:678
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:266
 msgid "Disk usage"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:479
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:267
 msgid "If disabled (new uploads)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:502
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:290
 msgid "core"
 msgstr ""
 
 #. translators: 1: width, 2: height, 3: crop yes/no
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:510
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:572
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:298
 #, php-format
 msgid "%1$d × %2$d — crop: %3$s"
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:301
 #: includes/modules/class-tsosk-mod-options-editor.php:968
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:513
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:575
 msgid "yes"
 msgstr ""
 
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:301
 #: includes/modules/class-tsosk-mod-options-editor.php:969
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:513
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:575
 msgid "no"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:522
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:310
 msgid "Always generated"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:524
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:312
 msgid "Skipped on new uploads"
 msgstr ""
 
 #. translators: %s: formatted disk size
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:529
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:317
 #, php-format
 msgid "Could save ~%s on future uploads"
 msgstr ""
@@ -9708,8 +9692,6 @@ msgid "Log cleared."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1397
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:234
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:290
 msgid "Invalid entry."
 msgstr ""
 
@@ -12252,7 +12234,6 @@ msgid "Download backup (JSON)"
 msgstr ""
 
 #: includes/class-tsosk-activity-log.php
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:787
 msgid "Restore"
 msgstr ""
 
@@ -12562,24 +12543,18 @@ msgstr ""
 msgid "Move to quarantine"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:746
 msgid "Quarantine is empty."
 msgstr ""
 
 msgid "Folder"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:765
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:781
 msgid "Quarantined"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:766
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:782
 msgid "Auto-deletes on"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:793
 msgid "Delete now"
 msgstr ""
 
@@ -12756,1072 +12731,4 @@ msgid ""
 "or the host restarts PHP. If a change you just uploaded does not seem to "
 "take effect, this button is worth trying, but a full PHP/PHP-FPM restart "
 "from your hosting panel is the only way to force it immediately everywhere."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:488
-msgid "Already covered"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:1240
-msgid "Possible bot"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:318
-msgid "No URLs selected."
-msgstr ""
-
-#. translators: %s: source path
-#: includes/modules/class-tsosk-mod-redirects.php:182
-msgid ""
-"A redirect for %s already exists. Edit that rule instead of creating a "
-"duplicate."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:488
-msgid ""
-"An active redirect rule already matches this exact path. If it still shows "
-"up here, the rule is not actually catching this request — check its match "
-"type and target."
-msgstr ""
-
-#. translators: 1: source path of the shadowed rule, 2: source pattern of the
-#. rule above it that already matches it
-#: includes/modules/class-tsosk-mod-redirects.php:797
-msgid ""
-"Redirect for %1$s is already covered by the %2$s rule above it and will "
-"never run."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:1240
-msgid ""
-"Same IP requested several different missing URLs within a short window."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-redirects.php:451
-msgid ""
-"Visits counts how many times each missing URL was requested. Referrer keeps "
-"the last known previous page (HTTP Referer). If none was ever sent, Direct /"
-" unknown is shown, plus the last User-Agent when available (direct visits, "
-"bots and bookmarks often send none). IP shows the last known requester "
-"address; Possible bot is flagged when the same IP requested several "
-"different missing URLs within about a minute (User-Agent strings are easily "
-"faked, so this is based on request behavior instead)."
-msgstr ""
-
-#. translators: %d: number of removed 404 log entries
-#: includes/modules/class-tsosk-mod-redirects.php:334
-msgid "%d 404 log entry removed."
-msgid_plural "%d 404 log entries removed."
-msgstr[0] ""
-msgstr[1] ""
-
-#. translators: %d: number of removed 404 log entries
-#: includes/modules/class-tsosk-mod-redirects.php:342
-msgid "%d entry removed."
-msgid_plural "%d entries removed."
-msgstr[0] ""
-msgstr[1] ""
-
-#. translators: 1: number of rules created, 2: HTTP status code
-#, php-format
-msgid "Bulk redirect rules created from the 404 monitor: %1$d (%2$d)."
-msgstr ""
-
-#. translators: 1: number of rules created, 2: number of URLs skipped because
-#. a rule already covers them, 3: number of URLs that could not be processed
-#, php-format
-msgid "Created %1$d rule(s). Skipped %2$d already covered. Failed: %3$d."
-msgstr ""
-
-#. translators: %s: URL prefix such as /en/
-#, php-format
-msgid "410 rule created for everything under %s."
-msgstr ""
-
-msgid "Invalid prefix."
-msgstr ""
-
-msgid ""
-"A page with this slug exists, so a 410 for the whole prefix could hide real "
-"content."
-msgstr ""
-
-msgid "Skip this one"
-msgstr ""
-
-msgid "Cancel queue"
-msgstr ""
-
-msgid "Mark selected as 410 (Gone)"
-msgstr ""
-
-msgid "Redirect selected to this target (301)"
-msgstr ""
-
-msgid "Suggested patterns"
-msgstr ""
-
-msgid ""
-"Missing URLs that share the same first path segment. One rule can answer 410"
-" (Gone) for the whole prefix, so you do not need to add them one by one."
-msgstr ""
-
-msgid "Prefix"
-msgstr ""
-
-msgid "Missing URLs"
-msgstr ""
-
-msgid "Examples"
-msgstr ""
-
-msgid "Create 410 rule"
-msgstr ""
-
-msgid "Prefill form"
-msgstr ""
-
-msgid "All selected URLs are already covered by an existing rule."
-msgstr ""
-
-#. translators: %1$d: number of selected 404 URLs left out because a rule
-#. already covers them.
-#, php-format
-msgid "%1$d already covered URL(s) left out."
-msgstr ""
-
-#. translators: %1$d: number of 404 paths still waiting in the redirect queue.
-#, php-format
-msgid "Skipped. %1$d path(s) remaining in the queue."
-msgstr ""
-
-msgid "Queue finished."
-msgstr ""
-
-msgid "Queue cancelled."
-msgstr ""
-
-#. translators: 1: source path that was skipped, 2: number of paths still
-#. waiting in the queue.
-#, php-format
-msgid ""
-"%1$s already had a redirect — skipped. %2$d path(s) remaining in the queue."
-msgstr ""
-
-#. translators: %1$s: source path that was skipped.
-#, php-format
-msgid "%1$s already had a redirect — skipped. Queue finished."
-msgstr ""
-
-#. translators: %1$d: number of selected 404 URLs.
-#, php-format
-msgid "Create a 410 (Gone) rule for each of the %1$d selected URL(s)?"
-msgstr ""
-
-#. translators: %1$d: number of selected 404 URLs.
-#, php-format
-msgid ""
-"Create a 301 redirect to the target for each of the %1$d selected URL(s)?"
-msgstr ""
-
-msgid "Enter a target URL or path first."
-msgstr ""
-
-#. translators: %1$s: URL prefix such as /en/
-#, php-format
-msgid "Create one rule that answers 410 (Gone) for everything under %1$s?"
-msgstr ""
-
-msgid "No redirects selected."
-msgstr ""
-
-msgid "Select at least one redirect rule."
-msgstr ""
-
-#. translators: %1$d: number of selected redirect rules.
-#, php-format
-msgid "Delete the %1$d selected redirect rule(s)? This cannot be undone."
-msgstr ""
-
-#. translators: %d: number of deleted redirect rules
-#, php-format
-msgid "%d redirect deleted."
-msgid_plural "%d redirects deleted."
-msgstr[0] ""
-msgstr[1] ""
-
-msgid ""
-"Rules are checked from top to bottom and the first match wins. Use the "
-"arrows to change the order; they are available while the list is unfiltered "
-"and in evaluation order."
-msgstr ""
-
-msgid "Search source or target…"
-msgstr ""
-
-msgid "Search redirect rules"
-msgstr ""
-
-msgid "Filter rules"
-msgstr ""
-
-msgid "All rules"
-msgstr ""
-
-msgid "410 / 451 (Gone)"
-msgstr ""
-
-msgid "Redirects (3xx)"
-msgstr ""
-
-msgid "Wildcard / regex rules"
-msgstr ""
-
-msgid "Sort rules"
-msgstr ""
-
-msgid "Evaluation order"
-msgstr ""
-
-msgid "Most visits"
-msgstr ""
-
-msgid "Fewest visits"
-msgstr ""
-
-msgid "Most recent visit"
-msgstr ""
-
-msgid "Oldest or never visited"
-msgstr ""
-
-msgid "Source A–Z"
-msgstr ""
-
-msgid "Select none"
-msgstr ""
-
-msgid "Unused for (months)"
-msgstr ""
-
-msgid "Select unused rules"
-msgstr ""
-
-msgid "Enable selected"
-msgstr ""
-
-msgid "Disable selected"
-msgstr ""
-
-msgid "Move up"
-msgstr ""
-
-msgid "Move down"
-msgstr ""
-
-msgid "No rules match your filters."
-msgstr ""
-
-msgid "Export / import (CSV)"
-msgstr ""
-
-msgid ""
-"Export downloads every rule as CSV (source, match_type, target, status, "
-"enabled). To import, paste rows below or load a file; rules whose source "
-"already exists are skipped and new ones are added at the end."
-msgstr ""
-
-msgid "CSV rows to import"
-msgstr ""
-
-msgid "CSV file"
-msgstr ""
-
-msgid "Import CSV"
-msgstr ""
-
-msgid "Redirect moved."
-msgstr ""
-
-msgid "Already at the edge of the list."
-msgstr ""
-
-msgid "Nothing to import."
-msgstr ""
-
-#. translators: %d: number of imported redirect rules
-#, php-format
-msgid "Redirect rules imported from CSV: %d."
-msgstr ""
-
-#. translators: 1: number of rules imported, 2: number of rows skipped because
-#. the source already exists, 3: number of rows that were invalid
-#, php-format
-msgid "Imported %1$d rule(s). Skipped %2$d duplicates. Failed: %3$d."
-msgstr ""
-
-#. translators: 1: number of rules shown, 2: total number of rules.
-#, php-format
-msgid "Showing %1$d of %2$d rules."
-msgstr ""
-
-#. translators: 1: number of unused rules selected, 2: number of months
-#. without visits.
-#, php-format
-msgid "%1$d unused rule(s) selected (no visits in the last %2$d month(s))."
-msgstr ""
-
-msgid "No unused rules found."
-msgstr ""
-
-msgid "Paste CSV rows or load a file first."
-msgstr ""
-
-msgid "CSV downloaded."
-msgstr ""
-
-#. translators: %d: number of redirect rules changed
-#, php-format
-msgid "%d redirect updated."
-msgid_plural "%d redirects updated."
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "How to read this table"
-msgstr ""
-
-msgid ""
-"Audit and fix post slugs across all public post types. Renaming a slug "
-"changes its URL, so a 301 redirect from the old address (and from child "
-"pages) is created to keep links and rankings. Rename only when the new slug "
-"is clearly better."
-msgstr ""
-
-#. translators: %d: threshold
-#, php-format
-msgid ""
-"Posts and pages whose slug exceeds %d characters. Google does not use URL "
-"length as a ranking factor, so this is about readability and sharing; the "
-"default of 75 is a guideline, not a Google rule. Shorten a slug when it is "
-"clearly better (new or low-traffic content) and leave well-ranked URLs "
-"alone: every rename needs a redirect and search engines have to reprocess "
-"the URL. Bulk Fix truncates at the last word boundary and creates 301 "
-"redirects."
-msgstr ""
-
-msgid ""
-"Posts that share the same slug within the same post type (pages only clash "
-"under the same parent), and posts that share a slug with a top-level page "
-"when permalinks start with the post name, where only one of them can load. "
-"WordPress normally prevents this: it usually comes from imports, direct "
-"database edits or plugins."
-msgstr ""
-
-msgid ""
-"Slugs with uppercase letters, underscores or encoded characters. Paths are "
-"case-sensitive, so uppercase can create duplicate URLs, and Google "
-"recommends hyphens over underscores. Encoded characters (accents, non-Latin "
-"scripts) are valid for Google; change them only if you prefer readable, "
-"transliterated slugs."
-msgstr ""
-
-msgid "Same slug in the same post type"
-msgstr ""
-
-msgid "Same URL as a post/page: only one of them can load"
-msgstr ""
-
-msgid "Uppercase letters"
-msgstr ""
-
-msgid "Underscore (hyphens are preferred)"
-msgstr ""
-
-msgid "Encoded characters"
-msgstr ""
-
-msgid "Other characters"
-msgstr ""
-
-#. translators: %d: maximum number of rows shown
-#, php-format
-msgid ""
-"Showing the first %d results only. Fix these and reload to see the rest."
-msgstr ""
-
-msgid "This content type cannot be edited here."
-msgstr ""
-
-#. translators: 1: slug, 2: content type that already uses it (post or page)
-#, php-format
-msgid ""
-"The URL /%1$s/ is already used by a %2$s, so only one of them could load. "
-"Choose a different slug."
-msgstr ""
-
-#. translators: %s: slug WordPress actually saved
-#, php-format
-msgid "WordPress adjusted the slug to \"%s\" to keep it unique."
-msgstr ""
-
-#. translators: 1: redirects created or updated, 2: redirects that already
-#. existed
-#, php-format
-msgid "301 redirects: %1$d created or updated, %2$d already existed."
-msgstr ""
-
-#. translators: %d: number of earlier redirects repointed
-#, php-format
-msgid "%d earlier redirect(s) were repointed to avoid redirect chains."
-msgstr ""
-
-msgid "This item is not an editable public post."
-msgstr ""
-
-msgid "No free slug was found within the limit."
-msgstr ""
-
-msgid ""
-"Slug updated. No redirect was needed because the post is not published."
-msgstr ""
-
-msgid ""
-"Slug updated, but no redirect was created because the Redirects module is "
-"not active."
-msgstr ""
-
-msgid "Slug updated. A 301 redirect for the old URL already existed."
-msgstr ""
-
-msgid "Slug updated, but no redirect was created."
-msgstr ""
-
-#. translators: %d: number of redirects removed because they pointed away from
-#. the now live URL
-#, php-format
-msgid "%d old redirect(s) for the new URL were removed."
-msgstr ""
-
-#. translators: 1: old URL, 2: new URL.
-#, php-format
-msgid "Old URL %1$s now redirects to %2$s"
-msgstr ""
-
-#. translators: %d: number of child pages whose URL also changed
-#, php-format
-msgid "%d child page URL was also redirected."
-msgid_plural "%d child page URLs were also redirected."
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "This item is not a Media Library attachment."
-msgstr ""
-
-msgid "Full media review completed."
-msgstr ""
-
-msgid ""
-"Some folders could not be read, so the list may be incomplete (see the "
-"notice below)."
-msgstr ""
-
-msgid ""
-"Finds Media Library items whose file is missing, empty or stored with a "
-"wrong path, media not attached to any post, and files in wp-content/uploads "
-"that no Media Library item references. It only reports: nothing is deleted "
-"or moved from this screen."
-msgstr ""
-
-msgid ""
-"No full review yet. It checks every Media Library item and every eligible "
-"file under wp-content/uploads/, in batches, until finished."
-msgstr ""
-
-msgid "A review was interrupted before it finished."
-msgstr ""
-
-msgid "Resume"
-msgstr ""
-
-msgid ""
-"Run a full media review to walk the whole uploads folder. Thumbnails, scaled"
-" or edited originals, PDF previews, WebP/AVIF copies and plugin folders are "
-"recognised and left out."
-msgstr ""
-
-msgid "Full URL stored"
-msgstr ""
-
-msgid "Old absolute path"
-msgstr ""
-
-msgid "No path stored"
-msgstr ""
-
-msgid "Invalid path"
-msgstr ""
-
-msgid "Empty file (0 bytes)"
-msgstr ""
-
-msgid "Missing sizes"
-msgstr ""
-
-msgid "File missing"
-msgstr ""
-
-msgid ""
-"A full URL was stored instead of a relative path, so WordPress cannot find "
-"the file. The file exists in uploads."
-msgstr ""
-
-msgid ""
-"A full URL was stored instead of a relative path, and the file was not found"
-" on disk."
-msgstr ""
-
-msgid ""
-"The stored path is absolute and comes from another server. The file exists "
-"in the current uploads folder, so only the database path needs fixing."
-msgstr ""
-
-msgid ""
-"The stored path is absolute and comes from another server, and the file was "
-"not found in the current uploads folder."
-msgstr ""
-
-msgid ""
-"The file exists but has 0 bytes, so it is corrupt or an interrupted upload."
-msgstr ""
-
-msgid ""
-"The original file exists, but generated sizes listed in the database are "
-"gone, so some image variants return 404. Regenerating thumbnails fixes it."
-msgstr ""
-
-msgid "Missing or broken items"
-msgstr ""
-
-msgid "Shared file references"
-msgstr ""
-
-msgid "Unattached media"
-msgstr ""
-
-msgid "Unreferenced media files"
-msgstr ""
-
-msgid "Other unreferenced files"
-msgstr ""
-
-#, php-format
-msgid ""
-"%s item(s) live on remote storage (an offload plugin) and were not checked "
-"on disk."
-msgstr ""
-
-#, php-format
-msgid "These folders could not be read, so their files were not checked: %s"
-msgstr ""
-
-#, php-format
-msgid "Plugin folders left out: %s."
-msgstr ""
-
-#, php-format
-msgid ""
-"%s file(s) were recognised as sizes, previews or copies of a Media Library "
-"item."
-msgstr ""
-
-#, php-format
-msgid "%s symlinked folder(s) were not followed."
-msgstr ""
-
-msgid ""
-"These are attachment records in the WordPress database. WordPress expects "
-"each one to point to a file under wp-content/uploads/. Red means the file "
-"cannot be served; amber means it works but some generated sizes are gone."
-msgstr ""
-
-#, php-format
-msgid ""
-"Showing the first %1$s of %2$s. Fix these and run the review again to see "
-"the rest."
-msgstr ""
-
-msgid "In trash"
-msgstr ""
-
-msgid "Missing on disk:"
-msgstr ""
-
-msgid "Media Library items sharing the same file"
-msgstr ""
-
-msgid ""
-"Several Media Library items point to one file. Deleting any of them from the"
-" Media Library deletes the file, and the others break. Keep one item per "
-"file before cleaning up."
-msgstr ""
-
-msgid "Stored file"
-msgstr ""
-
-msgid "Items"
-msgstr ""
-
-msgid ""
-"Images, documents, audio and video in uploads that no Media Library item "
-"points to. Check them before removing anything: some themes and page "
-"builders link to uploads directly."
-msgstr ""
-
-msgid ""
-"Files that are not media (text, code, archives…). Usually left by plugins or"
-" manual uploads."
-msgstr ""
-
-msgid ""
-"Full walk of wp-content/uploads. Sizes (-300x200), scaled or edited "
-"originals, PDF previews, WebP/AVIF copies, plugin folders and guard files "
-"are recognised and left out. Thumbnails whose original is gone are reported."
-msgstr ""
-
-msgid "No unreferenced files found."
-msgstr ""
-
-#, php-format
-msgid "Showing the %1$s largest of %2$s."
-msgstr ""
-
-msgid "Size without its original"
-msgstr ""
-
-msgid ""
-"Media Library items with no parent post, or whose parent post was deleted. "
-"Unattached does not mean unused: featured images, widgets, page builders and"
-" custom fields often use media that is not attached. Regenerate thumbnails "
-"only applies to image attachments."
-msgstr ""
-
-msgid "In use: featured image"
-msgstr ""
-
-msgid "Parent post deleted"
-msgstr ""
-
-msgid ""
-"The review was interrupted. Your progress is saved: press Resume to "
-"continue."
-msgstr ""
-
-msgid "No scan in progress. Start a new scan."
-msgstr ""
-
-msgid "The file limit was reached, so totals are partial."
-msgstr ""
-
-#, php-format
-msgid "Scanning uploads… %1$s files in %2$s folders (%3$s so far)"
-msgstr ""
-
-msgid "Folder hygiene scan completed."
-msgstr ""
-
-msgid "Invalid folder."
-msgstr ""
-
-msgid "This folder no longer appears in the scan. The list was refreshed."
-msgstr ""
-
-msgid ""
-"Folder moved to quarantine. It can be restored for 30 days, and it keeps "
-"using disk space until it is deleted."
-msgstr ""
-
-msgid ""
-"See how much disk space wp-content/uploads uses: totals by folder, month and"
-" file type, the largest files, and how much space thumbnails take compared "
-"to originals. Plugin folders and the quarantine are included, because they "
-"use real disk space."
-msgstr ""
-
-msgid ""
-"The scan runs in short batches, so large libraries do not time out. The last"
-" result is kept for 24 hours; scan again to refresh it."
-msgstr ""
-
-msgid "A scan was interrupted before it finished."
-msgstr ""
-
-msgid "Folder hygiene"
-msgstr ""
-
-msgid ""
-"Scan uploads and known cache folders (legacy TSO paths, .tmb thumbnails). "
-"Only items marked Safe can be moved to quarantine from here; the others are "
-"recommendations only. A folder in quarantine still uses disk space until it "
-"is deleted."
-msgstr ""
-
-msgid "Scan removable folders"
-msgstr ""
-
-msgid ""
-"No hygiene scan yet. Click “Scan removable folders” to classify uploads "
-"subfolders and .tmb caches."
-msgstr ""
-
-msgid ""
-"Folders removed via Folder hygiene are moved here first and kept for 30 days"
-" before automatic permanent deletion, so you can restore them if something "
-"breaks. The deletion runs on a scheduled task, so it also happens when "
-"nobody opens this screen."
-msgstr ""
-
-#, php-format
-msgid "%1$s files · %2$s folders"
-msgstr ""
-
-msgid "Quarantine (still on disk)"
-msgstr ""
-
-#, php-format
-msgid ""
-"Last scan: %1$s (%2$s ago, took %3$s s). Sizes are the bytes of each file, "
-"not the space rounded up by the disk."
-msgstr ""
-
-msgid ""
-"The scan stopped at the file safety limit. Totals are partial and should be "
-"used for guidance only."
-msgstr ""
-
-#, php-format
-msgid "These folders could not be read, so their size is not included: %s"
-msgstr ""
-
-#, php-format
-msgid ""
-"%s symbolic link(s) were not followed, so what they point to is not counted."
-msgstr ""
-
-msgid "Space by folder"
-msgstr ""
-
-msgid ""
-"Where the disk space goes, by first-level folder. Year folders are your "
-"Media Library; the rest is plugin data or files that are not in the Media "
-"Library."
-msgstr ""
-
-msgid "Share"
-msgstr ""
-
-msgid "Media Library"
-msgstr ""
-
-msgid "Plugin data"
-msgstr ""
-
-msgid "Quarantine"
-msgstr ""
-
-msgid "Loose files"
-msgstr ""
-
-#, php-format
-msgid ""
-"The 24 most recent periods are shown; %s older ones are grouped in the "
-"totals above."
-msgstr ""
-
-msgid "Outside year/month folders"
-msgstr ""
-
-msgid "Not in Media Library"
-msgstr ""
-
-msgid "Removable folders"
-msgstr ""
-
-#, php-format
-msgid ""
-"Space that will be freed once all Safe folders are deleted: %s. Moving them "
-"to quarantine does not free it yet: that happens after 30 days, or with "
-"“Delete now”."
-msgstr ""
-
-msgid "No classified folders were found under uploads or known cache paths."
-msgstr ""
-
-msgid "Confidence"
-msgstr ""
-
-msgid "Safe"
-msgstr ""
-
-msgid "Keep"
-msgstr ""
-
-msgid ""
-"This folder is very large, so measuring stopped early: size and file count "
-"are a minimum."
-msgstr ""
-
-msgid "Manual only"
-msgstr ""
-
-#, php-format
-msgid "%1$s folder(s) in quarantine, %2$s still on disk."
-msgstr ""
-
-msgid ""
-"Symbolic link. It is not followed or measured, and it cannot be removed from"
-" here."
-msgstr ""
-
-msgid "Unknown folder."
-msgstr ""
-
-msgid "This folder cannot be deleted from here."
-msgstr ""
-
-msgid "The folder no longer exists."
-msgstr ""
-
-msgid "The folder path is outside the allowed locations."
-msgstr ""
-
-msgid "Could not delete the folder."
-msgstr ""
-
-msgid ""
-"The original location is outside the allowed folders, so it cannot be "
-"restored from here."
-msgstr ""
-
-msgid ""
-"Could not delete the quarantined folder. It stays listed so you can try "
-"again."
-msgstr ""
-
-msgid "Active Swiss Knife data folder (config, logs). Do not delete."
-msgstr ""
-
-msgid ""
-"Legacy Swiss Knife config folder. JSON was migrated to the long slug folder "
-"— safe to remove if empty or duplicate."
-msgstr ""
-
-msgid ""
-"Legacy Swiss Knife config folder. Confirm the new config folder exists "
-"before deleting."
-msgstr ""
-
-msgid ""
-"Obsolete language-cache folder from an older Swiss Knife version. Safe to "
-"delete — not used by current releases."
-msgstr ""
-
-msgid ""
-"Legacy Swiss Knife logs folder. Current logs use uploads/{plugin-slug}/logs/"
-" — safe to remove if you no longer need these files."
-msgstr ""
-
-msgid ""
-"Legacy Swiss Knife logs folder. Review contents before deleting — may "
-"contain log files not copied elsewhere."
-msgstr ""
-
-msgid ""
-"Multisite: this folder holds the media of the other sites in the network. Do"
-" not delete."
-msgstr ""
-
-msgid "Folder belongs to an active TSO plugin — keep it."
-msgstr ""
-
-msgid ""
-"Folder matches a TSO plugin slug but that plugin is not active. Review "
-"before deleting — may contain backups or exports."
-msgstr ""
-
-msgid "Known plugin folder — not classified as disposable cache."
-msgstr ""
-
-msgid ""
-"Custom or third-party folder under uploads. Verify what created it before "
-"deleting."
-msgstr ""
-
-msgid ""
-"elFinder / file-manager thumbnail cache (.tmb). Safe to delete — thumbnails "
-"regenerate when you browse files in that tool."
-msgstr ""
-
-msgid ""
-"The scan was interrupted. Your progress is saved: press Resume to continue."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:699
-msgid "%1$d × %2$d"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:752
-msgid "%1$s batch(es) in quarantine, %2$s still on disk."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:1813
-msgid "Could not access the filesystem to move files to quarantine."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:2111
-msgid "Could not access the filesystem to restore files."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:1808
-msgid "Could not create the quarantine folder."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:2186
-msgid ""
-"Could not restore any files — their original locations already have a file, "
-"or are no longer valid."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:661
-msgid "Free up space from disabled sizes"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:363
-msgid "Image sizes quarantine"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:674
-msgid "Move"
-msgstr ""
-
-#: includes/class-tsosk-admin.php:268
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:716
-msgid "Move files for selected sizes to quarantine"
-msgstr ""
-
-#: includes/class-tsosk-admin.php:271
-msgid ""
-"Move the existing files for %1$d selected image size(s) to quarantine? They "
-"will be kept for 30 days and can be restored, or deleted permanently at any "
-"time. Continue?"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:213
-msgid ""
-"Moved %1$d files (%2$s) to quarantine. They can be restored or permanently "
-"deleted below."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:192
-msgid ""
-"Moved existing files for image size(s) %1$s to quarantine: %2$d files, %3$s."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:667
-msgid ""
-"No disabled size currently has existing files on disk (or the audit has not "
-"run yet)."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:179
-msgid ""
-"No eligible sizes selected. Only sizes already turned off for new uploads "
-"can be quarantined here."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:2017
-msgid "No existing files were found for the selected sizes."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:1784
-msgid "No image sizes selected."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:663
-msgid ""
-"Only sizes already turned off above are listed here, and turning a size off "
-"never deletes its files by itself — you choose which of those to move now. "
-"Files are moved to quarantine, not deleted: you can restore them or check "
-"the site is fine first, then delete them for good from the quarantine list "
-"below (or leave them — they are auto-deleted after 30 days)."
-msgstr ""
-
-#: includes/class-tsosk-admin.php:273
-msgid "Permanently delete these quarantined files now? This cannot be undone."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:306
-msgid "Permanently deleted quarantined files for image size(s): %s."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:313
-msgid "Quarantined files permanently deleted."
-msgstr ""
-
-#: includes/class-tsosk-admin.php:272
-msgid "Restore these quarantined files to their original locations?"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:261
-msgid ""
-"Restored %1$d file(s). %2$d file(s) could not be restored (their original "
-"spot already has a file) and stay in quarantine."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:267
-msgid "Restored %d file(s) to their original location."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:250
-msgid "Restored quarantined files for image size(s) %1$s: %2$d files."
-msgstr ""
-
-#: includes/class-tsosk-admin.php:269
-msgid "Select at least one size first."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:762
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:778
-msgid "Sizes"
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:2239
-msgid ""
-"Some quarantined files could not be deleted. They stay listed so you can try"
-" again."
-msgstr ""
-
-#: includes/class-tsosk-uploads-scanner.php:2103
-msgid "This quarantine entry has no files left."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:555
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:691
-msgid "not registered"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:563
-msgid "%1$d × %2$d — crop: unknown"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:593
-msgid ""
-"Rows marked \"not registered\" come from an old theme or a deactivated "
-"plugin. WordPress still stores their files even though nothing generates "
-"them any more."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:584
-msgid ""
-"Not registered by any active theme or plugin — no new files are generated "
-"for it. Existing files can be moved to quarantine below."
 msgstr ""
