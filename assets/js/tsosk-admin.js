@@ -4805,7 +4805,13 @@
 			action : 'tsosk_image_sizes_audit_save',
 			data   : { nonce: $btn.data( 'nonce' ), disabled: disabled },
 			success: function ( r ) {
-				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				if ( r.success && r.data && r.data.html ) {
+					// The button is re-rendered with the results, so the message goes to the fresh copy.
+					$( '#tsosk-image-sizes-results' ).html( r.data.html );
+					showMsg( $( '#tsosk-image-sizes-save-msg' ), r.data.message || tsosk.i18n.done, 'ok' );
+					return;
+				}
+				showMsg( $msg, r.success ? ( ( r.data && r.data.message ) || r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.image_sizes_save || 'Save image size settings' );
 			},
 			error: function () {
@@ -4821,6 +4827,7 @@
 		var $out  = $( '#tsosk-image-sizes-results' );
 		var $qout = $( '#tsosk-image-sizes-quarantine-results' );
 		var sizes = [];
+		var btnLabel = tsosk.i18n.image_sizes_quarantine || 'Move files for selected sizes to quarantine';
 
 		$( '.tsosk-img-audit-delete-checkbox:checked' ).each( function () {
 			var name = $( this ).data( 'name' );
@@ -4842,28 +4849,41 @@
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 		showMsg( $msg, '', '' );
 
-		ajaxPost( {
-			action : 'tsosk_image_sizes_audit_quarantine',
-			data   : { nonce: $btn.data( 'nonce' ), sizes: sizes },
-			success: function ( r ) {
-				if ( r.success ) {
-					if ( r.data && r.data.html ) {
-						$out.html( r.data.html );
+		// The server first reports content that still links to these sizes; the request is repeated once confirmed.
+		function send( confirmRefs ) {
+			ajaxPost( {
+				action : 'tsosk_image_sizes_audit_quarantine',
+				data   : { nonce: $btn.data( 'nonce' ), sizes: sizes, confirm_refs: confirmRefs ? 1 : 0 },
+				success: function ( r ) {
+					if ( r.success && r.data && r.data.needs_confirm ) {
+						if ( window.confirm( r.data.message ) ) {
+							send( true );
+							return;
+						}
+						$btn.prop( 'disabled', false ).text( btnLabel );
+						return;
 					}
-					if ( r.data && r.data.quarantine_html ) {
-						$qout.html( r.data.quarantine_html );
+					if ( r.success ) {
+						if ( r.data && r.data.html ) {
+							$out.html( r.data.html );
+						}
+						if ( r.data && r.data.quarantine_html ) {
+							$qout.html( r.data.quarantine_html );
+						}
+						showMsg( $( '#tsosk-image-sizes-delete-msg' ), ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+						$btn.prop( 'disabled', false ).text( btnLabel );
+					} else {
+						showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+						$btn.prop( 'disabled', false ).text( btnLabel );
 					}
-					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false ).text( tsosk.i18n.image_sizes_quarantine || 'Move files for selected sizes to quarantine' );
+				},
+				error: function () {
+					showMsg( $msg, tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( btnLabel );
 				}
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.image_sizes_quarantine || 'Move files for selected sizes to quarantine' );
-			}
-		} );
+			} );
+		}
+		send( false );
 	} );
 
 	$( document ).on( 'click', '.tsosk-img-quarantine-restore', function () {

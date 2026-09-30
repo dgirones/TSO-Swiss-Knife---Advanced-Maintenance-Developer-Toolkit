@@ -61,6 +61,8 @@ $tsosk_options = array(
 	'tsosk_security_uploads_php_test',
 	'tsosk_cas_learning_log',
 	'tsosk_media_quarantine',
+	'tsosk_image_sizes_quarantine',
+	'tsosk_seen_image_sizes',
 	'tsosk_rest_blocked_log',
 	'tsosk_sr_last_backup',
 	'tsosk_view_counter_last_import',
@@ -186,6 +188,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
 
 wp_clear_scheduled_hook( 'tsosk_vc_weekly_email' );
 wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
+wp_clear_scheduled_hook( 'tsosk_image_sizes_quarantine_purge' );
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 

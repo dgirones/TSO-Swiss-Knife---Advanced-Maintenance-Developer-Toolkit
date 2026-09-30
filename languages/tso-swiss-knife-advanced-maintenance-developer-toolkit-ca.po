@@ -15985,3 +15985,17 @@ msgstr ""
 "Les files marcades \"no registrat\" provenen d’un tema antic o d’un plugin "
 "desactivat. WordPress encara conserva els seus fitxers tot i que ja no els "
 "genera ningú."
+
+#. translators: 1: size name, 2: number of posts/pages, 3: number of post meta values
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "%1$s: %2$d post(s)/page(s), %3$d meta value(s)"
+msgstr "%1$s: %2$d entrada(es)/pàgina(ques), %3$d valor(s) de meta"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Some content still links directly to files of these sizes. Those images will show as broken until you restore the files:"
+msgstr "Hi ha contingut que encara enllaça directament amb fitxers d’aquestes mides. Aquestes imatges es veuran trencades fins que restaureu els fitxers:"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Move them to quarantine anyway?"
+msgstr "Voleu moure-les a la quarantena igualment?"

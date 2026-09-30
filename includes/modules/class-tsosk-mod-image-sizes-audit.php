@@ -17,6 +17,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	/** Option key for disabled image size names. */
 	public const OPTION_DISABLED_SIZES = 'tsosk_disabled_image_sizes';
 
+	/** Option key: size names seen registered on front-end requests (they may not exist in wp-admin). */
+	public const OPTION_SEEN_SIZES = 'tsosk_seen_image_sizes';
+
 	/** @var TSOSK_Mod_Image_Sizes_Audit|null */
 	private static $instance = null;
 
@@ -43,36 +46,77 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	 */
 	public function init(): void {
 		add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_disabled_image_sizes' ), 99 );
-
-		// Any change to the media library (from any plugin or screen) makes the cached audit stale.
-		add_action( 'add_attachment', array( $this, 'invalidate_cached_audit' ) );
-		add_action( 'delete_attachment', array( $this, 'invalidate_cached_audit' ) );
-		add_filter( 'wp_update_attachment_metadata', array( $this, 'invalidate_cached_audit_on_metadata' ), 99 );
+		add_action( 'wp_loaded', array( $this, 'remember_registered_sizes' ), 99 );
 	}
 
 	/**
-	 * Drop the cached image sizes audit so the next visit does not show outdated counts.
-	 *
-	 * Runs at most once per request, even during bulk uploads, deletions or thumbnail regeneration.
+	 * Remember sizes registered on front-end requests. Some themes and plugins only register a size
+	 * outside wp-admin, so "not registered" seen from the admin alone does not mean "unused".
 	 */
-	public function invalidate_cached_audit(): void {
-		static $done = false;
-		if ( $done ) {
+	public function remember_registered_sizes(): void {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ! function_exists( 'wp_get_registered_image_subsizes' ) ) {
 			return;
 		}
-		$done = true;
-		delete_transient( TSOSK_Uploads_Scanner::TRANSIENT_SIZES );
+		$names = array_keys( wp_get_registered_image_subsizes() );
+		$seen  = $this->get_seen_sizes();
+		if ( array_diff( $names, $seen ) ) {
+			update_option( self::OPTION_SEEN_SIZES, array_slice( array_values( array_unique( array_merge( $seen, $names ) ) ), 0, 200 ), false );
+		}
 	}
 
 	/**
-	 * Filter callback: invalidate the cached audit when attachment metadata changes.
-	 *
-	 * @param mixed $data Attachment metadata (returned unchanged).
-	 * @return mixed
+	 * @return string[]
 	 */
-	public function invalidate_cached_audit_on_metadata( $data ) {
-		$this->invalidate_cached_audit();
-		return $data;
+	private function get_seen_sizes(): array {
+		$stored = get_option( self::OPTION_SEEN_SIZES, array() );
+		return is_array( $stored ) ? array_values( array_filter( array_map( 'sanitize_key', $stored ) ) ) : array();
+	}
+
+	/**
+	 * Content that still links to files of the given sizes (post content and post meta such as page-builder data).
+	 *
+	 * @param string[] $sizes Size names.
+	 * @return array<string, array{posts:int, meta:int}> Only sizes with at least one reference.
+	 */
+	private function count_content_references( array $sizes ): array {
+		global $wpdb;
+
+		$registered = function_exists( 'wp_get_registered_image_subsizes' ) ? wp_get_registered_image_subsizes() : array();
+		$audit      = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_SIZES );
+		$size_meta  = is_array( $audit ) && is_array( $audit['size_meta'] ?? null ) ? $audit['size_meta'] : array();
+
+		$out = array();
+		foreach ( $sizes as $name ) {
+			$width  = (int) ( $registered[ $name ]['width'] ?? ( $size_meta[ $name ]['width'] ?? 0 ) );
+			$height = (int) ( $registered[ $name ]['height'] ?? ( $size_meta[ $name ]['height'] ?? 0 ) );
+			if ( $width <= 0 || $height <= 0 ) {
+				continue;
+			}
+			$like = '%' . $wpdb->esc_like( '-' . $width . 'x' . $height . '.' ) . '%';
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$posts = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type NOT IN ('attachment','revision') AND post_status <> 'auto-draft' AND post_content LIKE %s",
+					$like
+				)
+			);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$meta = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(meta_id) FROM {$wpdb->postmeta} WHERE meta_key NOT LIKE %s AND meta_value LIKE %s",
+					$wpdb->esc_like( '_wp_attach' ) . '%',
+					$like
+				)
+			);
+			if ( $posts + $meta > 0 ) {
+				$out[ $name ] = array(
+					'posts' => $posts,
+					'meta'  => $meta,
+				);
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -158,7 +202,25 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			__( 'Image size generation settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
 
-		wp_send_json_success( __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		// Re-render the results so the "Free up space" list reflects the sizes just turned off,
+		// without having to run the audit again.
+		$nonce    = wp_create_nonce( 'tsosk_image_sizes_audit_nonce' );
+		$disabled = $this->get_disabled_sizes();
+		$audit    = get_transient( TSOSK_Uploads_Scanner::TRANSIENT_SIZES );
+		if ( is_array( $audit ) ) {
+			$html = $this->render_audit_html( $audit, $disabled );
+		} else {
+			ob_start();
+			$this->render_sizes_table_without_audit( $disabled, $nonce );
+			$html = (string) ob_get_clean();
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Image size settings saved. New uploads will skip disabled sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'html'    => $html,
+			)
+		);
 	}
 
 	/**
@@ -193,20 +255,45 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		}
 
 		$disabled          = $this->get_disabled_sizes();
+		$seen_sizes        = $this->get_seen_sizes();
 		$registered_names  = function_exists( 'wp_get_registered_image_subsizes' )
 			? array_keys( wp_get_registered_image_subsizes() )
 			: array();
 		$sizes             = array_values(
 			array_filter(
 				array_unique( $requested ),
-				static function ( string $name ) use ( $disabled, $registered_names ): bool {
-					return in_array( $name, $disabled, true ) || ! in_array( $name, $registered_names, true );
+				static function ( string $name ) use ( $disabled, $registered_names, $seen_sizes ): bool {
+					// A size not registered in wp-admin still counts as "in use" when it was seen registered on the front end.
+					return in_array( $name, $disabled, true ) || ( ! in_array( $name, $registered_names, true ) && ! in_array( $name, $seen_sizes, true ) );
 				}
 			)
 		);
 
 		if ( empty( $sizes ) ) {
 			wp_send_json_error( __( 'No eligible sizes selected. Only sizes already turned off for new uploads can be quarantined here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Warn before moving files that content still links to (the links would 404 until restored).
+		if ( empty( $_POST['confirm_refs'] ) ) {
+			$refs = $this->count_content_references( $sizes );
+			if ( ! empty( $refs ) ) {
+				$lines = array();
+				foreach ( $refs as $ref_name => $ref ) {
+					$lines[] = sprintf(
+						/* translators: 1: size name, 2: number of posts/pages, 3: number of post meta values */
+						__( '%1$s: %2$d post(s)/page(s), %3$d meta value(s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$ref_name,
+						(int) $ref['posts'],
+						(int) $ref['meta']
+					);
+				}
+				wp_send_json_success(
+					array(
+						'needs_confirm' => true,
+						'message'       => __( 'Some content still links directly to files of these sizes. Those images will show as broken until you restore the files:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . "\n\n" . implode( "\n", $lines ) . "\n\n" . __( 'Move them to quarantine anyway?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					)
+				);
+			}
 		}
 
 		$result = TSOSK_Uploads_Scanner::quarantine_image_size_files( $sizes );
@@ -669,9 +756,10 @@ class TSOSK_Mod_Image_Sizes_Audit {
 				'legacy' => false,
 			);
 		}
+		$seen_sizes = $this->get_seen_sizes();
 		foreach ( $legacy_names as $name ) {
 			$stats = $by_size[ $name ] ?? array( 'files' => 0, 'bytes' => 0 );
-			if ( (int) ( $stats['files'] ?? 0 ) <= 0 ) {
+			if ( (int) ( $stats['files'] ?? 0 ) <= 0 || in_array( $name, $seen_sizes, true ) ) {
 				continue;
 			}
 			$meta               = $size_meta[ $name ] ?? array(

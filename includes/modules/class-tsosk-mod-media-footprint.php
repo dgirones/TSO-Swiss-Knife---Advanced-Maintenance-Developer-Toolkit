@@ -175,15 +175,21 @@ class TSOSK_Mod_Media_Footprint {
 			array( 'folder_id' => $folder_id )
 		);
 
-		$scan = TSOSK_Uploads_Scanner::scan_hygiene();
-		if ( ! is_wp_error( $scan ) ) {
-			set_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE, $scan, TSOSK_Uploads_Scanner::CACHE_TTL );
-		}
+		// Reuse the fresh scan taken above (minus the folder just moved) instead of walking uploads a second time.
+		$scan['items'] = array_values(
+			array_filter(
+				(array) ( $scan['items'] ?? array() ),
+				static function ( $item ) use ( $folder_id ): bool {
+					return ! is_array( $item ) || ( $item['id'] ?? '' ) !== $folder_id;
+				}
+			)
+		);
+		set_transient( TSOSK_Uploads_Scanner::TRANSIENT_HYGIENE, $scan, TSOSK_Uploads_Scanner::CACHE_TTL );
 
 		wp_send_json_success(
 			array(
 				'message'         => __( 'Folder moved to quarantine. It can be restored for 30 days, and it keeps using disk space until it is deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'html'            => is_wp_error( $scan ) ? '' : $this->render_hygiene_html( $scan ),
+				'html'            => $this->render_hygiene_html( $scan ),
 				'quarantine_html' => $this->render_quarantine_html(),
 			)
 		);
