@@ -1262,10 +1262,6 @@ msgstr "Regles de reescriptura"
 msgid "Rewrite Tags"
 msgstr "Etiquetes de reescriptura"
 
-#: includes/modules/class-tsosk-mod-rewrite.php:41
-msgid "Rewrite rules flushed successfully."
-msgstr "Regles de reescriptura buidadades correctament."
-
 #: includes/class-tsosk-activity-log.php:267
 #: includes/class-tsosk-admin.php:226
 #: includes/modules/class-tsosk-mod-cron.php:378
@@ -18549,3 +18545,67 @@ msgstr "Ruta personalitzada de WP_DEBUG_LOG"
 #, php-format
 msgid "error_log in %s"
 msgstr "error_log a %s"
+
+#: includes/modules/class-tsosk-mod-rewrite.php:80
+msgid ""
+"Flushed, but plain permalinks are active, so WordPress stores no rewrite "
+"rules."
+msgstr ""
+"Buidat, però hi ha enllaços permanents simples, així que WordPress no desa "
+"cap regla de reescriptura."
+
+# %d: number of rewrite rules now stored
+#: includes/modules/class-tsosk-mod-rewrite.php:88
+#, php-format
+msgid "Rewrite rules flushed. Rules now stored: %d."
+msgstr "Regles de reescriptura buidades. Regles desades ara: %d."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:101
+msgid "On multisite WordPress does not rewrite .htaccess automatically."
+msgstr "En multisite, WordPress no reescriu el .htaccess automàticament."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:116
+msgid ""
+"This server does not use .htaccess (for example nginx), so only the database"
+" rules were refreshed. Update the server configuration manually."
+msgstr ""
+"Aquest servidor no fa servir .htaccess (per exemple nginx), així que només "
+"s’han actualitzat les regles de la base de dades. Actualitza la configuració"
+" del servidor manualment."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:127
+msgid ""
+"WARNING: .htaccess is not writable, so it was NOT updated. Fix its "
+"permissions or edit it manually."
+msgstr ""
+"AVÍS: el .htaccess no es pot escriure, així que NO s’ha actualitzat. "
+"Corregeix-ne els permisos o edita’l manualment."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:133
+msgid "The .htaccess file was updated."
+msgstr "S’ha actualitzat el fitxer .htaccess."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:227
+msgid ""
+"Plain permalinks are active, so WordPress stores no rewrite rules. Choose "
+"another structure in Settings → Permalinks to use them."
+msgstr ""
+"Hi ha enllaços permanents simples, així que WordPress no desa cap regla de "
+"reescriptura. Tria una altra estructura a Configuració → Enllaços permanents"
+" per fer-ne servir."
+
+# 1: raw PHP value (0 or -1)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:349
+#, php-format
+msgid "%s (no limit)"
+msgstr "%s (sense límit)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:547
+msgid ""
+"The object-cache.php file is on disk, but WordPress is not using a "
+"persistent cache. The cache service may be down or turned off, or the drop-"
+"in may not be compatible with this server."
+msgstr ""
+"El fitxer object-cache.php és al disc, però WordPress no fa servir una "
+"memòria cau persistent. El servei de memòria cau pot estar aturat o "
+"desactivat, o el drop-in pot no ser compatible amb aquest servidor."

@@ -227,6 +227,13 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Improved: Update Manager shows the version offered per plugin and adds an "Update now" button to force a plugin update (even if hidden or checks are blocked).
 * Fixed: Update Manager now flags an overdue update-check cron, warns when counts are incomplete because checks are blocked or updates are hidden, includes core in the manual check result and no longer queries wordpress.org twice.
 * Fixed: Update Manager "Update now" button no longer ends in a critical error after installing the plugin.
+* Fixed: Redirects — "Create redirect" in the 404 Monitor now switches to the Redirects tab, so the form is visible instead of filling it out of sight.
+* Improved: Debug Mode lists only the error logs that exist, and new ones appear automatically; it also finds custom WP_DEBUG_LOG paths and error_log files inside plugin and theme folders, works on hosts with symlinked paths and flags logs that cannot be read.
+* Fixed: Image Sizes Audit refreshes itself when images are added, deleted or regenerated from anywhere (Media Library, Image Master, other plugins), so it no longer shows outdated counts.
+* Fixed: Rewrite Rules — the route simulator now works on subdirectory installs and follows WordPress's own matching (slashes trimmed, unmatched groups left empty, values URL-encoded); a bare domain or "?p=1" is read as the home page.
+* Fixed: Rewrite Rules — a hard flush now says whether .htaccess was really updated (and warns when it is read-only, on nginx or on multisite) instead of always reporting success; plain permalinks get their own message. Soft and hard flush can no longer run at the same time.
+* Fixed: Server & Runtime — no more PHP warnings or a false "OPcache off" on hosts that restrict the OPcache API (the Reset button is hidden there); the temporary-folder check uses upload_tmp_dir; limits of 0 / -1 are shown as "no limit".
+* Improved: Server & Runtime — warns when an object-cache.php drop-in is on disk but WordPress is not using it, and the summary for hosting includes more limits.
 
 = 1.2.1 =
 * Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.

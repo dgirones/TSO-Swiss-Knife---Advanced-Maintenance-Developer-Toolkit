@@ -7723,10 +7723,6 @@ msgstr ""
 msgid "Rewrite rules soft-flushed."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-rewrite.php:41
-msgid "Rewrite rules flushed successfully."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-rewrite.php:53
 msgid ""
 "Flush and inspect WordPress rewrite rules. A \"hard flush\" also regenerates"
@@ -16075,4 +16071,55 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-debug.php:188
 #, php-format
 msgid "error_log in %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:80
+msgid ""
+"Flushed, but plain permalinks are active, so WordPress stores no rewrite "
+"rules."
+msgstr ""
+
+# %d: number of rewrite rules now stored
+#: includes/modules/class-tsosk-mod-rewrite.php:88
+#, php-format
+msgid "Rewrite rules flushed. Rules now stored: %d."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:101
+msgid "On multisite WordPress does not rewrite .htaccess automatically."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:116
+msgid ""
+"This server does not use .htaccess (for example nginx), so only the database"
+" rules were refreshed. Update the server configuration manually."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:127
+msgid ""
+"WARNING: .htaccess is not writable, so it was NOT updated. Fix its "
+"permissions or edit it manually."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:133
+msgid "The .htaccess file was updated."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:227
+msgid ""
+"Plain permalinks are active, so WordPress stores no rewrite rules. Choose "
+"another structure in Settings → Permalinks to use them."
+msgstr ""
+
+# 1: raw PHP value (0 or -1)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:349
+#, php-format
+msgid "%s (no limit)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:547
+msgid ""
+"The object-cache.php file is on disk, but WordPress is not using a "
+"persistent cache. The cache service may be down or turned off, or the drop-"
+"in may not be compatible with this server."
 msgstr ""

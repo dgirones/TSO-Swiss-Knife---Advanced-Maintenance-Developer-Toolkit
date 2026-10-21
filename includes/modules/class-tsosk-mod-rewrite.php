@@ -49,6 +49,11 @@ class TSOSK_Mod_Rewrite {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 		$hard = ! empty( $_POST['hard'] );
+
+		// save_mod_rewrite_rules() / got_mod_rewrite() live in wp-admin/includes/misc.php.
+		tsosk_require_wp_admin( 'includes/misc.php' );
+		tsosk_require_wp_admin( 'includes/file.php' );
+
 		flush_rewrite_rules( $hard );
 		TSOSK_Activity_Log::log(
 			'rewrite',
@@ -57,7 +62,77 @@ class TSOSK_Mod_Rewrite {
 				? __( 'Rewrite rules hard-flushed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 				: __( 'Rewrite rules soft-flushed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 		);
-		wp_send_json_success( __( 'Rewrite rules flushed successfully.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( $this->describe_flush_result( $hard ) );
+	}
+
+	/**
+	 * Build an honest result message for a flush.
+	 *
+	 * flush_rewrite_rules( true ) silently skips the server file when .htaccess is not writable,
+	 * on multisite, or when the server is not Apache-compatible, so "success" alone is misleading.
+	 *
+	 * @param bool $hard Whether a hard flush was requested.
+	 * @return array{message:string,warning:bool}
+	 */
+	private function describe_flush_result( bool $hard ): array {
+		if ( '' === (string) get_option( 'permalink_structure' ) ) {
+			return array(
+				'message' => __( 'Flushed, but plain permalinks are active, so WordPress stores no rewrite rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'warning' => false,
+			);
+		}
+
+		$rules   = get_option( 'rewrite_rules', array() );
+		$message = sprintf(
+			/* translators: %d: number of rewrite rules now stored */
+			__( 'Rewrite rules flushed. Rules now stored: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			is_array( $rules ) ? count( $rules ) : 0
+		);
+
+		if ( ! $hard ) {
+			return array(
+				'message' => $message,
+				'warning' => false,
+			);
+		}
+
+		if ( is_multisite() ) {
+			return array(
+				'message' => $message . ' ' . __( 'On multisite WordPress does not rewrite .htaccess automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'warning' => true,
+			);
+		}
+
+		if ( function_exists( 'iis7_supports_permalinks' ) && iis7_supports_permalinks() ) {
+			// IIS: web.config is handled by core; nothing reliable to verify here.
+			return array(
+				'message' => $message,
+				'warning' => false,
+			);
+		}
+
+		if ( ! function_exists( 'got_mod_rewrite' ) || ! got_mod_rewrite() ) {
+			return array(
+				'message' => $message . ' ' . __( 'This server does not use .htaccess (for example nginx), so only the database rules were refreshed. Update the server configuration manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'warning' => true,
+			);
+		}
+
+		$home_path = function_exists( 'get_home_path' ) ? get_home_path() : ABSPATH;
+		$htaccess  = trailingslashit( $home_path ) . '.htaccess';
+		$writable  = file_exists( $htaccess ) ? wp_is_writable( $htaccess ) : wp_is_writable( dirname( $htaccess ) );
+
+		if ( ! $writable ) {
+			return array(
+				'message' => $message . ' ' . __( 'WARNING: .htaccess is not writable, so it was NOT updated. Fix its permissions or edit it manually.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'warning' => true,
+			);
+		}
+
+		return array(
+			'message' => $message . ' ' . __( 'The .htaccess file was updated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'warning' => false,
+		);
 	}
 
 	/**
@@ -148,7 +223,9 @@ class TSOSK_Mod_Rewrite {
 				);
 				?>
 			</h3>
-			<?php if ( empty( $rules ) ) : ?>
+			<?php if ( empty( $rules ) && '' === (string) get_option( 'permalink_structure' ) ) : ?>
+				<p><?php esc_html_e( 'Plain permalinks are active, so WordPress stores no rewrite rules. Choose another structure in Settings → Permalinks to use them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php elseif ( empty( $rules ) ) : ?>
 				<p><?php esc_html_e( 'No rewrite rules stored. Have you flushed permalinks?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 			<input type="text" id="tsosk-rewrite-search"
@@ -185,28 +262,56 @@ class TSOSK_Mod_Rewrite {
 	 * @return array<string,string>
 	 */
 	private function get_route_diagnostics( string $url, array $rules ): array {
-		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
-		if ( '' === $path ) {
-			$path = '/' . ltrim( $url, '/' );
+		$parts = wp_parse_url( $url );
+		$path  = ( is_array( $parts ) && isset( $parts['path'] ) ) ? (string) $parts['path'] : '';
+		$query = ( is_array( $parts ) && isset( $parts['query'] ) ) ? (string) $parts['query'] : '';
+
+		// A bare domain or "?p=1" has no path: that is the home page, not "/https://domain".
+		$path = '/' . ltrim( $path, '/' );
+
+		// Rules are relative to the site address. On subdirectory installs (e.g. /blog2/) strip that
+		// prefix, otherwise a pasted full URL never matches and home_url() would double the folder.
+		$home_path = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		if ( '' !== $home_path && '/' !== $home_path ) {
+			$home_prefix = untrailingslashit( $home_path );
+			if ( 0 === strpos( trailingslashit( $path ), trailingslashit( $home_prefix ) ) ) {
+				$path = '/' . ltrim( substr( $path, strlen( $home_prefix ) ), '/' );
+			}
 		}
 
-		$path          = '/' . ltrim( $path, '/' );
-		$request       = ltrim( $path, '/' );
-		$post_id       = url_to_postid( home_url( $path ) );
+		// WordPress trims the slashes at both ends before matching.
+		$request       = trim( $path, '/' );
+		$lookup_url    = home_url( $path ) . ( '' !== $query ? '?' . $query : '' );
+		$post_id       = url_to_postid( $lookup_url );
 		$matched_regex = __( 'No rewrite rule matched.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		$matched_query = __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
-		foreach ( $rules as $regex => $query ) {
-			if ( preg_match( '#^' . str_replace( '#', '\#', (string) $regex ) . '#', $request, $matches ) ) {
-				$matched_regex = (string) $regex;
-				$matched_query = (string) $query;
-				if ( ! empty( $matches ) ) {
-					foreach ( $matches as $index => $match ) {
-						$matched_query = str_replace( '$matches[' . $index . ']', $match, $matched_query );
-					}
-				}
-				break;
+		// An empty request can only match the "$" rule (same as WP::parse_request()).
+		$candidates = ( '' === $request )
+			? ( isset( $rules['$'] ) ? array( '$' => $rules['$'] ) : array() )
+			: $rules;
+
+		foreach ( $candidates as $regex => $rule_query ) {
+			// Escape only the "#" delimiter characters that are not already escaped.
+			$pattern = '#^' . preg_replace( '/(?<!\\\\)#/', '\\#', (string) $regex ) . '#';
+			$matches = array();
+			if ( '' === $request ) {
+				$matches = array( '' );
+			} elseif ( ! preg_match( $pattern, $request, $matches ) && ! preg_match( $pattern, urldecode( $request ), $matches ) ) {
+				continue;
 			}
+
+			$matched_regex = (string) $regex;
+			// Same substitution as core: values are URL-encoded and unmatched groups become empty.
+			$matched_query = (string) preg_replace_callback(
+				'/\$matches\[([1-9][0-9]*)\]/',
+				static function ( array $ref ) use ( $matches ): string {
+					$index = (int) $ref[1];
+					return isset( $matches[ $index ] ) ? urlencode( (string) $matches[ $index ] ) : '';
+				},
+				(string) $rule_query
+			);
+			break;
 		}
 
 		return array(

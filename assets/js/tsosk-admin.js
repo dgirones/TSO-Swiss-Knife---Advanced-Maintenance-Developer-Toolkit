@@ -21,14 +21,15 @@
 	 * @param {jQuery} $el      Target element.
 	 * @param {string} msg      Message text.
 	 * @param {string} [type]   'ok' | 'warn' | 'error'  (default 'ok').
+	 * @param {number} [ttl]    Milliseconds before hiding (default 4000).
 	 */
-	function showMsg( $el, msg, type ) {
+	function showMsg( $el, msg, type, ttl ) {
 		var cls = 'tsosk-msg tsosk-msg--' + ( type || 'ok' );
 		$el.attr( 'class', cls ).text( msg ).show();
 		clearTimeout( $el.data( 'timer' ) );
 		$el.data( 'timer', setTimeout( function () {
 			$el.fadeOut( 300 );
-		}, 4000 ) );
+		}, ttl || 4000 ) );
 	}
 
 	/**
@@ -1251,52 +1252,40 @@
 
 	// ── Rewrite Rules ──────────────────────────────────────────────────────
 
-	$( document ).on( 'click', '#tsosk-flush-soft', function () {
-		var $btn  = $( this );
-		var nonce = $btn.data( 'nonce' );
-		var $msg  = $( '#tsosk-rewrite-msg' );
+	// Soft and hard flush share one handler (the buttons carry data-hard). Both are locked while a
+	// flush runs, so a soft and a hard flush can never overlap.
+	$( document ).on( 'click', '#tsosk-flush-soft, #tsosk-flush-hard', function () {
+		var $btn    = $( this );
+		var $both   = $( '#tsosk-flush-soft, #tsosk-flush-hard' );
+		var $msg    = $( '#tsosk-rewrite-msg' );
+		var hard    = 1 === parseInt( $btn.data( 'hard' ), 10 ) ? 1 : 0;
 
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		function unlock() {
+			$both.prop( 'disabled', false );
+			$( '#tsosk-flush-soft' ).text( tsosk.i18n.soft_flush );
+			$( '#tsosk-flush-hard' ).text( tsosk.i18n.hard_flush );
+		}
 
-		ajaxPost( {
-			action : 'tsosk_flush_rewrite',
-			data   : { nonce: nonce, hard: 0 },
-			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-				}
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.soft_flush );
-			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.soft_flush );
-			}
-		} );
-	} );
-
-	$( document ).on( 'click', '#tsosk-flush-hard', function () {
-		var $btn  = $( this );
-		var nonce = $btn.data( 'nonce' );
-		var $msg  = $( '#tsosk-rewrite-msg' );
-
-		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		$both.prop( 'disabled', true );
+		$btn.text( tsosk.i18n.running );
 
 		ajaxPost( {
 			action : 'tsosk_flush_rewrite',
-			data   : { nonce: nonce, hard: 1 },
+			data   : { nonce: $btn.data( 'nonce' ), hard: hard },
 			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+				var d    = r.data;
+				var text = ( d && 'object' === typeof d ) ? d.message : d;
+				if ( r.success && d && d.warning ) {
+					// Partly done (e.g. .htaccess not writable): keep the warning on screen longer.
+					showMsg( $msg, text || tsosk.i18n.done, 'warn', 15000 );
 				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					showMsg( $msg, text || ( r.success ? tsosk.i18n.done : tsosk.i18n.error ), r.success ? 'ok' : 'error', r.success ? 6000 : 0 );
 				}
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.hard_flush );
+				unlock();
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.hard_flush );
+				unlock();
 			}
 		} );
 	} );

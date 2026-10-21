@@ -1264,10 +1264,6 @@ msgstr "Reglas de reescritura"
 msgid "Rewrite Tags"
 msgstr "Etiquetas de reescritura"
 
-#: includes/modules/class-tsosk-mod-rewrite.php:41
-msgid "Rewrite rules flushed successfully."
-msgstr "Reglas de reescritura vaciadas correctamente."
-
 #: includes/class-tsosk-activity-log.php:267
 #: includes/class-tsosk-admin.php:226
 #: includes/modules/class-tsosk-mod-cron.php:378
@@ -18593,3 +18589,67 @@ msgstr "Ruta personalizada de WP_DEBUG_LOG"
 #, php-format
 msgid "error_log in %s"
 msgstr "error_log en %s"
+
+#: includes/modules/class-tsosk-mod-rewrite.php:80
+msgid ""
+"Flushed, but plain permalinks are active, so WordPress stores no rewrite "
+"rules."
+msgstr ""
+"Vaciado, pero hay enlaces permanentes simples, así que WordPress no guarda "
+"ninguna regla de reescritura."
+
+# %d: number of rewrite rules now stored
+#: includes/modules/class-tsosk-mod-rewrite.php:88
+#, php-format
+msgid "Rewrite rules flushed. Rules now stored: %d."
+msgstr "Reglas de reescritura vaciadas. Reglas guardadas ahora: %d."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:101
+msgid "On multisite WordPress does not rewrite .htaccess automatically."
+msgstr "En multisitio, WordPress no reescribe el .htaccess automáticamente."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:116
+msgid ""
+"This server does not use .htaccess (for example nginx), so only the database"
+" rules were refreshed. Update the server configuration manually."
+msgstr ""
+"Este servidor no usa .htaccess (por ejemplo nginx), así que solo se han "
+"actualizado las reglas de la base de datos. Actualiza la configuración del "
+"servidor manualmente."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:127
+msgid ""
+"WARNING: .htaccess is not writable, so it was NOT updated. Fix its "
+"permissions or edit it manually."
+msgstr ""
+"AVISO: el .htaccess no se puede escribir, así que NO se ha actualizado. "
+"Corrige sus permisos o edítalo manualmente."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:133
+msgid "The .htaccess file was updated."
+msgstr "Se ha actualizado el archivo .htaccess."
+
+#: includes/modules/class-tsosk-mod-rewrite.php:227
+msgid ""
+"Plain permalinks are active, so WordPress stores no rewrite rules. Choose "
+"another structure in Settings → Permalinks to use them."
+msgstr ""
+"Hay enlaces permanentes simples, así que WordPress no guarda ninguna regla "
+"de reescritura. Elige otra estructura en Ajustes → Enlaces permanentes para "
+"usarlas."
+
+# 1: raw PHP value (0 or -1)
+#: includes/modules/class-tsosk-mod-runtime-stack.php:349
+#, php-format
+msgid "%s (no limit)"
+msgstr "%s (sin límite)"
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:547
+msgid ""
+"The object-cache.php file is on disk, but WordPress is not using a "
+"persistent cache. The cache service may be down or turned off, or the drop-"
+"in may not be compatible with this server."
+msgstr ""
+"El archivo object-cache.php está en el disco, pero WordPress no está usando "
+"una caché persistente. El servicio de caché puede estar caído o desactivado,"
+" o el drop-in puede no ser compatible con este servidor."

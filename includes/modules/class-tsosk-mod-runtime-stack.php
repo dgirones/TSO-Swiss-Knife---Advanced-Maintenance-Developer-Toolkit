@@ -172,17 +172,22 @@ class TSOSK_Mod_Runtime_Stack {
 		$max_time   = (string) ini_get( 'max_execution_time' );
 		$max_input  = (string) ini_get( 'max_input_vars' );
 		$disabled   = (string) ini_get( 'disable_functions' );
-		$temp       = function_exists( 'sys_get_temp_dir' ) ? sys_get_temp_dir() : '';
+		// Uploads are written to upload_tmp_dir when it is set, not to the system temp folder.
+		$upload_tmp = trim( (string) ini_get( 'upload_tmp_dir' ) );
+		$temp       = '' !== $upload_tmp ? $upload_tmp : ( function_exists( 'sys_get_temp_dir' ) ? sys_get_temp_dir() : '' );
 		$temp_ok    = ( '' !== $temp && wp_is_writable( $temp ) );
-		$opcache    = function_exists( 'opcache_get_status' );
 		$opcache_on = false;
-		if ( $opcache ) {
+		if ( function_exists( 'opcache_get_status' ) && self::opcache_api_allowed() ) {
 			try {
 				$status     = opcache_get_status( false );
 				$opcache_on = is_array( $status ) && ! empty( $status['opcache_enabled'] );
-			} catch ( Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- restrict_api / disabled internals must not fatal the admin tab.
+			} catch ( Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- disabled internals must not fatal the admin tab.
 				unset( $e );
 			}
+		} elseif ( extension_loaded( 'Zend OPcache' ) ) {
+			// The API is restricted or disabled by the host: infer the state from php.ini instead of
+			// reporting "off" for a server where OPcache is actually running.
+			$opcache_on = filter_var( ini_get( 'opcache.enable' ), FILTER_VALIDATE_BOOLEAN );
 		}
 
 		$wp_tz   = function_exists( 'wp_timezone_string' ) ? (string) wp_timezone_string() : '';
@@ -284,10 +289,25 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Whether this request may call the opcache_* API.
+	 *
+	 * With opcache.restrict_api set, a script outside that path does not get an exception: PHP
+	 * raises a warning and returns false. try/catch cannot stop that, so check the directive first.
+	 */
+	private static function opcache_api_allowed(): bool {
+		$restrict = (string) ini_get( 'opcache.restrict_api' );
+		if ( '' === $restrict ) {
+			return true;
+		}
+		$script = isset( $_SERVER['SCRIPT_FILENAME'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['SCRIPT_FILENAME'] ) ) : '';
+		return '' !== $script && 0 === strpos( $script, $restrict );
+	}
+
+	/**
 	 * Whether opcache_reset() can be called.
 	 */
 	public static function can_reset_opcache(): bool {
-		if ( ! function_exists( 'opcache_reset' ) ) {
+		if ( ! function_exists( 'opcache_reset' ) || ! self::opcache_api_allowed() ) {
 			return false;
 		}
 		$disabled = array_map( 'trim', explode( ',', (string) ini_get( 'disable_functions' ) ) );
@@ -318,6 +338,20 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Show 0 / -1 for what they mean: PHP treats them as "no limit", not as a literal value.
+	 *
+	 * @param string   $value     Raw ini value.
+	 * @param string[] $unlimited Values meaning "no limit" for this directive.
+	 */
+	private static function display_limit( string $value, array $unlimited ): string {
+		if ( in_array( trim( $value ), $unlimited, true ) ) {
+			/* translators: 1: raw PHP value (0 or -1) */
+			return sprintf( __( '%s (no limit)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $value );
+		}
+		return $value;
+	}
+
+	/**
 	 * Plain-text summary for copying to hosting support.
 	 *
 	 * @param array<string, string> $limits From get_php_limits().
@@ -333,6 +367,9 @@ class TSOSK_Mod_Runtime_Stack {
 			$lines[] = 'WARNING: post_max_size is smaller than upload_max_filesize';
 		}
 		$lines[] = 'max_execution_time: ' . ( $limits['max_time'] ?? '' );
+		$lines[] = 'max_input_vars: ' . ( $limits['max_input'] ?? '' );
+		$lines[] = 'WP_MEMORY_LIMIT: ' . ( $limits['wp_memory'] ?? '' );
+		$lines[] = 'WP_MAX_MEMORY_LIMIT: ' . ( $limits['wp_max_mem'] ?? '' );
 		$lines[] = 'OPcache: ' . ( ( isset( $limits['opcache'] ) && '1' === $limits['opcache'] ) ? 'on' : 'off' );
 		$lines[] = 'temp: ' . ( $limits['temp'] ?? '' );
 		return implode( "\n", $lines );
@@ -368,7 +405,7 @@ class TSOSK_Mod_Runtime_Stack {
 				<tr>
 					<th><?php esc_html_e( 'Memory PHP may use', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
-						<code><?php echo esc_html( $limits['memory'] ); ?></code>
+						<code><?php echo esc_html( self::display_limit( $limits['memory'], array( '-1' ) ) ); ?></code>
 						<?php if ( '' !== $limits['wp_memory'] ) : ?>
 							<span class="description">
 								<?php
@@ -391,7 +428,7 @@ class TSOSK_Mod_Runtime_Stack {
 				<tr>
 					<th><?php esc_html_e( 'Largest form WordPress can receive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
-						<code><?php echo esc_html( $limits['post'] ); ?></code>
+						<code><?php echo esc_html( self::display_limit( $limits['post'], array( '0' ) ) ); ?></code>
 						<?php if ( '1' === $limits['post_lt_up'] ) : ?>
 							<br><span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'post_max_size is smaller than upload_max_filesize, so large uploads can fail even when the file-size limit looks high enough.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<?php endif; ?>
@@ -399,7 +436,7 @@ class TSOSK_Mod_Runtime_Stack {
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Seconds a request may run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td><code><?php echo esc_html( $limits['max_time'] ); ?></code></td>
+					<td><code><?php echo esc_html( self::display_limit( $limits['max_time'], array( '0' ) ) ); ?></code></td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Form fields allowed in one request', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -505,6 +542,11 @@ class TSOSK_Mod_Runtime_Stack {
 							<p class="description" style="margin-top:6px;">
 								<?php esc_html_e( 'Without a persistent backend (Redis, Memcached, or your host\'s own object cache), values this plugin caches — like the Admin Menu manifest — and every WordPress option are re-read from the database on every request instead of being reused between them. Ask your hosting provider if one is available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</p>
+							<?php if ( $oc_exists ) : ?>
+								<p class="description" style="margin-top:6px;">
+									<?php esc_html_e( 'The object-cache.php file is on disk, but WordPress is not using a persistent cache. The cache service may be down or turned off, or the drop-in may not be compatible with this server.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</p>
+							<?php endif; ?>
 						<?php endif; ?>
 					</td>
 				</tr>
