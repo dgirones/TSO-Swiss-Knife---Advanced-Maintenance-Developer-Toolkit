@@ -4056,12 +4056,6 @@ msgstr ""
 msgid "Available Error Logs"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-debug.php:889
-msgid ""
-"Shows readable WordPress/PHP error logs detected inside this WordPress "
-"installation. Previews are limited to the end of each file."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-debug.php:892
 msgid "debug.log"
 msgstr ""
@@ -16054,4 +16048,31 @@ msgid ""
 "and that are not used as a featured image, site logo or icon. They may still"
 " be used inside content, widgets, page builders or custom fields: check "
 "before deleting anything."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1040
+msgid ""
+"Only the error logs that exist inside this WordPress installation are "
+"listed. When WordPress or PHP creates a new one, it appears here the next "
+"time you open this tab. Previews are limited to the end of each file."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1100
+msgid ""
+"No error logs detected yet. They will appear here automatically once "
+"WordPress or PHP creates one."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1134
+msgid "Not readable"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:159
+msgid "WP_DEBUG_LOG custom path"
+msgstr ""
+
+# %s: folder inside wp-content that contains the error_log file
+#: includes/modules/class-tsosk-mod-debug.php:188
+#, php-format
+msgid "error_log in %s"
 msgstr ""

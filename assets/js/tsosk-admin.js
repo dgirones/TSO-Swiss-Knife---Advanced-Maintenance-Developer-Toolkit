@@ -1624,6 +1624,17 @@
 		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
 	}
 
+	// The redirect form lives in the "Redirects" sub-tab, but the buttons that fill it live in
+	// the "404 Monitor" sub-tab: switch tab first, otherwise the form is hidden and nothing seems to happen.
+	function tsosk404FocusRedirectForm() {
+		rdShowTab( 'rules' );
+		var $source = $( '#tsosk-redirect-source' );
+		$( '#tsosk-redirect-target' ).focus();
+		if ( $source.length && $source.is( ':visible' ) ) {
+			$( 'html, body' ).animate( { scrollTop: $source.offset().top - 80 }, 200 );
+		}
+	}
+
 	function tsosk404PrefillFromQueue( introTotal, silent ) {
 		var queue = tsosk404GetPrefillQueue();
 		if ( ! queue.length ) {
@@ -1641,7 +1652,7 @@
 		$( '#tsosk-redirect-source' ).val( source );
 		tsosk404UncheckSource( source );
 		var remaining = queue.length;
-		var $msg      = $( '#tsosk-404-msg' );
+		var $msg      = $( '#tsosk-redirect-msg' );
 		if ( silent ) {
 			// The caller shows its own message (skip / duplicate).
 		} else if ( introTotal && introTotal > 1 && tsosk.i18n.redirects_prefill_queue ) {
@@ -1649,8 +1660,7 @@
 		} else if ( remaining > 0 && tsosk.i18n.redirects_prefill_next ) {
 			showMsg( $msg, tsosk.i18n.redirects_prefill_next.replace( '%1$d', String( remaining ) ), 'ok' );
 		}
-		$( '#tsosk-redirect-target' ).focus();
-		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
+		tsosk404FocusRedirectForm();
 		return true;
 	}
 
@@ -2278,8 +2288,7 @@
 	$( document ).on( 'click', '.tsosk-404-create-redirect', function () {
 		resetRedirectForm();
 		$( '#tsosk-redirect-source' ).val( $( this ).data( 'source' ) );
-		$( '#tsosk-redirect-target' ).focus();
-		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
+		tsosk404FocusRedirectForm();
 	} );
 
 	$( document ).on( 'change', '#tsosk-404-select-all', function () {
@@ -2301,6 +2310,7 @@
 		var sources        = [];
 		var skippedCovered = 0;
 		var $prefillMsg    = $( '#tsosk-404-msg' );
+		var $formMsg       = $( '#tsosk-redirect-msg' );
 		$checked.each( function () {
 			var $row   = $( this );
 			var source = String( $row.data( 'source' ) || '' );
@@ -2325,7 +2335,7 @@
 		tsosk404PrefillFromQueue( sources.length );
 		if ( skippedCovered && tsosk.i18n.redirects_skip_covered ) {
 			var note = tsosk.i18n.redirects_skip_covered.replace( '%1$d', String( skippedCovered ) );
-			showMsg( $prefillMsg, sources.length > 1 ? $prefillMsg.text() + ' ' + note : note, 'ok' );
+			showMsg( $formMsg, sources.length > 1 ? $formMsg.text() + ' ' + note : note, 'ok' );
 		}
 	} );
 
@@ -2433,8 +2443,7 @@
 		resetRedirectForm();
 		$( '#tsosk-redirect-match-type' ).val( 'regex' );
 		$( '#tsosk-redirect-source' ).val( '^/' + prefix + '(/|$)' );
-		$( '#tsosk-redirect-target' ).focus();
-		$( 'html, body' ).animate( { scrollTop: $( '#tsosk-redirect-source' ).offset().top - 80 }, 200 );
+		tsosk404FocusRedirectForm();
 	} );
 
 	$( document ).on( 'click', '#tsosk-404-clear', function () {

@@ -3948,14 +3948,6 @@ msgstr ""
 msgid "Available Error Logs"
 msgstr "Logs d’errors disponibles"
 
-#: includes/modules/class-tsosk-mod-debug.php:889
-msgid ""
-"Shows readable WordPress/PHP error logs detected inside this WordPress "
-"installation. Previews are limited to the end of each file."
-msgstr ""
-"Mostra logs d’errors WordPress/PHP llegibles detectats dins d’aquesta "
-"instal·lació. Les previsualitzacions es limiten al final de cada fitxer."
-
 #: includes/modules/class-tsosk-mod-debug.php:902
 msgid "Log"
 msgstr "Log"
@@ -18524,3 +18516,36 @@ msgstr ""
 "pare eliminada) que no s'usen com a imatge destacada, logotip o icona del "
 "lloc. Encara poden estar en ús dins de contingut, ginys, maquetadors o camps"
 " personalitzats: comprova-ho abans d'eliminar res."
+
+#: includes/modules/class-tsosk-mod-debug.php:1040
+msgid ""
+"Only the error logs that exist inside this WordPress installation are "
+"listed. When WordPress or PHP creates a new one, it appears here the next "
+"time you open this tab. Previews are limited to the end of each file."
+msgstr ""
+"Només es llisten els logs d’errors que existeixen dins d’aquesta "
+"instal·lació de WordPress. Quan WordPress o PHP en creï un de nou, "
+"apareixerà aquí la propera vegada que obris aquesta pestanya. Les "
+"previsualitzacions es limiten al final de cada fitxer."
+
+#: includes/modules/class-tsosk-mod-debug.php:1100
+msgid ""
+"No error logs detected yet. They will appear here automatically once "
+"WordPress or PHP creates one."
+msgstr ""
+"Encara no s’ha detectat cap log d’errors. Apareixeran aquí automàticament "
+"quan WordPress o PHP en creï un."
+
+#: includes/modules/class-tsosk-mod-debug.php:1134
+msgid "Not readable"
+msgstr "No es pot llegir"
+
+#: includes/modules/class-tsosk-mod-debug.php:159
+msgid "WP_DEBUG_LOG custom path"
+msgstr "Ruta personalitzada de WP_DEBUG_LOG"
+
+# %s: folder inside wp-content that contains the error_log file
+#: includes/modules/class-tsosk-mod-debug.php:188
+#, php-format
+msgid "error_log in %s"
+msgstr "error_log a %s"

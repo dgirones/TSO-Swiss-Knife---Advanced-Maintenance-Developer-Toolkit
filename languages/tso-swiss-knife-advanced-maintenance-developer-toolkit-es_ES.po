@@ -3955,14 +3955,6 @@ msgstr ""
 msgid "Available Error Logs"
 msgstr "Logs de errores disponibles"
 
-#: includes/modules/class-tsosk-mod-debug.php:889
-msgid ""
-"Shows readable WordPress/PHP error logs detected inside this WordPress "
-"installation. Previews are limited to the end of each file."
-msgstr ""
-"Muestra logs de errores WordPress/PHP legibles detectados dentro de esta "
-"instalación. Las vistas previas se limitan al final de cada archivo."
-
 #: includes/modules/class-tsosk-mod-debug.php:902
 msgid "Log"
 msgstr "Log"
@@ -18568,3 +18560,36 @@ msgstr ""
 "padre eliminada) que no se usan como imagen destacada, logotipo o icono del "
 "sitio. Aún pueden estar en uso dentro de contenido, widgets, maquetadores o "
 "campos personalizados: compruébalo antes de eliminar nada."
+
+#: includes/modules/class-tsosk-mod-debug.php:1040
+msgid ""
+"Only the error logs that exist inside this WordPress installation are "
+"listed. When WordPress or PHP creates a new one, it appears here the next "
+"time you open this tab. Previews are limited to the end of each file."
+msgstr ""
+"Solo se listan los logs de errores que existen dentro de esta instalación de"
+" WordPress. Cuando WordPress o PHP cree uno nuevo, aparecerá aquí la próxima"
+" vez que abras esta pestaña. Las vistas previas se limitan al final de cada "
+"archivo."
+
+#: includes/modules/class-tsosk-mod-debug.php:1100
+msgid ""
+"No error logs detected yet. They will appear here automatically once "
+"WordPress or PHP creates one."
+msgstr ""
+"Todavía no se ha detectado ningún log de errores. Aparecerán aquí "
+"automáticamente cuando WordPress o PHP cree uno."
+
+#: includes/modules/class-tsosk-mod-debug.php:1134
+msgid "Not readable"
+msgstr "No se puede leer"
+
+#: includes/modules/class-tsosk-mod-debug.php:159
+msgid "WP_DEBUG_LOG custom path"
+msgstr "Ruta personalizada de WP_DEBUG_LOG"
+
+# %s: folder inside wp-content that contains the error_log file
+#: includes/modules/class-tsosk-mod-debug.php:188
+#, php-format
+msgid "error_log in %s"
+msgstr "error_log en %s"

@@ -525,12 +525,20 @@ class TSOSK_Config_Storage {
 			$path = wp_normalize_path( $real );
 		}
 		foreach ( self::get_writable_log_roots() as $root ) {
-			$root = untrailingslashit( wp_normalize_path( $root ) );
-			if ( $path === $root ) {
-				return true;
+			$root       = untrailingslashit( wp_normalize_path( $root ) );
+			$candidates = array( $root );
+			// $path is resolved with realpath(); accept the resolved root as well (symlinked hosts).
+			$real_root = realpath( $root );
+			if ( is_string( $real_root ) && '' !== $real_root ) {
+				$candidates[] = untrailingslashit( wp_normalize_path( $real_root ) );
 			}
-			if ( is_dir( $root ) && 0 === strpos( $path, trailingslashit( $root ) ) ) {
-				return true;
+			foreach ( $candidates as $candidate ) {
+				if ( $path === $candidate ) {
+					return true;
+				}
+				if ( is_dir( $candidate ) && 0 === strpos( $path, trailingslashit( $candidate ) ) ) {
+					return true;
+				}
 			}
 		}
 		return false;

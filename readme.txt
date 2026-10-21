@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,7 +74,7 @@ This plugin can optionally contact third-party services. None of these calls run
 
 When **Comment Antispam** reputation or cloud checks are enabled, visitor data from comments or protected contact forms may be sent as follows:
 
-* **Stop Forum Spam** (`https://api.stopforumspam.org/api`) — Used to look up whether an IP, email address, or username has been reported as spam. Sent on each checked submission (results may be cached briefly). Service: [Stop Forum Spam](https://www.stopforumspam.com/). [Terms of use](https://www.stopforumspam.com/legal) · [Privacy policy](https://www.stopforumspam.com/privacy).
+* **Stop Forum Spam** (`https://api.stopforumspam.org/api`) — Used to look up whether an IP address or an email address has been reported as spam. Read-only anonymous lookups: no account or API key is needed. Sends the visitor public IP and an MD5 hash of the email (never the plain email or the username), only when the option is enabled, once per IP/email every 6 hours. Failed lookups pause for a few minutes and the submission is then allowed. Service: [Stop Forum Spam](https://www.stopforumspam.com/). [Terms of use](https://www.stopforumspam.com/legal) · [Privacy policy](https://www.stopforumspam.com/privacy).
 * **AbuseIPDB** (`https://api.abuseipdb.com/api/v2/check`) — Used to check IP reputation. Sends the visitor IP and your AbuseIPDB API key (request header). Service: [AbuseIPDB](https://www.abuseipdb.com/). [Terms of use](https://www.abuseipdb.com/legal) · [Privacy policy](https://www.abuseipdb.com/privacy).
 * **CleanTalk** (`https://moderate.cleantalk.org/api2.0`) — Used for cloud spam filtering when CleanTalk mode is selected. Sends your CleanTalk access key plus sender email, IP, nickname, URL, message content, and post/page context. Service: [CleanTalk](https://cleantalk.org/). [Terms of use and privacy policy](https://cleantalk.org/publicoffer).
 * **Project Honey Pot (HTTP:BL)** — Optional DNS-based IP reputation lookup using your HTTP:BL access key and the visitor IPv4 address. Service: [Project Honey Pot](https://www.projecthoneypot.org/). [Terms of use](https://www.projecthoneypot.org/terms_of_use.php) · [Privacy policy](https://www.projecthoneypot.org/privacy_policy.php).
@@ -201,6 +201,33 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.2.2 =
+* Media Cleaner: unattached media that is in use (featured image, site logo or icon) is now listed apart instead of mixed with the unused ones; the broken-files table no longer repeats the same path or breaks words, and uses red/amber badges as described; the uploads scan processes more files per request, so large libraries finish with far fewer requests.
+* Comment Antispam: fixed a bug where blocked comments were still published when the action was "Mark as spam" or "Move to trash" (WordPress overwrote the status); they now really go to spam/trash.
+* Comment Antispam: comments posted through Jetpack Comments (iframe form) are no longer rejected by the honeypot/time trap, which cannot exist inside the iframe.
+* Comment Antispam: bans and rate limits now skip private/reserved addresses (a proxy or CDN node would otherwise lock out every visitor) and the page warns when a proxy header is detected but not configured.
+* CSV exports (Slow Queries, View Counter, Staging mail log, Comment Antispam): output buffers are cleared and the CSV escape character is set explicitly, so a PHP notice or deprecation can no longer end up inside the file; the mail log CSV now includes the UTF-8 BOM for Excel.
+* Emails: login verification code, lockout and mass-lockout alerts, security alerts (new/promoted administrator) and the View Counter summary now use the same TSO branded HTML template as the other notifications.
+* Redirects: the page is now split into sub-tabs (Redirects, 404 Monitor, Email alerts, Import / Export).
+* Fixed: Learning mode was ignored by the WPForms, Gravity Forms, Elementor Pro and Fluent Forms integrations (they blocked anyway); every form integration now respects it, and the hourly spike alert no longer depends on the block log being enabled.
+* Added: Comment Anti-Spam can temporarily ban repeat offenders, accepts CIDR ranges in the IP whitelist, can skip external checks for returning commenters, shows a custom message to blocked visitors and lets you put individual rules in observe-only mode.
+* Added: Comment Anti-Spam also protects WooCommerce product reviews and the WordPress/WooCommerce registration forms (registration is off by default), shows a blocks-per-day chart, warns when the protection is disabled and ships a larger disposable-email list that also matches subdomains.
+* Improved: Comment Anti-Spam page reorganised into four tabs (Overview, Local rules, External services, Logs).
+* Improved: Comment Anti-Spam logs now live in their own database table instead of the options table, with a configurable size (up to 10,000 entries) and CSV export; rate-limit and duplicate counters use expiring transients. Existing logs are migrated automatically.
+* Added: Comment Anti-Spam email alerts (TSO format) for spam bursts and failing external services, with a test button.
+* Improved: Comment Anti-Spam — new "Provider status" card with the last real response and 24 h calls/errors of each external service, plus a Test button per provider.
+* Improved: Comment Anti-Spam — blocks-by-reason summary and an "Allow IP" button in the block and learning logs to whitelist false positives.
+* Fixed: Comment Anti-Spam — Akismet cloud mode never queried Akismet (it called a method that does not exist) and now uses Akismet's own client.
+* Improved: Comment Anti-Spam — Stop Forum Spam lookups are anonymous read-only queries (unaffected by its API-signup restriction); they now send an email hash instead of the plain email, no longer send the username, skip private IPs, and pause for a few minutes after an API error or rate limit.
+* Improved: Comment Anti-Spam — remote reputation/cloud checks now run after the cheap local rules, timeouts reduced, and the block log shows readable reasons.
+* Improved: Health Report now starts with the "Hide WordPress Site Health notices" card (moved from the Overview) and can also hide the "You should remove inactive plugins / themes" notices.
+* Improved: the 404 email alert settings moved from Health Report to a collapsible panel in Redirects, with a "Send test email" button; alerts are sent as a branded HTML email (same look as TSO Link Inspector) listing the most requested missing URLs.
+* Fixed: the hourly 404 alert counted batched hits twice, so it could fire before the configured threshold.
+* Improved: "Install pending updates" button (plugins, themes and language packs, one at a time) in Update Manager and on the Overview screen; plugins hidden by an individual rule are skipped.
+* Improved: Update Manager shows the version offered per plugin and adds an "Update now" button to force a plugin update (even if hidden or checks are blocked).
+* Fixed: Update Manager now flags an overdue update-check cron, warns when counts are incomplete because checks are blocked or updates are hidden, includes core in the manual check result and no longer queries wordpress.org twice.
+* Fixed: Update Manager "Update now" button no longer ends in a critical error after installing the plugin.
+
 = 1.2.1 =
 * Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.
 * Improved: Search & Replace now warns when the replacement is empty (matches get deleted) and when all matches are in internal tables rather than post content.
@@ -214,13 +241,3 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Fixed: Login Protect (real client IP behind proxies, 2FA and role IP rules only after a correct password, custom login URL with maintenance mode, single mass-lockout alert).
 * Fixed: Search & Replace with nested serialized data, super-admin only for shared data on multisite, complete uninstall on multisite.
 * Performance and translations: fewer database queries per request, more autoloaded settings, Catalan and Spanish catalogs complete.
-
-= 1.1.9 =
-* Slow Query Monitor: the admin bar item is now translated (Catalan/Spanish) on every admin and front-end page, not only on the plugin screen; several labels were also missing from the catalogs.
-* Slow Query Monitor: the admin bar numbers (time, queries, duplicates, slow) are refreshed at the end of the page, so they match Query Monitor instead of undercounting what ran after the bar was drawn.
-* Slow Query Monitor: admin bar links now open the right section — a new "Last page you visited" panel with that page's duplicate and slowest queries (before, "Queries" and "Slow" jumped to the top or to a table about the Monitor page itself).
-* Slow Query Monitor: "Origin detection" now also names the plugin or theme behind duplicate queries (last page panel, live table and admin bar), skips Query Monitor's own wrapper, no longer reports almost everything as "WordPress core", and origins are shown in the saved slow-query log again.
-* Slow Query Monitor: new "Copy to AI" on duplicate queries — copies an English report (SQL, counts, callers, components, troublemakers). You choose which plugin folders are included (defaults to tso-*); other sites pick their own plugins instead of dumping every third-party duplicate.
-* Slow Query Monitor: on narrow screens (admin bar ≤782px) the toolbar item collapses to a severity-colour dot only — load time and query/duplicate pills stay in the submenu and on desktop — so it no longer wraps onto a second row and covers Screen Options / Help.
-* Slow Query Monitor: on the same mobile breakpoint, hides the SweepPress and iThemes Security admin-bar icons when they would wrap over the admin menu (desktop unchanged).
-

@@ -104,13 +104,24 @@ class TSOSK_Mod_Debug {
 	 * @return bool
 	 */
 	private function is_wp_content_debug_log( string $path ): bool {
-		return wp_normalize_path( $path ) === $this->log_path();
+		$path    = wp_normalize_path( $path );
+		$default = $this->log_path();
+		if ( $path === $default ) {
+			return true;
+		}
+
+		// Detected paths are resolved with realpath(); on hosts where /home is a symlink the
+		// plain WP_CONTENT_DIR string would never match, so compare the resolved paths too.
+		$real_path    = realpath( $path );
+		$real_default = realpath( $default );
+		return false !== $real_path && false !== $real_default
+			&& wp_normalize_path( $real_path ) === wp_normalize_path( $real_default );
 	}
 
 	/**
 	 * Returns known WordPress/PHP log files that are safe to inspect from admin.
 	 *
-	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int,preview:string}>
+	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int}>
 	 */
 	private function get_log_files(): array {
 		$wp_root     = tsosk_get_wp_root_dir();
@@ -142,9 +153,42 @@ class TSOSK_Mod_Debug {
 			$candidates[ __( 'TSO managed debug log (uploads)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ] = $managed_debug;
 		}
 
+		// WP_DEBUG_LOG can be a custom path instead of true; core then writes the log there.
+		if ( defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG ) && '' !== WP_DEBUG_LOG
+			&& ! in_array( strtolower( WP_DEBUG_LOG ), array( 'true', 'false', '1', '0' ), true ) ) {
+			$candidates[ __( 'WP_DEBUG_LOG custom path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ] = WP_DEBUG_LOG;
+		}
+
 		$php_error_log = ini_get( 'error_log' );
 		if ( is_string( $php_error_log ) && '' !== $php_error_log ) {
 			$candidates[ __( 'PHP error_log setting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ] = $php_error_log;
+		}
+
+		// Hosts such as cPanel write an error_log next to the PHP script that failed, so one
+		// level of sub-folders (plugins, themes, other wp-content folders) is checked as well.
+		$content_dir = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) );
+		if ( function_exists( 'glob' ) ) {
+			$scan_roots = array( $content_dir, tsosk_get_plugins_dir() );
+			if ( function_exists( 'get_theme_root' ) ) {
+				$scan_roots[] = trailingslashit( wp_normalize_path( get_theme_root() ) );
+			}
+			$extra_found = 0;
+			foreach ( array_unique( $scan_roots ) as $scan_root ) {
+				$matches = glob( $scan_root . '*/error_log', GLOB_NOSORT );
+				if ( ! is_array( $matches ) ) {
+					continue;
+				}
+				foreach ( $matches as $match ) {
+					if ( $extra_found >= 40 ) {
+						break 2;
+					}
+					$match    = wp_normalize_path( $match );
+					$relative = 0 === strpos( $match, $content_dir ) ? substr( dirname( $match ), strlen( $content_dir ) ) : basename( dirname( $match ) );
+					/* translators: %s: folder inside wp-content that contains the error_log file */
+					$candidates[ sprintf( __( 'error_log in %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $relative ) ] = $match;
+					++$extra_found;
+				}
+			}
 		}
 
 		$logs = array();
@@ -152,19 +196,20 @@ class TSOSK_Mod_Debug {
 
 		foreach ( $candidates as $label => $path ) {
 			$path = $this->normalize_log_path( (string) $path );
-			if ( '' === $path ) {
+			// Only logs that really exist are listed; new ones show up on the next visit.
+			if ( '' === $path || ! file_exists( $path ) ) {
 				continue;
 			}
 
 			// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
-			$identity = file_exists( $path ) ? ( realpath( $path ) ?: $path ) : $path;
+			$identity = realpath( $path ) ?: $path;
 			if ( isset( $seen[ $identity ] ) ) {
 				continue;
 			}
 			$seen[ $identity ] = true;
 
-			$exists = file_exists( $path );
-			$size   = $exists ? (int) filesize( $path ) : 0;
+			$exists = true;
+			$size   = (int) filesize( $path );
 
 			$logs[] = array(
 				'label'      => (string) $label,
@@ -175,19 +220,12 @@ class TSOSK_Mod_Debug {
 				'writable'   => $exists && wp_is_writable( $path ) && TSOSK_Config_Storage::is_managed_log_path( $path ),
 				'size'       => $size,
 				'modified'   => $exists ? (int) filemtime( $path ) : 0,
-				'preview'    => $exists && is_readable( $path ) ? $this->read_log_preview( $path ) : '',
 			);
 		}
 
 		usort(
 			$logs,
 			static function ( array $a, array $b ): int {
-				if ( $a['exists'] !== $b['exists'] ) {
-					return $a['exists'] ? -1 : 1;
-				}
-				if ( ! $a['exists'] ) {
-					return strcmp( $a['label'], $b['label'] );
-				}
 				return $b['modified'] <=> $a['modified'];
 			}
 		);
@@ -221,10 +259,17 @@ class TSOSK_Mod_Debug {
 			$path = wp_normalize_path( $resolved );
 		}
 
-		$allowed_roots = array(
-			tsosk_get_wp_root_dir(),
-			wp_normalize_path( WP_CONTENT_DIR ),
-		);
+		// Existing paths were resolved with realpath() above, so accept the resolved form of each
+		// root too; otherwise symlinked hosting paths (e.g. /home -> /home2) would drop every log.
+		$allowed_roots = array();
+		foreach ( array( tsosk_get_wp_root_dir(), wp_normalize_path( WP_CONTENT_DIR ) ) as $root ) {
+			$allowed_roots[] = $root;
+			$real_root       = realpath( $root );
+			if ( false !== $real_root ) {
+				$allowed_roots[] = wp_normalize_path( $real_root );
+			}
+		}
+		$allowed_roots = array_unique( $allowed_roots );
 
 		foreach ( $allowed_roots as $root ) {
 			if ( 0 === strpos( $path, trailingslashit( $root ) ) || untrailingslashit( $root ) === $path ) {
@@ -992,7 +1037,7 @@ class TSOSK_Mod_Debug {
 		<div class="tsosk-card" id="tsosk-debug-logs">
 			<h3><?php esc_html_e( 'Available Error Logs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Shows readable WordPress/PHP error logs detected inside this WordPress installation. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Only the error logs that exist inside this WordPress installation are listed. When WordPress or PHP creates a new one, it appears here the next time you open this tab. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<div class="tsosk-notice tsosk-notice-info tsosk-log-help">
 				<ul class="tsosk-log-help-list">
@@ -1050,6 +1095,11 @@ class TSOSK_Mod_Debug {
 				</div>
 				<?php endif; ?>
 			</div>
+			<?php if ( empty( $logs ) ) : ?>
+			<div class="tsosk-notice tsosk-notice-info">
+				<?php esc_html_e( 'No error logs detected yet. They will appear here automatically once WordPress or PHP creates one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</div>
+			<?php else : ?>
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
@@ -1066,7 +1116,7 @@ class TSOSK_Mod_Debug {
 						<tr class="tsosk-log-row" data-log-path="<?php echo esc_attr( $log['path'] ); ?>" data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
 							<td><?php echo esc_html( $log['label'] ); ?></td>
 							<td class="tsosk-code"><?php echo esc_html( $log['path'] ); ?></td>
-							<td class="tsosk-log-size-cell"><?php echo $log['exists'] ? esc_html( size_format( $log['size'], 2 ) ) : esc_html__( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+							<td class="tsosk-log-size-cell"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></td>
 							<td class="tsosk-log-modified-cell"><?php echo $log['modified'] ? esc_html( $this->format_log_modified( $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
 							<td class="tsosk-log-actions-cell">
 								<div class="tsosk-log-actions">
@@ -1079,6 +1129,9 @@ class TSOSK_Mod_Debug {
 												data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
 											<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
+									<?php endif; ?>
+									<?php if ( $log['exists'] && ! $log['readable'] ) : ?>
+										<span class="description"><?php esc_html_e( 'Not readable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 									<?php endif; ?>
 									<?php if ( $log['exists'] && $log['modifiable'] ) : ?>
 										<button type="button" class="button button-small tsosk-shrink-log"
@@ -1101,6 +1154,7 @@ class TSOSK_Mod_Debug {
 					</tbody>
 				</table>
 			</div>
+			<?php endif; ?>
 			<span class="tsosk-ajax-msg" id="tsosk-log-msg"></span>
 		</div>
 
