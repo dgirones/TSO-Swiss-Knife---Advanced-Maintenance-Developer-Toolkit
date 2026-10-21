@@ -29,11 +29,14 @@ class TSOSK_Uploads_Scanner {
 
 	/** Cron hook that permanently deletes quarantined folders once their window is over. */
 	public const CRON_QUARANTINE_PURGE = 'tsosk_media_quarantine_purge';
-	public const TRANSIENT_SIZES     = 'tsosk_image_sizes_audit_v1';
-	public const TRANSIENT_HYGIENE   = 'tsosk_uploads_hygiene_v1';
+	public const TRANSIENT_SIZES       = 'tsosk_image_sizes_audit_v1';
+	public const TRANSIENT_HYGIENE     = 'tsosk_uploads_hygiene_v1';
 
 	/** Cache lifetime in seconds. */
 	public const CACHE_TTL = 600;
+
+	/** Lifetime of the cached image sizes audit (long enough to review, disable and quarantine in one sitting). */
+	public const SIZES_AUDIT_TTL = 21600;
 
 	/** Option storing quarantine entries metadata (moved-but-not-yet-purged hygiene folders). */
 	public const OPTION_QUARANTINE = 'tsosk_media_quarantine';
@@ -110,7 +113,7 @@ class TSOSK_Uploads_Scanner {
 	 */
 	public static function is_guard_upload_file( string $relative ): bool {
 		$basename = basename( wp_normalize_path( $relative ) );
-		return in_array( $basename, array( 'index.php', '.htaccess' ), true );
+		return in_array( strtolower( $basename ), array( 'index.php', 'index.html', 'index.htm', '.htaccess' ), true );
 	}
 
 	/**
@@ -220,6 +223,7 @@ class TSOSK_Uploads_Scanner {
 			$handle = is_readable( $dir ) ? @opendir( $dir ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			if ( ! $handle ) {
 				if ( count( $state['unreadable'] ) < 20 ) {
+					// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 					$state['unreadable'][] = ltrim( str_replace( $base, '', wp_normalize_path( $dir ) ), '/' ) ?: '/';
 				}
 				continue;
@@ -415,8 +419,8 @@ class TSOSK_Uploads_Scanner {
 	 * originals that simply have dimensions in their name are no longer counted as thumbnails. Also
 	 * recognised: WebP/AVIF copies (photo.jpg.webp, photo.webp beside photo.jpg) and PDF previews.
 	 *
-	 * @param string              $name     File basename.
-	 * @param array<string,bool>  $siblings Names of the files in the same folder.
+	 * @param string             $name     File basename.
+	 * @param array<string,bool> $siblings Names of the files in the same folder.
 	 * @return string original|derivative|other
 	 */
 	public static function classify_footprint_file( string $name, array $siblings ): string {
@@ -468,7 +472,7 @@ class TSOSK_Uploads_Scanner {
 				continue;
 			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$id = (int) $wpdb->get_var(
+			$id                          = (int) $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s LIMIT 1",
 					(string) $row['relative']
@@ -477,6 +481,40 @@ class TSOSK_Uploads_Scanner {
 			$rows[ $i ]['attachment_id'] = $id;
 		}
 		return $rows;
+	}
+
+	/**
+	 * Registered image sizes plus the four WordPress core sizes, even when WordPress does not list them.
+	 *
+	 * A core size is missing from wp_get_registered_image_subsizes() when its width and height are both 0
+	 * in Settings > Media (WordPress then generates no file for it) or when a theme/plugin removes it with
+	 * the "intermediate_image_sizes" filter. Such sizes can still own files from older uploads, so they get a
+	 * row with a "tsosk_note" marker ("disabled" or "hidden") instead of being silently dropped.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function get_registered_sizes_with_core(): array {
+		$registered = function_exists( 'wp_get_registered_image_subsizes' )
+			? wp_get_registered_image_subsizes()
+			: array();
+
+		foreach ( array( 'thumbnail', 'medium', 'medium_large', 'large' ) as $core_name ) {
+			if ( isset( $registered[ $core_name ] ) ) {
+				continue;
+			}
+			$width  = (int) get_option( $core_name . '_size_w', 0 );
+			$height = (int) get_option( $core_name . '_size_h', 0 );
+			$crop   = 'thumbnail' === $core_name ? (bool) get_option( 'thumbnail_crop', 1 ) : false;
+
+			$registered[ $core_name ] = array(
+				'width'      => $width,
+				'height'     => $height,
+				'crop'       => $crop,
+				'tsosk_note' => ( 0 === $width && 0 === $height ) ? 'disabled' : 'hidden',
+			);
+		}
+
+		return $registered;
 	}
 
 	/**
@@ -497,9 +535,7 @@ class TSOSK_Uploads_Scanner {
 			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$registered = function_exists( 'wp_get_registered_image_subsizes' )
-			? wp_get_registered_image_subsizes()
-			: array();
+		$registered = self::get_registered_sizes_with_core();
 
 		// Seeded from currently-registered sizes, but every size name actually found while
 		// scanning attachment metadata gets its own row too — including sizes no theme or
@@ -558,6 +594,9 @@ class TSOSK_Uploads_Scanner {
 					$known_files[ $norm ] = true;
 					++$full_stats['files'];
 					$full_stats['bytes'] += (int) filesize( $attached );
+				}
+				if ( $attached ) {
+					self::add_derivative_files( $known_files, (string) $attached, $metadata, $post_id );
 				}
 
 				if ( empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ) {
@@ -782,6 +821,49 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
+	 * Add to $known every file WordPress itself keeps for an attachment besides its registered sizes:
+	 * the pre-scaling original, the formats in "sources" (WebP/AVIF, WP 6.5+) and the backups that make
+	 * "Restore original image" work after an edit. Without them the audit would call them orphans.
+	 *
+	 * @param array<string,bool> $known    Known files (normalized paths), updated in place.
+	 * @param string             $attached Attached file path.
+	 * @param array              $metadata Attachment metadata.
+	 * @param int                $post_id  Attachment ID.
+	 */
+	private static function add_derivative_files( array &$known, string $attached, array $metadata, int $post_id ): void {
+		$dir = wp_normalize_path( trailingslashit( dirname( $attached ) ) );
+		if ( ! empty( $metadata['original_image'] ) && is_string( $metadata['original_image'] ) ) {
+			$known[ $dir . $metadata['original_image'] ] = true;
+		}
+		if ( ! empty( $metadata['sources'] ) && is_array( $metadata['sources'] ) ) {
+			foreach ( $metadata['sources'] as $source ) {
+				if ( is_array( $source ) && ! empty( $source['file'] ) ) {
+					$known[ $dir . $source['file'] ] = true;
+				}
+			}
+		}
+		if ( ! empty( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+			foreach ( $metadata['sizes'] as $size_data ) {
+				if ( is_array( $size_data ) && ! empty( $size_data['sources'] ) && is_array( $size_data['sources'] ) ) {
+					foreach ( $size_data['sources'] as $source ) {
+						if ( is_array( $source ) && ! empty( $source['file'] ) ) {
+							$known[ $dir . $source['file'] ] = true;
+						}
+					}
+				}
+			}
+		}
+		$backups = get_post_meta( $post_id, '_wp_attachment_backup_sizes', true );
+		if ( is_array( $backups ) ) {
+			foreach ( $backups as $backup ) {
+				if ( is_array( $backup ) && ! empty( $backup['file'] ) ) {
+					$known[ $dir . $backup['file'] ] = true;
+				}
+			}
+		}
+	}
+
+	/**
 	 * Determine whether a directory should be skipped during the uploads scan.
 	 *
 	 * @param string $path Directory path.
@@ -792,6 +874,12 @@ class TSOSK_Uploads_Scanner {
 		$relative = ltrim( str_replace( wp_normalize_path( $base ), '', wp_normalize_path( $path ) ), '/' );
 		$parts    = explode( '/', $relative );
 		$name     = end( $parts );
+
+		// Top-level folders of other plugins (Elementor thumbs, backups…) and, on multisite, the other sites' media are not
+		// this blog's files: the size audit and the quarantine must not treat their "-150x150" images as orphans.
+		if ( 1 === count( $parts ) && class_exists( 'TSOSK_Mod_Media_Cleaner' ) && TSOSK_Mod_Media_Cleaner::is_plugin_upload_dir_name( (string) $name ) ) {
+			return true;
+		}
 
 		return self::should_skip_upload_dir( (string) $name );
 	}
@@ -894,6 +982,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return true|WP_Error
 	 */
 	public static function delete_hygiene_folder( string $folder_id, array $scan ) {
+		delete_transient( self::TRANSIENT_FOOTPRINT ); // The disk split changes: drop the cached footprint.
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$folder_id = sanitize_key( $folder_id );
 		if ( '' === $folder_id || empty( $scan['items'] ) || ! is_array( $scan['items'] ) ) {
 			return new WP_Error( 'invalid_folder', __( 'Unknown folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -982,6 +1072,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return true|WP_Error
 	 */
 	public static function quarantine_hygiene_folder( string $folder_id, array $scan ) {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$folder_id = sanitize_key( $folder_id );
 		if ( '' === $folder_id || empty( $scan['items'] ) || ! is_array( $scan['items'] ) ) {
 			return new WP_Error( 'invalid_folder', __( 'Unknown folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -1128,6 +1220,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return true|WP_Error
 	 */
 	public static function restore_quarantine_entry( string $entry_id ) {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entry_id = sanitize_key( $entry_id );
 		$entries  = self::get_quarantine_entries();
 		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
@@ -1182,6 +1276,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return true|WP_Error
 	 */
 	public static function purge_quarantine_entry( string $entry_id ) {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entry_id = sanitize_key( $entry_id );
 		$entries  = self::get_quarantine_entries();
 		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
@@ -1209,6 +1305,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return int Number of entries purged.
 	 */
 	public static function purge_expired_quarantine(): int {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entries = self::get_quarantine_entries();
 		if ( empty( $entries ) ) {
 			return 0;
@@ -1792,7 +1890,7 @@ class TSOSK_Uploads_Scanner {
 		$last_id = 0;
 		do {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$rows = $wpdb->get_results(
+			$rows    = $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' AND post_id > %d ORDER BY post_id ASC LIMIT %d",
 					'_wp_attachment_metadata',
@@ -1801,12 +1899,13 @@ class TSOSK_Uploads_Scanner {
 				),
 				ARRAY_A
 			);
-			$rows = is_array( $rows ) ? $rows : array();
+			$rows    = is_array( $rows ) ? $rows : array();
+			$fetched = is_array( $rows ) ? count( $rows ) : 0;
 			foreach ( $rows as $row ) {
 				$last_id = absint( $row['post_id'] ?? 0 );
 				$callback( $last_id, maybe_unserialize( $row['meta_value'] ?? '' ) );
 			}
-		} while ( count( $rows ) === $chunk );
+		} while ( $fetched === $chunk );
 	}
 
 	/**
@@ -1824,10 +1923,11 @@ class TSOSK_Uploads_Scanner {
 	 *  2. Orphaned derivative files on disk that match one of the requested sizes'
 	 *     dimensions but are not referenced by any attachment metadata.
 	 *
-	 * The quarantine entry is registered before anything is moved and saved every few posts, so an
-	 * interrupted run stays restorable. Every metadata entry removed is recorded (files kept in place
-	 * get a metadata-only item), and an entry is never removed from the metadata when its file could
-	 * not be moved.
+	 * The quarantine entry is registered before anything is moved. Each item is recorded before its
+	 * file is moved and the entry is saved every 10 items, so an interrupted run stays restorable
+	 * except for, at most, its last few files. Every metadata entry removed is recorded (files kept in
+	 * place get a metadata-only item; entries whose file was already gone are simply dropped), and an
+	 * entry is never removed from the metadata when its file could not be moved.
 	 *
 	 * Callers are responsible for restricting $size_names to sizes the admin has
 	 * already disabled for new uploads — this method does not re-check that.
@@ -1836,6 +1936,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return array{entry_id:string, files:int, bytes:int, updated_posts:int}|WP_Error
 	 */
 	public static function quarantine_image_size_files( array $size_names ): array|WP_Error {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$size_names = array_values( array_unique( array_filter( array_map( 'sanitize_key', $size_names ) ) ) );
 		if ( empty( $size_names ) ) {
 			return new WP_Error( 'tsosk_no_sizes', __( 'No image sizes selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -1890,8 +1992,8 @@ class TSOSK_Uploads_Scanner {
 		// The entry is registered BEFORE anything is moved and re-saved every few posts, so a timeout
 		// or fatal in the middle never leaves moved files without a record that can restore or purge them.
 		$save_entry = static function ( bool $in_progress ) use ( &$items, &$moved_files, &$moved_bytes, $entry_id, $size_names, $dest_dir ): void {
-			$all            = self::get_sizes_quarantine_entries();
-			$existing       = $all[ $entry_id ] ?? array();
+			$all              = self::get_sizes_quarantine_entries();
+			$existing         = $all[ $entry_id ] ?? array();
 			$all[ $entry_id ] = array(
 				'id'             => $entry_id,
 				'sizes'          => $size_names,
@@ -1909,7 +2011,7 @@ class TSOSK_Uploads_Scanner {
 
 		// Metadata is only rewritten after the items that describe it are saved.
 		$flush = static function () use ( &$pending_meta, &$updated_posts, $save_entry ): void {
-			if ( empty( $pending_meta ) ) {
+			if ( ! $pending_meta ) {
 				return;
 			}
 			$save_entry( true );
@@ -1922,7 +2024,7 @@ class TSOSK_Uploads_Scanner {
 
 		// Pass 1: attachments that reference one of the requested sizes in their metadata.
 		self::each_attachment_metadata(
-			static function ( int $post_id, $metadata ) use ( &$items, &$moved_files, &$moved_bytes, &$seq, &$captured_dims, &$moved_paths, &$pending_meta, $flush, $size_set, $base, $dest_dir, $fs ): void {
+			static function ( int $post_id, $metadata ) use ( &$items, &$moved_files, &$moved_bytes, &$seq, &$captured_dims, &$moved_paths, &$pending_meta, $flush, $save_entry, $size_set, $base, $dest_dir, $fs ): void {
 				if ( ! $post_id || ! is_array( $metadata ) || empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ) {
 					return;
 				}
@@ -1999,18 +2101,26 @@ class TSOSK_Uploads_Scanner {
 					}
 
 					++$seq;
-					$bytes = (int) filesize( $file_path );
-					$qpath = wp_normalize_path( trailingslashit( $dest_dir ) . $seq . '-' . sanitize_file_name( basename( $file_path ) ) );
+					$bytes                        = (int) filesize( $file_path );
+					$qpath                        = wp_normalize_path( trailingslashit( $dest_dir ) . $seq . '-' . sanitize_file_name( basename( $file_path ) ) );
+					$meta_item['quarantine_path'] = $qpath;
+					$meta_item['bytes']           = $bytes;
+
+					// Record the item BEFORE moving its file, and persist the entry every 10 items, so a
+					// run interrupted mid-way leaves (almost) every moved file restorable. An item whose
+					// file never arrived is skipped by restore.
+					$items[] = $meta_item;
+					if ( 0 === count( $items ) % 10 ) {
+						$save_entry( true );
+					}
 					if ( ! $fs->move( $file_path, $qpath ) ) {
 						// The file could not be moved: keep the metadata entry so WordPress still knows the file.
+						array_pop( $items );
 						continue;
 					}
 
 					$moved_paths[ $file_path ] = true;
-					$meta_item['quarantine_path'] = $qpath;
-					$meta_item['bytes']           = $bytes;
-					$items[]                      = $meta_item;
-					$moved_bytes                 += $bytes;
+					$moved_bytes              += $bytes;
 					++$moved_files;
 
 					unset( $metadata['sizes'][ $size_name ] );
@@ -2058,6 +2168,9 @@ class TSOSK_Uploads_Scanner {
 					$attached = get_attached_file( $post_id );
 					if ( $attached && file_exists( $attached ) ) {
 						$known_files[ wp_normalize_path( $attached ) ] = true;
+					}
+					if ( $attached ) {
+						self::add_derivative_files( $known_files, (string) $attached, $metadata, $post_id );
 					}
 					if ( empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) || ! $attached ) {
 						return;
@@ -2114,20 +2227,23 @@ class TSOSK_Uploads_Scanner {
 					++$seq;
 					$bytes = (int) filesize( $path );
 					$qpath = wp_normalize_path( trailingslashit( $dest_dir ) . $seq . '-' . sanitize_file_name( $entry ) );
+					// Same order as pass 1: record first (persisting every 10 items), then move.
+					$items[] = array(
+						'post_id'         => 0,
+						'size_name'       => $target_dims[ $dim_key ] ?? '',
+						'size_data'       => null,
+						'original_path'   => $path,
+						'quarantine_path' => $qpath,
+						'bytes'           => $bytes,
+					);
+					if ( 0 === count( $items ) % 10 ) {
+						$save_entry( true );
+					}
 					if ( $fs->move( $path, $qpath ) ) {
-						$items[]      = array(
-							'post_id'         => 0,
-							'size_name'       => $target_dims[ $dim_key ] ?? '',
-							'size_data'       => null,
-							'original_path'   => $path,
-							'quarantine_path' => $qpath,
-							'bytes'           => $bytes,
-						);
 						$moved_bytes += $bytes;
 						++$moved_files;
-						if ( 0 === $moved_files % 100 ) {
-							$save_entry( true );
-						}
+					} else {
+						array_pop( $items );
 					}
 				}
 				closedir( $handle );
@@ -2153,6 +2269,75 @@ class TSOSK_Uploads_Scanner {
 			'files'         => $moved_files,
 			'bytes'         => $moved_bytes,
 			'updated_posts' => $updated_posts,
+		);
+	}
+
+	/**
+	 * Make the existing files of one image size available under another size name with identical
+	 * dimensions (typical after a theme renames a size). Only the attachment metadata is updated: the
+	 * entry of $to is copied from the entry of $from, pointing at the very same file. No file is read,
+	 * moved, copied or deleted, and the entries of $from stay as they are.
+	 *
+	 * @param string $from   Size name that owns the files today.
+	 * @param string $to     Registered size name that should use them.
+	 * @param int    $width  Shared width.
+	 * @param int    $height Shared height.
+	 * @return array{adopted:int, skipped:int}|WP_Error
+	 */
+	public static function adopt_size_files( string $from, string $to, int $width, int $height ) {
+		$from = sanitize_key( $from );
+		$to   = sanitize_key( $to );
+		if ( '' === $from || '' === $to || $from === $to || $width <= 0 || $height <= 0 ) {
+			return new WP_Error( 'tsosk_adopt_args', __( 'Invalid sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$uploads = wp_upload_dir();
+		if ( ! empty( $uploads['error'] ) ) {
+			return new WP_Error( 'tsosk_uploads', (string) $uploads['error'] );
+		}
+		$base = wp_normalize_path( trailingslashit( $uploads['basedir'] ) );
+
+		if ( function_exists( 'wp_raise_memory_limit' ) ) {
+			wp_raise_memory_limit( 'admin' );
+		}
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged, WordPress.PHP.NoSilencedErrors.Discouraged
+		}
+
+		$adopted = 0;
+		$skipped = 0;
+
+		self::each_attachment_metadata(
+			static function ( int $post_id, $metadata ) use ( $from, $to, $width, $height, $base, &$adopted, &$skipped ): void {
+				if ( ! $post_id || ! is_array( $metadata ) || empty( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ) {
+					return;
+				}
+				$source = $metadata['sizes'][ $from ] ?? null;
+				if ( ! is_array( $source ) || empty( $source['file'] ) || isset( $metadata['sizes'][ $to ] ) ) {
+					return;
+				}
+				if ( (int) ( $source['width'] ?? 0 ) !== $width || (int) ( $source['height'] ?? 0 ) !== $height ) {
+					++$skipped;
+					return;
+				}
+
+				$attached = get_attached_file( $post_id );
+				$path     = $attached ? wp_normalize_path( trailingslashit( dirname( $attached ) ) . $source['file'] ) : '';
+				$real     = '' !== $path ? realpath( $path ) : false;
+				if ( false === $real || 0 !== strpos( wp_normalize_path( $real ), $base ) ) {
+					++$skipped; // The file is missing (or outside uploads): nothing to reuse.
+					return;
+				}
+
+				$metadata['sizes'][ $to ] = $source;
+				wp_update_attachment_metadata( $post_id, $metadata );
+				++$adopted;
+			}
+		);
+
+		return array(
+			'adopted' => $adopted,
+			'skipped' => $skipped,
 		);
 	}
 
@@ -2208,6 +2393,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return array{restored:int, remaining:int}|WP_Error
 	 */
 	public static function restore_sizes_quarantine_entry( string $entry_id ): array|WP_Error {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entry_id = sanitize_key( $entry_id );
 		$entries  = self::get_sizes_quarantine_entries();
 		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
@@ -2340,6 +2527,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return true|WP_Error
 	 */
 	public static function purge_sizes_quarantine_entry( string $entry_id ) {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entry_id = sanitize_key( $entry_id );
 		$entries  = self::get_sizes_quarantine_entries();
 		if ( '' === $entry_id || ! isset( $entries[ $entry_id ] ) ) {
@@ -2389,6 +2578,8 @@ class TSOSK_Uploads_Scanner {
 	 * @return int Number of entries purged.
 	 */
 	public static function purge_expired_sizes_quarantine(): int {
+		delete_transient( self::TRANSIENT_FOOTPRINT );
+		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
 		$entries = self::get_sizes_quarantine_entries();
 		if ( empty( $entries ) ) {
 			return 0;

@@ -14,10 +14,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Media_Footprint {
 
-	/** @var TSOSK_Mod_Media_Footprint|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Media_Footprint|null
+	 */
 	private static $instance = null;
 
 	/**
+	 * Get instance.
+	 *
 	 * @return TSOSK_Mod_Media_Footprint
 	 */
 	public static function get_instance(): self {
@@ -27,6 +33,9 @@ class TSOSK_Mod_Media_Footprint {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_media_footprint_scan', array( $this, 'ajax_scan' ) );
 		add_action( 'wp_ajax_tsosk_media_hygiene_scan', array( $this, 'ajax_hygiene_scan' ) );
@@ -129,6 +138,9 @@ class TSOSK_Mod_Media_Footprint {
 		);
 	}
 
+	/**
+	 * AJAX: hygiene delete.
+	 */
 	public function ajax_hygiene_delete(): void {
 		check_ajax_referer( 'tsosk_media_footprint_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -277,6 +289,9 @@ class TSOSK_Mod_Media_Footprint {
 		);
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		TSOSK_Uploads_Scanner::purge_expired_quarantine();
 
@@ -297,7 +312,7 @@ class TSOSK_Mod_Media_Footprint {
 		</p>
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-media-footprint-scan"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Scan uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-media-footprint-msg"></span>
@@ -341,7 +356,7 @@ class TSOSK_Mod_Media_Footprint {
 		</p>
 		<p>
 			<button type="button" class="button button-secondary" id="tsosk-media-hygiene-scan"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Scan removable folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-media-hygiene-msg"></span>
@@ -373,6 +388,8 @@ class TSOSK_Mod_Media_Footprint {
 	}
 
 	/**
+	 * Render empty state.
+	 *
 	 * @return void
 	 */
 	private function render_empty_state(): void {
@@ -383,6 +400,12 @@ class TSOSK_Mod_Media_Footprint {
 		<?php
 	}
 
+	/**
+	 * Render stats html.
+	 *
+	 * @param array $stats Stats.
+	 * @return string
+	 */
 	private function render_stats_html( array $stats ): string {
 		$total      = (int) ( $stats['total_bytes'] ?? 0 );
 		$original   = (int) ( $stats['original_bytes'] ?? 0 );
@@ -399,12 +422,17 @@ class TSOSK_Mod_Media_Footprint {
 		};
 
 		$cards = array(
-			array( __( 'Total disk usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), size_format( $total, 2 ), 'info', sprintf(
-				/* translators: 1: number of files, 2: number of folders */
-				__( '%1$s files · %2$s folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				number_format_i18n( $scanned ),
-				number_format_i18n( $folders )
-			) ),
+			array(
+				__( 'Total disk usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				size_format( $total, 2 ),
+				'info',
+				sprintf(
+										/* translators: 1: number of files, 2: number of folders */
+					__( '%1$s files · %2$s folders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					number_format_i18n( $scanned ),
+					number_format_i18n( $folders )
+				),
+			),
 			array( __( 'Original media (est.)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), size_format( $original, 2 ), 'ok', $pct( $original ) ),
 			array( __( 'Thumbnails & derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), size_format( $derivative, 2 ), $derivative > $original && $original > 0 ? 'warn' : 'info', $pct( $derivative ) ),
 			array( __( 'Other files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), size_format( $other, 2 ), 'info', $pct( $other ) ),
@@ -515,7 +543,7 @@ class TSOSK_Mod_Media_Footprint {
 		<?php endif; ?>
 
 		<?php if ( ! empty( $stats['by_month'] ) && is_array( $stats['by_month'] ) ) : ?>
-		<?php $month_rows = array_slice( $stats['by_month'], 0, 24, true ); ?>
+			<?php $month_rows = array_slice( $stats['by_month'], 0, 24, true ); ?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Usage by month', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<?php if ( count( $stats['by_month'] ) > count( $month_rows ) ) : ?>
@@ -640,7 +668,7 @@ class TSOSK_Mod_Media_Footprint {
 	 * Pure CSS proportional-width "treemap" of disk usage by file extension.
 	 *
 	 * @param array<string, array{files: int, bytes: int}> $by_extension Extension => stats.
-	 * @param int                                           $total        Total bytes (for percentages).
+	 * @param int                                          $total        Total bytes (for percentages).
 	 * @return string
 	 */
 	private function render_treemap_html( array $by_extension, int $total ): string {
@@ -678,8 +706,8 @@ class TSOSK_Mod_Media_Footprint {
 				++$tsosk_tm_index;
 				?>
 				<div class="tsosk-treemap-block"
-				     style="width:<?php echo esc_attr( (string) $tsosk_tm_pct ); ?>%;background:<?php echo esc_attr( $tsosk_tm_color ); ?>;"
-				     title="<?php echo esc_attr( '.' . $tsosk_tm_ext . ' — ' . size_format( $tsosk_tm_bytes, 2 ) . ' (' . $tsosk_tm_pct . '%)' ); ?>">
+					style="width:<?php echo esc_attr( (string) $tsosk_tm_pct ); ?>%;background:<?php echo esc_attr( $tsosk_tm_color ); ?>;"
+					title="<?php echo esc_attr( '.' . $tsosk_tm_ext . ' — ' . size_format( $tsosk_tm_bytes, 2 ) . ' (' . $tsosk_tm_pct . '%)' ); ?>">
 					<?php if ( $tsosk_tm_pct >= 6 ) : ?>
 					<span class="tsosk-treemap-label">.<?php echo esc_html( (string) $tsosk_tm_ext ); ?> <?php echo esc_html( $tsosk_tm_pct . '%' ); ?></span>
 					<?php endif; ?>
@@ -688,8 +716,8 @@ class TSOSK_Mod_Media_Footprint {
 			<?php if ( $other > 0 ) : ?>
 				<?php $tsosk_tm_other_pct = round( ( $other / $total ) * 100, 1 ); ?>
 				<div class="tsosk-treemap-block tsosk-treemap-other"
-				     style="width:<?php echo esc_attr( (string) $tsosk_tm_other_pct ); ?>%;"
-				     title="<?php echo esc_attr( __( 'Other file types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' — ' . size_format( $other, 2 ) . ' (' . $tsosk_tm_other_pct . '%)' ); ?>">
+					style="width:<?php echo esc_attr( (string) $tsosk_tm_other_pct ); ?>%;"
+					title="<?php echo esc_attr( __( 'Other file types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' — ' . size_format( $other, 2 ) . ' (' . $tsosk_tm_other_pct . '%)' ); ?>">
 					<?php if ( $tsosk_tm_other_pct >= 6 ) : ?>
 					<span class="tsosk-treemap-label"><?php esc_html_e( 'Other', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <?php echo esc_html( $tsosk_tm_other_pct . '%' ); ?></span>
 					<?php endif; ?>
@@ -701,6 +729,12 @@ class TSOSK_Mod_Media_Footprint {
 		return (string) ob_get_clean();
 	}
 
+	/**
+	 * Render hygiene html.
+	 *
+	 * @param array $scan Scan.
+	 * @return string
+	 */
 	private function render_hygiene_html( array $scan ): string {
 		$items      = is_array( $scan['items'] ?? null ) ? $scan['items'] : array();
 		$scanned_at = (int) ( $scan['scanned_at'] ?? 0 );
@@ -786,9 +820,9 @@ class TSOSK_Mod_Media_Footprint {
 							<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php if ( ! empty( $item['deletable'] ) ) : ?>
 								<button type="button" class="button button-small button-link-delete tsosk-media-hygiene-delete"
-								        data-folder-id="<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-								        data-label="<?php echo esc_attr( (string) ( $item['relative'] ?? '' ) ); ?>">
+										data-folder-id="<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>"
+										data-label="<?php echo esc_attr( (string) ( $item['relative'] ?? '' ) ); ?>">
 									<?php esc_html_e( 'Move to quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php else : ?>
@@ -806,6 +840,11 @@ class TSOSK_Mod_Media_Footprint {
 		return (string) ob_get_clean();
 	}
 
+	/**
+	 * Render quarantine html.
+	 *
+	 * @return string
+	 */
 	private function render_quarantine_html(): string {
 		$entries = TSOSK_Uploads_Scanner::get_quarantine_entries();
 		$nonce   = wp_create_nonce( 'tsosk_media_footprint_nonce' );
@@ -858,14 +897,14 @@ class TSOSK_Mod_Media_Footprint {
 							<td data-label="<?php esc_attr_e( 'Auto-deletes on', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $tsosk_q_at > 0 ? wp_date( 'Y-m-d', $tsosk_q_expires ) : '—' ); ?></td>
 							<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<button type="button" class="button button-small tsosk-media-quarantine-restore"
-								        data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Restore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<button type="button" class="button button-small button-link-delete tsosk-media-quarantine-purge"
-								        data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-								        data-label="<?php echo esc_attr( (string) ( $entry['label'] ?? '' ) ); ?>">
+										data-entry-id="<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>"
+										data-label="<?php echo esc_attr( (string) ( $entry['label'] ?? '' ) ); ?>">
 									<?php esc_html_e( 'Delete now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>

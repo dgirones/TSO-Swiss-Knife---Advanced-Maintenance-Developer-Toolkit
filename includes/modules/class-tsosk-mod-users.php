@@ -26,9 +26,18 @@ class TSOSK_Mod_Users {
 	/** Max login history entries. */
 	private const MAX_HISTORY = 300;
 
-	/** @var TSOSK_Mod_Users|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Users|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -36,12 +45,15 @@ class TSOSK_Mod_Users {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_user_destroy_sessions',   array( $this, 'ajax_destroy_sessions' ) );
+		add_action( 'wp_ajax_tsosk_user_destroy_sessions', array( $this, 'ajax_destroy_sessions' ) );
 		add_action( 'wp_ajax_tsosk_user_destroy_one_session', array( $this, 'ajax_destroy_one_session' ) );
-		add_action( 'wp_ajax_tsosk_user_bulk_inactive',       array( $this, 'ajax_bulk_inactive' ) );
-		add_action( 'wp_ajax_tsosk_user_force_password',      array( $this, 'ajax_force_password' ) );
-		add_action( 'wp_ajax_tsosk_users_clear_history',      array( $this, 'ajax_clear_history' ) );
+		add_action( 'wp_ajax_tsosk_user_bulk_inactive', array( $this, 'ajax_bulk_inactive' ) );
+		add_action( 'wp_ajax_tsosk_user_force_password', array( $this, 'ajax_force_password' ) );
+		add_action( 'wp_ajax_tsosk_users_clear_history', array( $this, 'ajax_clear_history' ) );
 	}
 
 	/**
@@ -71,6 +83,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * On login success.
+	 *
 	 * @param string  $user_login Username.
 	 * @param WP_User $user       User object.
 	 */
@@ -89,6 +103,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * On login failed.
+	 *
 	 * @param string   $username Username attempted.
 	 * @param WP_Error $error    Error object.
 	 */
@@ -140,7 +156,7 @@ class TSOSK_Mod_Users {
 		if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
 			return;
 		}
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		if ( wp_doing_ajax() ) {
 			return;
 		}
 		if ( get_user_meta( get_current_user_id(), self::META_FORCE_PASSWORD, true ) ) {
@@ -160,6 +176,10 @@ class TSOSK_Mod_Users {
 			return;
 		}
 		if ( ! get_user_meta( get_current_user_id(), self::META_FORCE_PASSWORD, true ) ) {
+			return;
+		}
+		// Accounts that cannot use wp-admin (customers, members) are often bounced back to the front end: redirecting them would loop.
+		if ( ! current_user_can( 'edit_posts' ) ) {
 			return;
 		}
 		wp_safe_redirect( add_query_arg( 'tsosk_force_pwd', '1', admin_url( 'profile.php' ) ) );
@@ -183,6 +203,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Append login history.
+	 *
 	 * @param array<string,mixed> $entry History row.
 	 */
 	private function append_login_history( array $entry ): void {
@@ -198,6 +220,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Get login history.
+	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function get_login_history(): array {
@@ -206,12 +230,12 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Get client ip.
+	 *
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		return isset( $_SERVER['REMOTE_ADDR'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
-			: '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	/**
@@ -224,7 +248,7 @@ class TSOSK_Mod_Users {
 	private function get_inactive_users( int $days = 90, int $limit = 100 ): array {
 		$cutoff = time() - ( $days * DAY_IN_SECONDS );
 		// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Admin-only inactive user report.
-		$users  = get_users(
+		$users = get_users(
 			array(
 				'number'     => 500,
 				'orderby'    => 'registered',
@@ -248,10 +272,7 @@ class TSOSK_Mod_Users {
 		// phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 		$out = array();
 		foreach ( $users as $user ) {
-			$last = (int) get_user_meta( $user->ID, self::META_LAST_LOGIN, true );
-			if ( ! $last ) {
-				$last = strtotime( $user->user_registered );
-			}
+			$last = $this->get_last_activity( (int) $user->ID, (string) $user->user_registered );
 			if ( $last < $cutoff ) {
 				$out[] = $user;
 			}
@@ -262,6 +283,9 @@ class TSOSK_Mod_Users {
 		return $out;
 	}
 
+	/**
+	 * AJAX: destroy sessions.
+	 */
 	public function ajax_destroy_sessions(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -289,6 +313,9 @@ class TSOSK_Mod_Users {
 		wp_send_json_success( __( 'User sessions closed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: destroy one session.
+	 */
 	public function ajax_destroy_one_session(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -312,6 +339,9 @@ class TSOSK_Mod_Users {
 		wp_send_json_success( __( 'Session closed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: bulk inactive.
+	 */
 	public function ajax_bulk_inactive(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -334,7 +364,8 @@ class TSOSK_Mod_Users {
 			wp_send_json_error( __( 'Invalid bulk action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$count = 0;
+		$count             = 0;
+		$kept_with_content = 0;
 		foreach ( $ids as $user_id ) {
 			if ( get_current_user_id() === $user_id ) {
 				continue;
@@ -343,10 +374,7 @@ class TSOSK_Mod_Users {
 			if ( ! $user ) {
 				continue;
 			}
-			$last = (int) get_user_meta( $user_id, self::META_LAST_LOGIN, true );
-			if ( ! $last ) {
-				$last = strtotime( $user->user_registered );
-			}
+			$last = $this->get_last_activity( $user_id, (string) $user->user_registered );
 			if ( $last >= time() - ( $days * DAY_IN_SECONDS ) ) {
 				continue;
 			}
@@ -354,15 +382,20 @@ class TSOSK_Mod_Users {
 				if ( user_can( $user_id, 'manage_options' ) || is_super_admin( $user_id ) ) {
 					continue;
 				}
+				// Never delete accounts that own content: wp_delete_user() without a reassign target removes their posts too.
+				if ( $this->user_owns_content( $user_id ) ) {
+					++$kept_with_content;
+					continue;
+				}
 				if ( wp_delete_user( $user_id ) ) {
-					$count++;
+					++$count;
 				}
 			} else {
 				if ( user_can( $user_id, 'manage_options' ) || is_super_admin( $user_id ) ) {
 					continue;
 				}
 				$user->set_role( 'subscriber' );
-				$count++;
+				++$count;
 			}
 		}
 
@@ -376,15 +409,62 @@ class TSOSK_Mod_Users {
 				$count
 			)
 		);
-		wp_send_json_success(
-			sprintf(
-				/* translators: %d: number of users */
-				__( '%d users processed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$count
-			)
+		$message = sprintf(
+			/* translators: %d: number of users */
+			__( '%d users processed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$count
 		);
+		if ( $kept_with_content > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of users */
+				__( '%d users were not deleted because they own posts or other content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$kept_with_content
+			);
+		}
+		wp_send_json_success( $message );
 	}
 
+	/**
+	 * Timestamp of the last known activity for a user.
+	 *
+	 * Without a recorded login (the login meta only exists since this plugin tracked it)
+	 * the later of registration and plugin activation is used, so existing accounts are
+	 * not reported as inactive just because tracking started recently.
+	 *
+	 * @param int    $user_id    User ID.
+	 * @param string $registered user_registered value.
+	 * @return int
+	 */
+	private function get_last_activity( int $user_id, string $registered ): int {
+		$last = (int) get_user_meta( $user_id, self::META_LAST_LOGIN, true );
+		if ( $last ) {
+			return $last;
+		}
+		$last      = (int) strtotime( $registered );
+		$activated = (int) get_option( 'tsosk_activated', 0 );
+		return max( $last, $activated );
+	}
+
+	/**
+	 * Whether the user is the author of any post, page or custom content.
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	private function user_owns_content( int $user_id ): bool {
+		$types = get_post_types( array(), 'names' );
+		unset( $types['revision'], $types['nav_menu_item'], $types['customize_changeset'], $types['oembed_cache'] );
+		if ( count_user_posts( $user_id, array_values( $types ), false ) > 0 ) {
+			return true;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_author = %d AND post_status NOT IN ('auto-draft','inherit')", $user_id ) ) > 0;
+	}
+
+	/**
+	 * AJAX: force password.
+	 */
 	public function ajax_force_password(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -416,6 +496,9 @@ class TSOSK_Mod_Users {
 		wp_send_json_success( __( 'User must change password on next login.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: clear history.
+	 */
 	public function ajax_clear_history(): void {
 		check_ajax_referer( 'tsosk_users_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -425,18 +508,24 @@ class TSOSK_Mod_Users {
 		wp_send_json_success( __( 'Login history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$nonce           = wp_create_nonce( 'tsosk_users_nonce' );
-		$admin_users     = get_users(
+		$nonce          = wp_create_nonce( 'tsosk_users_nonce' );
+		$admin_users    = get_users(
 			array(
 				'role'   => 'administrator',
 				'number' => 50,
 				'fields' => array( 'ID', 'user_login', 'user_email', 'user_registered' ),
 			)
 		);
-		$inactive_users  = $this->get_inactive_users( 90, 100 );
-		$login_history   = array_slice( $this->get_login_history(), 0, 50 );
-		$total_users     = count_users()['total_users'] ?? 0;
+		$inactive_users = $this->get_inactive_users( 90, 100 );
+		$login_history  = array_slice( $this->get_login_history(), 0, 50 );
+		$user_counts    = count_users();
+		$total_users    = $user_counts['total_users'] ?? 0;
+		// The list above is capped at 50; the summary shows the real number of administrators.
+		$admin_total = (int) ( $user_counts['avail_roles']['administrator'] ?? count( $admin_users ) );
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Inspect sessions, login history, inactive accounts and manage user security actions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -446,8 +535,8 @@ class TSOSK_Mod_Users {
 			<h3><?php esc_html_e( 'User Summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
 				<tr><th><?php esc_html_e( 'Total Users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) $total_users ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Administrators', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $admin_users ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Inactive (90+ days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $inactive_users ) ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Administrators', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) $admin_total ); ?></code></td></tr>
+				<tr><th><?php esc_html_e( 'Inactive (90+ days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $inactive_users ) . ( count( $inactive_users ) >= 100 ? '+' : '' ) ); ?></code></td></tr>
 				<tr><th><?php esc_html_e( 'Login history entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><td><code><?php echo esc_html( (string) count( $this->get_login_history() ) ); ?></code></td></tr>
 			</table>
 		</div>
@@ -459,6 +548,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Render sessions card.
+	 *
 	 * @param WP_User[] $users Users.
 	 * @param string    $nonce Nonce.
 	 */
@@ -500,11 +591,11 @@ class TSOSK_Mod_Users {
 								<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;"><?php esc_html_e( 'You (this account)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<?php else : ?>
 								<button type="button" class="button button-small tsosk-user-close-sessions" style="margin-left:8px;"
-								        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Close all sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<button type="button" class="button button-small tsosk-user-force-pwd"
-								        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Force password change', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							<?php endif; ?>
@@ -536,9 +627,9 @@ class TSOSK_Mod_Users {
 										<td>
 											<?php if ( ! $is_self ) : ?>
 											<button type="button" class="button button-small button-link-delete tsosk-user-close-one-session"
-											        data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>"
-											        data-token="<?php echo esc_attr( (string) $token ); ?>"
-											        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+													data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>"
+													data-token="<?php echo esc_attr( (string) $token ); ?>"
+													data-nonce="<?php echo esc_attr( $nonce ); ?>">
 												<?php esc_html_e( 'Close', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 											</button>
 											<?php else : ?>
@@ -558,6 +649,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Render inactive card.
+	 *
 	 * @param WP_User[] $users Inactive users.
 	 * @param string    $nonce Nonce.
 	 */
@@ -609,6 +702,8 @@ class TSOSK_Mod_Users {
 	}
 
 	/**
+	 * Render history card.
+	 *
 	 * @param array<int,array<string,mixed>> $history Login history rows.
 	 * @param string                         $nonce   Nonce.
 	 */

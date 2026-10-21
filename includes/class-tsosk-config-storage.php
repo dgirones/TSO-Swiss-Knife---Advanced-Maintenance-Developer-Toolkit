@@ -17,10 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Config_Storage {
 
-	public const DEBUG_JSON     = 'tsosk-debug-flags.json';
-	public const SECURITY_JSON  = 'tsosk-security-flags.json';
-	public const PROFILES_JSON  = 'tsosk-profiles-flags.json';
-	public const MAIL_LOG_JSON  = 'tsosk-mail-log.json';
+	public const DEBUG_JSON    = 'tsosk-debug-flags.json';
+	public const SECURITY_JSON = 'tsosk-security-flags.json';
+	public const PROFILES_JSON = 'tsosk-profiles-flags.json';
+	public const MAIL_LOG_JSON = 'tsosk-mail-log.json';
 
 	public const LEGACY_DEBUG    = 'tsosk-debug-flags.php';
 	public const LEGACY_SECURITY = 'tsosk-security-flags.php';
@@ -88,6 +88,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Read json.
+	 *
 	 * @param string $filename JSON filename inside the config directory.
 	 * @return array<string, mixed>
 	 */
@@ -106,6 +108,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Write json.
+	 *
 	 * @param string               $filename JSON filename.
 	 * @param array<string, mixed> $data     Payload.
 	 * @return true|WP_Error
@@ -125,9 +129,19 @@ class TSOSK_Config_Storage {
 		if ( '' === $path ) {
 			return new WP_Error( 'invalid_config', __( 'Invalid config file name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		// Write to a temporary file and rename it so a crash or a concurrent request never sees a half-written config.
+		$tmp = $path . '.' . wp_generate_password( 8, false, false ) . '.tmp';
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- non-executable JSON in uploads.
-		if ( false === file_put_contents( $path, $json . "\n" ) ) {
+		if ( false === file_put_contents( $tmp, $json . "\n", LOCK_EX ) ) {
 			return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- atomic replace of a plugin-owned JSON file.
+		if ( ! rename( $tmp, $path ) ) {
+			wp_delete_file( $tmp );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- fallback when rename is not possible.
+			if ( false === file_put_contents( $path, $json . "\n", LOCK_EX ) ) {
+				return new WP_Error( 'write_failed', __( 'Could not write the config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
 		}
 		return true;
 	}
@@ -153,6 +167,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Read log json.
+	 *
 	 * @param string $filename Allowed JSON filename inside the logs directory.
 	 * @return array<string, mixed>
 	 */
@@ -171,6 +187,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Write log json.
+	 *
 	 * @param string               $filename Allowed JSON filename.
 	 * @param array<string, mixed> $data     Payload.
 	 * @return true|WP_Error
@@ -199,6 +217,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Delete log json.
+	 *
 	 * @param string $filename Allowed JSON filename.
 	 * @return true
 	 */
@@ -211,6 +231,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Log path for.
+	 *
 	 * @param string $filename JSON filename.
 	 * @return string Empty when the name is not allow-listed.
 	 */
@@ -227,6 +249,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Delete json.
+	 *
 	 * @param string $filename JSON filename.
 	 * @return true
 	 */
@@ -250,6 +274,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Save debug flags.
+	 *
 	 * @param array{debug:bool,log:bool,display:bool,script:bool,queries:bool} $flags Debug flags.
 	 * @return true|WP_Error
 	 */
@@ -276,6 +302,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Get debug flags.
+	 *
 	 * @return array{debug:bool,log:bool,display:bool,script:bool,queries:bool}
 	 */
 	public static function get_debug_flags(): array {
@@ -286,7 +314,7 @@ class TSOSK_Config_Storage {
 			'script'  => defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG,
 			'queries' => defined( 'SAVEQUERIES' ) && SAVEQUERIES,
 		);
-		$data = self::read_json( self::DEBUG_JSON );
+		$data     = self::read_json( self::DEBUG_JSON );
 		if ( empty( $data['flags'] ) || ! is_array( $data['flags'] ) ) {
 			return $defaults;
 		}
@@ -307,6 +335,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Save security flags.
+	 *
 	 * @param array<string,bool> $flags Security constants.
 	 * @param bool               $force_ssl_override_off Whether to disable FORCE_SSL_ADMIN via filter.
 	 * @return true|WP_Error
@@ -327,18 +357,20 @@ class TSOSK_Config_Storage {
 		return self::write_json(
 			self::SECURITY_JSON,
 			array(
-				'version'                     => 1,
-				'constants'                   => $constants,
+				'version'                      => 1,
+				'constants'                    => $constants,
 				'force_ssl_admin_override_off' => $force_ssl_override_off,
 			)
 		);
 	}
 
 	/**
+	 * Get security flags.
+	 *
 	 * @return array{constants:array<string,bool>,force_ssl_admin_override_off:bool}
 	 */
 	public static function get_security_flags(): array {
-		$data = self::read_json( self::SECURITY_JSON );
+		$data      = self::read_json( self::SECURITY_JSON );
 		$constants = array(
 			'DISALLOW_FILE_EDIT' => false,
 			'DISALLOW_FILE_MODS' => false,
@@ -356,6 +388,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Save profiles constants.
+	 *
 	 * @param array<string, mixed> $constants Profile constants.
 	 * @return true|WP_Error
 	 */
@@ -382,6 +416,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Get profiles constants.
+	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get_profiles_constants(): array {
@@ -393,7 +429,7 @@ class TSOSK_Config_Storage {
 			'AUTOSAVE_INTERVAL'   => null,
 			'EMPTY_TRASH_DAYS'    => null,
 		);
-		$data = self::read_json( self::PROFILES_JSON );
+		$data     = self::read_json( self::PROFILES_JSON );
 		if ( empty( $data['constants'] ) || ! is_array( $data['constants'] ) ) {
 			return $defaults;
 		}
@@ -501,6 +537,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Path for.
+	 *
 	 * @param string $filename JSON filename.
 	 * @return string
 	 */
@@ -530,6 +568,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Ensure dir.
+	 *
 	 * @param string $dir Config directory.
 	 * @return bool
 	 */
@@ -548,13 +588,19 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Protect dir.
+	 *
 	 * @param string $dir Directory to protect from direct web access.
 	 */
 	private static function protect_dir( string $dir ): void {
 		$htaccess = trailingslashit( $dir ) . '.htaccess';
-		$rules    = "Order deny,allow\nDeny from all\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n";
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		file_put_contents( $htaccess, $rules );
+		$rules    = "<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\nOrder deny,allow\nDeny from all\n</IfModule>\n";
+		// Only touch the file when it differs, so the folder is not rewritten on every request.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_file( $htaccess ) || file_get_contents( $htaccess ) !== $rules ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			file_put_contents( $htaccess, $rules );
+		}
 
 		// Prefer a non-executable blank index over PHP under uploads (WordPress.org guideline).
 		$legacy_php = trailingslashit( $dir ) . 'index.php';
@@ -568,6 +614,9 @@ class TSOSK_Config_Storage {
 		}
 	}
 
+	/**
+	 * Apply debug constants.
+	 */
 	private static function apply_debug_constants(): void {
 		$data = self::read_json( self::DEBUG_JSON );
 		if ( empty( $data['flags'] ) || ! is_array( $data['flags'] ) ) {
@@ -581,6 +630,9 @@ class TSOSK_Config_Storage {
 		}
 	}
 
+	/**
+	 * Apply security constants.
+	 */
 	private static function apply_security_constants(): void {
 		$data = self::read_json( self::SECURITY_JSON );
 		if ( empty( $data['constants'] ) || ! is_array( $data['constants'] ) ) {
@@ -594,6 +646,9 @@ class TSOSK_Config_Storage {
 		}
 	}
 
+	/**
+	 * Apply profiles constants.
+	 */
 	private static function apply_profiles_constants(): void {
 		$data = self::read_json( self::PROFILES_JSON );
 		if ( empty( $data['constants'] ) || ! is_array( $data['constants'] ) ) {
@@ -618,7 +673,8 @@ class TSOSK_Config_Storage {
 	 * @param mixed  $value         Constant value.
 	 */
 	private static function define_wp_constant_if_absent( string $constant_name, $value ): void {
-		if ( defined( $constant_name ) ) {
+		// Only plain upper-case constant identifiers coming from the JSON file are ever defined.
+		if ( ! preg_match( '/^[A-Z][A-Z0-9_]{1,63}$/', $constant_name ) || defined( $constant_name ) ) {
 			return;
 		}
 
@@ -626,6 +682,9 @@ class TSOSK_Config_Storage {
 		define( $constant_name, $value );
 	}
 
+	/**
+	 * Maybe migrate legacy configs.
+	 */
 	private static function maybe_migrate_legacy_configs(): void {
 		self::maybe_migrate_legacy_upload_folders();
 		self::migrate_legacy_debug();
@@ -661,12 +720,18 @@ class TSOSK_Config_Storage {
 			$from = trailingslashit( $old ) . $name;
 			$to   = trailingslashit( $new_dir ) . $name;
 			if ( is_readable( $from ) && ! file_exists( $to ) ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- JSON-only uploads migration.
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename, WordPress.PHP.NoSilencedErrors.Discouraged -- JSON-only uploads migration.
 				@rename( $from, $to );
 			}
 		}
 	}
 
+	/**
+	 * Legacy path.
+	 *
+	 * @param string $legacy_filename Legacy filename.
+	 * @return string
+	 */
 	private static function legacy_path( string $legacy_filename ): string {
 		$uploads = self::path_for( $legacy_filename );
 		if ( is_readable( $uploads ) ) {
@@ -683,6 +748,9 @@ class TSOSK_Config_Storage {
 		return is_readable( $mu ) ? $mu : $uploads;
 	}
 
+	/**
+	 * Migrate legacy debug.
+	 */
 	private static function migrate_legacy_debug(): void {
 		if ( self::json_exists( self::DEBUG_JSON ) ) {
 			return;
@@ -692,8 +760,8 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $legacy );
-		$map = array(
+		$src   = (string) file_get_contents( $legacy );
+		$map   = array(
 			'WP_DEBUG'         => 'debug',
 			'WP_DEBUG_LOG'     => 'log',
 			'WP_DEBUG_DISPLAY' => 'display',
@@ -716,6 +784,9 @@ class TSOSK_Config_Storage {
 		self::delete_legacy( self::LEGACY_DEBUG );
 	}
 
+	/**
+	 * Migrate legacy security.
+	 */
 	private static function migrate_legacy_security(): void {
 		if ( self::json_exists( self::SECURITY_JSON ) ) {
 			return;
@@ -725,8 +796,8 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $legacy );
-		$flags = array(
+		$src          = (string) file_get_contents( $legacy );
+		$flags        = array(
 			'DISALLOW_FILE_EDIT' => (bool) preg_match( "/define\(\s*'DISALLOW_FILE_EDIT'\s*,\s*true\s*\)/", $src ),
 			'DISALLOW_FILE_MODS' => (bool) preg_match( "/define\(\s*'DISALLOW_FILE_MODS'\s*,\s*true\s*\)/", $src ),
 			'FORCE_SSL_ADMIN'    => (bool) preg_match( "/define\(\s*'FORCE_SSL_ADMIN'\s*,\s*true\s*\)/", $src ),
@@ -739,6 +810,9 @@ class TSOSK_Config_Storage {
 		self::delete_legacy( self::LEGACY_SECURITY );
 	}
 
+	/**
+	 * Migrate legacy profiles.
+	 */
 	private static function migrate_legacy_profiles(): void {
 		if ( self::json_exists( self::PROFILES_JSON ) ) {
 			return;
@@ -748,7 +822,7 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$src = (string) file_get_contents( $legacy );
+		$src       = (string) file_get_contents( $legacy );
 		$constants = array();
 		foreach ( array( 'DISABLE_WP_CRON', 'CONCATENATE_SCRIPTS', 'COMPRESS_SCRIPTS' ) as $bool_const ) {
 			if ( preg_match( "/define\(\s*'" . preg_quote( $bool_const, '/' ) . "'\s*,\s*true\s*\)/", $src ) ) {
@@ -765,6 +839,8 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
+	 * Delete legacy.
+	 *
 	 * @param string $legacy_filename Legacy PHP filename.
 	 */
 	private static function delete_legacy( string $legacy_filename ): void {

@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.1.5
+Stable tag: 1.2.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,10 @@ These tools are intended for experienced administrators and developers. Always r
 
 Only when you enable reputation or cloud checks and, where required, provide API keys. See the **External services** section above for each provider, what data is sent, and links to their terms and privacy policies. With all cloud features off, checks run locally (honeypot, rate limits, keyword rules, and similar).
 
+= The plugin sees my CDN or proxy address instead of the visitor's IP. What can I do? =
+
+By default the plugin uses the server's `REMOTE_ADDR`, because headers such as `X-Forwarded-For` can be forged when the origin is reachable directly. Behind a CDN or reverse proxy you can opt in by adding `define( 'TSOSK_TRUSTED_PROXY_HEADER', 'HTTP_CF_CONNECTING_IP' );` (or `HTTP_X_FORWARDED_FOR`) to `wp-config.php`, or by returning the header name from the `tsosk_trusted_proxy_header` filter. Visitor IPs are used only for rate limiting, lockouts, whitelists and short-lived duplicate-hit detection (hashed, never stored in clear for the View Counter); they are not sent to any third party unless you enable a cloud antispam provider listed under External services.
+
 = Why do I see two copies of this plugin after installing? =
 
 That usually means the ZIP folder name was wrong (for example `…-main` from a GitHub download instead of `tso-swiss-knife-advanced-maintenance-developer-toolkit`). Remove the duplicate folder under `wp-content/plugins/`, keep only the folder whose name matches the plugin slug, and reactivate.
@@ -197,26 +201,26 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
-= 1.1.5 =
-* Image Sizes Audit: moving old thumbnails to quarantine is now safe against interruptions and can be restored exactly; it warns if content still links to those sizes, keeps sizes registered only on the front end, refreshes the list after saving, and works on hosts that need FTP credentials.
-* Redirects: the 404 monitor queue no longer stops on already-covered URLs, and adds Suggested patterns (one 410 rule per prefix) and bulk 410/redirect actions; the rules list gains search, filters, sorting, bulk actions, CSV export/import and a phone layout.
-* Slug Manager: renaming keeps accented letters (transliterated) and creates 301 redirects for child pages without chains; uppercase slugs, duplicates and URL clashes are reported, and the SEO notes were corrected (default long-slug threshold: 75).
-* Media Cleaner: the scan now runs in resumable batches with far fewer false positives, and also detects wrong stored paths, empty files, missing sizes, offloaded media and orphaned attachments, with summary cards.
-* Uploads Disk Footprint and Folder hygiene: batched scan with Resume, no symlink loops, new space-by-folder and month tables, and a 30-day quarantine that is purged by a scheduled task and no longer scans uploads twice.
+= 1.2.1 =
+* Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.
+* Improved: Search & Replace now warns when the replacement is empty (matches get deleted) and when all matches are in internal tables rather than post content.
+* Improved: Search & Replace result summary now reads as a proper sentence in every language.
+* Fixed: Search & Replace no longer scans or rewrites its own automatic backup, activity log and slow-query log, and the preview now shows the part of the cell where the match is instead of its first characters.
 
-= 1.1.4 =
-* Redirects: 404 monitor now shows requester IP with bot detection, a "Delete selected" button and an "Already covered" badge; duplicate and shadowed rules are now detected and blocked; fixed rules that silently never matched because of a duplicated site subdirectory in their path.
-* View Counter: fixed several legacy-table cleanup issues (stale opcode cache after a plain file upload, wrong table-prefix detection, incomplete removal on DB errors) and improved visibility when a leftover table can't be removed.
-* Server & Runtime: added a plain-language explanation of what the OPcache "Reset OPcache" button actually does and its limits.
+= 1.2.0 =
+* Improved: header, tool finder (more keywords, sections inside tools) and Overview tiles (all link to their tool, new design, more accurate counts).
+* Improved modules: Server Files (safer .htaccess saving, sitemap review, "Load previous version", "Discard unsaved changes", "Add security headers"), Maintenance (CIDR ranges in the IP whitelist), Redirects, Update Manager, Health, Security, Users, Roles, Transients, Cron, Custom 404, Content Audit, Media Cleaner, Uploads footprint, Activity History, REST API, Developer mode.
+* Fixed: View Counter imports (duplicate-import warning, lock, WP Statistics archives, inflated days), File Integrity false positives (index.php placeholders, error_log) with a read-only "View contents" button, and options stored as "auto-on" in the Options Editor and Health.
+* Fixed: Login Protect (real client IP behind proxies, 2FA and role IP rules only after a correct password, custom login URL with maintenance mode, single mass-lockout alert).
+* Fixed: Search & Replace with nested serialized data, super-admin only for shared data on multisite, complete uninstall on multisite.
+* Performance and translations: fewer database queries per request, more autoloaded settings, Catalan and Spanish catalogs complete.
 
-= 1.1.3 =
-* Maintenance mode: visitors and search engines now really receive "503 Service Unavailable" (it was answering 200 OK, so the maintenance page could be indexed as the real site).
-* Login Protect: failed logins with usernames such as "admin" now count toward the brute-force lockout when "Block forbidden usernames" is off (they were silently ignored).
-* Login Protect: custom login URLs with accents or ñ (e.g. "acceso-administración") are now converted to plain letters and work; existing accented slugs are fixed automatically on the next page load (they made the login page unreachable).
-* Redirects and 404 monitor: URLs with accents or ñ are now matched and logged correctly (they were stripped, so "/ñandú/" was treated as "/and/").
-* Rewrite Rules: fixed a fatal error on sites using Plain permalinks.
-* Search & Replace: table and column lists now work with database drivers that return upper-case column names.
-* Robustness: saving settings or calling the public view counter with malformed input (arrays, very large numbers, very long names) no longer triggers PHP errors or warnings; corrupted log entries (History, 404 monitor, login lockouts) are skipped instead of breaking the screen.
-* View Counter: recovers automatically from duplicate views/links tables left over by an old, removed table-naming scheme (a stale PHP opcode cache after a manual FTP upload could keep that old code running for a while); any such leftover table is merged into the real one and then dropped, instead of splitting the view count between two tables.
+= 1.1.9 =
+* Slow Query Monitor: the admin bar item is now translated (Catalan/Spanish) on every admin and front-end page, not only on the plugin screen; several labels were also missing from the catalogs.
+* Slow Query Monitor: the admin bar numbers (time, queries, duplicates, slow) are refreshed at the end of the page, so they match Query Monitor instead of undercounting what ran after the bar was drawn.
+* Slow Query Monitor: admin bar links now open the right section — a new "Last page you visited" panel with that page's duplicate and slowest queries (before, "Queries" and "Slow" jumped to the top or to a table about the Monitor page itself).
+* Slow Query Monitor: "Origin detection" now also names the plugin or theme behind duplicate queries (last page panel, live table and admin bar), skips Query Monitor's own wrapper, no longer reports almost everything as "WordPress core", and origins are shown in the saved slow-query log again.
+* Slow Query Monitor: new "Copy to AI" on duplicate queries — copies an English report (SQL, counts, callers, components, troublemakers). You choose which plugin folders are included (defaults to tso-*); other sites pick their own plugins instead of dumping every third-party duplicate.
+* Slow Query Monitor: on narrow screens (admin bar ≤782px) the toolbar item collapses to a severity-colour dot only — load time and query/duplicate pills stay in the submenu and on desktop — so it no longer wraps onto a second row and covers Screen Options / Help.
+* Slow Query Monitor: on the same mobile breakpoint, hides the SweepPress and iThemes Security admin-bar icons when they would wrap over the admin menu (desktop unchanged).
 
-Older versions: see changelog.txt in the plugin folder.

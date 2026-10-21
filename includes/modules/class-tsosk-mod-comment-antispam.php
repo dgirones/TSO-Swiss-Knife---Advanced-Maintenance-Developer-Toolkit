@@ -21,22 +21,36 @@ class TSOSK_Mod_Comment_Antispam {
 	/** Settings option key. */
 	public const OPTION = 'tsosk_comment_antispam';
 
-	/** Block log option key. */
-	private const OPTION_LOG = 'tsosk_cas_log';
+	/** Remote provider health/usage option key. */
+	private const OPTION_PROVIDERS = 'tsosk_cas_providers';
 
-	/** Learning-mode log option key (would-have-blocked entries). */
-	private const OPTION_LEARNING_LOG = 'tsosk_cas_learning_log';
+	/** Legacy option-based logs (moved to the log table once, then deleted). */
+	private const LEGACY_LOGS = array(
+		'tsosk_cas_log'          => 'block',
+		'tsosk_cas_learning_log' => 'learning',
+	);
 
-	/** Per-IP rate counter option key. */
-	private const OPTION_RATE = 'tsosk_cas_rate';
+	/** Rules that can be put in observe-only mode (reason keys). */
+	private const OBSERVABLE_RULES = array( 'honeypot', 'time_trap', 'rate_limit', 'max_links', 'disposable_email', 'cyrillic', 'keyword', 'blocked_url', 'duplicate', 'stopforumspam', 'abuseipdb', 'honeypot_httpbl', 'cloud' );
 
-	/** Recent form submission hashes for duplicate detection. */
-	private const OPTION_FORM_DUP = 'tsosk_cas_form_dup';
+	/** Log table schema version. */
+	private const DB_VERSION = '1';
 
-	/** Silent form block flag (honeypot fake success). */
+	/** Log table schema version option. */
+	private const OPTION_DB_VERSION = 'tsosk_cas_db_version';
+
+	/**
+	 * Silent form block flag (honeypot fake success).
+	 *
+	 * @var bool
+	 */
 	private bool $form_silent_block = false;
 
-	/** Unique honeypot field id suffix per rendered form. */
+	/**
+	 * Unique honeypot field id suffix per rendered form.
+	 *
+	 * @var int
+	 */
 	private static int $trap_field_counter = 0;
 
 	/** Honeypot field name (must not match real comment fields). */
@@ -44,12 +58,6 @@ class TSOSK_Mod_Comment_Antispam {
 
 	/** Time token field name. */
 	private const TIME_FIELD = 'tsosk_cas_time';
-
-	/** Maximum log entries kept. */
-	private const MAX_LOG = 150;
-
-	/** Maximum distinct IPs stored for rate limiting. */
-	private const MAX_RATE_IPS = 500;
 
 	/** CleanTalk moderation API endpoint. */
 	private const CLEANTALK_API = 'https://moderate.cleantalk.org/api2.0';
@@ -81,14 +89,94 @@ class TSOSK_Mod_Comment_Antispam {
 		'dispostable.com',
 		'mailnesia.com',
 		'fakeinbox.com',
+		'guerrillamail.org',
+		'guerrillamail.biz',
+		'guerrillamail.de',
+		'guerrillamail.info',
+		'guerrillamailblock.com',
+		'spam4.me',
+		'temp-mail.io',
+		'tempmail.net',
+		'tempmailo.com',
+		'10minutemail.net',
+		'20minutemail.com',
+		'throwawaymail.com',
+		'yopmail.fr',
+		'yopmail.net',
+		'trashmail.net',
+		'trashmail.de',
+		'nada.email',
+		'mintemail.com',
+		'mytemp.email',
+		'mohmal.com',
+		'emailondeck.com',
+		'mailcatch.com',
+		'mailnull.com',
+		'spambox.us',
+		'spamgourmet.com',
+		'tempinbox.com',
+		'tempr.email',
+		'dropmail.me',
+		'discard.email',
+		'burnermail.io',
+		'moakt.com',
+		'tmail.ws',
+		'tmpmail.org',
+		'tmpmail.net',
+		'fakemail.net',
+		'fakemailgenerator.com',
+		'harakirimail.com',
+		'incognitomail.com',
+		'jetable.org',
+		'mailforspam.com',
+		'mailmetrash.com',
+		'mailtemp.info',
+		'nowmymail.com',
+		'owlymail.com',
+		'pokemail.net',
+		'sogetthis.com',
+		'spamex.com',
+		'suremail.info',
+		'tempail.com',
+		'tempemail.net',
+		'tempmailaddress.com',
+		'tempmailer.com',
+		'throwam.com',
+		'trash-mail.com',
+		'wegwerfmail.de',
+		'wegwerfmail.net',
+		'wegwerfmail.org',
+		'zetmail.com',
+		'emailfake.com',
+		'email-fake.com',
+		'crazymailing.com',
+		'inboxbear.com',
+		'inboxkitten.com',
+		'luxusmail.org',
+		'mailpoof.com',
+		'mailsac.com',
+		'minuteinbox.com',
 	);
 
-	/** @var TSOSK_Mod_Comment_Antispam|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Comment_Antispam|null
+	 */
 	private static $instance = null;
 
-	/** @var array<string, mixed> */
+	/**
+	 * Module settings.
+	 *
+	 * @var array<string, mixed>
+	 */
 	private array $settings = array();
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -96,10 +184,17 @@ class TSOSK_Mod_Comment_Antispam {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_cas_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_cas_clear_log', array( $this, 'ajax_clear_log' ) );
 		add_action( 'wp_ajax_tsosk_cas_clear_learning_log', array( $this, 'ajax_clear_learning_log' ) );
+		add_action( 'wp_ajax_tsosk_cas_test_provider', array( $this, 'ajax_test_provider' ) );
+		add_action( 'wp_ajax_tsosk_cas_allow_ip', array( $this, 'ajax_allow_ip' ) );
+		add_action( 'wp_ajax_tsosk_cas_test_alert', array( $this, 'ajax_test_alert' ) );
+		add_action( 'admin_post_tsosk_cas_export', array( $this, 'handle_export' ) );
 	}
 
 	/**
@@ -107,22 +202,32 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	public function init(): void {
 		$this->settings = self::get_settings();
+		$this->maybe_upgrade_storage();
 		if ( empty( $this->settings['enabled'] ) ) {
 			return;
 		}
 
-		if ( empty( $this->settings['protect_comments'] ) && empty( $this->settings['protect_contact_forms'] ) ) {
+		if ( empty( $this->settings['protect_comments'] ) && empty( $this->settings['protect_contact_forms'] ) && empty( $this->settings['protect_registration'] ) ) {
 			return;
 		}
 
 		if ( ! empty( $this->settings['protect_comments'] ) ) {
 			add_filter( 'preprocess_comment', array( $this, 'filter_comment' ), 1 );
+			add_filter( 'pre_comment_approved', array( $this, 'force_comment_status' ), 99, 2 );
 			add_action( 'comment_form_after_fields', array( $this, 'render_honeypot_fields' ) );
 			add_action( 'comment_form_logged_in_after', array( $this, 'render_honeypot_fields' ) );
 		}
 
 		if ( ! empty( $this->settings['protect_contact_forms'] ) ) {
 			$this->register_form_hooks();
+		}
+
+		if ( ! empty( $this->settings['protect_registration'] ) ) {
+			add_action( 'register_form', array( $this, 'render_honeypot_fields' ) );
+			add_filter( 'registration_errors', array( $this, 'registration_errors' ), 20, 3 );
+			add_action( 'woocommerce_register_form', array( $this, 'render_honeypot_fields' ) );
+			add_filter( 'woocommerce_process_registration_errors', array( $this, 'woo_registration_errors' ), 20, 4 );
+			add_action( 'login_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		}
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
@@ -184,8 +289,8 @@ class TSOSK_Mod_Comment_Antispam {
 			'rate_limit_count'          => 3,
 			'rate_limit_window'         => 60,
 			'max_links'                 => 2,
-			'block_keywords'              => '',
-			'block_urls'                  => '',
+			'block_keywords'            => '',
+			'block_urls'                => '',
 			'block_disposable_email'    => true,
 			'custom_disposable_domains' => '',
 			'duplicate_check'           => true,
@@ -206,10 +311,25 @@ class TSOSK_Mod_Comment_Antispam {
 			'whitelist_ips'             => '',
 			'spam_action'               => 'spam',
 			'log_blocks'                => true,
+			'log_max'                   => 1000,
+			'protect_reviews'           => true,
+			'protect_registration'      => false,
+			'ban_enabled'               => false,
+			'ban_threshold'             => 5,
+			'ban_hours'                 => 24,
+			'trust_returning'           => true,
+			'block_message'             => '',
+			'observe_rules'             => array(),
+			'alert_enabled'             => false,
+			'alert_email'               => '',
+			'alert_threshold'           => 20,
+			'alert_provider_errors'     => true,
 		);
 	}
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get_settings(): array {
@@ -237,7 +357,7 @@ class TSOSK_Mod_Comment_Antispam {
 			$needs_assets = true;
 		}
 
-		if ( ! empty( $this->settings['protect_contact_forms'] ) && ! is_admin() ) {
+		if ( ( ! empty( $this->settings['protect_contact_forms'] ) || ! empty( $this->settings['protect_registration'] ) ) && ! is_admin() ) {
 			$needs_assets = true;
 		}
 
@@ -276,7 +396,7 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	public function fluentform_render_traps( $form ): void {
 		static $rendered = array();
-		$form_id = is_object( $form ) && isset( $form->id ) ? (int) $form->id : 0;
+		$form_id         = is_object( $form ) && isset( $form->id ) ? (int) $form->id : 0;
 		if ( $form_id > 0 && isset( $rendered[ $form_id ] ) ) {
 			return;
 		}
@@ -375,7 +495,7 @@ class TSOSK_Mod_Comment_Antispam {
 	/**
 	 * CF7 spam filter.
 	 *
-	 * @param bool               $spam       Whether CF7 already marked spam.
+	 * @param bool                  $spam       Whether CF7 already marked spam.
 	 * @param WPCF7_Submission|null $submission Submission instance.
 	 */
 	public function cf7_spam_check( bool $spam, $submission ): bool {
@@ -397,8 +517,8 @@ class TSOSK_Mod_Comment_Antispam {
 	public function cf7_feedback_response( array $response, string $status ): array {
 		if ( $this->form_silent_block && 'spam' === $status ) {
 			$this->form_silent_block = false;
-			$response['status']  = 'mail_sent';
-			$response['message'] = apply_filters(
+			$response['status']      = 'mail_sent';
+			$response['message']     = apply_filters(
 				'tsosk_cf7_silent_block_success_message',
 				__( 'Thank you for your message. It has been sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
@@ -421,17 +541,12 @@ class TSOSK_Mod_Comment_Antispam {
 			return $fields;
 		}
 
-		$check = $this->evaluate_submission( $data );
-		if ( $check['allow'] ) {
-			$this->record_successful_submission( $data );
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
 			return $fields;
 		}
 
 		$this->handle_form_block( $data, $check, 'wpforms', (int) ( $form_data['id'] ?? 0 ) );
-
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $data, $check );
-		}
 
 		return $fields;
 	}
@@ -469,9 +584,8 @@ class TSOSK_Mod_Comment_Antispam {
 			return $validation_result;
 		}
 
-		$check = $this->evaluate_submission( $data );
-		if ( $check['allow'] ) {
-			$this->record_successful_submission( $data );
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
 			return $validation_result;
 		}
 
@@ -482,16 +596,12 @@ class TSOSK_Mod_Comment_Antispam {
 				$field->failed_validation  = true;
 				$field->validation_message = $check['silent']
 					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-					: $check['message'];
+					: $this->public_message( $check );
 				break;
 			}
 		}
 		unset( $field );
 		$validation_result['form'] = $form;
-
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $data, $check );
-		}
 
 		return $validation_result;
 	}
@@ -499,7 +609,7 @@ class TSOSK_Mod_Comment_Antispam {
 	/**
 	 * Elementor Pro forms validation.
 	 *
-	 * @param ElementorPro\Modules\Forms\Classes\Form_Record $record       Form record.
+	 * @param ElementorPro\Modules\Forms\Classes\Form_Record  $record       Form record.
 	 * @param ElementorPro\Modules\Forms\Classes\Ajax_Handler $ajax_handler Handler.
 	 */
 	public function elementor_validate( $record, $ajax_handler ): void {
@@ -544,15 +654,11 @@ class TSOSK_Mod_Comment_Antispam {
 			return;
 		}
 
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $data, $check );
-		}
-
 		if ( is_object( $ajax_handler ) && method_exists( $ajax_handler, 'add_error_message' ) ) {
 			$ajax_handler->add_error_message(
 				$check['silent']
 					? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-					: $check['message']
+					: $this->public_message( $check )
 			);
 		}
 	}
@@ -573,49 +679,34 @@ class TSOSK_Mod_Comment_Antispam {
 			return $errors;
 		}
 
-		$check = $this->evaluate_submission( $data );
-		if ( $check['allow'] ) {
-			$this->record_successful_submission( $data );
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
 			return $errors;
-		}
-
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $data, $check );
 		}
 
 		$errors['tsosk_cas'] = array(
 			$check['silent']
 				? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-				: $check['message'],
+				: $this->public_message( $check ),
 		);
 
 		return $errors;
 	}
 
 	/**
-	 * Shared form block handler for CF7 (returns bool spam flag).
+	 * Run the checks for a form submission.
 	 *
 	 * @param array<string, mixed> $data Submission data.
+	 * @return bool True when the submission must be blocked.
 	 */
 	private function block_form_submission( array $data ): bool {
 		if ( $this->should_skip_submission( $data ) ) {
 			return false;
 		}
 
-		$check = $this->evaluate_submission( $data );
-		if ( $check['allow'] ) {
-			$this->record_successful_submission( $data );
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
 			return false;
-		}
-
-		if ( ! empty( $this->settings['learning_mode'] ) ) {
-			$this->log_learning_block( $data, $check );
-			$this->record_successful_submission( $data );
-			return false;
-		}
-
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $data, $check );
 		}
 
 		if ( ! empty( $check['silent'] ) ) {
@@ -637,7 +728,7 @@ class TSOSK_Mod_Comment_Antispam {
 		unset( $data );
 		$message = $check['silent']
 			? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-			: $check['message'];
+			: $this->public_message( $check );
 
 		if ( 'wpforms' === $provider && function_exists( 'wpforms' ) && $form_id > 0 ) {
 			if ( ! isset( wpforms()->process->errors[ $form_id ] ) || ! is_array( wpforms()->process->errors[ $form_id ] ) ) {
@@ -655,10 +746,10 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @return array<string, mixed>
 	 */
 	private function extract_fields_from_array( array $fields, string $source ): array {
-		$author  = '';
-		$email   = '';
-		$url     = '';
-		$parts   = array();
+		$author = '';
+		$email  = '';
+		$url    = '';
+		$parts  = array();
 
 		foreach ( $fields as $key => $value ) {
 			if ( in_array( (string) $key, array( self::HONEYPOT_FIELD, self::TIME_FIELD ), true ) ) {
@@ -728,6 +819,8 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Is email field key.
+	 *
 	 * @param string $key Lowercase field key.
 	 */
 	private function is_email_field_key( string $key ): bool {
@@ -735,6 +828,8 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Is name field key.
+	 *
 	 * @param string $key Lowercase field key.
 	 */
 	private function is_name_field_key( string $key ): bool {
@@ -742,6 +837,8 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Is url field key.
+	 *
 	 * @param string $key Lowercase field key.
 	 */
 	private function is_url_field_key( string $key ): bool {
@@ -919,21 +1016,19 @@ class TSOSK_Mod_Comment_Antispam {
 		}
 
 		$commentdata['source'] = 'comment';
-		$check = $this->evaluate_submission( $commentdata );
+		$check                 = $this->evaluate_submission( $commentdata );
 		if ( $check['allow'] ) {
 			$this->record_successful_submission( $commentdata );
 			return $commentdata;
 		}
 
-		if ( ! empty( $this->settings['learning_mode'] ) ) {
+		if ( $this->is_observed( $check ) ) {
 			$this->log_learning_block( $commentdata, $check );
 			$this->record_successful_submission( $commentdata );
 			return $commentdata;
 		}
 
-		if ( ! empty( $this->settings['log_blocks'] ) ) {
-			$this->log_block( $commentdata, $check );
-		}
+		$this->log_block( $commentdata, $check );
 
 		if ( ! empty( $check['silent'] ) ) {
 			wp_die( '', '', array( 'response' => 200 ) );
@@ -941,7 +1036,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		if ( 'discard' === $this->settings['spam_action'] ) {
 			wp_die(
-				esc_html( $check['message'] ),
+				esc_html( $this->public_message( $check ) ),
 				esc_html__( 'Comment blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				array(
 					'response'  => 403,
@@ -950,8 +1045,24 @@ class TSOSK_Mod_Comment_Antispam {
 			);
 		}
 
-		$commentdata['comment_approved'] = ( 'trash' === $this->settings['spam_action'] ) ? 'trash' : 'spam';
+		// WordPress recomputes comment_approved after this filter (wp_allow_comment), so the verdict travels in a
+		// private key and is applied in force_comment_status() on pre_comment_approved.
+		$commentdata['tsosk_cas_status'] = ( 'trash' === $this->settings['spam_action'] ) ? 'trash' : 'spam';
 		return $commentdata;
+	}
+
+	/**
+	 * Apply the spam/trash verdict set by filter_comment() (pre_comment_approved runs after preprocess_comment).
+	 *
+	 * @param mixed $approved    Approval status computed by WordPress.
+	 * @param mixed $commentdata Comment data, including our private verdict key.
+	 * @return mixed
+	 */
+	public function force_comment_status( $approved, $commentdata = array() ) {
+		if ( is_array( $commentdata ) && isset( $commentdata['tsosk_cas_status'] ) && in_array( $commentdata['tsosk_cas_status'], array( 'spam', 'trash' ), true ) ) {
+			return $commentdata['tsosk_cas_status'];
+		}
+		return $approved;
 	}
 
 	/**
@@ -960,7 +1071,8 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @param array<string, mixed> $commentdata Comment data.
 	 */
 	private function should_skip( array $commentdata ): bool {
-		if ( ! empty( $commentdata['comment_type'] ) && 'comment' !== $commentdata['comment_type'] ) {
+		$type = (string) ( $commentdata['comment_type'] ?? '' );
+		if ( '' !== $type && 'comment' !== $type && ! ( 'review' === $type && ! empty( $this->settings['protect_reviews'] ) ) ) {
 			return true;
 		}
 		return $this->should_skip_submission( $commentdata );
@@ -997,7 +1109,14 @@ class TSOSK_Mod_Comment_Antispam {
 			);
 		};
 
-		if ( ! empty( $this->settings['honeypot'] ) ) {
+		if ( ! empty( $this->settings['ban_enabled'] ) && $this->is_ip_banned() ) {
+			return $fail( 'banned', __( 'Too many blocked attempts from your IP address. Please try again later.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Jetpack Comments renders the form inside an iframe, so our hidden trap fields can never be present.
+		$via_jetpack = $this->is_jetpack_comment_request();
+
+		if ( ! empty( $this->settings['honeypot'] ) && ! $via_jetpack ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form; honeypot must be empty.
 			$trap = isset( $_POST[ self::HONEYPOT_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::HONEYPOT_FIELD ] ) ) : '';
 			if ( '' !== $trap ) {
@@ -1005,7 +1124,7 @@ class TSOSK_Mod_Comment_Antispam {
 			}
 		}
 
-		if ( ! empty( $this->settings['time_trap'] ) ) {
+		if ( ! empty( $this->settings['time_trap'] ) && ! $via_jetpack ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form.
 			$token = isset( $_POST[ self::TIME_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::TIME_FIELD ] ) ) : '';
 			if ( '' === $token || ! $this->verify_time_token( $token ) ) {
@@ -1021,16 +1140,6 @@ class TSOSK_Mod_Comment_Antispam {
 				'rate_limit',
 				__( 'Too many submissions from your IP address. Please try again later.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
-		}
-
-		$reputation = $this->check_reputation_services( $data );
-		if ( null !== $reputation ) {
-			return $fail( $reputation['reason'], $reputation['message'] );
-		}
-
-		$cloud = $this->check_cloud( $data );
-		if ( true === $cloud ) {
-			return $fail( 'cloud', __( 'Submission flagged as spam by cloud filter.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$content  = (string) ( $data['comment_content'] ?? '' );
@@ -1078,11 +1187,25 @@ class TSOSK_Mod_Comment_Antispam {
 			);
 		}
 
-		if ( ! empty( $this->settings['duplicate_check'] ) && $this->is_duplicate_submission( $data ) ) {
+		if ( ! empty( $this->settings['duplicate_check'] ) && 'registration' !== ( $data['source'] ?? '' ) && $this->is_duplicate_submission( $data ) ) {
 			return $fail(
 				'duplicate',
 				__( 'Duplicate submission detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
+		}
+
+		// Remote lookups run last: cheap local rules reject obvious spam first, so no visitor data is sent to third parties for it.
+		$trusted = ! empty( $this->settings['trust_returning'] ) && 'registration' !== ( $data['source'] ?? '' ) && $this->is_returning_commenter( $email );
+		if ( ! $trusted ) {
+			$reputation = $this->check_reputation_services( $data );
+			if ( null !== $reputation ) {
+				return $fail( $reputation['reason'], $reputation['message'] );
+			}
+
+			$cloud = $this->check_cloud( $data );
+			if ( true === $cloud ) {
+				return $fail( 'cloud', __( 'Submission flagged as spam by cloud filter.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
 		}
 
 		return array(
@@ -1138,57 +1261,68 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
-	 * StopForumSpam lookup (free API, no key required).
+	 * StopForumSpam lookup (read-only query; no account or API key needed).
 	 *
+	 * The 2026 restriction on API signups only affects API keys used to SUBMIT reports; lookups stay anonymous.
+	 * The email is sent as an MD5 hash and the username is not sent (names such as "John" give false positives).
+	 * Failures (timeout, HTTP error, rate limit) pause lookups for a few minutes so comments are never delayed.
+	 *
+	 * @param string $ip Ip.
+	 * @param string $email Email.
+	 * @param string $author Author (unused, kept for signature compatibility).
 	 * @return bool|null True = spam, false = ham, null = unavailable.
 	 */
 	private function check_stopforumspam( string $ip, string $email, string $author ): ?bool {
-		if ( '' === $ip && '' === $email && '' === $author ) {
-			return null;
-		}
+		unset( $author );
 
-		$cache_key = 'tsosk_cas_sfs_' . md5( $ip . '|' . $email . '|' . $author );
-		$cached    = get_site_transient( $cache_key );
-		if ( is_bool( $cached ) ) {
-			return $cached;
+		if ( get_site_transient( 'tsosk_cas_sfs_down' ) ) {
+			return null;
 		}
 
 		$query = array(
 			'f'          => 'json',
 			'confidence' => 'true',
 		);
-		if ( '' !== $ip && filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+		if ( '' !== $ip && false !== filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
 			$query['ip'] = $ip;
 		}
 		if ( is_email( $email ) ) {
-			$query['email'] = $email;
-		}
-		if ( '' !== $author ) {
-			$query['username'] = $author;
+			$query['emailhash'] = md5( strtolower( trim( $email ) ) );
 		}
 
 		if ( count( $query ) <= 2 ) {
 			return null;
 		}
 
+		$cache_key = 'tsosk_cas_sfs_' . md5( ( $query['ip'] ?? '' ) . '|' . ( $query['emailhash'] ?? '' ) );
+		$cached    = get_site_transient( $cache_key );
+		if ( is_bool( $cached ) ) {
+			return $cached;
+		}
+
 		$response = wp_remote_get(
 			add_query_arg( $query, self::STOPFORUMSPAM_API ),
-			array( 'timeout' => 8 )
+			array( 'timeout' => 5 )
 		);
 
-		if ( is_wp_error( $response ) ) {
+		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			$this->record_provider( 'stopforumspam', 'error', is_wp_error( $response ) ? $response->get_error_message() : 'HTTP ' . (int) wp_remote_retrieve_response_code( $response ) );
+			set_site_transient( 'tsosk_cas_sfs_down', 1, 10 * MINUTE_IN_SECONDS );
 			return null;
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || 1 !== (int) ( $body['success'] ?? 0 ) ) {
+			// Rate limit, banned IP or a changed API: back off instead of retrying on every comment.
+			$this->record_provider( 'stopforumspam', 'error', is_array( $body ) && ! empty( $body['error'] ) ? (string) ( is_array( $body['error'] ) ? wp_json_encode( $body['error'] ) : $body['error'] ) : 'Invalid response' );
+			set_site_transient( 'tsosk_cas_sfs_down', 1, 30 * MINUTE_IN_SECONDS );
 			return null;
 		}
 
 		$min_conf = (float) $this->settings['sfs_min_confidence'];
 		$is_spam  = false;
 
-		foreach ( array( 'ip', 'email', 'username' ) as $field ) {
+		foreach ( array( 'ip', 'emailhash', 'email' ) as $field ) {
 			if ( empty( $body[ $field ] ) || ! is_array( $body[ $field ] ) ) {
 				continue;
 			}
@@ -1202,6 +1336,7 @@ class TSOSK_Mod_Comment_Antispam {
 			}
 		}
 
+		$this->record_provider( 'stopforumspam', 'ok' );
 		set_site_transient( $cache_key, $is_spam, self::REPUTATION_CACHE_TTL );
 		return $is_spam;
 	}
@@ -1209,6 +1344,7 @@ class TSOSK_Mod_Comment_Antispam {
 	/**
 	 * AbuseIPDB IP reputation check.
 	 *
+	 * @param string $ip Ip.
 	 * @return bool|null True = spam, false = ham, null = unavailable.
 	 */
 	private function check_abuseipdb( string $ip ): ?bool {
@@ -1248,11 +1384,13 @@ class TSOSK_Mod_Comment_Antispam {
 		);
 
 		if ( is_wp_error( $response ) ) {
+			$this->record_provider( 'abuseipdb', 'error', $response->get_error_message() );
 			return null;
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code < 200 || $code >= 300 ) {
+			$this->record_provider( 'abuseipdb', 'error', 'HTTP ' . $code );
 			return null;
 		}
 
@@ -1261,6 +1399,7 @@ class TSOSK_Mod_Comment_Antispam {
 			return null;
 		}
 
+		$this->record_provider( 'abuseipdb', 'ok' );
 		$score   = isset( $body['data']['abuseConfidenceScore'] ) ? (int) $body['data']['abuseConfidenceScore'] : 0;
 		$min     = max( 1, min( 100, (int) $this->settings['abuseipdb_min_score'] ) );
 		$is_spam = $score >= $min;
@@ -1272,6 +1411,7 @@ class TSOSK_Mod_Comment_Antispam {
 	/**
 	 * Project Honey Pot HTTP:BL DNS lookup (IPv4 only).
 	 *
+	 * @param string $ip Ip.
 	 * @return bool|null True = spam, false = ham, null = unavailable.
 	 */
 	private function check_honeypot_httpbl( string $ip ): ?bool {
@@ -1296,6 +1436,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( function_exists( 'dns_get_record' ) ) {
 			$records = @dns_get_record( $lookup, DNS_A ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			if ( ! is_array( $records ) || empty( $records[0]['ip'] ) ) {
+				$this->record_provider( 'honeypot_httpbl', 'ok' );
 				set_site_transient( $cache_key, false, self::REPUTATION_CACHE_TTL );
 				return false;
 			}
@@ -1303,6 +1444,7 @@ class TSOSK_Mod_Comment_Antispam {
 		} else {
 			$result = gethostbyname( $lookup );
 			if ( $result === $lookup ) {
+				$this->record_provider( 'honeypot_httpbl', 'ok' );
 				set_site_transient( $cache_key, false, self::REPUTATION_CACHE_TTL );
 				return false;
 			}
@@ -1313,6 +1455,7 @@ class TSOSK_Mod_Comment_Antispam {
 			return null;
 		}
 
+		$this->record_provider( 'honeypot_httpbl', 'ok' );
 		$threat = (int) $octets[2];
 		$type   = (int) $octets[3];
 		$min    = max( 0, min( 255, (int) $this->settings['honeypot_min_threat'] ) );
@@ -1355,18 +1498,47 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Check akismet.
+	 *
 	 * @param array<string, mixed> $commentdata Comment data.
 	 */
 	private function check_akismet( array $commentdata ): ?bool {
-		if ( ! class_exists( 'Akismet' ) || ! method_exists( 'Akismet', 'check_comment' ) ) {
+		if ( ! class_exists( 'Akismet' ) || ! method_exists( 'Akismet', 'http_post' ) || ! method_exists( 'Akismet', 'get_api_key' ) ) {
+			return null;
+		}
+		if ( '' === (string) Akismet::get_api_key() ) {
 			return null;
 		}
 
-		$result = Akismet::check_comment( $commentdata, 'comment-check' );
-		if ( true === $result || 'true' === $result ) {
+		$post_id = (int) ( $commentdata['comment_post_ID'] ?? 0 );
+		$payload = array(
+			'blog'                 => home_url( '/' ),
+			'blog_lang'            => get_locale(),
+			'blog_charset'         => get_option( 'blog_charset' ),
+			'user_ip'              => $this->get_client_ip(),
+			'user_agent'           => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '',
+			'referrer'             => isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '',
+			'permalink'            => $post_id > 0 ? (string) get_permalink( $post_id ) : '',
+			'comment_type'         => ( ! empty( $commentdata['source'] ) && 'comment' !== $commentdata['source'] ) ? 'contact-form' : 'comment',
+			'comment_author'       => (string) ( $commentdata['comment_author'] ?? '' ),
+			'comment_author_email' => (string) ( $commentdata['comment_author_email'] ?? '' ),
+			'comment_author_url'   => (string) ( $commentdata['comment_author_url'] ?? '' ),
+			'comment_content'      => (string) ( $commentdata['comment_content'] ?? '' ),
+		);
+
+		// Akismet has no public "check this data" method: its own HTTP client is used with the comment-check endpoint.
+		$response = Akismet::http_post( http_build_query( $payload ), 'comment-check' );
+		if ( ! is_array( $response ) || ! isset( $response[1] ) ) {
+			$this->record_provider( 'akismet', 'error', 'No response' );
+			return null;
+		}
+
+		$verdict = trim( (string) $response[1] );
+		$this->record_provider( 'akismet', in_array( $verdict, array( 'true', 'false' ), true ) ? 'ok' : 'error', in_array( $verdict, array( 'true', 'false' ), true ) ? '' : 'Unexpected response' );
+		if ( 'true' === trim( (string) $response[1] ) ) {
 			return true;
 		}
-		if ( false === $result || 'false' === $result ) {
+		if ( 'false' === trim( (string) $response[1] ) ) {
 			return false;
 		}
 
@@ -1374,6 +1546,8 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Check cleantalk.
+	 *
 	 * @param array<string, mixed> $commentdata Comment data.
 	 */
 	private function check_cleantalk( array $commentdata ): ?bool {
@@ -1383,16 +1557,17 @@ class TSOSK_Mod_Comment_Antispam {
 		}
 
 		$payload = array(
-			'method_name'      => 'check_message',
-			'auth_key'         => $key,
-			'sender_email'     => (string) ( $commentdata['comment_author_email'] ?? '' ),
-			'sender_ip'        => $this->get_client_ip(),
-			'sender_nickname'  => (string) ( $commentdata['comment_author'] ?? '' ),
-			'sender_url'       => (string) ( $commentdata['comment_author_url'] ?? '' ),
-			'message'          => (string) ( $commentdata['comment_content'] ?? '' ),
-			'js_on'            => 1,
-			'post_info'        => array(
+			'method_name'     => 'check_message',
+			'auth_key'        => $key,
+			'sender_email'    => (string) ( $commentdata['comment_author_email'] ?? '' ),
+			'sender_ip'       => $this->get_client_ip(),
+			'sender_nickname' => (string) ( $commentdata['comment_author'] ?? '' ),
+			'sender_url'      => (string) ( $commentdata['comment_author_url'] ?? '' ),
+			'message'         => (string) ( $commentdata['comment_content'] ?? '' ),
+			'js_on'           => 1,
+			'post_info'       => array(
 				'comment_type' => ( ! empty( $commentdata['source'] ) && 'comment' !== $commentdata['source'] ) ? 'contact_form' : 'comment',
+				// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 				'post_url'     => get_permalink( (int) ( $commentdata['comment_post_ID'] ?? 0 ) ) ?: home_url( '/' ),
 			),
 		);
@@ -1400,7 +1575,7 @@ class TSOSK_Mod_Comment_Antispam {
 		$response = wp_remote_post(
 			self::CLEANTALK_API,
 			array(
-				'timeout' => 15,
+				'timeout' => 8,
 				'body'    => wp_json_encode( $payload ),
 				'headers' => array(
 					'Content-Type' => 'application/json',
@@ -1408,15 +1583,18 @@ class TSOSK_Mod_Comment_Antispam {
 			)
 		);
 
-		if ( is_wp_error( $response ) ) {
+		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			$this->record_provider( 'cleantalk', 'error', is_wp_error( $response ) ? $response->get_error_message() : 'HTTP ' . (int) wp_remote_retrieve_response_code( $response ) );
 			return null;
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( ! is_array( $body ) ) {
+		if ( ! is_array( $body ) || ! isset( $body['allow'] ) ) {
+			$this->record_provider( 'cleantalk', 'error', is_array( $body ) && ! empty( $body['comment'] ) ? sanitize_text_field( (string) $body['comment'] ) : 'Invalid response' );
 			return null;
 		}
 
+		$this->record_provider( 'cleantalk', 'ok' );
 		if ( isset( $body['allow'] ) && 0 === (int) $body['allow'] ) {
 			return true;
 		}
@@ -1429,6 +1607,8 @@ class TSOSK_Mod_Comment_Antispam {
 
 	/**
 	 * Count http/https links in text.
+	 *
+	 * @param string $text Text.
 	 */
 	private function count_links( string $text ): int {
 		preg_match_all( '#https?://[^\s<>"\']+#i', $text, $matches );
@@ -1436,15 +1616,19 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Match blocklist.
+	 *
+	 * @param string $haystack Haystack.
+	 * @param string $blocklist List.
 	 * @return string|null First matched blocklist entry.
 	 */
-	private function match_blocklist( string $haystack, string $list ): ?string {
-		$list = trim( $list );
-		if ( '' === $list ) {
+	private function match_blocklist( string $haystack, string $blocklist ): ?string {
+		$blocklist = trim( $blocklist );
+		if ( '' === $blocklist ) {
 			return null;
 		}
 
-		foreach ( preg_split( '/\r\n|\r|\n/', $list ) as $line ) {
+		foreach ( preg_split( '/\r\n|\r|\n/', $blocklist ) as $line ) {
 			$line = trim( strtolower( $line ) );
 			if ( '' === $line || str_starts_with( $line, '#' ) ) {
 				continue;
@@ -1459,6 +1643,8 @@ class TSOSK_Mod_Comment_Antispam {
 
 	/**
 	 * Whether email domain is disposable.
+	 *
+	 * @param string $email Email.
 	 */
 	private function is_disposable_email( string $email ): bool {
 		$email = strtolower( trim( $email ) );
@@ -1482,7 +1668,13 @@ class TSOSK_Mod_Comment_Antispam {
 			}
 		}
 
-		return in_array( $domain, $domains, true );
+		foreach ( $domains as $bad ) {
+			if ( $domain === $bad || str_ends_with( $domain, '.' . $bad ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -1527,64 +1719,34 @@ class TSOSK_Mod_Comment_Antispam {
 			return ! empty( $found );
 		}
 
-		$hash   = md5( $ip . '|' . $email . '|' . $content );
-		$dupes  = get_option( self::OPTION_FORM_DUP, array() );
-		if ( ! is_array( $dupes ) ) {
-			$dupes = array();
-		}
-
-		$now    = time();
-		$dupes  = array_filter(
-			$dupes,
-			static function ( $ts ) use ( $now, $window ) {
-				return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
-			}
-		);
-
-		return isset( $dupes[ $hash ] );
+		return false !== get_transient( 'tsosk_cas_dup_' . md5( $ip . '|' . $email . '|' . $content ) );
 	}
 
 	/**
-	 * Whether IP exceeded rate limit.
+	 * Whether IP exceeded rate limit (per-IP transient, expires with the window).
 	 */
 	private function is_rate_limited(): bool {
 		$ip = $this->get_client_ip();
-		if ( '' === $ip ) {
+		if ( $this->is_shared_ip( $ip ) ) {
 			return false;
 		}
 
 		$limit  = max( 1, (int) $this->settings['rate_limit_count'] );
 		$window = max( 1, (int) $this->settings['rate_limit_window'] ) * MINUTE_IN_SECONDS;
 		$now    = time();
-		$rates  = get_option( self::OPTION_RATE, array() );
-		if ( ! is_array( $rates ) ) {
-			$rates = array();
+		$stamps = get_transient( 'tsosk_cas_rl_' . md5( $ip ) );
+		if ( ! is_array( $stamps ) ) {
+			return false;
 		}
 
-		$timestamps = isset( $rates[ $ip ] ) && is_array( $rates[ $ip ] ) ? $rates[ $ip ] : array();
-		$timestamps = array_values(
-			array_filter(
-				$timestamps,
-				static function ( $ts ) use ( $now, $window ) {
-					return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
-				}
-			)
+		$recent = array_filter(
+			$stamps,
+			static function ( $ts ) use ( $now, $window ) {
+				return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
+			}
 		);
 
-		if ( count( $timestamps ) >= $limit ) {
-			if ( count( $rates ) > 1 ) {
-				$rates = $this->prune_rate_data( $rates, $window );
-				update_option( self::OPTION_RATE, $rates, false );
-			}
-			return true;
-		}
-
-		if ( count( $rates ) > self::MAX_RATE_IPS ) {
-			$rates = $this->prune_rate_data( $rates, $window );
-			update_option( self::OPTION_RATE, $rates, false );
-		}
-
-		return false;
+		return count( $recent ) >= $limit;
 	}
 
 	/**
@@ -1593,104 +1755,52 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @param array<string, mixed> $data Submission data.
 	 */
 	private function record_successful_submission( array $data ): void {
-		if ( ! empty( $this->settings['rate_limit'] ) ) {
-			$ip = $this->get_client_ip();
-			if ( '' !== $ip ) {
-				$window = max( 1, (int) $this->settings['rate_limit_window'] ) * MINUTE_IN_SECONDS;
-				$now    = time();
-				$rates  = get_option( self::OPTION_RATE, array() );
-				if ( ! is_array( $rates ) ) {
-					$rates = array();
-				}
-
-				$timestamps = isset( $rates[ $ip ] ) && is_array( $rates[ $ip ] ) ? $rates[ $ip ] : array();
-				$timestamps[] = $now;
-				$timestamps   = array_values(
-					array_filter(
-						$timestamps,
-						static function ( $ts ) use ( $now, $window ) {
-							return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
-						}
-					)
-				);
-
-				$rates[ $ip ] = $timestamps;
-				$rates        = $this->prune_rate_data( $rates, $window );
-				update_option( self::OPTION_RATE, $rates, false );
-			}
-		}
-
-		$source = (string) ( $data['source'] ?? 'comment' );
-		if ( 'comment' === $source || ! isset( $data['source'] ) ) {
-			return;
-		}
-
-		if ( empty( $this->settings['duplicate_check'] ) ) {
-			return;
-		}
-
-		$ip      = $this->get_client_ip();
-		$content = (string) ( $data['comment_content'] ?? '' );
-		$email   = (string) ( $data['comment_author_email'] ?? '' );
+		$ip = $this->get_client_ip();
 		if ( '' === $ip ) {
 			return;
 		}
 
-		$hash  = md5( $ip . '|' . $email . '|' . $content );
-		$dupes = get_option( self::OPTION_FORM_DUP, array() );
-		if ( ! is_array( $dupes ) ) {
-			$dupes = array();
+		if ( ! empty( $this->settings['rate_limit'] ) ) {
+			$window = max( 1, (int) $this->settings['rate_limit_window'] ) * MINUTE_IN_SECONDS;
+			$now    = time();
+			$key    = 'tsosk_cas_rl_' . md5( $ip );
+			$stamps = get_transient( $key );
+			$stamps = is_array( $stamps ) ? $stamps : array();
+
+			$stamps[] = $now;
+			$stamps   = array_values(
+				array_filter(
+					$stamps,
+					static function ( $ts ) use ( $now, $window ) {
+						return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
+					}
+				)
+			);
+			set_transient( $key, $stamps, $window );
 		}
+
+		$source = (string) ( $data['source'] ?? 'comment' );
+		if ( 'comment' === $source || ! isset( $data['source'] ) || empty( $this->settings['duplicate_check'] ) ) {
+			return;
+		}
+
+		$hash   = md5( $ip . '|' . (string) ( $data['comment_author_email'] ?? '' ) . '|' . (string) ( $data['comment_content'] ?? '' ) );
 		$window = max( 1, (int) $this->settings['duplicate_window'] ) * MINUTE_IN_SECONDS;
-		$now    = time();
-		$dupes  = array_filter(
-			$dupes,
-			static function ( $ts ) use ( $now, $window ) {
-				return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
-			}
-		);
-		$dupes[ $hash ] = $now;
-		update_option( self::OPTION_FORM_DUP, $dupes, false );
+		set_transient( 'tsosk_cas_dup_' . $hash, 1, $window );
 	}
 
 	/**
-	 * Append entry to block log.
+	 * Append entry to block log and feed the spike alert.
 	 *
 	 * @param array<string, mixed> $data  Submission data.
 	 * @param array<string, mixed> $check Check result.
 	 */
 	private function log_block( array $data, array $check ): void {
-		$log = get_option( self::OPTION_LOG, array() );
-		if ( ! is_array( $log ) ) {
-			$log = array();
+		if ( ! empty( $this->settings['log_blocks'] ) ) {
+			$this->insert_log( 'block', $data, $check );
 		}
-
-		array_unshift(
-			$log,
-			array(
-				'time'    => time(),
-				'ip'      => $this->get_client_ip(),
-				'source'  => sanitize_key( (string) ( $data['source'] ?? 'comment' ) ),
-				'author'  => sanitize_text_field( (string) ( $data['comment_author'] ?? '' ) ),
-				'email'   => sanitize_email( (string) ( $data['comment_author_email'] ?? '' ) ),
-				'reason'  => sanitize_key( (string) ( $check['reason'] ?? 'unknown' ) ),
-				'excerpt' => $this->substr_safe( sanitize_text_field( (string) ( $data['comment_content'] ?? '' ) ), 120 ),
-			)
-		);
-
-		if ( count( $log ) > self::MAX_LOG ) {
-			$log = array_slice( $log, 0, self::MAX_LOG );
-		}
-
-		update_option( self::OPTION_LOG, $log, false );
-	}
-
-	/**
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function get_log(): array {
-		$log = get_option( self::OPTION_LOG, array() );
-		return is_array( $log ) ? $log : array();
+		$this->note_block_for_alert();
+		$this->note_strike( $check );
 	}
 
 	/**
@@ -1700,37 +1810,7 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @param array<string, mixed> $check Check result.
 	 */
 	private function log_learning_block( array $data, array $check ): void {
-		$log = get_option( self::OPTION_LEARNING_LOG, array() );
-		if ( ! is_array( $log ) ) {
-			$log = array();
-		}
-
-		array_unshift(
-			$log,
-			array(
-				'time'    => time(),
-				'ip'      => $this->get_client_ip(),
-				'source'  => sanitize_key( (string) ( $data['source'] ?? 'comment' ) ),
-				'author'  => sanitize_text_field( (string) ( $data['comment_author'] ?? '' ) ),
-				'email'   => sanitize_email( (string) ( $data['comment_author_email'] ?? '' ) ),
-				'reason'  => sanitize_key( (string) ( $check['reason'] ?? 'unknown' ) ),
-				'excerpt' => $this->substr_safe( sanitize_text_field( (string) ( $data['comment_content'] ?? '' ) ), 120 ),
-			)
-		);
-
-		if ( count( $log ) > self::MAX_LOG ) {
-			$log = array_slice( $log, 0, self::MAX_LOG );
-		}
-
-		update_option( self::OPTION_LEARNING_LOG, $log, false );
-	}
-
-	/**
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function get_learning_log(): array {
-		$log = get_option( self::OPTION_LEARNING_LOG, array() );
-		return is_array( $log ) ? $log : array();
+		$this->insert_log( 'learning', $data, $check );
 	}
 
 	/**
@@ -1744,6 +1824,8 @@ class TSOSK_Mod_Comment_Antispam {
 
 	/**
 	 * Verify signed time token.
+	 *
+	 * @param string $token Token.
 	 */
 	private function verify_time_token( string $token ): bool {
 		$parts = explode( '.', $token );
@@ -1761,15 +1843,18 @@ class TSOSK_Mod_Comment_Antispam {
 			return false;
 		}
 
-		$age     = time() - $ts;
-		$min     = max( 1, (int) $this->settings['min_submit_seconds'] );
-		$max     = max( $min + 1, (int) $this->settings['max_submit_seconds'] );
+		$age = time() - $ts;
+		$min = max( 1, (int) $this->settings['min_submit_seconds'] );
+		$max = max( $min + 1, (int) $this->settings['max_submit_seconds'] );
 
 		return $age >= $min && $age <= $max;
 	}
 
 	/**
 	 * Safe substring with mbstring fallback.
+	 *
+	 * @param string $text Text.
+	 * @param int    $length Length.
 	 */
 	private function substr_safe( string $text, int $length ): string {
 		if ( function_exists( 'mb_substr' ) ) {
@@ -1780,63 +1865,61 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
-	 * Prune stale rate-limit entries and cap stored IP count.
+	 * Get client ip.
 	 *
-	 * @param array<string, array<int, int>> $rates  Rate data keyed by IP.
-	 * @param int                            $window Window in seconds.
-	 * @return array<string, array<int, int>>
-	 */
-	private function prune_rate_data( array $rates, int $window ): array {
-		$now = time();
-
-		foreach ( $rates as $ip => $timestamps ) {
-			if ( ! is_array( $timestamps ) ) {
-				unset( $rates[ $ip ] );
-				continue;
-			}
-
-			$timestamps = array_values(
-				array_filter(
-					$timestamps,
-					static function ( $ts ) use ( $now, $window ) {
-						return is_numeric( $ts ) && ( $now - (int) $ts ) <= $window;
-					}
-				)
-			);
-
-			if ( empty( $timestamps ) ) {
-				unset( $rates[ $ip ] );
-			} else {
-				$rates[ $ip ] = $timestamps;
-			}
-		}
-
-		if ( count( $rates ) <= self::MAX_RATE_IPS ) {
-			return $rates;
-		}
-
-		uasort(
-			$rates,
-			static function ( $a, $b ) {
-				$a_last = is_array( $a ) && ! empty( $a ) ? max( array_map( 'intval', $a ) ) : 0;
-				$b_last = is_array( $b ) && ! empty( $b ) ? max( array_map( 'intval', $b ) ) : 0;
-				return $a_last <=> $b_last;
-			}
-		);
-
-		return array_slice( $rates, -self::MAX_RATE_IPS, null, true );
-	}
-
-	/**
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		return isset( $_SERVER['REMOTE_ADDR'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
-			: '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	/**
+	 * Whether this comment was posted through Jetpack Comments (the iframe form).
+	 *
+	 * Jetpack verifies the signed request (sig + token_key) on pre_comment_on_post and stops the request when it is
+	 * not valid, so by the time our filter runs these fields can be trusted. The hidden trap fields do not exist
+	 * inside the iframe: without this exception every Jetpack comment would fail the time trap.
+	 */
+	private function is_jetpack_comment_request(): bool {
+		if ( ! class_exists( 'Jetpack_Comments' ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Signature is verified by Jetpack before this runs.
+		return ! empty( $_POST['sig'] ) && ! empty( $_POST['token_key'] ) && ! empty( $_POST['hc_post_as'] );
+	}
+
+	/**
+	 * Whether the detected IP is a private or reserved address (typically a reverse proxy or CDN node shared by every visitor).
+	 * Banning or rate limiting such an address would lock out the whole site, so those protections skip it.
+	 *
+	 * @param string $ip IP address.
+	 */
+	private function is_shared_ip( string $ip ): bool {
+		return '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+	}
+
+	/**
+	 * Whether the request carries a forwarded-IP header while no trusted proxy header is configured
+	 * (the detected IP is then probably the proxy's, not the visitor's).
+	 */
+	private function proxy_header_unconfigured(): bool {
+		if ( defined( 'TSOSK_TRUSTED_PROXY_HEADER' ) && '' !== (string) TSOSK_TRUSTED_PROXY_HEADER ) {
+			return false;
+		}
+		if ( '' !== (string) apply_filters( 'tsosk_trusted_proxy_header', '' ) ) {
+			return false;
+		}
+		foreach ( array( 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_TRUE_CLIENT_IP' ) as $key ) {
+			if ( ! empty( $_SERVER[ $key ] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether an IP is in the whitelist (exact addresses or CIDR ranges).
+	 *
 	 * @param string $ip IP address.
 	 */
 	private function is_ip_whitelisted( string $ip ): bool {
@@ -1846,8 +1929,7 @@ class TSOSK_Mod_Comment_Antispam {
 		}
 
 		foreach ( preg_split( '/\r\n|\r|\n/', $list ) as $line ) {
-			$line = trim( $line );
-			if ( '' !== $line && $line === $ip ) {
+			if ( $this->ip_matches_rule( $ip, $line ) ) {
 				return true;
 			}
 		}
@@ -1861,24 +1943,7 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @return array{total:int,last_24h:int,by_reason:array<string,int>}
 	 */
 	public function get_stats(): array {
-		$log     = $this->get_log();
-		$cutoff  = time() - DAY_IN_SECONDS;
-		$last24  = 0;
-		$reasons = array();
-
-		foreach ( $log as $entry ) {
-			$reason = (string) ( $entry['reason'] ?? 'unknown' );
-			$reasons[ $reason ] = ( $reasons[ $reason ] ?? 0 ) + 1;
-			if ( ! empty( $entry['time'] ) && (int) $entry['time'] >= $cutoff ) {
-				++$last24;
-			}
-		}
-
-		return array(
-			'total'     => count( $log ),
-			'last_24h'  => $last24,
-			'by_reason' => $reasons,
-		);
+		return $this->compute_stats( 'block' );
 	}
 
 	/**
@@ -1887,24 +1952,1330 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @return array{total:int,last_24h:int,by_reason:array<string,int>}
 	 */
 	public function get_learning_stats(): array {
-		$log     = $this->get_learning_log();
-		$cutoff  = time() - DAY_IN_SECONDS;
-		$last24  = 0;
-		$reasons = array();
+		return $this->compute_stats( 'learning' );
+	}
 
-		foreach ( $log as $entry ) {
-			$reason = (string) ( $entry['reason'] ?? 'unknown' );
-			$reasons[ $reason ] = ( $reasons[ $reason ] ?? 0 ) + 1;
-			if ( ! empty( $entry['time'] ) && (int) $entry['time'] >= $cutoff ) {
-				++$last24;
+	/**
+	 * Remember the outcome of a real remote call (rolling 24 h counters).
+	 *
+	 * @param string $id    Provider id.
+	 * @param string $state 'ok' or 'error'.
+	 * @param string $note  Short error text.
+	 */
+	private function record_provider( string $id, string $state, string $note = '' ): void {
+		$data = get_option( self::OPTION_PROVIDERS, array() );
+		if ( ! is_array( $data ) ) {
+			$data = array();
+		}
+
+		$now = time();
+		$row = isset( $data[ $id ] ) && is_array( $data[ $id ] ) ? $data[ $id ] : array();
+		if ( empty( $row['since'] ) || ( $now - (int) $row['since'] ) > DAY_IN_SECONDS ) {
+			$row['since']  = $now;
+			$row['calls']  = 0;
+			$row['errors'] = 0;
+		}
+
+		$row['calls']  = (int) ( $row['calls'] ?? 0 ) + 1;
+		$row['errors'] = (int) ( $row['errors'] ?? 0 ) + ( 'ok' === $state ? 0 : 1 );
+		$row['last']   = $now;
+		$row['state']  = 'ok' === $state ? 'ok' : 'error';
+		$row['note']   = $this->substr_safe( sanitize_text_field( $note ), 160 );
+
+		$data[ $id ] = $row;
+		update_option( self::OPTION_PROVIDERS, $data, false );
+
+		$cfg = empty( $this->settings ) ? self::get_settings() : $this->settings;
+		if ( 'ok' !== $state && ! empty( $cfg['alert_enabled'] ) && ! empty( $cfg['alert_provider_errors'] ) && (int) $row['errors'] >= 5 && ! get_transient( 'tsosk_cas_palert_' . $id ) ) {
+			set_transient( 'tsosk_cas_palert_' . $id, 1, DAY_IN_SECONDS );
+			$this->settings = $cfg;
+			$labels         = $this->get_provider_rows( $cfg );
+			$this->send_alert_email(
+				'provider',
+				array(
+					'label'  => isset( $labels[ $id ]['label'] ) ? (string) $labels[ $id ]['label'] : $id,
+					'errors' => (int) $row['errors'],
+					'note'   => (string) $row['note'],
+				)
+			);
+		}
+	}
+
+	/**
+	 * Provider rows for the status table.
+	 *
+	 * @param array<string, mixed> $s Settings.
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function get_provider_rows( array $s ): array {
+		$data = get_option( self::OPTION_PROVIDERS, array() );
+		$data = is_array( $data ) ? $data : array();
+
+		$off     = __( 'Off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		$missing = __( 'Missing key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		$active  = __( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		$cloud   = (string) $s['cloud_mode'];
+
+		$rows = array(
+			'stopforumspam'   => array(
+				'label'  => 'Stop Forum Spam',
+				'config' => ! empty( $s['stopforumspam_enabled'] ) ? $active : $off,
+			),
+			'abuseipdb'       => array(
+				'label'  => 'AbuseIPDB',
+				'config' => empty( $s['abuseipdb_enabled'] ) ? $off : ( '' === trim( (string) $s['abuseipdb_key'] ) ? $missing : $active ),
+			),
+			'honeypot_httpbl' => array(
+				'label'  => 'Project Honey Pot',
+				'config' => empty( $s['honeypot_httpbl_enabled'] ) ? $off : ( '' === trim( (string) $s['honeypot_access_key'] ) ? $missing : $active ),
+			),
+			'akismet'         => array(
+				'label'  => 'Akismet',
+				'config' => 'akismet' !== $cloud ? $off : ( class_exists( 'Akismet' ) ? $active : __( 'Plugin not active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			),
+			'cleantalk'       => array(
+				'label'  => 'CleanTalk',
+				'config' => 'cleantalk' !== $cloud ? $off : ( '' === trim( (string) $s['cleantalk_key'] ) ? $missing : $active ),
+			),
+		);
+
+		foreach ( array_keys( $rows ) as $id ) {
+			$rows[ $id ]['row'] = isset( $data[ $id ] ) && is_array( $data[ $id ] ) ? $data[ $id ] : array();
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Render the "Provider status" card.
+	 *
+	 * @param array<string, mixed> $s     Settings.
+	 * @param string               $nonce Nonce.
+	 */
+	private function render_provider_status( array $s, string $nonce ): void {
+		$now = time();
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Provider status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Last real response from each external service and its usage in the last 24 hours. The test button uses the saved settings, so save first after changing a key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<div class="tsosk-table-wrap">
+				<table class="widefat striped tsosk-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Provider', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Last result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Calls (24 h)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Errors (24 h)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $this->get_provider_rows( $s ) as $id => $p ) : ?>
+						<?php
+						$row   = $p['row'];
+						$fresh = ! empty( $row['since'] ) && ( $now - (int) $row['since'] ) <= DAY_IN_SECONDS;
+						if ( empty( $row['last'] ) ) {
+							$last = __( 'No calls yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						} else {
+							$last = ( 'ok' === ( $row['state'] ?? '' ) ? __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) )
+								/* translators: %s: human readable time difference, e.g. "5 minutes" */
+								. ' · ' . sprintf( __( '%s ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), human_time_diff( (int) $row['last'], $now ) )
+								. ( ! empty( $row['note'] ) && 'ok' !== ( $row['state'] ?? '' ) ? ' · ' . $row['note'] : '' );
+						}
+						?>
+						<tr>
+							<td><strong><?php echo esc_html( (string) $p['label'] ); ?></strong></td>
+							<td><?php echo esc_html( (string) $p['config'] ); ?></td>
+							<td><?php echo esc_html( $last ); ?></td>
+							<td><?php echo esc_html( (string) ( $fresh ? (int) ( $row['calls'] ?? 0 ) : 0 ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $fresh ? (int) ( $row['errors'] ?? 0 ) : 0 ) ); ?></td>
+							<td>
+								<button type="button" class="button button-small tsosk-cas-test-provider" data-provider="<?php echo esc_attr( $id ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<p id="tsosk-cas-test-msg" class="tsosk-msg" aria-live="polite" style="display:none;margin-top:10px;"></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * "Allow this IP" button cell for a log row.
+	 *
+	 * @param array<string, mixed> $entry Log entry.
+	 * @param string               $log   'block' or 'learning'.
+	 * @param string               $nonce Nonce.
+	 */
+	private function render_allow_button( array $entry, string $log, string $nonce ): void {
+		$ip = (string) ( $entry['ip'] ?? '' );
+		if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			echo '—';
+			return;
+		}
+		if ( $this->is_ip_whitelisted( $ip ) ) {
+			esc_html_e( 'Whitelisted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return;
+		}
+		?>
+		<button type="button" class="button button-small tsosk-cas-allow-ip"
+			data-ip="<?php echo esc_attr( $ip ); ?>"
+			data-log="<?php echo esc_attr( $log ); ?>"
+			data-nonce="<?php echo esc_attr( $nonce ); ?>"
+			data-confirm="<?php echo esc_attr__( 'Add this IP to the whitelist? It will skip every anti-spam rule from now on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'Allow IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+		<?php
+	}
+
+	/** AJAX: test one provider with a real request (saved settings). */
+	public function ajax_test_provider(): void {
+		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$id = isset( $_POST['provider'] ) ? sanitize_key( wp_unslash( $_POST['provider'] ) ) : '';
+		$s  = self::get_settings();
+
+		$this->settings = $s;
+		$result         = array(
+			'ok'      => false,
+			'message' => __( 'Unknown provider.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'skipped' => true,
+		);
+
+		switch ( $id ) {
+			case 'stopforumspam':
+				$result = $this->test_stopforumspam();
+				break;
+			case 'abuseipdb':
+				$result = $this->test_abuseipdb( trim( (string) $s['abuseipdb_key'] ) );
+				break;
+			case 'honeypot_httpbl':
+				$result = $this->test_httpbl( trim( (string) $s['honeypot_access_key'] ) );
+				break;
+			case 'akismet':
+				$result = $this->test_akismet();
+				break;
+			case 'cleantalk':
+				$result = $this->test_cleantalk( trim( (string) $s['cleantalk_key'] ) );
+				break;
+		}
+
+		if ( empty( $result['skipped'] ) ) {
+			$this->record_provider( $id, $result['ok'] ? 'ok' : 'error', $result['ok'] ? '' : $result['message'] );
+		}
+
+		if ( $result['ok'] ) {
+			wp_send_json_success( $result['message'] );
+		}
+		wp_send_json_error( $result['message'] );
+	}
+
+	/**
+	 * Test Stop Forum Spam.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function test_stopforumspam(): array {
+		$url      = add_query_arg(
+			array(
+				'f'         => 'json',
+				'ip'        => '8.8.8.8',
+				'emailhash' => md5( 'test@example.com' ),
+			),
+			self::STOPFORUMSPAM_API
+		);
+		$response = wp_remote_get( $url, array( 'timeout' => 8 ) );
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'      => false,
+				'message' => $response->get_error_message(),
+			);
+		}
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( 200 !== $code || ! is_array( $body ) || 1 !== (int) ( $body['success'] ?? 0 ) ) {
+			return array(
+				'ok'      => false,
+				/* translators: %d: HTTP status code */
+				'message' => sprintf( __( 'Unexpected response (HTTP %d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $code ),
+			);
+		}
+		delete_site_transient( 'tsosk_cas_sfs_down' );
+		return array(
+			'ok'      => true,
+			'message' => __( 'Stop Forum Spam responded correctly.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+	}
+
+	/**
+	 * Test AbuseIPDB.
+	 *
+	 * @param string $key API key.
+	 * @return array<string, mixed>
+	 */
+	private function test_abuseipdb( string $key ): array {
+		if ( '' === $key ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'No API key saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'skipped' => true,
+			);
+		}
+		$response = wp_remote_get(
+			add_query_arg(
+				array(
+					'ipAddress'    => '8.8.8.8',
+					'maxAgeInDays' => 30,
+				),
+				self::ABUSEIPDB_API
+			),
+			array(
+				'timeout' => 8,
+				'headers' => array(
+					'Key'    => $key,
+					'Accept' => 'application/json',
+				),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'      => false,
+				'message' => $response->get_error_message(),
+			);
+		}
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		if ( 401 === $code || 403 === $code ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'AbuseIPDB rejected the API key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( 429 === $code ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'AbuseIPDB daily limit reached.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( $code < 200 || $code >= 300 ) {
+			return array(
+				'ok'      => false,
+				/* translators: %d: HTTP status code */
+				'message' => sprintf( __( 'Unexpected response (HTTP %d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $code ),
+			);
+		}
+		return array(
+			'ok'      => true,
+			'message' => __( 'AbuseIPDB accepted the API key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+	}
+
+	/**
+	 * Test Project Honey Pot HTTP:BL.
+	 *
+	 * @param string $key Access key.
+	 * @return array<string, mixed>
+	 */
+	private function test_httpbl( string $key ): array {
+		if ( '' === $key ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'No access key saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'skipped' => true,
+			);
+		}
+		$lookup = sanitize_text_field( $key ) . '.8.8.8.8.dnsbl.httpbl.org';
+		$ip     = '';
+		if ( function_exists( 'dns_get_record' ) ) {
+			$records = @dns_get_record( $lookup, DNS_A ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			$ip      = is_array( $records ) && ! empty( $records[0]['ip'] ) ? (string) $records[0]['ip'] : '';
+		} else {
+			$host = gethostbyname( $lookup );
+			$ip   = $host !== $lookup ? $host : '';
+		}
+		if ( '127.255.255.255' === $ip ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'Project Honey Pot reported an invalid access key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		return array(
+			'ok'      => true,
+			'message' => __( 'DNS lookup completed without errors (a clean IP returns no record).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+	}
+
+	/**
+	 * Test Akismet.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function test_akismet(): array {
+		if ( ! class_exists( 'Akismet' ) || ! method_exists( 'Akismet', 'get_api_key' ) ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'The Akismet plugin is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'skipped' => true,
+			);
+		}
+		$key = (string) Akismet::get_api_key();
+		if ( '' === $key ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'Akismet has no API key configured.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'skipped' => true,
+			);
+		}
+		$status = method_exists( 'Akismet', 'verify_key' ) ? Akismet::verify_key( $key ) : 'failed';
+		if ( 'valid' === $status ) {
+			return array(
+				'ok'      => true,
+				'message' => __( 'Akismet API key is valid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( 'invalid' === $status ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'Akismet reports the API key as invalid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		return array(
+			'ok'      => false,
+			'message' => __( 'Could not reach Akismet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+	}
+
+	/**
+	 * Test CleanTalk.
+	 *
+	 * @param string $key Access key.
+	 * @return array<string, mixed>
+	 */
+	private function test_cleantalk( string $key ): array {
+		if ( '' === $key ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'No access key saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'skipped' => true,
+			);
+		}
+		$response = wp_remote_post(
+			self::CLEANTALK_API,
+			array(
+				'timeout' => 8,
+				'headers' => array( 'Content-Type' => 'application/json' ),
+				'body'    => wp_json_encode(
+					array(
+						'method_name'     => 'check_message',
+						'auth_key'        => $key,
+						'sender_email'    => 'test@example.com',
+						'sender_ip'       => '8.8.8.8',
+						'sender_nickname' => 'Test',
+						'message'         => 'Connection test from the site administrator.',
+						'js_on'           => 1,
+					)
+				),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'      => false,
+				'message' => $response->get_error_message(),
+			);
+		}
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( is_array( $body ) && isset( $body['allow'] ) ) {
+			return array(
+				'ok'      => true,
+				'message' => __( 'CleanTalk accepted the access key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		return array(
+			'ok'      => false,
+			'message' => is_array( $body ) && ! empty( $body['comment'] ) ? sanitize_text_field( (string) $body['comment'] ) : __( 'Invalid response.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+	}
+
+	/** AJAX: add an IP from a log row to the whitelist. */
+	public function ajax_allow_ip(): void {
+		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$ip  = isset( $_POST['ip'] ) ? sanitize_text_field( wp_unslash( $_POST['ip'] ) ) : '';
+		$log = isset( $_POST['log'] ) && 'learning' === sanitize_key( wp_unslash( $_POST['log'] ) ) ? 'learning' : 'block';
+		if ( false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			wp_send_json_error( __( 'Invalid IP address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 400 );
+		}
+
+		$settings       = self::get_settings();
+		$this->settings = $settings;
+		if ( ! $this->is_ip_whitelisted( $ip ) ) {
+			$list                      = trim( (string) $settings['whitelist_ips'] );
+			$settings['whitelist_ips'] = ( '' === $list ? '' : $list . "\n" ) . $ip;
+			update_option( self::OPTION, $settings, true );
+			$this->settings = $settings;
+		}
+
+		$this->delete_log_rows( $log, $ip );
+
+		/* translators: %s: IP address */
+		TSOSK_Activity_Log::log( 'comment-antispam', 'allow-ip', sprintf( __( 'IP %s added to the comment anti-spam whitelist.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $ip ) );
+		/* translators: %s: IP address */
+		wp_send_json_success( sprintf( __( 'IP %s added to the whitelist.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $ip ) );
+	}
+
+	/**
+	 * Run every enabled check once and log/record the outcome.
+	 *
+	 * @param array<string, mixed> $data Submission data.
+	 * @return array<string, mixed>|null Check result when the submission must be blocked, null when it may pass
+	 *                                   (allowed, or only an observed rule / Learning mode matched).
+	 */
+	private function gate_submission( array $data ): ?array {
+		$check = $this->evaluate_submission( $data );
+		if ( $check['allow'] ) {
+			$this->record_successful_submission( $data );
+			return null;
+		}
+
+		if ( $this->is_observed( $check ) ) {
+			$this->log_learning_block( $data, $check );
+			$this->record_successful_submission( $data );
+			return null;
+		}
+
+		$this->log_block( $data, $check );
+		return $check;
+	}
+
+	/**
+	 * Whether a failed check must only be logged (Learning mode, or this single rule is being observed).
+	 *
+	 * @param array<string, mixed> $check Check result.
+	 */
+	private function is_observed( array $check ): bool {
+		if ( ! empty( $this->settings['learning_mode'] ) ) {
+			return true;
+		}
+		$observed = isset( $this->settings['observe_rules'] ) && is_array( $this->settings['observe_rules'] ) ? $this->settings['observe_rules'] : array();
+		return in_array( (string) ( $check['reason'] ?? '' ), $observed, true );
+	}
+
+	/**
+	 * Message shown to the visitor (custom message when configured).
+	 *
+	 * @param array<string, mixed> $check Check result.
+	 */
+	private function public_message( array $check ): string {
+		$custom = isset( $this->settings['block_message'] ) ? trim( (string) $this->settings['block_message'] ) : '';
+		return '' !== $custom ? $custom : (string) ( $check['message'] ?? '' );
+	}
+
+	/**
+	 * WordPress registration form check.
+	 *
+	 * @param mixed  $errors WP_Error.
+	 * @param string $login  Username.
+	 * @param string $email  Email.
+	 * @return mixed
+	 */
+	public function registration_errors( $errors, $login = '', $email = '' ) {
+		return $this->check_registration( $errors, (string) $login, (string) $email );
+	}
+
+	/**
+	 * WooCommerce registration form check.
+	 *
+	 * @param mixed  $errors   WP_Error.
+	 * @param string $username Username.
+	 * @param string $password Password (never used).
+	 * @param string $email    Email.
+	 * @return mixed
+	 */
+	public function woo_registration_errors( $errors, $username = '', $password = '', $email = '' ) {
+		unset( $password );
+		return $this->check_registration( $errors, (string) $username, (string) $email );
+	}
+
+	/**
+	 * Shared registration check.
+	 *
+	 * @param mixed  $errors WP_Error.
+	 * @param string $login  Username.
+	 * @param string $email  Email.
+	 * @return mixed
+	 */
+	private function check_registration( $errors, string $login, string $email ) {
+		if ( ! $errors instanceof WP_Error ) {
+			$errors = new WP_Error();
+		}
+
+		$data = array(
+			'source'               => 'registration',
+			'comment_author'       => sanitize_user( $login ),
+			'comment_author_email' => sanitize_email( $email ),
+			'comment_content'      => '',
+		);
+		if ( $this->should_skip_submission( $data ) ) {
+			return $errors;
+		}
+
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
+			return $errors;
+		}
+
+		$errors->add(
+			'tsosk_cas_blocked',
+			! empty( $check['silent'] )
+				? __( 'There was a problem with your submission. Please try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: $this->public_message( $check )
+		);
+		return $errors;
+	}
+
+	/**
+	 * Whether the email already has an approved comment (returning visitor).
+	 *
+	 * @param string $email Email.
+	 */
+	private function is_returning_commenter( string $email ): bool {
+		if ( ! is_email( $email ) ) {
+			return false;
+		}
+
+		$key    = 'tsosk_cas_ret_' . md5( strtolower( $email ) );
+		$cached = get_transient( $key );
+		if ( false !== $cached ) {
+			return 1 === (int) $cached;
+		}
+
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_author_email = %s AND comment_approved = '1'", $email ) );
+		set_transient( $key, $count > 0 ? 1 : 0, HOUR_IN_SECONDS );
+		return $count > 0;
+	}
+
+	/**
+	 * Whether the current IP is temporarily banned.
+	 */
+	private function is_ip_banned(): bool {
+		$ip = $this->get_client_ip();
+		return ! $this->is_shared_ip( $ip ) && false !== get_transient( 'tsosk_cas_ban_' . md5( $ip ) );
+	}
+
+	/**
+	 * Count a real block against the IP and ban it when it reaches the threshold.
+	 *
+	 * @param array<string, mixed> $check Check result.
+	 */
+	private function note_strike( array $check ): void {
+		if ( empty( $this->settings['ban_enabled'] ) || 'banned' === ( $check['reason'] ?? '' ) ) {
+			return;
+		}
+
+		$ip = $this->get_client_ip();
+		if ( $this->is_shared_ip( $ip ) ) {
+			return;
+		}
+
+		$key     = 'tsosk_cas_strikes_' . md5( $ip );
+		$strikes = (int) get_transient( $key ) + 1;
+		set_transient( $key, $strikes, DAY_IN_SECONDS );
+
+		if ( $strikes >= max( 1, (int) ( $this->settings['ban_threshold'] ?? 5 ) ) ) {
+			set_transient( 'tsosk_cas_ban_' . md5( $ip ), 1, max( 1, (int) ( $this->settings['ban_hours'] ?? 24 ) ) * HOUR_IN_SECONDS );
+			delete_transient( $key );
+		}
+	}
+
+	/**
+	 * Whether an IP matches a rule: exact address, or a CIDR range (IPv4 or IPv6).
+	 *
+	 * @param string $ip   Visitor IP.
+	 * @param string $rule Address or range such as 203.0.113.0/24.
+	 */
+	private function ip_matches_rule( string $ip, string $rule ): bool {
+		$rule = trim( $rule );
+		if ( '' === $rule || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+
+		$bits = null;
+		if ( false !== strpos( $rule, '/' ) ) {
+			list( $rule, $bits_raw ) = explode( '/', $rule, 2 );
+			if ( ! ctype_digit( $bits_raw ) ) {
+				return false;
 			}
+			$bits = (int) $bits_raw;
+		}
+
+		if ( false === filter_var( $rule, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+
+		$ip_bin   = inet_pton( $ip );
+		$rule_bin = inet_pton( $rule );
+		if ( false === $ip_bin || false === $rule_bin || strlen( $ip_bin ) !== strlen( $rule_bin ) ) {
+			return false;
+		}
+
+		if ( null === $bits ) {
+			return $ip_bin === $rule_bin;
+		}
+
+		$max = strlen( $ip_bin ) * 8;
+		if ( $bits > $max ) {
+			return false;
+		}
+
+		$full = intdiv( $bits, 8 );
+		if ( substr( $ip_bin, 0, $full ) !== substr( $rule_bin, 0, $full ) ) {
+			return false;
+		}
+
+		$rest = $bits % 8;
+		if ( 0 === $rest ) {
+			return true;
+		}
+
+		$mask = ( 0xFF << ( 8 - $rest ) ) & 0xFF;
+		return ( ord( $ip_bin[ $full ] ) & $mask ) === ( ord( $rule_bin[ $full ] ) & $mask );
+	}
+
+	/**
+	 * Blocks per day (UTC) for the last days, as a small bar chart.
+	 *
+	 * @param int $days Number of days.
+	 */
+	private function render_daily_chart( int $days = 14 ): void {
+		global $wpdb;
+
+		$table = self::log_table();
+		$first = (int) floor( time() / DAY_IN_SECONDS ) - ( $days - 1 );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT FLOOR(logged_at / 86400) AS d, COUNT(*) AS c FROM {$table} WHERE log_type = 'block' AND logged_at >= %d GROUP BY d", $first * DAY_IN_SECONDS ), ARRAY_A );
+
+		$counts = array();
+		foreach ( is_array( $rows ) ? $rows : array() as $r ) {
+			$counts[ (int) $r['d'] ] = (int) $r['c'];
+		}
+
+		$max = max( 1, $counts ? max( $counts ) : 1 );
+		?>
+		<p style="margin:14px 0 4px;"><strong><?php esc_html_e( 'Blocks per day (last 14 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+		<div class="tsosk-cas-chart" role="img" aria-label="<?php esc_attr_e( 'Blocks per day (last 14 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			<?php
+			for ( $d = $first; $d < $first + $days; $d++ ) {
+				$c   = $counts[ $d ] ?? 0;
+				$pct = $c > 0 ? max( 4, (int) round( $c / $max * 100 ) ) : 1;
+				$day = wp_date( 'M j', $d * DAY_IN_SECONDS + 43200, new DateTimeZone( 'UTC' ) );
+				?>
+				<span class="tsosk-cas-bar<?php echo $c > 0 ? '' : ' tsosk-cas-bar-empty'; ?>" style="<?php echo esc_attr( 'height:' . $pct . '%' ); ?>" title="<?php echo esc_attr( $day . ': ' . $c ); ?>"></span>
+			<?php } ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the "Repeat offenders", "Exceptions and messages" and "Test individual rules" cards.
+	 *
+	 * @param array<string, mixed> $s Settings.
+	 */
+	private function render_advanced_rules_cards( array $s ): void {
+		$observe = isset( $s['observe_rules'] ) && is_array( $s['observe_rules'] ) ? $s['observe_rules'] : array();
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Repeat offenders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<?php if ( $this->proxy_header_unconfigured() ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<?php
+					printf(
+						/* translators: 1: detected IP address, 2: PHP constant name */
+						esc_html__( 'Your site seems to be behind a proxy or CDN, but no trusted proxy header is configured. The detected IP (%1$s) may be the proxy\'s, not the visitor\'s, which would make bans and rate limits affect every visitor. Define %2$s in wp-config.php (for example HTTP_CF_CONNECTING_IP) before enabling bans.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						esc_html( $this->get_client_ip() ),
+						'TSOSK_TRUSTED_PROXY_HEADER'
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
+			<p class="description"><?php esc_html_e( 'Ban an IP address temporarily after several blocked submissions. Banned visitors are rejected immediately, without querying any external service.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<label class="tsosk-toggle-row">
+				<input type="checkbox" id="tsosk-cas-ban-enabled" <?php checked( ! empty( $s['ban_enabled'] ) ); ?>>
+				<span><strong><?php esc_html_e( 'Ban repeat offenders', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></span>
+			</label>
+			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 8px 24px;">
+				<tr>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Blocks before banning', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<input type="number" id="tsosk-cas-ban-threshold" min="1" max="100" value="<?php echo esc_attr( (string) $s['ban_threshold'] ); ?>" style="width:80px;">
+						<p class="description"><?php esc_html_e( 'Blocked submissions from the same IP within 24 hours. Whitelisted IPs are never banned.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Ban duration (hours)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td><input type="number" id="tsosk-cas-ban-hours" min="1" max="720" value="<?php echo esc_attr( (string) $s['ban_hours'] ); ?>" style="width:80px;"></td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Exceptions and messages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<label class="tsosk-toggle-row">
+				<input type="checkbox" id="tsosk-cas-trust-returning" <?php checked( ! empty( $s['trust_returning'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'Trust returning commenters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Skip the external reputation and cloud checks when the email already has an approved comment. Local rules still apply.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</span>
+			</label>
+			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 8px 24px;">
+				<tr>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Message for blocked visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<input type="text" id="tsosk-cas-block-message" value="<?php echo esc_attr( (string) $s['block_message'] ); ?>" maxlength="200" style="width:100%;max-width:480px;">
+						<p class="description"><?php esc_html_e( 'Shown instead of the technical reason when a comment or form is rejected. Leave empty to show the default message for each rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Test individual rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Rules ticked here do not block: when they match, the submission is allowed and written to the learning log, while every other rule keeps working normally. Useful to try a new rule safely. A submission that matches an observed rule is not checked against the rules that come after it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p>
+				<?php foreach ( self::OBSERVABLE_RULES as $rule ) : ?>
+					<label style="display:inline-block;margin:0 18px 6px 0;">
+						<input type="checkbox" class="tsosk-cas-observe" value="<?php echo esc_attr( $rule ); ?>" <?php checked( in_array( $rule, $observe, true ) ); ?>>
+						<?php echo esc_html( $this->get_reason_label( $rule ) ); ?>
+					</label>
+				<?php endforeach; ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Log table name.
+	 */
+	private static function log_table(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'tsosk_cas_log';
+	}
+
+	/**
+	 * Create/upgrade the log table via dbDelta.
+	 */
+	public static function create_table(): void {
+		global $wpdb;
+
+		if ( ! function_exists( 'dbDelta' ) ) {
+			tsosk_require_wp_admin( 'includes/upgrade.php' );
+		}
+		if ( ! function_exists( 'dbDelta' ) ) {
+			return;
+		}
+
+		$charset_collate = $wpdb->get_charset_collate();
+		$sql             = "CREATE TABLE {$wpdb->prefix}tsosk_cas_log (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			log_type VARCHAR(10) NOT NULL DEFAULT 'block',
+			logged_at BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			ip VARCHAR(45) NOT NULL DEFAULT '',
+			source VARCHAR(30) NOT NULL DEFAULT '',
+			author VARCHAR(255) NOT NULL DEFAULT '',
+			email VARCHAR(255) NOT NULL DEFAULT '',
+			reason VARCHAR(40) NOT NULL DEFAULT '',
+			excerpt VARCHAR(255) NOT NULL DEFAULT '',
+			PRIMARY KEY  (id),
+			KEY tsosk_cas_type_id (log_type, id),
+			KEY tsosk_cas_type_ip (log_type, ip)
+		) {$charset_collate};";
+
+		dbDelta( $sql );
+	}
+
+	/**
+	 * Create the table once, move the old option-based logs into it and drop the option-based counters.
+	 */
+	private function maybe_upgrade_storage(): void {
+		if ( get_option( self::OPTION_DB_VERSION ) === self::DB_VERSION ) {
+			return;
+		}
+
+		global $wpdb;
+		self::create_table();
+
+		$table = self::log_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$exists = $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
+		if ( ! $exists ) {
+			return;
+		}
+
+		foreach ( self::LEGACY_LOGS as $option => $type ) {
+			$entries = get_option( $option, array() );
+			if ( is_array( $entries ) ) {
+				// Legacy entries were stored newest first: insert oldest first to keep the order.
+				foreach ( array_reverse( $entries ) as $e ) {
+					if ( ! is_array( $e ) ) {
+						continue;
+					}
+					$this->insert_log_row( $type, (int) ( $e['time'] ?? time() ), $e );
+				}
+			}
+			delete_option( $option );
+		}
+		delete_option( 'tsosk_cas_rate' );
+		delete_option( 'tsosk_cas_form_dup' );
+
+		update_option( self::OPTION_DB_VERSION, self::DB_VERSION, true );
+	}
+
+	/**
+	 * Insert one row into the log table.
+	 *
+	 * @param string               $type Log type: block or learning.
+	 * @param int                  $time Unix time.
+	 * @param array<string, mixed> $row  ip, source, author, email, reason, excerpt.
+	 */
+	private function insert_log_row( string $type, int $time, array $row ): void {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->insert(
+			self::log_table(),
+			array(
+				'log_type'  => 'learning' === $type ? 'learning' : 'block',
+				'logged_at' => max( 0, $time ),
+				'ip'        => substr( (string) ( $row['ip'] ?? '' ), 0, 45 ),
+				'source'    => substr( sanitize_key( (string) ( $row['source'] ?? 'comment' ) ), 0, 30 ),
+				'author'    => $this->substr_safe( sanitize_text_field( (string) ( $row['author'] ?? '' ) ), 200 ),
+				'email'     => $this->substr_safe( sanitize_email( (string) ( $row['email'] ?? '' ) ), 200 ),
+				'reason'    => substr( sanitize_key( (string) ( $row['reason'] ?? 'unknown' ) ), 0, 40 ),
+				'excerpt'   => $this->substr_safe( sanitize_text_field( (string) ( $row['excerpt'] ?? '' ) ), 200 ),
+			),
+			array( '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
+		);
+	}
+
+	/**
+	 * Record a blocked (or would-be blocked) submission.
+	 *
+	 * @param string               $type  Log type: block or learning.
+	 * @param array<string, mixed> $data  Submission data.
+	 * @param array<string, mixed> $check Check result.
+	 */
+	private function insert_log( string $type, array $data, array $check ): void {
+		$this->insert_log_row(
+			$type,
+			time(),
+			array(
+				'ip'      => $this->get_client_ip(),
+				'source'  => (string) ( $data['source'] ?? 'comment' ),
+				'author'  => (string) ( $data['comment_author'] ?? '' ),
+				'email'   => (string) ( $data['comment_author_email'] ?? '' ),
+				'reason'  => (string) ( $check['reason'] ?? 'unknown' ),
+				'excerpt' => (string) ( $data['comment_content'] ?? '' ),
+			)
+		);
+
+		// Trim the log now and then (not on every insert) to the configured size.
+		if ( 0 === wp_rand( 0, 9 ) ) {
+			$this->prune_log( 'learning' === $type ? 'learning' : 'block' );
+		}
+	}
+
+	/**
+	 * Delete the oldest rows beyond the configured maximum.
+	 *
+	 * @param string $type Log type.
+	 */
+	private function prune_log( string $type ): void {
+		global $wpdb;
+
+		$max   = max( 100, min( 10000, (int) ( $this->settings['log_max'] ?? 1000 ) ) );
+		$table = self::log_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$cut = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE log_type = %s ORDER BY id DESC LIMIT 1 OFFSET %d", $type, $max ) );
+		if ( $cut ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE log_type = %s AND id <= %d", $type, (int) $cut ) );
+		}
+	}
+
+	/**
+	 * Newest log rows.
+	 *
+	 * @param string $type  Log type: block or learning.
+	 * @param int    $limit Maximum rows.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_log( string $type = 'block', int $limit = 50 ): array {
+		global $wpdb;
+
+		$table = self::log_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT logged_at AS time, ip, source, author, email, reason, excerpt FROM {$table} WHERE log_type = %s ORDER BY id DESC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$type,
+				max( 1, $limit )
+			),
+			ARRAY_A
+		);
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Totals for one log.
+	 *
+	 * @param string $type Log type.
+	 * @return array{total:int,last_24h:int,by_reason:array<string,int>}
+	 */
+	private function compute_stats( string $type ): array {
+		global $wpdb;
+
+		$table = self::log_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE log_type = %s", $type ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$last24 = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE log_type = %s AND logged_at >= %d", $type, time() - DAY_IN_SECONDS ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT reason, COUNT(*) AS c FROM {$table} WHERE log_type = %s GROUP BY reason", $type ), ARRAY_A );
+
+		$reasons = array();
+		foreach ( is_array( $rows ) ? $rows : array() as $r ) {
+			$reasons[ (string) $r['reason'] ] = (int) $r['c'];
 		}
 
 		return array(
-			'total'     => count( $log ),
+			'total'     => $total,
 			'last_24h'  => $last24,
 			'by_reason' => $reasons,
 		);
+	}
+
+	/**
+	 * Count a block towards the hourly spike alert and send the email when the threshold is reached.
+	 */
+	private function note_block_for_alert(): void {
+		if ( empty( $this->settings['alert_enabled'] ) ) {
+			return;
+		}
+
+		$key       = 'tsosk_cas_hour_' . gmdate( 'YmdH' );
+		$hits      = (int) get_transient( $key ) + 1;
+		$threshold = max( 1, (int) ( $this->settings['alert_threshold'] ?? 20 ) );
+		set_transient( $key, $hits, 2 * HOUR_IN_SECONDS );
+
+		if ( $hits >= $threshold && ! get_transient( 'tsosk_cas_alert_sent' ) ) {
+			set_transient( 'tsosk_cas_alert_sent', 1, 3 * HOUR_IN_SECONDS );
+			$this->send_alert_email(
+				'spike',
+				array(
+					'hits'      => $hits,
+					'threshold' => $threshold,
+				)
+			);
+		}
+	}
+
+	/**
+	 * Alert recipient.
+	 */
+	private function get_alert_recipient(): string {
+		$to = isset( $this->settings['alert_email'] ) ? sanitize_email( (string) $this->settings['alert_email'] ) : '';
+		return is_email( $to ) ? $to : (string) get_option( 'admin_email' );
+	}
+
+	/**
+	 * Send an alert email (spike, provider failure or test) with the TSO template.
+	 *
+	 * @param string               $kind spike|provider|test.
+	 * @param array<string, mixed> $ctx  Context values.
+	 */
+	private function send_alert_email( string $kind, array $ctx ): bool {
+		$site = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+		$rows = array(
+			array(
+				'label' => __( 'Site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => home_url( '/' ),
+			),
+		);
+
+		if ( 'provider' === $kind ) {
+			$rows[] = array(
+				'label' => __( 'Provider', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => (string) ( $ctx['label'] ?? '' ),
+			);
+			if ( ! empty( $ctx['note'] ) ) {
+				$rows[] = array(
+					'label' => __( 'Last error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'value' => (string) $ctx['note'],
+				);
+			}
+			$heading = __( 'Comment anti-spam: service failing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$intro   = sprintf(
+				/* translators: 1: provider name, 2: number of errors in the last 24 hours */
+				__( '%1$s returned %2$d errors in the last 24 hours. The service may be down or its key may be invalid; submissions are being allowed through that check.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				(string) ( $ctx['label'] ?? '' ),
+				(int) ( $ctx['errors'] ?? 0 )
+			);
+			/* translators: %s: site name */
+			$subject = sprintf( __( '[%s] Comment anti-spam: a service is failing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site );
+		} elseif ( 'spike' === $kind ) {
+			foreach ( $this->get_recent_reasons() as $reason => $count ) {
+				$rows[] = array(
+					'label' => $this->get_reason_label( (string) $reason ),
+					'value' => (string) $count,
+				);
+			}
+				$heading = __( 'Comment anti-spam alert', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				$intro   = sprintf(
+					/* translators: 1: blocked submissions this hour, 2: configured threshold */
+					__( '%1$d submissions were blocked in the last hour (threshold: %2$d). Review the logs to check there are no false positives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) ( $ctx['hits'] ?? 0 ),
+					(int) ( $ctx['threshold'] ?? 0 )
+				);
+				/* translators: %s: site name */
+				$subject = sprintf( __( '[%s] Comment anti-spam alert', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site );
+		} else {
+			$heading = __( 'Comment anti-spam: test email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$intro   = __( 'This is a test email. If you can read it, alerts will reach this address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			/* translators: %s: site name */
+			$subject = sprintf( __( '[%s] Comment anti-spam test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site );
+		}
+
+		return TSOSK_Email_Template::send(
+			$this->get_alert_recipient(),
+			$subject,
+			array(
+				'heading'      => $heading,
+				'intro'        => $intro,
+				'rows'         => $rows,
+				'button_label' => __( 'Open comment anti-spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'button_url'   => admin_url( 'tools.php?page=tso-swiss-knife&tab=comment-antispam' ),
+			)
+		);
+	}
+
+	/**
+	 * Block reasons of the last hour (for the alert email).
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_recent_reasons(): array {
+		global $wpdb;
+
+		$table = self::log_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT reason, COUNT(*) AS c FROM {$table} WHERE log_type = 'block' AND logged_at >= %d GROUP BY reason ORDER BY c DESC LIMIT 6", time() - HOUR_IN_SECONDS ), ARRAY_A );
+
+		$out = array();
+		foreach ( is_array( $rows ) ? $rows : array() as $r ) {
+			$out[ (string) $r['reason'] ] = (int) $r['c'];
+		}
+		return $out;
+	}
+
+	/** AJAX: send a test alert email. */
+	public function ajax_test_alert(): void {
+		check_ajax_referer( 'tsosk_cas_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$this->settings = self::get_settings();
+		if ( $this->send_alert_email( 'test', array() ) ) {
+			/* translators: %s: email address */
+			wp_send_json_success( sprintf( __( 'Test email sent to %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $this->get_alert_recipient() ) );
+		}
+		wp_send_json_error( __( 'The email could not be sent. Check your site mail configuration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/** Admin-post: download a log as CSV. */
+	public function handle_export(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'tsosk_cas_export' );
+
+		$type = isset( $_GET['type'] ) && 'learning' === sanitize_key( wp_unslash( $_GET['type'] ) ) ? 'learning' : 'block';
+		$rows = $this->get_log( $type, 10000 );
+
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
+		}
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tsosk-comment-antispam-' . $type . '-' . gmdate( 'Ymd' ) . '.csv"' );
+
+		$out = "\xEF\xBB\xBF" . implode( ',', array( 'time_utc', 'source', 'ip', 'author', 'email', 'reason', 'excerpt' ) ) . "\r\n";
+		foreach ( $rows as $r ) {
+			$cells = array(
+				gmdate( 'Y-m-d H:i:s', (int) $r['time'] ),
+				(string) $r['source'],
+				(string) $r['ip'],
+				(string) $r['author'],
+				(string) $r['email'],
+				(string) $r['reason'],
+				(string) $r['excerpt'],
+			);
+			$out  .= implode( ',', array_map( array( $this, 'csv_cell' ), $cells ) ) . "\r\n";
+		}
+
+		echo $out; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV download, cells escaped by csv_cell().
+		exit;
+	}
+
+	/**
+	 * Escape one CSV cell (quotes, and spreadsheet formula injection).
+	 *
+	 * @param string $value Cell value.
+	 */
+	private function csv_cell( string $value ): string {
+		if ( '' !== $value && in_array( $value[0], array( '=', '+', '-', '@', "\t", "\r" ), true ) ) {
+			$value = "'" . $value;
+		}
+		return '"' . str_replace( '"', '""', $value ) . '"';
+	}
+
+	/**
+	 * Render the "Email alerts" card.
+	 *
+	 * @param array<string, mixed> $s     Settings.
+	 * @param string               $nonce Nonce.
+	 */
+	private function render_alerts_card( array $s, string $nonce ): void {
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Get an email when the site is receiving a burst of spam, or when an external service keeps failing.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+
+			<label class="tsosk-toggle-row">
+				<input type="checkbox" id="tsosk-cas-alert-enabled" <?php checked( ! empty( $s['alert_enabled'] ) ); ?>>
+				<span><strong><?php esc_html_e( 'Enable email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></span>
+			</label>
+
+			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0 8px 24px;">
+				<tr>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Send alerts to', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<input type="email" id="tsosk-cas-alert-email" value="<?php echo esc_attr( (string) $s['alert_email'] ); ?>" placeholder="<?php echo esc_attr( (string) get_option( 'admin_email' ) ); ?>" style="width:100%;max-width:360px;">
+						<p class="description"><?php esc_html_e( 'Leave empty to use the site administrator email.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Blocks per hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<input type="number" id="tsosk-cas-alert-threshold" min="1" max="1000" value="<?php echo esc_attr( (string) $s['alert_threshold'] ); ?>" style="width:80px;">
+						<p class="description"><?php esc_html_e( 'An alert is sent when the blocked submissions in one hour reach this number (at most one email every 3 hours).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<label class="tsosk-toggle-row">
+				<input type="checkbox" id="tsosk-cas-alert-providers" <?php checked( ! empty( $s['alert_provider_errors'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'Also alert when a service keeps failing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( '5 or more errors in 24 hours (at most one email per service per day).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</span>
+			</label>
+
+			<p style="margin-top:12px;">
+				<button type="button" class="button" id="tsosk-cas-test-alert" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Send test email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<span id="tsosk-cas-alert-msg" class="tsosk-msg" aria-live="polite" style="display:none;"></span>
+			</p>
+			<p class="description"><?php esc_html_e( 'The test email uses the saved settings: save first if you changed the address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the "Log storage" card (retention + CSV export).
+	 *
+	 * @param array<string, mixed> $s       Settings.
+	 * @param array<string, mixed> $stats   Block stats.
+	 * @param array<string, mixed> $lstats  Learning stats.
+	 */
+	private function render_log_storage_card( array $s, array $stats, array $lstats ): void {
+		$export = static function ( string $type ): string {
+			return wp_nonce_url( admin_url( 'admin-post.php?action=tsosk_cas_export&type=' . $type ), 'tsosk_cas_export' );
+		};
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Log storage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Entries are stored in a dedicated database table (not in the options table), so long logs do not slow the site down. The lists below show the latest 50 entries; export the CSV to get the full log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<table class="tsosk-kv-table" style="width:100%;max-width:640px;margin:8px 0;">
+				<tr>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Max. entries per log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<input type="number" id="tsosk-cas-log-max" min="100" max="10000" value="<?php echo esc_attr( (string) $s['log_max'] ); ?>" style="width:100px;">
+						<p class="description"><?php esc_html_e( 'The oldest entries are deleted automatically beyond this number (100–10000).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+			</table>
+			<p>
+				<a class="button" href="<?php echo esc_url( $export( 'block' ) ); ?>"><?php esc_html_e( 'Export blocks (CSV)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+				<a class="button" href="<?php echo esc_url( $export( 'learning' ) ); ?>"><?php esc_html_e( 'Export learning log (CSV)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			</p>
+			<?php if ( 0 === (int) $stats['total'] && 0 === (int) $lstats['total'] ) : ?>
+			<p class="description"><?php esc_html_e( 'No log entries yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Human-readable label for a block reason key.
+	 *
+	 * @param string $reason Reason key stored in the log.
+	 */
+	private function get_reason_label( string $reason ): string {
+		$labels = array(
+			'honeypot'         => __( 'Honeypot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'time_trap'        => __( 'Time trap', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rate_limit'       => __( 'Rate limit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'stopforumspam'    => __( 'Stop Forum Spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'abuseipdb'        => __( 'AbuseIPDB', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'honeypot_httpbl'  => __( 'Project Honey Pot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'cloud'            => __( 'Cloud filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'max_links'        => __( 'Too many links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disposable_email' => __( 'Disposable email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'cyrillic'         => __( 'Blocked characters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'keyword'          => __( 'Blocked keyword', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'blocked_url'      => __( 'Blocked URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'duplicate'        => __( 'Duplicate', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'banned'           => __( 'Temporarily banned IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+		return $labels[ $reason ] ?? $reason;
+	}
+
+	/**
+	 * Delete log rows of a type, optionally only for one IP.
+	 *
+	 * @param string $type Log type.
+	 * @param string $ip   Optional IP.
+	 */
+	private function delete_log_rows( string $type, string $ip = '' ): void {
+		global $wpdb;
+
+		$table = self::log_table();
+		if ( '' === $ip ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE log_type = %s", $type ) );
+			return;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE log_type = %s AND ip = %s", $type, $ip ) );
 	}
 
 	/** AJAX: save settings. */
@@ -1922,6 +3293,16 @@ class TSOSK_Mod_Comment_Antispam {
 		$spam_action = isset( $_POST['spam_action'] ) ? sanitize_key( wp_unslash( $_POST['spam_action'] ) ) : 'spam';
 		if ( ! in_array( $spam_action, array( 'spam', 'trash', 'discard' ), true ) ) {
 			$spam_action = 'spam';
+		}
+
+		$observe_rules = array();
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every value is passed through sanitize_key() and checked against a fixed list below.
+		$observe_raw = isset( $_POST['observe_rules'] ) && is_array( $_POST['observe_rules'] ) ? wp_unslash( $_POST['observe_rules'] ) : array();
+		foreach ( $observe_raw as $rule ) {
+			$rule = sanitize_key( (string) $rule );
+			if ( in_array( $rule, self::OBSERVABLE_RULES, true ) ) {
+				$observe_rules[] = $rule;
+			}
 		}
 
 		$new = array(
@@ -1947,10 +3328,10 @@ class TSOSK_Mod_Comment_Antispam {
 			'max_links'                 => isset( $_POST['max_links'] )
 				? max( 0, min( 20, absint( wp_unslash( $_POST['max_links'] ) ) ) )
 				: 2,
-			'block_keywords'              => isset( $_POST['block_keywords'] )
+			'block_keywords'            => isset( $_POST['block_keywords'] )
 				? sanitize_textarea_field( wp_unslash( $_POST['block_keywords'] ) )
 				: '',
-			'block_urls'                  => isset( $_POST['block_urls'] )
+			'block_urls'                => isset( $_POST['block_urls'] )
 				? sanitize_textarea_field( wp_unslash( $_POST['block_urls'] ) )
 				: '',
 			'block_disposable_email'    => ! empty( $_POST['block_disposable_email'] ),
@@ -1993,16 +3374,37 @@ class TSOSK_Mod_Comment_Antispam {
 				: '',
 			'spam_action'               => $spam_action,
 			'log_blocks'                => ! empty( $_POST['log_blocks'] ),
+			'log_max'                   => isset( $_POST['log_max'] )
+				? max( 100, min( 10000, absint( wp_unslash( $_POST['log_max'] ) ) ) )
+				: 1000,
+			'alert_enabled'             => ! empty( $_POST['alert_enabled'] ),
+			'alert_email'               => isset( $_POST['alert_email'] ) ? sanitize_email( wp_unslash( $_POST['alert_email'] ) ) : '',
+			'alert_threshold'           => isset( $_POST['alert_threshold'] )
+				? max( 1, min( 1000, absint( wp_unslash( $_POST['alert_threshold'] ) ) ) )
+				: 20,
+			'alert_provider_errors'     => ! empty( $_POST['alert_provider_errors'] ),
+			'protect_reviews'           => ! empty( $_POST['protect_reviews'] ),
+			'protect_registration'      => ! empty( $_POST['protect_registration'] ),
+			'ban_enabled'               => ! empty( $_POST['ban_enabled'] ),
+			'ban_threshold'             => isset( $_POST['ban_threshold'] )
+				? max( 1, min( 100, absint( wp_unslash( $_POST['ban_threshold'] ) ) ) )
+				: 5,
+			'ban_hours'                 => isset( $_POST['ban_hours'] )
+				? max( 1, min( 720, absint( wp_unslash( $_POST['ban_hours'] ) ) ) )
+				: 24,
+			'trust_returning'           => ! empty( $_POST['trust_returning'] ),
+			'block_message'             => isset( $_POST['block_message'] ) ? $this->substr_safe( sanitize_text_field( wp_unslash( $_POST['block_message'] ) ), 200 ) : '',
+			'observe_rules'             => $observe_rules,
 		);
 
-		if ( $new['enabled'] && empty( $new['protect_comments'] ) && empty( $new['protect_contact_forms'] ) ) {
+		if ( $new['enabled'] && empty( $new['protect_comments'] ) && empty( $new['protect_contact_forms'] ) && empty( $new['protect_registration'] ) ) {
 			wp_send_json_error(
-				__( 'Enable at least one protection target: comments or contact forms.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				__( 'Enable at least one protection target: comments, contact forms or registration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				400
 			);
 		}
 
-		update_option( self::OPTION, $new, false );
+		update_option( self::OPTION, $new, true ); // Settings are read on every request — must autoload.
 		$this->settings = $new;
 
 		TSOSK_Activity_Log::log( 'comment-antispam', 'save', __( 'Comment anti-spam settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -2017,7 +3419,7 @@ class TSOSK_Mod_Comment_Antispam {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		update_option( self::OPTION_LOG, array(), false );
+		$this->delete_log_rows( 'block' );
 		TSOSK_Activity_Log::log( 'comment-antispam', 'clear', __( 'Comment anti-spam log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		wp_send_json_success( __( 'Block log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
@@ -2029,7 +3431,7 @@ class TSOSK_Mod_Comment_Antispam {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		update_option( self::OPTION_LEARNING_LOG, array(), false );
+		$this->delete_log_rows( 'learning' );
 		TSOSK_Activity_Log::log( 'comment-antispam', 'clear-learning', __( 'Comment anti-spam learning log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		wp_send_json_success( __( 'Learning log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
@@ -2040,11 +3442,11 @@ class TSOSK_Mod_Comment_Antispam {
 	public function render(): void {
 		$s              = self::get_settings();
 		$stats          = $this->get_stats();
-		$log            = $this->get_log();
+		$log            = $this->get_log( 'block', 50 );
 		$learning_stats = $this->get_learning_stats();
-		$learning_log   = $this->get_learning_log();
-		$nonce   = wp_create_nonce( 'tsosk_cas_nonce' );
-		$plugins = $this->get_detected_form_plugins();
+		$learning_log   = $this->get_log( 'learning', 50 );
+		$nonce          = wp_create_nonce( 'tsosk_cas_nonce' );
+		$plugins        = $this->get_detected_form_plugins();
 		$akismet_active = class_exists( 'Akismet' );
 		?>
 		<p class="tsosk-desc">
@@ -2053,6 +3455,18 @@ class TSOSK_Mod_Comment_Antispam {
 
 		<form id="tsosk-cas-form" autocomplete="off">
 
+		<?php if ( empty( $s['enabled'] ) ) : ?>
+		<div class="notice notice-warning inline"><p><?php esc_html_e( 'Protection is disabled: none of the options on these tabs has any effect until you enable it in Overview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p></div>
+		<?php endif; ?>
+
+		<h2 class="nav-tab-wrapper tsosk-cas-tabs" role="tablist">
+			<a href="#tsosk-cas-panel-overview" class="nav-tab tsosk-cas-tab nav-tab-active" data-tab="overview" role="tab" aria-selected="true"><?php esc_html_e( 'Overview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-cas-panel-rules" class="nav-tab tsosk-cas-tab" data-tab="rules" role="tab" aria-selected="false"><?php esc_html_e( 'Local rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-cas-panel-services" class="nav-tab tsosk-cas-tab" data-tab="services" role="tab" aria-selected="false"><?php esc_html_e( 'External services', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-cas-panel-logs" class="nav-tab tsosk-cas-tab" data-tab="logs" role="tab" aria-selected="false"><?php esc_html_e( 'Logs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+		</h2>
+
+		<div class="tsosk-cas-panel" id="tsosk-cas-panel-overview" role="tabpanel">
 		<div class="tsosk-card">
 			<h3>
 				<span class="dashicons dashicons-shield" aria-hidden="true"></span>
@@ -2077,11 +3491,27 @@ class TSOSK_Mod_Comment_Antispam {
 				</span>
 			</label>
 
+			<label class="tsosk-toggle-row" style="margin-left:48px;">
+				<input type="checkbox" id="tsosk-cas-protect-reviews" <?php checked( ! empty( $s['protect_reviews'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'Product reviews', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Also protects WooCommerce product reviews (they are comments of type "review"). Needs WordPress comments protection enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</span>
+			</label>
+
 			<label class="tsosk-toggle-row" style="margin-left:24px;">
 				<input type="checkbox" id="tsosk-cas-protect-forms" <?php checked( ! empty( $s['protect_contact_forms'] ) ); ?>>
 				<span>
 					<strong><?php esc_html_e( 'Contact forms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 					— <?php esc_html_e( 'Applies the same rules to Contact Form 7, WPForms, Gravity Forms, Elementor Pro and Fluent Forms when those plugins are active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</span>
+			</label>
+
+			<label class="tsosk-toggle-row" style="margin-left:24px;">
+				<input type="checkbox" id="tsosk-cas-protect-registration" <?php checked( ! empty( $s['protect_registration'] ) ); ?>>
+				<span>
+					<strong><?php esc_html_e( 'User registration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+					— <?php esc_html_e( 'Applies the rules to the WordPress and WooCommerce registration forms (honeypot, time trap, disposable emails, reputation lists).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 
@@ -2117,7 +3547,7 @@ class TSOSK_Mod_Comment_Antispam {
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $stats['last_24h'] ); ?></span>
 				</div>
 				<div class="tsosk-kv-item">
-					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Blocked (total)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $stats['total'] ); ?></span>
 				</div>
 				<?php if ( ! empty( $s['learning_mode'] ) || $learning_stats['total'] > 0 ) : ?>
@@ -2126,13 +3556,30 @@ class TSOSK_Mod_Comment_Antispam {
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $learning_stats['last_24h'] ); ?></span>
 				</div>
 				<div class="tsosk-kv-item">
-					<span class="tsosk-kv-label"><?php esc_html_e( 'Would block (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<span class="tsosk-kv-label"><?php esc_html_e( 'Would block (total)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<span class="tsosk-kv-value"><?php echo esc_html( (string) $learning_stats['total'] ); ?></span>
 				</div>
 				<?php endif; ?>
 			</div>
+			<?php if ( ! empty( $stats['by_reason'] ) ) : ?>
+			<p style="margin-top:12px;">
+				<strong><?php esc_html_e( 'Blocks by reason (log)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
+				<?php
+				arsort( $stats['by_reason'] );
+				foreach ( $stats['by_reason'] as $reason_key => $reason_count ) {
+					echo '<span class="tsosk-badge" style="margin:0 6px 4px 0;">' . esc_html( $this->get_reason_label( (string) $reason_key ) . ' × ' . (int) $reason_count ) . '</span>';
+				}
+				?>
+			</p>
+			<?php endif; ?>
+			<?php $this->render_daily_chart(); ?>
 		</div>
 
+		<?php $this->render_alerts_card( $s, $nonce ); ?>
+
+		</div>
+
+		<div class="tsosk-cas-panel" id="tsosk-cas-panel-rules" role="tabpanel" hidden>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Local protection layers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'These run on your server without external API calls. Together they block most automated spam.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
@@ -2197,7 +3644,7 @@ class TSOSK_Mod_Comment_Antispam {
 					<th style="vertical-align:top;"><?php esc_html_e( 'Max. form age (seconds)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" id="tsosk-cas-max-seconds" min="60" max="86400" value="<?php echo esc_attr( (string) $s['max_submit_seconds'] ); ?>" style="width:100px;">
-						<p class="description"><?php esc_html_e( 'Maximum time a form stays valid after it was opened. Older tokens are rejected (e.g. a tab left open overnight). Default: 7200 (2 hours).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Maximum time a form stays valid after it was opened. Older tokens are rejected (e.g. a tab left open overnight). If a page cache serves your pages, keep this higher than the cache lifetime, or visitors on cached pages will be rejected. Default: 7200 (2 hours).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -2243,6 +3690,46 @@ class TSOSK_Mod_Comment_Antispam {
 		</div>
 
 		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Blocklists & bypass', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Your own rules on top of automatic checks: block specific words or URLs, extend the disposable-email list, or whitelist trusted IPs that should never be filtered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<table class="tsosk-kv-table" style="width:100%;">
+				<tr>
+					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Blocked keywords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<textarea id="tsosk-cas-keywords" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_keywords'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'One word or phrase per line. If any line appears in the comment text, author name, email or URL, the submission is blocked. Lines starting with # are ignored. Not case-sensitive.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Blocked URL fragments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<textarea id="tsosk-cas-urls" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_urls'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). Matched anywhere in the submission content. Useful to stop recurring spam links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Extra disposable domains', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<textarea id="tsosk-cas-domains" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['custom_disposable_domains'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Add email domains to block in addition to the built-in list. One domain per line, with or without @ (e.g. tempmail.example). Only applies when "Block disposable email domains" is enabled above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th style="vertical-align:top;"><?php esc_html_e( 'Whitelist IPs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<textarea id="tsosk-cas-whitelist" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['whitelist_ips'] ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'One IP address per line. These addresses skip every anti-spam rule (local, cloud and reputation). Use for your office, home or test machines — not for public visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+						<p class="description"><?php esc_html_e( 'You can also use CIDR ranges, for example 203.0.113.0/24 or 2001:db8::/32.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<?php $this->render_advanced_rules_cards( $s ); ?>
+		</div>
+
+		<div class="tsosk-cas-panel" id="tsosk-cas-panel-services" role="tabpanel" hidden>
+		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Cloud filter (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'For effectiveness similar to dedicated anti-spam plugins, enable a cloud check. Local rules still run as a second layer.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
@@ -2281,7 +3768,7 @@ class TSOSK_Mod_Comment_Antispam {
 				<input type="checkbox" id="tsosk-cas-sfs" <?php checked( ! empty( $s['stopforumspam_enabled'] ) ); ?>>
 				<span>
 					<strong><?php esc_html_e( 'Stop Forum Spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-					— <?php esc_html_e( 'Free API, no key required. Checks IP, email and username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					— <?php esc_html_e( 'Free lookups, no account or key required. Checks the IP and a hash of the email.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					<a href="https://www.stopforumspam.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'stopforumspam.com', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</span>
 			</label>
@@ -2353,40 +3840,12 @@ class TSOSK_Mod_Comment_Antispam {
 			</table>
 		</div>
 
-		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Blocklists & bypass', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Your own rules on top of automatic checks: block specific words or URLs, extend the disposable-email list, or whitelist trusted IPs that should never be filtered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<table class="tsosk-kv-table" style="width:100%;">
-				<tr>
-					<th style="width:220px;vertical-align:top;"><?php esc_html_e( 'Blocked keywords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td>
-						<textarea id="tsosk-cas-keywords" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_keywords'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One word or phrase per line. If any line appears in the comment text, author name, email or URL, the submission is blocked. Lines starting with # are ignored. Not case-sensitive.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Blocked URL fragments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td>
-						<textarea id="tsosk-cas-urls" rows="4" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['block_urls'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One domain or URL fragment per line (e.g. casino.xyz or bit.ly/spam). Matched anywhere in the submission content. Useful to stop recurring spam links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Extra disposable domains', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td>
-						<textarea id="tsosk-cas-domains" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['custom_disposable_domains'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'Add email domains to block in addition to the built-in list. One domain per line, with or without @ (e.g. tempmail.example). Only applies when "Block disposable email domains" is enabled above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th style="vertical-align:top;"><?php esc_html_e( 'Whitelist IPs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td>
-						<textarea id="tsosk-cas-whitelist" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( (string) $s['whitelist_ips'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'One IP address per line. These addresses skip every anti-spam rule (local, cloud and reputation). Use for your office, home or test machines — not for public visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-					</td>
-				</tr>
-			</table>
+		<?php $this->render_provider_status( $s, $nonce ); ?>
+
 		</div>
+
+		<div class="tsosk-cas-panel" id="tsosk-cas-panel-logs" role="tabpanel" hidden>
+		<?php $this->render_log_storage_card( $s, $stats, $learning_stats ); ?>
 
 		<?php if ( ! empty( $log ) ) : ?>
 		<div class="tsosk-card">
@@ -2401,17 +3860,19 @@ class TSOSK_Mod_Comment_Antispam {
 							<th><?php esc_html_e( 'Author', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Excerpt', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
-					<?php foreach ( array_slice( $log, 0, 25 ) as $entry ) : ?>
+					<?php foreach ( $log as $entry ) : ?>
 						<tr>
 							<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) ( $entry['time'] ?? 0 ) ) ); ?></td>
 							<td><code><?php echo esc_html( (string) ( $entry['source'] ?? 'comment' ) ); ?></code></td>
 							<td><code><?php echo esc_html( (string) ( $entry['ip'] ?? '' ) ); ?></code></td>
 							<td><?php echo esc_html( (string) ( $entry['author'] ?? '' ) ); ?></td>
-							<td><code><?php echo esc_html( (string) ( $entry['reason'] ?? '' ) ); ?></code></td>
+							<td><code><?php echo esc_html( $this->get_reason_label( (string) ( $entry['reason'] ?? '' ) ) ); ?></code></td>
 							<td><?php echo esc_html( (string) ( $entry['excerpt'] ?? '' ) ); ?></td>
+							<td><?php $this->render_allow_button( $entry, 'block', $nonce ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -2439,17 +3900,19 @@ class TSOSK_Mod_Comment_Antispam {
 							<th><?php esc_html_e( 'Author', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Excerpt', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
-					<?php foreach ( array_slice( $learning_log, 0, 25 ) as $entry ) : ?>
+					<?php foreach ( $learning_log as $entry ) : ?>
 						<tr>
 							<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) ( $entry['time'] ?? 0 ) ) ); ?></td>
 							<td><code><?php echo esc_html( (string) ( $entry['source'] ?? 'comment' ) ); ?></code></td>
 							<td><code><?php echo esc_html( (string) ( $entry['ip'] ?? '' ) ); ?></code></td>
 							<td><?php echo esc_html( (string) ( $entry['author'] ?? '' ) ); ?></td>
-							<td><code><?php echo esc_html( (string) ( $entry['reason'] ?? '' ) ); ?></code></td>
+							<td><code><?php echo esc_html( $this->get_reason_label( (string) ( $entry['reason'] ?? '' ) ) ); ?></code></td>
 							<td><?php echo esc_html( (string) ( $entry['excerpt'] ?? '' ) ); ?></td>
+							<td><?php $this->render_allow_button( $entry, 'learning', $nonce ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -2462,6 +3925,8 @@ class TSOSK_Mod_Comment_Antispam {
 			</p>
 		</div>
 		<?php endif; ?>
+
+		</div>
 
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-cas-save" data-nonce="<?php echo esc_attr( $nonce ); ?>">

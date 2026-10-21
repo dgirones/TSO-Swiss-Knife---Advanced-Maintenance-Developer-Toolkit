@@ -9,10 +9,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Rewrite module.
+ */
 class TSOSK_Mod_Rewrite {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Rewrite|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -20,10 +33,16 @@ class TSOSK_Mod_Rewrite {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_flush_rewrite', array( $this, 'ajax_flush' ) );
 	}
 
+	/**
+	 * AJAX: flush.
+	 */
 	public function ajax_flush(): void {
 		check_ajax_referer( 'tsosk_rewrite_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -41,6 +60,9 @@ class TSOSK_Mod_Rewrite {
 		wp_send_json_success( __( 'Rewrite rules flushed successfully.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		global $wp_rewrite;
 
@@ -51,7 +73,7 @@ class TSOSK_Mod_Rewrite {
 			$rules = array();
 		}
 		$route_url = isset( $_GET['tsosk_route_url'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_route_url'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostic form.
-		$route = '' !== $route_url ? $this->get_route_diagnostics( $route_url, $rules ) : array();
+		$route     = '' !== $route_url ? $this->get_route_diagnostics( $route_url, $rules ) : array();
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Flush and inspect WordPress rewrite rules. A "hard flush" also regenerates the .htaccess / web.config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -85,11 +107,11 @@ class TSOSK_Mod_Rewrite {
 			<h3><?php esc_html_e( 'Flush Rewrite Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p><?php esc_html_e( 'Soft flush: regenerates rules in the database. Hard flush: also updates the server rewrite configuration file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<button class="button button-primary" id="tsosk-flush-soft"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>" data-hard="0">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>" data-hard="0">
 				<?php esc_html_e( 'Soft Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button class="button button-secondary" id="tsosk-flush-hard"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>" data-hard="1" style="margin-left:6px;">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>" data-hard="1" style="margin-left:6px;">
 				<?php esc_html_e( 'Hard Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-rewrite-msg"></span>
@@ -130,8 +152,8 @@ class TSOSK_Mod_Rewrite {
 				<p><?php esc_html_e( 'No rewrite rules stored. Have you flushed permalinks?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 			<input type="text" id="tsosk-rewrite-search"
-			       placeholder="<?php esc_attr_e( 'Filter rules…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-			       style="width:280px;margin-bottom:10px;">
+					placeholder="<?php esc_attr_e( 'Filter rules…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+					style="width:280px;margin-bottom:10px;">
 			<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-rewrite-table">
 					<thead>
@@ -168,9 +190,9 @@ class TSOSK_Mod_Rewrite {
 			$path = '/' . ltrim( $url, '/' );
 		}
 
-		$path = '/' . ltrim( $path, '/' );
-		$request = ltrim( $path, '/' );
-		$post_id = url_to_postid( home_url( $path ) );
+		$path          = '/' . ltrim( $path, '/' );
+		$request       = ltrim( $path, '/' );
+		$post_id       = url_to_postid( home_url( $path ) );
 		$matched_regex = __( 'No rewrite rule matched.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		$matched_query = __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 

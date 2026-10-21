@@ -23,9 +23,18 @@ class TSOSK_Mod_Email {
 	/** Max stored test results. */
 	private const HISTORY_LIMIT = 10;
 
-	/** @var TSOSK_Mod_Email|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Email|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -33,6 +42,9 @@ class TSOSK_Mod_Email {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_email_send_test', array( $this, 'ajax_send_test' ) );
 	}
@@ -92,9 +104,12 @@ class TSOSK_Mod_Email {
 			}
 			$captured['to']      = sanitize_text_field( (string) $to );
 			$captured['subject'] = sanitize_text_field( (string) ( $args['subject'] ?? '' ) );
-			$headers               = $args['headers'] ?? array();
+			$headers             = $args['headers'] ?? array();
 			if ( is_string( $headers ) ) {
-				$headers = preg_split( '/\r\n|\r|\n/', $headers ) ?: array();
+				$headers = preg_split( '/\r\n|\r|\n/', $headers );
+				if ( false === $headers ) {
+					$headers = array();
+				}
 			}
 			if ( is_array( $headers ) ) {
 				foreach ( $headers as $header_line ) {
@@ -116,15 +131,23 @@ class TSOSK_Mod_Email {
 				return;
 			}
 			if ( 'html' === $format && property_exists( $phpmailer, 'AltBody' ) ) {
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				$phpmailer->AltBody = $plain_body;
 			}
 			$captured['phpmailer'] = array(
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'mailer'      => sanitize_text_field( (string) ( $phpmailer->Mailer ?? '' ) ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'host'        => sanitize_text_field( (string) ( $phpmailer->Host ?? '' ) ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'port'        => absint( $phpmailer->Port ?? 0 ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'smtp_auth'   => ! empty( $phpmailer->SMTPAuth ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'smtp_secure' => sanitize_text_field( (string) ( $phpmailer->SMTPSecure ?? '' ) ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'from'        => sanitize_email( (string) ( $phpmailer->From ?? '' ) ),
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property names are fixed by the library.
 				'from_name'   => sanitize_text_field( (string) ( $phpmailer->FromName ?? '' ) ),
 			);
 			if ( '' === $captured['from'] && ! empty( $captured['phpmailer']['from'] ) ) {
@@ -137,7 +160,7 @@ class TSOSK_Mod_Email {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Temporary capture around wp_mail.
 		add_action( 'phpmailer_init', $capture_phpmailer, 9999 );
 
-		$error = null;
+		$error          = null;
 		$on_mail_failed = static function ( WP_Error $wp_error ) use ( &$error ): void {
 			$error = $wp_error;
 		};
@@ -175,8 +198,8 @@ class TSOSK_Mod_Email {
 				: ( $sent
 					? __( 'Test email sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: __( 'wp_mail returned false.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-			'to'        => $captured['to'] !== '' ? $captured['to'] : $email,
-			'subject'   => $captured['subject'] !== '' ? $captured['subject'] : $subject,
+			'to'        => '' !== $captured['to'] ? $captured['to'] : $email,
+			'subject'   => '' !== $captured['subject'] ? $captured['subject'] : $subject,
 			'from'      => $captured['from'],
 			'headers'   => array_values( array_unique( $captured['headers'] ) ),
 			'phpmailer' => is_array( $captured['phpmailer'] ) ? $captured['phpmailer'] : array(),
@@ -196,7 +219,7 @@ class TSOSK_Mod_Email {
 			)
 		);
 
-		$nonce = wp_create_nonce( 'tsosk_email_nonce' );
+		$nonce   = wp_create_nonce( 'tsosk_email_nonce' );
 		$payload = array(
 			'message' => $result['message'],
 			'html'    => $this->render_results_html( $nonce ),
@@ -398,6 +421,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Render result table.
+	 *
 	 * @param array<string,mixed> $result Test result.
 	 * @return string
 	 */
@@ -429,6 +454,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Get filtered from email.
+	 *
 	 * @return string
 	 */
 	private function get_filtered_from_email(): string {
@@ -438,6 +465,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Get filtered from name.
+	 *
 	 * @return string
 	 */
 	private function get_filtered_from_name(): string {
@@ -446,6 +475,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Get site mail domain.
+	 *
 	 * @return string
 	 */
 	private function get_site_mail_domain(): string {
@@ -464,7 +495,7 @@ class TSOSK_Mod_Email {
 		if ( ! is_email( $from_email ) ) {
 			return '';
 		}
-		$parts = explode( '@', $from_email );
+		$parts       = explode( '@', $from_email );
 		$from_domain = $this->normalize_mail_domain( (string) end( $parts ) );
 		$site_domain = $this->get_site_mail_domain();
 		if ( '' === $from_domain || '' === $site_domain ) {
@@ -483,6 +514,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Normalize mail domain.
+	 *
 	 * @param string $domain Raw host.
 	 * @return string
 	 */
@@ -499,12 +532,14 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Domain is subdomain of.
+	 *
 	 * @param string $child  Possible subdomain.
-	 * @param string $parent Parent domain.
+	 * @param string $parent_domain Parent domain.
 	 * @return bool
 	 */
-	private function domain_is_subdomain_of( string $child, string $parent ): bool {
-		return $child !== $parent && substr( $child, - ( strlen( $parent ) + 1 ) ) === '.' . $parent;
+	private function domain_is_subdomain_of( string $child, string $parent_domain ): bool {
+		return $child !== $parent_domain && substr( $child, - ( strlen( $parent_domain ) + 1 ) ) === '.' . $parent_domain;
 	}
 
 	/**
@@ -516,18 +551,18 @@ class TSOSK_Mod_Email {
 		if ( ! function_exists( 'get_plugins' ) ) {
 			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
-		$active  = (array) get_option( 'active_plugins', array() );
+		$active  = TSOSK_Support::get_active_plugin_files();
 		$plugins = get_plugins();
 		$known   = $this->known_smtp_plugin_map();
 		$out     = array();
 		$seen    = array();
 
 		foreach ( $active as $plugin_file ) {
-			$name = (string) ( $plugins[ $plugin_file ]['Name'] ?? $plugin_file );
-			$folder = strpos( $plugin_file, '/' ) !== false ? dirname( $plugin_file ) : $plugin_file;
+			$name     = (string) ( $plugins[ $plugin_file ]['Name'] ?? $plugin_file );
+			$folder   = strpos( $plugin_file, '/' ) !== false ? dirname( $plugin_file ) : $plugin_file;
 			$haystack = strtolower( $name . ' ' . $plugin_file );
 
-			$matched = false;
+			$matched  = false;
 			$settings = '';
 			foreach ( $known as $slug => $meta ) {
 				$needle = strtolower( (string) ( $meta['match'] ?? $slug ) );
@@ -552,7 +587,7 @@ class TSOSK_Mod_Email {
 				continue;
 			}
 			$seen[ $key ] = true;
-			$out[] = array(
+			$out[]        = array(
 				'name'         => $name,
 				'file'         => $plugin_file,
 				'settings_url' => $settings,
@@ -569,30 +604,92 @@ class TSOSK_Mod_Email {
 	 */
 	private function known_smtp_plugin_map(): array {
 		return array(
-			'wp-mail-smtp'           => array( 'match' => 'wp-mail-smtp', 'page' => 'admin.php?page=wp-mail-smtp' ),
-			'wp-mail-smtp-pro'       => array( 'match' => 'wp-mail-smtp', 'page' => 'admin.php?page=wp-mail-smtp' ),
-			'easy-wp-smtp'           => array( 'match' => 'easy-wp-smtp', 'page' => 'options-general.php?page=easy-wp-smtp' ),
-			'fluent-smtp'            => array( 'match' => 'fluent-smtp', 'page' => 'options-general.php?page=fluent-mail' ),
-			'post-smtp'              => array( 'match' => 'post-smtp', 'page' => 'admin.php?page=postman_email_log' ),
-			'post-smtp-mailer'       => array( 'match' => 'post smtp', 'page' => 'admin.php?page=postman' ),
-			'postman-smtp'           => array( 'match' => 'postman', 'page' => 'admin.php?page=postman' ),
-			'gmail-smtp'             => array( 'match' => 'gmail-smtp', 'page' => 'options-general.php?page=gmail-smtp-settings' ),
-			'smtp-mailer'            => array( 'match' => 'smtp-mailer', 'page' => 'options-general.php?page=smtp-mailer' ),
-			'wp-ses'                 => array( 'match' => 'wp-ses', 'page' => 'options-general.php?page=wpses' ),
-			'wp-offload-ses'         => array( 'match' => 'offload-ses', 'page' => 'admin.php?page=wp-offload-ses' ),
-			'amazon-ses'             => array( 'match' => 'amazon-ses', 'page' => '' ),
-			'mailgun'                => array( 'match' => 'mailgun', 'page' => 'options-general.php?page=mailgun' ),
-			'sendgrid-email-delivery-simplified' => array( 'match' => 'sendgrid', 'page' => 'settings.php?page=sendgrid-settings' ),
-			'postmark-approved-wordpress-plugin' => array( 'match' => 'postmark', 'page' => 'options-general.php?page=postmark_settings' ),
-			'mailpoet'               => array( 'match' => 'mailpoet', 'page' => 'admin.php?page=mailpoet-settings#/basics' ),
-			'brevo'                  => array( 'match' => 'brevo', 'page' => '' ),
-			'mailin'                 => array( 'match' => 'sendinblue', 'page' => 'admin.php?page=sendinblue' ),
-			'sparkpost'              => array( 'match' => 'sparkpost', 'page' => '' ),
-			'mailjet-for-wordpress'  => array( 'match' => 'mailjet', 'page' => 'admin.php?page=mailjet_settings_page' ),
+			'wp-mail-smtp'                       => array(
+				'match' => 'wp-mail-smtp',
+				'page'  => 'admin.php?page=wp-mail-smtp',
+			),
+			'wp-mail-smtp-pro'                   => array(
+				'match' => 'wp-mail-smtp',
+				'page'  => 'admin.php?page=wp-mail-smtp',
+			),
+			'easy-wp-smtp'                       => array(
+				'match' => 'easy-wp-smtp',
+				'page'  => 'options-general.php?page=easy-wp-smtp',
+			),
+			'fluent-smtp'                        => array(
+				'match' => 'fluent-smtp',
+				'page'  => 'options-general.php?page=fluent-mail',
+			),
+			'post-smtp'                          => array(
+				'match' => 'post-smtp',
+				'page'  => 'admin.php?page=postman_email_log',
+			),
+			'post-smtp-mailer'                   => array(
+				'match' => 'post smtp',
+				'page'  => 'admin.php?page=postman',
+			),
+			'postman-smtp'                       => array(
+				'match' => 'postman',
+				'page'  => 'admin.php?page=postman',
+			),
+			'gmail-smtp'                         => array(
+				'match' => 'gmail-smtp',
+				'page'  => 'options-general.php?page=gmail-smtp-settings',
+			),
+			'smtp-mailer'                        => array(
+				'match' => 'smtp-mailer',
+				'page'  => 'options-general.php?page=smtp-mailer',
+			),
+			'wp-ses'                             => array(
+				'match' => 'wp-ses',
+				'page'  => 'options-general.php?page=wpses',
+			),
+			'wp-offload-ses'                     => array(
+				'match' => 'offload-ses',
+				'page'  => 'admin.php?page=wp-offload-ses',
+			),
+			'amazon-ses'                         => array(
+				'match' => 'amazon-ses',
+				'page'  => '',
+			),
+			'mailgun'                            => array(
+				'match' => 'mailgun',
+				'page'  => 'options-general.php?page=mailgun',
+			),
+			'sendgrid-email-delivery-simplified' => array(
+				'match' => 'sendgrid',
+				'page'  => 'settings.php?page=sendgrid-settings',
+			),
+			'postmark-approved-wordpress-plugin' => array(
+				'match' => 'postmark',
+				'page'  => 'options-general.php?page=postmark_settings',
+			),
+			'mailpoet'                           => array(
+				'match' => 'mailpoet',
+				'page'  => 'admin.php?page=mailpoet-settings#/basics',
+			),
+			'brevo'                              => array(
+				'match' => 'brevo',
+				'page'  => '',
+			),
+			'mailin'                             => array(
+				'match' => 'sendinblue',
+				'page'  => 'admin.php?page=sendinblue',
+			),
+			'sparkpost'                          => array(
+				'match' => 'sparkpost',
+				'page'  => '',
+			),
+			'mailjet-for-wordpress'              => array(
+				'match' => 'mailjet',
+				'page'  => 'admin.php?page=mailjet_settings_page',
+			),
 		);
 	}
 
 	/**
+	 * Format phpmailer summary.
+	 *
 	 * @param array<string,mixed> $pm PHPMailer snapshot.
 	 * @return string
 	 */
@@ -623,7 +720,9 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
-	 * @param array<string,mixed>      $last    Latest result.
+	 * Build support report.
+	 *
+	 * @param array<string,mixed>            $last    Latest result.
 	 * @param array<int,array<string,mixed>> $history History rows.
 	 * @return string
 	 */
@@ -689,6 +788,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Store test result.
+	 *
 	 * @param array<string,mixed> $result Result row.
 	 */
 	private function store_test_result( array $result ): void {
@@ -700,6 +801,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Get history.
+	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function get_history(): array {
@@ -718,6 +821,8 @@ class TSOSK_Mod_Email {
 	}
 
 	/**
+	 * Get last legacy.
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function get_last_legacy(): array {

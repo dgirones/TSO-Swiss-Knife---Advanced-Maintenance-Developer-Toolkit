@@ -14,9 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Option_Library {
 
-	/** @var TSOSK_Mod_Option_Library|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Option_Library|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -24,10 +33,16 @@ class TSOSK_Mod_Option_Library {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_ol_preview', array( $this, 'ajax_preview' ) );
 	}
 
+	/**
+	 * AJAX: preview.
+	 */
 	public function ajax_preview(): void {
 		check_ajax_referer( 'tsosk_ol_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -37,6 +52,10 @@ class TSOSK_Mod_Option_Library {
 		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
 		if ( ! $name || ! $this->is_listed_option( $name ) ) {
 			wp_send_json_error( __( 'Unknown or undocumented option.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( TSOSK_Mod_Options_Editor::is_secret_option_name( $name ) ) {
+			wp_send_json_error( __( 'This option cannot be viewed here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$protected = TSOSK_Mod_Options_Editor::is_protected_option_name( $name );
@@ -79,7 +98,7 @@ class TSOSK_Mod_Option_Library {
 	 */
 	private function format_preview_value( string $value ): string {
 		if ( is_serialized( $value ) ) {
-			$unpacked = @unserialize( $value, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			$unpacked = @unserialize( $value, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			if ( false !== $unpacked || 'b:0;' === $value ) {
 				$json = wp_json_encode( $unpacked, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 				if ( is_string( $json ) ) {
@@ -96,6 +115,8 @@ class TSOSK_Mod_Option_Library {
 	}
 
 	/**
+	 * Is listed option.
+	 *
 	 * @param string $name Option name.
 	 * @return bool
 	 */
@@ -110,6 +131,9 @@ class TSOSK_Mod_Option_Library {
 		return false;
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce     = wp_create_nonce( 'tsosk_ol_nonce' );
 		$libraries = TSOSK_Option_Library::get_active_libraries();
@@ -172,6 +196,7 @@ class TSOSK_Mod_Option_Library {
 							<?php
 							$exists    = TSOSK_Option_Library::option_exists( $option['name'] );
 							$protected = TSOSK_Mod_Options_Editor::is_protected_option_name( $option['name'] );
+							$secret    = TSOSK_Mod_Options_Editor::is_secret_option_name( $option['name'] );
 							$readonly  = ! empty( $option['readonly'] ) || $protected;
 							$caution   = ! empty( $option['caution'] ) && ! $protected;
 							$edit_url  = TSOSK_Mod_Options_Editor::get_admin_url_with_search( $option['name'], $protected, true );
@@ -195,10 +220,10 @@ class TSOSK_Mod_Option_Library {
 								<?php endif; ?>
 							</td>
 							<td>
-								<?php if ( $exists ) : ?>
+								<?php if ( $exists && ! $secret ) : ?>
 								<button type="button" class="button button-small tsosk-ol-preview"
-								        data-name="<?php echo esc_attr( $option['name'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-name="<?php echo esc_attr( $option['name'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Preview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php endif; ?>

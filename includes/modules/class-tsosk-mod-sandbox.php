@@ -17,7 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Sandbox {
 
-	/** @var TSOSK_Mod_Sandbox|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Sandbox|null
+	 */
 	private static $instance = null;
 
 	/** User meta: bisection session state (array) or absent when idle. */
@@ -26,6 +30,11 @@ class TSOSK_Mod_Sandbox {
 	/** User meta: one-shot flash result shown after bisection finishes. */
 	private const META_BISECT_RESULT = 'tsosk_sandbox_bisect_result';
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -33,6 +42,9 @@ class TSOSK_Mod_Sandbox {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sandbox_apply', array( $this, 'ajax_apply' ) );
 		add_action( 'wp_ajax_tsosk_sandbox_reset', array( $this, 'ajax_reset' ) );
@@ -42,57 +54,20 @@ class TSOSK_Mod_Sandbox {
 	}
 
 	/**
-	 * Fallback filters when the MU loader could not be installed.
+	 * Housekeeping: drop sandbox state that no longer matches a live session, and keep the MU loader current.
+	 *
+	 * The sandbox itself is applied by the must-use loader (it must run before plugins load), so
+	 * there is deliberately no later fallback filter: it could not change which plugins are loaded.
 	 */
 	public function init(): void {
-		if ( TSOSK_Sandbox_Mu::is_loader_installed() ) {
-			return;
-		}
-
 		if ( ! is_user_logged_in() ) {
 			return;
 		}
-
-		$override = get_user_meta( get_current_user_id(), TSOSK_Sandbox_Mu::META_PLUGINS, true );
-		if ( is_array( $override ) ) {
-			add_filter( 'option_active_plugins', array( $this, 'apply_override' ), 5 );
-			add_filter( 'site_option_active_sitewide_plugins', array( $this, 'apply_sitewide_override' ), 5 );
+		$user_id = get_current_user_id();
+		TSOSK_Sandbox_Mu::cleanup_stale_state( $user_id );
+		if ( is_admin() && TSOSK_Sandbox_Mu::has_live_session( $user_id ) ) {
+			TSOSK_Sandbox_Mu::maybe_refresh_loader();
 		}
-	}
-
-	/**
-	 * Returns the sandboxed plugin list for the current user (fallback mode).
-	 *
-	 * @param array $plugins Original active_plugins.
-	 * @return array
-	 */
-	public function apply_override( array $plugins ): array {
-		if ( ! current_user_can( 'activate_plugins' ) ) {
-			return $plugins;
-		}
-		$override = get_user_meta( get_current_user_id(), TSOSK_Sandbox_Mu::META_PLUGINS, true );
-		if ( ! is_array( $override ) || empty( $override ) ) {
-			return $plugins;
-		}
-		return $this->normalize_plugin_list( $override );
-	}
-
-	/**
-	 * Keep network-activated plugins aligned with the sandbox list on multisite.
-	 *
-	 * @param array|false $plugins Sitewide plugins map.
-	 * @return array|false
-	 */
-	public function apply_sitewide_override( $plugins ) {
-		if ( ! is_multisite() || ! is_array( $plugins ) || ! current_user_can( 'activate_plugins' ) ) {
-			return $plugins;
-		}
-		$override = get_user_meta( get_current_user_id(), TSOSK_Sandbox_Mu::META_PLUGINS, true );
-		if ( ! is_array( $override ) ) {
-			return $plugins;
-		}
-		$allowed = array_fill_keys( $this->normalize_plugin_list( $override ), true );
-		return array_intersect_key( $plugins, $allowed );
 	}
 
 	/**
@@ -102,6 +77,9 @@ class TSOSK_Mod_Sandbox {
 	 * @return array
 	 */
 	private function normalize_plugin_list( array $plugins ): array {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
 		$all     = array_keys( get_plugins() );
 		$plugins = array_values( array_filter( $plugins, static fn( $p ) => in_array( $p, $all, true ) ) );
 		if ( ! in_array( TSOSK_BASENAME, $plugins, true ) ) {
@@ -120,7 +98,7 @@ class TSOSK_Mod_Sandbox {
 			return false;
 		}
 		$plugins = get_user_meta( get_current_user_id(), TSOSK_Sandbox_Mu::META_PLUGINS, true );
-		return is_array( $plugins );
+		return is_array( $plugins ) && TSOSK_Sandbox_Mu::has_live_session( get_current_user_id() );
 	}
 
 	// ── Bisection ─────────────────────────────────────────────────────────────
@@ -239,7 +217,7 @@ class TSOSK_Mod_Sandbox {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$normal     = (array) get_option( 'active_plugins', array() );
+		$normal     = TSOSK_Sandbox_Mu::get_real_active_plugins();
 		$candidates = array_values( array_filter( $normal, static fn( $p ) => TSOSK_BASENAME !== $p ) );
 
 		if ( count( $candidates ) < 2 ) {
@@ -421,7 +399,7 @@ class TSOSK_Mod_Sandbox {
 	public function render(): void {
 		$nonce      = wp_create_nonce( 'tsosk_sandbox_nonce' );
 		$all        = get_plugins();
-		$normal     = (array) get_option( 'active_plugins', array() );
+		$normal     = TSOSK_Sandbox_Mu::get_real_active_plugins();
 		$in_sandbox = $this->user_has_sandbox();
 		$sandboxed  = $in_sandbox
 			? get_user_meta( get_current_user_id(), TSOSK_Sandbox_Mu::META_PLUGINS, true )
@@ -540,15 +518,15 @@ class TSOSK_Mod_Sandbox {
 
 			<div class="tsosk-plugin-list" id="tsosk-sandbox-list">
 				<?php foreach ( $all as $file => $data ) : ?>
-				<?php
-				$checked   = in_array( $file, $active_set, true );
-				$is_normal = in_array( $file, $normal, true );
-				?>
+					<?php
+					$checked   = in_array( $file, $active_set, true );
+					$is_normal = in_array( $file, $normal, true );
+					?>
 				<label class="<?php echo esc_attr( 'tsosk-plugin-row' . ( $is_normal ? ' is-active' : '' ) ); ?>"
-				       data-normal="<?php echo esc_attr( $is_normal ? '1' : '0' ); ?>">
+						data-normal="<?php echo esc_attr( $is_normal ? '1' : '0' ); ?>">
 					<input type="checkbox" class="tsosk-sandbox-cb"
-					       value="<?php echo esc_attr( $file ); ?>"
-					       <?php checked( $checked ); ?>>
+							value="<?php echo esc_attr( $file ); ?>"
+							<?php checked( $checked ); ?>>
 					<span class="tsosk-plugin-name"><?php echo esc_html( $data['Name'] ); ?></span>
 					<span class="tsosk-plugin-ver">v<?php echo esc_html( $data['Version'] ); ?></span>
 					<?php if ( $is_normal ) : ?>

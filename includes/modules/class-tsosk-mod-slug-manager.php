@@ -40,10 +40,18 @@ class TSOSK_Mod_Slug_Manager {
 	/** Maximum rows shown per audit list (one more is fetched to detect truncation). */
 	private const AUDIT_LIMIT = 200;
 
-	/** @var TSOSK_Mod_Slug_Manager|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Slug_Manager|null
+	 */
 	private static $instance = null;
 
-	/** @return TSOSK_Mod_Slug_Manager */
+	/**
+	 * Get instance.
+	 *
+	 * @return TSOSK_Mod_Slug_Manager
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -51,11 +59,14 @@ class TSOSK_Mod_Slug_Manager {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_sm_rename',        array( $this, 'ajax_rename' ) );
-		add_action( 'wp_ajax_tsosk_sm_bulk_preview',  array( $this, 'ajax_bulk_preview' ) );
-		add_action( 'wp_ajax_tsosk_sm_bulk_fix',      array( $this, 'ajax_bulk_fix' ) );
-		add_action( 'wp_ajax_tsosk_sm_search',       array( $this, 'ajax_search' ) );
+		add_action( 'wp_ajax_tsosk_sm_rename', array( $this, 'ajax_rename' ) );
+		add_action( 'wp_ajax_tsosk_sm_bulk_preview', array( $this, 'ajax_bulk_preview' ) );
+		add_action( 'wp_ajax_tsosk_sm_bulk_fix', array( $this, 'ajax_bulk_fix' ) );
+		add_action( 'wp_ajax_tsosk_sm_search', array( $this, 'ajax_search' ) );
 	}
 
 	// ── AJAX: rename a single slug ────────────────────────────────────────────
@@ -188,11 +199,11 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ids       = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
+		$ids         = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
 			? array_map( 'absint', map_deep( wp_unslash( $_POST['post_ids'] ), 'sanitize_text_field' ) )
 			: array();
-		$ids       = array_values( array_filter( $ids ) );
-		$threshold = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
+		$ids         = array_values( array_filter( $ids ) );
+		$threshold   = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
 		if ( empty( $ids ) ) {
@@ -203,11 +214,11 @@ class TSOSK_Mod_Slug_Manager {
 
 		wp_send_json_success(
 			array(
-				'changes'  => $preview['changes'],
-				'skipped'  => $preview['skipped'],
-				'threshold'=> $threshold,
-				'redirect' => $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ),
-				'message'  => $this->build_bulk_preview_message( $preview, $threshold, $do_redirect ),
+				'changes'   => $preview['changes'],
+				'skipped'   => $preview['skipped'],
+				'threshold' => $threshold,
+				'redirect'  => $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ),
+				'message'   => $this->build_bulk_preview_message( $preview, $threshold, $do_redirect ),
 			)
 		);
 	}
@@ -406,7 +417,7 @@ class TSOSK_Mod_Slug_Manager {
 			}
 
 			$taken[ $this->slug_key( $post, $new_slug ) ] = true;
-			$changes[] = array(
+			$changes[]                                    = array(
 				'id'       => $post_id,
 				'title'    => (string) $post->post_title,
 				'old_slug' => $old_slug,
@@ -603,7 +614,7 @@ class TSOSK_Mod_Slug_Manager {
 			if ( $q ) {
 				$count_args = array_merge( array( $like ), $allowed_types );
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$total = (int) $wpdb->get_var(
+				$total     = (int) $wpdb->get_var(
 					$wpdb->prepare(
 						"SELECT COUNT(*) FROM {$wpdb->posts}
 						  WHERE post_status IN ('publish','draft','private','pending','future')
@@ -628,7 +639,7 @@ class TSOSK_Mod_Slug_Manager {
 				);
 			} else {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$total = (int) $wpdb->get_var(
+				$total     = (int) $wpdb->get_var(
 					$wpdb->prepare(
 						"SELECT COUNT(*) FROM {$wpdb->posts}
 						  WHERE post_status IN ('publish','draft','private','pending','future')
@@ -669,17 +680,22 @@ class TSOSK_Mod_Slug_Manager {
 			);
 		}
 
-		wp_send_json_success( array(
-			'items'       => $items,
-			'total'       => $total,
-			'page'        => $page,
-			'per_page'    => self::PER_PAGE,
-			'total_pages' => max( 1, (int) ceil( $total / self::PER_PAGE ) ),
-		) );
+		wp_send_json_success(
+			array(
+				'items'       => $items,
+				'total'       => $total,
+				'page'        => $page,
+				'per_page'    => self::PER_PAGE,
+				'total_pages' => max( 1, (int) ceil( $total / self::PER_PAGE ) ),
+			)
+		);
 	}
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce         = wp_create_nonce( 'tsosk_sm_nonce' );
 		$all_types     = $this->get_public_post_types();
@@ -699,7 +715,13 @@ class TSOSK_Mod_Slug_Manager {
 			$active_tab = 'long';
 		}
 
-		$base_url = add_query_arg( array( 'page' => 'tso-swiss-knife', 'tab' => 'slug-manager' ), admin_url( 'tools.php' ) );
+		$base_url = add_query_arg(
+			array(
+				'page' => 'tso-swiss-knife',
+				'tab'  => 'slug-manager',
+			),
+			admin_url( 'tools.php' )
+		);
 		if ( '' !== $sel_type ) {
 			$base_url = add_query_arg( 'sm_type', $sel_type, $base_url );
 		}
@@ -736,14 +758,14 @@ class TSOSK_Mod_Slug_Manager {
 				<label style="display:flex;align-items:center;gap:6px;font-size:13px;">
 					<span><?php esc_html_e( 'Long slug threshold:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					<input type="number" id="tsosk-sm-threshold"
-					       value="<?php echo esc_attr( (string) $threshold ); ?>"
-					       min="10" max="200" step="5" style="width:70px;">
+							value="<?php echo esc_attr( (string) $threshold ); ?>"
+							min="10" max="200" step="5" style="width:70px;">
 					<span class="description"><?php esc_html_e( 'characters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</label>
 				<label style="display:flex;align-items:center;gap:6px;font-size:13px;">
 					<input type="checkbox" id="tsosk-sm-auto-redirect"
-					       <?php checked( $has_redirects ); ?>
-					       <?php disabled( ! $has_redirects ); ?>>
+							<?php checked( $has_redirects ); ?>
+							<?php disabled( ! $has_redirects ); ?>>
 					<span>
 						<?php esc_html_e( 'Auto-create 301 redirect on rename', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						<?php if ( ! $has_redirects ) : ?>
@@ -768,11 +790,11 @@ class TSOSK_Mod_Slug_Manager {
 				$more  = ( 'search' !== $slug ) && ! empty( $audit_data['more'][ $slug ] );
 				?>
 				<a href="<?php echo esc_url( add_query_arg( 'sm_tab', $slug, $base_url ) ); ?>"
-				   class="button tsosk-oe-tab-btn <?php echo $active_tab === $slug ? 'is-active' : ''; ?>">
+					class="button tsosk-oe-tab-btn <?php echo $active_tab === $slug ? 'is-active' : ''; ?>">
 					<?php echo esc_html( $label ); ?>
 					<?php if ( null !== $count ) : ?>
 					<span class="tsosk-badge tsosk-badge-<?php echo $count > 0 ? 'warn' : 'ok'; ?>"
-					      style="margin-left:4px;font-size:11px;">
+							style="margin-left:4px;font-size:11px;">
 						<?php echo esc_html( (string) $count . ( $more ? '+' : '' ) ); ?>
 					</span>
 					<?php endif; ?>
@@ -824,7 +846,7 @@ class TSOSK_Mod_Slug_Manager {
 						<?php esc_html_e( 'Deselect All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<button class="button button-primary button-small" id="tsosk-sm-bulk-fix"
-					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Bulk Fix Selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<span class="tsosk-ajax-msg" id="tsosk-sm-bulk-msg"></span>
@@ -910,14 +932,14 @@ class TSOSK_Mod_Slug_Manager {
 			</p>
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
 				<input type="text" id="tsosk-sm-search-input"
-				       placeholder="<?php esc_attr_e( 'Search slug…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-				       style="width:260px;" autocomplete="off">
+						placeholder="<?php esc_attr_e( 'Search slug…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+						style="width:260px;" autocomplete="off">
 				<button class="button" id="tsosk-sm-search-btn"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button class="button" id="tsosk-sm-load-all"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Load All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sm-search-msg"></span>
@@ -955,7 +977,7 @@ class TSOSK_Mod_Slug_Manager {
 					<td>
 						<div id="tsosk-sm-rename-title" class="tsosk-sm-rename-title"></div>
 						<a id="tsosk-sm-rename-edit-link" href="#" target="_blank" rel="noopener noreferrer"
-						   class="button button-small" style="margin-top:6px;">
+							class="button button-small" style="margin-top:6px;">
 							<?php esc_html_e( 'Edit post ↗', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
 					</td>
@@ -972,8 +994,8 @@ class TSOSK_Mod_Slug_Manager {
 					<th><?php esc_html_e( 'New slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sm-rename-new"
-						       style="width:100%;max-width:360px;font-family:monospace;"
-						       autocomplete="off" spellcheck="false">
+								style="width:100%;max-width:360px;font-family:monospace;"
+								autocomplete="off" spellcheck="false">
 						<p class="description" id="tsosk-sm-rename-new-len" style="margin-top:3px;font-size:11px;color:#646970;"></p>
 					</td>
 				</tr>
@@ -982,8 +1004,8 @@ class TSOSK_Mod_Slug_Manager {
 					<td>
 						<label>
 							<input type="checkbox" id="tsosk-sm-rename-redirect"
-							       <?php checked( $has_redirects ); ?>
-							       <?php disabled( ! $has_redirects ); ?>>
+									<?php checked( $has_redirects ); ?>
+									<?php disabled( ! $has_redirects ); ?>>
 							<?php esc_html_e( 'Create 301 redirect from old URL to new URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<?php if ( $has_redirects ) : ?>
@@ -996,7 +1018,7 @@ class TSOSK_Mod_Slug_Manager {
 			</table>
 			<div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-sm-rename-save"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Save New Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button class="button" id="tsosk-sm-rename-cancel">
@@ -1011,6 +1033,13 @@ class TSOSK_Mod_Slug_Manager {
 
 	// ── Audit data loaders ────────────────────────────────────────────────────
 
+	/**
+	 * Get all audit data.
+	 *
+	 * @param array $post_types Post types.
+	 * @param int   $threshold Threshold.
+	 * @return array
+	 */
 	private function get_all_audit_data( array $post_types, int $threshold ): array {
 		if ( empty( $post_types ) ) {
 			return array(
@@ -1050,7 +1079,7 @@ class TSOSK_Mod_Slug_Manager {
 		global $wpdb;
 
 		$placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
-		$args = array_merge( $post_types, array( $threshold, self::AUDIT_LIMIT + 1 ) );
+		$args         = array_merge( $post_types, array( $threshold, self::AUDIT_LIMIT + 1 ) );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -1070,6 +1099,12 @@ class TSOSK_Mod_Slug_Manager {
 		return $this->hydrate_rows( (array) $rows );
 	}
 
+	/**
+	 * Get duplicate slugs.
+	 *
+	 * @param array $post_types Post types.
+	 * @return array
+	 */
 	private function get_duplicate_slugs( array $post_types ): array {
 		global $wpdb;
 
@@ -1172,6 +1207,12 @@ class TSOSK_Mod_Slug_Manager {
 		return $out;
 	}
 
+	/**
+	 * Get issue slugs.
+	 *
+	 * @param array $post_types Post types.
+	 * @return array
+	 */
 	private function get_issue_slugs( array $post_types ): array {
 		global $wpdb;
 
@@ -1230,11 +1271,17 @@ class TSOSK_Mod_Slug_Manager {
 		return $reasons;
 	}
 
+	/**
+	 * Hydrate rows.
+	 *
+	 * @param array $rows Rows.
+	 * @return array
+	 */
 	private function hydrate_rows( array $rows ): array {
 		$out = array();
 		foreach ( $rows as $row ) {
-			$id   = (int) $row->ID;
-			$type = (string) $row->post_type;
+			$id    = (int) $row->ID;
+			$type  = (string) $row->post_type;
 			$out[] = array(
 				'id'        => $id,
 				'title'     => (string) $row->post_title,
@@ -1271,7 +1318,7 @@ class TSOSK_Mod_Slug_Manager {
 				<thead><tr>
 					<?php if ( $checkboxes ) : ?>
 					<th style="width:36px;"><input type="checkbox" class="tsosk-sm-check-all"
-					       data-prefix="<?php echo esc_attr( $cb_prefix ); ?>"></th>
+							data-prefix="<?php echo esc_attr( $cb_prefix ); ?>"></th>
 					<?php endif; ?>
 					<th class="tsosk-sm-title-col"><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<th style="width:10%"><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1286,20 +1333,20 @@ class TSOSK_Mod_Slug_Manager {
 				<tbody>
 				<?php foreach ( $rows as $row ) : ?>
 					<tr id="tsosk-sm-row-<?php echo esc_attr( (string) $row['id'] ); ?>"
-					    class="<?php echo $row['len'] > $threshold ? 'tsosk-row-warn' : ''; ?>">
+						class="<?php echo $row['len'] > $threshold ? 'tsosk-row-warn' : ''; ?>">
 						<?php if ( $checkboxes ) : ?>
 						<td data-label="<?php esc_attr_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							<input type="checkbox" class="tsosk-sm-row-check"
-							       name="<?php echo esc_attr( $cb_prefix ); ?>[]"
-							       value="<?php echo esc_attr( (string) $row['id'] ); ?>">
+									name="<?php echo esc_attr( $cb_prefix ); ?>[]"
+									value="<?php echo esc_attr( (string) $row['id'] ); ?>">
 						</td>
 						<?php endif; ?>
 						<td class="tsosk-sm-title-col" data-label="<?php esc_attr_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-							<strong><?php echo esc_html( $row['title'] ?: '(' . __( 'no title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ')' ); ?></strong>
+							<strong><?php echo esc_html( $row['title'] ? $row['title'] : '(' . __( 'no title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ')' ); ?></strong>
 							<?php if ( $row['edit_link'] ) : ?>
 							<a href="<?php echo esc_url( $row['edit_link'] ); ?>"
-							   target="_blank" rel="noopener noreferrer"
-							   class="tsosk-sm-edit-link">
+								target="_blank" rel="noopener noreferrer"
+								class="tsosk-sm-edit-link">
 								<?php esc_html_e( 'edit ↗', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</a>
 							<?php endif; ?>
@@ -1310,14 +1357,14 @@ class TSOSK_Mod_Slug_Manager {
 						<td class="tsosk-code" style="font-size:12px;" data-label="<?php esc_attr_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $row['type'] ); ?></td>
 						<td data-label="<?php esc_attr_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							<span class="tsosk-badge tsosk-badge-<?php echo 'publish' === $row['status'] ? 'ok' : 'info'; ?>"
-							      style="font-size:11px;">
+									style="font-size:11px;">
 								<?php echo esc_html( $row['status'] ); ?>
 							</span>
 						</td>
 						<td class="tsosk-sm-slug-col tsosk-code" data-label="<?php esc_attr_e( 'Slug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							<a href="<?php echo esc_url( $row['permalink'] ); ?>"
-							   target="_blank" rel="noopener noreferrer"
-							   title="<?php echo esc_attr( $row['slug'] ); ?>">
+								target="_blank" rel="noopener noreferrer"
+								title="<?php echo esc_attr( $row['slug'] ); ?>">
 								<?php echo esc_html( $row['slug'] ); ?>
 							</a>
 							<?php if ( '' !== $row['path'] && $row['path'] !== $row['slug'] ) : ?>
@@ -1338,12 +1385,12 @@ class TSOSK_Mod_Slug_Manager {
 						</td>
 						<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							<button class="button button-small tsosk-sm-edit-btn"
-							        data-id="<?php echo esc_attr( (string) $row['id'] ); ?>"
-							        data-title="<?php echo esc_attr( $row['title'] ); ?>"
-							        data-slug="<?php echo esc_attr( $row['slug'] ); ?>"
-							        data-len="<?php echo esc_attr( (string) $row['len'] ); ?>"
-							        data-edit-link="<?php echo esc_attr( $row['edit_link'] ); ?>"
-							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									data-id="<?php echo esc_attr( (string) $row['id'] ); ?>"
+									data-title="<?php echo esc_attr( $row['title'] ); ?>"
+									data-slug="<?php echo esc_attr( $row['slug'] ); ?>"
+									data-len="<?php echo esc_attr( (string) $row['len'] ); ?>"
+									data-edit-link="<?php echo esc_attr( $row['edit_link'] ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Rename', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
@@ -1403,10 +1450,10 @@ class TSOSK_Mod_Slug_Manager {
 	 * @param string $slug       Slug to check.
 	 * @param string $post_type  Post type.
 	 * @param int    $exclude_id Post ID to exclude from the check.
-	 * @param int    $parent     Parent ID (hierarchical types only).
+	 * @param int    $parent_id     Parent ID (hierarchical types only).
 	 * @return bool
 	 */
-	private function slug_exists( string $slug, string $post_type, int $exclude_id, int $parent = 0 ): bool {
+	private function slug_exists( string $slug, string $post_type, int $exclude_id, int $parent_id = 0 ): bool {
 		global $wpdb;
 
 		if ( is_post_type_hierarchical( $post_type ) ) {
@@ -1419,7 +1466,10 @@ class TSOSK_Mod_Slug_Manager {
 					    AND ID          != %d
 					    AND post_parent  = %d
 					    AND post_status IN ('publish','draft','private','pending','future')",
-					$slug, $post_type, $exclude_id, $parent
+					$slug,
+					$post_type,
+					$exclude_id,
+					$parent_id
 				)
 			);
 			return $count > 0;
@@ -1433,7 +1483,9 @@ class TSOSK_Mod_Slug_Manager {
 				    AND post_type    = %s
 				    AND ID          != %d
 				    AND post_status IN ('publish','draft','private','pending','future')",
-				$slug, $post_type, $exclude_id
+				$slug,
+				$post_type,
+				$exclude_id
 			)
 		);
 		return $count > 0;
@@ -1507,6 +1559,7 @@ class TSOSK_Mod_Slug_Manager {
 					'post_parent'      => $parent,
 					'post_status'      => 'publish',
 					'fields'           => 'ids',
+					// phpcs:ignore WordPress.WP.PostsPerPage.posts_per_page_numberposts -- Bounded admin query.
 					'numberposts'      => 200,
 					'orderby'          => 'ID',
 					'order'            => 'ASC',
@@ -1622,7 +1675,7 @@ class TSOSK_Mod_Slug_Manager {
 		}
 
 		if ( $changed ) {
-			update_option( 'tsosk_redirect_rules', $rules, false );
+			update_option( 'tsosk_redirect_rules', $rules, true ); // Read on every request.
 		}
 		return $stats;
 	}

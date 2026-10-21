@@ -14,10 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Health {
 
-	/** Plugin option storing alert settings. */
-	private const OPTION = 'tsosk_alert_settings';
-
-	/** @var TSOSK_Mod_Health|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Health|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -32,35 +33,14 @@ class TSOSK_Mod_Health {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_health_save_alerts', array( $this, 'ajax_save_alerts' ) );
 		add_action( 'wp_ajax_tsosk_health_save_suppress', array( $this, 'ajax_save_suppress' ) );
 		add_action( 'admin_post_tsosk_health_download_report', array( $this, 'download_report' ) );
 		add_filter( 'site_status_tests', array( $this, 'filter_site_health_tests' ) );
-	}
-
-	/**
-	 * AJAX: save alert settings.
-	 */
-	public function ajax_save_alerts(): void {
-		check_ajax_referer( 'tsosk_health_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
-		}
-
-		$settings = array(
-			'enabled'             => ! empty( $_POST['enabled'] ),
-			'email'               => isset( $_POST['email'] ) && is_string( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : get_option( 'admin_email' ),
-			'not_found_threshold' => isset( $_POST['not_found_threshold'] ) ? max( 1, absint( wp_unslash( $_POST['not_found_threshold'] ) ) ) : 25,
-		);
-
-		if ( '' === $settings['email'] || ! is_email( $settings['email'] ) ) {
-			wp_send_json_error( __( 'Enter a valid email address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		update_option( self::OPTION, $settings, false );
-		TSOSK_Activity_Log::log( 'health', 'save', __( 'Health alert settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		wp_send_json_success( __( 'Alert settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		add_filter( 'site_status_test_result', array( $this, 'filter_site_health_result' ) );
 	}
 
 	/**
@@ -73,8 +53,10 @@ class TSOSK_Mod_Health {
 		}
 
 		$suppress = array(
-			'blog_public'   => ! empty( $_POST['suppress_blog_public'] ),
-			'debug_enabled' => ! empty( $_POST['suppress_debug_enabled'] ),
+			'blog_public'      => ! empty( $_POST['suppress_blog_public'] ),
+			'debug_enabled'    => ! empty( $_POST['suppress_debug_enabled'] ),
+			'inactive_plugins' => ! empty( $_POST['suppress_inactive_plugins'] ),
+			'inactive_themes'  => ! empty( $_POST['suppress_inactive_themes'] ),
 		);
 		update_option( 'tsosk_health_suppress', $suppress, false );
 		TSOSK_Activity_Log::log( 'health', 'save', __( 'Site Health suppression settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -102,14 +84,65 @@ class TSOSK_Mod_Health {
 	}
 
 	/**
+	 * Hide the "You should remove inactive plugins / themes" Site Health notices.
+	 *
+	 * WordPress reports them inside the plugin_version and theme_version tests (which also warn about
+	 * pending updates), so only the inactive-items result is turned into a "good" one.
+	 *
+	 * @param mixed $result Test result.
+	 * @return mixed
+	 */
+	public function filter_site_health_result( $result ) {
+		if ( ! is_array( $result ) || empty( $result['test'] ) || ! isset( $result['label'] ) ) {
+			return $result;
+		}
+		$suppress = $this->get_suppress_settings();
+		$map      = array(
+			'plugin_version' => array(
+				'key'     => 'inactive_plugins',
+				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Core string, matched in the site language.
+				'core'    => translate( 'You should remove inactive plugins', 'default' ),
+				'english' => 'You should remove inactive plugins',
+				'new'     => __( 'Inactive plugins notice hidden by TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			),
+			'theme_version'  => array(
+				'key'     => 'inactive_themes',
+				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Core string, matched in the site language.
+				'core'    => translate( 'You should remove inactive themes', 'default' ),
+				'english' => 'You should remove inactive themes',
+				'new'     => __( 'Inactive themes notice hidden by TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			),
+		);
+		$test     = (string) $result['test'];
+		if ( ! isset( $map[ $test ] ) || empty( $suppress[ $map[ $test ]['key'] ] ) ) {
+			return $result;
+		}
+		$label = (string) $result['label'];
+		if ( $label !== $map[ $test ]['core'] && $label !== $map[ $test ]['english'] ) {
+			return $result;
+		}
+
+		$result['status']      = 'good';
+		$result['label']       = $map[ $test ]['new'];
+		$result['description'] = '<p>' . esc_html__( 'This notice is hidden from TSO Swiss Knife → Health Report. Your site and its settings are not changed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</p>';
+		$result['actions']     = '';
+
+		return $result;
+	}
+
+	/**
+	 * Get suppress settings.
+	 *
 	 * @return array
 	 */
 	private function get_suppress_settings(): array {
 		$defaults = array(
-			'blog_public'   => false,
-			'debug_enabled' => false,
+			'blog_public'      => false,
+			'debug_enabled'    => false,
+			'inactive_plugins' => false,
+			'inactive_themes'  => false,
 		);
-		$stored = get_option( 'tsosk_health_suppress', array() );
+		$stored   = get_option( 'tsosk_health_suppress', array() );
 		return wp_parse_args( is_array( $stored ) ? $stored : array(), $defaults );
 	}
 
@@ -123,7 +156,7 @@ class TSOSK_Mod_Health {
 		$site_name = isset( $report['site']['name'] ) ? (string) $report['site']['name'] : '';
 		$site_url  = isset( $report['site']['url'] ) ? (string) $report['site']['url'] : '';
 		$generated = isset( $report['generated_at'] ) ? (string) $report['generated_at'] : '';
-		$checks = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
+		$checks    = isset( $report['checks'] ) && is_array( $report['checks'] ) ? $report['checks'] : array();
 
 		wp_register_style(
 			'tsosk-health-report',
@@ -140,7 +173,7 @@ class TSOSK_Mod_Health {
 <head>
 	<meta charset="utf-8">
 	<title><?php echo esc_html( sprintf( /* translators: %s: site name */ __( 'TSO Health Report — %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $site_name ) ); ?></title>
-	<?php wp_print_styles( 'tsosk-health-report' ); ?>
+		<?php wp_print_styles( 'tsosk-health-report' ); ?>
 </head>
 <body class="tsosk-health-report">
 	<h1><?php esc_html_e( 'TSO Swiss Knife — Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h1>
@@ -218,10 +251,8 @@ class TSOSK_Mod_Health {
 	 * Render the Health Report tab.
 	 */
 	public function render(): void {
-		$nonce = wp_create_nonce( 'tsosk_health_nonce' );
-		$settings = $this->get_settings();
-		$checks              = $this->get_checks();
-		$top_autoload        = $this->get_top_autoload_options();
+		$checks        = $this->get_checks();
+		$top_autoload  = $this->get_top_autoload_options();
 		$download_base = add_query_arg( 'action', 'tsosk_health_download_report', admin_url( 'admin-post.php' ) );
 		$download_url  = wp_nonce_url( $download_base, 'tsosk_health_download_report' );
 		$download_html = wp_nonce_url(
@@ -232,6 +263,8 @@ class TSOSK_Mod_Health {
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'A compact health report with checks that help detect risky settings, noisy logs, broken links and maintenance issues.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
+
+		<?php $this->render_suppress_card(); ?>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
@@ -303,44 +336,11 @@ class TSOSK_Mod_Health {
 			<?php endif; ?>
 		</div>
 
-		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Email Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description">
-				<?php esc_html_e( 'Optional email when the Redirects 404 monitor sees too much traffic to missing pages. Useful to catch broken links or bots scanning your site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</p>
-			<label class="tsosk-radio-row">
-				<input type="checkbox" id="tsosk-alerts-enabled" <?php checked( ! empty( $settings['enabled'] ) ); ?>>
-				<?php esc_html_e( 'Enable email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</label>
-			<div class="tsosk-field-row">
-				<label for="tsosk-alerts-email"><strong><?php esc_html_e( 'Alert Email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-				<input type="email" id="tsosk-alerts-email" class="regular-text" value="<?php echo esc_attr( $settings['email'] ); ?>">
-			</div>
-			<div class="tsosk-field-row">
-				<label for="tsosk-alerts-404-threshold"><strong><?php esc_html_e( 'Max 404 visits per hour', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-				<input type="number" id="tsosk-alerts-404-threshold" min="1" value="<?php echo esc_attr( (string) $settings['not_found_threshold'] ); ?>">
-				<p class="description tsosk-field-desc-tight">
-					<?php
-					printf(
-						/* translators: 1: example threshold value from settings, 2: same threshold (minimum visits in one hour) */
-						esc_html__( 'Example: with %1$d, you get one email if the site records %2$d or more Not Found (404) visits within the same clock hour. Each visit counts once (not the lifetime total of a URL). At most one alert email is sent per hour.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						(int) $settings['not_found_threshold'],
-						(int) $settings['not_found_threshold']
-					);
-					?>
-				</p>
-			</div>
-			<button class="button button-primary" id="tsosk-health-save-alerts" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-				<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</button>
-			<span class="tsosk-ajax-msg" id="tsosk-health-msg"></span>
-		</div>
-
 		<?php
 	}
 
 	/**
-	 * Render the "Hide WordPress Site Health notices" card (shown on the Overview tab).
+	 * Render the "Hide WordPress Site Health notices" card (top of the Health Report tab).
 	 */
 	public function render_suppress_card(): void {
 		$nonce    = wp_create_nonce( 'tsosk_health_nonce' );
@@ -349,7 +349,7 @@ class TSOSK_Mod_Health {
 		<div class="tsosk-card" id="tsosk-health-suppress">
 			<h3><?php esc_html_e( 'Hide WordPress Site Health notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'On staging or private test sites, WordPress may show heavy warnings on Tools › Site Health about search-engine visibility or debug.log being public. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'On staging or private test sites (or when you keep unused plugins and themes on purpose), WordPress may show warnings on Tools › Site Health about search-engine visibility, debug.log being public, or inactive plugins and themes. Enable the options below to hide those specific tests. This does not change your real settings — it only removes the notices from Site Health.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<label class="tsosk-radio-row">
 				<input type="checkbox" id="tsosk-health-suppress-blog-public" <?php checked( ! empty( $suppress['blog_public'] ) ); ?>>
@@ -359,30 +359,20 @@ class TSOSK_Mod_Health {
 				<input type="checkbox" id="tsosk-health-suppress-debug" <?php checked( ! empty( $suppress['debug_enabled'] ) ); ?>>
 				<?php esc_html_e( 'Hide “debug.log may be publicly accessible” test', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</label>
+			<label class="tsosk-radio-row">
+				<input type="checkbox" id="tsosk-health-suppress-inactive-plugins" <?php checked( ! empty( $suppress['inactive_plugins'] ) ); ?>>
+				<?php esc_html_e( 'Hide “You should remove inactive plugins” notice', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</label>
+			<label class="tsosk-radio-row">
+				<input type="checkbox" id="tsosk-health-suppress-inactive-themes" <?php checked( ! empty( $suppress['inactive_themes'] ) ); ?>>
+				<?php esc_html_e( 'Hide “You should remove inactive themes” notice', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</label>
 			<button class="button button-primary tsosk-btn-mt" id="tsosk-health-save-suppress" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save suppression settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-health-suppress-msg"></span>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Get alert settings.
-	 *
-	 * @return array
-	 */
-	private function get_settings(): array {
-		$settings = get_option( self::OPTION, array() );
-		if ( ! is_array( $settings ) ) {
-			$settings = array();
-		}
-
-		return array(
-			'enabled'             => ! empty( $settings['enabled'] ),
-			'email'               => sanitize_email( $settings['email'] ?? get_option( 'admin_email' ) ),
-			'not_found_threshold' => max( 1, absint( $settings['not_found_threshold'] ?? 25 ) ),
-		);
 	}
 
 	/**
@@ -401,7 +391,7 @@ class TSOSK_Mod_Health {
 			__( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => array( 'redirects', 'tsosk-404-monitor' ),
 			__( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )      => array( 'health', 'tsosk-health-autoload' ),
 		);
-		$checks = $this->get_checks( false );
+		$checks  = $this->get_checks( false );
 		foreach ( $checks as $i => $check ) {
 			$label = (string) ( $check['label'] ?? '' );
 			if ( isset( $targets[ $label ] ) ) {
@@ -419,7 +409,7 @@ class TSOSK_Mod_Health {
 	 * @return array
 	 */
 	private function get_checks( bool $with_headers = true ): array {
-		$checks = array();
+		$checks   = array();
 		$checks[] = array(
 			'label'   => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => is_wp_version_compatible( '6.0' ) ? 'ok' : 'warn',
@@ -427,13 +417,13 @@ class TSOSK_Mod_Health {
 		);
 		$checks[] = array(
 			'label'   => __( 'PHP version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => version_compare( PHP_VERSION, '8.0', '>=' ) ? 'ok' : 'warn',
+			'status'  => TSOSK_Support::is_php_end_of_life() ? 'warn' : 'ok',
 			'details' => PHP_VERSION,
 		);
 		$checks[] = $this->site_urls_check();
 		// Core only applies WP_DEBUG_DISPLAY when WP_DEBUG is true (wp_debug_mode()).
-		$wp_debug_on           = defined( 'WP_DEBUG' ) && WP_DEBUG;
-		$debug_display_on      = $wp_debug_on && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
+		$wp_debug_on      = defined( 'WP_DEBUG' ) && WP_DEBUG;
+		$debug_display_on = $wp_debug_on && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
 		if ( $debug_display_on ) {
 			$debug_display_details = __( 'Enabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		} elseif ( ! $wp_debug_on ) {
@@ -469,8 +459,8 @@ class TSOSK_Mod_Health {
 	 * @return array
 	 */
 	private function site_urls_check(): array {
-		$home = (string) home_url();
-		$site = (string) site_url();
+		$home       = (string) home_url();
+		$site       = (string) site_url();
 		$home_parts = wp_parse_url( $home );
 		$site_parts = wp_parse_url( $site );
 
@@ -499,7 +489,7 @@ class TSOSK_Mod_Health {
 			$status = 'warn';
 		}
 		if ( $home_host !== $site_host ) {
-			$status = 'warn';
+			$status   = 'warn';
 			$details .= "\n" . __( 'Home and Site URL hosts differ.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		} elseif ( $home_scheme !== $site_scheme ) {
 			$details .= "\n" . __( 'Home and Site URL schemes differ.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
@@ -636,7 +626,7 @@ class TSOSK_Mod_Health {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT option_name, LENGTH(option_value) AS size_bytes FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto') ORDER BY size_bytes DESC LIMIT %d",
+				"SELECT option_name, LENGTH(option_value) AS size_bytes FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto-on', 'auto') ORDER BY size_bytes DESC LIMIT %d",
 				$limit
 			),
 			ARRAY_A
@@ -699,13 +689,13 @@ class TSOSK_Mod_Health {
 	 * @return array
 	 */
 	private function debug_log_check(): array {
-		$path = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'debug.log';
-		$size = file_exists( $path ) ? (int) filesize( $path ) : 0;
+		$path = TSOSK_Support::get_active_debug_log_path();
+		$size = is_file( $path ) ? (int) filesize( $path ) : 0;
 
 		return array(
 			'label'   => __( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => $size > 5 * MB_IN_BYTES ? 'warn' : 'ok',
-			'details' => file_exists( $path ) ? size_format( $size, 2 ) : __( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $size > TSOSK_Support::DEBUG_LOG_WARN_BYTES ? 'warn' : 'ok',
+			'details' => is_file( $path ) ? size_format( $size, 2 ) : __( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -716,7 +706,15 @@ class TSOSK_Mod_Health {
 	 */
 	private function not_found_check(): array {
 		$logs = get_option( 'tsosk_404_log', array() );
-		$count = is_array( $logs ) ? count( $logs ) : 0;
+		// Same set as the Redirects monitor and the dashboard list: well-formed rows that are not bot noise.
+		$count = 0;
+		if ( is_array( $logs ) ) {
+			foreach ( $logs as $row ) {
+				if ( is_array( $row ) && isset( $row['path'] ) && empty( $row['bot_suspect'] ) ) {
+					++$count;
+				}
+			}
+		}
 
 		return array(
 			'label'   => __( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -738,7 +736,7 @@ class TSOSK_Mod_Health {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$size = (int) $wpdb->get_var( "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto')" );
+		$size = (int) $wpdb->get_var( "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload IN ('yes', 'on', 'auto-on', 'auto')" );
 
 		return array(
 			'label'   => __( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

@@ -45,6 +45,68 @@ class TSOSK_Sandbox_Mu {
 	}
 
 	/**
+	 * Real list of active plugins as stored in the database (ignores any sandbox filter).
+	 *
+	 * @return string[]
+	 */
+	public static function get_real_active_plugins(): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", 'active_plugins' ) );
+		$val = is_string( $raw ) ? maybe_unserialize( $raw ) : array();
+		return is_array( $val ) ? array_values( array_map( 'strval', $val ) ) : array();
+	}
+
+	/**
+	 * Whether the user has a sandbox session that still exists and has not expired.
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	public static function has_live_session( int $user_id ): bool {
+		$token = get_user_meta( $user_id, self::META_TOKEN, true );
+		if ( ! is_string( $token ) || '' === $token ) {
+			return false;
+		}
+		$sessions = get_option( self::SESSIONS_OPTION, array() );
+		if ( ! is_array( $sessions ) || ! isset( $sessions[ $token ] ) || ! is_array( $sessions[ $token ] ) ) {
+			return false;
+		}
+		return ! empty( $sessions[ $token ]['expires'] ) && time() <= (int) $sessions[ $token ]['expires'];
+	}
+
+	/**
+	 * Drop leftover sandbox state (expired session, missing loader) so the UI and the
+	 * plugin list never disagree with what is really loaded.
+	 *
+	 * @param int $user_id User ID.
+	 */
+	public static function cleanup_stale_state( int $user_id ): void {
+		if ( ! metadata_exists( 'user', $user_id, self::META_PLUGINS ) && ! metadata_exists( 'user', $user_id, self::META_TOKEN ) ) {
+			return;
+		}
+		if ( self::is_loader_installed() && self::has_live_session( $user_id ) ) {
+			return;
+		}
+		self::end_session( $user_id );
+	}
+
+	/**
+	 * Replace an outdated installed loader with the bundled one while a session is active.
+	 */
+	public static function maybe_refresh_loader(): void {
+		if ( ! self::is_loader_installed() ) {
+			return;
+		}
+		$source = TSOSK_PATH . 'mu-plugin/' . self::MU_FILENAME;
+		$dest   = trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILENAME;
+		if ( ! is_readable( $source ) || md5_file( $source ) === md5_file( $dest ) ) {
+			return;
+		}
+		self::install_loader();
+	}
+
+	/**
 	 * Install or refresh the MU-plugin loader from the bundled template.
 	 *
 	 * Uses the WordPress Filesystem API for writes outside uploads.
@@ -138,25 +200,26 @@ class TSOSK_Sandbox_Mu {
 			);
 		}
 
+		// Drop any previous session first: ending it may remove the loader, so install it afterwards.
+		self::end_session( $user_id );
+
 		$install = self::install_loader();
 		if ( is_wp_error( $install ) ) {
 			return $install;
 		}
 
-		self::end_session( $user_id );
-
-		$token = bin2hex( random_bytes( 16 ) );
+		$token    = bin2hex( random_bytes( 16 ) );
 		$sessions = get_option( self::SESSIONS_OPTION, array() );
 		if ( ! is_array( $sessions ) ) {
 			$sessions = array();
 		}
 
 		$sessions[ $token ] = array(
-			'user_id'      => $user_id,
-			'plugins'      => array_values( $plugins ),
-			'swiss_knife'  => TSOSK_BASENAME,
-			'expires'      => time() + self::SESSION_TTL,
-			'started'      => time(),
+			'user_id'     => $user_id,
+			'plugins'     => array_values( $plugins ),
+			'swiss_knife' => TSOSK_BASENAME,
+			'expires'     => time() + self::SESSION_TTL,
+			'started'     => time(),
 		);
 
 		update_option( self::SESSIONS_OPTION, $sessions, false );

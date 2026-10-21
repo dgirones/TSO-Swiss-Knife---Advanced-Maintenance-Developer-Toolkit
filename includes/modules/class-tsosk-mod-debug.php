@@ -18,15 +18,28 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Debug {
 
-	/** @var TSOSK_Mod_Debug|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Debug|null
+	 */
 	private static $instance = null;
 
 	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
 	private const CONFIG_FILE = 'tsosk-debug-flags.json';
 
-	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
+	/**
+	 * Mu file.
+	 *
+	 * @deprecated Legacy PHP filename — migrated to JSON on read.
+	 */
 	private const MU_FILE = 'tsosk-debug-flags.php';
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -34,6 +47,9 @@ class TSOSK_Mod_Debug {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_debug_clear_log', array( $this, 'ajax_clear_log' ) );
 		add_action( 'wp_ajax_tsosk_debug_shrink_log', array( $this, 'ajax_shrink_log' ) );
@@ -97,7 +113,7 @@ class TSOSK_Mod_Debug {
 	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int,preview:string}>
 	 */
 	private function get_log_files(): array {
-		$wp_root = tsosk_get_wp_root_dir();
+		$wp_root     = tsosk_get_wp_root_dir();
 		$uploads     = wp_upload_dir( null, false );
 		$uploads_dir = ( ! empty( $uploads['basedir'] ) && empty( $uploads['error'] ) )
 			? wp_normalize_path( (string) $uploads['basedir'] )
@@ -140,6 +156,7 @@ class TSOSK_Mod_Debug {
 				continue;
 			}
 
+			// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 			$identity = file_exists( $path ) ? ( realpath( $path ) ?: $path ) : $path;
 			if ( isset( $seen[ $identity ] ) ) {
 				continue;
@@ -147,7 +164,7 @@ class TSOSK_Mod_Debug {
 			$seen[ $identity ] = true;
 
 			$exists = file_exists( $path );
-			$size = $exists ? (int) filesize( $path ) : 0;
+			$size   = $exists ? (int) filesize( $path ) : 0;
 
 			$logs[] = array(
 				'label'      => (string) $label,
@@ -210,7 +227,7 @@ class TSOSK_Mod_Debug {
 		);
 
 		foreach ( $allowed_roots as $root ) {
-			if ( 0 === strpos( $path, trailingslashit( $root ) ) || $path === untrailingslashit( $root ) ) {
+			if ( 0 === strpos( $path, trailingslashit( $root ) ) || untrailingslashit( $root ) === $path ) {
 				return $path;
 			}
 		}
@@ -226,7 +243,7 @@ class TSOSK_Mod_Debug {
 	 */
 	private function read_log_preview( string $path ): string {
 		$max_bytes = 200 * 1024;
-		$size = (int) filesize( $path );
+		$size      = (int) filesize( $path );
 		if ( $size <= 0 ) {
 			return '';
 		}
@@ -263,8 +280,10 @@ class TSOSK_Mod_Debug {
 			return '';
 		}
 
+		// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 		$target = realpath( $path ) ?: $path;
 		foreach ( $this->get_log_files() as $log ) {
+			// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 			$known = realpath( $log['path'] ) ?: $log['path'];
 			if ( $known === $target ) {
 				return $log['path'];
@@ -298,7 +317,7 @@ class TSOSK_Mod_Debug {
 		check_admin_referer( 'tsosk_debug_download_log' );
 
 		$posted_log = isset( $_GET['log_path'] ) ? sanitize_text_field( wp_unslash( $_GET['log_path'] ) ) : '';
-		$log = $this->validate_log_path( $posted_log );
+		$log        = $this->validate_log_path( $posted_log );
 		if ( '' === $log || ! file_exists( $log ) || ! is_readable( $log ) ) {
 			wp_die( esc_html__( 'Log file not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -395,12 +414,12 @@ class TSOSK_Mod_Debug {
 
 		wp_send_json_success(
 			array(
-				'html'            => $unchanged ? '' : $this->render_log_preview_html( $log ),
-				'size'            => size_format( $size, 2 ),
-				'modified'        => $mtime,
-				'modified_label'  => $this->format_log_modified( $mtime ),
-				'unchanged'       => $unchanged,
-				'message'         => $unchanged
+				'html'           => $unchanged ? '' : $this->render_log_preview_html( $log ),
+				'size'           => size_format( $size, 2 ),
+				'modified'       => $mtime,
+				'modified_label' => $this->format_log_modified( $mtime ),
+				'unchanged'      => $unchanged,
+				'message'        => $unchanged
 					? __( 'Log is already up to date.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: __( 'Log preview updated.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			)
@@ -450,32 +469,32 @@ class TSOSK_Mod_Debug {
 	 */
 	private function wpconfig_debug_snippets(): array {
 		return array(
-			'developer'   => array(
+			'developer'  => array(
 				'title'   => __( 'Developer mode (staging)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Recommended for staging: enable debugging, log to wp-content/debug.log, hide errors from visitors, and record DB queries for the Slow Query Monitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', true );",
 			),
-			'production'  => array(
+			'production' => array(
 				'title'   => __( 'Production (debug off)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Disable all debug constants on live sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', false );\ndefine( 'WP_DEBUG_LOG', false );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', false );",
 			),
-			'display'     => array(
+			'display'    => array(
 				'title'   => __( 'Show PHP errors on screen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Local troubleshooting only — never use on production. Visitors would see PHP notices and warnings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', true );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', false );",
 			),
-			'script'      => array(
+			'script'     => array(
 				'title'   => __( 'Unminified core CSS/JS (SCRIPT_DEBUG)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Loads non-minified WordPress core assets. Combine with the Developer mode (staging) lines when debugging front-end scripts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', true );\ndefine( 'SAVEQUERIES', false );",
 			),
-			'queries'     => array(
+			'queries'    => array(
 				'title'   => __( 'Database query logging only (SAVEQUERIES)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Record SQL queries without full PHP debug output. View results on the Slow Query Monitor tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', false );\ndefine( 'WP_DEBUG_LOG', false );\ndefine( 'WP_DEBUG_DISPLAY', false );\ndefine( 'SCRIPT_DEBUG', false );\ndefine( 'SAVEQUERIES', true );",
 			),
-			'full_local'  => array(
+			'full_local' => array(
 				'title'   => __( 'Full local debugging (all on)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'desc'    => __( 'Maximum verbosity for a local machine: on-screen errors, debug.log, unminified assets, and query logging.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'snippet' => "define( 'WP_DEBUG', true );\ndefine( 'WP_DEBUG_LOG', true );\ndefine( 'WP_DEBUG_DISPLAY', true );\ndefine( 'SCRIPT_DEBUG', true );\ndefine( 'SAVEQUERIES', true );",
@@ -502,7 +521,11 @@ class TSOSK_Mod_Debug {
 	private function read_wpconfig_constants(): array {
 		$result = array();
 		foreach ( array_keys( $this->managed_constants() ) as $c ) {
-			$result[ $c ] = array( 'defined' => false, 'value' => null, 'line' => 0 );
+			$result[ $c ] = array(
+				'defined' => false,
+				'value'   => null,
+				'line'    => 0,
+			);
 		}
 
 		$path = $this->wpconfig_path();
@@ -615,7 +638,7 @@ class TSOSK_Mod_Debug {
 		}
 
 		$posted_log = isset( $_POST['log_path'] ) ? sanitize_text_field( wp_unslash( $_POST['log_path'] ) ) : $this->log_path();
-		$log = $this->validate_log_writable_path( $posted_log );
+		$log        = $this->validate_log_writable_path( $posted_log );
 		if ( '' === $log ) {
 			wp_send_json_error( __( 'This log file cannot be modified from the plugin. Only files under the plugin uploads logs folder may be emptied or shrunk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -676,7 +699,7 @@ class TSOSK_Mod_Debug {
 			);
 		}
 
-		$archive_dir = TSOSK_Config_Storage::get_log_archive_dir();
+		$archive_dir  = TSOSK_Config_Storage::get_log_archive_dir();
 		$archive_name = basename( $log ) . '.' . gmdate( 'Y-m-d-His' ) . '.bak';
 		$archive_path = $archive_dir . '/' . $archive_name;
 		$removed      = array_slice( $lines, 0, $total - $keep_lines );
@@ -718,24 +741,24 @@ class TSOSK_Mod_Debug {
 	 * Render the Debug Mode tab.
 	 */
 	public function render(): void {
-		$nonce    = wp_create_nonce( 'tsosk_debug_nonce' );
-		$settings = $this->get_settings();
-		$log_path = $this->log_path();
-		$log_size = file_exists( $log_path ) ? size_format( filesize( $log_path ), 2 ) : false;
-		$mu_exists        = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::DEBUG_JSON );
-		$legacy_exists    = defined( 'WPMU_PLUGIN_DIR' ) && file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE );
-		$logs             = $this->get_log_files();
-		$wpconfig_path    = $this->wpconfig_path();
-		$wpconfig_state   = $this->read_wpconfig_constants();
+		$nonce          = wp_create_nonce( 'tsosk_debug_nonce' );
+		$settings       = $this->get_settings();
+		$log_path       = $this->log_path();
+		$log_size       = file_exists( $log_path ) ? size_format( filesize( $log_path ), 2 ) : false;
+		$mu_exists      = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::DEBUG_JSON );
+		$legacy_exists  = defined( 'WPMU_PLUGIN_DIR' ) && file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE );
+		$logs           = $this->get_log_files();
+		$wpconfig_path  = $this->wpconfig_path();
+		$wpconfig_state = $this->read_wpconfig_constants();
 		// If path wasn't found initially, try again now that we know the constants were readable.
 		if ( '' === $wpconfig_path ) {
 			$wpconfig_path = $this->wpconfig_path(); // retry with all strategies.
 		}
-		$wpconfig_exists  = '' !== $wpconfig_path;
-		$wpconfig_write   = false;
+		$wpconfig_exists = '' !== $wpconfig_path;
+		$wpconfig_write  = false;
 
-		$dev_active   = class_exists( 'TSOSK_Site_Status' ) && TSOSK_Site_Status::is_developer_mode_active();
-		$wp_debug_on  = defined( 'WP_DEBUG' ) && WP_DEBUG;
+		$dev_active       = class_exists( 'TSOSK_Site_Status' ) && TSOSK_Site_Status::is_developer_mode_active();
+		$wp_debug_on      = defined( 'WP_DEBUG' ) && WP_DEBUG;
 		$debug_via_config = $wp_debug_on && ! $dev_active;
 		?>
 		<p class="tsosk-desc">
@@ -749,13 +772,13 @@ class TSOSK_Mod_Debug {
 			</p>
 			<div class="tsosk-dev-mode-actions">
 				<button type="button" class="button button-primary" id="tsosk-debug-developer-on"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-				        <?php disabled( $dev_active ); ?>>
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"
+						<?php disabled( $dev_active ); ?>>
 					<?php esc_html_e( 'Enable developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" class="button button-secondary" id="tsosk-debug-developer-off"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-				        <?php disabled( ! $dev_active ); ?>>
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"
+						<?php disabled( ! $dev_active ); ?>>
 					<?php esc_html_e( 'Disable developer mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-badge <?php echo $dev_active ? 'tsosk-badge-warn' : 'tsosk-badge-info'; ?>" id="tsosk-dev-mode-badge">
@@ -770,7 +793,7 @@ class TSOSK_Mod_Debug {
 			<span class="tsosk-ajax-msg" id="tsosk-debug-msg"></span>
 		</div>
 
-<?php if ( $legacy_exists ) : ?>
+		<?php if ( $legacy_exists ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">
 			<?php
 			echo wp_kses(
@@ -783,7 +806,7 @@ class TSOSK_Mod_Debug {
 			);
 			?>
 		</div>
-		<?php endif; ?>
+				<?php endif; ?>
 		<?php if ( $mu_exists ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
 			<?php
@@ -848,17 +871,21 @@ class TSOSK_Mod_Debug {
 					$flag_constant = $flag['label'];
 					$is_defined    = defined( $flag_constant );
 					$actual_on     = in_array( $flag['current'], array( 'true', '1' ), true );
-					$wc_state      = $wpconfig_state[ $flag_constant ] ?? array( 'defined' => false, 'value' => null, 'line' => 0 );
+					$wc_state      = $wpconfig_state[ $flag_constant ] ?? array(
+						'defined' => false,
+						'value'   => null,
+						'line'    => 0,
+					);
 					$in_wpconfig   = $wc_state['defined'];
 					$wc_val        = $wc_state['value'];
-					$wc_mismatch   = $in_wpconfig && $wc_val !== ( $actual_on ? 'true' : 'false' );
+					$wc_mismatch   = $in_wpconfig && ( $actual_on ? 'true' : 'false' ) !== $wc_val;
 					// WordPress core (wp_initial_constants) defines these before any plugin loads,
 					// so the plugin JSON preset can never set them; only wp-config.php can.
 					$core_predefined = in_array( $flag_constant, array( 'WP_DEBUG', 'WP_DEBUG_LOG', 'WP_DEBUG_DISPLAY', 'SCRIPT_DEBUG' ), true );
 					$from_tsosk      = ! $core_predefined && TSOSK_Config_Storage::constant_defined_in_tsosk_config( $flag_constant );
 					$is_core_default = ! $in_wpconfig && $is_defined && $core_predefined;
 					// WP_DEBUG_LOG / WP_DEBUG_DISPLAY are only applied by core when WP_DEBUG is true.
-					$no_effect     = $actual_on && ! $wp_debug_on && in_array( $key, array( 'log', 'display' ), true );
+					$no_effect = $actual_on && ! $wp_debug_on && in_array( $key, array( 'log', 'display' ), true );
 
 					if ( ! $is_defined ) {
 						$val_mod = 'undef';
@@ -881,7 +908,7 @@ class TSOSK_Mod_Debug {
 						$status_label = __( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 						$status_title = '';
 					}
-				?>
+					?>
 					<div class="tsosk-dflags-row<?php echo $wc_mismatch ? ' tsosk-flag-mismatch' : ''; ?>" role="row">
 						<div class="tsosk-dflags-name" role="cell">
 							<code><?php echo esc_html( $flag_constant ); ?></code>
@@ -1048,22 +1075,22 @@ class TSOSK_Mod_Debug {
 											<?php esc_html_e( 'View content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</a>
 										<button type="button" class="button button-small tsosk-refresh-log"
-										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
+												data-nonce="<?php echo esc_attr( $nonce ); ?>"
+												data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
 											<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
 									<?php endif; ?>
 									<?php if ( $log['exists'] && $log['modifiable'] ) : ?>
 										<button type="button" class="button button-small tsosk-shrink-log"
-										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
-										        data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
+												data-nonce="<?php echo esc_attr( $nonce ); ?>"
+												data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
+												data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
 											<?php esc_html_e( 'Shrink (keep last 500 lines)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
 										<button type="button" class="button button-small button-link-delete tsosk-clear-log"
-										        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-										        data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
-										        data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
+												data-nonce="<?php echo esc_attr( $nonce ); ?>"
+												data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
+												data-log-label="<?php echo esc_attr( $log['label'] ); ?>">
 											<?php esc_html_e( 'Empty file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 										</button>
 									<?php endif; ?>
@@ -1082,8 +1109,8 @@ class TSOSK_Mod_Debug {
 				<?php continue; ?>
 			<?php endif; ?>
 			<div class="tsosk-card tsosk-log-card" id="tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>"
-			     data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
-			     data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
+				data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
+				data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
 				<h3><?php echo esc_html( $log['label'] ); ?></h3>
 				<p class="tsosk-log-meta">
 					<code><?php echo esc_html( $log['path'] ); ?></code>
@@ -1100,11 +1127,26 @@ class TSOSK_Mod_Debug {
 						<option value="deprecated"><?php esc_html_e( 'Deprecated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 					<button type="button" class="button button-secondary tsosk-refresh-log"
-					        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-					        data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
+							data-nonce="<?php echo esc_attr( $nonce ); ?>"
+							data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
 						<?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
-					<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'tsosk_debug_download_log', 'log_path' => $log['path'] ), admin_url( 'admin-post.php' ) ), 'tsosk_debug_download_log' ) ); ?>">
+					<a class="button button-secondary" href="
+					<?php
+					echo esc_url(
+						wp_nonce_url(
+							add_query_arg(
+								array(
+									'action'   => 'tsosk_debug_download_log',
+									'log_path' => $log['path'],
+								),
+								admin_url( 'admin-post.php' )
+							),
+							'tsosk_debug_download_log'
+						)
+					);
+					?>
+																">
 						<?php esc_html_e( 'Download Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</a>
 					<button type="button" class="button button-secondary tsosk-log-scroll-end">

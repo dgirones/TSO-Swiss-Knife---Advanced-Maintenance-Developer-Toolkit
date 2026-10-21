@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Sandbox Loader
  * Description: Must-use loader for per-admin plugin sandbox sessions. Installed automatically by TSO Swiss Knife.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Tu Soporte Online
  *
  * @package TSO_Swiss_Knife
@@ -52,7 +52,7 @@ function tsosk_mu_sandbox_parse_cookie(): ?array {
 		return null;
 	}
 
-	$raw = sanitize_text_field( wp_unslash( $_COOKIE[ TSOSK_SANDBOX_COOKIE ] ) );
+	$raw   = sanitize_text_field( wp_unslash( $_COOKIE[ TSOSK_SANDBOX_COOKIE ] ) );
 	$parts = explode( '.', $raw );
 	if ( 3 !== count( $parts ) ) {
 		return null;
@@ -111,9 +111,9 @@ function tsosk_mu_sandbox_get_session(): ?array {
 	$swiss   = isset( $session['swiss_knife'] ) ? (string) $session['swiss_knife'] : '';
 
 	return array(
-		'user_id'      => $cookie['user_id'],
-		'plugins'      => $plugins,
-		'swiss_knife'  => $swiss,
+		'user_id'     => $cookie['user_id'],
+		'plugins'     => $plugins,
+		'swiss_knife' => $swiss,
 	);
 }
 
@@ -177,5 +177,74 @@ function tsosk_mu_sandbox_filter_sitewide_plugins( $pre ) {
 	return array_intersect_key( $pre, $allowed );
 }
 
+/**
+ * Read an option or network option straight from the database, bypassing every pre_option filter.
+ *
+ * @param string $name    Option name.
+ * @param bool   $network Whether to read from the network (sitemeta) table.
+ * @return array
+ */
+function tsosk_mu_sandbox_read_raw_option( string $name, bool $network = false ): array {
+
+	global $wpdb;
+	if ( ! isset( $wpdb ) ) {
+		return array();
+	}
+	if ( $network ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->sitemeta} WHERE meta_key = %s AND site_id = %d LIMIT 1", $name, (int) get_current_network_id() ) );
+	} else {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$value = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", $name ) );
+	}
+	if ( null === $value ) {
+		return array();
+	}
+	$value = maybe_unserialize( $value );
+	return is_array( $value ) ? $value : array();
+}
+
+/**
+ * While a sandbox is active, WordPress sees only the sandbox plugin subset. Any write to
+ * active_plugins (activate, deactivate, update) would then replace the real list with that
+ * subset. Re-apply only the change that was made on top of the real, stored list instead.
+ *
+ * @param mixed $value     New value.
+ * @param mixed $old_value Old value as WordPress saw it (the filtered subset).
+ * @return mixed
+ */
+function tsosk_mu_sandbox_guard_active_plugins( $value, $old_value ) {
+
+	if ( ! is_array( $value ) || null === tsosk_mu_sandbox_get_session() ) {
+			return $value;
+	}
+	$old     = is_array( $old_value ) ? $old_value : array();
+	$real    = tsosk_mu_sandbox_read_raw_option( 'active_plugins' );
+	$removed = array_diff( $old, $value );
+	$added   = array_diff( $value, $old );
+	return array_values( array_unique( array_merge( array_diff( $real, $removed ), $added ) ) );
+}
+
+/**
+ * Same protection for network-activated plugins on multisite.
+ *
+ * @param mixed $value     New value (plugin => timestamp).
+ * @param mixed $old_value Old value as WordPress saw it.
+ * @return mixed
+ */
+function tsosk_mu_sandbox_guard_sitewide_plugins( $value, $old_value ) {
+
+	if ( ! is_array( $value ) || null === tsosk_mu_sandbox_get_session() ) {
+		return $value;
+	}
+	$old     = is_array( $old_value ) ? $old_value : array();
+	$real    = tsosk_mu_sandbox_read_raw_option( 'active_sitewide_plugins', true );
+	$removed = array_diff_key( $old, $value );
+	$added   = array_diff_key( $value, $old );
+	return array_diff_key( $real, $removed ) + $added;
+}
+
 add_filter( 'pre_option_active_plugins', 'tsosk_mu_sandbox_filter_active_plugins', 1 );
+add_filter( 'pre_update_option_active_plugins', 'tsosk_mu_sandbox_guard_active_plugins', 1, 2 );
+add_filter( 'pre_update_site_option_active_sitewide_plugins', 'tsosk_mu_sandbox_guard_sitewide_plugins', 1, 2 );
 add_filter( 'pre_site_option_active_sitewide_plugins', 'tsosk_mu_sandbox_filter_sitewide_plugins', 1 );

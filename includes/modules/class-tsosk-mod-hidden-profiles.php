@@ -19,19 +19,33 @@ class TSOSK_Mod_Hidden_Profiles {
 	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
 	private const CONFIG_FILE = 'tsosk-profiles-flags.json';
 
-	/** @deprecated Legacy PHP filename — migrated to JSON on read. */
+	/**
+	 * Legacy config file.
+	 *
+	 * @deprecated Legacy PHP filename — migrated to JSON on read.
+	 */
 	private const LEGACY_CONFIG_FILE = 'tsosk-profiles-flags.php';
 
 	/** Runtime toggles stored in wp_options. */
 	private const OPTION_KEY = 'tsosk_hidden_profiles';
 
-	/** @var TSOSK_Mod_Hidden_Profiles|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Hidden_Profiles|null
+	 */
 	private static $instance = null;
 
-	/** @var bool Whether runtime hooks were registered. */
+	/**
+	 * Whether runtime hooks were registered.
+	 *
+	 * @var bool
+	 */
 	private static $runtime_booted = false;
 
 	/**
+	 * Get instance.
+	 *
 	 * @return TSOSK_Mod_Hidden_Profiles
 	 */
 	public static function get_instance(): self {
@@ -41,6 +55,9 @@ class TSOSK_Mod_Hidden_Profiles {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_hidden_profiles_save', array( $this, 'ajax_save' ) );
 	}
@@ -110,6 +127,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Disable emojis tinymce.
+	 *
 	 * @param array $plugins TinyMCE plugins.
 	 * @return array
 	 */
@@ -121,6 +140,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Disable embeds tinymce.
+	 *
 	 * @param array $plugins TinyMCE plugins.
 	 * @return array
 	 */
@@ -132,6 +153,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Disable embeds rewrites.
+	 *
 	 * @param array $rules Rewrite rules.
 	 * @return array
 	 */
@@ -153,6 +176,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Filter closed comment status.
+	 *
 	 * @return string
 	 */
 	public static function filter_closed_comment_status(): string {
@@ -183,7 +208,7 @@ class TSOSK_Mod_Hidden_Profiles {
 			wp_send_json_error( $file_result->get_error_message() );
 		}
 
-		update_option( self::OPTION_KEY, $runtime, false );
+		update_option( self::OPTION_KEY, $runtime, true ); // Read on every request — must autoload.
 
 		TSOSK_Activity_Log::log(
 			'hidden-profiles',
@@ -298,6 +323,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Parse constants from post.
+	 *
 	 * @return array<string, mixed>
 	 */
 	private function parse_constants_from_post(): array {
@@ -326,6 +353,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Parse runtime from post.
+	 *
 	 * @return array<string, bool>
 	 */
 	private function parse_runtime_from_post(): array {
@@ -344,6 +373,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Write config file.
+	 *
 	 * @param array<string, mixed> $constants Constant => bool|int|null.
 	 * @return true|WP_Error
 	 */
@@ -352,6 +383,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Get saved constants.
+	 *
 	 * @return array<string, mixed>
 	 */
 	private function get_saved_constants(): array {
@@ -359,15 +392,17 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Get saved runtime.
+	 *
 	 * @return array<string, bool>
 	 */
 	private function get_saved_runtime(): array {
 		$defaults = array(
-			'disable_emojis'  => false,
-			'disable_embeds'  => false,
-			'disable_xmlrpc'  => false,
-			'disable_feeds'   => false,
-			'close_comments'  => false,
+			'disable_emojis' => false,
+			'disable_embeds' => false,
+			'disable_xmlrpc' => false,
+			'disable_feeds'  => false,
+			'close_comments' => false,
 		);
 		$stored   = get_option( self::OPTION_KEY, array() );
 		if ( ! is_array( $stored ) ) {
@@ -413,9 +448,9 @@ class TSOSK_Mod_Hidden_Profiles {
 	 * Render admin UI.
 	 */
 	public function render(): void {
-		$nonce     = wp_create_nonce( 'tsosk_hidden_profiles_nonce' );
-		$constants = $this->get_saved_constants();
-		$runtime   = $this->get_saved_runtime();
+		$nonce         = wp_create_nonce( 'tsosk_hidden_profiles_nonce' );
+		$constants     = $this->get_saved_constants();
+		$runtime       = $this->get_saved_runtime();
 		$config_ok     = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::PROFILES_JSON );
 		$legacy_exists = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . TSOSK_Config_Storage::LEGACY_PROFILES );
 		$constants_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=constants' );
@@ -544,7 +579,7 @@ class TSOSK_Mod_Hidden_Profiles {
 			<p class="description tsosk-hp-section-desc"><?php esc_html_e( 'Applied via WordPress hooks on the next request after saving. No server reload required. XML-RPC and RSS feeds are configured under Security Review; REST API under REST API.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 
 			<?php
-			$runtime_descs = array(
+			$runtime_descs   = array(
 				'disable_emojis' => __( 'Removes emoji scripts and styles from the front end and admin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'disable_embeds' => __( 'Stops WordPress from embedding external content and related discovery tags.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'close_comments' => __( 'Sets default comment and ping status to closed for new content (does not change existing posts).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -562,10 +597,10 @@ class TSOSK_Mod_Hidden_Profiles {
 					<label class="tsosk-hp-field-label">
 						<div class="tsosk-hp-field-header">
 							<input type="checkbox"
-							       name="tsosk_hp_rt_<?php echo esc_attr( $key ); ?>"
-							       id="tsosk-hp-rt-<?php echo esc_attr( $key ); ?>"
-							       data-hp-field="rt_<?php echo esc_attr( $key ); ?>"
-							       <?php checked( $runtime[ $key ] ); ?>>
+									name="tsosk_hp_rt_<?php echo esc_attr( $key ); ?>"
+									id="tsosk-hp-rt-<?php echo esc_attr( $key ); ?>"
+									data-hp-field="rt_<?php echo esc_attr( $key ); ?>"
+									<?php checked( $runtime[ $key ] ); ?>>
 							<strong><?php echo esc_html( $toggle['label'] ); ?></strong>
 							<?php if ( $runtime[ $key ] ) : ?>
 								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -581,8 +616,8 @@ class TSOSK_Mod_Hidden_Profiles {
 
 		<p>
 			<button type="button" class="button button-primary" id="tsosk-hp-save"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-			        data-save-label="<?php esc_attr_e( 'Save profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>"
+					data-save-label="<?php esc_attr_e( 'Save profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<?php esc_html_e( 'Save profiles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-hp-msg"></span>
@@ -592,6 +627,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Render bool toggle.
+	 *
 	 * @param string $field_id   Field id suffix.
 	 * @param string $constant   Constant name for display.
 	 * @param string $desc       Description.
@@ -604,11 +641,11 @@ class TSOSK_Mod_Hidden_Profiles {
 			<label class="tsosk-hp-field-label">
 				<div class="tsosk-hp-field-header">
 					<input type="checkbox"
-					       name="tsosk_hp_<?php echo esc_attr( $field_id ); ?>"
-					       id="tsosk-hp-<?php echo esc_attr( $field_id ); ?>"
-					       data-hp-field="<?php echo esc_attr( $field_id ); ?>"
-					       <?php checked( $checked ); ?>
-					       <?php disabled( $locked ); ?>>
+							name="tsosk_hp_<?php echo esc_attr( $field_id ); ?>"
+							id="tsosk-hp-<?php echo esc_attr( $field_id ); ?>"
+							data-hp-field="<?php echo esc_attr( $field_id ); ?>"
+							<?php checked( $checked ); ?>
+							<?php disabled( $locked ); ?>>
 					<code><strong><?php echo esc_html( $constant ); ?></strong></code>
 					<?php if ( defined( $constant ) && constant( $constant ) ) : ?>
 						<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -626,6 +663,8 @@ class TSOSK_Mod_Hidden_Profiles {
 	}
 
 	/**
+	 * Render numeric toggle.
+	 *
 	 * @param string $field_id     Checkbox field id.
 	 * @param string $constant     Constant name.
 	 * @param string $number_field Number input field id.
@@ -641,23 +680,23 @@ class TSOSK_Mod_Hidden_Profiles {
 			<label class="tsosk-hp-field-label">
 				<div class="tsosk-hp-field-header">
 					<input type="checkbox"
-					       name="tsosk_hp_<?php echo esc_attr( $field_id ); ?>"
-					       id="tsosk-hp-<?php echo esc_attr( $field_id ); ?>"
-					       data-hp-field="<?php echo esc_attr( $field_id ); ?>"
-					       <?php checked( $checked ); ?>
-					       <?php disabled( $locked ); ?>>
+							name="tsosk_hp_<?php echo esc_attr( $field_id ); ?>"
+							id="tsosk-hp-<?php echo esc_attr( $field_id ); ?>"
+							data-hp-field="<?php echo esc_attr( $field_id ); ?>"
+							<?php checked( $checked ); ?>
+							<?php disabled( $locked ); ?>>
 					<code><strong><?php echo esc_html( $constant ); ?></strong></code>
 					<span class="tsosk-hp-input-wrap">
 						<span class="tsosk-hp-mini-label"><?php esc_html_e( 'New value if saved', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<input type="number"
-						       name="tsosk_hp_<?php echo esc_attr( $number_field ); ?>"
-						       id="tsosk-hp-<?php echo esc_attr( $number_field ); ?>"
-						       data-hp-field="<?php echo esc_attr( $number_field ); ?>"
-						       value="<?php echo esc_attr( (string) $number ); ?>"
-						       min="0"
-						       max="9999"
-						       class="tsosk-hp-number-input"
-						       <?php disabled( $locked ); ?>>
+								name="tsosk_hp_<?php echo esc_attr( $number_field ); ?>"
+								id="tsosk-hp-<?php echo esc_attr( $number_field ); ?>"
+								data-hp-field="<?php echo esc_attr( $number_field ); ?>"
+								value="<?php echo esc_attr( (string) $number ); ?>"
+								min="0"
+								max="9999"
+								class="tsosk-hp-number-input"
+								<?php disabled( $locked ); ?>>
 					</span>
 					<?php if ( null !== $live_value && '' !== (string) $live_value ) : ?>
 						<span class="tsosk-hp-live-value">

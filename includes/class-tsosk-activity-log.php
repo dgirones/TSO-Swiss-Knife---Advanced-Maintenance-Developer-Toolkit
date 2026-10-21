@@ -23,6 +23,8 @@ class TSOSK_Activity_Log {
 	public const DETAIL_TRUNCATE = 200;
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array{modules: string[], limit: int}
 	 */
 	public static function get_settings(): array {
@@ -34,7 +36,7 @@ class TSOSK_Activity_Log {
 			'modules' => array(),
 			'limit'   => self::LIMIT,
 		);
-		$s = wp_parse_args( $s, $defaults );
+		$s        = wp_parse_args( $s, $defaults );
 		if ( ! is_array( $s['modules'] ) ) {
 			$s['modules'] = array();
 		}
@@ -58,6 +60,8 @@ class TSOSK_Activity_Log {
 	}
 
 	/**
+	 * Get configurable modules.
+	 *
 	 * @return string[] Module slugs available for logging preferences.
 	 */
 	public static function get_configurable_modules(): array {
@@ -230,6 +234,8 @@ class TSOSK_Activity_Log {
 	}
 
 	/**
+	 * Get entries.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function get_entries(): array {
@@ -317,33 +323,35 @@ class TSOSK_Activity_Log {
 	 */
 	public static function action_label( string $action ): string {
 		$labels = array(
-			'add'     => __( 'Add', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'update'  => __( 'Update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'delete'  => __( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'save'    => __( 'Save', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'reset'   => __( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'enable'  => __( 'Enable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'disable' => __( 'Disable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'execute' => __( 'Execute', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'restore' => __( 'Restore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'toggle'  => __( 'Toggle', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'run'     => __( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'add'                  => __( 'Add', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update'               => __( 'Update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'delete'               => __( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'save'                 => __( 'Save', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'reset'                => __( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'enable'               => __( 'Enable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable'              => __( 'Disable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'execute'              => __( 'Execute', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'restore'              => __( 'Restore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'toggle'               => __( 'Toggle', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'run'                  => __( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'install-translations' => __( 'Install translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'flush'   => __( 'Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'import'  => __( 'Import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'export'  => __( 'Export', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'scan'    => __( 'Scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'purge'   => __( 'Purge', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'cancel'  => __( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'clear'   => __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bulk'    => __( 'Bulk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'clone'   => __( 'Clone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'send'    => __( 'Send', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'error'   => __( 'Error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bisect-start'  => __( 'Bisection start', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bisect-step'   => __( 'Bisection step', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bisect-result' => __( 'Bisection result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bisect-cancel' => __( 'Bisection cancelled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update-plugin'        => __( 'Update plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'allow-ip'             => __( 'Allow IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'flush'                => __( 'Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'import'               => __( 'Import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'export'               => __( 'Export', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'scan'                 => __( 'Scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'purge'                => __( 'Purge', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'cancel'               => __( 'Cancel', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'clear'                => __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bulk'                 => __( 'Bulk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'clone'                => __( 'Clone', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'send'                 => __( 'Send', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'error'                => __( 'Error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-start'         => __( 'Bisection start', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-step'          => __( 'Bisection step', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-result'        => __( 'Bisection result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bisect-cancel'        => __( 'Bisection cancelled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
 		$action = sanitize_key( $action );
@@ -378,7 +386,7 @@ class TSOSK_Activity_Log {
 	 * @param array<string, mixed> $details Structured details.
 	 * @return string
 	 */
-	public static function translate_summary( string $module, string $action, string $summary, array $details = array() ): string {
+	public static function translate_summary( string $module, string $action, string $summary, array $details = array() ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Kept for the stable public signature.
 		$summary = trim( $summary );
 		if ( '' === $summary ) {
 			return '';
@@ -401,7 +409,7 @@ class TSOSK_Activity_Log {
 					(int) $m[2]
 				);
 			},
-			'/^Slug renamed: (.+) → (.+)\.$/u' => static function ( array $m ): string {
+			'/^Slug renamed: (.+) → (.+)\.$/u'             => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: old slug, 2: new slug */
 					__( 'Slug renamed: %1$s → %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -416,13 +424,16 @@ class TSOSK_Activity_Log {
 					self::update_manager_preset_label( $m[1] )
 				);
 			},
+			'/^Redirect alert settings saved\.$/'          => static function (): string {
+				return __( 'Redirect alert settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			},
 			'/^Site Health suppression settings saved\.$/' => static function (): string {
 				return __( 'Site Health suppression settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
-			'/^Staging Mode settings saved\.$/' => static function (): string {
+			'/^Staging Mode settings saved\.$/'            => static function (): string {
 				return __( 'Staging Mode settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
-			'/^Staging mail log cleared\.$/' => static function (): string {
+			'/^Staging mail log cleared\.$/'               => static function (): string {
 				return __( 'Staging mail log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^Debug log shrunk to last 500 lines \(archive: (.+)\)\.$/' => static function ( array $m ): string {
@@ -432,17 +443,17 @@ class TSOSK_Activity_Log {
 					$m[1]
 				);
 			},
-			'/^Expired transients purged: (\d+)\.$/' => static function ( array $m ): string {
+			'/^Expired transients purged: (\d+)\.$/'       => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %d: number of transients */
 					__( 'Expired transients purged: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1]
 				);
 			},
-			'/^File added to ignore list\.$/' => static function (): string {
+			'/^File added to ignore list\.$/'              => static function (): string {
 				return __( 'File added to ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
-			'/^File removed from ignore list\.$/' => static function (): string {
+			'/^File removed from ignore list\.$/'          => static function (): string {
 				return __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^File integrity scan completed \((\d+) issue\(s\)\)\.$/' => static function ( array $m ): string {
@@ -468,7 +479,32 @@ class TSOSK_Activity_Log {
 					(int) $m[2]
 				);
 			},
-			'/^Option (.+): (.+)$/' => static function ( array $m ): string {
+			'/^IP (\S+) added to the comment anti-spam whitelist\.$/u' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: %s: IP address */
+					__( 'IP %s added to the comment anti-spam whitelist.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$m[1]
+				);
+			},
+			'/^Plugin updated manually: (.+) \(([^()]*) → ([^()]*)\)\.$/u' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: plugin name, 2: old version, 3: new version */
+					__( 'Plugin updated manually: %1$s (%2$s → %3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$m[1],
+					$m[2],
+					$m[3]
+				);
+			},
+			'/^Theme updated manually: (.+) \\(([^()]*) → ([^()]*)\\)\\.$/u' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: 1: theme name, 2: old version, 3: new version */
+					__( 'Theme updated manually: %1$s (%2$s → %3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$m[1],
+					$m[2],
+					$m[3]
+				);
+			},
+			'/^Option (.+): (.+)$/'                        => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: action, 2: option name */
 					__( 'Option %1$s: %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -476,7 +512,7 @@ class TSOSK_Activity_Log {
 					$m[2]
 				);
 			},
-			'/^Database replace: "(.+)" → "(.+)"$/' => static function ( array $m ): string {
+			'/^Database replace: "(.+)" → "(.+)"$/'        => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: search string, 2: replace string */
 					__( 'Database replace: "%1$s" → "%2$s"', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -524,14 +560,14 @@ class TSOSK_Activity_Log {
 			'/^Plugin bisection cancelled; sandbox exited\.$/' => static function (): string {
 				return __( 'Plugin bisection cancelled; sandbox exited.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
-			'/^Cron event executed: (.+)\.$/' => static function ( array $m ): string {
+			'/^Cron event executed: (.+)\.$/'              => static function ( array $m ): string {
 				return sprintf(
 					/* translators: %s: cron hook name */
 					__( 'Cron event executed: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1]
 				);
 			},
-			'/^Activity history cleared\.$/' => static function (): string {
+			'/^Activity history cleared\.$/'               => static function (): string {
 				return __( 'Activity history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 		);
@@ -645,6 +681,8 @@ class TSOSK_Activity_Log {
 	}
 
 	/**
+	 * Entry from options editor.
+	 *
 	 * @param array<string, mixed> $row Legacy OE row.
 	 * @return array<string, mixed>
 	 */
@@ -676,6 +714,8 @@ class TSOSK_Activity_Log {
 	}
 
 	/**
+	 * Entry from search replace.
+	 *
 	 * @param array<string, mixed> $row Legacy SR row.
 	 * @return array<string, mixed>
 	 */

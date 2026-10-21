@@ -19,9 +19,18 @@ class TSOSK_Mod_Database {
 	/** WordPress.org plugin slug. */
 	private const CLEANER_SLUG = 'tso-options-tables-cleaner';
 
-	/** @var TSOSK_Mod_Database|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Database|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -29,6 +38,9 @@ class TSOSK_Mod_Database {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {}
 
 	/**
@@ -63,6 +75,9 @@ class TSOSK_Mod_Database {
 		);
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$org_url   = 'https://wordpress.org/plugins/' . self::CLEANER_SLUG . '/';
 		$install   = $this->cleaner_install_url();

@@ -23,9 +23,18 @@ class TSOSK_Mod_Rest_Api {
 	/** Maximum log entries kept. */
 	private const MAX_LOG = 100;
 
-	/** @var TSOSK_Mod_Rest_Api|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Rest_Api|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -33,6 +42,9 @@ class TSOSK_Mod_Rest_Api {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_rest_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_rest_clear_log', array( $this, 'ajax_clear_log' ) );
@@ -42,63 +54,89 @@ class TSOSK_Mod_Rest_Api {
 	public function init(): void {
 		$settings = $this->get_settings();
 		if ( 'disabled' === $settings['mode'] ) {
-			add_filter( 'rest_authentication_errors', static function ( $result ) {
-				if ( ! is_user_logged_in() ) {
-					self::log_blocked_request( 'rest_disabled', __( 'REST API access restricted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-					return new WP_Error( 'rest_disabled', __( 'REST API access restricted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'status' => 401 ) );
-				}
-				return $result;
-			}, 99 );
+			add_filter(
+				'rest_authentication_errors',
+				static function ( $result ) {
+					if ( ! is_user_logged_in() ) {
+						self::log_blocked_request( 'rest_disabled', __( 'REST API access restricted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+						return new WP_Error( 'rest_disabled', __( 'REST API access restricted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'status' => 401 ) );
+					}
+					return $result;
+				},
+				99
+			);
 		}
 		if ( ! empty( $settings['block_user_enumeration'] ) ) {
-			add_filter( 'rest_pre_dispatch', static function ( $result, $server, $request ) {
-				if ( is_user_logged_in() ) {
+			add_filter(
+				'rest_pre_dispatch',
+				static function ( $result, $server, $request ) {
+					if ( is_user_logged_in() ) {
+						return $result;
+					}
+					$route = ltrim( (string) $request->get_route(), '/' );
+					if ( preg_match( '#^wp/v2/users(?:/(\d+|me))?$#', $route ) ) {
+						self::log_blocked_request( 'user_enumeration', __( 'User listing via the REST API is disabled on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $route );
+						return new WP_Error(
+							'rest_user_enumeration_blocked',
+							__( 'User listing via the REST API is disabled on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							array( 'status' => 401 )
+						);
+					}
 					return $result;
-				}
-				$route = ltrim( (string) $request->get_route(), '/' );
-				if ( preg_match( '#^wp/v2/users(?:/(\d+|me))?$#', $route ) ) {
-					self::log_blocked_request( 'user_enumeration', __( 'User listing via the REST API is disabled on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $route );
-					return new WP_Error(
-						'rest_user_enumeration_blocked',
-						__( 'User listing via the REST API is disabled on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						array( 'status' => 401 )
-					);
-				}
-				return $result;
-			}, 9, 3 );
+				},
+				9,
+				3
+			);
 		}
 
 		$disabled_ns = $settings['disabled_namespaces'];
 		if ( ! empty( $disabled_ns ) ) {
-			add_filter( 'rest_pre_dispatch', static function ( $result, $server, $request ) use ( $disabled_ns ) {
-				$route = ltrim( (string) $request->get_route(), '/' );
-				foreach ( $disabled_ns as $ns ) {
-					$ns_clean = ltrim( (string) $ns, '/' );
-					// Match the namespace itself or a route inside it, on a
-					// "/" boundary — a plain strpos() prefix match would also
-					// block an unrelated namespace that merely starts with the
-					// same characters (e.g. disabling "foo/v1" would also
-					// silently block "foo/v10" or "foo/v1-extra").
-					if ( $route === $ns_clean || 0 === strpos( $route, $ns_clean . '/' ) ) {
-						self::log_blocked_request(
-							'namespace_disabled',
-							sprintf(
-								/* translators: %s: namespace */
-								__( 'REST namespace %s is disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								$ns
-							),
-							$route
-						);
-						return new WP_Error(
-							'rest_namespace_disabled',
-							/* translators: %s: namespace */
-							sprintf( __( 'REST namespace %s is disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $ns ),
-							array( 'status' => 403 )
-						);
+			add_filter(
+				'rest_pre_dispatch',
+				static function ( $result, $server, $request ) use ( $disabled_ns ) {
+					$route = ltrim( (string) $request->get_route(), '/' );
+					// Editors keep the namespaces the block editor and Site Health depend on, so a mistaken setting cannot lock them out.
+					$core_ns = array( 'wp/v2', 'wp-block-editor/v1', 'wp-site-health/v1', 'oembed/1.0' );
+					$is_core = false;
+					foreach ( $core_ns as $core ) {
+						if ( $route === $core || 0 === strpos( $route, $core . '/' ) ) {
+							$is_core = true;
+							break;
+						}
 					}
-				}
-				return $result;
-			}, 10, 3 );
+					if ( $is_core && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+						return $result;
+					}
+					foreach ( $disabled_ns as $ns ) {
+						$ns_clean = ltrim( (string) $ns, '/' );
+						// Match the namespace itself or a route inside it, on a
+						// "/" boundary — a plain strpos() prefix match would also
+						// block an unrelated namespace that merely starts with the
+						// same characters (e.g. disabling "foo/v1" would also
+						// silently block "foo/v10" or "foo/v1-extra").
+						if ( $route === $ns_clean || 0 === strpos( $route, $ns_clean . '/' ) ) {
+							self::log_blocked_request(
+								'namespace_disabled',
+								sprintf(
+								/* translators: %s: namespace */
+									__( 'REST namespace %s is disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									$ns
+								),
+								$route
+							);
+							return new WP_Error(
+								'rest_namespace_disabled',
+								/* translators: %s: namespace */
+								sprintf( __( 'REST namespace %s is disabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $ns ),
+								array( 'status' => 403 )
+							);
+						}
+					}
+					return $result;
+				},
+				10,
+				3
+			);
 		}
 	}
 
@@ -116,9 +154,17 @@ class TSOSK_Mod_Rest_Api {
 		if ( isset( $_POST['disabled_namespaces'] ) && is_array( $_POST['disabled_namespaces'] ) ) {
 			$raw_ns = array_map( 'sanitize_text_field', wp_unslash( $_POST['disabled_namespaces'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
-		$ns = array_values( array_filter( array_map( 'trim', $raw_ns ) ) );
+		$ns         = array_values( array_filter( array_map( 'trim', $raw_ns ) ) );
 		$block_enum = ! empty( $_POST['block_user_enumeration'] );
-		update_option( self::OPTION, array( 'mode' => $mode, 'disabled_namespaces' => $ns, 'block_user_enumeration' => $block_enum ), false );
+		update_option(
+			self::OPTION,
+			array(
+				'mode'                   => $mode,
+				'disabled_namespaces'    => $ns,
+				'block_user_enumeration' => $block_enum,
+			),
+			true // Read on every request.
+		);
 		TSOSK_Activity_Log::log(
 			'rest-api',
 			'save',
@@ -155,6 +201,13 @@ class TSOSK_Mod_Rest_Api {
 	 * @param string $route   REST route, when known.
 	 */
 	private static function log_blocked_request( string $reason, string $message, string $route = '' ): void {
+		// Repeated hits from the same visitor on the same route are written once per minute so a bot cannot turn this log into a database write storm.
+		$throttle = 'tsosk_rest_log_' . md5( self::get_client_ip() . '|' . $route . '|' . $reason );
+		if ( false !== get_transient( $throttle ) ) {
+			return;
+		}
+		set_transient( $throttle, 1, MINUTE_IN_SECONDS );
+
 		$log = get_option( self::OPTION_LOG, array() );
 		if ( ! is_array( $log ) ) {
 			$log = array();
@@ -179,6 +232,8 @@ class TSOSK_Mod_Rest_Api {
 	}
 
 	/**
+	 * Get blocked log.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	private static function get_blocked_log(): array {
@@ -187,12 +242,10 @@ class TSOSK_Mod_Rest_Api {
 	}
 
 	/**
-	 * Get the real client IP (REMOTE_ADDR only; proxy headers are not trusted by default).
+	 * Get the client IP (shared helper; honours the opt-in trusted proxy header).
 	 */
 	private static function get_client_ip(): string {
-		return isset( $_SERVER['REMOTE_ADDR'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
-			: '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	/**
@@ -218,7 +271,7 @@ class TSOSK_Mod_Rest_Api {
 				'risk'        => 'high',
 				'risk_label'  => __( 'High risk — admin tools break', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
-			'oembed/1.0'           => array(
+			'oembed/1.0'         => array(
 				'description' => __( 'Handles embed previews (YouTube, Twitter, etc.) and allows other sites to embed your posts. Rarely needed to block.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'risk'        => 'medium',
 				'risk_label'  => __( 'Medium risk — embeds may fail', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -260,7 +313,7 @@ class TSOSK_Mod_Rest_Api {
 			<div class="tsosk-guide-grid">
 				<div class="tsosk-guide-block">
 					<h4><?php esc_html_e( 'What does blocking do?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
-					<p><?php esc_html_e( 'When you tick a namespace below, every request to that API group returns an error — for visitors and for logged-in admins alike. It is a surgical “off switch” for one API group, not the same as the access mode above (which only affects logged-out users).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<p><?php esc_html_e( 'When you tick a namespace below, every request to that API group returns an error. Plugin namespaces are blocked for everyone, admins included; the core groups the Block Editor needs (wp/v2, wp-block-editor, wp-site-health, oEmbed) stay available to logged-in users who can edit content. It is a surgical “off switch” for one API group, not the same as the access mode above (which only affects logged-out users).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 				</div>
 				<div class="tsosk-guide-block">
 					<h4><?php esc_html_e( 'Why would you use this?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
@@ -273,19 +326,22 @@ class TSOSK_Mod_Rest_Api {
 
 			<div class="tsosk-notice tsosk-notice-warn" style="margin:0;">
 				<strong><?php esc_html_e( 'Is it dangerous?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-				<?php esc_html_e( 'Yes, if you block the wrong namespace. Core groups (wp/v2, wp-block-editor) will break the Block Editor immediately. Plugin namespaces will break that plugin’s features. Leave everything unchecked unless you have a specific reason and have tested on staging.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Yes, if you block the wrong namespace. Blocking a core group (wp/v2, for example) breaks the public site features and apps that read it, even though editors keep the Block Editor. Blocking a plugin namespace breaks that plugin’s features for everyone. Leave everything unchecked unless you have a specific reason and have tested on staging.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 		</details>
 		<?php
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce       = wp_create_nonce( 'tsosk_rest_nonce' );
 		$blocked_log = self::get_blocked_log();
 		$settings    = $this->get_settings();
-		$mode     = $settings['mode'];
-		$dis_ns   = $settings['disabled_namespaces'];
-		$block_enum = $settings['block_user_enumeration'];
+		$mode        = $settings['mode'];
+		$dis_ns      = $settings['disabled_namespaces'];
+		$block_enum  = $settings['block_user_enumeration'];
 
 		// Detect plugins that use the REST API and could break.
 		$rest_dependent = $this->detect_rest_dependent_plugins();
@@ -371,21 +427,21 @@ class TSOSK_Mod_Rest_Api {
 
 			<div class="tsosk-ns-list" id="tsosk-ns-list">
 				<?php foreach ( $namespaces as $ns ) : ?>
-				<?php
-				$is_core   = in_array( $ns, array( 'wp/v2', 'wp-block-editor/v1', 'wp-site-health/v1', 'oembed/1.0', 'wp/v3' ), true );
-				$is_dis    = in_array( $ns, $dis_ns, true );
-				$info      = $this->get_namespace_info( $ns );
-				$dep_names = array();
-				foreach ( $rest_dependent as $p ) {
-					if ( ! empty( $p['namespace'] ) && $p['namespace'] === $ns ) {
-						$dep_names[] = $p['name'];
+					<?php
+					$is_core   = in_array( $ns, array( 'wp/v2', 'wp-block-editor/v1', 'wp-site-health/v1', 'oembed/1.0', 'wp/v3' ), true );
+					$is_dis    = in_array( $ns, $dis_ns, true );
+					$info      = $this->get_namespace_info( $ns );
+					$dep_names = array();
+					foreach ( $rest_dependent as $p ) {
+						if ( ! empty( $p['namespace'] ) && $p['namespace'] === $ns ) {
+							$dep_names[] = $p['name'];
+						}
 					}
-				}
-				?>
+					?>
 				<div class="tsosk-ns-item">
 					<label class="tsosk-ns-item-label">
 						<input type="checkbox" class="tsosk-ns-cb" value="<?php echo esc_attr( $ns ); ?>"
-						       <?php checked( $is_dis ); ?> <?php disabled( $is_core && ! $is_dis ); ?>>
+								<?php checked( $is_dis ); ?> <?php disabled( $is_core && ! $is_dis ); ?>>
 						<span class="tsosk-ns-item-head">
 							<strong><?php esc_html_e( 'Block', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 							<code><?php echo esc_html( $ns ); ?></code>
@@ -397,7 +453,7 @@ class TSOSK_Mod_Rest_Api {
 							</span>
 							<?php if ( ! empty( $dep_names ) ) : ?>
 								<span class="tsosk-badge tsosk-badge-warn"
-								      title="<?php echo esc_attr( implode( ', ', $dep_names ) ); ?>">
+										title="<?php echo esc_attr( implode( ', ', $dep_names ) ); ?>">
 									⚠ <?php echo esc_html( implode( ', ', $dep_names ) ); ?>
 								</span>
 							<?php endif; ?>
@@ -446,7 +502,7 @@ class TSOSK_Mod_Rest_Api {
 		<?php endif; ?>
 
 		<button class="button button-primary" id="tsosk-rest-save"
-		        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				data-nonce="<?php echo esc_attr( $nonce ); ?>">
 			<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</button>
 		<span class="tsosk-ajax-msg" id="tsosk-rest-msg"></span>
@@ -462,21 +518,65 @@ class TSOSK_Mod_Rest_Api {
 		if ( ! function_exists( 'get_plugins' ) ) {
 			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
-		$active  = (array) get_option( 'active_plugins', array() );
+		$active  = TSOSK_Support::get_active_plugin_files();
 		$plugins = get_plugins();
 
 		$known = array(
-			'jetpack'              => array( 'name' => 'Jetpack',                   'reason' => __( 'Jetpack relies on the REST API for sync, stats, Publicize and many other features.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),               'namespace' => 'jetpack/v4' ),
-			'woocommerce'          => array( 'name' => 'WooCommerce',               'reason' => __( 'WooCommerce uses the REST API for the cart, checkout, store blocks and mobile apps.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),               'namespace' => 'wc/v3' ),
-			'yoast-seo'            => array( 'name' => 'Yoast SEO',                 'reason' => __( 'Yoast SEO uses the REST API for the sidebar integration in the Block Editor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                     'namespace' => 'yoast/v1' ),
-			'advanced-custom-fields' => array( 'name' => 'Advanced Custom Fields', 'reason' => __( 'ACF registers REST API endpoints to expose custom fields.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                        'namespace' => '' ),
-			'acf'                  => array( 'name' => 'ACF',                       'reason' => __( 'ACF (Pro) uses REST API to expose custom fields.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                  'namespace' => '' ),
-			'contact-form-7'       => array( 'name' => 'Contact Form 7',            'reason' => __( 'CF7 uses REST API endpoints for form submissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                                'namespace' => 'contact-form-7/v1' ),
-			'elementor'            => array( 'name' => 'Elementor',                 'reason' => __( 'Elementor uses REST API calls in the page builder and for template library.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                      'namespace' => 'elementor/v1' ),
-			'gutenberg'            => array( 'name' => 'Gutenberg',                 'reason' => __( 'The Block Editor requires REST API for all edit operations.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                      'namespace' => 'wp/v2' ),
-			'wp-rocket'            => array( 'name' => 'WP Rocket',                 'reason' => __( 'WP Rocket uses the REST API for cache invalidation and heartbeat optimisation.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                   'namespace' => '' ),
-			'litespeed-cache'      => array( 'name' => 'LiteSpeed Cache',           'reason' => __( 'LiteSpeed Cache uses REST API for QUIC.cloud integration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                       'namespace' => 'litespeed/v1' ),
-			'mailchimp-for-wp'     => array( 'name' => 'Mailchimp for WP',          'reason' => __( 'Mailchimp for WP uses REST API for forms and subscribe endpoints.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),                                'namespace' => '' ),
+			'jetpack'                => array(
+				'name'      => 'Jetpack',
+				'reason'    => __( 'Jetpack relies on the REST API for sync, stats, Publicize and many other features.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'jetpack/v4',
+			),
+			'woocommerce'            => array(
+				'name'      => 'WooCommerce',
+				'reason'    => __( 'WooCommerce uses the REST API for the cart, checkout, store blocks and mobile apps.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'wc/v3',
+			),
+			'yoast-seo'              => array(
+				'name'      => 'Yoast SEO',
+				'reason'    => __( 'Yoast SEO uses the REST API for the sidebar integration in the Block Editor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'yoast/v1',
+			),
+			'advanced-custom-fields' => array(
+				'name'      => 'Advanced Custom Fields',
+				'reason'    => __( 'ACF registers REST API endpoints to expose custom fields.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => '',
+			),
+			'acf'                    => array(
+				'name'      => 'ACF',
+				'reason'    => __( 'ACF (Pro) uses REST API to expose custom fields.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => '',
+			),
+			'contact-form-7'         => array(
+				'name'      => 'Contact Form 7',
+				'reason'    => __( 'CF7 uses REST API endpoints for form submissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'contact-form-7/v1',
+			),
+			'elementor'              => array(
+				'name'      => 'Elementor',
+				'reason'    => __( 'Elementor uses REST API calls in the page builder and for template library.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'elementor/v1',
+			),
+			'gutenberg'              => array(
+				'name'      => 'Gutenberg',
+				'reason'    => __( 'The Block Editor requires REST API for all edit operations.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'wp/v2',
+			),
+			'wp-rocket'              => array(
+				'name'      => 'WP Rocket',
+				'reason'    => __( 'WP Rocket uses the REST API for cache invalidation and heartbeat optimisation.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => '',
+			),
+			'litespeed-cache'        => array(
+				'name'      => 'LiteSpeed Cache',
+				'reason'    => __( 'LiteSpeed Cache uses REST API for QUIC.cloud integration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => 'litespeed/v1',
+			),
+			'mailchimp-for-wp'       => array(
+				'name'      => 'Mailchimp for WP',
+				'reason'    => __( 'Mailchimp for WP uses REST API for forms and subscribe endpoints.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'namespace' => '',
+			),
 		);
 
 		$found = array();
@@ -514,9 +614,9 @@ class TSOSK_Mod_Rest_Api {
 			$s = array();
 		}
 		return array(
-			'mode'                    => in_array( $s['mode'] ?? '', array( 'enabled', 'disabled' ), true ) ? $s['mode'] : 'enabled',
-			'disabled_namespaces'     => isset( $s['disabled_namespaces'] ) && is_array( $s['disabled_namespaces'] ) ? $s['disabled_namespaces'] : array(),
-			'block_user_enumeration'  => ! empty( $s['block_user_enumeration'] ),
+			'mode'                   => in_array( $s['mode'] ?? '', array( 'enabled', 'disabled' ), true ) ? $s['mode'] : 'enabled',
+			'disabled_namespaces'    => isset( $s['disabled_namespaces'] ) && is_array( $s['disabled_namespaces'] ) ? $s['disabled_namespaces'] : array(),
+			'block_user_enumeration' => ! empty( $s['block_user_enumeration'] ),
 		);
 	}
 }

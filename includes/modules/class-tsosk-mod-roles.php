@@ -14,7 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Roles {
 
-	/** @var TSOSK_Mod_Roles|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Roles|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -70,26 +74,45 @@ class TSOSK_Mod_Roles {
 	public static function get_role_templates(): array {
 		return array(
 			'content_editor' => array(
-				'read'              => true,
-				'edit_posts'        => true,
-				'edit_pages'        => true,
-				'edit_others_posts' => true,
-				'publish_posts'     => true,
-				'upload_files'      => true,
-				'moderate_comments' => true,
-				'manage_categories' => true,
+				'read'                   => true,
+				'edit_posts'             => true,
+				'edit_pages'             => true,
+				'edit_others_posts'      => true,
+				'edit_others_pages'      => true,
+				'edit_published_posts'   => true,
+				'edit_published_pages'   => true,
+				'edit_private_posts'     => true,
+				'edit_private_pages'     => true,
+				'read_private_posts'     => true,
+				'read_private_pages'     => true,
+				'publish_posts'          => true,
+				'publish_pages'          => true,
+				'delete_posts'           => true,
+				'delete_pages'           => true,
+				'delete_published_posts' => true,
+				'delete_published_pages' => true,
+				'delete_others_posts'    => true,
+				'delete_others_pages'    => true,
+				'upload_files'           => true,
+				'moderate_comments'      => true,
+				'manage_categories'      => true,
 			),
-			'media_manager' => array(
+			'media_manager'  => array(
 				'read'         => true,
 				'upload_files' => true,
 				'edit_posts'   => true,
 			),
-			'read_only' => array(
+			'read_only'      => array(
 				'read' => true,
 			),
 		);
 	}
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -97,6 +120,9 @@ class TSOSK_Mod_Roles {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_roles_caps', array( $this, 'ajax_caps' ) );
 		add_action( 'wp_ajax_tsosk_roles_add_cap', array( $this, 'ajax_add_cap' ) );
@@ -107,6 +133,8 @@ class TSOSK_Mod_Roles {
 	}
 
 	/**
+	 * Get roles.
+	 *
 	 * @return array<string, string> Role id => label.
 	 */
 	private function get_roles(): array {
@@ -122,6 +150,8 @@ class TSOSK_Mod_Roles {
 	}
 
 	/**
+	 * Get role caps.
+	 *
 	 * @param string $role_id Role slug.
 	 * @return array<string, bool>|null
 	 */
@@ -169,6 +199,7 @@ class TSOSK_Mod_Roles {
 			return '';
 		}
 
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Decodes plugin-owned export data, not code.
 		$decoded = base64_decode( $raw, true );
 		if ( false !== $decoded && is_string( $decoded ) && preg_match( '/^[a-z0-9_-]+$/', $decoded ) ) {
 			return sanitize_key( $decoded );
@@ -177,6 +208,9 @@ class TSOSK_Mod_Roles {
 		return sanitize_key( $raw );
 	}
 
+	/**
+	 * AJAX: caps.
+	 */
 	public function ajax_caps(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -224,29 +258,29 @@ class TSOSK_Mod_Roles {
 	 */
 	private function cap_description( string $cap ): string {
 		$map = array(
-			'level_0'           => __( 'Legacy user level 0 (subscriber). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'level_1'           => __( 'Legacy user level 1 (contributor). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'level_2'           => __( 'Legacy user level 2 (author). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'level_7'           => __( 'Legacy user level 7 (editor). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'level_10'          => __( 'Legacy user level 10 (administrator). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'manage_options'    => __( 'Access Settings and configure the site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_posts'        => __( 'Create and edit own posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'publish_posts'     => __( 'Publish posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_others_posts' => __( 'Edit posts written by other users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'delete_posts'      => __( 'Delete own posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'level_0'             => __( 'Legacy user level 0 (subscriber). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'level_1'             => __( 'Legacy user level 1 (contributor). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'level_2'             => __( 'Legacy user level 2 (author). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'level_7'             => __( 'Legacy user level 7 (editor). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'level_10'            => __( 'Legacy user level 10 (administrator). Deprecated — ignore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'manage_options'      => __( 'Access Settings and configure the site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_posts'          => __( 'Create and edit own posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'publish_posts'       => __( 'Publish posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_others_posts'   => __( 'Edit posts written by other users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'delete_posts'        => __( 'Delete own posts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'delete_others_posts' => __( 'Delete posts by other users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_pages'        => __( 'Edit pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'publish_pages'     => __( 'Publish pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'upload_files'      => __( 'Upload media to the library.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'moderate_comments' => __( 'Moderate comments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'manage_categories' => __( 'Manage post categories.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'read'              => __( 'Read the dashboard (logged-in access).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'install_plugins'   => __( 'Install plugins — high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'activate_plugins'  => __( 'Activate/deactivate plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_plugins'      => __( 'Edit plugin files — very high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_themes'       => __( 'Edit theme files — very high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'unfiltered_html'   => __( 'Post HTML without filtering — XSS risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'edit_users'        => __( 'Edit other user accounts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_pages'          => __( 'Edit pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'publish_pages'       => __( 'Publish pages.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'upload_files'        => __( 'Upload media to the library.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'moderate_comments'   => __( 'Moderate comments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'manage_categories'   => __( 'Manage post categories.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'read'                => __( 'Read the dashboard (logged-in access).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'install_plugins'     => __( 'Install plugins — high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'activate_plugins'    => __( 'Activate/deactivate plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_plugins'        => __( 'Edit plugin files — very high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_themes'         => __( 'Edit theme files — very high risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'unfiltered_html'     => __( 'Post HTML without filtering — XSS risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'edit_users'          => __( 'Edit other user accounts.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 		if ( isset( $map[ $cap ] ) ) {
 			return $map[ $cap ];
@@ -278,6 +312,9 @@ class TSOSK_Mod_Roles {
 		return '';
 	}
 
+	/**
+	 * AJAX: compare.
+	 */
 	public function ajax_compare(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -329,6 +366,9 @@ class TSOSK_Mod_Roles {
 		);
 	}
 
+	/**
+	 * AJAX: clone.
+	 */
 	public function ajax_clone(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -378,14 +418,17 @@ class TSOSK_Mod_Roles {
 		wp_send_json_success( __( 'Role cloned. Reload the page to see it in the dropdown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: apply template.
+	 */
 	public function ajax_apply_template(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$role_id  = $this->get_post_role_slug();
-		$template = isset( $_POST['template'] ) ? sanitize_key( wp_unslash( $_POST['template'] ) ) : '';
+		$role_id   = $this->get_post_role_slug();
+		$template  = isset( $_POST['template'] ) ? sanitize_key( wp_unslash( $_POST['template'] ) ) : '';
 		$templates = self::get_role_templates();
 
 		if ( 'administrator' === $role_id ) {
@@ -436,6 +479,9 @@ class TSOSK_Mod_Roles {
 		wp_send_json_success( __( 'Template applied.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: add cap.
+	 */
 	public function ajax_add_cap(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -478,6 +524,9 @@ class TSOSK_Mod_Roles {
 		wp_send_json_success( __( 'Capability added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: remove cap.
+	 */
 	public function ajax_remove_cap(): void {
 		check_ajax_referer( 'tsosk_roles_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -517,10 +566,13 @@ class TSOSK_Mod_Roles {
 		wp_send_json_success( __( 'Capability removed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$nonce     = wp_create_nonce( 'tsosk_roles_nonce' );
-		$roles     = $this->get_roles();
-		$templates = self::get_role_templates();
+		$nonce        = wp_create_nonce( 'tsosk_roles_nonce' );
+		$roles        = $this->get_roles();
+		$templates    = self::get_role_templates();
 		$default_role = 'editor';
 		foreach ( array_keys( $roles ) as $role_id ) {
 			if ( 'administrator' !== $role_id ) {

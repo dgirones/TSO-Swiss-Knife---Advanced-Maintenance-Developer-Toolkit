@@ -19,9 +19,18 @@ class TSOSK_Mod_Url_Doctor {
 	/** Transient for the last probe. */
 	public const TRANSIENT = 'tsosk_url_doctor_probe';
 
-	/** @var TSOSK_Mod_Url_Doctor|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Url_Doctor|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -29,6 +38,9 @@ class TSOSK_Mod_Url_Doctor {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_url_doctor_probe', array( $this, 'ajax_probe' ) );
 		add_action( 'wp_ajax_tsosk_url_doctor_leftovers', array( $this, 'ajax_leftovers' ) );
@@ -53,9 +65,9 @@ class TSOSK_Mod_Url_Doctor {
 			);
 		}
 
-		$host  = strtolower( (string) $parts['host'] );
+		$host   = strtolower( (string) $parts['host'] );
 		$is_www = 0 === strpos( $host, 'www.' );
-		$path  = isset( $parts['path'] ) && '' !== $parts['path'] ? (string) $parts['path'] : '/';
+		$path   = isset( $parts['path'] ) && '' !== $parts['path'] ? (string) $parts['path'] : '/';
 		if ( '' === $path ) {
 			$path = '/';
 		}
@@ -171,6 +183,8 @@ class TSOSK_Mod_Url_Doctor {
 
 	/**
 	 * Whether a transport error looks like a TLS/certificate failure (local/self-signed).
+	 *
+	 * @param string $message Message.
 	 */
 	public static function is_transport_ssl_error( string $message ): bool {
 		$hay = strtolower( $message );
@@ -365,7 +379,7 @@ class TSOSK_Mod_Url_Doctor {
 	 * @return array Counts keyed by posts, postmeta, options, comments, and total.
 	 */
 	public static function count_leftover_rows( string $needle ): array {
-		$empty = array(
+		$empty  = array(
 			'posts'    => 0,
 			'postmeta' => 0,
 			'options'  => 0,
@@ -399,7 +413,7 @@ class TSOSK_Mod_Url_Doctor {
 			)
 		);
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$options = (int) $wpdb->get_var(
+		$options  = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_value LIKE %s",
 				$like
@@ -459,8 +473,8 @@ class TSOSK_Mod_Url_Doctor {
 			);
 		}
 
-		$counts = self::count_leftover_rows( $pair['search'] );
-		$url    = self::search_replace_prefill_url( $pair['search'], $pair['replace'] );
+		$counts  = self::count_leftover_rows( $pair['search'] );
+		$url     = self::search_replace_prefill_url( $pair['search'], $pair['replace'] );
 		$message = sprintf(
 			/* translators: 1: number of rows, 2: http URL, 3: https URL */
 			__( '%1$d content rows still contain %2$s. Search & Replace can preview changing them to %3$s (nothing is written until you confirm).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -492,6 +506,8 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Run probe.
+	 *
 	 * @return array{ok:bool,status:int,final_url:string,message:string,ssl_relaxed:bool}
 	 */
 	private function run_probe(): array {
@@ -577,6 +593,9 @@ class TSOSK_Mod_Url_Doctor {
 		);
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce = wp_create_nonce( 'tsosk_url_doctor_nonce' );
 		$home  = home_url();
@@ -587,8 +606,8 @@ class TSOSK_Mod_Url_Doctor {
 			is_ssl(),
 			array(
 				'force_ssl_admin'  => function_exists( 'force_ssl_admin' ) && force_ssl_admin(),
-				'wp_home_const'    => defined( 'WP_HOME' ) ? (string) WP_HOME : '',
-				'wp_siteurl_const' => defined( 'WP_SITEURL' ) ? (string) WP_SITEURL : '',
+				'wp_home_const'    => defined( 'WP_HOME' ) ? (string) constant( 'WP_HOME' ) : '',
+				'wp_siteurl_const' => defined( 'WP_SITEURL' ) ? (string) constant( 'WP_SITEURL' ) : '',
 			)
 		);
 		$probe = get_transient( self::TRANSIENT );
@@ -684,6 +703,8 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Badge class.
+	 *
 	 * @param string $status ok|warn|info.
 	 */
 	private function badge_class( string $status ): string {
@@ -697,6 +718,8 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Badge label.
+	 *
 	 * @param string $status ok|warn|info.
 	 */
 	private function badge_label( string $status ): string {

@@ -9,10 +9,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Constants module.
+ */
 class TSOSK_Mod_Constants {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Constants|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -20,45 +33,80 @@ class TSOSK_Mod_Constants {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$system_info = $this->get_system_info();
+		$system_info           = $this->get_system_info();
 		$environment_overrides = $this->get_environment_overrides();
 
 		// Groups of WP constants to display with descriptions.
-		$groups = array(
+		$groups       = array(
 			__( 'Paths & URLs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'ABSPATH', 'WPINC', 'WP_CONTENT_DIR', 'WP_CONTENT_URL',
-				'WP_PLUGIN_DIR', 'WP_PLUGIN_URL', 'WPMU_PLUGIN_DIR', 'WPMU_PLUGIN_URL',
-				'TEMPLATEPATH', 'STYLESHEETPATH',
+				'ABSPATH',
+				'WPINC',
+				'WP_CONTENT_DIR',
+				'WP_CONTENT_URL',
+				'WP_PLUGIN_DIR',
+				'WP_PLUGIN_URL',
+				'WPMU_PLUGIN_DIR',
+				'WPMU_PLUGIN_URL',
+				'TEMPLATEPATH',
+				'STYLESHEETPATH',
 			),
 			__( 'Database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'DB_NAME', 'DB_HOST', 'DB_CHARSET', 'DB_COLLATE',
+				'DB_NAME',
+				'DB_HOST',
+				'DB_CHARSET',
+				'DB_COLLATE',
 			),
 			__( 'Debug', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'WP_DEBUG', 'WP_DEBUG_LOG', 'WP_DEBUG_DISPLAY', 'SCRIPT_DEBUG', 'SAVEQUERIES',
+				'WP_DEBUG',
+				'WP_DEBUG_LOG',
+				'WP_DEBUG_DISPLAY',
+				'SCRIPT_DEBUG',
+				'SAVEQUERIES',
 			),
 			__( 'Performance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'WP_CACHE', 'CONCATENATE_SCRIPTS', 'COMPRESS_SCRIPTS', 'COMPRESS_CSS',
+				'WP_CACHE',
+				'CONCATENATE_SCRIPTS',
+				'COMPRESS_SCRIPTS',
+				'COMPRESS_CSS',
 				'ENFORCE_GZIP',
 			),
 			__( 'Security', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'DISALLOW_FILE_EDIT', 'DISALLOW_FILE_MODS', 'FORCE_SSL_ADMIN',
-				'COOKIEPATH', 'SITECOOKIEPATH',
+				'DISALLOW_FILE_EDIT',
+				'DISALLOW_FILE_MODS',
+				'FORCE_SSL_ADMIN',
+				'COOKIEPATH',
+				'SITECOOKIEPATH',
 			),
 			__( 'Memory', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'WP_MEMORY_LIMIT', 'WP_MAX_MEMORY_LIMIT',
+				'WP_MEMORY_LIMIT',
+				'WP_MAX_MEMORY_LIMIT',
 			),
 			__( 'Autosave & Revisions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'AUTOSAVE_INTERVAL', 'WP_POST_REVISIONS', 'EMPTY_TRASH_DAYS',
+				'AUTOSAVE_INTERVAL',
+				'WP_POST_REVISIONS',
+				'EMPTY_TRASH_DAYS',
 			),
 			__( 'Multisite', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'MULTISITE', 'SUBDOMAIN_INSTALL', 'DOMAIN_CURRENT_SITE', 'PATH_CURRENT_SITE',
-				'SITE_ID_CURRENT_SITE', 'BLOG_ID_CURRENT_SITE',
+				'MULTISITE',
+				'SUBDOMAIN_INSTALL',
+				'DOMAIN_CURRENT_SITE',
+				'PATH_CURRENT_SITE',
+				'SITE_ID_CURRENT_SITE',
+				'BLOG_ID_CURRENT_SITE',
 			),
 			__( 'Cron', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array(
-				'DISABLE_WP_CRON', 'ALTERNATE_WP_CRON', 'WP_CRON_LOCK_TIMEOUT',
+				'DISABLE_WP_CRON',
+				'ALTERNATE_WP_CRON',
+				'WP_CRON_LOCK_TIMEOUT',
 			),
 		);
 		$profiles_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=hidden-profiles' );
@@ -121,20 +169,28 @@ class TSOSK_Mod_Constants {
 		</div>
 
 		<input type="text" id="tsosk-constants-search" placeholder="<?php esc_attr_e( 'Filter constants…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-		       style="width:260px;margin-bottom:16px;">
+				style="width:260px;margin-bottom:16px;">
 
-		<?php foreach ( $groups as $group_label => $constants ) :
+		<?php
+		foreach ( $groups as $group_label => $constants ) :
 			$has_any = false;
 			foreach ( $constants as $const ) {
-				if ( defined( $const ) ) { $has_any = true; break; }
+				if ( defined( $const ) ) {
+					$has_any = true;
+					break; }
 			}
-			if ( ! $has_any ) continue;
-		?>
+			if ( ! $has_any ) {
+				continue;
+			}
+			?>
 		<div class="tsosk-card">
 			<h3><?php echo esc_html( $group_label ); ?></h3>
 			<table class="tsosk-kv-table tsosk-constants-table">
 				<?php foreach ( $constants as $const ) : ?>
-					<?php if ( ! defined( $const ) ) continue; ?>
+					<?php
+					if ( ! defined( $const ) ) {
+						continue;}
+					?>
 					<?php
 					$val = constant( $const );
 					if ( is_bool( $val ) ) {
@@ -168,8 +224,8 @@ class TSOSK_Mod_Constants {
 	private function get_system_info(): array {
 		global $wpdb;
 
-		$theme = wp_get_theme();
-		$active_plugins = (array) get_option( 'active_plugins', array() );
+		$theme            = wp_get_theme();
+		$active_plugins   = (array) get_option( 'active_plugins', array() );
 		$sitewide_plugins = is_multisite() ? (array) get_site_option( 'active_sitewide_plugins', array() ) : array();
 
 		$server_software = isset( $_SERVER['SERVER_SOFTWARE'] )
@@ -291,6 +347,7 @@ class TSOSK_Mod_Constants {
 				);
 			case 'WP_MEMORY_LIMIT':
 				return array(
+					// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 					'value'  => ini_get( 'memory_limit' ) ?: '40M',
 					'source' => __( 'PHP ini / WordPress fallback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				);
@@ -323,6 +380,8 @@ class TSOSK_Mod_Constants {
 	}
 
 	/**
+	 * Format constant value.
+	 *
 	 * @param mixed $value Constant value.
 	 * @return string
 	 */
@@ -371,6 +430,8 @@ class TSOSK_Mod_Constants {
 	}
 
 	/**
+	 * Find wp config path.
+	 *
 	 * @return string Absolute wp-config.php path or empty.
 	 */
 	private function find_wp_config_path(): string {

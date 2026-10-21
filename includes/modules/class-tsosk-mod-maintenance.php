@@ -12,12 +12,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Maintenance module.
+ */
 class TSOSK_Mod_Maintenance {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Maintenance|null
+	 */
 	private static $instance = null;
 
 	const OPTION = 'tsosk_maintenance';
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -25,6 +38,9 @@ class TSOSK_Mod_Maintenance {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_maintenance_toggle', array( $this, 'ajax_toggle' ) );
 		add_action( 'wp_ajax_tsosk_maintenance_save', array( $this, 'ajax_save' ) );
@@ -54,13 +70,14 @@ class TSOSK_Mod_Maintenance {
 		// Check whitelisted IPs.
 		$client_ip = $this->get_client_ip();
 		if ( $client_ip && ! empty( $settings['whitelist_ips'] ) ) {
-			$whitelist = array_filter( array_map( 'trim', explode( "\n", $settings['whitelist_ips'] ) ) );
-			if ( in_array( $client_ip, $whitelist, true ) ) {
+			// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
+			$whitelist = array_filter( array_map( 'trim', preg_split( '/\R/', (string) $settings['whitelist_ips'] ) ?: array() ) );
+			if ( $this->ip_in_list( $client_ip, $whitelist ) ) {
 				return;
 			}
 		}
 
-		$message = $settings['message'] ?: $this->get_default_message();
+		$message = $settings['message'] ? $settings['message'] : $this->get_default_message();
 
 		$this->render_maintenance_html( $message, false, (int) $settings['logo_id'], $settings['page_title'] ?? '' );
 	}
@@ -102,14 +119,14 @@ class TSOSK_Mod_Maintenance {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html( get_bloginfo( 'name' ) ); ?> – <?php esc_html_e( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></title>
-<?php wp_print_styles( 'tsosk-maintenance' ); ?>
+		<?php wp_print_styles( 'tsosk-maintenance' ); ?>
 </head>
 <body class="<?php echo esc_attr( $body_cls ); ?>">
-<?php if ( $is_preview ) : ?>
+		<?php if ( $is_preview ) : ?>
 <div class="tsosk-maint-preview-bar"><?php esc_html_e( 'Preview only — maintenance mode is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></div>
-<?php endif; ?>
+		<?php endif; ?>
 <div class="tsosk-maint-box">
-	<?php if ( $logo_url ) : ?>
+		<?php if ( $logo_url ) : ?>
 		<img class="tsosk-maint-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 	<?php else : ?>
 		<div class="tsosk-maint-icon" aria-hidden="true">🔧</div>
@@ -133,17 +150,19 @@ class TSOSK_Mod_Maintenance {
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array{enabled:bool,message:string,page_title:string,whitelist_ips:string,logo_id:int}
 	 */
 	private function get_settings(): array {
-		$defaults = array(
+		$defaults            = array(
 			'enabled'       => false,
 			'message'       => '',
 			'page_title'    => '',
 			'whitelist_ips' => '',
 			'logo_id'       => 0,
 		);
-		$settings = wp_parse_args( (array) get_option( self::OPTION, array() ), $defaults );
+		$settings            = wp_parse_args( (array) get_option( self::OPTION, array() ), $defaults );
 		$settings['logo_id'] = absint( $settings['logo_id'] );
 
 		return $settings;
@@ -187,12 +206,14 @@ class TSOSK_Mod_Maintenance {
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		// Use REMOTE_ADDR only (most reliable; proxy headers can be spoofed).
-		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	// ── AJAX ──────────────────────────────────────────────────────────────────
 
+	/**
+	 * AJAX: toggle.
+	 */
 	public function ajax_toggle(): void {
 		check_ajax_referer( 'tsosk_maintenance_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -200,7 +221,7 @@ class TSOSK_Mod_Maintenance {
 		}
 		$settings            = $this->get_settings();
 		$settings['enabled'] = ! $settings['enabled'];
-		update_option( self::OPTION, $settings, false );
+		update_option( self::OPTION, $settings, true ); // Read on every request — must autoload.
 
 		TSOSK_Activity_Log::log(
 			'maintenance',
@@ -220,6 +241,9 @@ class TSOSK_Mod_Maintenance {
 		);
 	}
 
+	/**
+	 * AJAX: save.
+	 */
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_maintenance_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -237,7 +261,7 @@ class TSOSK_Mod_Maintenance {
 			isset( $_POST['logo_id'] ) ? absint( wp_unslash( $_POST['logo_id'] ) ) : 0
 		);
 
-		update_option( self::OPTION, $settings, false );
+		update_option( self::OPTION, $settings, true ); // Read on every request — must autoload.
 
 		TSOSK_Activity_Log::log(
 			'maintenance',
@@ -257,10 +281,10 @@ class TSOSK_Mod_Maintenance {
 			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '', array( 'response' => 403 ) );
 		}
 
-		$message = isset( $_POST['message'] )
+		$message    = isset( $_POST['message'] )
 			? sanitize_textarea_field( wp_unslash( ( is_scalar( $_POST['message'] ) ? (string) $_POST['message'] : '' ) ) )
 			: '';
-		$logo_id = $this->sanitize_logo_id(
+		$logo_id    = $this->sanitize_logo_id(
 			isset( $_POST['logo_id'] ) ? absint( wp_unslash( $_POST['logo_id'] ) ) : 0
 		);
 		$page_title = isset( $_POST['page_title'] )
@@ -272,6 +296,9 @@ class TSOSK_Mod_Maintenance {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce    = wp_create_nonce( 'tsosk_maintenance_nonce' );
 		$settings = $this->get_settings();
@@ -291,7 +318,7 @@ class TSOSK_Mod_Maintenance {
 					<?php echo $enabled ? esc_html__( '⚠ MAINTENANCE MODE ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 				<button class="button button-<?php echo $enabled ? 'primary' : 'secondary'; ?>" id="tsosk-maintenance-toggle"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php echo $enabled ? esc_html__( 'Disable Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Enable Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-maintenance-toggle-msg"></span>
@@ -315,7 +342,7 @@ class TSOSK_Mod_Maintenance {
 							<?php esc_html_e( 'Select logo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</button>
 						<button type="button" class="button" id="tsosk-m-logo-remove"
-						        <?php disabled( ! $logo_id ); ?>>
+								<?php disabled( ! $logo_id ); ?>>
 							<?php esc_html_e( 'Remove logo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</button>
 					</p>
@@ -328,8 +355,8 @@ class TSOSK_Mod_Maintenance {
 			<div class="tsosk-field-row" style="margin-top:12px;">
 				<label><strong><?php esc_html_e( 'Page heading', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 				<input type="text" id="tsosk-m-page-title" class="regular-text" style="width:100%;max-width:480px;"
-				       value="<?php echo esc_attr( $settings['page_title'] ?? '' ); ?>"
-				       placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+						value="<?php echo esc_attr( $settings['page_title'] ?? '' ); ?>"
+						placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 				<p class="description">
 					<?php esc_html_e( 'Large title shown on the maintenance page (e.g. your brand name). Leave empty to use the site name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -337,9 +364,11 @@ class TSOSK_Mod_Maintenance {
 
 			<div class="tsosk-field-row" style="margin-top:12px;">
 				<label><strong><?php esc_html_e( 'Message to Visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-				<textarea name="tsosk_m_message" id="tsosk-m-message" rows="4" style="width:100%;"><?php
+				<textarea name="tsosk_m_message" id="tsosk-m-message" rows="4" style="width:100%;">
+				<?php
 					echo esc_textarea( $settings['message'] );
-				?></textarea>
+				?>
+				</textarea>
 				<p class="description">
 					<?php
 					printf(
@@ -353,23 +382,26 @@ class TSOSK_Mod_Maintenance {
 
 			<div class="tsosk-field-row" style="margin-top:12px;">
 				<label><strong><?php esc_html_e( 'Whitelisted IP Addresses (one per line)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-				<textarea name="tsosk_m_ips" id="tsosk-m-ips" rows="4" style="width:100%;font-family:monospace;"><?php
+				<textarea name="tsosk_m_ips" id="tsosk-m-ips" rows="4" style="width:100%;font-family:monospace;">
+				<?php
 					echo esc_textarea( $settings['whitelist_ips'] );
-				?></textarea>
+				?>
+				</textarea>
 				<p class="description">
 					<?php
 					echo esc_html__( 'Your current IP:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					echo ' <code>' . esc_html( $this->get_client_ip() ) . '</code>';
 					?>
 				</p>
+				<p class="description"><?php esc_html_e( 'You can also use CIDR ranges, for example 203.0.113.0/24.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			</div>
 
 			<button class="button button-primary" id="tsosk-maintenance-save"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
 				<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button type="button" class="button" id="tsosk-maintenance-preview"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:12px;">
 				<?php esc_html_e( 'Preview maintenance page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<p class="description" style="margin-top:8px;">
@@ -378,5 +410,46 @@ class TSOSK_Mod_Maintenance {
 			<span class="tsosk-ajax-msg" id="tsosk-maintenance-save-msg"></span>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Whether an IP matches any entry of a list of exact IPs or CIDR ranges (IPv4 and IPv6).
+	 *
+	 * @param string   $ip      Visitor IP.
+	 * @param string[] $entries Exact IPs or ranges such as 203.0.113.0/24.
+	 * @return bool
+	 */
+	private function ip_in_list( string $ip, array $entries ): bool {
+		$packed = @inet_pton( $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- invalid input returns false.
+		if ( false === $packed ) {
+			return in_array( $ip, $entries, true );
+		}
+		foreach ( $entries as $entry ) {
+			$entry = (string) $entry;
+			$bits  = null;
+			if ( false !== strpos( $entry, '/' ) ) {
+				list( $entry, $raw_bits ) = explode( '/', $entry, 2 );
+				$bits                     = (int) $raw_bits;
+			}
+			$net = @inet_pton( trim( $entry ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- invalid input returns false.
+			if ( false === $net || strlen( $net ) !== strlen( $packed ) ) {
+				continue;
+			}
+			$max   = strlen( $packed ) * 8;
+			$bits  = null === $bits ? $max : max( 0, min( $max, $bits ) );
+			$bytes = intdiv( $bits, 8 );
+			if ( $bytes > 0 && substr( $packed, 0, $bytes ) !== substr( $net, 0, $bytes ) ) {
+				continue;
+			}
+			$rest = $bits % 8;
+			if ( $rest > 0 ) {
+				$mask = ( 0xFF << ( 8 - $rest ) ) & 0xFF;
+				if ( ( ord( $packed[ $bytes ] ) & $mask ) !== ( ord( $net[ $bytes ] ) & $mask ) ) {
+					continue;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 }

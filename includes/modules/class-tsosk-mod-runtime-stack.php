@@ -16,9 +16,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Runtime_Stack {
 
-	/** @var TSOSK_Mod_Runtime_Stack|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Runtime_Stack|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -26,6 +35,9 @@ class TSOSK_Mod_Runtime_Stack {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_runtime_opcache_reset', array( $this, 'ajax_opcache_reset' ) );
 	}
@@ -82,6 +94,8 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Get dropins.
+	 *
 	 * @return array<int, array{file:string,label:string,exists:bool,size:int,modified:int}>
 	 */
 	private function get_dropins(): array {
@@ -116,6 +130,8 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Get mu plugins.
+	 *
 	 * @return array<int, array{file:string,name:string,size:int,modified:int}>
 	 */
 	private function get_mu_plugins(): array {
@@ -132,8 +148,8 @@ class TSOSK_Mod_Runtime_Stack {
 			if ( '' === $file || false !== strpos( $file, '..' ) ) {
 				continue;
 			}
-			$path = '' !== $base ? $base . $file : '';
-			$name = is_array( $data ) && ! empty( $data['Name'] ) ? (string) $data['Name'] : $file;
+			$path   = '' !== $base ? $base . $file : '';
+			$name   = is_array( $data ) && ! empty( $data['Name'] ) ? (string) $data['Name'] : $file;
 			$rows[] = array(
 				'file'     => $file,
 				'name'     => $name,
@@ -145,19 +161,21 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Get php limits.
+	 *
 	 * @return array<string, string>
 	 */
 	private function get_php_limits(): array {
-		$memory      = (string) ini_get( 'memory_limit' );
-		$upload      = (string) ini_get( 'upload_max_filesize' );
-		$post        = (string) ini_get( 'post_max_size' );
-		$max_time    = (string) ini_get( 'max_execution_time' );
-		$max_input   = (string) ini_get( 'max_input_vars' );
-		$disabled    = (string) ini_get( 'disable_functions' );
-		$temp        = function_exists( 'sys_get_temp_dir' ) ? sys_get_temp_dir() : '';
-		$temp_ok     = ( '' !== $temp && wp_is_writable( $temp ) );
-		$opcache     = function_exists( 'opcache_get_status' );
-		$opcache_on  = false;
+		$memory     = (string) ini_get( 'memory_limit' );
+		$upload     = (string) ini_get( 'upload_max_filesize' );
+		$post       = (string) ini_get( 'post_max_size' );
+		$max_time   = (string) ini_get( 'max_execution_time' );
+		$max_input  = (string) ini_get( 'max_input_vars' );
+		$disabled   = (string) ini_get( 'disable_functions' );
+		$temp       = function_exists( 'sys_get_temp_dir' ) ? sys_get_temp_dir() : '';
+		$temp_ok    = ( '' !== $temp && wp_is_writable( $temp ) );
+		$opcache    = function_exists( 'opcache_get_status' );
+		$opcache_on = false;
 		if ( $opcache ) {
 			try {
 				$status     = opcache_get_status( false );
@@ -195,23 +213,23 @@ class TSOSK_Mod_Runtime_Stack {
 		}
 
 		return array(
-			'php'          => PHP_VERSION,
-			'memory'       => $memory,
-			'upload'       => $upload,
-			'post'         => $post,
-			'post_lt_up'   => $post_lt_up ? '1' : '0',
-			'max_time'     => $max_time,
-			'max_input'    => $max_input,
-			'opcache'      => $opcache_on ? '1' : '0',
-			'temp'         => $temp,
-			'temp_ok'      => $temp_ok ? '1' : '0',
-			'wp_tz'        => $wp_tz,
-			'clock_skew'   => (string) $clock_skew,
-			'clock_ok'     => ( null === $db_now ) ? '' : ( $clock_bad ? '0' : '1' ),
-			'disabled'     => $disabled_short,
-			'wp_memory'    => defined( 'WP_MEMORY_LIMIT' ) ? (string) WP_MEMORY_LIMIT : '',
-			'wp_max_mem'   => defined( 'WP_MAX_MEMORY_LIMIT' ) ? (string) WP_MAX_MEMORY_LIMIT : '',
-			'opcache_reset'=> self::can_reset_opcache() ? '1' : '0',
+			'php'           => PHP_VERSION,
+			'memory'        => $memory,
+			'upload'        => $upload,
+			'post'          => $post,
+			'post_lt_up'    => $post_lt_up ? '1' : '0',
+			'max_time'      => $max_time,
+			'max_input'     => $max_input,
+			'opcache'       => $opcache_on ? '1' : '0',
+			'temp'          => $temp,
+			'temp_ok'       => $temp_ok ? '1' : '0',
+			'wp_tz'         => $wp_tz,
+			'clock_skew'    => (string) $clock_skew,
+			'clock_ok'      => ( null === $db_now ) ? '' : ( $clock_bad ? '0' : '1' ),
+			'disabled'      => $disabled_short,
+			'wp_memory'     => defined( 'WP_MEMORY_LIMIT' ) ? (string) WP_MEMORY_LIMIT : '',
+			'wp_max_mem'    => defined( 'WP_MAX_MEMORY_LIMIT' ) ? (string) WP_MAX_MEMORY_LIMIT : '',
+			'opcache_reset' => self::can_reset_opcache() ? '1' : '0',
 		);
 	}
 
@@ -320,12 +338,15 @@ class TSOSK_Mod_Runtime_Stack {
 		return implode( "\n", $lines );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$dropins  = $this->get_dropins();
-		$mu       = $this->get_mu_plugins();
-		$limits   = $this->get_php_limits();
-		$external = wp_using_ext_object_cache();
-		$oc_file  = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'object-cache.php';
+		$dropins   = $this->get_dropins();
+		$mu        = $this->get_mu_plugins();
+		$limits    = $this->get_php_limits();
+		$external  = wp_using_ext_object_cache();
+		$oc_file   = trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'object-cache.php';
 		$oc_exists = file_exists( $oc_file );
 		global $wp_object_cache;
 		$driver  = is_object( $wp_object_cache ) ? get_class( $wp_object_cache ) : '';

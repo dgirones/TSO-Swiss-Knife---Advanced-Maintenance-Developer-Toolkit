@@ -16,11 +16,11 @@
 ( function () {
 	'use strict';
 
-	if ( 'undefined' === typeof window.tsookViewCounter ) {
+	if ( 'undefined' === typeof window.tsoskViewCounter ) {
 		return;
 	}
 
-	var cfg = window.tsookViewCounter;
+	var cfg = window.tsoskViewCounter;
 
 	function sendBeacon( params ) {
 		var body = new URLSearchParams( Object.assign( { action: 'tsosk_vc_hit' }, params ) ).toString();
@@ -67,13 +67,63 @@
 		}, true );
 	}
 
+	// External links in the theme header (social icons...). Visitors only: the server
+	// only flags trackHeaderLinks for logged-out requests and re-checks on every hit.
+	function trackHeaderClicks() {
+		if ( ! cfg.trackHeaderLinks ) {
+			return;
+		}
+		document.addEventListener( 'click', function ( event ) {
+			var link = event.target.closest ? event.target.closest( 'a[href]' ) : null;
+			if ( ! link || link.hasAttribute( 'data-tsosk-vc-url' ) || link.closest( '#wpadminbar' ) ) {
+				return;
+			}
+			var siteHeader = link.closest( 'header, #masthead, .site-header, [role="banner"]' );
+			// A <header> inside an article/main (post title block, byline...) is content, not the site header.
+			if ( ! siteHeader || siteHeader.closest( 'article, main, .entry-content' ) ) {
+				return;
+			}
+			if ( ! /^https?:$/.test( link.protocol ) || link.hostname === window.location.hostname ) {
+				return;
+			}
+			sendBeacon( { type: 'link', id: '0', url: link.href, src: 'header' } );
+		}, true );
+	}
+
+	// Downloads: <a download> pointing at a file on this very site, plus normal links to files
+	// whose extension is in the configured list (no download attribute needed). The server
+	// re-validates the host, the setting and the exclusions (users, roles, IPs) on every hit.
+	function trackDownloadClicks() {
+		if ( ! cfg.trackDownloads ) {
+			return;
+		}
+		var exts = Array.isArray( cfg.downloadExts ) ? cfg.downloadExts : [];
+		document.addEventListener( 'click', function ( event ) {
+			var link = event.target.closest ? event.target.closest( 'a[href]' ) : null;
+			if ( ! link || ! /^https?:$/.test( link.protocol ) || link.hostname !== window.location.hostname ) {
+				return;
+			}
+			if ( ! link.hasAttribute( 'download' ) ) {
+				var match = /\.([a-z0-9]+)$/i.exec( link.pathname );
+				if ( ! match || -1 === exts.indexOf( match[ 1 ].toLowerCase() ) ) {
+					return;
+				}
+			}
+			sendBeacon( { type: 'download', id: '0', url: link.href } );
+		}, true );
+	}
+
 	if ( 'loading' === document.readyState ) {
 		document.addEventListener( 'DOMContentLoaded', function () {
 			trackPageView();
 			trackOutboundClicks();
+			trackHeaderClicks();
+			trackDownloadClicks();
 		} );
 	} else {
 		trackPageView();
 		trackOutboundClicks();
+		trackHeaderClicks();
+		trackDownloadClicks();
 	}
 } )();

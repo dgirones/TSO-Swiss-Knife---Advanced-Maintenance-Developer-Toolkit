@@ -11,10 +11,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Transients module.
+ */
 class TSOSK_Mod_Transients {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Transients|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -22,8 +35,11 @@ class TSOSK_Mod_Transients {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_transient_delete',     array( $this, 'ajax_delete' ) );
+		add_action( 'wp_ajax_tsosk_transient_delete', array( $this, 'ajax_delete' ) );
 		add_action( 'wp_ajax_tsosk_transients_purge_exp', array( $this, 'ajax_purge_expired' ) );
 		add_action( 'wp_ajax_tsosk_transients_purge_all', array( $this, 'ajax_purge_all' ) );
 	}
@@ -41,6 +57,9 @@ class TSOSK_Mod_Transients {
 	private function get_transients( string $search = '', string $filter = 'all', int $limit = 200 ): array {
 		global $wpdb;
 
+		// Expired/Active is decided in PHP, so read a wider batch first: otherwise the expired rows that sort after the first $limit names would never show.
+		$fetch = 'all' === $filter ? $limit : max( $limit, 5000 );
+
 		if ( '' !== $search ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$rows = $wpdb->get_results(
@@ -55,7 +74,7 @@ class TSOSK_Mod_Transients {
 					$wpdb->esc_like( '_transient_' ) . '%',
 					$wpdb->esc_like( '_transient_timeout_' ) . '%',
 					'%' . $wpdb->esc_like( '_transient_' . $search ) . '%',
-					$limit
+					$fetch
 				),
 				ARRAY_A
 			);
@@ -71,7 +90,7 @@ class TSOSK_Mod_Transients {
 					 LIMIT %d",
 					$wpdb->esc_like( '_transient_' ) . '%',
 					$wpdb->esc_like( '_transient_timeout_' ) . '%',
-					$limit
+					$fetch
 				),
 				ARRAY_A
 			);
@@ -81,8 +100,8 @@ class TSOSK_Mod_Transients {
 			return array();
 		}
 
-		$now  = time();
-		$out  = array();
+		$now = time();
+		$out = array();
 
 		foreach ( $rows as $row ) {
 			$key     = substr( $row['option_name'], strlen( '_transient_' ) );
@@ -103,7 +122,7 @@ class TSOSK_Mod_Transients {
 				'expired' => $expired,
 			);
 		}
-		return $out;
+		return array_slice( $out, 0, $limit );
 	}
 
 	/**
@@ -193,8 +212,22 @@ class TSOSK_Mod_Transients {
 		return is_super_admin() || is_network_admin();
 	}
 
+	/**
+	 * Transients "Purge all" must never touch: this plugin's own working state (a Media Cleaner review in
+	 * progress, cached scans) and the cron lock, whose removal would break a running job.
+	 *
+	 * @param string $key Transient name without the _transient_ prefix.
+	 * @return bool
+	 */
+	private function is_protected_transient( string $key ): bool {
+		return 0 === strpos( $key, 'tsosk_' ) || 'doing_cron' === $key;
+	}
+
 	// ── AJAX ──────────────────────────────────────────────────────────────────
 
+	/**
+	 * AJAX: delete.
+	 */
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -218,6 +251,9 @@ class TSOSK_Mod_Transients {
 		wp_send_json_success( __( 'Transient deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: purge expired.
+	 */
 	public function ajax_purge_expired(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -241,7 +277,7 @@ class TSOSK_Mod_Transients {
 		foreach ( $expired_keys as $timeout_key ) {
 			$key = substr( $timeout_key, strlen( '_transient_timeout_' ) );
 			if ( delete_transient( $key ) ) {
-				$count++;
+				++$count;
 			}
 		}
 
@@ -250,7 +286,7 @@ class TSOSK_Mod_Transients {
 			foreach ( $expired_site_keys as $timeout_key ) {
 				$key = substr( $timeout_key, strlen( '_site_transient_timeout_' ) );
 				if ( delete_site_transient( $key ) ) {
-					$count++;
+					++$count;
 				}
 			}
 		}
@@ -274,6 +310,9 @@ class TSOSK_Mod_Transients {
 		);
 	}
 
+	/**
+	 * AJAX: purge all.
+	 */
 	public function ajax_purge_all(): void {
 		check_ajax_referer( 'tsosk_transients_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -289,11 +328,14 @@ class TSOSK_Mod_Transients {
 				$wpdb->esc_like( '_transient_timeout_' ) . '%'
 			)
 		);
-		$count = 0;
+		$count    = 0;
 		foreach ( $all_keys as $option_name ) {
 			$key = substr( $option_name, strlen( '_transient_' ) );
+			if ( $this->is_protected_transient( $key ) ) {
+				continue;
+			}
 			if ( delete_transient( $key ) ) {
-				$count++;
+				++$count;
 			}
 		}
 
@@ -301,8 +343,11 @@ class TSOSK_Mod_Transients {
 			$site_keys = $this->get_site_transient_value_keys();
 			foreach ( $site_keys as $stored_name ) {
 				$key = $this->site_transient_key_from_stored_name( $stored_name );
+				if ( $this->is_protected_transient( $key ) ) {
+					continue;
+				}
 				if ( delete_site_transient( $key ) ) {
-					$count++;
+					++$count;
 				}
 			}
 		}
@@ -326,6 +371,9 @@ class TSOSK_Mod_Transients {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce  = wp_create_nonce( 'tsosk_transients_nonce' );
 		$search = isset( $_GET['tsosk_ts_search'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_ts_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -345,8 +393,8 @@ class TSOSK_Mod_Transients {
 				<input type="hidden" name="page" value="tso-swiss-knife">
 				<input type="hidden" name="tab"  value="transients">
 				<input type="text" id="tsosk-transients-search" name="tsosk_ts_search" value="<?php echo esc_attr( $search ); ?>"
-				       placeholder="<?php esc_attr_e( 'Search transients…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-				       style="width:220px;">
+						placeholder="<?php esc_attr_e( 'Search transients…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+						style="width:220px;">
 				<select name="tsosk_ts_filter" id="tsosk-transients-filter-select" style="display:none;">
 					<option value="all"     <?php selected( $filter, 'all' ); ?>><?php esc_html_e( 'All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					<option value="expired" <?php selected( $filter, 'expired' ); ?>><?php esc_html_e( 'Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
@@ -385,13 +433,13 @@ class TSOSK_Mod_Transients {
 					<?php if ( empty( $items ) ) : ?>
 					<tr><td colspan="5"><?php esc_html_e( 'No transients found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td></tr>
 					<?php else : ?>
-					<?php foreach ( $items as $item ) : ?>
+						<?php foreach ( $items as $item ) : ?>
 					<tr id="tsosk-tr-<?php echo esc_attr( md5( $item['key'] ) ); ?>"
-					    class="<?php echo $item['expired'] ? 'tsosk-transient-expired' : ''; ?>"
-					    data-key="<?php echo esc_attr( $item['key'] ); ?>"
-					    data-size="<?php echo esc_attr( (string) $item['size'] ); ?>"
-					    data-timeout="<?php echo esc_attr( (string) $item['timeout'] ); ?>"
-					    data-status="<?php echo esc_attr( $item['expired'] ? 'expired' : 'active' ); ?>">
+						class="<?php echo $item['expired'] ? 'tsosk-transient-expired' : ''; ?>"
+						data-key="<?php echo esc_attr( $item['key'] ); ?>"
+						data-size="<?php echo esc_attr( (string) $item['size'] ); ?>"
+						data-timeout="<?php echo esc_attr( (string) $item['timeout'] ); ?>"
+						data-status="<?php echo esc_attr( $item['expired'] ? 'expired' : 'active' ); ?>">
 						<td class="tsosk-code"><?php echo esc_html( $item['key'] ); ?></td>
 						<td><?php echo esc_html( size_format( $item['size'], 2 ) ); ?></td>
 						<td>
@@ -400,10 +448,10 @@ class TSOSK_Mod_Transients {
 								esc_html_e( 'No expiry', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 							} elseif ( $item['expired'] ) {
 								echo '<span title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $item['timeout'] ) ) . ' UTC">'
-								     . esc_html( human_time_diff( $item['timeout'] ) ) . ' ' . esc_html__( 'ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+									. esc_html( human_time_diff( $item['timeout'] ) ) . ' ' . esc_html__( 'ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
 							} else {
 								echo '<span title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $item['timeout'] ) ) . ' UTC">'
-								     . esc_html__( 'In', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' ' . esc_html( human_time_diff( $item['timeout'] ) ) . '</span>';
+									. esc_html__( 'In', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' ' . esc_html( human_time_diff( $item['timeout'] ) ) . '</span>';
 							}
 							?>
 						</td>
@@ -416,8 +464,8 @@ class TSOSK_Mod_Transients {
 						</td>
 						<td>
 							<button class="button button-small button-link-delete tsosk-transient-delete"
-							        data-key="<?php echo esc_attr( $item['key'] ); ?>"
-							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									data-key="<?php echo esc_attr( $item['key'] ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>

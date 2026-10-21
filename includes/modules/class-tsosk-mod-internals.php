@@ -14,7 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Internals {
 
-	/** @var TSOSK_Mod_Internals|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Internals|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -29,6 +33,9 @@ class TSOSK_Mod_Internals {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {}
 
 	/**

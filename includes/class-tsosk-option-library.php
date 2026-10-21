@@ -27,13 +27,13 @@ class TSOSK_Option_Library {
 	 */
 	public static function get_registry(): array {
 		return array(
-			'wordpress' => array(
-				'label'  => __( 'WordPress core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-wordpress',
-				'detect' => static function (): bool {
+			'wordpress'   => array(
+				'label'   => __( 'WordPress core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-wordpress',
+				'detect'  => static function (): bool {
 					return true;
 				},
-				'prefix' => '',
+				'prefix'  => '',
 				'options' => array(
 					array(
 						'name' => 'uploads_use_yearmonth_folders',
@@ -52,68 +52,68 @@ class TSOSK_Option_Library {
 						'desc' => __( 'Use excerpts instead of full posts in feeds.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'blog_charset',
-						'desc' => __( 'Site character encoding (usually UTF-8).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'blog_charset',
+						'desc'    => __( 'Site character encoding (usually UTF-8).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'timezone_string',
-						'desc' => __( 'Site timezone identifier.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'timezone_string',
+						'desc'    => __( 'Site timezone identifier.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'default_role',
-						'desc' => __( 'Default role assigned to new users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'default_role',
+						'desc'    => __( 'Default role assigned to new users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'users_can_register',
-						'desc' => __( 'Whether anyone can register (0 or 1).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'users_can_register',
+						'desc'    => __( 'Whether anyone can register (0 or 1).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'blog_public',
-						'desc' => __( 'Discourage search engines (0 = discourage, 1 = allow indexing).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'blog_public',
+						'desc'    => __( 'Discourage search engines (0 = discourage, 1 = allow indexing).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'permalink_structure',
-						'desc' => __( 'Pretty permalink pattern (empty = plain ?p= links).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'permalink_structure',
+						'desc'    => __( 'Pretty permalink pattern (empty = plain ?p= links).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'category_base',
-						'desc' => __( 'Custom base slug for category URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'category_base',
+						'desc'    => __( 'Custom base slug for category URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'tag_base',
-						'desc' => __( 'Custom base slug for tag URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'tag_base',
+						'desc'    => __( 'Custom base slug for tag URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'show_on_front',
-						'desc' => __( 'Front page displays: posts or a static page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'show_on_front',
+						'desc'    => __( 'Front page displays: posts or a static page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'page_on_front',
-						'desc' => __( 'Page ID used as the static front page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'page_on_front',
+						'desc'    => __( 'Page ID used as the static front page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'page_for_posts',
-						'desc' => __( 'Page ID used as the posts page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'page_for_posts',
+						'desc'    => __( 'Page ID used as the posts page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'default_comment_status',
-						'desc' => __( 'Allow comments on new posts (open or closed).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'default_comment_status',
+						'desc'    => __( 'Allow comments on new posts (open or closed).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'comment_moderation',
-						'desc' => __( 'Hold comments for manual approval before they appear.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'comment_moderation',
+						'desc'    => __( 'Hold comments for manual approval before they appear.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
@@ -137,33 +137,33 @@ class TSOSK_Option_Library {
 						'desc' => __( 'Default size inserted into posts (thumbnail, medium, large, full).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'WPLANG',
-						'desc' => __( 'WordPress locale code (empty = English US).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'WPLANG',
+						'desc'    => __( 'WordPress locale code (empty = English US).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'cron',
-						'desc' => __( 'Scheduled cron events (serialized array).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'caution' => true,
+						'name'     => 'cron',
+						'desc'     => __( 'Scheduled cron events (serialized array).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution'  => true,
 						'readonly' => true,
 					),
 				),
 			),
 			'woocommerce' => array(
-				'label'  => __( 'WooCommerce', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-cart',
-				'detect' => static function (): bool {
+				'label'   => __( 'WooCommerce', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-cart',
+				'detect'  => static function (): bool {
 					return class_exists( 'WooCommerce' );
 				},
-				'prefix' => 'woocommerce_',
+				'prefix'  => 'woocommerce_',
 				'options' => array(
 					array(
 						'name' => 'woocommerce_store_address',
 						'desc' => __( 'Store street address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'woocommerce_currency',
-						'desc' => __( 'Store currency code (e.g. EUR, USD).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'woocommerce_currency',
+						'desc'    => __( 'Store currency code (e.g. EUR, USD).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
@@ -176,86 +176,86 @@ class TSOSK_Option_Library {
 					),
 				),
 			),
-			'yoast' => array(
-				'label'  => __( 'Yoast SEO', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-chart-line',
-				'detect' => static function (): bool {
+			'yoast'       => array(
+				'label'   => __( 'Yoast SEO', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-chart-line',
+				'detect'  => static function (): bool {
 					return defined( 'WPSEO_VERSION' ) || class_exists( 'WPSEO_Options' );
 				},
-				'prefix' => 'wpseo',
+				'prefix'  => 'wpseo',
 				'options' => array(
 					array(
-						'name' => 'wpseo',
-						'desc' => __( 'Main Yoast SEO settings (serialized array).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'wpseo',
+						'desc'    => __( 'Main Yoast SEO settings (serialized array).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'wpseo_titles',
-						'desc' => __( 'Title and meta description templates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'wpseo_titles',
+						'desc'    => __( 'Title and meta description templates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'wpseo_social',
-						'desc' => __( 'Open Graph and social profiles.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'wpseo_social',
+						'desc'    => __( 'Open Graph and social profiles.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 				),
 			),
-			'rankmath' => array(
-				'label'  => __( 'Rank Math', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-chart-area',
-				'detect' => static function (): bool {
+			'rankmath'    => array(
+				'label'   => __( 'Rank Math', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-chart-area',
+				'detect'  => static function (): bool {
 					return defined( 'RANK_MATH_VERSION' );
 				},
-				'prefix' => 'rank_math',
+				'prefix'  => 'rank_math',
 				'options' => array(
 					array(
-						'name' => 'rank_math_options',
-						'desc' => __( 'Main Rank Math settings (serialized).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'rank_math_options',
+						'desc'    => __( 'Main Rank Math settings (serialized).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'rank_math_modules',
-						'desc' => __( 'Enabled Rank Math modules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'rank_math_modules',
+						'desc'    => __( 'Enabled Rank Math modules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 				),
 			),
-			'acf' => array(
-				'label'  => __( 'Advanced Custom Fields', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-forms',
-				'detect' => static function (): bool {
+			'acf'         => array(
+				'label'   => __( 'Advanced Custom Fields', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-forms',
+				'detect'  => static function (): bool {
 					return class_exists( 'ACF' ) || function_exists( 'acf_get_setting' );
 				},
-				'prefix' => 'acf_',
+				'prefix'  => 'acf_',
 				'options' => array(
 					array(
 						'name' => 'acf_version',
 						'desc' => __( 'Installed ACF version string.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'acf_pro_license',
-						'desc' => __( 'ACF Pro license data (read-only here — do not share exports).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'caution' => true,
+						'name'     => 'acf_pro_license',
+						'desc'     => __( 'ACF Pro license data (read-only here — do not share exports).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'caution'  => true,
 						'readonly' => true,
 					),
 				),
 			),
-			'elementor' => array(
-				'label'  => __( 'Elementor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-layout',
-				'detect' => static function (): bool {
+			'elementor'   => array(
+				'label'   => __( 'Elementor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-layout',
+				'detect'  => static function (): bool {
 					return did_action( 'elementor/loaded' ) || defined( 'ELEMENTOR_VERSION' );
 				},
-				'prefix' => 'elementor_',
+				'prefix'  => 'elementor_',
 				'options' => array(
 					array(
 						'name' => 'elementor_version',
 						'desc' => __( 'Installed Elementor version.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'elementor_cpt_support',
-						'desc' => __( 'Post types that use Elementor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'elementor_cpt_support',
+						'desc'    => __( 'Post types that use Elementor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
@@ -264,41 +264,41 @@ class TSOSK_Option_Library {
 					),
 				),
 			),
-			'wpforms' => array(
-				'label'  => __( 'WPForms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-email',
-				'detect' => static function (): bool {
+			'wpforms'     => array(
+				'label'   => __( 'WPForms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-email',
+				'detect'  => static function (): bool {
 					return function_exists( 'wpforms' ) || defined( 'WPFORMS_VERSION' );
 				},
-				'prefix' => 'wpforms_',
+				'prefix'  => 'wpforms_',
 				'options' => array(
 					array(
 						'name' => 'wpforms_version',
 						'desc' => __( 'WPForms version.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					),
 					array(
-						'name' => 'wpforms_settings',
-						'desc' => __( 'Global WPForms settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'wpforms_settings',
+						'desc'    => __( 'Global WPForms settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 				),
 			),
-			'litespeed' => array(
-				'label'  => __( 'LiteSpeed Cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'   => 'dashicons-performance',
-				'detect' => static function (): bool {
+			'litespeed'   => array(
+				'label'   => __( 'LiteSpeed Cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'    => 'dashicons-performance',
+				'detect'  => static function (): bool {
 					return defined( 'LSCWP_V' ) || class_exists( 'LiteSpeed_Cache' );
 				},
-				'prefix' => 'litespeed.',
+				'prefix'  => 'litespeed.',
 				'options' => array(
 					array(
-						'name' => 'litespeed.conf.cache',
-						'desc' => __( 'LiteSpeed cache enabled flag.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'litespeed.conf.cache',
+						'desc'    => __( 'LiteSpeed cache enabled flag.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 					array(
-						'name' => 'litespeed.conf.object',
-						'desc' => __( 'Object cache settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'name'    => 'litespeed.conf.object',
+						'desc'    => __( 'Object cache settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						'caution' => true,
 					),
 				),
@@ -320,6 +320,27 @@ class TSOSK_Option_Library {
 			}
 		}
 		return $active;
+	}
+
+	/**
+	 * Whether the registry documents an option as read-only (any library, active or not).
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	public static function is_readonly_option( string $name ): bool {
+		static $readonly = null;
+		if ( null === $readonly ) {
+			$readonly = array();
+			foreach ( self::get_registry() as $library ) {
+				foreach ( $library['options'] as $option ) {
+					if ( ! empty( $option['readonly'] ) ) {
+						$readonly[ $option['name'] ] = true;
+					}
+				}
+			}
+		}
+		return isset( $readonly[ $name ] );
 	}
 
 	/**

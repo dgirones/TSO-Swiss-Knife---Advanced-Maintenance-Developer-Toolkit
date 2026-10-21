@@ -29,12 +29,25 @@ class TSOSK_Mod_Staging {
 	/** Max characters stored from a message body. */
 	private const BODY_EXCERPT = 200;
 
-	/** @var TSOSK_Mod_Staging|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Staging|null
+	 */
 	private static $instance = null;
 
-	/** @var bool */
+	/**
+	 * Did init.
+	 *
+	 * @var bool
+	 */
 	private static $did_init = false;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -42,6 +55,9 @@ class TSOSK_Mod_Staging {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_staging_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_staging_clear_mail_log', array( $this, 'ajax_clear_mail_log' ) );
@@ -96,6 +112,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Filter wp robots noindex.
+	 *
 	 * @param mixed $robots Robots directives from wp_robots (must stay untyped; other plugins may pass non-arrays).
 	 * @return mixed
 	 */
@@ -109,6 +127,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Filter sitemaps off.
+	 *
 	 * @param mixed $enabled Whether sitemaps are enabled.
 	 * @return bool
 	 */
@@ -118,12 +138,14 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Filter robots txt.
+	 *
 	 * @param mixed $output robots.txt body.
-	 * @param mixed $public blog_public value (unused).
+	 * @param mixed $is_public blog_public value (unused).
 	 * @return mixed
 	 */
-	public function filter_robots_txt( $output, $public ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
-		unset( $public );
+	public function filter_robots_txt( $output, $is_public ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		unset( $is_public );
 		if ( ! is_string( $output ) ) {
 			return $output;
 		}
@@ -164,6 +186,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Filter pre wp mail.
+	 *
 	 * @param mixed                $pre  Short-circuit value.
 	 * @param array<string, mixed> $atts wp_mail arguments.
 	 * @return mixed
@@ -174,8 +198,14 @@ class TSOSK_Mod_Staging {
 		}
 
 		$settings = $this->get_settings();
-		$block    = ! empty( $settings['block_mail'] );
-		$log      = ! empty( $settings['log_mail'] ) || $block;
+		/**
+		 * Lets a caller exempt one message from the staging mail block (e.g. the sign-in verification code).
+		 *
+		 * @param bool                 $block Whether the message would be blocked.
+		 * @param array<string, mixed> $atts  wp_mail arguments.
+		 */
+		$block = ! empty( $settings['block_mail'] ) && (bool) apply_filters( 'tsosk_staging_block_this_mail', true, is_array( $atts ) ? $atts : array() );
+		$log   = ! empty( $settings['log_mail'] ) || $block;
 
 		if ( $log ) {
 			$this->append_mail_log( is_array( $atts ) ? $atts : array(), $block );
@@ -190,6 +220,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Add admin bar badge.
+	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar.
 	 */
 	public function add_admin_bar_badge( $wp_admin_bar ): void {
@@ -274,6 +306,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Sanitize settings.
+	 *
 	 * @param array<string, mixed> $raw Raw flags.
 	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool,pause_cron:bool}
 	 */
@@ -336,7 +370,7 @@ class TSOSK_Mod_Staging {
 				if ( '' === $piece ) {
 					continue;
 				}
-				$email = sanitize_email( $piece );
+				$email   = sanitize_email( $piece );
 				$clean[] = is_email( $email ) ? $email : sanitize_text_field( $piece );
 			}
 		}
@@ -346,6 +380,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Build mail entry.
+	 *
 	 * @param array<string, mixed> $atts    wp_mail atts.
 	 * @param bool                 $blocked Whether sending was blocked.
 	 * @return array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}
@@ -364,13 +400,13 @@ class TSOSK_Mod_Staging {
 		$source  = self::detect_mail_source();
 
 		return array(
-			'time'     => time(),
-			'to'       => self::normalize_recipients( $atts['to'] ?? '' ),
-			'subject'  => $subject,
-			'excerpt'  => sanitize_text_field( $excerpt ),
-			'blocked'  => $blocked,
-			'source'   => $source,
-			'kind'     => self::classify_mail_kind( $subject, $excerpt ),
+			'time'    => time(),
+			'to'      => self::normalize_recipients( $atts['to'] ?? '' ),
+			'subject' => $subject,
+			'excerpt' => sanitize_text_field( $excerpt ),
+			'blocked' => $blocked,
+			'source'  => $source,
+			'kind'    => self::classify_mail_kind( $subject, $excerpt ),
 		);
 	}
 
@@ -393,7 +429,7 @@ class TSOSK_Mod_Staging {
 				continue;
 			}
 			if ( '' !== $plug && 0 === strpos( $file, $plug ) ) {
-				$rel = ltrim( substr( $file, strlen( trailingslashit( $plug ) ) ), '/' );
+				$rel  = ltrim( substr( $file, strlen( trailingslashit( $plug ) ) ), '/' );
 				$slug = explode( '/', $rel )[0];
 				$slug = sanitize_key( $slug );
 				if ( '' !== $slug ) {
@@ -410,7 +446,7 @@ class TSOSK_Mod_Staging {
 			}
 		}
 
-		return 'core:wordpress';
+		return 'core:WordPress';
 	}
 
 	/**
@@ -499,9 +535,9 @@ class TSOSK_Mod_Staging {
 		if ( ! is_array( $crons ) ) {
 			return array();
 		}
-		$now    = time();
-		$until  = $now + max( 60, $within_seconds );
-		$out    = array();
+		$now   = time();
+		$until = $now + max( 60, $within_seconds );
+		$out   = array();
 		foreach ( $crons as $timestamp => $hooks ) {
 			$ts = (int) $timestamp;
 			if ( $ts > $until ) {
@@ -524,6 +560,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array{show_badge:bool,hide_from_search:bool,block_mail:bool,log_mail:bool,pause_cron:bool}
 	 */
 	public function get_settings(): array {
@@ -547,6 +585,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Get mail log.
+	 *
 	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}>
 	 */
 	public function get_mail_log(): array {
@@ -575,6 +615,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Sanitize mail log entries.
+	 *
 	 * @param array<int, mixed> $raw Raw rows.
 	 * @return array<int, array{time:int,to:string,subject:string,excerpt:string,blocked:bool,source:string,kind:string}>
 	 */
@@ -675,6 +717,9 @@ class TSOSK_Mod_Staging {
 		check_admin_referer( 'tsosk_staging_export_mail_log' );
 
 		$log = $this->get_mail_log();
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
+		}
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="tsosk-mail-log.csv"' );
@@ -683,6 +728,7 @@ class TSOSK_Mod_Staging {
 		if ( false === $out ) {
 			exit;
 		}
+		echo "\xEF\xBB\xBF"; // UTF-8 BOM for Excel (a fixed literal, nothing to escape).
 		fputcsv(
 			$out,
 			array(
@@ -693,7 +739,10 @@ class TSOSK_Mod_Staging {
 				'held',
 				'source',
 				'kind',
-			)
+			),
+			',',
+			'"',
+			''
 		);
 		foreach ( $log as $row ) {
 			fputcsv(
@@ -705,8 +754,11 @@ class TSOSK_Mod_Staging {
 					$this->csv_safe_cell( $row['excerpt'] ),
 					$row['blocked'] ? '1' : '0',
 					$this->csv_safe_cell( $row['source'] ),
-					$row['kind'],
-				)
+					$this->csv_safe_cell( $row['kind'] ),
+				),
+				',',
+				'"',
+				''
 			);
 		}
 		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closes php://output CSV stream opened above; not a disk write.
@@ -714,6 +766,8 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Append mail log.
+	 *
 	 * @param array<string, mixed> $atts    wp_mail atts.
 	 * @param bool                 $blocked Blocked flag.
 	 */
@@ -734,15 +788,18 @@ class TSOSK_Mod_Staging {
 		TSOSK_Config_Storage::delete_log_json( TSOSK_Config_Storage::MAIL_LOG_JSON );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$nonce     = wp_create_nonce( 'tsosk_staging_nonce' );
-		$settings  = $this->get_settings();
-		$log       = $this->get_mail_log();
-		$woo       = class_exists( 'WooCommerce' );
-		$looks     = self::looks_like_non_production();
-		$any_on    = self::is_any_feature_on();
-		$upcoming  = self::upcoming_cron_hooks();
-		$export    = wp_nonce_url(
+		$nonce    = wp_create_nonce( 'tsosk_staging_nonce' );
+		$settings = $this->get_settings();
+		$log      = $this->get_mail_log();
+		$woo      = class_exists( 'WooCommerce' );
+		$looks    = self::looks_like_non_production();
+		$any_on   = self::is_any_feature_on();
+		$upcoming = self::upcoming_cron_hooks();
+		$export   = wp_nonce_url(
 			add_query_arg( 'action', 'tsosk_staging_export_mail_log', admin_url( 'admin-post.php' ) ),
 			'tsosk_staging_export_mail_log'
 		);
@@ -791,6 +848,9 @@ class TSOSK_Mod_Staging {
 				<strong><?php esc_html_e( 'Do not send real emails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'WordPress will think the email was sent, but nothing leaves the server. A short copy is kept in the log below. Use this so a test shop does not email real customers.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+				<p class="description" style="margin:4px 0 0 24px;">
+					<?php esc_html_e( 'Note: this also blocks password-reset emails and login verification codes. Keep an administrator session open, or turn this option off before you need to sign in again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
 			</label>
 			<label class="tsosk-heartbeat-option">

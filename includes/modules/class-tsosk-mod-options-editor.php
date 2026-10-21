@@ -12,13 +12,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Options editor module.
+ */
 class TSOSK_Mod_Options_Editor {
 
 	private const HISTORY_OPTION = 'tsosk_oe_history';
 	private const PER_PAGE       = 100;
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Options_Editor|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -26,11 +39,14 @@ class TSOSK_Mod_Options_Editor {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_oe_search', array( $this, 'ajax_search' ) );
-		add_action( 'wp_ajax_tsosk_oe_get',    array( $this, 'ajax_get' ) );
-		add_action( 'wp_ajax_tsosk_oe_save',   array( $this, 'ajax_save' ) );
-		add_action( 'wp_ajax_tsosk_oe_add',    array( $this, 'ajax_add' ) );
+		add_action( 'wp_ajax_tsosk_oe_get', array( $this, 'ajax_get' ) );
+		add_action( 'wp_ajax_tsosk_oe_save', array( $this, 'ajax_save' ) );
+		add_action( 'wp_ajax_tsosk_oe_add', array( $this, 'ajax_add' ) );
 		add_action( 'wp_ajax_tsosk_oe_delete', array( $this, 'ajax_delete' ) );
 		// Undo button on the Activity History tab; scoped to Options Editor entries only.
 		add_action( 'wp_ajax_tsosk_history_undo', array( $this, 'ajax_undo_from_history' ) );
@@ -46,8 +62,9 @@ class TSOSK_Mod_Options_Editor {
 	 */
 	private function decode_for_storage( string $raw ) {
 		if ( $this->looks_serialized( $raw ) ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			$decoded = @unserialize( $raw, array( 'allowed_classes' => false ) );
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
 			if ( false !== $decoded || serialize( false ) === $raw ) {
 				return $decoded;
 			}
@@ -96,11 +113,11 @@ class TSOSK_Mod_Options_Editor {
 		if ( '' === $name || ! in_array( $action, array( 'update', 'add', 'delete' ), true ) ) {
 			wp_send_json_error( __( 'This change cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		if ( $this->is_protected_core( $name ) || $this->is_secret_option( $name ) || $this->is_caution_option( $name ) ) {
+		if ( $this->is_protected_core( $name ) || $this->is_secret_option( $name ) || $this->is_readonly_option( $name ) ) {
 			wp_send_json_error( __( 'This option is protected and cannot be changed here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$autoload_final = in_array( $autoload, array( 'yes', 'no', 'on', 'off', '1', '0', 'true', 'false' ), true ) ? $autoload : 'no';
+		$autoload_final = self::normalize_autoload( $autoload );
 
 		if ( 'add' === $action ) {
 			if ( ! $this->option_exists( $name ) ) {
@@ -147,44 +164,104 @@ class TSOSK_Mod_Options_Editor {
 	 */
 	public static function get_protected_option_names(): array {
 		return array(
-			'siteurl', 'home', 'blogname', 'blogdescription',
-			'admin_email', 'active_plugins', 'active_sitewide_plugins',
-			'template', 'stylesheet', 'template_root', 'stylesheet_root',
-			'db_version', 'initial_db_version',
+			'siteurl',
+			'home',
+			'blogname',
+			'blogdescription',
+			'admin_email',
+			'active_plugins',
+			'active_sitewide_plugins',
+			'template',
+			'stylesheet',
+			'template_root',
+			'stylesheet_root',
+			'db_version',
+			'initial_db_version',
 			'wp_user_roles',
-			'auth_key', 'secure_auth_key', 'logged_in_key', 'nonce_key',
-			'auth_salt', 'secure_auth_salt', 'logged_in_salt', 'nonce_salt',
-			'cron', 'rewrite_rules', 'permalink_structure',
-			'recently_activated', 'recently_edited', 'uninstall_plugins',
-			'sidebars_widgets', 'widget_block',
-			'WPLANG', 'gmt_offset', 'timezone_string',
-			'date_format', 'time_format', 'start_of_week',
-			'default_category', 'default_email_category',
-			'default_comment_status', 'default_ping_status', 'default_pingback_flag',
-			'comments_notify', 'moderation_notify', 'comment_moderation',
-			'comment_whitelist', 'comment_registration',
-			'close_comments_for_old_posts', 'close_comments_days_old',
-			'thread_comments', 'thread_comments_depth', 'page_comments',
-			'comments_per_page', 'default_comments_page', 'comment_order',
-			'comment_max_links', 'moderation_keys', 'blacklist_keys',
-			'show_avatars', 'avatar_rating', 'avatar_default',
-			'thumbnail_size_w', 'thumbnail_size_h', 'thumbnail_crop',
-			'medium_size_w', 'medium_size_h', 'large_size_w', 'large_size_h',
-			'image_default_link_type', 'image_default_size',
-			'ping_sites', 'blog_public', 'blog_charset',
-			'default_role', 'users_can_register',
-			'show_on_front', 'page_on_front', 'page_for_posts',
-			'sticky_posts', 'site_icon', 'site_logo',
-			'fresh_site', 'can_compress_scripts',
-			'upload_path', 'upload_url_path',
-			'category_base', 'tag_base',
-			'auto_core_update_notified', 'auto_plugin_theme_update_emails',
-			'auto_update_core_dev', 'auto_update_core_minor', 'auto_update_core_major',
+			'auth_key',
+			'secure_auth_key',
+			'logged_in_key',
+			'nonce_key',
+			'auth_salt',
+			'secure_auth_salt',
+			'logged_in_salt',
+			'nonce_salt',
+			'cron',
+			'rewrite_rules',
+			'permalink_structure',
+			'recently_activated',
+			'recently_edited',
+			'uninstall_plugins',
+			'sidebars_widgets',
+			'widget_block',
+			'WPLANG',
+			'gmt_offset',
+			'timezone_string',
+			'date_format',
+			'time_format',
+			'start_of_week',
+			'default_category',
+			'default_email_category',
+			'default_comment_status',
+			'default_ping_status',
+			'default_pingback_flag',
+			'comments_notify',
+			'moderation_notify',
+			'comment_moderation',
+			'comment_whitelist',
+			'comment_registration',
+			'close_comments_for_old_posts',
+			'close_comments_days_old',
+			'thread_comments',
+			'thread_comments_depth',
+			'page_comments',
+			'comments_per_page',
+			'default_comments_page',
+			'comment_order',
+			'comment_max_links',
+			'moderation_keys',
+			'blacklist_keys',
+			'show_avatars',
+			'avatar_rating',
+			'avatar_default',
+			'thumbnail_size_w',
+			'thumbnail_size_h',
+			'thumbnail_crop',
+			'medium_size_w',
+			'medium_size_h',
+			'large_size_w',
+			'large_size_h',
+			'image_default_link_type',
+			'image_default_size',
+			'ping_sites',
+			'blog_public',
+			'blog_charset',
+			'default_role',
+			'users_can_register',
+			'show_on_front',
+			'page_on_front',
+			'page_for_posts',
+			'sticky_posts',
+			'site_icon',
+			'site_logo',
+			'fresh_site',
+			'can_compress_scripts',
+			'upload_path',
+			'upload_url_path',
+			'category_base',
+			'tag_base',
+			'auto_core_update_notified',
+			'auto_plugin_theme_update_emails',
+			'auto_update_core_dev',
+			'auto_update_core_minor',
+			'auto_update_core_major',
 			'recovery_keys',
 			self::HISTORY_OPTION,
 			TSOSK_Activity_Log::OPTION,
 			TSOSK_Activity_Log::MIGRATED_OPTION,
-			'tsosk_activated', 'tsosk_version',
+			'tsosk_activated',
+			'tsosk_version',
+			'tsosk_snapshot_backup',
 		);
 	}
 
@@ -210,9 +287,15 @@ class TSOSK_Mod_Options_Editor {
 	 */
 	public static function get_caution_option_names(): array {
 		return array(
-			'posts_per_page', 'posts_per_rss', 'rss_use_excerpt',
-			'mailserver_url', 'mailserver_login', 'mailserver_pass', 'mailserver_port',
-			'default_post_format', 'default_post_category',
+			'posts_per_page',
+			'posts_per_rss',
+			'rss_use_excerpt',
+			'mailserver_url',
+			'mailserver_login',
+			'mailserver_pass',
+			'mailserver_port',
+			'default_post_format',
+			'default_post_category',
 			'wp_mail_smtp',
 		);
 	}
@@ -223,10 +306,14 @@ class TSOSK_Mod_Options_Editor {
 	 * @return string[]
 	 */
 	public static function get_deletion_blocked_option_names(): array {
-		return array_values( array_unique( array_merge(
-			self::get_protected_option_names(),
-			self::get_caution_option_names()
-		) ) );
+		return array_values(
+			array_unique(
+				array_merge(
+					self::get_protected_option_names(),
+					self::get_caution_option_names()
+				)
+			)
+		);
 	}
 
 	/**
@@ -252,18 +339,60 @@ class TSOSK_Mod_Options_Editor {
 		return add_query_arg( $args, admin_url( 'tools.php' ) );
 	}
 
+	/**
+	 * Is deletion blocked.
+	 *
+	 * @param string $name Name.
+	 * @return bool
+	 */
 	private function is_deletion_blocked( string $name ): bool {
 		return in_array( $name, self::get_deletion_blocked_option_names(), true );
 	}
 
+	/**
+	 * Is caution option.
+	 *
+	 * @param string $name Name.
+	 * @return bool
+	 */
 	private function is_caution_option( string $name ): bool {
-		return in_array( $name, $this->get_caution(), true );
+		return in_array( $name, $this->get_caution(), true ) || $this->is_readonly_option( $name );
 	}
 
+	/**
+	 * Whether the Option Library documents this option as read-only.
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	private function is_readonly_option( string $name ): bool {
+		return class_exists( 'TSOSK_Option_Library' ) && TSOSK_Option_Library::is_readonly_option( $name );
+	}
+
+	/**
+	 * Normalize any accepted autoload flag to 'yes' or 'no' (WP < 6.6 treats 'off'/'0'/'false' as yes).
+	 *
+	 * @param string $autoload Raw autoload flag.
+	 * @return string
+	 */
+	private static function normalize_autoload( string $autoload ): string {
+		return in_array( strtolower( $autoload ), array( 'yes', 'on', 'auto-on', 'auto', '1', 'true' ), true ) ? 'yes' : 'no';
+	}
+
+	/**
+	 * Get protected.
+	 *
+	 * @return array
+	 */
 	private function get_protected(): array {
 		return self::get_protected_option_names();
 	}
 
+	/**
+	 * Get caution.
+	 *
+	 * @return array
+	 */
 	private function get_caution(): array {
 		return self::get_caution_option_names();
 	}
@@ -283,7 +412,8 @@ class TSOSK_Mod_Options_Editor {
 			return true;
 		}
 		foreach ( self::get_protected_option_patterns() as $pattern ) {
-			if ( fnmatch( $pattern, $name ) ) {
+			// Patterns use SQL LIKE syntax (%); fnmatch() expects shell wildcards (*).
+			if ( fnmatch( str_replace( '%', '*', $pattern ), $name ) ) {
 				return true;
 			}
 		}
@@ -328,7 +458,17 @@ class TSOSK_Mod_Options_Editor {
 	 * @return bool
 	 */
 	private function is_secret_option( string $name ): bool {
-		$lower = strtolower( $name );
+		return self::is_secret_option_name( $name );
+	}
+
+	/**
+	 * Whether an option name likely stores credentials or secrets (static, shared with Option Library).
+	 *
+	 * @param string $name Option name.
+	 * @return bool
+	 */
+	public static function is_secret_option_name( string $name ): bool {
+		$lower   = strtolower( $name );
 		$needles = array(
 			'password',
 			'passwd',
@@ -347,6 +487,8 @@ class TSOSK_Mod_Options_Editor {
 			'oauth',
 			'jwt',
 			'license_key',
+			'license',
+			'mailserver_pass',
 		);
 		foreach ( $needles as $needle ) {
 			if ( str_contains( $lower, $needle ) ) {
@@ -580,9 +722,10 @@ class TSOSK_Mod_Options_Editor {
 						__( 'The value does not look like valid serialized PHP.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					);
 				}
-				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 				$test = @unserialize( $raw, array( 'allowed_classes' => false ) );
-				if ( false === $test && $raw !== serialize( false ) ) {
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
+				if ( false === $test && serialize( false ) !== $raw ) {
 					return new WP_Error(
 						'invalid_serialized',
 						__( 'The value looks like serialized PHP but is not valid.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
@@ -597,6 +740,9 @@ class TSOSK_Mod_Options_Editor {
 		}
 	}
 
+	/**
+	 * AJAX: search.
+	 */
 	public function ajax_search(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -605,17 +751,17 @@ class TSOSK_Mod_Options_Editor {
 
 		global $wpdb;
 
-		$search           = isset( $_POST['search'] )        ? sanitize_text_field( wp_unslash( $_POST['search'] ) )        : '';
-		$page             = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
-		$sort_col    = sanitize_key( wp_unslash( $_POST['sort_col']  ?? 'option_name' ) );
-		$sort_dir    = strtoupper( sanitize_key( wp_unslash( $_POST['sort_dir']  ?? 'ASC' ) ) ) === 'DESC' ? 'DESC' : 'ASC';
-		$filter_type = sanitize_key( wp_unslash( $_POST['filter_type'] ?? '' ) );
+		$search          = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+		$page            = max( 1, isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : 1 );
+		$sort_col        = sanitize_key( wp_unslash( $_POST['sort_col'] ?? 'option_name' ) );
+		$sort_dir        = strtoupper( sanitize_key( wp_unslash( $_POST['sort_dir'] ?? 'ASC' ) ) ) === 'DESC' ? 'DESC' : 'ASC';
+		$filter_type     = sanitize_key( wp_unslash( $_POST['filter_type'] ?? '' ) );
 		$filter_autoload = sanitize_key( wp_unslash( $_POST['filter_autoload'] ?? '' ) );
 		$filter_autoload = in_array( $filter_autoload, array( 'yes', 'no' ), true ) ? $filter_autoload : '';
-		$min_size_kb = isset( $_POST['min_size_kb'] ) ? absint( wp_unslash( $_POST['min_size_kb'] ) ) : 0;
-		$show_protected = ! empty( $_POST['show_protected'] );
-		$exact          = ! empty( $_POST['exact'] );
-		$offset      = ( $page - 1 ) * self::PER_PAGE;
+		$min_size_kb     = isset( $_POST['min_size_kb'] ) ? absint( wp_unslash( $_POST['min_size_kb'] ) ) : 0;
+		$show_protected  = ! empty( $_POST['show_protected'] );
+		$exact           = ! empty( $_POST['exact'] );
+		$offset          = ( $page - 1 ) * self::PER_PAGE;
 
 		$allowed_cols = array( 'option_name', 'autoload', 'size', 'type', 'preview' );
 		if ( ! in_array( $sort_col, $allowed_cols, true ) ) {
@@ -673,29 +819,35 @@ class TSOSK_Mod_Options_Editor {
 			$name         = (string) $row['option_name'];
 			$value        = (string) $row['option_value'];
 			$type         = $this->detect_type( $value );
-			$is_caution = in_array( $name, $caution, true );
+			$is_caution   = in_array( $name, $caution, true ) || $this->is_readonly_option( $name );
 			$is_protected = $this->is_protected_core( $name );
+			$is_secret    = $this->is_secret_option( $name );
 
 			$items[] = array(
 				'name'      => $name,
 				'type'      => $type,
 				'size'      => strlen( $value ),
 				'autoload'  => $row['autoload'],
-				'preview'   => $this->make_preview( $value, $type ),
+				'preview'   => $is_secret ? '••••••' : $this->make_preview( $value, $type ),
 				'caution'   => $is_caution,
 				'protected' => $is_protected,
 			);
 		}
 
-		wp_send_json_success( array(
-			'items'       => $items,
-			'total'       => $total,
-			'page'        => $page,
-			'per_page'    => self::PER_PAGE,
-			'total_pages' => max( 1, (int) ceil( $total / self::PER_PAGE ) ),
-		) );
+		wp_send_json_success(
+			array(
+				'items'       => $items,
+				'total'       => $total,
+				'page'        => $page,
+				'per_page'    => self::PER_PAGE,
+				'total_pages' => max( 1, (int) ceil( $total / self::PER_PAGE ) ),
+			)
+		);
 	}
 
+	/**
+	 * AJAX: get.
+	 */
 	public function ajax_get(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -730,31 +882,42 @@ class TSOSK_Mod_Options_Editor {
 		$value = (string) $row['option_value'];
 		$type  = $this->detect_type( $value );
 
-		wp_send_json_success( array(
-			'name'      => $row['option_name'],
-			'raw'       => $value,
-			'pretty'    => $this->pretty_value( $value, $type ),
-			'type'      => $type,
-			'autoload'  => $row['autoload'],
-			'size'      => strlen( $value ),
-			'protected' => $this->is_protected_core( $name ),
-			'caution'   => in_array( $name, $this->get_caution(), true ),
-		) );
+		wp_send_json_success(
+			array(
+				'name'      => $row['option_name'],
+				'raw'       => $value,
+				'pretty'    => $this->pretty_value( $value, $type ),
+				'type'      => $type,
+				'autoload'  => $row['autoload'],
+				'size'      => strlen( $value ),
+				'protected' => $this->is_protected_core( $name ),
+				'caution'   => $this->is_caution_option( $name ),
+			)
+		);
 	}
 
+	/**
+	 * AJAX: save.
+	 */
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$name    = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
-		$raw_val = TSOSK_Support::get_post_scalar( 'value' );
+		$name     = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$raw_val  = TSOSK_Support::get_post_scalar( 'value' );
 		$autoload = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) ) : 'no';
-		$autoload = in_array( $autoload, array( 'yes', 'no', 'on', 'off', '1', '0', 'true', 'false' ), true ) ? $autoload : 'no';
+		$autoload = self::normalize_autoload( $autoload );
 
 		if ( ! $name ) {
 			wp_send_json_error( __( 'Invalid option name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( $this->is_transient_option( $name ) ) {
+			wp_send_json_error( __( 'Transient options cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( ! $this->option_exists( $name ) ) {
+			wp_send_json_error( __( 'Option not found. Use "Add new option" to create it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->is_protected_core( $name ) ) {
 			wp_send_json_error( __( 'This option is protected and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -762,30 +925,36 @@ class TSOSK_Mod_Options_Editor {
 		if ( $this->is_secret_option( $name ) ) {
 			wp_send_json_error( __( 'This option cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		if ( $this->is_caution_option( $name ) ) {
-			wp_send_json_error( __( 'This option is marked as caution and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		if ( $this->is_readonly_option( $name ) ) {
+			wp_send_json_error( __( 'This option is documented as read-only and cannot be edited here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		if ( $this->looks_serialized( $raw_val ) ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			$test = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
-			if ( false === $test && $raw_val !== serialize( false ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
+			if ( false === $test && serialize( false ) !== $raw_val ) {
 				wp_send_json_error( __( 'The value looks like serialized PHP but is not valid. Please fix the syntax or paste plain text instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 		}
 
 		$old_raw  = $this->fetch_option_value_from_db( $name );
 		$old_type = $this->detect_type( $old_raw );
+		// Objects cannot be rebuilt safely here (their classes are not loaded on purpose): saving would turn them into broken placeholders.
+		if ( preg_match( '/(?:^|[;{}])[OC]:\d+:"/', (string) $old_raw ) || preg_match( '/(?:^|[;{}])[OC]:\d+:"/', $raw_val ) ) {
+			wp_send_json_error( __( 'This value contains serialized PHP objects and cannot be edited here without corrupting it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		if ( 'serialized' === $old_type ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
-			$old_data = @unserialize( $old_raw, array( 'allowed_classes' => false ) );
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
+			$old_data         = @unserialize( $old_raw, array( 'allowed_classes' => false ) );
 			$old_is_structure = is_array( $old_data ) || is_object( $old_data );
 			if ( $old_is_structure ) {
 				if ( ! $this->looks_serialized( $raw_val ) ) {
 					wp_send_json_error( __( 'This option stores structured data. Paste a valid serialized PHP value (or keep the existing structure).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 				}
-				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 				$new_data = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
-				if ( ( false === $new_data && $raw_val !== serialize( false ) ) || ( ! is_array( $new_data ) && ! is_object( $new_data ) ) ) {
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
+				if ( ( false === $new_data && serialize( false ) !== $raw_val ) || ( ! is_array( $new_data ) && ! is_object( $new_data ) ) ) {
 					wp_send_json_error( __( 'This option stores structured data. The new value must unserialize to an array or object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 				}
 			}
@@ -804,42 +973,48 @@ class TSOSK_Mod_Options_Editor {
 		}
 
 		// Avoid double-serialize: update_option() may maybe_serialize arrays/objects and serialized strings.
-		$to_store   = $raw_val;
-		$log_new    = is_string( $raw_val ) ? $raw_val : wp_json_encode( $raw_val );
+		$to_store = $raw_val;
+		$log_new  = is_string( $raw_val ) ? $raw_val : wp_json_encode( $raw_val );
 		if ( is_string( $raw_val ) && $this->looks_serialized( $raw_val ) ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			$decoded = @unserialize( $raw_val, array( 'allowed_classes' => false ) );
-			if ( false !== $decoded || $raw_val === serialize( false ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
+			if ( false !== $decoded || serialize( false ) === $raw_val ) {
 				$to_store = $decoded;
 				$log_new  = $raw_val;
 			}
 		}
 
 		update_option( $name, $to_store, $autoload );
-		$this->log_activity( array(
-			'action'   => 'update',
-			'name'     => $name,
-			'old'      => TSOSK_Support::sanitize_stored_scalar( $old_raw ),
-			'new'      => is_string( $log_new ) ? $log_new : TSOSK_Support::sanitize_stored_scalar( (string) $log_new ),
-			'autoload' => $autoload,
-			'time'     => time(),
-			'user'     => wp_get_current_user()->user_login,
-		) );
+		$this->log_activity(
+			array(
+				'action'   => 'update',
+				'name'     => $name,
+				'old'      => TSOSK_Support::sanitize_stored_scalar( $old_raw ),
+				'new'      => is_string( $log_new ) ? $log_new : TSOSK_Support::sanitize_stored_scalar( (string) $log_new ),
+				'autoload' => $autoload,
+				'time'     => time(),
+				'user'     => wp_get_current_user()->user_login,
+			)
+		);
 
 		wp_send_json_success( __( 'Option saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: add.
+	 */
 	public function ajax_add(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$name      = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
-		$raw_val   = TSOSK_Support::get_post_scalar( 'value' );
+		$name       = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$raw_val    = TSOSK_Support::get_post_scalar( 'value' );
 		$value_type = sanitize_key( wp_unslash( $_POST['value_type'] ?? 'text' ) );
-		$autoload  = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) )         : 'no';
-		$autoload  = in_array( $autoload, array( 'yes', 'no' ), true ) ? $autoload : 'no';
+		$autoload   = isset( $_POST['autoload'] ) ? sanitize_key( wp_unslash( $_POST['autoload'] ) ) : 'no';
+		$autoload   = in_array( $autoload, array( 'yes', 'no' ), true ) ? $autoload : 'no';
 
 		if ( ! in_array( $value_type, array( 'text', 'integer', 'json', 'serialized' ), true ) ) {
 			$value_type = 'text';
@@ -860,24 +1035,34 @@ class TSOSK_Mod_Options_Editor {
 			wp_send_json_error( $prepared_value->get_error_message() );
 		}
 
-		$log_new = is_string( $prepared_value )
-			? $prepared_value
-			: ( is_scalar( $prepared_value ) ? (string) $prepared_value : wp_json_encode( $prepared_value ) );
+		if ( 'serialized' === $value_type ) {
+			// Log the exact string stored in the DB so Undo can compare it (not a JSON re-encoding).
+			$log_new = trim( $raw_val );
+		} else {
+			$log_new = is_string( $prepared_value )
+				? $prepared_value
+				: ( is_scalar( $prepared_value ) ? (string) $prepared_value : wp_json_encode( $prepared_value ) );
+		}
 
 		add_option( $name, $prepared_value, '', $autoload );
-		$this->log_activity( array(
-			'action'   => 'add',
-			'name'     => $name,
-			'old'      => '',
-			'new'      => (string) $log_new,
-			'autoload' => $autoload,
-			'time'     => time(),
-			'user'     => wp_get_current_user()->user_login,
-		) );
+		$this->log_activity(
+			array(
+				'action'   => 'add',
+				'name'     => $name,
+				'old'      => '',
+				'new'      => (string) $log_new,
+				'autoload' => $autoload,
+				'time'     => time(),
+				'user'     => wp_get_current_user()->user_login,
+			)
+		);
 
 		wp_send_json_success( __( 'Option added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: delete.
+	 */
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_oe_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -899,45 +1084,74 @@ class TSOSK_Mod_Options_Editor {
 		$old_autoload = $this->fetch_option_autoload_from_db( $name );
 
 		delete_option( $name );
-		$this->log_activity( array(
-			'action'   => 'delete',
-			'name'     => $name,
-			'old'      => (string) $old_raw,
-			'new'      => '',
-			'autoload' => $old_autoload,
-			'time'     => time(),
-			'user'     => wp_get_current_user()->user_login,
-		) );
+		$this->log_activity(
+			array(
+				'action'   => 'delete',
+				'name'     => $name,
+				'old'      => (string) $old_raw,
+				'new'      => '',
+				'autoload' => $old_autoload,
+				'time'     => time(),
+				'user'     => wp_get_current_user()->user_login,
+			)
+		);
 
 		wp_send_json_success( __( 'Option deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Detect type.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
 	private function detect_type( string $value ): string {
-		if ( $this->looks_serialized( $value ) ) { return 'serialized'; }
+		if ( $this->looks_serialized( $value ) ) {
+			return 'serialized'; }
 		if ( strlen( $value ) > 1 && in_array( $value[0], array( '{', '[' ), true ) ) {
-			if ( null !== json_decode( $value, true ) ) { return 'json'; }
+			if ( null !== json_decode( $value, true ) ) {
+				return 'json'; }
 		}
-		if ( is_numeric( $value ) && strpos( $value, '.' ) === false ) { return 'integer'; }
+		if ( is_numeric( $value ) && strpos( $value, '.' ) === false ) {
+			return 'integer'; }
 		return 'text';
 	}
 
+	/**
+	 * Looks serialized.
+	 *
+	 * @param string $value Value.
+	 * @return bool
+	 */
 	private function looks_serialized( string $value ): bool {
-		if ( '' === $value ) { return false; }
+		if ( '' === $value ) {
+			return false; }
 		return (bool) preg_match( '/^(s:\d+:".+";|i:\d+;|b:[01];|a:\d+:{|O:\d+:"|N;|d:[\d.E+-]+;|C:\d+:")/s', $value );
 	}
 
+	/**
+	 * Make preview.
+	 *
+	 * @param string $value Value.
+	 * @param string $type Type.
+	 * @return string
+	 */
 	private function make_preview( string $value, string $type ): string {
-		if ( '' === $value ) { return '(empty)'; }
+		if ( '' === $value ) {
+			return '(empty)'; }
 		switch ( $type ) {
 			case 'serialized':
-				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 				$data = @unserialize( $value, array( 'allowed_classes' => false ) );
-				if ( is_array( $data ) )  { return '[array, ' . count( $data ) . ' keys]'; }
-				if ( is_object( $data ) ) { return '[object]'; }
+				if ( is_array( $data ) ) {
+					return '[array, ' . count( $data ) . ' keys]'; }
+				if ( is_object( $data ) ) {
+					return '[object]'; }
 				return mb_substr( $value, 0, 60 );
 			case 'json':
 				$data = json_decode( $value, true );
-				if ( is_array( $data ) ) { return '[JSON, ' . count( $data ) . ' keys]'; }
+				if ( is_array( $data ) ) {
+					return '[JSON, ' . count( $data ) . ' keys]'; }
 				return mb_substr( $value, 0, 60 );
 			default:
 				$preview = mb_substr( $value, 0, 80 );
@@ -945,11 +1159,19 @@ class TSOSK_Mod_Options_Editor {
 		}
 	}
 
+	/**
+	 * Pretty value.
+	 *
+	 * @param string $value Value.
+	 * @param string $type Type.
+	 * @return string
+	 */
 	private function pretty_value( string $value, string $type ): string {
 		if ( 'serialized' === $type ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			$data = @unserialize( $value, array( 'allowed_classes' => false ) );
-			if ( false !== $data || $value === serialize( false ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- Re-serialising a validated stored value.
+			if ( false !== $data || serialize( false ) === $value ) {
 				return $this->export_var( $data );
 			}
 		}
@@ -962,23 +1184,36 @@ class TSOSK_Mod_Options_Editor {
 		return $value;
 	}
 
-	private function export_var( $var, int $depth = 0 ): string {
+	/**
+	 * Export var.
+	 *
+	 * @param mixed $exported Var.
+	 * @param int   $depth Depth.
+	 * @return string
+	 */
+	private function export_var( $exported, int $depth = 0 ): string {
 		$indent = str_repeat( '  ', $depth );
-		if ( is_null( $var ) )   { return 'null'; }
-		if ( is_bool( $var ) )   { return $var ? 'true' : 'false'; }
-		if ( is_int( $var ) || is_float( $var ) ) { return (string) $var; }
-		if ( is_string( $var ) ) { return '"' . addcslashes( $var, '"\\' ) . '"'; }
-		if ( is_array( $var ) ) {
-			if ( empty( $var ) ) { return '[]'; }
-			$is_list = array_keys( $var ) === range( 0, count( $var ) - 1 );
+		if ( is_null( $exported ) ) {
+			return 'null'; }
+		if ( is_bool( $exported ) ) {
+			return $exported ? 'true' : 'false'; }
+		if ( is_int( $exported ) || is_float( $exported ) ) {
+			return (string) $exported; }
+		if ( is_string( $exported ) ) {
+			return '"' . addcslashes( $exported, '"\\' ) . '"'; }
+		if ( is_array( $exported ) ) {
+			if ( empty( $exported ) ) {
+				return '[]'; }
+			$is_list = array_keys( $exported ) === range( 0, count( $exported ) - 1 );
 			$items   = array();
-			foreach ( $var as $k => $v ) {
+			foreach ( $exported as $k => $v ) {
 				$key_str = $is_list ? '' : $this->export_var( $k ) . ': ';
 				$items[] = $indent . '  ' . $key_str . $this->export_var( $v, $depth + 1 );
 			}
 			return "[\n" . implode( ",\n", $items ) . "\n" . $indent . ']';
 		}
-		if ( is_object( $var ) ) { return '{object: ' . get_class( $var ) . '}'; }
+		if ( is_object( $exported ) ) {
+			return '{object: ' . get_class( $exported ) . '}'; }
 		return '?';
 	}
 
@@ -1000,8 +1235,8 @@ class TSOSK_Mod_Options_Editor {
 		$undoable = '' !== $name
 			&& mb_strlen( $old_full ) <= TSOSK_Activity_Log::DETAIL_TRUNCATE
 			&& mb_strlen( $new_full ) <= TSOSK_Activity_Log::DETAIL_TRUNCATE
-			&& $old_full === sanitize_text_field( $old_full )
-			&& $new_full === sanitize_text_field( $new_full );
+			&& sanitize_text_field( $old_full ) === $old_full
+			&& sanitize_text_field( $new_full ) === $new_full;
 
 		TSOSK_Activity_Log::log(
 			'options-editor',
@@ -1022,10 +1257,13 @@ class TSOSK_Mod_Options_Editor {
 		);
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		global $wpdb;
 
-		$nonce         = wp_create_nonce( 'tsosk_oe_nonce' );
+		$nonce = wp_create_nonce( 'tsosk_oe_nonce' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$total_options = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->options}" );
 		?>
@@ -1040,8 +1278,10 @@ class TSOSK_Mod_Options_Editor {
 
 		<div class="tsosk-toolbar" style="gap:12px;margin-bottom:16px;">
 			<span class="tsosk-badge tsosk-badge-info">
-				<?php /* translators: %d: number of options in database */
-			printf( esc_html__( '%d options in database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $total_options ); ?>
+				<?php
+				/* translators: %d: number of options in database */
+				printf( esc_html__( '%d options in database', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $total_options );
+				?>
 			</span>
 		</div>
 
@@ -1056,8 +1296,8 @@ class TSOSK_Mod_Options_Editor {
 				<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
 					<input type="hidden" id="tsosk-oe-nonce" value="<?php echo esc_attr( $nonce ); ?>">
 					<input type="text" id="tsosk-oe-search"
-					       placeholder="<?php esc_attr_e( 'Filter by option name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-					       style="min-width:220px;" autocomplete="off">
+							placeholder="<?php esc_attr_e( 'Filter by option name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							style="min-width:220px;" autocomplete="off">
 					<select id="tsosk-oe-filter-type" style="min-width:130px;">
 						<option value=""><?php esc_html_e( 'All types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<option value="serialized"><?php esc_html_e( 'Serialized PHP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
@@ -1072,8 +1312,8 @@ class TSOSK_Mod_Options_Editor {
 						<option value="no"><?php esc_html_e( 'Autoload: no only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
 					<input type="number" id="tsosk-oe-min-size" min="0" step="1"
-					       placeholder="<?php esc_attr_e( 'Min size (KB)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-					       style="width:130px;" title="<?php esc_attr_e( 'Show only options at least this large — useful to spot large autoloaded options that slow down every page load.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							placeholder="<?php esc_attr_e( 'Min size (KB)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							style="width:130px;" title="<?php esc_attr_e( 'Show only options at least this large — useful to spot large autoloaded options that slow down every page load.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					<button class="button button-small" id="tsosk-oe-clear-filters" title="<?php esc_attr_e( 'Clear all filters', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">✕</button>
 					<span class="tsosk-ajax-msg" id="tsosk-oe-search-msg"></span>
 				</div>
@@ -1153,10 +1393,10 @@ class TSOSK_Mod_Options_Editor {
 			</div>
 			<div style="position:relative;">
 				<textarea id="tsosk-oe-value"
-				          style="width:100%;min-height:200px;font-family:monospace;font-size:12px;line-height:1.5;resize:vertical;tab-size:2;"
-				          spellcheck="false"></textarea>
+							style="width:100%;min-height:200px;font-family:monospace;font-size:12px;line-height:1.5;resize:vertical;tab-size:2;"
+							spellcheck="false"></textarea>
 				<div id="tsosk-oe-raw-preview"
-				     style="display:none;background:#f6f7f7;border:1px solid #ddd;border-radius:3px;padding:12px;font-family:monospace;font-size:11px;white-space:pre;overflow:auto;max-height:300px;margin-top:8px;color:#1d2327;"></div>
+					style="display:none;background:#f6f7f7;border:1px solid #ddd;border-radius:3px;padding:12px;font-family:monospace;font-size:11px;white-space:pre;overflow:auto;max-height:300px;margin-top:8px;color:#1d2327;"></div>
 			</div>
 			<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-oe-save-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>

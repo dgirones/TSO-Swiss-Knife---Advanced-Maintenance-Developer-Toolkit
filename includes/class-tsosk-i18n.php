@@ -21,7 +21,11 @@ class TSOSK_I18n {
 	/** User meta key for the plugin admin language switcher. */
 	public const LANGUAGE_META_KEY = 'tsosk_admin_language';
 
-	/** @var TSOSK_I18n|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_I18n|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -36,7 +40,11 @@ class TSOSK_I18n {
 		return self::$instance;
 	}
 
-	/** @codeCoverageIgnore */
+	/**
+	 * Construct.
+	 *
+	 * @codeCoverageIgnore
+	 */
 	private function __construct() {}
 
 	/**
@@ -156,6 +164,43 @@ class TSOSK_I18n {
 		}
 
 		$domain = TSOSK_TEXT_DOMAIN;
+		unload_textdomain( $domain );
+		load_textdomain( $domain, $mofile, $locale );
+	}
+
+	/**
+	 * Load the bundled catalog for the toolbar (admin bar) outside the plugin screen.
+	 *
+	 * The regular loader only runs on this plugin's own admin page, so the
+	 * Slow Query Monitor toolbar item would stay in English everywhere else.
+	 * Uses the user's plugin language when set, otherwise the current locale.
+	 */
+	public function load_translations_for_admin_bar(): void {
+		static $done = false;
+		if ( $done || $this->is_plugin_admin_screen() ) {
+			return;
+		}
+		$done = true;
+
+		$key       = self::get_admin_language_key();
+		$languages = self::get_languages();
+		$locale    = '' !== $key ? $languages[ $key ]['locale'] : determine_locale();
+		$suffix    = self::locale_file_suffix( $locale );
+		$domain    = TSOSK_TEXT_DOMAIN;
+
+		if ( '' === $suffix ) {
+			// English chosen explicitly: drop any other catalog so source strings show.
+			if ( '' !== $key ) {
+				unload_textdomain( $domain );
+			}
+			return;
+		}
+
+		$mofile = $this->resolve_mo_file( $suffix );
+		if ( '' === $mofile ) {
+			return;
+		}
+
 		unload_textdomain( $domain );
 		load_textdomain( $domain, $mofile, $locale );
 	}

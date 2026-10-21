@@ -14,9 +14,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Content_Audit {
 
-	/** @var TSOSK_Mod_Content_Audit|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Content_Audit|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Per-request cache of the posts that contain square brackets (shared by the inventory and the broken-shortcode scan).
+	 *
+	 * @var array<int, WP_Post>|null
+	 */
+	private $bracket_posts_cache = null;
+
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -24,6 +40,9 @@ class TSOSK_Mod_Content_Audit {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_ca_remove_shortcode', array( $this, 'ajax_remove_shortcode' ) );
 	}
@@ -37,8 +56,9 @@ class TSOSK_Mod_Content_Audit {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$post_id   = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
-		$shortcode = isset( $_POST['shortcode'] ) ? sanitize_key( wp_unslash( $_POST['shortcode'] ) ) : '';
+		$post_id = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
+		// Shortcode names are case-sensitive in WordPress: keep the case (sanitize_key would lowercase [MyCode]).
+		$shortcode = isset( $_POST['shortcode'] ) ? (string) preg_replace( '/[^A-Za-z0-9_-]/', '', sanitize_text_field( wp_unslash( $_POST['shortcode'] ) ) ) : '';
 
 		if ( ! $post_id ) {
 			wp_send_json_error( __( 'Invalid post ID.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -53,17 +73,17 @@ class TSOSK_Mod_Content_Audit {
 		$removed = 0;
 
 		if ( '' !== $shortcode ) {
-			$quoted  = preg_quote( $shortcode, '/' );
-			// Tag boundary: removing [foo] must not match [foobar].
-			$pattern = '/\[' . $quoted . '(?![a-zA-Z0-9_])(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
+			$quoted = preg_quote( $shortcode, '/' );
+			// Tag boundary: removing [foo] must not match [foobar]. Only the opening/closing tags go; the text between them stays.
+			$pattern = '/\[\/?' . $quoted . '(?![a-zA-Z0-9_-])[^\]]*\]/';
 			$new     = preg_replace( $pattern, '', $content, -1, $removed );
 		} else {
 			$broken = $this->get_post_broken_shortcodes( $post );
 			$new    = $content;
 			foreach ( $broken as $tag ) {
-				$quoted  = preg_quote( $tag, '/' );
-				$pattern = '/\[' . $quoted . '(?![a-zA-Z0-9_])(?:[^\]]*)\](?:.*?\[\/' . $quoted . '\])?/s';
-				$new     = preg_replace( $pattern, '', $new, -1, $count );
+				$quoted   = preg_quote( $tag, '/' );
+				$pattern  = '/\[\/?' . $quoted . '(?![a-zA-Z0-9_-])[^\]]*\]/';
+				$new      = preg_replace( $pattern, '', $new, -1, $count );
 				$removed += (int) $count;
 			}
 		}
@@ -90,7 +110,7 @@ class TSOSK_Mod_Content_Audit {
 			sprintf(
 				/* translators: 1: shortcode tag, 2: post ID */
 				__( 'Removed broken shortcode [%1$s] from post #%2$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$shortcode ?: '*',
+				$shortcode ? $shortcode : '*',
 				$post_id
 			)
 		);
@@ -111,13 +131,13 @@ class TSOSK_Mod_Content_Audit {
 	 * Render content audit.
 	 */
 	public function render(): void {
-		$nonce = wp_create_nonce( 'tsosk_ca_nonce' );
-		$empty_titles = $this->get_posts_by_issue( 'empty_titles' );
-		$missing_featured = $this->get_posts_by_issue( 'missing_featured' );
-		$old_pending = $this->get_posts_by_issue( 'old_pending' );
-		$long_slugs = $this->get_posts_by_issue( 'long_slugs' );
-		$broken_shortcodes = $this->get_broken_shortcodes();
-		$duplicate_titles = $this->get_duplicate_titles();
+		$nonce               = wp_create_nonce( 'tsosk_ca_nonce' );
+		$empty_titles        = $this->get_posts_by_issue( 'empty_titles' );
+		$missing_featured    = $this->get_posts_by_issue( 'missing_featured' );
+		$old_pending         = $this->get_posts_by_issue( 'old_pending' );
+		$long_slugs          = $this->get_posts_by_issue( 'long_slugs' );
+		$broken_shortcodes   = $this->get_broken_shortcodes();
+		$duplicate_titles    = $this->get_duplicate_titles();
 		$shortcode_inventory = $this->get_shortcode_inventory();
 		?>
 		<p class="tsosk-desc">
@@ -153,7 +173,7 @@ class TSOSK_Mod_Content_Audit {
 										<?php
 										$links = array();
 										foreach ( $row['ids'] as $post_id ) {
-											$edit  = get_edit_post_link( $post_id );
+											$edit    = get_edit_post_link( $post_id );
 											$links[] = $edit
 												? '<a href="' . esc_url( $edit ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( (string) $post_id ) . '</a>'
 												: esc_html( (string) $post_id );
@@ -230,14 +250,14 @@ class TSOSK_Mod_Content_Audit {
 					<?php foreach ( $broken_shortcodes as $item ) : ?>
 						<?php $sc_count = count( $item['shortcodes'] ); ?>
 						<tr id="tsosk-ca-row-<?php echo esc_attr( (string) $item['id'] ); ?>">
-							<td><a href="<?php echo esc_url( get_edit_post_link( $item['id'] ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $item['id'] ) ?: '#' . $item['id'] ); ?></a></td>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $item['id'] ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( '' !== get_the_title( $item['id'] ) ? get_the_title( $item['id'] ) : '#' . $item['id'] ); ?></a></td>
 							<td class="tsosk-code"><?php echo esc_html( implode( ', ', $item['shortcodes'] ) ); ?></td>
 							<td class="tsosk-actions">
 								<?php foreach ( $item['shortcodes'] as $sc ) : ?>
 								<button type="button" class="button button-small tsosk-ca-remove-sc"
-								        data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
-								        data-shortcode="<?php echo esc_attr( $sc ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
+										data-shortcode="<?php echo esc_attr( $sc ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php
 									printf(
 										/* translators: %s: shortcode tag */
@@ -249,8 +269,8 @@ class TSOSK_Mod_Content_Audit {
 								<?php endforeach; ?>
 								<?php if ( $sc_count > 1 ) : ?>
 								<button type="button" class="button button-small tsosk-ca-remove-all-sc"
-								        data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-post-id="<?php echo esc_attr( (string) $item['id'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Remove all in this post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php endif; ?>
@@ -268,6 +288,7 @@ class TSOSK_Mod_Content_Audit {
 	/**
 	 * Get posts for a content issue.
 	 *
+	 * @param string $issue Issue.
 	 * @return array<int,WP_Post>
 	 */
 	private function get_posts_by_issue( string $issue ): array {
@@ -283,8 +304,20 @@ class TSOSK_Mod_Content_Audit {
 		);
 
 		if ( 'missing_featured' === $issue ) {
-			$args['post_type']      = 'post';
-			$args['posts_per_page'] = 100;
+			$args['post_type'] = 'post';
+			// Ask the database for posts with no thumbnail instead of filtering only the newest 100.
+			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Targeted audit query, small result.
+				'relation' => 'OR',
+				array(
+					'key'     => '_thumbnail_id',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => '_thumbnail_id',
+					'value'   => '0',
+					'compare' => '=',
+				),
+			);
 		} elseif ( 'old_pending' === $issue ) {
 			$args['post_status'] = array( 'pending', 'private', 'draft' );
 			$args['date_query']  = array(
@@ -305,19 +338,26 @@ class TSOSK_Mod_Content_Audit {
 			);
 		}
 		if ( 'long_slugs' === $issue ) {
-			$posts = get_posts(
+			global $wpdb;
+			// Targeted query over every post, not just the newest 100.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$long_ids = $wpdb->get_col(
+				"SELECT ID FROM {$wpdb->posts}
+				WHERE post_type IN ('post','page')
+				AND post_status IN ('publish','draft','private','pending')
+				AND CHAR_LENGTH(post_name) > 70
+				ORDER BY post_modified_gmt DESC
+				LIMIT 30"
+			);
+			$posts    = empty( $long_ids ) ? array() : get_posts(
 				array(
 					'post_type'      => array( 'post', 'page' ),
 					'post_status'    => array( 'publish', 'draft', 'private', 'pending' ),
-					'posts_per_page' => 100,
+					'post__in'       => array_map( 'absint', $long_ids ),
+					'posts_per_page' => 30,
 					'no_found_rows'  => true,
+					'orderby'        => 'post__in',
 				)
-			);
-			$posts = array_filter(
-				$posts,
-				static function ( WP_Post $post ): bool {
-					return strlen( $post->post_name ) > 70;
-				}
 			);
 		}
 
@@ -458,6 +498,18 @@ class TSOSK_Mod_Content_Audit {
 	 * @return array<int, WP_Post>
 	 */
 	private function get_posts_with_bracket_content(): array {
+		if ( null === $this->bracket_posts_cache ) {
+			$this->bracket_posts_cache = $this->query_posts_with_bracket_content();
+		}
+		return $this->bracket_posts_cache;
+	}
+
+	/**
+	 * Queries the posts whose content contains square brackets (uncached).
+	 *
+	 * @return array<int, WP_Post>
+	 */
+	private function query_posts_with_bracket_content(): array {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -487,8 +539,10 @@ class TSOSK_Mod_Content_Audit {
 	}
 
 	/**
-	 * @param WP_Post              $post       Post object.
-	 * @param array<string, true>  $registered Registered shortcode map.
+	 * Get post broken shortcodes.
+	 *
+	 * @param WP_Post             $post       Post object.
+	 * @param array<string, true> $registered Registered shortcode map.
 	 * @return string[]
 	 */
 	private function get_post_broken_shortcodes( WP_Post $post, array $registered = array() ): array {
@@ -496,12 +550,13 @@ class TSOSK_Mod_Content_Audit {
 			global $shortcode_tags;
 			$registered = array_fill_keys( array_keys( (array) $shortcode_tags ), true );
 		}
-		if ( ! preg_match_all( '/\[([a-zA-Z][a-zA-Z0-9_-]*)/', $post->post_content, $matches ) ) {
+		// A real shortcode shape: [name], [name attr="x"] or [name /], never "[text](link)" (Markdown) or a bracket with no closing "]".
+		if ( ! preg_match_all( '/\[([a-zA-Z][a-zA-Z0-9_-]*)(?=[\s\/\]])[^\[\]]*\](?!\()/', $post->post_content, $matches ) ) {
 			return array();
 		}
 		$unknown = array();
 		foreach ( array_unique( $matches[1] ) as $shortcode ) {
-			$shortcode = sanitize_key( (string) $shortcode );
+			$shortcode = (string) $shortcode; // Case-sensitive, as in WordPress.
 			if ( '' === $shortcode || ctype_digit( $shortcode ) ) {
 				continue;
 			}
@@ -532,7 +587,7 @@ class TSOSK_Mod_Content_Audit {
 					<?php foreach ( $posts as $post ) : ?>
 						<tr>
 							<td><?php echo esc_html( (string) $post->ID ); ?></td>
-							<td><a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_the_title( $post ) ?: __( '(no title)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></a></td>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( '' !== get_the_title( $post ) ? get_the_title( $post ) : __( '(no title)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></a></td>
 							<td><?php echo esc_html( $post->post_status ); ?></td>
 							<td class="tsosk-code"><?php echo esc_html( $post->post_name ); ?></td>
 							<td><?php echo esc_html( get_the_modified_date( '', $post ) ); ?></td>

@@ -16,9 +16,18 @@ class TSOSK_Mod_Action_Scheduler {
 
 	private const PER_PAGE = 25;
 
-	/** @var TSOSK_Mod_Action_Scheduler|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Action_Scheduler|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -26,6 +35,9 @@ class TSOSK_Mod_Action_Scheduler {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_asched_list', array( $this, 'ajax_list' ) );
 		add_action( 'wp_ajax_tsosk_asched_cancel', array( $this, 'ajax_cancel' ) );
@@ -42,16 +54,18 @@ class TSOSK_Mod_Action_Scheduler {
 	}
 
 	/**
+	 * Get status choices.
+	 *
 	 * @return string[]
 	 */
 	private function get_status_choices(): array {
 		if ( class_exists( 'ActionScheduler_Store' ) ) {
 			return array(
-				'pending'   => ActionScheduler_Store::STATUS_PENDING,
+				'pending'     => ActionScheduler_Store::STATUS_PENDING,
 				'in-progress' => ActionScheduler_Store::STATUS_RUNNING,
-				'failed'    => ActionScheduler_Store::STATUS_FAILED,
-				'complete'  => ActionScheduler_Store::STATUS_COMPLETE,
-				'canceled'  => ActionScheduler_Store::STATUS_CANCELED,
+				'failed'      => ActionScheduler_Store::STATUS_FAILED,
+				'complete'    => ActionScheduler_Store::STATUS_COMPLETE,
+				'canceled'    => ActionScheduler_Store::STATUS_CANCELED,
 			);
 		}
 		return array(
@@ -64,6 +78,8 @@ class TSOSK_Mod_Action_Scheduler {
 	}
 
 	/**
+	 * Map status.
+	 *
 	 * @param string $status UI status key.
 	 * @return string
 	 */
@@ -73,13 +89,18 @@ class TSOSK_Mod_Action_Scheduler {
 	}
 
 	/**
+	 * Fetch actions.
+	 *
 	 * @param string $status UI status.
 	 * @param int    $page   Page number.
 	 * @return array{rows: array<int, array>, total: int}
 	 */
 	private function fetch_actions( string $status, int $page ): array {
 		if ( ! self::is_available() ) {
-			return array( 'rows' => array(), 'total' => 0 );
+			return array(
+				'rows'  => array(),
+				'total' => 0,
+			);
 		}
 
 		$args = array(
@@ -106,10 +127,15 @@ class TSOSK_Mod_Action_Scheduler {
 			);
 		}
 
-		return array( 'rows' => array(), 'total' => 0 );
+		return array(
+			'rows'  => array(),
+			'total' => 0,
+		);
 	}
 
 	/**
+	 * Format action rows.
+	 *
 	 * @param array<int, mixed> $actions Raw actions.
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -120,7 +146,7 @@ class TSOSK_Mod_Action_Scheduler {
 		$rows = array();
 		foreach ( $actions as $key => $action ) {
 			if ( is_numeric( $action ) || ( is_numeric( $key ) && is_numeric( $action ) ) ) {
-				$id = (int) ( is_numeric( $action ) ? $action : $key );
+				$id     = (int) ( is_numeric( $action ) ? $action : $key );
 				$rows[] = $this->format_action_from_store( $id );
 				continue;
 			}
@@ -185,6 +211,9 @@ class TSOSK_Mod_Action_Scheduler {
 		return $row;
 	}
 
+	/**
+	 * AJAX: list.
+	 */
 	public function ajax_list(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -211,6 +240,9 @@ class TSOSK_Mod_Action_Scheduler {
 		);
 	}
 
+	/**
+	 * AJAX: cancel.
+	 */
 	public function ajax_cancel(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -236,6 +268,9 @@ class TSOSK_Mod_Action_Scheduler {
 		wp_send_json_error( __( 'Could not cancel this action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: delete.
+	 */
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_asched_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -261,6 +296,9 @@ class TSOSK_Mod_Action_Scheduler {
 		wp_send_json_error( __( 'Could not delete this action.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce     = wp_create_nonce( 'tsosk_asched_nonce' );
 		$available = self::is_available();

@@ -34,7 +34,10 @@ class TSOSK_Mod_Media_Cleaner {
 	private const CHUNK_ATTACHMENTS = 80;
 
 	/** Upload files inspected per AJAX chunk. */
-	private const CHUNK_FILES = 500;
+	private const CHUNK_FILES = 3000;
+
+	/** Seconds one scan request may spend walking uploads before it hands over to the next one. */
+	private const CHUNK_SECONDS = 8;
 
 	/** Rows kept in the stored results (counters keep counting past these caps). */
 	private const MAX_MISSING_ROWS = 2000;
@@ -47,27 +50,103 @@ class TSOSK_Mod_Media_Cleaner {
 	/** Unattached media per page. */
 	private const UNATTACHED_PER_PAGE = 30;
 
+	/** MIME types of compressed archives: listed apart from media in the unattached lists. */
+	private const ARCHIVE_MIMES = array(
+		'application/zip',
+		'application/x-zip-compressed',
+		'application/x-rar-compressed',
+		'application/vnd.rar',
+		'application/x-7z-compressed',
+		'application/x-tar',
+		'application/gzip',
+		'application/x-gzip',
+		'application/x-bzip2',
+		'application/x-xz',
+	);
+
 	/** Cached "missing" rows re-checked on page load, so fixed items disappear. */
 	private const REVALIDATE_LIMIT = 300;
 
 	/** Extensions treated as media when a file is not referenced (everything else is "other files"). */
 	private const MEDIA_EXTENSIONS = array(
-		'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico', 'tif', 'tiff', 'heic', 'heif',
-		'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp',
-		'mp4', 'm4v', 'mov', 'avi', 'webm', 'mkv', 'mp3', 'wav', 'ogg', 'm4a', 'flac',
+		'jpg',
+		'jpeg',
+		'png',
+		'gif',
+		'webp',
+		'avif',
+		'svg',
+		'bmp',
+		'ico',
+		'tif',
+		'tiff',
+		'heic',
+		'heif',
+		'pdf',
+		'doc',
+		'docx',
+		'xls',
+		'xlsx',
+		'ppt',
+		'pptx',
+		'odt',
+		'ods',
+		'odp',
+		'mp4',
+		'm4v',
+		'mov',
+		'avi',
+		'webm',
+		'mkv',
+		'mp3',
+		'wav',
+		'ogg',
+		'm4a',
+		'flac',
 	);
 
 	/** Top-level uploads folders that plugins own; they are not walked (filterable). */
 	private const PLUGIN_FOLDERS = array(
-		'cache', 'fonts', 'custom-fonts', 'elementor', 'wc-logs', 'woocommerce_uploads', 'wpforms', 'smush',
-		'ai1wm-backups', 'updraft', 'litespeed', 'sucuri', 'revslider', 'wpallimport', 'wpcf7_uploads',
-		'gravity_forms', 'bb-plugin', 'backupbuddy_backups', 'pb_backupbuddy', 'wp-rocket', 'wpo-plugins-tmp',
-		'w3tc', 'breeze', 'autoptimize', 'et_temp', 'siteground-optimizer-assets',
+		'cache',
+		'fonts',
+		'custom-fonts',
+		'elementor',
+		'wc-logs',
+		'woocommerce_uploads',
+		'wpforms',
+		'smush',
+		'ai1wm-backups',
+		'updraft',
+		'litespeed',
+		'sucuri',
+		'revslider',
+		'wpallimport',
+		'wpcf7_uploads',
+		'gravity_forms',
+		'bb-plugin',
+		'backupbuddy_backups',
+		'pb_backupbuddy',
+		'wp-rocket',
+		'wpo-plugins-tmp',
+		'w3tc',
+		'breeze',
+		'autoptimize',
+		'et_temp',
+		'siteground-optimizer-assets',
 	);
 
-	/** @var TSOSK_Mod_Media_Cleaner|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Media_Cleaner|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -75,6 +154,9 @@ class TSOSK_Mod_Media_Cleaner {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_media_regenerate', array( $this, 'ajax_regenerate' ) );
 		add_action( 'wp_ajax_tsosk_media_full_review', array( $this, 'ajax_full_review' ) );
@@ -161,7 +243,7 @@ class TSOSK_Mod_Media_Cleaner {
 					'message'  => $message,
 					'progress' => $this->format_full_review_progress( $state ),
 					'html'     => array(
-						'summary'    => $this->render_summary_html( $results, $this->get_unattached_page( 1 )['total'], (int) $results['missing_total'] ),
+						'summary'    => $this->render_summary_html( $results, $this->get_unattached_page( 1 )['total'], (int) $results['missing_total'], $this->get_unattached_page( 1, true )['total'], $this->get_unattached_page( 1, false, true )['total'] ),
 						'missing'    => $this->render_missing_table_html( $this->hydrate_missing_rows( $results['missing'] ), $results ),
 						'duplicates' => $this->render_duplicates_table_html( $results['duplicates'] ),
 						'orphans'    => $this->render_orphans_table_html( $results ),
@@ -226,6 +308,12 @@ class TSOSK_Mod_Media_Cleaner {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination
 		$page       = isset( $_GET['mc_page'] ) ? max( 1, absint( wp_unslash( $_GET['mc_page'] ) ) ) : 1;
 		$unattached = $this->get_unattached_page( $page );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination
+		$zip_page     = isset( $_GET['mc_zip_page'] ) ? max( 1, absint( wp_unslash( $_GET['mc_zip_page'] ) ) ) : 1;
+		$unattached_z = $this->get_unattached_page( $zip_page, true );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination
+		$used_page    = isset( $_GET['mc_used_page'] ) ? max( 1, absint( wp_unslash( $_GET['mc_used_page'] ) ) ) : 1;
+		$unattached_u = $this->get_unattached_page( $used_page, false, true );
 
 		$uploads  = wp_upload_dir();
 		$basedir  = ! empty( $uploads['basedir'] ) ? wp_normalize_path( trailingslashit( $uploads['basedir'] ) ) : '';
@@ -242,7 +330,7 @@ class TSOSK_Mod_Media_Cleaner {
 
 		<div class="tsosk-toolbar" style="gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
 			<button type="button" class="button button-primary" id="tsosk-media-full-review"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Run full media review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-media-full-review-msg"></span>
@@ -286,7 +374,7 @@ class TSOSK_Mod_Media_Cleaner {
 			<?php
 			if ( $has_full ) {
 				$missing_count = ! empty( $cached['missing_capped'] ) ? (int) ( $cached['missing_total'] ?? 0 ) : count( $missing );
-				echo $this->render_summary_html( $cached, $unattached['total'], $missing_count ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method.
+				echo $this->render_summary_html( $cached, $unattached['total'], $missing_count, $unattached_z['total'], $unattached_u['total'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method.
 			}
 			?>
 		</div>
@@ -294,8 +382,8 @@ class TSOSK_Mod_Media_Cleaner {
 		<div id="tsosk-media-missing-wrap">
 			<?php
 			if ( $has_full ) {
-				$meta                   = $cached;
-				$meta['missing_total']  = ! empty( $cached['missing_capped'] ) ? (int) ( $cached['missing_total'] ?? 0 ) : count( $missing );
+				$meta                  = $cached;
+				$meta['missing_total'] = ! empty( $cached['missing_capped'] ) ? (int) ( $cached['missing_total'] ?? 0 ) : count( $missing );
 				echo $this->render_missing_table_html( $missing, $meta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method.
 			} else {
 				?>
@@ -317,6 +405,16 @@ class TSOSK_Mod_Media_Cleaner {
 		</div>
 
 		<?php $this->render_unattached_card( $unattached, $nonce, $page ); ?>
+		<?php
+		if ( $unattached_u['total'] > 0 ) {
+			$this->render_unattached_card( $unattached_u, $nonce, $used_page, false, true );
+		}
+		?>
+		<?php
+		if ( $unattached_z['total'] > 0 ) {
+			$this->render_unattached_card( $unattached_z, $nonce, $zip_page, true );
+		}
+		?>
 
 		<div id="tsosk-media-orphans-wrap">
 			<?php
@@ -487,12 +585,13 @@ class TSOSK_Mod_Media_Cleaner {
 			$queue   = is_array( $state['queue'] ?? null ) ? $state['queue'] : array();
 			$pending = is_array( $state['pending_files'] ?? null ) ? $state['pending_files'] : array();
 			$budget  = self::CHUNK_FILES;
+			$stop_at = microtime( true ) + self::CHUNK_SECONDS;
 
 			// Rebuilt per request instead of stored in the transient: a large library would otherwise
 			// make every chunk write megabytes to the options table.
 			$maps = $this->build_known_maps( $base );
 
-			while ( $budget > 0 && ( ! empty( $pending ) || ! empty( $queue ) ) ) {
+			while ( $budget > 0 && microtime( true ) < $stop_at && ( ! empty( $pending ) || ! empty( $queue ) ) ) {
 				if ( ! empty( $pending ) ) {
 					$path = (string) array_shift( $pending );
 					if ( '' !== $path && is_file( $path ) && str_starts_with( wp_normalize_path( $path ), $base ) ) {
@@ -510,6 +609,7 @@ class TSOSK_Mod_Media_Cleaner {
 				$handle = @opendir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 				if ( ! $handle ) {
 					if ( count( $state['unreadable'] ) < 20 ) {
+						// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 						$state['unreadable'][] = ltrim( str_replace( $base, '', wp_normalize_path( $dir ) ), '/' ) ?: '/';
 					}
 					continue;
@@ -518,7 +618,7 @@ class TSOSK_Mod_Media_Cleaner {
 				$is_root = ( wp_normalize_path( trailingslashit( $dir ) ) === $base );
 				$subdirs = array();
 				$files   = array();
-				while ( false !== ( $entry = readdir( $handle ) ) ) { // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
+				while ( false !== ( $entry = readdir( $handle ) ) ) { // phpcs:ignore Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
 					if ( '.' === $entry || '..' === $entry ) {
 						continue;
 					}
@@ -598,7 +698,7 @@ class TSOSK_Mod_Media_Cleaner {
 		$size = (int) @filesize( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 		$kind = (string) $result['kind'];
 		++$state['orphans_total'];
-		$state['orphans_bytes'] += $size;
+		$state['orphans_bytes']       += $size;
 		$state['kind_counts'][ $kind ] = 1 + (int) ( $state['kind_counts'][ $kind ] ?? 0 );
 		$state['kind_bytes'][ $kind ]  = $size + (int) ( $state['kind_bytes'][ $kind ] ?? 0 );
 
@@ -700,7 +800,21 @@ class TSOSK_Mod_Media_Cleaner {
 	 * @return bool
 	 */
 	private function is_plugin_upload_folder( string $name ): bool {
-		$name  = strtolower( $name );
+		return self::is_plugin_upload_dir_name( $name );
+	}
+
+	/**
+	 * Whether a top-level uploads folder belongs to another plugin (cache, backups…) or, on a multisite main site,
+	 * to the other sites of the network. Shared with the uploads scanner so every tool leaves the same folders alone.
+	 *
+	 * @param string $name Folder name.
+	 * @return bool
+	 */
+	public static function is_plugin_upload_dir_name( string $name ): bool {
+		$name = strtolower( $name );
+		if ( 'sites' === $name && is_multisite() ) {
+			return true;
+		}
 		$names = (array) apply_filters( 'tsosk_media_plugin_upload_folders', self::PLUGIN_FOLDERS );
 		if ( in_array( $name, array_map( 'strtolower', $names ), true ) ) {
 			return true;
@@ -711,6 +825,7 @@ class TSOSK_Mod_Media_Cleaner {
 	/**
 	 * Build the maps used to recognise referenced files.
 	 *
+	 * The result holds two lists:
 	 *  known   – every path a Media Library item points to (URL and old absolute paths normalised).
 	 *  related – originals kept beside a scaled ("-scaled") or edited ("-e123…", "-rotated") item.
 	 *
@@ -845,7 +960,8 @@ class TSOSK_Mod_Media_Cleaner {
 			$basedir = ! empty( $uploads['basedir'] ) ? wp_normalize_path( trailingslashit( $uploads['basedir'] ) ) : '';
 		}
 
-		$raw      = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$raw = (string) get_post_meta( $attachment_id, '_wp_attached_file', true );
+		// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 		$resolved = (string) ( get_attached_file( $attachment_id ) ?: '' );
 		$remote   = $this->is_remote_path( $resolved );
 		$relative = $this->normalize_attached_file_relative( $raw, $basedir );
@@ -891,12 +1007,12 @@ class TSOSK_Mod_Media_Cleaner {
 		}
 
 		return array(
-			'raw'                => $raw,
-			'resolved'           => $resolved,
-			'relative'           => $relative,
-			'exists'             => $exists,
-			'problem'            => $problem,
-			'missing_sizes'      => array_slice( $missing_sizes, 0, 6 ),
+			'raw'                 => $raw,
+			'resolved'            => $resolved,
+			'relative'            => $relative,
+			'exists'              => $exists,
+			'problem'             => $problem,
+			'missing_sizes'       => array_slice( $missing_sizes, 0, 6 ),
 			'missing_sizes_total' => count( $missing_sizes ),
 		);
 	}
@@ -1091,9 +1207,11 @@ class TSOSK_Mod_Media_Cleaner {
 	 * @param array<string,mixed> $results         Full review results.
 	 * @param int                 $unattached_total Unattached media count.
 	 * @param int                 $missing_count   Missing/broken items (after revalidation).
+	 * @param int                 $archives_total  Unattached compressed archives count.
+	 * @param int                 $in_use_total    Unattached media that is in use (featured image, site logo or icon).
 	 * @return string
 	 */
-	private function render_summary_html( array $results, int $unattached_total, int $missing_count ): string {
+	private function render_summary_html( array $results, int $unattached_total, int $missing_count, int $archives_total = 0, int $in_use_total = 0 ): string {
 		$kind_counts = is_array( $results['kind_counts'] ?? null ) ? $results['kind_counts'] : array();
 		$kind_bytes  = is_array( $results['kind_bytes'] ?? null ) ? $results['kind_bytes'] : array();
 		$media_files = (int) ( $kind_counts['media'] ?? 0 );
@@ -1109,6 +1227,8 @@ class TSOSK_Mod_Media_Cleaner {
 			array( __( 'Missing or broken items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing_count, $missing_count > 0 ? 'warn' : 'ok', '' ),
 			array( __( 'Shared file references', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $duplicates, $duplicates > 0 ? 'warn' : 'ok', '' ),
 			array( __( 'Unattached media', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $unattached_total, 'info', '' ),
+			array( __( 'Unattached media in use', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $in_use_total, 'ok', '' ),
+			array( __( 'Unattached archives (zip, rar…)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $archives_total, 'info', '' ),
 			array( __( 'Unreferenced media files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $media_files, $media_files > 0 ? 'warn' : 'ok', $media_files > 0 ? size_format( (int) ( $kind_bytes['media'] ?? 0 ), 1 ) : '' ),
 			array( __( 'Other unreferenced files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $other_files, 'info', $other_files > 0 ? size_format( (int) ( $kind_bytes['other'] ?? 0 ), 1 ) : '' ),
 		);
@@ -1259,43 +1379,48 @@ class TSOSK_Mod_Media_Cleaner {
 									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'In trash', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'Stored path / expected file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-								<?php if ( ! empty( $info['raw'] ) ) : ?>
-									<div>
-										<strong><?php esc_html_e( 'In database:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-										<?php echo esc_html( (string) $info['raw'] ); ?>
+							<td class="tsosk-code tsosk-media-paths" data-label="<?php esc_attr_e( 'Stored path / expected file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								<?php
+								$raw_path = (string) ( $info['raw'] ?? '' );
+								$rel_path = (string) ( $info['relative'] ?? '' );
+								?>
+								<?php if ( '' !== $raw_path ) : ?>
+									<div class="tsosk-path-row">
+										<span class="tsosk-path-label"><?php esc_html_e( 'In database:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<code><?php echo esc_html( $raw_path ); ?></code>
 									</div>
 								<?php endif; ?>
-								<?php if ( ! empty( $info['relative'] ) ) : ?>
-									<div>
-										<strong><?php esc_html_e( 'Expected under uploads:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-										<?php echo esc_html( (string) $info['relative'] ); ?>
+								<?php if ( '' !== $rel_path && $rel_path !== $raw_path ) : ?>
+									<div class="tsosk-path-row">
+										<span class="tsosk-path-label"><?php esc_html_e( 'Expected under uploads:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<code><?php echo esc_html( $rel_path ); ?></code>
+									</div>
+								<?php elseif ( '' === $rel_path && ! empty( $info['resolved'] ) && (string) $info['resolved'] !== $raw_path ) : ?>
+									<div class="tsosk-path-row">
+										<span class="tsosk-path-label"><?php esc_html_e( 'WordPress resolved path:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<code><?php echo esc_html( (string) $info['resolved'] ); ?></code>
+									</div>
+								<?php elseif ( '' === $raw_path && '' === $rel_path ) : ?>
+									<?php esc_html_e( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<?php endif; ?>
+								<?php if ( '' !== $rel_path || '' !== $raw_path || ! empty( $info['resolved'] ) ) : ?>
+									<div class="tsosk-path-row">
 										<?php if ( ! empty( $info['exists'] ) ) : ?>
 											<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'File found on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 										<?php else : ?>
-											<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'File not found on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+											<span class="tsosk-badge tsosk-badge-err"><?php esc_html_e( 'File not found on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 										<?php endif; ?>
 									</div>
-								<?php elseif ( ! empty( $info['resolved'] ) ) : ?>
-									<div>
-										<strong><?php esc_html_e( 'WordPress resolved path:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-										<?php echo esc_html( (string) $info['resolved'] ); ?>
-									</div>
-								<?php elseif ( empty( $info['raw'] ) ) : ?>
-									<?php esc_html_e( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								<?php endif; ?>
 								<?php if ( ! empty( $info['missing_sizes'] ) ) : ?>
-									<div>
-										<strong><?php esc_html_e( 'Missing on disk:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-										<?php echo esc_html( implode( ', ', array_map( 'strval', $info['missing_sizes'] ) ) ); ?>
-										<?php if ( (int) ( $info['missing_sizes_total'] ?? 0 ) > count( $info['missing_sizes'] ) ) : ?>
-											…
-										<?php endif; ?>
+									<div class="tsosk-path-row">
+										<span class="tsosk-path-label"><?php esc_html_e( 'Missing on disk:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+										<code><?php echo esc_html( implode( ', ', array_map( 'strval', $info['missing_sizes'] ) ) ); ?><?php echo (int) ( $info['missing_sizes_total'] ?? 0 ) > count( $info['missing_sizes'] ) ? ' …' : ''; ?></code>
 									</div>
 								<?php endif; ?>
 							</td>
 							<td data-label="<?php esc_attr_e( 'Problem', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-								<span class="tsosk-badge tsosk-badge-<?php echo 'warn' === $severity ? 'info' : 'warn'; ?>">
+								<span class="tsosk-badge tsosk-badge-<?php echo 'warn' === $severity ? 'warn' : 'err'; ?>">
 									<?php echo esc_html( $this->problem_label( (string) ( $info['problem'] ?? '' ) ) ); ?>
 								</span>
 								<div><?php echo esc_html( $this->describe_attachment_problem( $info ) ); ?></div>
@@ -1418,7 +1543,7 @@ class TSOSK_Mod_Media_Cleaner {
 		</div>
 		<?php foreach ( $groups as $kind => $group ) : ?>
 			<?php
-			$rows = array_values(
+			$rows  = array_values(
 				array_filter(
 					$files,
 					static function ( array $file ) use ( $kind ): bool {
@@ -1480,16 +1605,62 @@ class TSOSK_Mod_Media_Cleaner {
 	/**
 	 * One page of unattached media (no parent, or a parent that no longer exists).
 	 *
-	 * @param int $page Page number (1-based).
-	 * @return array{items:WP_Post[],total:int,featured:array<int,bool>}
+	 * @param int  $page     Page number (1-based).
+	 * @param bool $archives True to list compressed archives (zip, rar…) instead of media.
+	 * @param bool $in_use   True to list only the items that are in use (featured image, site logo or icon).
+	 * @return array{items:WP_Post[],total:int,featured:array<int,string[]>}
 	 */
-	private function get_unattached_page( int $page ): array {
+	private function get_unattached_page( int $page, bool $archives = false, bool $in_use = false ): array {
 		global $wpdb;
 
-		$where = "p.post_type = 'attachment' AND p.post_status <> 'auto-draft'
-			AND ( p.post_parent = 0 OR NOT EXISTS ( SELECT 1 FROM {$wpdb->posts} par WHERE par.ID = p.post_parent ) )";
+		// Unattached is not unused: featured images and the site logo / icon have no parent but are in use. They are
+		// listed apart so the main list only holds items with no known use.
+		$use_ids = array_values( array_unique( array_filter( array_map( 'absint', array( get_option( 'site_icon' ), get_theme_mod( 'custom_logo' ), get_option( 'site_logo' ) ) ) ) ) );
+		$use_sql = "EXISTS ( SELECT 1 FROM {$wpdb->postmeta} tm WHERE tm.meta_key = '_thumbnail_id' AND CAST( tm.meta_value AS UNSIGNED ) = p.ID )";
+		if ( ! empty( $use_ids ) ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- only integers, cast above.
+			$use_sql .= ' OR p.ID IN ( ' . implode( ',', $use_ids ) . ' )';
+		}
+		$use_sql = $in_use ? "( {$use_sql} )" : "NOT ( {$use_sql} )";
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- $where only contains the static table name.
+		// Static, hard-coded MIME list (no user input) bound as prepared placeholders: archives are split from media.
+		// Keep one %s per entry of self::ARCHIVE_MIMES (10).
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- only the table name is interpolated.
+		if ( $archives ) {
+			$where = $wpdb->prepare(
+				"p.post_type = 'attachment' AND p.post_status <> 'auto-draft'
+				AND ( p.post_parent = 0 OR NOT EXISTS ( SELECT 1 FROM {$wpdb->posts} par WHERE par.ID = p.post_parent ) )
+				AND {$use_sql}
+				AND p.post_mime_type IN ( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s )",
+				self::ARCHIVE_MIMES[0],
+				self::ARCHIVE_MIMES[1],
+				self::ARCHIVE_MIMES[2],
+				self::ARCHIVE_MIMES[3],
+				self::ARCHIVE_MIMES[4],
+				self::ARCHIVE_MIMES[5],
+				self::ARCHIVE_MIMES[6],
+				self::ARCHIVE_MIMES[7],
+				self::ARCHIVE_MIMES[8],
+				self::ARCHIVE_MIMES[9]
+			);
+		} else {
+			$where = $wpdb->prepare(
+				"p.post_type = 'attachment' AND p.post_status <> 'auto-draft'
+				AND ( p.post_parent = 0 OR NOT EXISTS ( SELECT 1 FROM {$wpdb->posts} par WHERE par.ID = p.post_parent ) )
+				AND {$use_sql}
+				AND p.post_mime_type NOT IN ( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s )",
+				self::ARCHIVE_MIMES[0],
+				self::ARCHIVE_MIMES[1],
+				self::ARCHIVE_MIMES[2],
+				self::ARCHIVE_MIMES[3],
+				self::ARCHIVE_MIMES[4],
+				self::ARCHIVE_MIMES[5],
+				self::ARCHIVE_MIMES[6],
+				self::ARCHIVE_MIMES[7],
+				self::ARCHIVE_MIMES[8],
+				self::ARCHIVE_MIMES[9]
+			);
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} p WHERE {$where}" );
 		$max   = max( 1, (int) ceil( $total / self::UNATTACHED_PER_PAGE ) );
@@ -1513,22 +1684,19 @@ class TSOSK_Mod_Media_Cleaner {
 			}
 		}
 
-		// "Unattached" is not "unused": a featured image has no parent yet is in use.
+		// Why each listed item counts as in use (only filled for the in-use list).
 		$featured = array();
-		if ( ! empty( $items ) ) {
-			$item_ids = array_map( 'intval', wp_list_pluck( $items, 'ID' ) );
-			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$used = (array) $wpdb->get_col(
-				$wpdb->prepare(
-					"SELECT DISTINCT meta_value FROM {$wpdb->postmeta}
-					  WHERE meta_key = '_thumbnail_id' AND meta_value IN (" . implode( ',', array_fill( 0, count( $item_ids ), '%s' ) ) . ')',
-					...array_map( 'strval', $item_ids )
-				)
-			);
-			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
-			foreach ( $used as $used_id ) {
-				$featured[ (int) $used_id ] = true;
+		if ( $in_use ) {
+			foreach ( $items as $item ) {
+				$reasons = array();
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				if ( (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value = %s", (string) $item->ID ) ) > 0 ) {
+					$reasons[] = __( 'Featured image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				}
+				if ( in_array( (int) $item->ID, $use_ids, true ) ) {
+					$reasons[] = __( 'Site logo or icon', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				}
+				$featured[ (int) $item->ID ] = $reasons;
 			}
 		}
 
@@ -1569,18 +1737,35 @@ class TSOSK_Mod_Media_Cleaner {
 	 * @param array{items:WP_Post[],total:int,featured:array<int,bool>} $data  Page data.
 	 * @param string                                                    $nonce Nonce.
 	 * @param int                                                       $page  Current page.
+	 * @param bool                                                      $archives Whether this card lists compressed archives.
+	 * @param bool                                                      $in_use   Whether this card lists the unattached media that is in use.
 	 */
-	private function render_unattached_card( array $data, string $nonce, int $page ): void {
+	private function render_unattached_card( array $data, string $nonce, int $page, bool $archives = false, bool $in_use = false ): void {
 		$total = (int) $data['total'];
 		$pages = max( 1, (int) ceil( $total / self::UNATTACHED_PER_PAGE ) );
 		$page  = min( $page, $pages );
 		$base  = admin_url( 'tools.php?page=tso-swiss-knife&tab=media-cleaner' );
+		$arg   = $archives ? 'mc_zip_page' : ( $in_use ? 'mc_used_page' : 'mc_page' );
 		?>
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Unattached Media', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( $total ) ); ?>)</h3>
+			<?php if ( $in_use ) : ?>
+			<details>
+				<summary><h3 style="display:inline;"><?php esc_html_e( 'Unattached media in use', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( $total ) ); ?>)</h3></summary>
+				<p class="description"><?php esc_html_e( 'These items have no parent post but are in use (featured image, site logo or icon). Do not delete them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
+			<h3><?php echo $archives ? esc_html__( 'Unattached archives (zip, rar…)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Unattached Media', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( $total ) ); ?>)</h3>
+			<?php endif; ?>
+			<?php if ( ! $in_use ) : ?>
 			<p class="description">
-				<?php esc_html_e( 'Media Library items with no parent post, or whose parent post was deleted. Unattached does not mean unused: featured images, widgets, page builders and custom fields often use media that is not attached. Regenerate thumbnails only applies to image attachments.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php
+				if ( $archives ) {
+					esc_html_e( 'Compressed files (zip, rar, 7z, tar, gz) uploaded to the Media Library with no parent post. They are not images or media: they are usually plugin or theme packages uploaded by hand and can often be removed once installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				} else {
+					esc_html_e( 'Media Library items with no parent post (or whose parent post was deleted) and that are not used as a featured image, site logo or icon. They may still be used inside content, widgets, page builders or custom fields: check before deleting anything.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				}
+				?>
 			</p>
+			<?php endif; ?>
 			<?php if ( empty( $data['items'] ) ) : ?>
 				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
@@ -1602,14 +1787,14 @@ class TSOSK_Mod_Media_Cleaner {
 							<td data-label="<?php esc_attr_e( 'ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) $item->ID ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php echo esc_html( get_the_title( $item ) ); ?>
-								<?php if ( ! empty( $data['featured'][ (int) $item->ID ] ) ) : ?>
-									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'In use: featured image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-								<?php endif; ?>
+								<?php foreach ( (array) ( $data['featured'][ (int) $item->ID ] ?? array() ) as $reason ) : ?>
+									<span class="tsosk-badge tsosk-badge-ok"><?php echo esc_html( sprintf( /* translators: %s: reason, e.g. Featured image */ __( 'In use: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (string) $reason ) ); ?></span>
+								<?php endforeach; ?>
 								<?php if ( (int) $item->post_parent > 0 ) : ?>
 									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Parent post deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $file ? $file : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
+							<td class="tsosk-code tsosk-media-paths" data-label="<?php esc_attr_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $file ? $file : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
 							<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php if ( $this->can_regenerate_thumbnails( $item, $file ) ) : ?>
 									<button class="button button-small tsosk-media-regenerate" data-attachment-id="<?php echo esc_attr( (string) $item->ID ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
@@ -1631,7 +1816,7 @@ class TSOSK_Mod_Media_Cleaner {
 				<?php if ( $pages > 1 ) : ?>
 					<p class="tsosk-media-pager">
 						<?php if ( $page > 1 ) : ?>
-							<a class="button" href="<?php echo esc_url( add_query_arg( 'mc_page', $page - 1, $base ) ); ?>">&larr; <?php esc_html_e( 'Previous', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+							<a class="button" href="<?php echo esc_url( add_query_arg( $arg, $page - 1, $base ) ); ?>">&larr; <?php esc_html_e( 'Previous', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 						<?php endif; ?>
 						<span class="description">
 							<?php
@@ -1644,10 +1829,13 @@ class TSOSK_Mod_Media_Cleaner {
 							?>
 						</span>
 						<?php if ( $page < $pages ) : ?>
-							<a class="button" href="<?php echo esc_url( add_query_arg( 'mc_page', $page + 1, $base ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> &rarr;</a>
+							<a class="button" href="<?php echo esc_url( add_query_arg( $arg, $page + 1, $base ) ); ?>"><?php esc_html_e( 'Next', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> &rarr;</a>
 						<?php endif; ?>
 					</p>
 				<?php endif; ?>
+			<?php endif; ?>
+			<?php if ( $in_use ) : ?>
+			</details>
 			<?php endif; ?>
 		</div>
 		<?php

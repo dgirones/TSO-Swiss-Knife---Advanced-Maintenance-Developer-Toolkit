@@ -19,9 +19,18 @@ class TSOSK_Mod_Hooks {
 	/** Maximum hooks to render per page to avoid fatal errors. */
 	const PER_PAGE = 100;
 
-	/** @var TSOSK_Mod_Hooks|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Hooks|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -29,33 +38,51 @@ class TSOSK_Mod_Hooks {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		global $wp_filter;
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter.
-		$search  = isset( $_GET['tsosk_hook_search'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_hook_search'] ) ) : '';
+		$search = isset( $_GET['tsosk_hook_search'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_hook_search'] ) ) : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$paged   = isset( $_GET['tsosk_hooks_page'] ) ? max( 1, absint( wp_unslash( $_GET['tsosk_hooks_page'] ) ) ) : 1;
+		$paged = isset( $_GET['tsosk_hooks_page'] ) ? max( 1, absint( wp_unslash( $_GET['tsosk_hooks_page'] ) ) ) : 1;
 
 		// Collect & filter hook names only (no callback expansion yet).
 		$all_tags = array_keys( (array) $wp_filter );
 		if ( $search ) {
-			$all_tags = array_values( array_filter( $all_tags, static function ( $tag ) use ( $search ) {
-				return false !== stripos( $tag, $search );
-			} ) );
+			$all_tags = array_values(
+				array_filter(
+					$all_tags,
+					static function ( $tag ) use ( $search ) {
+						return false !== stripos( $tag, $search );
+					}
+				)
+			);
 		}
 		sort( $all_tags );
 
-		$total      = count( $all_tags );
+		$total       = count( $all_tags );
 		$total_pages = max( 1, (int) ceil( $total / self::PER_PAGE ) );
 		$paged       = min( $paged, $total_pages );
 		$offset      = ( $paged - 1 ) * self::PER_PAGE;
 		$page_tags   = array_slice( $all_tags, $offset, self::PER_PAGE );
 
-		$base_url = add_query_arg( array( 'page' => 'tso-swiss-knife', 'tab' => 'hooks' ), admin_url( 'tools.php' ) );
+		$base_url = add_query_arg(
+			array(
+				'page' => 'tso-swiss-knife',
+				'tab'  => 'hooks',
+			),
+			admin_url( 'tools.php' )
+		);
 		if ( $search ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.urlencode_urlencode -- Matches the encoding used by the target URL.
 			$base_url = add_query_arg( 'tsosk_hook_search', urlencode( $search ), $base_url );
 		}
 		?>
@@ -73,11 +100,23 @@ class TSOSK_Mod_Hooks {
 			<input type="hidden" name="page" value="tso-swiss-knife">
 			<input type="hidden" name="tab"  value="hooks">
 			<input type="text" name="tsosk_hook_search" value="<?php echo esc_attr( $search ); ?>"
-			       placeholder="<?php esc_attr_e( 'Filter hook name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-			       class="tsosk-hooks-search-input" id="tsosk-hooks-search">
+					placeholder="<?php esc_attr_e( 'Filter hook name…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+					class="tsosk-hooks-search-input" id="tsosk-hooks-search">
 			<?php submit_button( __( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'secondary', '', false ); ?>
 			<?php if ( $search ) : ?>
-				<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'tso-swiss-knife', 'tab' => 'hooks' ), admin_url( 'tools.php' ) ) ); ?>" class="button">
+				<a href="
+				<?php
+				echo esc_url(
+					add_query_arg(
+						array(
+							'page' => 'tso-swiss-knife',
+							'tab'  => 'hooks',
+						),
+						admin_url( 'tools.php' )
+					)
+				);
+				?>
+							" class="button">
 					<?php esc_html_e( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</a>
 			<?php endif; ?>
@@ -131,7 +170,7 @@ class TSOSK_Mod_Hooks {
 							continue;
 						endif;
 						foreach ( $callbacks as $index => $cb ) :
-							$is_last_cb = ( $index === count( $callbacks ) - 1 );
+							$is_last_cb = ( count( $callbacks ) - 1 === $index );
 							$row_class  = 'tsosk-hooks-row' . ( $is_last_cb ? ' tsosk-hooks-row-group-end' : '' );
 							?>
 						<tr class="<?php echo esc_attr( $row_class ); ?>">

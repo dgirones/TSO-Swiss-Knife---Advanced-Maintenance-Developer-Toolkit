@@ -20,10 +20,18 @@ class TSOSK_Mod_Custom_404 {
 	/** Plugin option key. */
 	private const OPTION = 'tsosk_custom_404';
 
-	/** @var TSOSK_Mod_Custom_404|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Custom_404|null
+	 */
 	private static $instance = null;
 
-	/** @var string URL that triggered the 404 response. */
+	/**
+	 * URL that triggered the 404 response.
+	 *
+	 * @var string
+	 */
 	private static $failed_url = '';
 
 	/**
@@ -38,6 +46,9 @@ class TSOSK_Mod_Custom_404 {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_custom_404_save', array( $this, 'ajax_save' ) );
 	}
@@ -89,16 +100,18 @@ class TSOSK_Mod_Custom_404 {
 	}
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array<string, mixed>
 	 */
 	private function get_settings(): array {
 		$defaults = array(
-			'page_id'              => 0,
-			'hide_from_admin'      => false,
-			'hide_from_search'     => true,
-			'force_direct_404'     => true,
-			'send_410'             => false,
-			'disable_url_guess'    => false,
+			'page_id'           => 0,
+			'hide_from_admin'   => false,
+			'hide_from_search'  => true,
+			'force_direct_404'  => true,
+			'send_410'          => false,
+			'disable_url_guess' => false,
 		);
 		return wp_parse_args( (array) get_option( self::OPTION, array() ), $defaults );
 	}
@@ -113,7 +126,14 @@ class TSOSK_Mod_Custom_404 {
 
 		$request_uri = TSOSK_Support::get_request_uri_for_display();
 		if ( is_string( $request_uri ) && '' !== $request_uri ) {
-			self::$failed_url = home_url( $request_uri );
+			// REQUEST_URI already contains the install folder (example.com/blog/missing), so join it to the site ORIGIN, not to home_url(), or the folder would appear twice.
+			$home   = (array) wp_parse_url( home_url( '/' ) );
+			$origin = ( $home['scheme'] ?? 'https' ) . '://' . ( $home['host'] ?? '' ) . ( isset( $home['port'] ) ? ':' . $home['port'] : '' );
+			if ( '' === ( $home['host'] ?? '' ) || 0 !== strpos( $request_uri, '/' ) ) {
+				self::$failed_url = home_url( $request_uri );
+			} else {
+				self::$failed_url = $origin . $request_uri;
+			}
 			return;
 		}
 
@@ -371,7 +391,7 @@ class TSOSK_Mod_Custom_404 {
 		}
 
 		$singular = get_query_template( 'singular' );
-		return $singular ?: $fallback_template;
+		return $singular ? $singular : $fallback_template;
 	}
 
 	/**
@@ -629,24 +649,24 @@ class TSOSK_Mod_Custom_404 {
 	 * Render admin tab.
 	 */
 	public function render(): void {
-		$nonce    = wp_create_nonce( 'tsosk_custom_404_nonce' );
-		$settings = $this->get_settings();
-		$page_id  = absint( $settings['page_id'] );
-		$active   = $this->is_active();
+		$nonce          = wp_create_nonce( 'tsosk_custom_404_nonce' );
+		$settings       = $this->get_settings();
+		$page_id        = absint( $settings['page_id'] );
+		$active         = $this->is_active();
 		$edit_url       = $page_id ? get_edit_post_link( $page_id, 'raw' ) : '';
 		$preview_nonce  = wp_create_nonce( 'tsosk_custom_404_preview' );
 		$selftest_nonce = wp_create_nonce( 'tsosk_custom_404_selftest' );
 		// Query-arg test always hits WordPress (pretty /missing/ paths often never reach WP on some hosts).
-		$test_url = add_query_arg(
+		$test_url    = add_query_arg(
 			array(
 				'tsosk_404_selftest' => '1',
 				'selftest_nonce'     => $selftest_nonce,
 			),
 			home_url( '/' )
 		);
-		$page_slug  = $page_id ? (string) get_post_field( 'post_name', $page_id ) : '';
-		$slug_risky = ( '' !== $page_slug && false !== stripos( $page_slug, '404' ) );
-		$plink      = $this->pretty_permalink_status();
+		$page_slug   = $page_id ? (string) get_post_field( 'post_name', $page_id ) : '';
+		$slug_risky  = ( '' !== $page_slug && false !== stripos( $page_slug, '404' ) );
+		$plink       = $this->pretty_permalink_status();
 		$rewrite_url = admin_url( 'admin.php?page=tso-swiss-knife&tab=rewrite' );
 		$server_url  = admin_url( 'admin.php?page=tso-swiss-knife&tab=server-files' );
 		$plink_url   = admin_url( 'options-permalink.php' );
@@ -846,12 +866,12 @@ class TSOSK_Mod_Custom_404 {
 
 		<div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
 			<button type="button" class="button button-primary" id="tsosk-custom-404-save"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button type="button" class="button" id="tsosk-custom-404-preview"
-			        data-preview-nonce="<?php echo esc_attr( $preview_nonce ); ?>"
-			        data-home-url="<?php echo esc_url( home_url( '/' ) ); ?>">
+					data-preview-nonce="<?php echo esc_attr( $preview_nonce ); ?>"
+					data-home-url="<?php echo esc_url( home_url( '/' ) ); ?>">
 				<?php esc_html_e( 'Preview 404 page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-custom-404-msg"></span>
@@ -863,7 +883,7 @@ class TSOSK_Mod_Custom_404 {
 /**
  * Whether a custom 404 page is active.
  */
-function tsosk_404_is_active(): bool {
+function tsosk_404_is_active(): bool { // phpcs:ignore Universal.Files.SeparateFunctionsFromOO.Mixed -- Public helper intentionally kept beside the module that owns it.
 	return class_exists( 'TSOSK_Mod_Custom_404' ) && TSOSK_Mod_Custom_404::get_instance()->is_active();
 }
 

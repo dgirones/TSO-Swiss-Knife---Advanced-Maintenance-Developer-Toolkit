@@ -22,18 +22,31 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_View_Counter {
 
-	const OPTION_SETTINGS   = 'tsosk_view_counter_settings';
-	const OPTION_DB_VERSION = 'tsosk_view_counter_db_version';
-	const DB_VERSION        = '1';
+	/**
+	 * Result of the legacy-table cleanup for the current request (null until it has run).
+	 *
+	 * @var array<string, string>|null
+	 */
+	private static $legacy_cleanup_result = null;
+
+	const OPTION_SETTINGS    = 'tsosk_view_counter_settings';
+	const OPTION_DB_VERSION  = 'tsosk_view_counter_db_version';
+	const DB_VERSION         = '1';
 	const OPTION_LAST_IMPORT = 'tsosk_view_counter_last_import';
+	const OPTION_IMPORTED    = 'tsosk_view_counter_imported_sources';
+	const IMPORT_LOCK        = 'tsosk_vc_import_lock';
 	/** Date bucket for imported lifetime totals whose real dates are unknown (counts for "All time" only). */
-	const LEGACY_DATE       = '2000-01-01';
-	const DEDUP_WINDOW      = 30 * MINUTE_IN_SECONDS;
-	const NONCE_ACTION      = 'tsosk_vc_nonce';
-	const EXPORT_ACTION     = 'tsosk_vc_export';
-	const CRON_HOOK         = 'tsosk_vc_weekly_email';
-	const CRON_SCHEDULE     = 'tsosk_weekly';
-	const TOP_LIMIT         = 10;
+	const LEGACY_DATE  = '2000-01-01';
+	const DEDUP_WINDOW = 30 * MINUTE_IN_SECONDS;
+
+	/** Maximum fresh hits one IP can register per hour (flood guard). */
+	const MAX_CLAIMS_PER_IP = 120;
+
+	const NONCE_ACTION  = 'tsosk_vc_nonce';
+	const EXPORT_ACTION = 'tsosk_vc_export';
+	const CRON_HOOK     = 'tsosk_vc_weekly_email';
+	const CRON_SCHEDULE = 'tsosk_weekly';
+	const TOP_LIMIT     = 10;
 
 	/**
 	 * Max distinct outbound-link URLs tracked. The public, unauthenticated
@@ -43,7 +56,7 @@ class TSOSK_Mod_View_Counter {
 	 * links, so once this cap is reached, hits for URLs not already known
 	 * are simply not recorded (existing tracked links are unaffected).
 	 */
-	const MAX_TRACKED_LINKS = 5000;
+	const MAX_TRACKED_LINKS = 10000; // Outbound links and downloads share the lookup table.
 
 	/**
 	 * Singleton instance.
@@ -80,6 +93,7 @@ class TSOSK_Mod_View_Counter {
 		add_action( 'wp_ajax_tsosk_vc_save_settings', array( $this, 'ajax_save_settings' ) );
 		add_action( 'wp_ajax_tsosk_vc_import', array( $this, 'ajax_import' ) );
 		add_action( 'wp_ajax_tsosk_vc_reset', array( $this, 'ajax_reset' ) );
+		add_action( 'wp_ajax_tsosk_vc_fix_day', array( $this, 'ajax_fix_day' ) );
 		add_action( 'wp_ajax_tsosk_vc_top_content', array( $this, 'ajax_top_content' ) );
 		add_action( 'admin_post_' . self::EXPORT_ACTION, array( $this, 'handle_export' ) );
 		add_filter( 'cron_schedules', array( $this, 'add_weekly_schedule' ) ); // phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval -- fixed weekly interval for the optional summary email.
@@ -140,7 +154,12 @@ class TSOSK_Mod_View_Counter {
 		add_action( 'rest_api_init', array( $this, 'register_rest_route' ) );
 		// Also fires on admin-ajax.php, so tables exist before the first beacon hit even when the plugin was updated without being re-activated.
 		add_action( 'admin_init', array( __CLASS__, 'maybe_upgrade_schema' ) );
-		add_action( 'admin_init', array( __CLASS__, 'maybe_migrate_legacy_wrapped_tables' ) );
+		add_action(
+			'admin_init',
+			static function (): void {
+				self::maybe_migrate_legacy_wrapped_tables();
+			}
+		);
 		add_action( 'admin_init', array( __CLASS__, 'maybe_delete_temporary_diagnostic_option' ) );
 
 		foreach ( $this->get_trackable_post_types( $settings ) as $post_type ) {
@@ -149,6 +168,9 @@ class TSOSK_Mod_View_Counter {
 			add_filter( "manage_edit-{$post_type}_sortable_columns", array( $this, 'make_views_column_sortable' ) );
 		}
 		add_action( 'pre_get_posts', array( $this, 'maybe_sort_by_views' ) );
+		add_filter( 'manage_media_columns', array( $this, 'add_media_downloads_column' ) );
+		add_filter( 'manage_upload_sortable_columns', array( $this, 'make_media_downloads_column_sortable' ) );
+		add_action( 'manage_media_custom_column', array( $this, 'render_media_downloads_column' ), 10, 2 );
 
 		if ( ! empty( $settings['track_outbound_links'] ) ) {
 			add_filter( 'the_content', array( $this, 'mark_outbound_links' ), 20 );
@@ -167,6 +189,13 @@ class TSOSK_Mod_View_Counter {
 			'post_types'           => array( 'post', 'page' ),
 			'exclude_logged_in'    => true,
 			'track_outbound_links' => true,
+			'track_header_links'   => true,
+			'track_downloads'      => true,
+			'track_download_links' => true,
+			'download_extensions'  => 'pdf,zip,rar,7z,gz,doc,docx,xls,xlsx,ppt,pptx,odt,ods,csv,txt,epub,mp3,mp4,apk,exe,dmg',
+			'download_images'      => false,
+			'exclude_roles'        => array(),
+			'exclude_ips'          => array(),
 			'email_weekly_summary' => false,
 			'email_period_days'    => 7,
 			'email_recipient'      => get_option( 'admin_email' ),
@@ -264,10 +293,15 @@ class TSOSK_Mod_View_Counter {
 	public static function maybe_migrate_legacy_wrapped_tables(): array {
 		global $wpdb;
 
-		$prefix       = (string) $wpdb->prefix;
-		$views_table  = self::views_table();
-		$links_table  = self::links_table();
-		$errors       = array();
+		// Already checked (and cleaned) earlier in this request, e.g. on admin_init before the page render.
+		if ( null !== self::$legacy_cleanup_result ) {
+			return self::$legacy_cleanup_result;
+		}
+
+		$prefix      = (string) $wpdb->prefix;
+		$views_table = self::views_table();
+		$links_table = self::links_table();
+		$errors      = array();
 
 		$legacy_links_tables = self::find_legacy_wrapped_tables( $prefix, 'tsosk_view_links' );
 		foreach ( $legacy_links_tables as $legacy_links_table ) {
@@ -290,6 +324,8 @@ class TSOSK_Mod_View_Counter {
 		} elseif ( get_option( 'tsosk_vc_legacy_cleanup_errors', false ) ) {
 			delete_option( 'tsosk_vc_legacy_cleanup_errors' );
 		}
+
+		self::$legacy_cleanup_result = $errors;
 
 		return $errors;
 	}
@@ -610,8 +646,116 @@ class TSOSK_Mod_View_Counter {
 		if ( false !== get_transient( $key ) ) {
 			return false;
 		}
+
+		// Flood guard: one IP rotating user agents or URLs must not create unlimited fingerprint rows in wp_options.
+		$rate_key = 'tsosk_vc_rl_' . md5( $ip );
+		$claims   = (int) get_transient( $rate_key );
+		if ( $claims >= self::MAX_CLAIMS_PER_IP ) {
+			return false;
+		}
+		set_transient( $rate_key, $claims + 1, HOUR_IN_SECONDS );
+
 		set_transient( $key, 1, self::DEDUP_WINDOW );
 		return true;
+	}
+
+	/**
+	 * Whether the current visitor must not be counted (logged-in setting, excluded roles, excluded IPs).
+	 *
+	 * @param array $settings Module settings.
+	 * @return bool
+	 */
+	private function is_excluded_visitor( array $settings ): bool {
+		if ( is_user_logged_in() ) {
+			if ( ! empty( $settings['exclude_logged_in'] ) ) {
+				return true;
+			}
+			$roles = is_array( $settings['exclude_roles'] ?? null ) ? $settings['exclude_roles'] : array();
+			if ( ! empty( $roles ) ) {
+				$user = wp_get_current_user();
+				if ( array_intersect( $roles, (array) $user->roles ) ) {
+					return true;
+				}
+			}
+		}
+
+		$ips = is_array( $settings['exclude_ips'] ?? null ) ? $settings['exclude_ips'] : array();
+		return ! empty( $ips ) && $this->ip_matches_list( $this->get_visitor_ip(), $ips );
+	}
+
+	/**
+	 * Whether an IP matches any entry of a list of IPs / CIDR ranges (IPv4 and IPv6).
+	 *
+	 * @param string   $ip   Visitor IP.
+	 * @param string[] $ip_list IPs or CIDR ranges (e.g. 203.0.113.0/24).
+	 * @return bool
+	 */
+	private function ip_matches_list( string $ip, array $ip_list ): bool {
+		$packed = '' !== $ip ? @inet_pton( $ip ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- invalid input returns false.
+		if ( false === $packed ) {
+			return false;
+		}
+		foreach ( $ip_list as $entry ) {
+			$entry = (string) $entry;
+			$bits  = null;
+			if ( false !== strpos( $entry, '/' ) ) {
+				list( $entry, $raw_bits ) = explode( '/', $entry, 2 );
+				$bits                     = (int) $raw_bits;
+			}
+			$net = @inet_pton( $entry ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- invalid input returns false.
+			if ( false === $net || strlen( $net ) !== strlen( $packed ) ) {
+				continue;
+			}
+			$max   = strlen( $packed ) * 8;
+			$bits  = null === $bits ? $max : max( 0, min( $max, $bits ) );
+			$bytes = intdiv( $bits, 8 );
+			if ( $bytes > 0 && substr( $packed, 0, $bytes ) !== substr( $net, 0, $bytes ) ) {
+				continue;
+			}
+			$rest = $bits % 8;
+			if ( $rest > 0 ) {
+				$mask = ( 0xFF << ( 8 - $rest ) ) & 0xFF;
+				if ( ( ord( $packed[ $bytes ] ) & $mask ) !== ( ord( $net[ $bytes ] ) & $mask ) ) {
+					continue;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * File extensions whose links count as downloads even without the download attribute.
+	 *
+	 * @param array $settings Module settings.
+	 * @return string[] Lowercase extensions (empty when the option is off).
+	 */
+	private function get_download_extensions( array $settings ): array {
+		if ( empty( $settings['track_download_links'] ) ) {
+			return array();
+		}
+		$exts = $this->parse_extension_list( (string) ( $settings['download_extensions'] ?? '' ) );
+		if ( ! empty( $settings['download_images'] ) ) {
+			$exts = array_merge( $exts, array( 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'tif', 'tiff', 'heic' ) );
+		}
+		return array_values( array_unique( $exts ) );
+	}
+
+	/**
+	 * Turn "pdf, .zip docx" into a clean list of lowercase extensions.
+	 *
+	 * @param string $raw Raw list (commas, spaces or new lines).
+	 * @return string[]
+	 */
+	private function parse_extension_list( string $raw ): array {
+		$out = array();
+		foreach ( (array) preg_split( '/[\s,;]+/', strtolower( $raw ) ) as $ext ) {
+			$ext = (string) preg_replace( '/[^a-z0-9]/', '', (string) $ext );
+			if ( '' !== $ext && strlen( $ext ) <= 8 ) {
+				$out[] = $ext;
+			}
+		}
+		return array_slice( array_values( array_unique( $out ) ), 0, 60 );
 	}
 
 	/**
@@ -621,8 +765,7 @@ class TSOSK_Mod_View_Counter {
 	 * @return string
 	 */
 	private function get_visitor_ip(): string {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '';
-		return preg_match( '/^[0-9a-fA-F.:]+$/', $ip ) ? $ip : '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	/**
@@ -741,18 +884,37 @@ class TSOSK_Mod_View_Counter {
 			);
 		}
 
+		// Load every listed post with one query (primes the post cache) instead of one lookup per row.
+		$post_ids = array_values( array_filter( array_map( 'absint', wp_list_pluck( (array) $rows, 'object_id' ) ) ) );
+		if ( $post_ids ) {
+			get_posts(
+				array(
+					'include'                => $post_ids,
+					'post_type'              => 'any',
+					'post_status'            => 'any',
+					'posts_per_page'         => count( $post_ids ),
+					'orderby'                => 'none',
+					'no_found_rows'          => true,
+					'update_post_term_cache' => false,
+					'update_post_meta_cache' => false,
+				)
+			);
+		}
+
 		$out = array();
 		foreach ( (array) $rows as $row ) {
 			$post_id = absint( $row['object_id'] ?? 0 );
 			if ( $post_id <= 0 ) {
 				continue;
 			}
-			$title = get_the_title( $post_id );
+			// One lookup per row; a deleted post is not cached by WordPress, so reuse the object for title and link.
+			$post  = get_post( $post_id );
+			$title = $post instanceof WP_Post ? get_the_title( $post ) : '';
 			$out[] = array(
 				'post_id'  => $post_id,
 				'type'     => (string) ( $row['object_type'] ?? '' ),
 				'title'    => '' !== $title ? $title : __( '(no title)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'edit_url' => (string) get_edit_post_link( $post_id, 'raw' ),
+				'edit_url' => $post instanceof WP_Post ? (string) get_edit_post_link( $post, 'raw' ) : '',
 				'total'    => absint( $row['total'] ?? 0 ),
 			);
 		}
@@ -762,12 +924,15 @@ class TSOSK_Mod_View_Counter {
 	/**
 	 * Top outbound links by clicks over a period (or all-time).
 	 *
-	 * @param int $days  Window size in days, or 0 for all-time.
-	 * @param int $limit Max rows.
+	 * @param int    $days  Window size in days, or 0 for all-time.
+	 * @param int    $limit Max rows.
+	 * @param string $type  'link' (outbound clicks) or 'download' (file downloads).
 	 * @return array<int, array{url:string, total:int}>
 	 */
-	public function get_top_links( int $days, int $limit = self::TOP_LIMIT ): array {
+	public function get_top_links( int $days, int $limit = self::TOP_LIMIT, string $type = 'link' ): array {
 		global $wpdb;
+
+		$type = 'download' === $type ? 'download' : 'link';
 
 		if ( $days > 0 ) {
 			// Site-local "today" — see get_total_last_days().
@@ -777,8 +942,9 @@ class TSOSK_Mod_View_Counter {
 				$wpdb->prepare(
 					"SELECT l.url AS url, SUM(v.count) AS total FROM {$wpdb->prefix}tsosk_views v
 					 INNER JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id
-					 WHERE v.object_type = 'link' AND v.view_date >= %s
+					 WHERE v.object_type = %s AND v.view_date >= %s
 					 GROUP BY l.url ORDER BY total DESC LIMIT %d",
+					$type,
 					$since,
 					$limit
 				),
@@ -790,8 +956,9 @@ class TSOSK_Mod_View_Counter {
 				$wpdb->prepare(
 					"SELECT l.url AS url, SUM(v.count) AS total FROM {$wpdb->prefix}tsosk_views v
 					 INNER JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id
-					 WHERE v.object_type = 'link'
+					 WHERE v.object_type = %s
 					 GROUP BY l.url ORDER BY total DESC LIMIT %d",
+					$type,
 					$limit
 				),
 				ARRAY_A
@@ -878,8 +1045,33 @@ class TSOSK_Mod_View_Counter {
 
 		$settings = $this->get_settings();
 
-		if ( 'link' === $type ) {
-			if ( empty( $settings['track_outbound_links'] ) ) {
+		if ( 'download' === $type ) {
+			if ( empty( $settings['track_downloads'] ) || $this->is_excluded_visitor( $settings ) ) {
+				return;
+			}
+			$url = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( ( is_scalar( $_POST['url'] ) ? (string) $_POST['url'] : '' ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( '' === $url && isset( $_REQUEST['url'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+				$url = esc_url_raw( wp_unslash( ( is_scalar( $_REQUEST['url'] ) ? (string) $_REQUEST['url'] : '' ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			}
+			if ( '' === $url || strlen( $url ) > 700 ) {
+				return;
+			}
+			// Only files served by this very site: a public endpoint must not record arbitrary third-party URLs as downloads.
+			$url_host  = wp_parse_url( $url, PHP_URL_HOST );
+			$home_host = wp_parse_url( home_url(), PHP_URL_HOST );
+			if ( ! $url_host || ! $home_host || 0 !== strcasecmp( (string) $url_host, (string) $home_host ) ) {
+				return;
+			}
+			$object_id = $this->get_or_create_link_id( $url );
+		} elseif ( 'link' === $type ) {
+			// Clicks on theme header links (social icons...) are flagged by the beacon with src=header.
+			$from_header = isset( $_POST['src'] ) && 'header' === sanitize_key( is_scalar( $_POST['src'] ) ? wp_unslash( (string) $_POST['src'] ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( $from_header ) {
+				// Visitors only, and only when the option is on.
+				if ( empty( $settings['track_header_links'] ) || is_user_logged_in() ) {
+					return;
+				}
+			} elseif ( empty( $settings['track_outbound_links'] ) ) {
 				return;
 			}
 			$url = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( ( is_scalar( $_POST['url'] ) ? (string) $_POST['url'] : '' ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -890,17 +1082,16 @@ class TSOSK_Mod_View_Counter {
 				return;
 			}
 			$object_id = $this->get_or_create_link_id( $url );
-		} elseif ( in_array( $type, array( 'post', 'page' ), true ) ) {
-			if ( ! in_array( $type, $this->get_trackable_post_types( $settings ), true ) ) {
-				return;
-			}
+		} elseif ( ! in_array( $type, array( 'link', 'download' ), true ) && in_array( $type, $this->get_trackable_post_types( $settings ), true ) ) {
 			$object_id = absint( $raw_id );
 			if ( $object_id <= 0 || get_post_type( $object_id ) !== $type || 'publish' !== get_post_status( $object_id ) ) {
 				return;
 			}
-			if ( ! empty( $settings['exclude_logged_in'] ) && is_user_logged_in() ) {
+			if ( $this->is_excluded_visitor( $settings ) ) {
 				return;
 			}
+			// Post IDs are unique across post types, so every non-page type (custom post types included) is stored as 'post'; reports and the table column (VARCHAR(10)) rely on that.
+			$type = 'page' === $type ? 'page' : 'post';
 		} else {
 			return;
 		}
@@ -924,8 +1115,10 @@ class TSOSK_Mod_View_Counter {
 
 		$is_singular_trackable = is_singular( $this->get_trackable_post_types( $settings ) );
 		$track_links           = ! empty( $settings['track_outbound_links'] );
+		$track_header_links    = ! empty( $settings['track_header_links'] ) && ! is_user_logged_in();
+		$track_downloads       = ! empty( $settings['track_downloads'] ) && ! ( ! empty( $settings['exclude_logged_in'] ) && is_user_logged_in() );
 
-		if ( ! $is_singular_trackable && ! $track_links ) {
+		if ( ! $is_singular_trackable && ! $track_links && ! $track_header_links && ! $track_downloads ) {
 			return;
 		}
 
@@ -938,11 +1131,14 @@ class TSOSK_Mod_View_Counter {
 		);
 
 		$payload = array(
-			'restUrl'    => esc_url_raw( rest_url( 'tsosk-swiss-knife/v1/hit' ) ),
-			'ajaxUrl'    => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
-			'trackId'    => 0,
-			'type'       => '',
-			'trackLinks' => $track_links,
+			'restUrl'          => esc_url_raw( rest_url( 'tsosk-swiss-knife/v1/hit' ) ),
+			'ajaxUrl'          => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
+			'trackId'          => 0,
+			'type'             => '',
+			'trackLinks'       => $track_links,
+			'trackHeaderLinks' => $track_header_links,
+			'trackDownloads'   => $track_downloads,
+			'downloadExts'     => $track_downloads ? $this->get_download_extensions( $settings ) : array(),
 		);
 
 		if ( $is_singular_trackable ) {
@@ -950,7 +1146,7 @@ class TSOSK_Mod_View_Counter {
 			$payload['type']    = (string) get_post_type();
 		}
 
-		wp_localize_script( 'tsosk-view-counter', 'tsookViewCounter', $payload );
+		wp_localize_script( 'tsosk-view-counter', 'tsoskViewCounter', $payload );
 	}
 
 	/**
@@ -1039,6 +1235,54 @@ class TSOSK_Mod_View_Counter {
 	}
 
 	/**
+	 * Add the TSO Downloads column to the Media Library list view.
+	 *
+	 * @param array<string, string> $columns List-table columns.
+	 * @return array<string, string>
+	 */
+	public function add_media_downloads_column( array $columns ): array {
+		$label = '<span class="dashicons dashicons-visibility" style="line-height:1.4;" title="'
+			. esc_attr__( 'TSO Downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '"></span> ' . esc_html__( 'TSO Downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+
+		$new = array();
+		foreach ( $columns as $key => $value ) {
+			$new[ $key ] = $value;
+			if ( 'parent' === $key ) {
+				$new['tsosk_downloads'] = $label;
+			}
+		}
+		if ( ! isset( $new['tsosk_downloads'] ) ) {
+			$new['tsosk_downloads'] = $label;
+		}
+		return $new;
+	}
+
+	/**
+	 * Render the TSO Downloads cell: recorded downloads of the file's URL.
+	 *
+	 * @param string $column  Column key.
+	 * @param int    $post_id Attachment ID.
+	 */
+	public function render_media_downloads_column( string $column, int $post_id ): void {
+		if ( 'tsosk_downloads' !== $column ) {
+			return;
+		}
+		global $wpdb;
+		$url = (string) wp_get_attachment_url( $post_id );
+		$sum = 0;
+		if ( '' !== $url ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$sum = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT SUM(v.count) FROM {$wpdb->prefix}tsosk_views v INNER JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id WHERE v.object_type = 'download' AND l.url = %s",
+					$url
+				)
+			);
+		}
+		echo esc_html( number_format_i18n( $sum ) );
+	}
+
+	/**
 	 * Register the Views column as sortable.
 	 *
 	 * @param array<string, string> $columns Sortable columns.
@@ -1050,21 +1294,68 @@ class TSOSK_Mod_View_Counter {
 	}
 
 	/**
+	 * Register the TSO Downloads column as sortable in the Media Library list.
+	 *
+	 * @param array<string, string> $columns Sortable columns.
+	 * @return array<string, string>
+	 */
+	public function make_media_downloads_column_sortable( array $columns ): array {
+		$columns['tsosk_downloads'] = 'tsosk_downloads';
+		return $columns;
+	}
+
+	/**
+	 * Order the Media Library list by recorded downloads of each file's URL.
+	 *
+	 * @param WP_Query $query Main list-table query.
+	 */
+	private function sort_media_by_downloads( WP_Query $query ): void {
+		global $wpdb;
+		$base = trailingslashit( (string) ( wp_get_upload_dir()['baseurl'] ?? '' ) );
+		$dir  = 'ASC' === strtoupper( (string) $query->get( 'order' ) ) ? 'ASC' : 'DESC';
+		$query->set( 'suppress_filters', false );
+		add_filter(
+			'posts_join',
+			function ( $join ) use ( $wpdb, $base ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- static table names; the URL base goes through prepare().
+				$join .= " LEFT JOIN {$wpdb->postmeta} tsosk_pm ON tsosk_pm.post_id = {$wpdb->posts}.ID AND tsosk_pm.meta_key = '_wp_attached_file'";
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- static table names; the URL base goes through prepare().
+				$join .= $wpdb->prepare( " LEFT JOIN ( SELECT l.url AS url, SUM(v.count) AS tsosk_total FROM {$wpdb->prefix}tsosk_views v INNER JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id WHERE v.object_type = 'download' GROUP BY l.url ) tsosk_d ON tsosk_d.url = CONCAT( %s, tsosk_pm.meta_value )", $base );
+				return $join;
+			}
+		);
+		add_filter(
+			'posts_orderby',
+			function () use ( $dir, $wpdb ) {
+				return "COALESCE(tsosk_d.tsosk_total, 0) {$dir}, {$wpdb->posts}.ID DESC";
+			}
+		);
+	}
+
+	/**
 	 * Sort the Posts/Pages list by lifetime views when requested.
 	 *
 	 * @param WP_Query $query Main list-table query.
 	 */
 	public function maybe_sort_by_views( WP_Query $query ): void {
-		if ( ! is_admin() || ! $query->is_main_query() || 'tsosk_views' !== $query->get( 'orderby' ) ) {
+		if ( ! is_admin() || ! $query->is_main_query() ) {
+			return;
+		}
+
+		if ( 'tsosk_downloads' === $query->get( 'orderby' ) ) {
+			$this->sort_media_by_downloads( $query );
+			return;
+		}
+
+		if ( 'tsosk_views' !== $query->get( 'orderby' ) ) {
 			return;
 		}
 
 		global $wpdb;
-		$views_table = self::views_table();
 		$query->set( 'suppress_filters', false );
 		add_filter(
 			'posts_join',
-			function ( $join ) use ( $wpdb, $views_table ) {
+			function ( $join ) use ( $wpdb ) {
 				return $join . " LEFT JOIN ( SELECT object_id, SUM(count) AS tsosk_total FROM {$wpdb->prefix}tsosk_views WHERE object_type IN ('post','page') GROUP BY object_id ) tsosk_v ON tsosk_v.object_id = {$wpdb->posts}.ID";
 			}
 		);
@@ -1093,12 +1384,36 @@ class TSOSK_Mod_View_Counter {
 			: array();
 		$posted_types = array_values( array_filter( $posted_types, 'post_type_exists' ) );
 
+		$known_roles  = array_keys( wp_roles()->get_names() );
+		$posted_roles = isset( $_POST['exclude_roles'] ) && is_array( $_POST['exclude_roles'] )
+			? array_values( array_intersect( array_map( 'sanitize_key', wp_unslash( $_POST['exclude_roles'] ) ), $known_roles ) )
+			: array();
+
+		$posted_ips = array();
+		if ( isset( $_POST['exclude_ips'] ) && is_string( $_POST['exclude_ips'] ) ) {
+			foreach ( (array) preg_split( '/[\s,;]+/', sanitize_textarea_field( wp_unslash( $_POST['exclude_ips'] ) ) ) as $candidate ) {
+				$candidate = trim( (string) $candidate );
+				$addr      = false !== strpos( $candidate, '/' ) ? (string) strstr( $candidate, '/', true ) : $candidate;
+				if ( '' !== $candidate && false !== filter_var( $addr, FILTER_VALIDATE_IP ) ) {
+					$posted_ips[] = $candidate;
+				}
+			}
+			$posted_ips = array_slice( array_values( array_unique( $posted_ips ) ), 0, 100 );
+		}
+
 		$posted_email = isset( $_POST['email_recipient'] ) && is_string( $_POST['email_recipient'] ) ? sanitize_email( wp_unslash( $_POST['email_recipient'] ) ) : '';
 
 		$settings = array(
 			'post_types'           => $posted_types,
 			'exclude_logged_in'    => ! empty( $_POST['exclude_logged_in'] ),
 			'track_outbound_links' => ! empty( $_POST['track_outbound_links'] ),
+			'track_header_links'   => ! empty( $_POST['track_header_links'] ),
+			'track_downloads'      => ! empty( $_POST['track_downloads'] ),
+			'track_download_links' => ! empty( $_POST['track_download_links'] ),
+			'download_extensions'  => implode( ',', $this->parse_extension_list( isset( $_POST['download_extensions'] ) && is_string( $_POST['download_extensions'] ) ? sanitize_text_field( wp_unslash( $_POST['download_extensions'] ) ) : '' ) ),
+			'download_images'      => ! empty( $_POST['download_images'] ),
+			'exclude_roles'        => $posted_roles,
+			'exclude_ips'          => $posted_ips,
 			'email_weekly_summary' => ! empty( $_POST['email_weekly_summary'] ),
 			'email_period_days'    => $this->normalize_email_period( isset( $_POST['email_period_days'] ) ? absint( wp_unslash( $_POST['email_period_days'] ) ) : 7 ),
 			'email_recipient'      => is_email( $posted_email ) ? $posted_email : get_option( 'admin_email' ),
@@ -1136,8 +1451,30 @@ class TSOSK_Mod_View_Counter {
 		}
 
 		$source = isset( $_POST['source'] ) ? sanitize_key( wp_unslash( $_POST['source'] ) ) : '';
+		$force  = ! empty( $_POST['force'] );
 		$rows   = array();
-		$today  = current_time( 'Y-m-d' );
+
+		// The import adds to the counters, so running the same source twice would double every number.
+		$imported_sources = get_option( self::OPTION_IMPORTED, array() );
+		$imported_sources = is_array( $imported_sources ) ? $imported_sources : array();
+		if ( isset( $imported_sources[ $source ] ) && ! $force ) {
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: date/time of the previous import */
+					__( 'This source was already imported on %s. Importing it again would add the same views a second time.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $imported_sources[ $source ] )
+				)
+			);
+		}
+		if ( ! in_array( $source, array( 'post_views_counter', 'wp_postviews', 'wp_statistics' ), true ) ) {
+			wp_send_json_error( __( 'Unknown import source.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Short lock: a double click or a second tab must not run the same import twice at the same time.
+		if ( get_transient( self::IMPORT_LOCK ) ) {
+			wp_send_json_error( __( 'An import is already running. Wait a minute and check the results before trying again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		set_transient( self::IMPORT_LOCK, 1, 2 * MINUTE_IN_SECONDS );
 
 		global $wpdb;
 
@@ -1156,9 +1493,9 @@ class TSOSK_Mod_View_Counter {
 					if ( ! preg_match( '/^(\d{4})(\d{2})(\d{2})$/', $period, $dm ) ) {
 						continue;
 					}
-					$pid = absint( $pvc_row['post_id'] ?? 0 );
-					$cnt = absint( $pvc_row['count'] ?? 0 );
-					$rows[] = array(
+					$pid             = absint( $pvc_row['post_id'] ?? 0 );
+					$cnt             = absint( $pvc_row['count'] ?? 0 );
+					$rows[]          = array(
 						'post_id'   => $pid,
 						'count'     => $cnt,
 						'view_date' => $dm[1] . '-' . $dm[2] . '-' . $dm[3],
@@ -1217,17 +1554,27 @@ class TSOSK_Mod_View_Counter {
 				$has_cols = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->prefix}statistics_pages" );
 				if ( is_array( $has_cols ) && in_array( 'date', $has_cols, true ) && in_array( 'count', $has_cols, true ) ) {
 					// Two literal queries (no interpolated column name) depending on whether page_id exists.
-					if ( in_array( 'page_id', $has_cols, true ) ) {
+					if ( in_array( 'page_id', $has_cols, true ) && in_array( 'type', $has_cols, true ) ) {
+						// "type" tells posts from archives: page_id of a category or author is a term/user ID, not a post ID.
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$stats_rows = $wpdb->get_results( "SELECT page_id AS post_id, type, uri, date, count FROM {$wpdb->prefix}statistics_pages", ARRAY_A );
+					} elseif ( in_array( 'page_id', $has_cols, true ) ) {
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 						$stats_rows = $wpdb->get_results( "SELECT page_id AS post_id, uri, date, count FROM {$wpdb->prefix}statistics_pages", ARRAY_A );
 					} else {
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 						$stats_rows = $wpdb->get_results( "SELECT 0 AS post_id, uri, date, count FROM {$wpdb->prefix}statistics_pages", ARRAY_A );
 					}
-					$uri_cache  = array();
+					$uri_cache = array();
 					foreach ( (array) $stats_rows as $stats_row ) {
-						$post_id = absint( $stats_row['post_id'] ?? 0 );
-						if ( $post_id <= 0 || ! get_post_type( $post_id ) ) {
+						$post_id   = absint( $stats_row['post_id'] ?? 0 );
+						$row_type  = isset( $stats_row['type'] ) ? (string) $stats_row['type'] : '';
+						$post_type = $post_id > 0 ? get_post_type( $post_id ) : false;
+						// Same ID but another kind of object (category, author…): not this post, resolve by URL instead.
+						if ( '' !== $row_type && false !== $post_type && $row_type !== $post_type ) {
+							$post_type = false;
+						}
+						if ( $post_id <= 0 || ! $post_type ) {
 							$uri = (string) ( $stats_row['uri'] ?? '' );
 							if ( ! isset( $uri_cache[ $uri ] ) ) {
 								$uri_cache[ $uri ] = '' !== $uri ? (int) url_to_postid( home_url( $uri ) ) : 0;
@@ -1245,8 +1592,6 @@ class TSOSK_Mod_View_Counter {
 					}
 				}
 			}
-		} else {
-			wp_send_json_error( __( 'Unknown import source.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$imported_posts = array();
@@ -1261,10 +1606,12 @@ class TSOSK_Mod_View_Counter {
 				continue;
 			}
 			$type = get_post_type( $post_id );
-			if ( ! in_array( $type, array( 'post', 'page' ), true ) ) {
+			if ( ! is_string( $type ) || ! in_array( $type, $this->get_trackable_post_types(), true ) ) {
 				continue;
 			}
-			$view_date = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $row['view_date'] ?? '' ) ) ? $row['view_date'] : $today;
+			$type = 'page' === $type ? 'page' : 'post';
+			// A row without a valid date is history of unknown date: it must count for "All time" only, never as today's traffic.
+			$view_date = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $row['view_date'] ?? '' ) ) ? $row['view_date'] : $legacy;
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$wpdb->query(
@@ -1278,7 +1625,7 @@ class TSOSK_Mod_View_Counter {
 				)
 			);
 			$imported_posts[ $post_id ] = true;
-			if ( $view_date === self::LEGACY_DATE ) {
+			if ( self::LEGACY_DATE === $view_date ) {
 				$views_legacy += $count;
 			} else {
 				$views_dated += $count;
@@ -1307,6 +1654,8 @@ class TSOSK_Mod_View_Counter {
 			'wp_statistics'      => 'WP Statistics',
 		);
 		$source_label  = $source_labels[ $source ] ?? $source;
+
+		delete_transient( self::IMPORT_LOCK );
 
 		if ( 0 === $imported ) {
 			wp_send_json_error(
@@ -1342,8 +1691,100 @@ class TSOSK_Mod_View_Counter {
 		);
 
 		update_option( self::OPTION_LAST_IMPORT, $message, false );
+		$imported_sources[ $source ] = time();
+		update_option( self::OPTION_IMPORTED, $imported_sources, false );
 
 		wp_send_json_success( $message );
+	}
+
+	/**
+	 * Days whose total is far above the rest of the history: almost always an import that was stored under the
+	 * import date (or imported twice) instead of "All time".
+	 *
+	 * @return array<int, array{date:string,total:int}>
+	 */
+	private function get_suspicious_days(): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows   = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT view_date, SUM(count) AS total FROM {$wpdb->prefix}tsosk_views WHERE view_date <> %s GROUP BY view_date ORDER BY view_date DESC LIMIT 800",
+				self::LEGACY_DATE
+			),
+			ARRAY_A
+		);
+		$totals = array();
+		foreach ( (array) $rows as $row ) {
+			$totals[ (string) $row['view_date'] ] = (int) $row['total'];
+		}
+		if ( count( $totals ) < 2 ) {
+			return array();
+		}
+		$sorted = array_values( $totals );
+		sort( $sorted );
+		$median    = (float) $sorted[ intdiv( count( $sorted ), 2 ) ];
+		$threshold = max( 1000.0, 20.0 * $median );
+		$out       = array();
+		foreach ( $totals as $date => $total ) {
+			if ( $total >= $threshold ) {
+				$out[] = array(
+					'date'  => $date,
+					'total' => $total,
+				);
+			}
+		}
+		return $out;
+	}
+
+	/** AJAX: move one day's counts to "All time" (no date) or delete them. */
+	public function ajax_fix_day(): void {
+		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$date = isset( $_POST['date'] ) ? sanitize_text_field( wp_unslash( $_POST['date'] ) ) : '';
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || self::LEGACY_DATE === $date || ! in_array( $mode, array( 'legacy', 'delete' ), true ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		global $wpdb;
+		if ( 'legacy' === $mode ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$day_rows = $wpdb->get_results(
+				$wpdb->prepare( "SELECT object_type, object_id, count FROM {$wpdb->prefix}tsosk_views WHERE view_date = %s", $date ),
+				ARRAY_A
+			);
+			foreach ( (array) $day_rows as $day_row ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$wpdb->query(
+					$wpdb->prepare(
+						"INSERT INTO {$wpdb->prefix}tsosk_views (object_type, object_id, view_date, count) VALUES (%s, %d, %s, %d)
+						 ON DUPLICATE KEY UPDATE count = count + VALUES(count)",
+						(string) $day_row['object_type'],
+						(int) $day_row['object_id'],
+						self::LEGACY_DATE,
+						(int) $day_row['count']
+					)
+				);
+			}
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}tsosk_views WHERE view_date = %s", $date ) );
+
+		if ( class_exists( 'TSOSK_Activity_Log' ) ) {
+			TSOSK_Activity_Log::log(
+				'view-counter',
+				'fix-day',
+				sprintf(
+					/* translators: 1: date, 2: action (legacy or delete) */
+					__( 'View Counter: counts of %1$s handled (%2$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$date,
+					$mode
+				)
+			);
+		}
+		wp_send_json_success( __( 'Done.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -1360,6 +1801,8 @@ class TSOSK_Mod_View_Counter {
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}tsosk_views" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}tsosk_view_links" );
+		delete_option( self::OPTION_IMPORTED ); // Counters are empty again: importing is safe again.
+		delete_option( self::OPTION_LAST_IMPORT );
 
 		if ( class_exists( 'TSOSK_Activity_Log' ) ) {
 			TSOSK_Activity_Log::log(
@@ -1402,8 +1845,9 @@ class TSOSK_Mod_View_Counter {
 
 		wp_send_json_success(
 			array(
-				'posts' => $this->get_top_posts( $days ),
-				'links' => $this->get_top_links( $days ),
+				'posts'     => $this->get_top_posts( $days ),
+				'links'     => $this->get_top_links( $days ),
+				'downloads' => $this->get_top_links( $days, self::TOP_LIMIT, 'download' ),
 			)
 		);
 	}
@@ -1425,7 +1869,7 @@ class TSOSK_Mod_View_Counter {
 	}
 
 	/**
-	 * Stream the recorded daily views/clicks as a CSV download.
+	 * Stream the recorded daily views, link clicks and downloads as a CSV download.
 	 */
 	public function handle_export(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1435,14 +1879,8 @@ class TSOSK_Mod_View_Counter {
 
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$rows = $wpdb->get_results(
-			"SELECT v.object_type, v.object_id, v.view_date, v.count, l.url
-			 FROM {$wpdb->prefix}tsosk_views v
-			 LEFT JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id AND v.object_type = 'link'
-			 ORDER BY v.view_date DESC, v.object_type, v.object_id",
-			ARRAY_A
-		);
+		// Comma is the universal CSV. Excel with a Spanish/Catalan regional setup expects a semicolon, so a second link asks for it.
+		$delimiter = ( isset( $_GET['delimiter'] ) && 'semicolon' === sanitize_key( wp_unslash( (string) $_GET['delimiter'] ) ) ) ? ';' : ','; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce checked above.
 
 		// A large export can take a while to stream on slow hosts; don't let
 		// the default execution-time limit cut the file off mid-stream.
@@ -1467,33 +1905,72 @@ class TSOSK_Mod_View_Counter {
 		if ( false === $out ) {
 			wp_die( esc_html__( 'Could not open export stream.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		fprintf( $out, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) ); // UTF-8 BOM for Excel.
-		fprintf( $out, "sep=,\r\n" ); // Tells Excel (any locale) that the delimiter is a comma, otherwise es/ca locales put everything in column A.
-		fputcsv( $out, array( 'date', 'type', 'object', 'count' ) );
+		echo "\xEF\xBB\xBF"; // UTF-8 BOM for Excel (a fixed literal, nothing to escape).
+		fputcsv( $out, array( 'date', 'type', 'object', 'count', 'note' ), $delimiter, '"', '' );
 
-		$row_num = 0;
-		foreach ( (array) $rows as $row ) {
-			$type = (string) ( $row['object_type'] ?? '' );
-			if ( 'link' === $type ) {
-				$object = trim( (string) preg_replace( '/\s+/u', '', (string) ( $row['url'] ?? '' ) ) );
-			} else {
-				$title  = trim( (string) preg_replace( '/\s+/u', ' ', html_entity_decode( wp_strip_all_tags( get_the_title( absint( $row['object_id'] ?? 0 ) ) ), ENT_QUOTES, 'UTF-8' ) ) );
-				$object = ( '' !== $title ? $title : '#' . absint( $row['object_id'] ?? 0 ) );
-			}
-			fputcsv(
-				$out,
-				array(
-					$this->csv_safe_cell( (string) ( $row['view_date'] ?? '' ) ),
-					$this->csv_safe_cell( $type ),
-					$this->csv_safe_cell( $object ),
-					absint( $row['count'] ?? 0 ),
-				)
+		// Rows are read in batches so a big table never has to fit in memory. The ORDER BY ends in the
+		// primary key, which keeps the paging stable while visitors keep adding hits.
+		$batch_size = 2000;
+		$offset     = 0;
+		$titles     = array();
+		$row_num    = 0;
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows    = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT v.object_type, v.object_id, v.view_date, v.count, l.url
+					 FROM {$wpdb->prefix}tsosk_views v
+					 LEFT JOIN {$wpdb->prefix}tsosk_view_links l ON l.id = v.object_id AND v.object_type IN ('link','download')
+					 ORDER BY v.view_date DESC, v.object_type, v.object_id, v.id
+					 LIMIT %d OFFSET %d",
+					$batch_size,
+					$offset
+				),
+				ARRAY_A
 			);
-			++$row_num;
-			if ( 0 === $row_num % 500 ) {
-				flush();
+			$rows    = is_array( $rows ) ? $rows : array();
+			$fetched = is_array( $rows ) ? count( $rows ) : 0;
+
+			foreach ( $rows as $row ) {
+				$type      = (string) ( $row['object_type'] ?? '' );
+				$object_id = absint( $row['object_id'] ?? 0 );
+				if ( in_array( $type, array( 'link', 'download' ), true ) ) {
+					$url    = (string) ( $row['url'] ?? '' );
+					$object = '' !== $url ? $url : '(deleted URL #' . $object_id . ')';
+					// URLs never contain whitespace; strip it (plain, not /u: invalid UTF-8 would make a /u regex return null).
+					$object = trim( (string) preg_replace( '/\s+/', '', $object ) );
+				} else {
+					if ( ! isset( $titles[ $object_id ] ) ) {
+						// Raw title: get_the_title() would add "Private:"/"Protected:" prefixes.
+						$raw_title            = (string) get_post_field( 'post_title', $object_id );
+						$titles[ $object_id ] = trim( (string) preg_replace( '/\s+/u', ' ', html_entity_decode( wp_strip_all_tags( $raw_title ), ENT_QUOTES, 'UTF-8' ) ) );
+					}
+					$object = '' !== $titles[ $object_id ] ? $titles[ $object_id ] : '#' . $object_id;
+				}
+				$date = (string) ( $row['view_date'] ?? '' );
+				// Imported history without real daily dates is stored under a placeholder date: say so.
+				$note = self::LEGACY_DATE === $date ? 'imported history (no real date)' : '';
+				fputcsv(
+					$out,
+					array(
+						$this->csv_safe_cell( $date ),
+						$this->csv_safe_cell( $type ),
+						$this->csv_safe_cell( $object ),
+						absint( $row['count'] ?? 0 ),
+						$note,
+					),
+					$delimiter,
+					'"',
+					''
+				);
+				++$row_num;
+				if ( 0 === $row_num % 500 ) {
+					flush();
+				}
 			}
-		}
+
+			$offset += $batch_size;
+		} while ( $fetched === $batch_size );
 
 		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;
@@ -1530,35 +2007,56 @@ class TSOSK_Mod_View_Counter {
 		$top_posts = $this->get_top_posts( $period, 5 );
 		$top_links = $this->get_top_links( $period, 5 );
 
-		$lines = array();
-		/* translators: %s: site name */
-		$lines[] = sprintf( __( 'View Counter summary for %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), wp_specialchars_decode( get_bloginfo( 'name' ) ) );
-		$lines[] = '';
-		/* translators: 1: number of days, 2: total views */
-		$lines[] = sprintf( __( 'Total post/page views (last %1$d days): %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $period, number_format_i18n( $total_views ) );
-		/* translators: 1: number of days, 2: total outbound link clicks */
-		$lines[] = sprintf( __( 'Total outbound link clicks (last %1$d days): %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $period, number_format_i18n( $total_clicks ) );
-		$lines[] = '';
-
-		if ( ! empty( $top_posts ) ) {
-			$lines[] = __( 'Top posts/pages:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-			foreach ( $top_posts as $row ) {
-				$lines[] = '- ' . $row['title'] . ': ' . number_format_i18n( $row['total'] );
-			}
-			$lines[] = '';
+		$total_downloads = 0;
+		foreach ( $this->get_top_links( $period, 1000, 'download' ) as $row ) {
+			$total_downloads += $row['total'];
 		}
+		$top_downloads = $this->get_top_links( $period, 5, 'download' );
 
-		if ( ! empty( $top_links ) ) {
-			$lines[] = __( 'Top outbound links:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-			foreach ( $top_links as $row ) {
-				$lines[] = '- ' . $row['url'] . ': ' . number_format_i18n( $row['total'] );
+		/* translators: %s: site name */
+		$intro = sprintf( __( 'View Counter summary for %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), wp_specialchars_decode( get_bloginfo( 'name' ) ) );
+		$rows  = array(
+			array(
+				/* translators: 1: number of days, 2: total views */
+				'value' => sprintf( __( 'Total post/page views (last %1$d days): %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $period, number_format_i18n( $total_views ) ),
+			),
+			array(
+				/* translators: 1: number of days, 2: total outbound link clicks */
+				'value' => sprintf( __( 'Total outbound link clicks (last %1$d days): %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $period, number_format_i18n( $total_clicks ) ),
+			),
+			array(
+				/* translators: 1: number of days, 2: total file downloads */
+				'value' => sprintf( __( 'Total file downloads (last %1$d days): %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $period, number_format_i18n( $total_downloads ) ),
+			),
+		);
+
+		$sections = array(
+			array( __( 'Top posts/pages:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $top_posts, 'title' ),
+			array( __( 'Top outbound links:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $top_links, 'url' ),
+			array( __( 'Top downloaded files:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $top_downloads, 'url' ),
+		);
+		foreach ( $sections as $section ) {
+			foreach ( $section[1] as $row ) {
+				$rows[] = array(
+					'label' => rtrim( $section[0], ':' ),
+					'value' => (string) $row[ $section[2] ],
+					'meta'  => number_format_i18n( $row['total'] ),
+				);
 			}
 		}
 
 		/* translators: %s: site name */
 		$subject = sprintf( __( '[%s] View Counter summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), wp_specialchars_decode( get_bloginfo( 'name' ) ) );
 
-		wp_mail( $to, $subject, implode( "\n", $lines ) );
+		TSOSK_Email_Template::send(
+			$to,
+			$subject,
+			array(
+				'heading' => __( 'View Counter summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'intro'   => $intro,
+				'rows'    => $rows,
+			)
+		);
 	}
 
 	// ── Render (settings tab) ─────────────────────────────────────────────────
@@ -1587,8 +2085,9 @@ class TSOSK_Mod_View_Counter {
 		$all_post_types = get_post_types( array( 'public' => true ), 'objects' );
 
 		global $wpdb;
-		$total_views  = (int) $wpdb->get_var( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type IN ('post','page')" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$total_clicks = (int) $wpdb->get_var( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type = 'link'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total_views     = (int) $wpdb->get_var( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type IN ('post','page')" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total_clicks    = (int) $wpdb->get_var( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type = 'link'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total_downloads = (int) $wpdb->get_var( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type = 'download'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Counts post, page and outbound-link-click visits with a small front-end beacon so counting keeps working even behind a full-page cache. No cookies are used — de-duplication happens with a short-lived, server-side fingerprint only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1603,10 +2102,14 @@ class TSOSK_Mod_View_Counter {
 				<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( $total_clicks ) ); ?></span>
 				<span class="tsosk-stat-label"><?php esc_html_e( 'Total outbound link clicks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</div>
+			<div class="tsosk-stat-box">
+				<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( $total_downloads ) ); ?></span>
+				<span class="tsosk-stat-label"><?php esc_html_e( 'Total file downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+			</div>
 		</div>
 
 		<p class="description">
-			<?php esc_html_e( 'Only posts and pages are counted. Media files (images, PDFs, downloads) and other attachments are not tracked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Page views are counted for posts and pages only. Download buttons (links with the download attribute that point to files on this site) are counted separately when enabled in the settings below; media attachment pages are not tracked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<h2><?php esc_html_e( 'Top Content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
@@ -1643,6 +2146,18 @@ class TSOSK_Mod_View_Counter {
 					<tbody></tbody>
 				</table>
 			</div>
+			<div class="tsosk-vc-col">
+				<h3><?php esc_html_e( 'Most downloaded files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<table class="widefat striped" id="tsosk-vc-top-downloads-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-vc-num-col"><?php esc_html_e( 'Downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
 		</div>
 
 		<h2><?php esc_html_e( 'Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
@@ -1670,11 +2185,66 @@ class TSOSK_Mod_View_Counter {
 				</td>
 			</tr>
 			<tr>
+				<th scope="row"><?php esc_html_e( 'Excluded roles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				<td>
+					<div class="tsosk-vc-roles">
+					<?php foreach ( wp_roles()->get_names() as $tsosk_vc_role => $tsosk_vc_role_name ) : ?>
+						<label>
+							<input type="checkbox" class="tsosk-vc-exclude-role" value="<?php echo esc_attr( $tsosk_vc_role ); ?>" <?php checked( in_array( $tsosk_vc_role, (array) ( $settings['exclude_roles'] ?? array() ), true ) ); ?>>
+							<?php echo esc_html( translate_user_role( $tsosk_vc_role_name ) ); ?>
+						</label>
+					<?php endforeach; ?>
+					</div>
+					<p class="description"><?php esc_html_e( 'Do not count visits and downloads from logged-in users with these roles. Not needed when "Don\'t count views from logged-in users" is on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Excluded IP addresses', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				<td>
+					<textarea id="tsosk-vc-exclude-ips" rows="3" cols="40" class="tsosk-code"><?php echo esc_textarea( implode( "\n", (array) ( $settings['exclude_ips'] ?? array() ) ) ); ?></textarea>
+					<p class="description">
+						<?php
+						printf(
+							/* translators: %s: the administrator's current IP address */
+							esc_html__( 'One IP or range (CIDR, e.g. 203.0.113.0/24) per line; IPv4 and IPv6. Visits and downloads from these addresses are not counted, even if the visitor is not logged in. Your current IP: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>' . esc_html( $this->get_visitor_ip() ) . '</code>'
+						);
+						?>
+					</p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><?php esc_html_e( 'Outbound links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				<td>
 					<label>
 						<input type="checkbox" id="tsosk-vc-track-links" <?php checked( ! empty( $settings['track_outbound_links'] ) ); ?>>
 						<?php esc_html_e( 'Count clicks on external links inside post/page content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+					<br>
+					<label>
+						<input type="checkbox" id="tsosk-vc-track-header-links" <?php checked( ! empty( $settings['track_header_links'] ) ); ?>>
+						<?php esc_html_e( 'Also count clicks on external links in the theme header (e.g. social icons) — visitors only, never the admin bar', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				<td>
+					<label>
+						<input type="checkbox" id="tsosk-vc-track-downloads" <?php checked( ! empty( $settings['track_downloads'] ) ); ?>>
+						<?php esc_html_e( 'Count downloads: clicks on links with the download attribute that point to files on this site (respects the logged-in users setting above)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+					<br>
+					<label>
+						<input type="checkbox" id="tsosk-vc-track-download-links" <?php checked( ! empty( $settings['track_download_links'] ) ); ?>>
+						<?php esc_html_e( 'Also count normal links to files with these extensions (no download attribute needed):', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+					<br>
+					<input type="text" id="tsosk-vc-download-extensions" class="large-text tsosk-code" style="max-width:520px;" value="<?php echo esc_attr( (string) ( $settings['download_extensions'] ?? '' ) ); ?>">
+					<br>
+					<label>
+						<input type="checkbox" id="tsosk-vc-download-images" <?php checked( ! empty( $settings['download_images'] ) ); ?>>
+						<?php esc_html_e( 'Also count links to image files (jpg, png, gif, webp, svg…). Off by default: a link to an image is often a lightbox, not a download.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</label>
 				</td>
 			</tr>
@@ -1719,7 +2289,13 @@ class TSOSK_Mod_View_Counter {
 				<option value="wp_postviews"><?php esc_html_e( 'WP-PostViews', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 				<option value="wp_statistics"><?php esc_html_e( 'WP Statistics', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 			</select>
-			<button class="button button-secondary" id="tsosk-vc-import" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+			<?php
+			$tsosk_vc_done = get_option( self::OPTION_IMPORTED, array() );
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name built from $wpdb->prefix.
+			$tsosk_vc_has_data = (bool) $wpdb->get_var( "SELECT 1 FROM {$wpdb->prefix}tsosk_views LIMIT 1" );
+			?>
+			<button class="button button-secondary" id="tsosk-vc-import" data-has-data="<?php echo $tsosk_vc_has_data ? '1' : '0'; ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-imported="<?php echo esc_attr( implode( ',', is_array( $tsosk_vc_done ) ? array_keys( $tsosk_vc_done ) : array() ) ); ?>">
 				<?php esc_html_e( 'Import Now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-vc-import-msg"></span>
@@ -1727,10 +2303,34 @@ class TSOSK_Mod_View_Counter {
 		<?php $tsosk_vc_last_import = get_option( self::OPTION_LAST_IMPORT, '' ); ?>
 		<p class="tsosk-vc-import-result" id="tsosk-vc-import-result"<?php echo '' === $tsosk_vc_last_import ? ' hidden' : ''; ?>><?php echo esc_html( is_string( $tsosk_vc_last_import ) ? $tsosk_vc_last_import : '' ); ?></p>
 
+		<?php $tsosk_vc_suspicious = $this->get_suspicious_days(); ?>
+		<?php if ( ! empty( $tsosk_vc_suspicious ) ) : ?>
+		<div class="notice notice-warning inline" id="tsosk-vc-suspicious">
+			<p><strong><?php esc_html_e( 'These days have unusually high totals', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+			<p><?php esc_html_e( 'This usually means totals imported from another plugin were saved under the import date (or imported twice), which inflates the 7/30/90-day figures. Move them to "All time" so they stop counting as recent traffic, or delete a day that was imported twice.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<table class="widefat striped" style="max-width:620px;">
+				<?php foreach ( $tsosk_vc_suspicious as $tsosk_vc_day ) : ?>
+				<tr>
+					<td><code><?php echo esc_html( $tsosk_vc_day['date'] ); ?></code></td>
+					<td><?php echo esc_html( number_format_i18n( $tsosk_vc_day['total'] ) ); ?></td>
+					<td>
+						<button type="button" class="button button-small tsosk-vc-fix-day" data-mode="legacy" data-date="<?php echo esc_attr( $tsosk_vc_day['date'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Move to "All time"', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+						<button type="button" class="button button-small button-link-delete tsosk-vc-fix-day" data-mode="delete" data-date="<?php echo esc_attr( $tsosk_vc_day['date'] ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-confirm="<?php esc_attr_e( 'Delete every count recorded on this day? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'Delete day', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					</td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
+			<p><span class="tsosk-ajax-msg" id="tsosk-vc-fix-msg"></span></p>
+		</div>
+		<?php endif; ?>
+
 		<h2><?php esc_html_e( 'Export', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h2>
 		<p>
 			<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::EXPORT_ACTION ), self::EXPORT_ACTION ) ); ?>">
 				<?php esc_html_e( 'Download CSV (daily detail)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</a>
+			<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::EXPORT_ACTION . '&delimiter=semicolon' ), self::EXPORT_ACTION ) ); ?>">
+				<?php esc_html_e( 'Download CSV for Excel (Spanish/Catalan, semicolon)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</a>
 		</p>
 

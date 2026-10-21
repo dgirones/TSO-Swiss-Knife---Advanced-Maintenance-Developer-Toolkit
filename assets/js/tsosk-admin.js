@@ -365,14 +365,14 @@
 
 	// ── Health Report ──────────────────────────────────────────────────────
 
-	$( document ).on( 'click', '#tsosk-health-save-alerts', function () {
+	$( document ).on( 'click', '#tsosk-404-save-alerts', function () {
 		var $btn = $( this );
-		var $msg = $( '#tsosk-health-msg' );
+		var $msg = $( '#tsosk-404-alerts-msg' );
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 
 		ajaxPost( {
-			action : 'tsosk_health_save_alerts',
+			action : 'tsosk_404_save_alerts',
 			data   : {
 				nonce              : $btn.data( 'nonce' ),
 				enabled            : $( '#tsosk-alerts-enabled' ).prop( 'checked' ) ? 1 : 0,
@@ -380,16 +380,33 @@
 				not_found_threshold: $( '#tsosk-alerts-404-threshold' ).val()
 			},
 			success: function ( r ) {
-				if ( r.success ) {
-					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-				}
+				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.save_alerts );
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false ).text( tsosk.i18n.save_alerts );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-404-test-alert', function () {
+		var $btn  = $( this );
+		var $msg  = $( '#tsosk-404-alerts-msg' );
+		var label = $btn.text();
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_404_test_alert',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				$btn.prop( 'disabled', false ).text( label );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( label );
 			}
 		} );
 	} );
@@ -1009,6 +1026,117 @@
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$btn.prop( 'disabled', false ).text( label );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-um-install-all', function () {
+		var $btn  = $( this );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $btn.nextAll( '.tsosk-um-install-msg' ).first();
+		var label = $btn.text();
+		var confirmMsg = ( tsosk.i18n.um_install_all_confirm || 'Install the pending updates now?' )
+			.replace( '%1$d', String( parseInt( $btn.data( 'plugins' ), 10 ) || 0 ) )
+			.replace( '%2$d', String( parseInt( $btn.data( 'themes' ), 10 ) || 0 ) )
+			.replace( '%3$d', String( parseInt( $btn.data( 'translations' ), 10 ) || 0 ) );
+
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		var done   = [];
+		var failed = [];
+		var skip   = [];
+
+		$( '.tsosk-um-install-all, .tsosk-um-update-plugin, #tsosk-um-run-updates, #tsosk-um-install-translations' ).prop( 'disabled', true );
+		$btn.text( tsosk.i18n.running );
+
+		function finish( errorText ) {
+			var text;
+			var type = 'ok';
+			if ( errorText ) {
+				text = errorText;
+				type = 'error';
+			} else if ( failed.length ) {
+				text = ( tsosk.i18n.um_install_all_partial || 'Installed: %1$d. Failed: %2$s' )
+					.replace( '%1$d', String( done.length ) )
+					.replace( '%2$s', failed.map( function ( f ) { return f.name + ( f.error ? ' (' + f.error + ')' : '' ); } ).join( '; ' ) );
+				type = 'error';
+			} else if ( done.length ) {
+				text = ( tsosk.i18n.um_install_all_done || 'Pending updates installed: %d.' ).replace( '%d', String( done.length ) );
+			} else {
+				text = tsosk.i18n.um_install_all_none || 'Nothing to install.';
+			}
+			showMsg( $msg, text, type );
+			$btn.text( label );
+			if ( ! errorText && ! failed.length ) {
+				setTimeout( function () { window.location.reload(); }, 2000 );
+			} else {
+				$( '.tsosk-um-install-all, .tsosk-um-update-plugin, #tsosk-um-run-updates, #tsosk-um-install-translations' ).prop( 'disabled', false );
+			}
+		}
+
+		function next( first ) {
+			ajaxPost( {
+				action : 'tsosk_um_install_next',
+				data   : { nonce: nonce, first: first ? 1 : 0, skip: skip.join( ',' ) },
+				success: function ( r ) {
+					if ( ! r.success ) {
+						finish( r.data || tsosk.i18n.error );
+						return;
+					}
+					var item = r.data ? r.data.item : null;
+					if ( item ) {
+						skip.push( item.key );
+						( item.ok ? done : failed ).push( item );
+					}
+					if ( item && r.data.remaining > 0 ) {
+						showMsg( $msg, ( tsosk.i18n.um_install_all_progress || 'Installing… (%d done)' ).replace( '%d', String( done.length ) ), 'ok' );
+						next( false );
+					} else {
+						finish( '' );
+					}
+				},
+				error: function () {
+					finish( tsosk.i18n.error );
+				}
+			} );
+		}
+
+		next( true );
+	} );
+
+	$( document ).on( 'click', '.tsosk-um-update-plugin', function () {
+		var $btn  = $( this );
+		var name  = String( $btn.data( 'name' ) || '' );
+		var $msg  = $( '#tsosk-um-run-msg' );
+		var label = $btn.text();
+		var confirmMsg = ( tsosk.i18n.um_update_plugin_confirm || 'Update %s now?' ).replace( '%s', name );
+
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+
+		$( '.tsosk-um-update-plugin' ).prop( 'disabled', true );
+		$btn.text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_um_update_plugin',
+			data   : { nonce: $btn.data( 'nonce' ), plugin: $btn.data( 'plugin' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) ? r.data.message : tsosk.i18n.done, 'ok' );
+					setTimeout( function () { window.location.reload(); }, 1500 );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$( '.tsosk-um-update-plugin' ).prop( 'disabled', false );
+					$btn.text( label );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$( '.tsosk-um-update-plugin' ).prop( 'disabled', false );
+				$btn.text( label );
 			}
 		} );
 	} );
@@ -1694,8 +1822,98 @@
 
 	// ── Redirect Rules list: filter, sort, select, bulk actions, reorder, CSV ──
 
+	// 404 Monitor: click a header to sort the table (URL, visits, last visit, referrer, IP, action).
+	function tsosk404Sort( $th ) {
+		var col     = String( $th.data( 'sort' ) );
+		var numeric = ( 'hits' === col || 'last' === col || 'covered' === col );
+		var current = $th.hasClass( 'tsosk-sort-asc' ) ? 'asc' : ( $th.hasClass( 'tsosk-sort-desc' ) ? 'desc' : '' );
+		var dir;
+		if ( ! current ) {
+			dir = ( 'hits' === col || 'last' === col ) ? 'desc' : 'asc'; // Most visits / most recent first.
+		} else {
+			dir = 'asc' === current ? 'desc' : 'asc';
+		}
+		$( '#tsosk-404-table th.tsosk-th-sortable' ).removeClass( 'tsosk-sort-asc tsosk-sort-desc' ).attr( 'aria-sort', 'none' );
+		$th.addClass( 'asc' === dir ? 'tsosk-sort-asc' : 'tsosk-sort-desc' ).attr( 'aria-sort', 'asc' === dir ? 'ascending' : 'descending' );
+
+		var value = function ( tr ) {
+			var $tr = $( tr );
+			switch ( col ) {
+				case 'url':
+					return String( $tr.find( '.tsosk-404-select' ).data( 'source' ) || '' ).toLowerCase();
+				case 'hits':
+					return parseInt( $tr.attr( 'data-hits' ), 10 ) || 0;
+				case 'last':
+					return parseInt( $tr.attr( 'data-last' ), 10 ) || 0;
+				case 'covered':
+					return parseInt( $tr.attr( 'data-covered' ), 10 ) || 0;
+				case 'ref':
+					return $.trim( $tr.find( '.tsosk-404-col-ref' ).text() ).toLowerCase();
+				case 'ip':
+					return $.trim( $tr.find( '.tsosk-404-col-ip' ).text() ).toLowerCase();
+				default:
+					return '';
+			}
+		};
+		var $body = $( '#tsosk-404-table tbody' );
+		var rows  = $body.children( 'tr' ).get();
+		rows.sort( function ( a, b ) {
+			var va = value( a );
+			var vb = value( b );
+			var diff = numeric ? va - vb : String( va ).localeCompare( String( vb ), undefined, { numeric: true } );
+			if ( 'desc' === dir ) {
+				diff = -diff;
+			}
+			return diff || ( ( parseInt( $( a ).attr( 'data-index' ), 10 ) || 0 ) - ( parseInt( $( b ).attr( 'data-index' ), 10 ) || 0 ) );
+		} );
+		$.each( rows, function ( i, row ) {
+			$body.append( row );
+		} );
+	}
+	$( document ).on( 'click', '#tsosk-404-table th.tsosk-th-sortable', function () {
+		tsosk404Sort( $( this ) );
+	} );
+	$( document ).on( 'keydown', '#tsosk-404-table th.tsosk-th-sortable', function ( e ) {
+		if ( 'Enter' === e.key || ' ' === e.key ) {
+			e.preventDefault();
+			tsosk404Sort( $( this ) );
+		}
+	} );
+
+	// 404 Monitor: only rows not hidden by the live filter count for selection.
+	function tsosk404Boxes() {
+		return $( '#tsosk-404-table tbody tr' ).not( '.tsosk-404-hidden' ).find( '.tsosk-404-select' );
+	}
+
+	function tsosk404UpdateCount() {
+		var $count = $( '#tsosk-404-count' );
+		if ( ! $count.length ) {
+			return;
+		}
+		var total = $( '#tsosk-404-table tbody tr' ).length;
+		var shown = $( '#tsosk-404-table tbody tr' ).not( '.tsosk-404-hidden' ).length;
+		var text  = shown ? String( $count.data( 'template' ) ) : String( $count.data( 'empty' ) );
+		$count.text( text.replace( '{shown}', shown ).replace( '{total}', total ) );
+	}
+
+	$( document ).on( 'input search', '#tsosk-404-search', function () {
+		var q = String( $( this ).val() || '' ).trim().toLowerCase();
+		$( '#tsosk-404-table tbody tr' ).each( function () {
+			var $tr   = $( this );
+			var match = ! q || $tr.text().toLowerCase().indexOf( q ) !== -1 || String( $tr.find( '.tsosk-404-select' ).data( 'source' ) || '' ).toLowerCase().indexOf( q ) !== -1;
+			$tr.toggleClass( 'tsosk-404-hidden', ! match );
+			if ( ! match ) {
+				// Never leave hidden rows selected: bulk actions must only touch what is visible.
+				$tr.find( '.tsosk-404-select' ).prop( 'checked', false );
+			}
+		} );
+		tsosk404UpdateCount();
+		tsosk404SyncSelectAll();
+	} );
+	$( tsosk404UpdateCount );
+
 	function tsosk404SyncSelectAll() {
-		var $rows    = $( '#tsosk-404-table .tsosk-404-select' );
+		var $rows    = tsosk404Boxes();
 		var $checked = $rows.filter( ':checked' );
 		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
 	}
@@ -1808,12 +2026,12 @@
 	} );
 
 	$( document ).on( 'click', '#tsosk-404-select-all-btn', function () {
-		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', true );
+		tsosk404Boxes().prop( 'checked', true );
 		tsosk404SyncSelectAll();
 	} );
 
 	$( document ).on( 'click', '#tsosk-404-select-none-btn', function () {
-		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', false );
+		tsosk404Boxes().prop( 'checked', false );
 		tsosk404SyncSelectAll();
 	} );
 
@@ -1851,7 +2069,7 @@
 	$( document ).on( 'click', '#tsosk-redirects-table .tsosk-redirect-select, #tsosk-404-table .tsosk-404-select', function ( e ) {
 		var is404 = $( this ).hasClass( 'tsosk-404-select' );
 		var key   = is404 ? '404' : 'rules';
-		var $all  = is404 ? $( '#tsosk-404-table .tsosk-404-select' ) : tsoskVisibleRuleBoxes();
+		var $all  = is404 ? tsosk404Boxes() : tsoskVisibleRuleBoxes();
 		var idx   = $all.index( this );
 		if ( e.shiftKey && undefined !== tsoskLastClicked[ key ] && tsoskLastClicked[ key ] < $all.length && idx > -1 ) {
 			var from = Math.min( idx, tsoskLastClicked[ key ] );
@@ -2065,11 +2283,11 @@
 	} );
 
 	$( document ).on( 'change', '#tsosk-404-select-all', function () {
-		$( '#tsosk-404-table .tsosk-404-select' ).prop( 'checked', $( this ).prop( 'checked' ) );
+		tsosk404Boxes().prop( 'checked', $( this ).prop( 'checked' ) );
 	} );
 
 	$( document ).on( 'change', '#tsosk-404-table .tsosk-404-select', function () {
-		var $rows    = $( '#tsosk-404-table .tsosk-404-select' );
+		var $rows    = tsosk404Boxes();
 		var $checked = $rows.filter( ':checked' );
 		$( '#tsosk-404-select-all' ).prop( 'checked', $rows.length > 0 && $checked.length === $rows.length );
 	} );
@@ -2353,6 +2571,31 @@
 					: tsosk.i18n.error;
 				showMsg( $msg, msg, 'error' );
 				$( '#tsosk-fi-scan, #tsosk-fi-force-scan' ).prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-fi-view', function () {
+		var $btn = $( this );
+		var $row = $btn.closest( 'tr' );
+		var $old = $row.next( '.tsosk-fi-view-row' );
+		if ( $old.length ) {
+			$old.remove();
+			return;
+		}
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_fi_view',
+			data   : { nonce: $btn.data( 'nonce' ), file: $btn.data( 'file' ) },
+			success: function ( r ) {
+				$btn.prop( 'disabled', false );
+				var $pre = $( '<pre class="tsosk-code" style="white-space:pre-wrap;word-break:break-all;margin:0;max-height:220px;overflow:auto;"></pre>' );
+				$pre.text( r && r.success ? r.data.content : ( ( r && r.data ) || tsosk.i18n.error ) );
+				var $cell = $( '<td></td>' ).attr( 'colspan', $row.children().length ).append( $pre );
+				$row.after( $( '<tr class="tsosk-fi-view-row"></tr>' ).append( $cell ) );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
 			}
 		} );
 	} );
@@ -2767,7 +3010,20 @@
 				block_keywords          : $( '#tsosk-cas-keywords' ).val(),
 				block_urls              : $( '#tsosk-cas-urls' ).val(),
 				custom_disposable_domains: $( '#tsosk-cas-domains' ).val(),
-				whitelist_ips           : $( '#tsosk-cas-whitelist' ).val()
+				whitelist_ips           : $( '#tsosk-cas-whitelist' ).val(),
+				log_max                 : $( '#tsosk-cas-log-max' ).val(),
+				alert_enabled           : $( '#tsosk-cas-alert-enabled' ).prop( 'checked' ) ? 1 : 0,
+				alert_email             : $( '#tsosk-cas-alert-email' ).val(),
+				alert_threshold         : $( '#tsosk-cas-alert-threshold' ).val(),
+				alert_provider_errors   : $( '#tsosk-cas-alert-providers' ).prop( 'checked' ) ? 1 : 0,
+				protect_reviews         : $( '#tsosk-cas-protect-reviews' ).prop( 'checked' ) ? 1 : 0,
+				protect_registration    : $( '#tsosk-cas-protect-registration' ).prop( 'checked' ) ? 1 : 0,
+				ban_enabled             : $( '#tsosk-cas-ban-enabled' ).prop( 'checked' ) ? 1 : 0,
+				ban_threshold           : $( '#tsosk-cas-ban-threshold' ).val(),
+				ban_hours               : $( '#tsosk-cas-ban-hours' ).val(),
+				trust_returning         : $( '#tsosk-cas-trust-returning' ).prop( 'checked' ) ? 1 : 0,
+				block_message           : $( '#tsosk-cas-block-message' ).val(),
+				observe_rules           : $( '.tsosk-cas-observe:checked' ).map( function () { return this.value; } ).get()
 			},
 			success: function ( r ) {
 				if ( r.success ) {
@@ -2823,6 +3079,142 @@
 				}
 			},
 			error: function () {
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-cas-test-provider', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-cas-test-msg' );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_cas_test_provider',
+			data   : { nonce: $btn.data( 'nonce' ), provider: $btn.data( 'provider' ) },
+			success: function ( r ) {
+				$msg.attr( 'class', 'tsosk-msg tsosk-msg--' + ( r.success ? 'ok' : 'error' ) ).text( r.data ).show();
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				$msg.attr( 'class', 'tsosk-msg tsosk-msg--error' ).text( tsosk.i18n.error ).show();
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-cas-allow-ip', function () {
+		var $btn = $( this );
+
+		if ( ! window.confirm( $btn.data( 'confirm' ) ) ) {
+			return;
+		}
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_cas_allow_ip',
+			data   : { nonce: $btn.data( 'nonce' ), ip: $btn.data( 'ip' ), log: $btn.data( 'log' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+				} else {
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	// Comment anti-spam: sub-tabs (remembered for the browser session).
+	function casShowTab( tab ) {
+		var $tab = $( '.tsosk-cas-tab[data-tab="' + tab + '"]' );
+		if ( ! $tab.length ) {
+			return;
+		}
+		$( '.tsosk-cas-tab' ).removeClass( 'nav-tab-active' ).attr( 'aria-selected', 'false' );
+		$tab.addClass( 'nav-tab-active' ).attr( 'aria-selected', 'true' );
+		$( '.tsosk-cas-panel' ).prop( 'hidden', true );
+		$( '#tsosk-cas-panel-' + tab ).prop( 'hidden', false );
+		try {
+			window.sessionStorage.setItem( 'tsosk_cas_tab', tab );
+		} catch ( e ) {
+			// Storage unavailable: the tab just is not remembered.
+		}
+	}
+
+	$( document ).on( 'click', '.tsosk-cas-tab', function ( e ) {
+		e.preventDefault();
+		casShowTab( $( this ).data( 'tab' ) );
+	} );
+
+	$( function () {
+		if ( ! $( '.tsosk-cas-tabs' ).length ) {
+			return;
+		}
+		var saved = '';
+		try {
+			saved = window.sessionStorage.getItem( 'tsosk_cas_tab' ) || '';
+		} catch ( e ) {
+			saved = '';
+		}
+		if ( saved ) {
+			casShowTab( saved );
+		}
+	} );
+
+	// Redirects: sub-tabs (remembered for the browser session).
+	function rdShowTab( tab ) {
+		var $tab = $( '.tsosk-rd-tab[data-tab="' + tab + '"]' );
+		if ( ! $tab.length ) {
+			return;
+		}
+		$( '.tsosk-rd-tab' ).removeClass( 'nav-tab-active' ).attr( 'aria-selected', 'false' );
+		$tab.addClass( 'nav-tab-active' ).attr( 'aria-selected', 'true' );
+		$( '.tsosk-rd-panel' ).prop( 'hidden', true );
+		$( '#tsosk-rd-panel-' + tab ).prop( 'hidden', false );
+		try {
+			window.sessionStorage.setItem( 'tsosk_rd_tab', tab );
+		} catch ( e ) {
+			// Storage unavailable: the tab just is not remembered.
+		}
+	}
+
+	$( document ).on( 'click', '.tsosk-rd-tab', function ( e ) {
+		e.preventDefault();
+		rdShowTab( $( this ).data( 'tab' ) );
+	} );
+
+	$( function () {
+		if ( ! $( '.tsosk-rd-tabs' ).length ) {
+			return;
+		}
+		var saved = '';
+		try {
+			saved = window.sessionStorage.getItem( 'tsosk_rd_tab' ) || '';
+		} catch ( e ) {
+			saved = '';
+		}
+		if ( saved ) {
+			rdShowTab( saved );
+		}
+	} );
+
+	$( document ).on( 'click', '#tsosk-cas-test-alert', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-cas-alert-msg' );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_cas_test_alert',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				$msg.attr( 'class', 'tsosk-msg tsosk-msg--' + ( r.success ? 'ok' : 'error' ) ).text( r.data ).show();
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				$msg.attr( 'class', 'tsosk-msg tsosk-msg--error' ).text( tsosk.i18n.error ).show();
 				$btn.prop( 'disabled', false );
 			}
 		} );
@@ -3172,9 +3564,9 @@
 			var sizeStr     = item.size > 1024 ? ( ( item.size / 1024 ).toFixed( 1 ) + ' KB' ) : ( item.size + ' B' );
 			var typeColor   = { serialized: '#7c3aed', json: '#0369a1', integer: '#0f766e', text: '#374151' };
 			var tc          = typeColor[ item.type ] || '#374151';
-			var alColor     = item.autoload === 'yes' || item.autoload === 'on' ? '#d97706' : '#6b7280';
+			var alColor     = item.autoload === 'yes' || item.autoload === 'on' || item.autoload === 'auto-on' || item.autoload === 'auto' ? '#d97706' : '#6b7280';
 
-			var badge_al    = '<span style="background:' + ( item.autoload === 'yes' || item.autoload === 'on' ? '#fef3c7' : '#f3f4f6' ) + ';color:' + alColor + ';padding:2px 7px;border-radius:10px;font-size:11px;">' + item.autoload + '</span>';
+			var badge_al    = '<span style="background:' + ( item.autoload === 'yes' || item.autoload === 'on' || item.autoload === 'auto-on' || item.autoload === 'auto' ? '#fef3c7' : '#f3f4f6' ) + ';color:' + alColor + ';padding:2px 7px;border-radius:10px;font-size:11px;">' + item.autoload + '</span>';
 			var badge_type  = '<span style="background:#f3f4f6;color:' + tc + ';padding:2px 7px;border-radius:10px;font-size:11px;">' + item.type + '</span>';
 
 			var actions = '';
@@ -3275,7 +3667,7 @@
 		tsosk_oe.readOnly    = !! data.protected;
 		$( '#tsosk-oe-editing-name' ).text( data.name );
 		$( '#tsosk-oe-editing-type' ).text( data.type );
-		$( '#tsosk-oe-editing-autoload' ).val( ( data.autoload === 'yes' || data.autoload === 'on' ) ? 'yes' : 'no' );
+		$( '#tsosk-oe-editing-autoload' ).val( ( data.autoload === 'yes' || data.autoload === 'on' || data.autoload === 'auto-on' || data.autoload === 'auto' ) ? 'yes' : 'no' );
 		$( '#tsosk-oe-caution-banner' ).toggle( caution && ! tsosk_oe.readOnly );
 		$( '#tsosk-oe-protected-banner' ).toggle( tsosk_oe.readOnly );
 		$( '#tsosk-oe-serialized-note' ).toggle( data.type === 'serialized' );
@@ -4886,6 +5278,38 @@
 		send( false );
 	} );
 
+	$( document ).on( 'click', '.tsosk-img-adopt', function () {
+		var $btn = $( this );
+		var from = String( $btn.data( 'from' ) );
+		var to   = String( $btn.data( 'to' ) );
+		var confirmMsg = ( tsosk.i18n.image_sizes_adopt_confirm || 'Make the existing files of "%2$s" (%1$d images) available as "%3$s"? No file is moved, copied or deleted. Continue?' )
+			.replace( '%1$d', String( $btn.data( 'files' ) ) )
+			.replace( /%2\$s/g, from )
+			.replace( /%3\$s/g, to );
+		if ( ! window.confirm( confirmMsg ) ) {
+			return;
+		}
+		var label = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		ajaxPost( {
+			action : 'tsosk_image_sizes_audit_adopt',
+			data   : { nonce: $btn.data( 'nonce' ), from: from, to: to },
+			success: function ( r ) {
+				if ( r.success && r.data && r.data.html ) {
+					$( '#tsosk-image-sizes-results' ).html( r.data.html );
+					showMsg( $( '#tsosk-image-sizes-save-msg' ), r.data.message || tsosk.i18n.done, 'ok' );
+					return;
+				}
+				$btn.prop( 'disabled', false ).text( label );
+				window.alert( r.success ? ( ( r.data && r.data.message ) || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ) );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false ).text( label );
+				window.alert( tsosk.i18n.error );
+			}
+		} );
+	} );
+
 	$( document ).on( 'click', '.tsosk-img-quarantine-restore', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-image-sizes-delete-msg' );
@@ -4993,9 +5417,301 @@
 	} );
 
 
+	// Sitemap review: the table is drawn without HTTP calls, then verified in the background.
+	function tsoskSitemapCheck( refresh ) {
+		var $card = $( '#tsosk-sf-sitemaps' );
+		if ( ! $card.length ) {
+			return;
+		}
+		var $btn = $( '#tsosk-sf-sitemaps-recheck' ).prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_sf_sitemap_check',
+			data   : { nonce: $card.data( 'nonce' ), refresh: refresh ? '1' : '0' },
+			success: function ( r ) {
+				if ( r.success && r.data && typeof r.data.html === 'string' ) {
+					$( '#tsosk-sf-sitemaps-body' ).html( r.data.html );
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	}
+	$( function () {
+		tsoskSitemapCheck( false );
+	} );
+	$( document ).on( 'click', '#tsosk-sf-sitemaps-recheck', function () {
+		tsoskSitemapCheck( true );
+	} );
+
+	$( document ).on( 'click', '.tsosk-sf-previous', function () {
+		var $btn = $( this );
+		var key  = $btn.data( 'key' );
+		var $msg = $( '.tsosk-sf-msg-' + key );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_sf_previous',
+			data   : { nonce: $btn.data( 'nonce' ), key: key },
+			success: function ( r ) {
+				if ( r.success ) {
+					$( '#tsosk-sf-content-' + key ).val( r.data.content );
+					showMsg( $msg, r.data.message, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	// Put the editor back to the content saved on the server (the textarea's original value).
+	$( document ).on( 'click', '.tsosk-sf-discard', function () {
+		var $btn  = $( this );
+		var key   = $btn.data( 'key' );
+		var $area = $( '#tsosk-sf-content-' + key );
+		if ( ! $area.length ) {
+			return;
+		}
+		$area.val( $area.prop( 'defaultValue' ) );
+		showMsg( $( '.tsosk-sf-msg-' + key ), $btn.attr( 'data-done' ), 'ok' );
+	} );
+
+	// Insert the security-headers block into the .htaccess editor (nothing is saved until "Save Changes").
+	$( document ).on( 'click', '.tsosk-sf-headers', function () {
+		var $btn  = $( this );
+		var key   = $btn.data( 'key' );
+		var $msg  = $( '.tsosk-sf-msg-' + key );
+		var $area = $( '#tsosk-sf-content-' + key );
+		var block = String( $btn.attr( 'data-block' ) || '' );
+		var cur   = String( $area.val() || '' );
+
+		if ( cur.indexOf( '# BEGIN TSOSK Security Headers' ) !== -1 ) {
+			showMsg( $msg, $btn.attr( 'data-exists' ), 'error' );
+			return;
+		}
+		var wp = cur.indexOf( '# BEGIN WordPress' );
+		if ( wp !== -1 ) {
+			cur = cur.slice( 0, wp ) + block + '\n\n' + cur.slice( wp );
+		} else {
+			cur = ( cur.replace( /\s+$/, '' ) ? cur.replace( /\s+$/, '' ) + '\n\n' : '' ) + block + '\n';
+		}
+		$area.val( cur ).trigger( 'focus' );
+		showMsg( $msg, $btn.attr( 'data-done' ), 'ok' );
+	} );
+
+
 	// ── Slow Query Monitor ────────────────────────────────────────────────────
 
 	var tsosk_sq = { page: 1, total_pages: 1, lastSearch: '' };
+
+	// Expand / collapse long SQL (and fingerprints) in tables.
+	$( document ).on( 'click', '.tsosk-sq-sql-fold-btn', function () {
+		var $btn   = $( this );
+		var $wrap  = $btn.closest( '.tsosk-sq-sql-fold' );
+		var open   = ! $wrap.hasClass( 'is-open' );
+		$wrap.toggleClass( 'is-open', open );
+		$wrap.find( '.tsosk-sq-sql-preview' ).prop( 'hidden', open );
+		$wrap.find( '.tsosk-sq-sql-code--full' ).prop( 'hidden', ! open );
+		$btn.attr( 'aria-expanded', open ? 'true' : 'false' );
+		$btn.find( '.tsosk-sq-sql-fold-show' ).prop( 'hidden', open );
+		$btn.find( '.tsosk-sq-sql-fold-hide' ).prop( 'hidden', ! open );
+	} );
+
+	function tsoskSqDupeTable( panel ) {
+		return $( '#tsosk-sq-' + panel + '-dupe-table' );
+	}
+
+	function tsoskSqParseDupeJson( panel ) {
+		var el = document.getElementById( 'tsosk-sq-' + panel + '-dupe-json' );
+		if ( ! el || ! el.textContent ) {
+			return null;
+		}
+		try {
+			return JSON.parse( el.textContent );
+		} catch ( e ) {
+			return null;
+		}
+	}
+
+	function tsoskSqOriginLabelEn( origin ) {
+		origin = String( origin || '' );
+		if ( origin.indexOf( 'plugin:' ) === 0 ) {
+			return 'Plugin: ' + origin.slice( 7 );
+		}
+		if ( origin.indexOf( 'mu-plugin:' ) === 0 ) {
+			return 'MU-plugin: ' + origin.slice( 10 );
+		}
+		if ( origin.indexOf( 'theme:' ) === 0 ) {
+			return 'Theme: ' + origin.slice( 6 );
+		}
+		if ( origin === 'core' ) {
+			return 'WordPress Core';
+		}
+		if ( origin === 'unknown' ) {
+			return 'Unknown';
+		}
+		return origin || 'Unknown';
+	}
+
+	function tsoskSqMapLines( map, emptyLine, labelFn ) {
+		var keys = map && typeof map === 'object' ? Object.keys( map ) : [];
+		if ( ! keys.length ) {
+			return [ emptyLine ];
+		}
+		var lines = [];
+		keys.slice( 0, 8 ).forEach( function ( k ) {
+			var label = labelFn ? labelFn( k ) : k;
+			lines.push( '- ' + label + ' ×' + String( map[ k ] ) );
+		} );
+		return lines;
+	}
+
+	function tsoskSqBuildDupeReport( payload, selectedIds ) {
+		var meta = ( payload && payload.meta ) ? payload.meta : {};
+		var all  = ( payload && payload.rows ) ? payload.rows : [];
+		var want = {};
+		( selectedIds || [] ).forEach( function ( id ) { want[ String( id ) ] = true; } );
+		var rows = all.filter( function ( r ) { return want[ String( r.id ) ]; } );
+		var lines = [
+			'# Duplicate database queries (TSO Swiss Knife — Slow Query Monitor)',
+			'URL: ' + ( meta.url ? meta.url : '(unknown)' ),
+			'Queries on page: ' + String( meta.query_count || 0 ) + ' · Duplicate patterns in this report: ' + String( rows.length ),
+			'Origin detection: ' + ( meta.detect ? 'on' : 'off (turn on in Monitor Settings, then reload the page you are debugging)' ),
+			''
+		];
+		if ( ! rows.length ) {
+			lines.push( 'No duplicate patterns selected.' );
+			return lines.join( '\n' ) + '\n';
+		}
+		rows.forEach( function ( row, idx ) {
+			if ( idx >= 25 ) {
+				return;
+			}
+			lines.push( '## ' + String( idx + 1 ) + '. ×' + String( row.count ) + ' · ' + Number( row.time_ms || 0 ).toFixed( 2 ) + ' ms total' );
+			lines.push( 'SQL:' );
+			lines.push( String( row.sql || '' ) );
+			lines.push( '' );
+			lines.push( 'Callers:' );
+			lines = lines.concat( tsoskSqMapLines( row.callers, '- (none recorded)' ) );
+			lines.push( '' );
+			lines.push( 'Components:' );
+			lines = lines.concat( tsoskSqMapLines( row.components, meta.detect ? '- (unknown)' : '- (enable Origin detection to attribute plugins)', tsoskSqOriginLabelEn ) );
+			lines.push( '' );
+			lines.push( 'Potential troublemakers:' );
+			lines = lines.concat( tsoskSqMapLines( row.troublemakers, meta.detect ? '- (none identified beyond the callers above)' : '- (enable Origin detection)' ) );
+			lines.push( '' );
+		} );
+		if ( rows.length > 25 ) {
+			lines.push( '… and ' + String( rows.length - 25 ) + ' more patterns.' );
+		}
+		return lines.join( '\n' );
+	}
+
+	$( document ).on( 'change', '.tsosk-sq-dupe-pick-all', function () {
+		var $table = $( this ).closest( 'table' );
+		$table.find( '.tsosk-sq-dupe-pick' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
+
+	$( document ).on( 'change', '.tsosk-sq-dupe-pick', function () {
+		var $table = $( this ).closest( 'table' );
+		var $picks = $table.find( '.tsosk-sq-dupe-pick' );
+		var allOn  = $picks.length && $picks.filter( ':checked' ).length === $picks.length;
+		$table.find( '.tsosk-sq-dupe-pick-all' ).prop( 'checked', allOn );
+	} );
+
+	function tsoskSqCopyText( text, $msg, $fallback ) {
+		var doneLabel = ( tsosk.i18n && tsosk.i18n.sq_copied ) ? tsosk.i18n.sq_copied : ( ( tsosk.i18n && tsosk.i18n.email_copied ) ? tsosk.i18n.email_copied : 'Copied' );
+		function onCopied() {
+			showMsg( $msg, doneLabel, 'ok' );
+		}
+		if ( ! text ) {
+			showMsg( $msg, ( tsosk.i18n && tsosk.i18n.sq_copy_none ) ? tsosk.i18n.sq_copy_none : tsosk.i18n.error, 'error' );
+			return;
+		}
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( text ).then( onCopied ).catch( function () {
+				try {
+					if ( $fallback && $fallback.length ) {
+						$fallback.val( text ).prop( 'hidden', false ).trigger( 'select' );
+						document.execCommand( 'copy' );
+						$fallback.prop( 'hidden', true );
+					}
+					onCopied();
+				} catch ( e ) {
+					showMsg( $msg, tsosk.i18n.error, 'error' );
+				}
+			} );
+			return;
+		}
+		try {
+			if ( $fallback && $fallback.length ) {
+				$fallback.val( text ).prop( 'hidden', false ).trigger( 'select' );
+				document.execCommand( 'copy' );
+				$fallback.prop( 'hidden', true );
+			}
+			onCopied();
+		} catch ( e2 ) {
+			showMsg( $msg, tsosk.i18n.error, 'error' );
+		}
+	}
+
+	// Copy a Query Monitor–style duplicate report (English) for pasting into an AI chat.
+	$( document ).on( 'click', '.tsosk-sq-copy-report', function () {
+		var $btn  = $( this );
+		var panel = $btn.data( 'dupe-panel' );
+		var msgId = $btn.data( 'msg' );
+		var $msg  = msgId ? $( '#' + msgId ) : $btn.siblings( '.tsosk-ajax-msg' ).first();
+
+		if ( ! panel ) {
+			showMsg( $msg, tsosk.i18n.error, 'error' );
+			return;
+		}
+
+		var payload = tsoskSqParseDupeJson( String( panel ) );
+		var ids     = [];
+		tsoskSqDupeTable( String( panel ) ).find( '.tsosk-sq-dupe-pick:checked' ).each( function () {
+			ids.push( String( $( this ).val() ) );
+		} );
+		if ( ! payload || ! payload.rows ) {
+			showMsg( $msg, tsosk.i18n.error, 'error' );
+			return;
+		}
+		if ( ! ids.length ) {
+			showMsg( $msg, ( tsosk.i18n && tsosk.i18n.sq_copy_none ) ? tsosk.i18n.sq_copy_none : tsosk.i18n.error, 'error' );
+			return;
+		}
+		tsoskSqCopyText( tsoskSqBuildDupeReport( payload, ids ), $msg, $() );
+	} );
+
+	function tsoskSqCopyPluginsSelected() {
+		var out = [];
+		$( '#tsosk-sq-copy-plugins .tsosk-sq-copy-plugin:checked' ).each( function () {
+			var v = $( this ).val();
+			if ( v ) {
+				out.push( String( v ) );
+			}
+		} );
+		return out;
+	}
+
+	$( document ).on( 'click', '#tsosk-sq-copy-plugins-tso', function ( e ) {
+		e.preventDefault();
+		$( '#tsosk-sq-copy-plugins .tsosk-sq-copy-plugin' ).each( function () {
+			var slug = String( $( this ).val() || '' );
+			$( this ).prop( 'checked', slug.indexOf( 'tso-' ) === 0 );
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-sq-copy-plugins-none', function ( e ) {
+		e.preventDefault();
+		$( '#tsosk-sq-copy-plugins .tsosk-sq-copy-plugin' ).prop( 'checked', false );
+	} );
 
 	// Save settings
 	$( document ).on( 'click', '#tsosk-sq-save', function () {
@@ -5014,6 +5730,7 @@
 				exclude_cron : $( '#tsosk-sq-exclude-cron' ).prop( 'checked' ) ? 1 : 0,
 				show_admin_bar : $( '#tsosk-sq-show-admin-bar' ).prop( 'checked' ) ? 1 : 0,
 				capture_origin : $( '#tsosk-sq-capture-origin' ).prop( 'checked' ) ? 1 : 0,
+				copy_plugins : JSON.stringify( tsoskSqCopyPluginsSelected() ),
 				ignore_patterns : $( '#tsosk-sq-ignore-patterns' ).val() || ''
 			},
 			success: function ( r ) {
@@ -5203,6 +5920,7 @@
 					+ '<span class="tsosk-sq-query-time ' + tc + '">' + t.toFixed(3) + ' ms</span>'
 					+ '<span class="tsosk-badge tsosk-sq-kw-badge" style="background:' + kwc + '20;color:' + kwc + ';">' + $('<span>').text(kw).html() + '</span>'
 					+ '<span class="tsosk-sq-query-num">#' + (j+1) + '</span>'
+					+ ( q.origin_label ? '<span class="tsosk-badge tsosk-sq-origin-badge">' + $('<span>').text(q.origin_label).html() + '</span>' : '' )
 					+ '</div>'
 					+ '<div class="tsosk-sq-query-sql">' + $('<span>').text(q.sql || '').html() + '</div>'
 					+ ( q.caller ? '<div class="tsosk-sq-query-caller"><span class="tsosk-sq-caller-arrow">↳</span> ' + $('<span>').text(q.caller).html() + '</div>' : '' )
@@ -5286,19 +6004,47 @@
 	$( document ).on( 'input change', '#tsosk-sr-search, #tsosk-sr-replace, #tsosk-sr-case, #tsosk-sr-regex', tsosk_sr_invalidate_preview );
 	$( document ).on( 'change', '.tsosk-sr-table-cb', tsosk_sr_invalidate_preview );
 
-	// Table selection helpers
-	$( document ).on( 'click', '#tsosk-sr-select-wp', function () {
+	// Table selection helpers (act on the tables currently shown by the filter).
+	function tsosk_sr_update_count() {
+		var $count = $( '#tsosk-sr-table-count' );
+		if ( ! $count.length ) {
+			return;
+		}
+		var $all   = $( '.tsosk-sr-table-cb' );
+		var shown  = $all.filter( function () { return ! $( this ).closest( 'label' ).hasClass( 'tsosk-sr-hidden' ); } ).length;
+		var total  = $all.length;
+		var sel    = $all.filter( ':checked' ).length;
+		var text   = shown ? String( $count.data( 'template' ) ) : String( $count.data( 'empty' ) );
+		$count.text( text.replace( '{shown}', shown ).replace( '{total}', total ).replace( '{selected}', sel ) );
+	}
+	function tsosk_sr_visible_cbs() {
+		return $( '.tsosk-sr-table-cb' ).filter( function () { return ! $( this ).closest( 'label' ).hasClass( 'tsosk-sr-hidden' ); } );
+	}
+	$( document ).on( 'input search', '#tsosk-sr-table-filter', function () {
+		var q = $.trim( $( this ).val() ).toLowerCase();
 		$( '.tsosk-sr-table-cb' ).each( function () {
+			var match = ! q || String( $( this ).val() ).toLowerCase().indexOf( q ) !== -1;
+			$( this ).closest( 'label' ).toggleClass( 'tsosk-sr-hidden', ! match );
+		} );
+		tsosk_sr_update_count();
+	} );
+	$( document ).on( 'change', '.tsosk-sr-table-cb', tsosk_sr_update_count );
+	$( tsosk_sr_update_count );
+	$( document ).on( 'click', '#tsosk-sr-select-wp', function () {
+		tsosk_sr_visible_cbs().each( function () {
 			$( this ).prop( 'checked', $( this ).data( 'is-wp' ) === 1 || $( this ).data( 'is-wp' ) === '1' );
 		} );
+		tsosk_sr_update_count();
 		tsosk_sr_invalidate_preview();
 	} );
 	$( document ).on( 'click', '#tsosk-sr-select-all', function () {
-		$( '.tsosk-sr-table-cb' ).prop( 'checked', true );
+		tsosk_sr_visible_cbs().prop( 'checked', true );
+		tsosk_sr_update_count();
 		tsosk_sr_invalidate_preview();
 	} );
 	$( document ).on( 'click', '#tsosk-sr-select-none', function () {
-		$( '.tsosk-sr-table-cb' ).prop( 'checked', false );
+		tsosk_sr_visible_cbs().prop( 'checked', false );
+		tsosk_sr_update_count();
 		tsosk_sr_invalidate_preview();
 	} );
 
@@ -5369,6 +6115,44 @@
 		} );
 	} );
 
+	// True when at least one matching table holds visible content (posts, comments, terms…).
+	function tsosk_sr_is_content_table( data, name ) {
+		return $.inArray( name, data.content_tables || [] ) !== -1;
+	}
+	function tsosk_sr_has_content_match( data ) {
+		var found = false;
+		$.each( data.results || {}, function ( name ) {
+			if ( tsosk_sr_is_content_table( data, name ) ) {
+				found = true;
+				return false;
+			}
+		} );
+		return found;
+	}
+
+	// Preview warnings: sampled tables, skipped tables and untouched cells (all text is escaped).
+	function tsosk_sr_append_warnings( $notice, data ) {
+		var lines = [];
+		if ( data.truncated && data.truncated.length ) {
+			lines.push( tsosk.i18n.sr_truncated_note.replace( '%s', data.truncated.join( ', ' ) ) );
+		}
+		if ( data.skipped_tables && data.skipped_tables.length ) {
+			lines.push( tsosk.i18n.sr_skipped_tables.replace( '%s', data.skipped_tables.join( ', ' ) ) );
+		}
+		if ( data.skipped_cells ) {
+			lines.push( tsosk.i18n.sr_skipped_cells.replace( '%d', String( data.skipped_cells ) ) );
+		}
+		if ( ! $( '#tsosk-sr-replace' ).val() ) {
+			lines.push( tsosk.i18n.sr_warn_empty_replace );
+		}
+		if ( data.total_rows && ! tsosk_sr_has_content_match( data ) ) {
+			lines.push( tsosk.i18n.sr_warn_internal_only );
+		}
+		$.each( lines, function ( i, line ) {
+			$notice.append( $( '<div style="margin-top:6px;"></div>' ).text( line ) );
+		} );
+	}
+
 	// ── Render preview ──
 	function tsosk_sr_render_preview( data ) {
 		var $wrap   = $( '#tsosk-sr-preview-wrap' );
@@ -5377,9 +6161,14 @@
 
 		$body.empty();
 		$wrap.show();
+		if ( $wrap.length && $wrap[0].scrollIntoView ) {
+			$wrap[0].scrollIntoView( { behavior: 'smooth', block: 'nearest' } );
+		}
 
 		if ( ! data.total_rows ) {
-			$notice.html( '<strong>' + tsosk.i18n.sr_preview_none + '</strong>' ).show();
+			$notice.html( '<strong>' + tsosk.i18n.sr_preview_none + '</strong>' );
+			tsosk_sr_append_warnings( $notice, data );
+			$notice.show();
 			return;
 		}
 
@@ -5388,18 +6177,23 @@
 			totalCells += rows.length;
 		} );
 		$notice.html(
-			'<strong>' +
-			data.total_rows + ' ' + tsosk.i18n.sr_rows + ' ' +
-			tsosk.i18n.sr_matches + ' ' +
-			Object.keys( data.results ).length + ' ' + tsosk.i18n.sr_tables +
-			'.</strong> ' + tsosk.i18n.sr_confirm_hint
-		).show();
+			$( '<strong></strong>' ).text(
+				tsosk.i18n.sr_found_summary.replace( '%1$s', String( data.total_rows ) ).replace( '%2$s', String( Object.keys( data.results ).length ) )
+			).prop( 'outerHTML' ) + ' ' + tsosk.i18n.sr_confirm_hint
+		);
+		tsosk_sr_append_warnings( $notice, data );
+		$notice.show();
 
 		$.each( data.results, function ( tableName, rows ) {
 			var $section = $( '<div class="tsosk-sr-table-section"></div>' );
 			var $header  = $( '<div class="tsosk-sr-table-header"></div>' );
 			$header.append( '<span class="tsosk-code" style="font-size:13px;">' + $( '<span>' ).text( tableName ).html() + '</span>' );
 			$header.append( '<span class="tsosk-badge tsosk-badge-warn" style="font-size:11px;">' + rows.length + ' ' + tsosk.i18n.sr_rows + '</span>' );
+			if ( tsosk_sr_is_content_table( data, tableName ) ) {
+				$header.append( $( '<span class="tsosk-badge tsosk-badge-ok" style="font-size:11px;"></span>' ).text( tsosk.i18n.sr_badge_content ) );
+			} else {
+				$header.append( $( '<span class="tsosk-badge tsosk-badge-info" style="font-size:11px;"></span>' ).text( tsosk.i18n.sr_badge_internal ) );
+			}
 			$section.append( $header );
 
 			$.each( rows, function ( i, row ) {
@@ -5444,7 +6238,10 @@
 			return;
 		}
 
+		if ( ! $( '#tsosk-sr-replace' ).val() && ! confirm( tsosk.i18n.sr_confirm_empty_replace ) ) { return; }
+		if ( ! tsosk_sr_has_content_match( tsosk_sr_preview_data ) && ! confirm( tsosk.i18n.sr_confirm_internal_only ) ) { return; }
 		if ( ! confirm( tsosk.i18n.sr_confirm_exec ) ) { return; }
+		if ( tsosk_sr_preview_data.has_backup && ! confirm( tsosk.i18n.sr_replace_backup_warn ) ) { return; }
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 		$( '#tsosk-sr-preview-btn' ).prop( 'disabled', true );
@@ -5456,13 +6253,27 @@
 				$btn.prop( 'disabled', false ).text( '⚡ ' + tsosk.i18n.sr_execute_btn );
 				$( '#tsosk-sr-preview-btn' ).prop( 'disabled', false );
 				if ( r.success ) {
+					var warnings = ( r.data.errors || [] ).slice();
+					if ( r.data.skipped_cells ) {
+						warnings.push( tsosk.i18n.sr_skipped_cells.replace( '%d', String( r.data.skipped_cells ) ) );
+					}
 					showMsg( $msg, r.data.message, 'ok' );
 					$( '#tsosk-sr-execute-btn, #tsosk-sr-cancel-btn' ).hide();
 					$( '.tsosk-sr-execute-hint' ).hide();
 					$( '#tsosk-sr-preview-wrap' ).hide();
 					tsosk_sr_preview_data = null;
-					// Reload after 1.5s to refresh history
-					setTimeout( function () { window.location.reload(); }, 1500 );
+					if ( warnings.length ) {
+						// Keep the page so the warnings can be read; the backup panel refreshes on the next load.
+						var $warn = $( '<div class="tsosk-notice tsosk-notice-warn" style="margin-top:8px;"></div>' );
+						$warn.append( $( '<strong></strong>' ).text( tsosk.i18n.sr_exec_warnings ) );
+						$.each( warnings, function ( i, w ) {
+							$warn.append( $( '<div></div>' ).text( String( w ) ) );
+						} );
+						$msg.after( $warn );
+					} else {
+						// Reload after 1.5s to refresh history
+						setTimeout( function () { window.location.reload(); }, 1500 );
+					}
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
@@ -5633,13 +6444,19 @@
 	} );
 
 	// ── Meta Editor ───────────────────────────────────────────────────────────
-	var tsoskMe = { currentPage: 1, lastSearch: '', context: 'post', editingId: 0 };
+	var tsoskMe = { currentPage: 1, lastSearch: '', context: 'post', editingId: 0, editingContext: 'post' };
 	var tsosk_me_search_seq = 0;
 
 	function tsoskMeSearch( page ) {
 		if ( ! $( '#tsosk-me-search-btn' ).length ) { return; }
 		tsoskMe.currentPage = page || 1;
-		tsoskMe.context     = $( '#tsosk-me-context' ).val() || 'post';
+		var newContext      = $( '#tsosk-me-context' ).val() || 'post';
+		if ( newContext !== tsoskMe.context ) {
+			// Context changed: the open editor row belongs to the other table, so close it.
+			tsoskMe.editingId = 0;
+			$( '#tsosk-me-editor' ).hide();
+		}
+		tsoskMe.context     = newContext;
 		tsoskMe.lastSearch  = $( '#tsosk-me-search' ).val().trim();
 		var nonce    = $( '#tsosk-me-search-btn' ).data( 'nonce' );
 		var $msg     = $( '#tsosk-me-search-msg' );
@@ -5723,24 +6540,32 @@
 			data   : { nonce: nonce, context: tsoskMe.context, meta_id: row.meta_id },
 			success: function ( r ) {
 				if ( r.success ) {
-					tsoskMe.editingId = r.data.meta_id;
+					tsoskMe.editingId      = r.data.meta_id;
+					tsoskMe.editingContext = tsoskMe.context;
 					$( '#tsosk-me-editor' ).show();
 					$( '#tsosk-me-edit-key' ).text( r.data.key );
 					$( '#tsosk-me-edit-object' ).text( r.data.object_id );
 					$( '#tsosk-me-edit-value' ).val( r.data.value ).prop( 'disabled', r.data.protected );
 					$( '#tsosk-me-save, #tsosk-me-delete' ).prop( 'disabled', r.data.protected );
+					$( '#tsosk-me-edit-msg' ).hide().text( '' );
+				} else {
+					showMsg( $( '#tsosk-me-search-msg' ), r.data || tsosk.i18n.error, 'error' );
 				}
+			},
+			error: function () {
+				showMsg( $( '#tsosk-me-search-msg' ), tsosk.i18n.error, 'error' );
 			}
 		} );
 	} );
 
 	$( document ).on( 'click', '#tsosk-me-save', function () {
 		var $msg = $( '#tsosk-me-edit-msg' );
+		if ( ! tsoskMe.editingId ) { return; }
 		ajaxPost( {
 			action : 'tsosk_me_save',
 			data   : {
 				nonce   : $( this ).data( 'nonce' ),
-				context : tsoskMe.context,
+				context : tsoskMe.editingContext,
 				meta_id : tsoskMe.editingId,
 				value   : $( '#tsosk-me-edit-value' ).val()
 			},
@@ -5754,9 +6579,10 @@
 	$( document ).on( 'click', '#tsosk-me-delete', function () {
 		if ( ! window.confirm( tsosk.i18n.oe_confirm_del ) ) { return; }
 		var $msg = $( '#tsosk-me-edit-msg' );
+		if ( ! tsoskMe.editingId ) { return; }
 		ajaxPost( {
 			action : 'tsosk_me_delete',
-			data   : { nonce: $( this ).data( 'nonce' ), context: tsoskMe.context, meta_id: tsoskMe.editingId },
+			data   : { nonce: $( this ).data( 'nonce' ), context: tsoskMe.editingContext, meta_id: tsoskMe.editingId },
 			success: function ( r ) {
 				showMsg( $msg, r.success ? r.data : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
 				if ( r.success ) {
@@ -5780,7 +6606,12 @@
 			},
 			success: function ( r ) {
 				showMsg( $msg, r.success ? r.data : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
-				if ( r.success ) { tsoskMeSearch( 1 ); }
+				if ( r.success ) {
+					// Show the new row: filter by the object it was added to and drop the text filter.
+					$( '#tsosk-me-object-id' ).val( $( '#tsosk-me-add-object' ).val() );
+					$( '#tsosk-me-search' ).val( '' );
+					tsoskMeSearch( 1 );
+				}
 			}
 		} );
 	} );
@@ -5929,7 +6760,10 @@
 			var label = labels[ id ] || id;
 			var $li = $( '<li style="margin-bottom:6px;"></li>' );
 			var $label = $( '<label></label>' );
-			var $cb = $( '<input type="checkbox" class="tsosk-snapshot-import-section" checked>' ).val( id );
+			var operational = ( typeof tsosk !== 'undefined' && tsosk.snapshot_operational ) ? tsosk.snapshot_operational : [];
+			var $cb = $( '<input type="checkbox" class="tsosk-snapshot-import-section">' ).val( id );
+			// Operational logs (lockouts, attempts, manifests) are unchecked by default, like on export.
+			$cb.prop( 'checked', operational.indexOf( id ) === -1 );
 			$label.append( $cb ).append( document.createTextNode( ' ' + String( label ) ) );
 			$li.append( $label );
 			$list.append( $li );
@@ -6015,6 +6849,30 @@
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
 				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-snapshot-restore', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-snapshot-restore-msg' );
+		if ( ! window.confirm( tsosk.i18n.snapshot_confirm_restore ) ) { return; }
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_snapshot_restore',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					$btn.closest( '.tsosk-snapshot-restore-card' ).find( 'button' ).hide();
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
@@ -6231,7 +7089,9 @@
 			data   : {
 				nonce: nonce,
 				suppress_blog_public: $( '#tsosk-health-suppress-blog-public' ).is( ':checked' ) ? 1 : 0,
-				suppress_debug_enabled: $( '#tsosk-health-suppress-debug' ).is( ':checked' ) ? 1 : 0
+				suppress_debug_enabled: $( '#tsosk-health-suppress-debug' ).is( ':checked' ) ? 1 : 0,
+				suppress_inactive_plugins: $( '#tsosk-health-suppress-inactive-plugins' ).is( ':checked' ) ? 1 : 0,
+				suppress_inactive_themes: $( '#tsosk-health-suppress-inactive-themes' ).is( ':checked' ) ? 1 : 0
 			},
 			success: function ( r ) {
 				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
@@ -6349,24 +7209,114 @@
 
 	var tsoskSearchActive = -1;
 
-	function tsoskSearchFilter( query ) {
-		var items = tsosk.tab_search || [];
-		query   = ( query || '' ).toLowerCase().trim();
-		if ( ! query ) {
-			return items.slice( 0, 12 );
+	// Lowercase and strip accents so "configuración" finds "configuracion".
+	function tsoskSearchNorm( text ) {
+		text = String( text || '' ).toLowerCase();
+		if ( text.normalize ) {
+			text = text.normalize( 'NFD' ).replace( /[̀-ͯ]/g, '' );
 		}
-		var tokens = query.split( /\s+/ ).filter( function ( token ) {
+		return text;
+	}
+
+	function tsoskSearchEscape( text ) {
+		return String( text || '' ).replace( /[&<>"']/g, function ( c ) {
+			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ c ];
+		} );
+	}
+
+	// Query tokens: normalised, without surrounding dots (".htaccess" -> "htaccess").
+	function tsoskSearchTokens( query ) {
+		return tsoskSearchNorm( query ).split( /\s+/ ).map( function ( token ) {
+			return token.replace( /^\.+|\.+$/g, '' );
+		} ).filter( function ( token ) {
 			return token.length > 0;
 		} );
-		return items.filter( function ( item ) {
-			var hay = item.search || '';
-			for ( var i = 0; i < tokens.length; i++ ) {
-				if ( hay.indexOf( tokens[ i ] ) === -1 ) {
-					return false;
+	}
+
+	// Score one token against one tab (0 = no match). Label beats slug beats keywords.
+	function tsoskSearchTokenScore( item, token ) {
+		var variants = [ token ];
+		if ( token.length > 3 && token.slice( -1 ) === 's' ) {
+			variants.push( token.slice( 0, -1 ) ); // "redirects" -> "redirect".
+		}
+		var label = item.label_n || tsoskSearchNorm( item.label );
+		var slug  = item.slug || '';
+		var kw    = ' ' + ( item.kw || '' ) + ' ';
+		var group = item.group_n || tsoskSearchNorm( item.group );
+		var best  = 0;
+		variants.forEach( function ( v ) {
+			var score = 0;
+			if ( label.indexOf( v ) === 0 ) {
+				score = 6;
+			} else if ( label.indexOf( ' ' + v ) > -1 ) {
+				score = 5;
+			} else if ( label.indexOf( v ) > -1 ) {
+				score = 4;
+			} else if ( slug.indexOf( v ) > -1 ) {
+				score = 3;
+			} else if ( kw.indexOf( ' ' + v ) > -1 || kw.indexOf( '.' + v ) > -1 ) {
+				score = 2;
+			} else if ( kw.indexOf( v ) > -1 ) {
+				score = 1;
+			} else if ( group.indexOf( v ) > -1 ) {
+				score = 0.5;
+			}
+			best = Math.max( best, score );
+		} );
+		return best;
+	}
+
+	// Keyword words that explain why a tab matched (shown under the result title).
+	function tsoskSearchHints( item, tokens ) {
+		var label = item.label_n || '';
+		var words = ( item.kw || '' ).split( ' ' );
+		var hints = [];
+		tokens.forEach( function ( token ) {
+			if ( label.indexOf( token ) > -1 ) {
+				return;
+			}
+			for ( var i = 0; i < words.length; i++ ) {
+				if ( words[ i ] && words[ i ].indexOf( token ) > -1 ) {
+					if ( hints.indexOf( words[ i ] ) === -1 ) {
+						hints.push( words[ i ] );
+					}
+					break;
 				}
 			}
-			return true;
-		} ).slice( 0, 12 );
+		} );
+		return hints.slice( 0, 3 );
+	}
+
+	function tsoskSearchFilter( query ) {
+		var items  = tsosk.tab_search || [];
+		var tokens = tsoskSearchTokens( query );
+		if ( ! tokens.length ) {
+			return items.slice( 0, 12 ).map( function ( item ) {
+				return { item: item, hints: [] };
+			} );
+		}
+		var scored = items.map( function ( item ) {
+			var total = 0, matched = 0;
+			tokens.forEach( function ( token ) {
+				var sc = tsoskSearchTokenScore( item, token );
+				if ( sc > 0 ) {
+					matched++;
+					total += sc;
+				}
+			} );
+			return { item: item, total: total, matched: matched, hints: tsoskSearchHints( item, tokens ) };
+		} );
+		// All words must match; if nothing does, fall back to tabs matching at least one word.
+		var strict = scored.filter( function ( row ) {
+			return row.matched === tokens.length;
+		} );
+		var rows = strict.length ? strict : scored.filter( function ( row ) {
+			return row.matched > 0;
+		} );
+		rows.sort( function ( a, b ) {
+			return ( b.matched - a.matched ) || ( b.total - a.total );
+		} );
+		return rows.slice( 0, 12 );
 	}
 
 	function tsoskSearchRender( matches ) {
@@ -6384,15 +7334,88 @@
 			return;
 		}
 		var html = '';
-		matches.forEach( function ( item, i ) {
+		matches.forEach( function ( row, i ) {
+			var item = row.item;
+			var sub  = tsoskSearchEscape( item.group );
+			if ( row.hints && row.hints.length ) {
+				sub += ' · ' + row.hints.map( tsoskSearchEscape ).join( ', ' );
+			}
 			html += '<li data-index="' + i + '">' +
-				'<a href="' + item.url + '" class="tsosk-search-result">' +
-				item.label +
-				'<span class="tsosk-search-result-group">' + item.group + '</span>' +
+				'<a href="' + tsoskSearchEscape( item.url ) + '" class="tsosk-search-result">' +
+				tsoskSearchEscape( item.label ) +
+				'<span class="tsosk-search-result-group">' + sub + '</span>' +
 				'</a></li>';
 		} );
 		$list.html( html ).prop( 'hidden', false );
 	}
+
+	// ── Jump to a section inside a tab (links from the finder end in #tsosk-go=<heading text>) ──
+	function tsoskFindSection( needle ) {
+		var target = tsoskSearchNorm( needle );
+		var best   = null;
+		var bestScore = 0;
+		var scope  = document.getElementById( 'wpbody-content' ) || document.body;
+		$( scope ).find( 'h1, h2, h3, h4, h5, summary, legend, th, label, strong, .tsosk-card-title' ).each( function () {
+			var $el = $( this );
+			if ( $el.closest( '#tsosk-global-search-results, #adminmenu, .tsosk-sidebar, .tsosk-favs, script, style' ).length ) {
+				return;
+			}
+			var txt = tsoskSearchNorm( $el.text().replace( /\s+/g, ' ' ).trim() );
+			if ( ! txt || txt.indexOf( target ) === -1 ) {
+				return;
+			}
+			var score = txt.indexOf( target ) === 0 ? 3 : 1;
+			if ( /^H[1-5]$/.test( this.tagName ) ) {
+				score += 2;
+			}
+			if ( score > bestScore ) {
+				best      = this;
+				bestScore = score;
+			}
+		} );
+		return best;
+	}
+
+	function tsoskGoToSection( attempt ) {
+		var m = /^#tsosk-go=(.+)$/.exec( window.location.hash || '' );
+		if ( ! m ) {
+			return;
+		}
+		var needle;
+		try {
+			needle = decodeURIComponent( m[ 1 ] );
+		} catch ( e ) {
+			return;
+		}
+		var el = tsoskFindSection( needle );
+		if ( ! el ) {
+			if ( attempt < 4 ) {
+				window.setTimeout( function () {
+					tsoskGoToSection( attempt + 1 );
+				}, 400 );
+			}
+			return;
+		}
+		$( el ).parents( 'details' ).prop( 'open', true );
+		if ( el.tagName === 'SUMMARY' ) {
+			$( el ).parent( 'details' ).prop( 'open', true );
+		}
+		var $box = $( el ).closest( '.tsosk-card, details, .tsosk-section' );
+		var $hit = $box.length ? $box.first() : $( el );
+		var top  = $hit.offset().top - 80;
+		window.scrollTo( { top: Math.max( 0, top ), behavior: 'smooth' } );
+		$hit.addClass( 'tsosk-section-flash' );
+		window.setTimeout( function () {
+			$hit.removeClass( 'tsosk-section-flash' );
+		}, 2800 );
+	}
+
+	$( function () {
+		tsoskGoToSection( 0 );
+	} );
+	$( window ).on( 'hashchange', function () {
+		tsoskGoToSection( 0 );
+	} );
 
 	function tsoskSearchNavigate( url ) {
 		if ( url ) {
@@ -7426,6 +8449,11 @@
 			types.push( $( this ).val() );
 		} );
 
+		var roles = [];
+		$( '.tsosk-vc-exclude-role:checked' ).each( function () {
+			roles.push( $( this ).val() );
+		} );
+
 		ajaxPost( {
 			action : 'tsosk_vc_save_settings',
 			data   : {
@@ -7433,6 +8461,13 @@
 				post_types            : types,
 				exclude_logged_in     : $( '#tsosk-vc-exclude-logged-in' ).is( ':checked' ) ? 1 : '',
 				track_outbound_links  : $( '#tsosk-vc-track-links' ).is( ':checked' ) ? 1 : '',
+				track_header_links    : $( '#tsosk-vc-track-header-links' ).is( ':checked' ) ? 1 : '',
+				track_downloads       : $( '#tsosk-vc-track-downloads' ).is( ':checked' ) ? 1 : '',
+				track_download_links  : $( '#tsosk-vc-track-download-links' ).is( ':checked' ) ? 1 : '',
+				download_extensions   : $( '#tsosk-vc-download-extensions' ).val(),
+				download_images       : $( '#tsosk-vc-download-images' ).is( ':checked' ) ? 1 : '',
+				exclude_roles         : roles,
+				exclude_ips           : $( '#tsosk-vc-exclude-ips' ).val(),
 				email_weekly_summary  : $( '#tsosk-vc-email-weekly' ).is( ':checked' ) ? 1 : '',
 				email_period_days     : $( '#tsosk-vc-email-period' ).val(),
 				email_recipient       : $( '#tsosk-vc-email-recipient' ).val()
@@ -7446,22 +8481,65 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '.tsosk-vc-fix-day', function () {
+		var $btn = $( this );
+		var ask  = $btn.data( 'confirm' );
+		if ( ask && ! window.confirm( ask ) ) { // eslint-disable-line no-alert
+			return;
+		}
+		var $msg = $( '#tsosk-vc-fix-msg' );
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_vc_fix_day',
+			data   : { nonce: $btn.data( 'nonce' ), date: $btn.data( 'date' ), mode: $btn.data( 'mode' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+					return;
+				}
+				showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
 	$( document ).on( 'click', '#tsosk-vc-import', function () {
 		var $btn  = $( this );
 		var nonce = $btn.data( 'nonce' );
 		var $msg  = $( '#tsosk-vc-import-msg' );
+		var source = $( '#tsosk-vc-import-source' ).val();
+		var done   = String( $btn.attr( 'data-imported' ) || '' ).split( ',' );
+		var force  = '';
+
+		// Importing adds to the counters: confirm before running the same source twice.
+		if ( -1 !== $.inArray( source, done ) ) {
+			if ( ! window.confirm( tsosk.i18n.vc_import_again_confirm ) ) {
+				return;
+			}
+			force = 1;
+		} else if ( '1' === String( $btn.attr( 'data-has-data' ) ) && ! window.confirm( tsosk.i18n.vc_import_has_data_confirm ) ) {
+			// No import is recorded, but the counter already holds data (it may come from an earlier import).
+			return;
+		}
 
 		ajaxPost( {
 			action : 'tsosk_vc_import',
 			data   : {
 				nonce : nonce,
-				source: $( '#tsosk-vc-import-source' ).val()
+				source: source,
+				force : force
 			},
 			success: function ( r ) {
 				// Persistent (non-fading) result so the outcome of the import stays readable.
 				var $result = $( '#tsosk-vc-import-result' );
 				$result.text( ( r && r.data ) || tsosk.i18n.done ).toggleClass( 'is-error', ! ( r && r.success ) ).prop( 'hidden', false );
 				if ( r && r.success ) {
+					$btn.attr( 'data-has-data', '1' );
+					$btn.attr( 'data-imported', ( String( $btn.attr( 'data-imported' ) || '' ) + ',' + source ).replace( /^,/, '' ) );
 					tsooskVcLoadTopContent( $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' ) );
 				}
 			},
@@ -7484,6 +8562,11 @@
 			data   : { nonce: nonce },
 			success: function ( r ) {
 				showMsg( $msg, ( r && r.data ) || tsosk.i18n.done, r && r.success ? 'ok' : 'error' );
+				if ( r && r.success ) {
+					// Counters are empty again: importing is safe again.
+					$( '#tsosk-vc-import' ).attr( { 'data-imported': '', 'data-has-data': '0' } );
+					$( '#tsosk-vc-import-result' ).prop( 'hidden', true ).text( '' );
+				}
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
@@ -7507,6 +8590,7 @@
 				}
 				var $postsBody = $( '#tsosk-vc-top-posts-table tbody' ).empty();
 				var $linksBody = $( '#tsosk-vc-top-links-table tbody' ).empty();
+				var $dlBody    = $( '#tsosk-vc-top-downloads-table tbody' ).empty();
 
 				if ( ! r.data.posts.length ) {
 					$postsBody.append( $( '<tr>' ).append( $( '<td colspan="2">' ).text( tsosk.i18n.vc_no_data ) ) );
@@ -7533,6 +8617,21 @@
 						)
 					);
 				} );
+
+				var downloads = r.data.downloads || [];
+				if ( ! downloads.length ) {
+					$dlBody.append( $( '<tr>' ).append( $( '<td colspan="2">' ).text( tsosk.i18n.vc_no_data ) ) );
+				}
+				$.each( downloads, function ( i, row ) {
+					var name  = String( row.url ).split( '/' ).pop() || row.url;
+					var $link = $( '<a>' ).attr( { href: row.url, target: '_blank', rel: 'noopener noreferrer', title: row.url } ).text( name );
+					$dlBody.append(
+						$( '<tr>' ).append(
+							$( '<td>' ).append( $link ),
+							$( '<td>' ).text( row.total )
+						)
+					);
+				} );
 			}
 		} );
 	}
@@ -7547,5 +8646,51 @@
 	if ( $( '#tsosk-vc-top-posts-table' ).length ) {
 		tsooskVcLoadTopContent( $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' ) );
 	}
+
+	/* ── Info popovers (long table notes) ─────────────────────────────────── */
+	function tsoskCloseInfoPops() {
+		$( '.tsosk-info-pop:not([hidden])' ).prop( 'hidden', true );
+		$( '.tsosk-info-btn[aria-expanded="true"]' ).attr( 'aria-expanded', 'false' );
+	}
+
+	$( document ).on( 'click', '.tsosk-info-btn', function ( e ) {
+		e.preventDefault();
+		e.stopPropagation();
+		var $btn  = $( this );
+		var $pop  = $btn.siblings( '.tsosk-info-pop' ).first();
+		var isOpen = ! $pop.prop( 'hidden' );
+		tsoskCloseInfoPops();
+		if ( isOpen ) {
+			return;
+		}
+		$pop.prop( 'hidden', false );
+		$btn.attr( 'aria-expanded', 'true' );
+
+		var rect = this.getBoundingClientRect();
+		var popW = $pop.outerWidth();
+		var popH = $pop.outerHeight();
+		var left = Math.max( 12, Math.min( rect.left, window.innerWidth - popW - 12 ) );
+		var top  = rect.bottom + 6;
+		if ( top + popH > window.innerHeight - 12 && rect.top - popH - 6 > 12 ) {
+			top = rect.top - popH - 6;
+		}
+		$pop.css( { left: left + 'px', top: top + 'px' } );
+	} );
+
+	$( document ).on( 'click', function ( e ) {
+		if ( ! $( e.target ).closest( '.tsosk-info' ).length ) {
+			tsoskCloseInfoPops();
+		}
+	} );
+
+	$( document ).on( 'keydown', function ( e ) {
+		if ( 'Escape' === e.key ) {
+			tsoskCloseInfoPops();
+		}
+	} );
+
+	window.addEventListener( 'scroll', tsoskCloseInfoPops, true );
+	$( window ).on( 'resize', tsoskCloseInfoPops );
+
 
 } )( jQuery );

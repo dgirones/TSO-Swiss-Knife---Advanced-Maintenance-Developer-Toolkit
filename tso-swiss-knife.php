@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.1.5
+ * Version:     1.2.2
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -20,10 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION',  '1.1.5' );
-define( 'TSOSK_FILE',     __FILE__ );
-define( 'TSOSK_PATH',     plugin_dir_path( __FILE__ ) );
-define( 'TSOSK_URL',      plugin_dir_url( __FILE__ ) );
+define( 'TSOSK_VERSION', '1.2.2' );
+define( 'TSOSK_FILE', __FILE__ );
+define( 'TSOSK_PATH', plugin_dir_path( __FILE__ ) );
+define( 'TSOSK_URL', plugin_dir_url( __FILE__ ) );
 define( 'TSOSK_BASENAME', plugin_basename( __FILE__ ) );
 define( 'TSOSK_TEXT_DOMAIN', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 // Writable data lives under uploads/{plugin-slug}/ (WordPress.org guideline).
@@ -162,7 +162,7 @@ function tsosk_join_wp_root( string $relative ): string {
 }
 
 /**
- * wp-admin directory (trailing slash).
+ * The wp-admin directory (trailing slash).
  *
  * @return string
  */
@@ -171,7 +171,7 @@ function tsosk_get_wp_admin_dir(): string {
 }
 
 /**
- * wp-includes directory (trailing slash).
+ * The wp-includes directory (trailing slash).
  *
  * @return string
  */
@@ -236,6 +236,7 @@ $tsosk_includes = array(
 	'includes/class-tsosk-config-storage',
 	'includes/class-tsosk-i18n',
 	'includes/class-tsosk-support',
+	'includes/class-tsosk-email-template',
 	'includes/class-tsosk-sandbox-mu',
 	'includes/class-tsosk-option-library',
 	'includes/class-tsosk-site-status',
@@ -301,6 +302,9 @@ $tsosk_includes = array(
 // last request, before requiring it, so the current, correct code is always
 // what executes — no manual OPcache/PHP restart needed after a plain file
 // upload.
+// Performance: the full scan (one filemtime() per module) only runs in the admin, WP-Cron and WP-CLI, where an upload is
+// noticed on the next visit; front-end requests skip it.
+$tsosk_full_scan = is_admin() || ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) || defined( 'WP_CLI' );
 if ( function_exists( 'opcache_invalidate' ) ) {
 	$tsosk_cached_mtimes = get_option( 'tsosk_module_mtimes', array() );
 	if ( ! is_array( $tsosk_cached_mtimes ) ) {
@@ -308,8 +312,10 @@ if ( function_exists( 'opcache_invalidate' ) ) {
 	}
 	$tsosk_mtimes_changed = false;
 
-	foreach ( $tsosk_includes as $tsosk_watch_file ) {
+	$tsosk_watch_list = $tsosk_full_scan ? $tsosk_includes : array();
+	foreach ( $tsosk_watch_list as $tsosk_watch_file ) {
 		$tsosk_watch_path = TSOSK_PATH . $tsosk_watch_file . '.php';
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Intentional: failure is handled by the caller.
 		$tsosk_watch_mtime = @filemtime( $tsosk_watch_path );
 		if ( false === $tsosk_watch_mtime ) {
 			continue;
@@ -317,15 +323,16 @@ if ( function_exists( 'opcache_invalidate' ) ) {
 		if ( ! isset( $tsosk_cached_mtimes[ $tsosk_watch_file ] ) || (int) $tsosk_cached_mtimes[ $tsosk_watch_file ] !== $tsosk_watch_mtime ) {
 			opcache_invalidate( $tsosk_watch_path, true );
 			$tsosk_cached_mtimes[ $tsosk_watch_file ] = $tsosk_watch_mtime;
-			$tsosk_mtimes_changed = true;
+			$tsosk_mtimes_changed                     = true;
 		}
 	}
 
 	if ( $tsosk_mtimes_changed ) {
-		update_option( 'tsosk_module_mtimes', $tsosk_cached_mtimes, false );
+		update_option( 'tsosk_module_mtimes', $tsosk_cached_mtimes, true );
 	}
-	unset( $tsosk_cached_mtimes, $tsosk_mtimes_changed, $tsosk_watch_file, $tsosk_watch_path, $tsosk_watch_mtime );
+	unset( $tsosk_cached_mtimes, $tsosk_mtimes_changed, $tsosk_watch_file, $tsosk_watch_path, $tsosk_watch_mtime, $tsosk_watch_list );
 }
+unset( $tsosk_full_scan );
 
 foreach ( $tsosk_includes as $tsosk_file ) {
 	$tsosk_path = TSOSK_PATH . $tsosk_file . '.php';
@@ -358,10 +365,22 @@ if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-// Permanently deletes quarantined folders once their 30 days are over (also when nobody opens the screen).
-add_action( TSOSK_Uploads_Scanner::CRON_QUARANTINE_PURGE, array( 'TSOSK_Uploads_Scanner', 'purge_expired_quarantine' ) );
-// Same, for image-size derivative files quarantined from the Image Sizes Audit module.
-add_action( TSOSK_Uploads_Scanner::CRON_SIZES_QUARANTINE_PURGE, array( 'TSOSK_Uploads_Scanner', 'purge_expired_sizes_quarantine' ) );
+if ( class_exists( 'TSOSK_Uploads_Scanner' ) ) {
+	// Permanently deletes quarantined folders once their 30 days are over (also when nobody opens the screen).
+	add_action(
+		TSOSK_Uploads_Scanner::CRON_QUARANTINE_PURGE,
+		static function (): void {
+			TSOSK_Uploads_Scanner::purge_expired_quarantine();
+		}
+	);
+	// Same, for image-size derivative files quarantined from the Image Sizes Audit module.
+	add_action(
+		TSOSK_Uploads_Scanner::CRON_SIZES_QUARANTINE_PURGE,
+		static function (): void {
+			TSOSK_Uploads_Scanner::purge_expired_sizes_quarantine();
+		}
+	);
+}
 
 add_action( 'plugins_loaded', 'tsosk_load_textdomain', 0 );
 add_action( 'plugins_loaded', 'tsosk_bootstrap_sandbox', 0 );
@@ -410,10 +429,44 @@ function tsosk_boot_staging_runtime(): void {
 }
 
 /**
+ * One-off autoload fix: settings read on every request were stored with autoload = false (one extra database query
+ * each). Runs once per site, tracked by its own flag so it also reaches sites that already hold the current version.
+ */
+function tsosk_migrate_autoload(): void {
+	if ( '1' === get_option( 'tsosk_autoload_schema' ) ) {
+		return;
+	}
+	$names = array(
+		'tsosk_module_mtimes',
+		'tsosk_maintenance',
+		'tsosk_redirect_rules',
+		'tsosk_update_manager_settings',
+		'tsosk_slow_query_settings',
+		'tsosk_comment_antispam',
+		'tsosk_hidden_profiles',
+	);
+	foreach ( $names as $name ) {
+		if ( false === get_option( $name, false ) ) {
+			continue;
+		}
+		if ( function_exists( 'wp_set_option_autoload' ) ) {
+			wp_set_option_autoload( $name, true );
+			continue;
+		}
+		$value = get_option( $name );
+		delete_option( $name );
+		add_option( $name, $value, '', 'yes' );
+	}
+	update_option( 'tsosk_autoload_schema', '1', true );
+}
+
+/**
  * One-time upgrade tasks, run once per version bump (covers sites that
  * auto-update without a deactivate/reactivate cycle).
  */
 function tsosk_maybe_upgrade(): void {
+	tsosk_migrate_autoload();
+
 	if ( get_option( 'tsosk_version' ) === TSOSK_VERSION ) {
 		return;
 	}
@@ -444,7 +497,9 @@ function tsosk_maybe_upgrade(): void {
  * Modules that need early hooks (heartbeat, REST, maintenance) init first.
  */
 function tsosk_init() {
-	TSOSK_I18n::get_instance()->init();
+	if ( class_exists( 'TSOSK_I18n' ) ) {
+		TSOSK_I18n::get_instance()->init();
+	}
 
 	if ( class_exists( 'TSOSK_Config_Storage' ) ) {
 		TSOSK_Config_Storage::apply_runtime_hooks();
@@ -481,7 +536,9 @@ function tsosk_init() {
 
 	if ( is_admin() ) {
 		tsosk_init_admin_modules();
-		TSOSK_Admin::get_instance()->init();
+		if ( class_exists( 'TSOSK_Admin' ) ) {
+			TSOSK_Admin::get_instance()->init();
+		}
 	}
 }
 
@@ -600,4 +657,5 @@ function tsosk_deactivate() {
 
 	// The purge task is scheduled again from the Uploads Disk Footprint screen if folders are still quarantined.
 	wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
+	wp_clear_scheduled_hook( 'tsosk_image_sizes_quarantine_purge' );
 }

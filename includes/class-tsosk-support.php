@@ -141,9 +141,9 @@ class TSOSK_Support {
 	public static function render_donate_button(): void {
 		?>
 		<a class="tsosk-donate-btn"
-		   href="<?php echo esc_url( self::get_kofi_donate_url() ); ?>"
-		   target="_blank"
-		   rel="noopener noreferrer">
+			href="<?php echo esc_url( self::get_kofi_donate_url() ); ?>"
+			target="_blank"
+			rel="noopener noreferrer">
 			<?php echo esc_html( self::get_donate_label() ); ?>
 		</a>
 		<?php
@@ -254,7 +254,7 @@ class TSOSK_Support {
 			}
 		}
 
-		$value = str_replace( "\0", '', $value );
+		$value   = str_replace( "\0", '', $value );
 		$checked = wp_check_invalid_utf8( $value, true );
 		return is_string( $checked ) ? $checked : '';
 	}
@@ -292,6 +292,118 @@ class TSOSK_Support {
 		}
 		return '';
 	}
-}
 
-add_filter( 'plugin_row_meta', array( 'TSOSK_Support', 'filter_plugin_row_meta' ), 10, 2 );
+	/**
+	 * Whether the current user may run actions that touch the whole database or the server files.
+	 *
+	 * On a multisite network "manage_options" belongs to every subsite administrator, but these actions
+	 * reach shared tables (users, sitemeta, other sites) and files such as .htaccess, which WordPress itself
+	 * reserves for super admins. On a single site it is the usual "manage_options".
+	 *
+	 * @return bool
+	 */
+	public static function can_manage_sensitive(): bool {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		return ! is_multisite() || is_super_admin();
+	}
+
+	/**
+	 * Plugin files that are active for the current site, including network-activated ones on multisite.
+	 *
+	 * @return string[] Plugin basenames such as "akismet/akismet.php".
+	 */
+	public static function get_active_plugin_files(): array {
+		$active = (array) get_option( 'active_plugins', array() );
+		if ( is_multisite() ) {
+			$active = array_merge( $active, array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
+		}
+		return array_values( array_unique( array_map( 'strval', $active ) ) );
+	}
+
+	/** PHP branch => date on which it stops receiving security fixes (php.net supported versions). */
+	public const PHP_EOL_DATES = array(
+		'7.4' => '2022-11-28',
+		'8.0' => '2023-11-26',
+		'8.1' => '2025-12-31',
+		'8.2' => '2026-12-31',
+		'8.3' => '2027-12-31',
+		'8.4' => '2028-12-31',
+	);
+
+	/**
+	 * Whether the running PHP branch no longer receives security fixes.
+	 *
+	 * @return bool
+	 */
+	public static function is_php_end_of_life(): bool {
+		$branch = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+		if ( ! isset( self::PHP_EOL_DATES[ $branch ] ) ) {
+			return version_compare( PHP_VERSION, '7.4', '<' );
+		}
+		return time() > (int) strtotime( self::PHP_EOL_DATES[ $branch ] . ' 23:59:59 UTC' );
+	}
+
+	/** Size above which an active debug log is reported as too big, everywhere the plugin shows it. */
+	public const DEBUG_LOG_WARN_BYTES = 10 * MB_IN_BYTES;
+
+	/**
+	 * Path of the debug log WordPress is writing to right now: a custom string in WP_DEBUG_LOG (for example
+	 * the managed log of the Debug tab), otherwise wp-content/debug.log.
+	 *
+	 * @return string Absolute path (the file may not exist).
+	 */
+	public static function get_active_debug_log_path(): string {
+		if ( defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG ) && '' !== WP_DEBUG_LOG ) {
+			return wp_normalize_path( WP_DEBUG_LOG );
+		}
+		return trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'debug.log';
+	}
+
+	/**
+	 * Best-effort visitor IP, shared by every module.
+	 *
+	 * Uses REMOTE_ADDR by default. Behind a CDN or reverse proxy REMOTE_ADDR is the proxy's address, so
+	 * the real header can be named explicitly, either with the TSOSK_TRUSTED_PROXY_HEADER constant
+	 * (e.g. 'HTTP_CF_CONNECTING_IP' or 'HTTP_X_FORWARDED_FOR') or with the 'tsosk_trusted_proxy_header'
+	 * filter. It is opt-in because those headers can be forged when the origin is reachable directly.
+	 *
+	 * @return string Valid IPv4/IPv6 address, or an empty string.
+	 */
+	public static function get_client_ip(): string {
+
+		$header = defined( 'TSOSK_TRUSTED_PROXY_HEADER' ) ? (string) TSOSK_TRUSTED_PROXY_HEADER : '';
+		/**
+			* Filters the server variable that carries the real client IP behind a trusted proxy.
+		*
+		* @param string $header Server variable name (empty = use REMOTE_ADDR only).
+		 */
+		$header = (string) apply_filters( 'tsosk_trusted_proxy_header', $header );
+		$header = strtoupper( preg_replace( '/[^A-Za-z0-9_]/', '', $header ) ?? '' );
+
+		if ( '' !== $header && isset( $_SERVER[ $header ] ) ) {
+			$raw   = sanitize_text_field( wp_unslash( (string) $_SERVER[ $header ] ) );
+			$parts = array_map( 'trim', explode( ',', $raw ) );
+			// X-Forwarded-For can be forged by the client, which only controls the LEFT side of the list: proxies append
+			// the address they saw on the right. Walk from the right and take the first public address, so a forged
+			// leftmost entry is never trusted. Single-value headers (CF-Connecting-IP) have one entry and work the same.
+			$valid = array();
+			foreach ( array_reverse( $parts ) as $candidate ) {
+				if ( false === filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+					continue;
+				}
+				$valid[] = $candidate;
+				if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+					return $candidate;
+				}
+			}
+			if ( ! empty( $valid ) ) {
+				return $valid[0]; // Only private addresses (intranet or internal proxies): the rightmost one.
+			}
+		}
+
+		$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '';
+		return false !== filter_var( $remote, FILTER_VALIDATE_IP ) ? $remote : '';
+	}
+}

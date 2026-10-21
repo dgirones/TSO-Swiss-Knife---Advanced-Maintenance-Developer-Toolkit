@@ -56,9 +56,18 @@ class TSOSK_Mod_Login_Protect {
 	/** Usernames commonly targeted by bots (case-insensitive). */
 	private const FORBIDDEN_USERNAMES = array( 'admin', 'administrador', 'administrator' );
 
-	/** @var TSOSK_Mod_Login_Protect|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Login_Protect|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -66,13 +75,16 @@ class TSOSK_Mod_Login_Protect {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		// Admin AJAX handlers.
-		add_action( 'wp_ajax_tsosk_lp_save',          array( $this, 'ajax_save' ) );
-		add_action( 'wp_ajax_tsosk_lp_unlock',         array( $this, 'ajax_unlock' ) );
-		add_action( 'wp_ajax_tsosk_lp_unlock_all',     array( $this, 'ajax_unlock_all' ) );
-		add_action( 'wp_ajax_tsosk_lp_clear_log',      array( $this, 'ajax_clear_log' ) );
-		add_action( 'wp_ajax_tsosk_lp_generate_slug',  array( $this, 'ajax_generate_slug' ) );
+		add_action( 'wp_ajax_tsosk_lp_save', array( $this, 'ajax_save' ) );
+		add_action( 'wp_ajax_tsosk_lp_unlock', array( $this, 'ajax_unlock' ) );
+		add_action( 'wp_ajax_tsosk_lp_unlock_all', array( $this, 'ajax_unlock_all' ) );
+		add_action( 'wp_ajax_tsosk_lp_clear_log', array( $this, 'ajax_clear_log' ) );
+		add_action( 'wp_ajax_tsosk_lp_generate_slug', array( $this, 'ajax_generate_slug' ) );
 	}
 
 	// ── Early init (called from tsosk_init) ──────────────────────────────────
@@ -107,24 +119,25 @@ class TSOSK_Mod_Login_Protect {
 
 		// Email verification code for selected roles.
 		if ( ! empty( $s['email_2fa'] ) && ! empty( $s['email_2fa_roles'] ) ) {
-			add_filter( 'wp_authenticate_user', array( $this, 'verify_email_2fa' ), 50, 1 );
+			add_filter( 'wp_authenticate_user', array( $this, 'verify_email_2fa' ), 50, 2 );
 			add_action( 'login_form', array( $this, 'render_2fa_field' ) );
 			add_filter( 'login_errors', array( $this, 'filter_2fa_login_errors' ) );
 		}
 
 		// Per-role IP restrictions after password is valid.
 		if ( '' !== trim( $s['role_whitelist_ips'] ) ) {
-			add_filter( 'wp_authenticate_user', array( $this, 'check_role_ip_whitelist' ), 40, 1 );
+			add_filter( 'wp_authenticate_user', array( $this, 'check_role_ip_whitelist' ), 40, 2 );
 		}
 
 		// ── Custom login URL ──────────────────────────────────────────────
 		if ( $s['custom_url'] && $s['login_slug'] ) {
 			// Register query var so WP doesn't strip it.
 			add_filter( 'query_vars', array( $this, 'add_query_var' ) );
-			// Rewrite: /{slug}/ → index.php?tsosk_login_key={slug}
+			// Rewrite: /{slug}/ → index.php?tsosk_login_key={slug}.
 			add_action( 'init', array( $this, 'add_rewrite_rule' ) );
 			// Intercept the request.
-			add_action( 'template_redirect', array( $this, 'handle_custom_login_url' ), 1 );
+			// Priority 0: must run before Maintenance mode (priority 1), or a logged-out admin could not reach the secret login URL.
+			add_action( 'template_redirect', array( $this, 'handle_custom_login_url' ), 0 );
 			// Block direct wp-login.php access (returns 404).
 			add_action( 'login_init', array( $this, 'block_direct_login_access' ), 1 );
 			// Block direct /wp-admin/ access before WordPress core's own
@@ -242,6 +255,8 @@ class TSOSK_Mod_Login_Protect {
 			nocache_headers();
 			$login = tsosk_join_wp_root( 'wp-login.php' );
 			if ( is_readable( $login ) ) {
+				// wp-login.php expects these as globals; a require inside a function would make them local and break login messages and redirects.
+				global $error, $interim_login, $action, $user_login, $user_email, $user_pass, $secure_cookie, $customize_login, $wp_error, $redirect_to;
 				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				require_once $login;
 			}
@@ -537,8 +552,8 @@ class TSOSK_Mod_Login_Protect {
 				return;
 			}
 		}
-		$s   = $this->get_settings();
-		$ip  = $this->get_client_ip();
+		$s  = $this->get_settings();
+		$ip = $this->get_client_ip();
 
 		// Forbidden usernames are handled (and locked out) by block_forbidden_username() — but only
 		// when that option is on. Otherwise attacks on "admin" must still count toward the lockout.
@@ -560,11 +575,17 @@ class TSOSK_Mod_Login_Protect {
 					$entry = $attempts[ $ip ];
 					// Reset counter if the window has expired.
 					if ( $now - (int) $entry['first'] > $window ) {
-						$entry = array( 'count' => 0, 'first' => $now );
+						$entry = array(
+							'count' => 0,
+							'first' => $now,
+						);
 					}
 					$entry['count']++;
 				} else {
-					$entry = array( 'count' => 1, 'first' => $now );
+					$entry = array(
+						'count' => 1,
+						'first' => $now,
+					);
 				}
 
 				$attempts[ $ip ] = $entry;
@@ -627,11 +648,17 @@ class TSOSK_Mod_Login_Protect {
 	/**
 	 * Require email verification code for configured roles.
 	 *
-	 * @param WP_User|WP_Error $user User or error.
+	 * @param WP_User|WP_Error $user     User or error.
+	 * @param string           $password Submitted password.
 	 * @return WP_User|WP_Error
 	 */
-	public function verify_email_2fa( $user ) {
+	public function verify_email_2fa( $user, $password = '' ) {
 		if ( is_wp_error( $user ) || ! ( $user instanceof WP_User ) ) {
+			return $user;
+		}
+		// WordPress fires this filter BEFORE it checks the password. Do nothing until the password is right, so a wrong
+		// password gets the normal error (and counts as a failed attempt) and nobody can burn the real user's code.
+		if ( ! wp_check_password( (string) $password, $user->user_pass, $user->ID ) ) {
 			return $user;
 		}
 
@@ -645,7 +672,7 @@ class TSOSK_Mod_Login_Protect {
 			return $user;
 		}
 
-		$submitted = isset( $_POST['tsosk_2fa_code'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$submitted    = isset( $_POST['tsosk_2fa_code'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			? sanitize_text_field( wp_unslash( $_POST['tsosk_2fa_code'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			: '';
 		$key          = 'tsosk_2fa_' . $user->ID;
@@ -657,7 +684,9 @@ class TSOSK_Mod_Login_Protect {
 				$code = (string) random_int( 100000, 999999 );
 				set_transient( $key, $code, 10 * MINUTE_IN_SECONDS );
 				delete_transient( $attempts_key );
-				wp_mail(
+				// Staging may block outgoing mail; the sign-in code must still arrive or nobody could log in.
+				add_filter( 'tsosk_staging_block_this_mail', '__return_false' );
+				TSOSK_Email_Template::send_message(
 					$user->user_email,
 					sprintf(
 						/* translators: %s: site name */
@@ -669,8 +698,12 @@ class TSOSK_Mod_Login_Protect {
 						__( "Your login verification code is: %1\$s\n\nIt expires in %2\$d minutes.", 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						$code,
 						10
-					)
+					),
+					'',
+					'',
+					false
 				);
+				remove_filter( 'tsosk_staging_block_this_mail', '__return_false' );
 			}
 			return new WP_Error(
 				'tsosk_2fa_required',
@@ -689,7 +722,7 @@ class TSOSK_Mod_Login_Protect {
 		}
 
 		if ( ! is_string( $stored ) || ! hash_equals( $stored, $submitted ) ) {
-			$attempts++;
+			++$attempts;
 			set_transient( $attempts_key, $attempts, 10 * MINUTE_IN_SECONDS );
 			if ( $attempts >= self::MAX_2FA_ATTEMPTS ) {
 				delete_transient( $key );
@@ -741,11 +774,17 @@ class TSOSK_Mod_Login_Protect {
 	/**
 	 * Enforce per-role IP whitelist after credentials are valid.
 	 *
-	 * @param WP_User|WP_Error $user User or error.
+	 * @param WP_User|WP_Error $user     User or error.
+	 * @param string           $password Submitted password.
 	 * @return WP_User|WP_Error
 	 */
-	public function check_role_ip_whitelist( $user ) {
+	public function check_role_ip_whitelist( $user, $password = '' ) {
 		if ( is_wp_error( $user ) || ! ( $user instanceof WP_User ) ) {
+			return $user;
+		}
+		// The filter runs before WordPress verifies the password: stay silent for a wrong one, so this message
+		// cannot be used to discover which usernames and roles exist.
+		if ( ! wp_check_password( (string) $password, $user->user_pass, $user->ID ) ) {
 			return $user;
 		}
 
@@ -755,7 +794,7 @@ class TSOSK_Mod_Login_Protect {
 			return $user;
 		}
 
-		$rules = $this->parse_role_ip_rules( $s['role_whitelist_ips'] );
+		$rules            = $this->parse_role_ip_rules( $s['role_whitelist_ips'] );
 		$roles_with_rules = array_values( array_intersect( $user->roles, array_keys( $rules ) ) );
 		if ( empty( $roles_with_rules ) ) {
 			return $user;
@@ -780,14 +819,17 @@ class TSOSK_Mod_Login_Protect {
 	 */
 	private function parse_role_ip_rules( string $raw ): array {
 		$out   = array();
-		$lines = preg_split( '/\r\n|\r|\n/', $raw ) ?: array();
+		$lines = preg_split( '/\r\n|\r|\n/', $raw );
+		if ( false === $lines ) {
+			$lines = array();
+		}
 		foreach ( $lines as $line ) {
 			$line = trim( (string) $line );
 			if ( '' === $line || false === strpos( $line, ':' ) ) {
 				continue;
 			}
 			list( $role, $ips ) = array_map( 'trim', explode( ':', $line, 2 ) );
-			$role = sanitize_key( $role );
+			$role               = sanitize_key( $role );
 			if ( '' === $role ) {
 				continue;
 			}
@@ -859,29 +901,30 @@ class TSOSK_Mod_Login_Protect {
 			return;
 		}
 
-		$window  = (int) $s['notify_mass_window'] * MINUTE_IN_SECONDS;
-		$cutoff  = time() - $window;
-		$recent  = 0;
+		$window = (int) $s['notify_mass_window'] * MINUTE_IN_SECONDS;
+		$cutoff = time() - $window;
+		$recent = 0;
 		foreach ( $this->get_lockout_log() as $entry ) {
 			if ( empty( $entry['active'] ) ) {
 				continue;
 			}
 			if ( (int) ( $entry['locked_at'] ?? 0 ) >= $cutoff ) {
-				$recent++;
+				++$recent;
 			}
 		}
 		if ( $recent < (int) $s['notify_mass_threshold'] ) {
 			return;
 		}
 
-		$flag_key = 'tsosk_mass_lockout_' . gmdate( 'YmdHi' );
+		// One fixed key: a per-minute key would send a new email every minute once the threshold is passed.
+		$flag_key = 'tsosk_mass_lockout_sent';
 		if ( get_transient( $flag_key ) ) {
 			return;
 		}
 		set_transient( $flag_key, 1, $window );
 
-		$to = $s['notify_address'] ?: get_option( 'admin_email' );
-		wp_mail(
+		$to = $s['notify_address'] ? $s['notify_address'] : get_option( 'admin_email' );
+		TSOSK_Email_Template::send_message(
 			$to,
 			sprintf(
 				/* translators: %s: site name */
@@ -890,7 +933,7 @@ class TSOSK_Mod_Login_Protect {
 			),
 			sprintf(
 				/* translators: 1: count, 2: minutes */
-				__( "%1\$d IP lockouts occurred in the last %2\$d minutes. Review Login Protection in TSO Swiss Knife.", 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				__( '%1$d IP lockouts occurred in the last %2$d minutes. Review Login Protection in TSO Swiss Knife.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$recent,
 				(int) $s['notify_mass_window']
 			)
@@ -902,7 +945,7 @@ class TSOSK_Mod_Login_Protect {
 	 *
 	 * @param string $user_login Username.
 	 */
-	public function reset_attempts( string $user_login ): void {
+	public function reset_attempts( string $user_login ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Hook callback signature (wp_login passes the user login).
 		$ip       = $this->get_client_ip();
 		$attempts = $this->get_all_attempts();
 		if ( isset( $attempts[ $ip ] ) ) {
@@ -929,41 +972,41 @@ class TSOSK_Mod_Login_Protect {
 		}
 
 		$new = array(
-			'custom_url'       => ! empty( $_POST['custom_url'] ),
-			'login_slug'       => isset( $_POST['login_slug'] )
+			'custom_url'                => ! empty( $_POST['custom_url'] ),
+			'login_slug'                => isset( $_POST['login_slug'] )
 				? self::normalize_login_slug( sanitize_text_field( wp_unslash( $_POST['login_slug'] ) ) )
 				: '',
-			'brute_force'              => ! empty( $_POST['brute_force'] ),
-			'block_forbidden_usernames'=> ! empty( $_POST['block_forbidden_usernames'] ),
-			'max_attempts'     => isset( $_POST['max_attempts'] )
+			'brute_force'               => ! empty( $_POST['brute_force'] ),
+			'block_forbidden_usernames' => ! empty( $_POST['block_forbidden_usernames'] ),
+			'max_attempts'              => isset( $_POST['max_attempts'] )
 				? max( 1, min( 50, absint( wp_unslash( $_POST['max_attempts'] ) ) ) )
 				: 5,
-			'lockout_duration' => isset( $_POST['lockout_duration'] )
+			'lockout_duration'          => isset( $_POST['lockout_duration'] )
 				? max( 1, min( 1440, absint( wp_unslash( $_POST['lockout_duration'] ) ) ) )
 				: 30,
-			'lockout_window'   => isset( $_POST['lockout_window'] )
+			'lockout_window'            => isset( $_POST['lockout_window'] )
 				? max( 1, min( 60, absint( wp_unslash( $_POST['lockout_window'] ) ) ) )
 				: 5,
-			'whitelist_ips'    => isset( $_POST['whitelist_ips'] )
+			'whitelist_ips'             => isset( $_POST['whitelist_ips'] )
 				? $this->sanitize_whitelist_ips( sanitize_textarea_field( wp_unslash( $_POST['whitelist_ips'] ) ) )
 				: '',
-			'notify_email'     => ! empty( $_POST['notify_email'] ),
-			'notify_address'   => isset( $_POST['notify_address'] ) && is_string( $_POST['notify_address'] )
+			'notify_email'              => ! empty( $_POST['notify_email'] ),
+			'notify_address'            => isset( $_POST['notify_address'] ) && is_string( $_POST['notify_address'] )
 				? sanitize_email( wp_unslash( $_POST['notify_address'] ) )
 				: get_option( 'admin_email' ),
-			'login_maintenance'      => ! empty( $_POST['login_maintenance'] ),
-			'login_maintenance_ips'  => isset( $_POST['login_maintenance_ips'] )
+			'login_maintenance'         => ! empty( $_POST['login_maintenance'] ),
+			'login_maintenance_ips'     => isset( $_POST['login_maintenance_ips'] )
 				? $this->sanitize_whitelist_ips( sanitize_textarea_field( wp_unslash( $_POST['login_maintenance_ips'] ) ) )
 				: '',
-			'email_2fa'              => ! empty( $_POST['email_2fa'] ),
-			'email_2fa_roles'        => $this->sanitize_role_list( $email_2fa_roles ),
-			'role_whitelist_ips'     => isset( $_POST['role_whitelist_ips'] )
+			'email_2fa'                 => ! empty( $_POST['email_2fa'] ),
+			'email_2fa_roles'           => $this->sanitize_role_list( $email_2fa_roles ),
+			'role_whitelist_ips'        => isset( $_POST['role_whitelist_ips'] )
 				? sanitize_textarea_field( wp_unslash( $_POST['role_whitelist_ips'] ) )
 				: '',
-			'notify_mass_threshold'  => isset( $_POST['notify_mass_threshold'] )
+			'notify_mass_threshold'     => isset( $_POST['notify_mass_threshold'] )
 				? max( 0, min( 100, absint( wp_unslash( $_POST['notify_mass_threshold'] ) ) ) )
 				: 0,
-			'notify_mass_window'     => isset( $_POST['notify_mass_window'] )
+			'notify_mass_window'        => isset( $_POST['notify_mass_window'] )
 				? max( 5, min( 1440, absint( wp_unslash( $_POST['notify_mass_window'] ) ) ) )
 				: 60,
 		);
@@ -983,6 +1026,29 @@ class TSOSK_Mod_Login_Protect {
 					$new['login_slug']
 				)
 			);
+		}
+
+		// The slug must not be the address of an existing post or page, or the login rule would hijack it.
+		if ( $new['custom_url'] && '' !== $new['login_slug'] ) {
+			$taken = get_posts(
+				array(
+					'name'           => (string) $new['login_slug'],
+					'post_type'      => 'any',
+					'post_status'    => array( 'publish', 'draft', 'pending', 'private', 'future' ),
+					'posts_per_page' => 1,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+				)
+			);
+			if ( ! empty( $taken ) ) {
+				wp_send_json_error(
+					sprintf(
+						/* translators: %s: slug */
+						__( '"%s" is already the address of a post or page on this site. Choose a different login URL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$new['login_slug']
+					)
+				);
+			}
 		}
 
 		// Login maintenance without any trusted IP locks everyone out (including the admin).
@@ -1022,8 +1088,8 @@ class TSOSK_Mod_Login_Protect {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ip    = isset( $_POST['ip'] ) ? sanitize_text_field( wp_unslash( $_POST['ip'] ) ) : '';
-		$index = isset( $_POST['idx'] ) ? absint( wp_unslash( $_POST['idx'] ) ) : -1;
+		$ip                  = isset( $_POST['ip'] ) ? sanitize_text_field( wp_unslash( $_POST['ip'] ) ) : '';
+		$index               = isset( $_POST['idx'] ) ? absint( wp_unslash( $_POST['idx'] ) ) : -1;
 		$reset_attempts_only = ! empty( $_POST['reset_attempts_only'] );
 
 		if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
@@ -1046,7 +1112,8 @@ class TSOSK_Mod_Login_Protect {
 		}
 
 		$lockouts = $this->get_lockout_log();
-		if ( $index >= 0 && isset( $lockouts[ $index ] ) ) {
+		// Trust the row number only when it still belongs to this IP (the table may have been trimmed since it was drawn).
+		if ( $index >= 0 && isset( $lockouts[ $index ] ) && (string) ( $lockouts[ $index ]['ip'] ?? '' ) === $ip ) {
 			$lockouts[ $index ]['active'] = false;
 			update_option( self::OPTION_LOCKOUTS, $lockouts, false );
 		} else {
@@ -1134,23 +1201,23 @@ class TSOSK_Mod_Login_Protect {
 			$s = array();
 		}
 		return array(
-			'custom_url'       => (bool) ( $s['custom_url']       ?? false ),
-			'login_slug'       => self::normalize_login_slug( is_string( $s['login_slug'] ?? null ) ? $s['login_slug'] : '' ),
-			'brute_force'               => (bool) ( $s['brute_force']               ?? false ),
+			'custom_url'                => (bool) ( $s['custom_url'] ?? false ),
+			'login_slug'                => self::normalize_login_slug( is_string( $s['login_slug'] ?? null ) ? $s['login_slug'] : '' ),
+			'brute_force'               => (bool) ( $s['brute_force'] ?? false ),
 			'block_forbidden_usernames' => (bool) ( $s['block_forbidden_usernames'] ?? false ),
-			'max_attempts'     => max( 1, min( 50, (int) ( $s['max_attempts']     ?? 5  ) ) ),
-			'lockout_duration' => max( 1, min( 1440, (int) ( $s['lockout_duration'] ?? 30 ) ) ),
-			'lockout_window'   => max( 1, min( 60,   (int) ( $s['lockout_window']   ?? 5  ) ) ),
-			'whitelist_ips'    => (string) ( $s['whitelist_ips']    ?? '' ),
-			'notify_email'     => (bool) ( $s['notify_email']     ?? false ),
-			'notify_address'   => sanitize_email( (string) ( $s['notify_address'] ?? get_option( 'admin_email', '' ) ) ),
-			'login_maintenance'     => (bool) ( $s['login_maintenance'] ?? false ),
-			'login_maintenance_ips' => (string) ( $s['login_maintenance_ips'] ?? '' ),
-			'email_2fa'             => (bool) ( $s['email_2fa'] ?? false ),
-			'email_2fa_roles'       => is_array( $s['email_2fa_roles'] ?? null ) ? array_map( 'sanitize_key', $s['email_2fa_roles'] ) : array(),
-			'role_whitelist_ips'    => (string) ( $s['role_whitelist_ips'] ?? '' ),
-			'notify_mass_threshold' => max( 0, min( 100, (int) ( $s['notify_mass_threshold'] ?? 0 ) ) ),
-			'notify_mass_window'    => max( 5, min( 1440, (int) ( $s['notify_mass_window'] ?? 60 ) ) ),
+			'max_attempts'              => max( 1, min( 50, (int) ( $s['max_attempts'] ?? 5 ) ) ),
+			'lockout_duration'          => max( 1, min( 1440, (int) ( $s['lockout_duration'] ?? 30 ) ) ),
+			'lockout_window'            => max( 1, min( 60, (int) ( $s['lockout_window'] ?? 5 ) ) ),
+			'whitelist_ips'             => (string) ( $s['whitelist_ips'] ?? '' ),
+			'notify_email'              => (bool) ( $s['notify_email'] ?? false ),
+			'notify_address'            => sanitize_email( (string) ( $s['notify_address'] ?? get_option( 'admin_email', '' ) ) ),
+			'login_maintenance'         => (bool) ( $s['login_maintenance'] ?? false ),
+			'login_maintenance_ips'     => (string) ( $s['login_maintenance_ips'] ?? '' ),
+			'email_2fa'                 => (bool) ( $s['email_2fa'] ?? false ),
+			'email_2fa_roles'           => is_array( $s['email_2fa_roles'] ?? null ) ? array_map( 'sanitize_key', $s['email_2fa_roles'] ) : array(),
+			'role_whitelist_ips'        => (string) ( $s['role_whitelist_ips'] ?? '' ),
+			'notify_mass_threshold'     => max( 0, min( 100, (int) ( $s['notify_mass_threshold'] ?? 0 ) ) ),
+			'notify_mass_window'        => max( 5, min( 1440, (int) ( $s['notify_mass_window'] ?? 60 ) ) ),
 		);
 	}
 
@@ -1197,7 +1264,7 @@ class TSOSK_Mod_Login_Protect {
 			'until'     => 0,
 			'active'    => false,
 		);
-		$clean = array();
+		$clean    = array();
 		foreach ( $v as $row ) {
 			if ( is_array( $row ) ) {
 				$clean[] = array_merge( $defaults, $row );
@@ -1219,7 +1286,13 @@ class TSOSK_Mod_Login_Protect {
 		$clean = array();
 		foreach ( $v as $ip => $row ) {
 			if ( is_array( $row ) ) {
-				$clean[ $ip ] = array_merge( array( 'count' => 0, 'first' => 0 ), $row );
+				$clean[ $ip ] = array_merge(
+					array(
+						'count' => 0,
+						'first' => 0,
+					),
+					$row
+				);
 			}
 		}
 		return $clean;
@@ -1264,8 +1337,11 @@ class TSOSK_Mod_Login_Protect {
 	 * @return string
 	 */
 	private function sanitize_whitelist_ips( string $whitelist_raw ): string {
-		$lines  = preg_split( '/\r\n|\r|\n/', $whitelist_raw ) ?: array();
-		$valid  = array();
+		$lines = preg_split( '/\r\n|\r|\n/', $whitelist_raw );
+		if ( false === $lines ) {
+			$lines = array();
+		}
+		$valid = array();
 
 		foreach ( $lines as $line ) {
 			$line = trim( (string) $line );
@@ -1281,14 +1357,12 @@ class TSOSK_Mod_Login_Protect {
 	}
 
 	/**
-	 * Get the real client IP (REMOTE_ADDR only; proxy headers are not trusted by default).
+	 * Get the client IP (shared helper; honours the opt-in trusted proxy header).
 	 *
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		return isset( $_SERVER['REMOTE_ADDR'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
-			: '';
+		return TSOSK_Support::get_client_ip();
 	}
 
 	/**
@@ -1312,7 +1386,7 @@ class TSOSK_Mod_Login_Protect {
 	 */
 	private function send_lockout_notification( string $ip, string $username, int $count ): void {
 		$s       = $this->get_settings();
-		$to      = $s['notify_address'] ?: get_option( 'admin_email' );
+		$to      = $s['notify_address'] ? $s['notify_address'] : get_option( 'admin_email' );
 		$site    = get_bloginfo( 'name' );
 		$subject = sprintf(
 			/* translators: 1: site name, 2: IP address */
@@ -1328,7 +1402,7 @@ class TSOSK_Mod_Login_Protect {
 			$count,
 			home_url()
 		);
-		wp_mail( $to, $subject, $body );
+		TSOSK_Email_Template::send_message( $to, $subject, $body );
 	}
 
 	// ── Render ────────────────────────────────────────────────────────────────
@@ -1337,9 +1411,9 @@ class TSOSK_Mod_Login_Protect {
 	 * Render the module tab.
 	 */
 	public function render(): void {
-		$s       = $this->get_settings();
-		$nonce   = wp_create_nonce( 'tsosk_lp_nonce' );
-		$my_ip   = $this->get_client_ip();
+		$s        = $this->get_settings();
+		$nonce    = wp_create_nonce( 'tsosk_lp_nonce' );
+		$my_ip    = $this->get_client_ip();
 		$lockouts = $this->get_lockout_log();
 		$attempts = $this->get_all_attempts();
 		$now      = time();
@@ -1352,10 +1426,13 @@ class TSOSK_Mod_Login_Protect {
 			? home_url( '/' . $s['login_slug'] . '/' )
 			: wp_login_url();
 
-		$remote_flags   = get_option( 'tsosk_hidden_profiles', array() );
-		$xmlrpc_off     = is_array( $remote_flags ) && ! empty( $remote_flags['disable_xmlrpc'] );
-		$security_url   = add_query_arg(
-			array( 'page' => 'tso-swiss-knife', 'tab' => 'security' ),
+		$remote_flags = get_option( 'tsosk_hidden_profiles', array() );
+		$xmlrpc_off   = is_array( $remote_flags ) && ! empty( $remote_flags['disable_xmlrpc'] );
+		$security_url = add_query_arg(
+			array(
+				'page' => 'tso-swiss-knife',
+				'tab'  => 'security',
+			),
 			admin_url( 'tools.php' )
 		);
 		?>
@@ -1386,7 +1463,7 @@ class TSOSK_Mod_Login_Protect {
 				<span class="dashicons dashicons-admin-links" aria-hidden="true"></span>
 				<?php esc_html_e( 'Custom Login URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge <?php echo $s['custom_url'] ? 'tsosk-badge-ok' : ''; ?>"
-				      style="margin-left:10px;font-size:12px;">
+						style="margin-left:10px;font-size:12px;">
 					<?php echo $s['custom_url'] ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</h3>
@@ -1422,7 +1499,7 @@ class TSOSK_Mod_Login_Protect {
 					<td>
 						<label>
 							<input type="checkbox" name="custom_url" id="tsosk-lp-custom-url"
-							       value="1" <?php checked( $s['custom_url'] ); ?>>
+									value="1" <?php checked( $s['custom_url'] ); ?>>
 							<?php esc_html_e( 'Hide /wp-login.php and use the slug below instead', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 					</td>
@@ -1433,9 +1510,9 @@ class TSOSK_Mod_Login_Protect {
 						<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 							<code style="color:#666;font-size:12px;"><?php echo esc_html( trailingslashit( home_url() ) ); ?></code>
 							<input type="text" name="login_slug" id="tsosk-lp-slug"
-							       value="<?php echo esc_attr( $s['login_slug'] ); ?>"
-							       placeholder="<?php esc_attr_e( 'e.g. enter-4892', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-							       style="width:180px;" autocomplete="off" spellcheck="false">
+									value="<?php echo esc_attr( $s['login_slug'] ); ?>"
+									placeholder="<?php esc_attr_e( 'e.g. enter-4892', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+									style="width:180px;" autocomplete="off" spellcheck="false">
 							<code style="color:#666;font-size:12px;">/</code>
 							<button type="button" class="button button-small" id="tsosk-lp-generate">
 								<?php esc_html_e( 'Generate', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1460,7 +1537,7 @@ class TSOSK_Mod_Login_Protect {
 				<span class="dashicons dashicons-shield" aria-hidden="true"></span>
 				<?php esc_html_e( 'Brute-Force Protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge <?php echo $s['brute_force'] ? 'tsosk-badge-ok' : ''; ?>"
-				      style="margin-left:10px;font-size:12px;">
+						style="margin-left:10px;font-size:12px;">
 					<?php echo $s['brute_force'] ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</h3>
@@ -1475,7 +1552,7 @@ class TSOSK_Mod_Login_Protect {
 					<td>
 						<label>
 							<input type="checkbox" name="brute_force" id="tsosk-lp-brute"
-							       value="1" <?php checked( $s['brute_force'] ); ?>>
+									value="1" <?php checked( $s['brute_force'] ); ?>>
 							<?php esc_html_e( 'Block IPs after repeated failed logins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 					</td>
@@ -1485,7 +1562,7 @@ class TSOSK_Mod_Login_Protect {
 					<td>
 						<label>
 							<input type="checkbox" name="block_forbidden_usernames" id="tsosk-lp-block-forbidden"
-							       value="1" <?php checked( $s['block_forbidden_usernames'] ); ?>>
+									value="1" <?php checked( $s['block_forbidden_usernames'] ); ?>>
 							<?php esc_html_e( 'Instantly lock out IPs that try to log in with admin, administrador or administrator', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<p class="description" style="margin-top:6px;">
@@ -1497,8 +1574,8 @@ class TSOSK_Mod_Login_Protect {
 					<th><?php esc_html_e( 'Max attempts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" name="max_attempts" id="tsosk-lp-max"
-						       value="<?php echo esc_attr( (string) $s['max_attempts'] ); ?>"
-						       min="1" max="50" step="1" style="width:80px;">
+								value="<?php echo esc_attr( (string) $s['max_attempts'] ); ?>"
+								min="1" max="50" step="1" style="width:80px;">
 						<span class="description">
 							<?php esc_html_e( 'failed attempts before lockout (recommended: 5)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
@@ -1508,8 +1585,8 @@ class TSOSK_Mod_Login_Protect {
 					<th><?php esc_html_e( 'Attempt window', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" name="lockout_window" id="tsosk-lp-window"
-						       value="<?php echo esc_attr( (string) $s['lockout_window'] ); ?>"
-						       min="1" max="60" step="1" style="width:80px;">
+								value="<?php echo esc_attr( (string) $s['lockout_window'] ); ?>"
+								min="1" max="60" step="1" style="width:80px;">
 						<span class="description">
 							<?php esc_html_e( 'minutes in which the attempts are counted (recommended: 5)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
@@ -1519,8 +1596,8 @@ class TSOSK_Mod_Login_Protect {
 					<th><?php esc_html_e( 'Lockout duration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" name="lockout_duration" id="tsosk-lp-duration"
-						       value="<?php echo esc_attr( (string) $s['lockout_duration'] ); ?>"
-						       min="1" max="1440" step="1" style="width:80px;">
+								value="<?php echo esc_attr( (string) $s['lockout_duration'] ); ?>"
+								min="1" max="1440" step="1" style="width:80px;">
 						<span class="description">
 							<?php esc_html_e( 'minutes the IP is blocked (recommended: 30)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</span>
@@ -1531,14 +1608,14 @@ class TSOSK_Mod_Login_Protect {
 					<td>
 						<label>
 							<input type="checkbox" name="notify_email" id="tsosk-lp-notify"
-							       value="1" <?php checked( $s['notify_email'] ); ?>>
+									value="1" <?php checked( $s['notify_email'] ); ?>>
 							<?php esc_html_e( 'Send email when an IP is locked out', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<br>
 						<input type="email" name="notify_address" id="tsosk-lp-notify-addr"
-						       value="<?php echo esc_attr( $s['notify_address'] ); ?>"
-						       placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"
-						       style="margin-top:6px;width:280px;">
+								value="<?php echo esc_attr( $s['notify_address'] ); ?>"
+								placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"
+								style="margin-top:6px;width:280px;">
 					</td>
 				</tr>
 			</table>
@@ -1562,15 +1639,15 @@ class TSOSK_Mod_Login_Protect {
 					</th>
 					<td>
 						<textarea name="whitelist_ips" id="tsosk-lp-whitelist" rows="4"
-						          style="width:100%;font-family:monospace;font-size:13px;"
-						          placeholder="<?php esc_attr_e( 'One IP per line, e.g.:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>&#10;192.168.1.10&#10;85.125.44.72"
+									style="width:100%;font-family:monospace;font-size:13px;"
+									placeholder="<?php esc_attr_e( 'One IP per line, e.g.:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>&#10;192.168.1.10&#10;85.125.44.72"
 						><?php echo esc_textarea( $s['whitelist_ips'] ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Your current IP:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							<code><?php echo esc_html( $my_ip ); ?></code>
 							<?php if ( ! $this->is_ip_whitelisted( $my_ip, $s['whitelist_ips'] ) ) : ?>
 							<button type="button" class="button button-small" id="tsosk-lp-add-my-ip"
-							        data-ip="<?php echo esc_attr( $my_ip ); ?>">
+									data-ip="<?php echo esc_attr( $my_ip ); ?>">
 								<?php esc_html_e( 'Add my IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 							<?php else : ?>
@@ -1596,8 +1673,8 @@ class TSOSK_Mod_Login_Protect {
 							<?php esc_html_e( 'Block login page except for trusted IPs below', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</label>
 						<textarea name="login_maintenance_ips" id="tsosk-lp-maintenance-ips" rows="3"
-						          style="width:100%;margin-top:8px;font-family:monospace;font-size:13px;"
-						          placeholder="<?php esc_attr_e( 'One IP per line allowed during maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_textarea( $s['login_maintenance_ips'] ); ?></textarea>
+									style="width:100%;margin-top:8px;font-family:monospace;font-size:13px;"
+									placeholder="<?php esc_attr_e( 'One IP per line allowed during maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_textarea( $s['login_maintenance_ips'] ); ?></textarea>
 					</td>
 				</tr>
 				<tr>
@@ -1611,7 +1688,7 @@ class TSOSK_Mod_Login_Protect {
 						<?php foreach ( wp_roles()->roles as $role_id => $role ) : ?>
 						<label style="display:inline-block;margin-right:12px;margin-bottom:4px;">
 							<input type="checkbox" name="email_2fa_roles[]" value="<?php echo esc_attr( $role_id ); ?>"
-							       <?php checked( in_array( $role_id, $s['email_2fa_roles'], true ) ); ?>>
+									<?php checked( in_array( $role_id, $s['email_2fa_roles'], true ) ); ?>>
 							<?php echo esc_html( translate_user_role( $role['name'] ) ); ?>
 						</label>
 						<?php endforeach; ?>
@@ -1621,8 +1698,8 @@ class TSOSK_Mod_Login_Protect {
 					<th style="vertical-align:top;"><?php esc_html_e( 'IP whitelist by role', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<textarea name="role_whitelist_ips" id="tsosk-lp-role-ips" rows="4"
-						          style="width:100%;font-family:monospace;font-size:13px;"
-						          placeholder="administrator: 192.168.1.10, 85.125.44.72"><?php echo esc_textarea( $s['role_whitelist_ips'] ); ?></textarea>
+									style="width:100%;font-family:monospace;font-size:13px;"
+									placeholder="administrator: 192.168.1.10, 85.125.44.72"><?php echo esc_textarea( $s['role_whitelist_ips'] ); ?></textarea>
 						<p class="description"><?php esc_html_e( 'One role per line: role_slug: ip1, ip2. Global whitelist IPs always bypass this rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
@@ -1630,10 +1707,10 @@ class TSOSK_Mod_Login_Protect {
 					<th><?php esc_html_e( 'Mass lockout alert', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="number" name="notify_mass_threshold" id="tsosk-lp-mass-threshold" min="0" max="100" step="1"
-						       value="<?php echo esc_attr( (string) $s['notify_mass_threshold'] ); ?>" style="width:70px;">
+								value="<?php echo esc_attr( (string) $s['notify_mass_threshold'] ); ?>" style="width:70px;">
 						<span class="description"><?php esc_html_e( 'lockouts in', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 						<input type="number" name="notify_mass_window" id="tsosk-lp-mass-window" min="5" max="1440" step="1"
-						       value="<?php echo esc_attr( (string) $s['notify_mass_window'] ); ?>" style="width:70px;">
+								value="<?php echo esc_attr( (string) $s['notify_mass_window'] ); ?>" style="width:70px;">
 						<span class="description"><?php esc_html_e( 'minutes (0 = disabled)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 					</td>
 				</tr>
@@ -1643,7 +1720,7 @@ class TSOSK_Mod_Login_Protect {
 		<?php /* ── Save button ── */ ?>
 		<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
 			<button type="button" class="button button-primary" id="tsosk-lp-save"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-lp-msg"></span>
@@ -1667,9 +1744,9 @@ class TSOSK_Mod_Login_Protect {
 				</tr></thead>
 				<tbody>
 					<?php foreach ( $attempts as $ip => $entry ) : ?>
-					<?php
-					$is_mine = ( (string) $ip === $my_ip );
-					?>
+						<?php
+						$is_mine = ( (string) $ip === $my_ip );
+						?>
 					<tr class="<?php echo $is_mine ? 'tsosk-row-warn' : ''; ?>">
 						<td class="tsosk-code">
 							<?php echo esc_html( (string) $ip ); ?>
@@ -1685,8 +1762,8 @@ class TSOSK_Mod_Login_Protect {
 						<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', (int) ( $entry['first'] ?? 0 ) ) ); ?> UTC</td>
 						<td>
 							<button class="button button-small tsosk-lp-reset-counter"
-							        data-ip="<?php echo esc_attr( (string) $ip ); ?>"
-							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									data-ip="<?php echo esc_attr( (string) $ip ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
@@ -1713,12 +1790,12 @@ class TSOSK_Mod_Login_Protect {
 			<div class="tsosk-toolbar" style="gap:8px;margin-bottom:12px;">
 				<?php if ( ! empty( $active_lockouts ) ) : ?>
 				<button class="button" id="tsosk-lp-unlock-all"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Unlock All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<?php endif; ?>
 				<button class="button button-link-delete" id="tsosk-lp-clear-log"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-lp-log-msg"></span>
@@ -1741,10 +1818,10 @@ class TSOSK_Mod_Login_Protect {
 					$log_display = array_reverse( array_values( $lockouts ) );
 					foreach ( $log_display as $display_idx => $l ) :
 						// Map back to original index for ajax_unlock.
-						$orig_idx     = count( $lockouts ) - 1 - $display_idx;
-						$is_active    = ! empty( $l['active'] ) && (int) $l['until'] > $now;
-						$is_mine      = ( (string) $l['ip'] === $my_ip );
-					?>
+						$orig_idx  = count( $lockouts ) - 1 - $display_idx;
+						$is_active = ! empty( $l['active'] ) && (int) $l['until'] > $now;
+						$is_mine   = ( (string) $l['ip'] === $my_ip );
+						?>
 					<tr class="<?php echo $is_active ? 'tsosk-row-warn' : ''; ?>">
 						<td>
 							<?php if ( $is_active ) : ?>
@@ -1768,14 +1845,16 @@ class TSOSK_Mod_Login_Protect {
 									<?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $l['until'] ) ); ?> UTC
 								</span>
 								<br><small style="color:#666;">
-									(<?php
+									(
+									<?php
 									$rem = (int) $l['until'] - $now;
 									printf(
 										/* translators: %s: human-readable time */
 										esc_html__( '%s left', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 										esc_html( human_time_diff( $now, (int) $l['until'] ) )
 									);
-									?>)
+									?>
+									)
 								</small>
 							<?php else : ?>
 								<span style="color:#646970;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $l['until'] ) ); ?> UTC</span>
@@ -1784,9 +1863,9 @@ class TSOSK_Mod_Login_Protect {
 						<td class="tsosk-actions">
 							<?php if ( $is_active ) : ?>
 							<button class="button button-small tsosk-lp-unlock"
-							        data-ip="<?php echo esc_attr( (string) $l['ip'] ); ?>"
-							        data-idx="<?php echo esc_attr( (string) $orig_idx ); ?>"
-							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									data-ip="<?php echo esc_attr( (string) $l['ip'] ); ?>"
+									data-idx="<?php echo esc_attr( (string) $orig_idx ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Unlock', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 							<?php else : ?>

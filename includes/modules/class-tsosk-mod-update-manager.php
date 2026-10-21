@@ -21,12 +21,39 @@ class TSOSK_Mod_Update_Manager {
 	/** Option key. */
 	public const OPTION = 'tsosk_update_manager_settings';
 
-	/** @var TSOSK_Mod_Update_Manager|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Update_Manager|null
+	 */
 	private static $instance = null;
 
-	/** @var array<string, mixed> */
+	/**
+	 * Module settings.
+	 *
+	 * @var array<string, mixed>
+	 */
 	private array $settings = array();
 
+	/**
+	 * Callback that hides updates of individually blocked plugins (kept to lift it on forced updates).
+	 *
+	 * @var callable|null
+	 */
+	private $plugin_hide_cb = null;
+
+	/**
+	 * Pending-update counts cached for the current request.
+	 *
+	 * @var array<string, int>|null
+	 */
+	private $pending_cache = null;
+
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -34,10 +61,15 @@ class TSOSK_Mod_Update_Manager {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_um_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_um_run_updates', array( $this, 'ajax_run_updates' ) );
 		add_action( 'wp_ajax_tsosk_um_install_translations', array( $this, 'ajax_install_translations' ) );
+		add_action( 'wp_ajax_tsosk_um_update_plugin', array( $this, 'ajax_update_plugin' ) );
+		add_action( 'wp_ajax_tsosk_um_install_next', array( $this, 'ajax_install_next' ) );
 	}
 
 	/**
@@ -81,6 +113,8 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Get settings.
+	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get_settings(): array {
@@ -136,7 +170,7 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		if ( $dirty ) {
-			update_option( self::OPTION, wp_parse_args( $raw, self::get_defaults() ), false );
+			update_option( self::OPTION, wp_parse_args( $raw, self::get_defaults() ), true ); // Read on every request — must autoload.
 		}
 	}
 
@@ -147,15 +181,17 @@ class TSOSK_Mod_Update_Manager {
 	 * @return string
 	 */
 	private static function tsosk_um_build_pre_update_filter( string $type ): string {
-		return 'pre_' . 'site_' . 'transient_' . 'update_' . $type;
+		return 'pre_site_transient_update_' . $type;
 	}
 
 	/**
+	 * Tsosk um build update filter.
+	 *
 	 * @param string $type plugins|themes|core.
 	 * @return string
 	 */
 	private static function tsosk_um_build_update_filter( string $type ): string {
-		return 'site_' . 'transient_' . 'update_' . $type;
+		return 'site_transient_update_' . $type;
 	}
 
 	/**
@@ -180,6 +216,8 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Has blocked plugin rules.
+	 *
 	 * @param array<string, mixed> $settings Settings array.
 	 */
 	private static function has_blocked_plugin_rules( array $settings ): bool {
@@ -207,7 +245,7 @@ class TSOSK_Mod_Update_Manager {
 			$preset = 'default';
 		}
 
-		$settings = self::get_defaults();
+		$settings           = self::get_defaults();
 		$settings['preset'] = $preset;
 
 		if ( 'disable_all' === $preset ) {
@@ -238,7 +276,7 @@ class TSOSK_Mod_Update_Manager {
 
 		$settings['plugin_rules'] = $this->sanitize_plugin_rules_from_post();
 
-		update_option( self::OPTION, $settings, false );
+		update_option( self::OPTION, $settings, true ); // Read on every request — must autoload.
 		TSOSK_Activity_Log::log(
 			'update-manager',
 			'save',
@@ -306,19 +344,16 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		if ( ! empty( $blocked ) && empty( $this->settings['block_plugins'] ) ) {
-			add_filter(
-				self::tsosk_um_build_update_filter( 'plugins' ),
-				function ( $value ) use ( $blocked ) {
-					if ( ! is_object( $value ) || empty( $value->response ) || ! is_array( $value->response ) ) {
-						return $value;
-					}
-					foreach ( $blocked as $plugin_file ) {
-						unset( $value->response[ $plugin_file ] );
-					}
+			$this->plugin_hide_cb = function ( $value ) use ( $blocked ) {
+				if ( ! is_object( $value ) || empty( $value->response ) || ! is_array( $value->response ) ) {
 					return $value;
-				},
-				999
-			);
+				}
+				foreach ( $blocked as $plugin_file ) {
+					unset( $value->response[ $plugin_file ] );
+				}
+				return $value;
+			};
+			add_filter( self::tsosk_um_build_update_filter( 'plugins' ), $this->plugin_hide_cb, 999 );
 		}
 	}
 
@@ -366,7 +401,7 @@ class TSOSK_Mod_Update_Manager {
 	/**
 	 * Installed plugins for the admin list.
 	 *
-	 * @return array<int, array{file:string,name:string,version:string,active:bool}>
+	 * @return array<int, array{file:string,name:string,version:string,active:bool,new_version:string}>
 	 */
 	private function get_plugins_for_ui(): array {
 		if ( ! function_exists( 'get_plugins' ) ) {
@@ -374,15 +409,17 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		$all    = get_plugins();
-		$active = (array) get_option( 'active_plugins', array() );
+		$active = TSOSK_Support::get_active_plugin_files();
 		$list   = array();
+		$offers = $this->get_plugin_update_offers();
 
 		foreach ( $all as $file => $data ) {
 			$list[] = array(
-				'file'    => $file,
-				'name'    => (string) ( $data['Name'] ?? $file ),
-				'version' => (string) ( $data['Version'] ?? '' ),
-				'active'  => in_array( $file, $active, true ),
+				'file'        => $file,
+				'name'        => (string) ( $data['Name'] ?? $file ),
+				'version'     => (string) ( $data['Version'] ?? '' ),
+				'active'      => in_array( $file, $active, true ),
+				'new_version' => $offers[ $file ] ?? '',
 			);
 		}
 
@@ -472,7 +509,7 @@ class TSOSK_Mod_Update_Manager {
 			array( self::tsosk_um_build_pre_update_filter( 'themes' ), 'block_theme_transient' ),
 			array( 'translations_api', 'block_translations_api' ),
 		);
-		$lifted = array();
+		$lifted     = array();
 		foreach ( $candidates as $item ) {
 			if ( has_filter( $item[0], array( $this, $item[1] ) ) ) {
 				remove_filter( $item[0], array( $this, $item[1] ), 999 );
@@ -498,20 +535,24 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Block core transient.
+	 *
 	 * @param mixed $value Ignored.
 	 * @return object
 	 */
 	public function block_core_transient( $value ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-		$stub                   = new stdClass();
-		$stub->updates          = array();
-		$stub->version_checked  = get_bloginfo( 'version' );
-		$stub->last_checked     = time();
-		$stub->version          = get_bloginfo( 'version' );
-		$stub->translations     = array();
+		$stub                  = new stdClass();
+		$stub->updates         = array();
+		$stub->version_checked = get_bloginfo( 'version' );
+		$stub->last_checked    = time();
+		$stub->version         = get_bloginfo( 'version' );
+		$stub->translations    = array();
 		return $stub;
 	}
 
 	/**
+	 * Block plugin transient.
+	 *
 	 * @param mixed $value Ignored.
 	 * @return object
 	 */
@@ -525,6 +566,8 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Block theme transient.
+	 *
 	 * @param mixed $value Ignored.
 	 * @return object
 	 */
@@ -589,9 +632,13 @@ class TSOSK_Mod_Update_Manager {
 	/**
 	 * Count pending updates from current transients.
 	 *
+	 * @param bool $fresh Ignore the per-request cache (use after refreshing the transients).
 	 * @return array{plugins:int,themes:int,translations:int,core:int}
 	 */
-	private function count_pending_updates(): array {
+	private function count_pending_updates( bool $fresh = false ): array {
+		if ( ! $fresh && null !== $this->pending_cache ) {
+			return $this->pending_cache;
+		}
 		if ( ! function_exists( 'get_plugin_updates' ) ) {
 			tsosk_require_wp_admin( 'includes/update.php' );
 		}
@@ -605,20 +652,67 @@ class TSOSK_Mod_Update_Manager {
 		$translations   = wp_get_translation_updates();
 
 		$core_count = 0;
-		if ( is_array( $core_updates ) ) {
-			foreach ( $core_updates as $update ) {
-				if ( is_object( $update ) && ! empty( $update->response ) && 'upgrade' === $update->response ) {
-					$core_count++;
-				}
+		// WordPress offers the latest release plus, sometimes, the newest of an older branch; like core's own
+		// counters and the Dashboard tile, only the first offer is "the" pending core update.
+		if ( is_array( $core_updates ) && ! empty( $core_updates ) ) {
+			$first = reset( $core_updates );
+			if ( is_object( $first ) && ! empty( $first->response ) && 'upgrade' === $first->response ) {
+				$core_count = 1;
 			}
 		}
 
-		return array(
+		$this->pending_cache = array(
 			'plugins'      => is_array( $plugin_updates ) ? count( $plugin_updates ) : 0,
 			'themes'       => is_array( $theme_updates ) ? count( $theme_updates ) : 0,
 			'translations' => is_array( $translations ) ? count( $translations ) : 0,
 			'core'         => $core_count,
 		);
+
+		return $this->pending_cache;
+	}
+
+	/**
+	 * Labels of the components whose update checks this module is blocking right now.
+	 *
+	 * @return array<int, string>
+	 */
+	private function get_blocked_components(): array {
+		$preset = (string) ( $this->settings['preset'] ?? 'default' );
+		$all    = 'disable_all' === $preset;
+		$custom = 'custom' === $preset;
+		$list   = array();
+
+		if ( $all || ( $custom && ! empty( $this->settings['block_core'] ) ) ) {
+			$list[] = __( 'Core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( $all || ( $custom && ! empty( $this->settings['block_plugins'] ) ) ) {
+			$list[] = __( 'Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( $all || ( $custom && ! empty( $this->settings['block_themes'] ) ) ) {
+			$list[] = __( 'Themes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( $this->is_blocking_translation_checks() ) {
+			$list[] = __( 'Translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		return $list;
+	}
+
+	/**
+	 * Number of offered plugin updates hidden by individual plugin rules.
+	 */
+	private function count_hidden_plugin_updates(): int {
+		$rules = $this->settings['plugin_rules'] ?? array();
+		if ( ! is_array( $rules ) || empty( $rules ) || 'disable_all' === ( $this->settings['preset'] ?? '' ) ) {
+			return 0;
+		}
+		$count = 0;
+		foreach ( array_keys( $this->get_plugin_update_offers() ) as $file ) {
+			if ( ! empty( $rules[ $file ]['block'] ) ) {
+				++$count;
+			}
+		}
+		return $count;
 	}
 
 	/**
@@ -627,11 +721,11 @@ class TSOSK_Mod_Update_Manager {
 	 * @return array<int, array{label:string,status:string,badge:string,details:string}>
 	 */
 	private function get_update_environment(): array {
-		$pending     = $this->count_pending_updates();
-		$cron_url    = admin_url( 'tools.php?page=tso-swiss-knife&tab=cron' );
+		$pending      = $this->count_pending_updates();
+		$cron_url     = admin_url( 'tools.php?page=tso-swiss-knife&tab=cron' );
 		$profiles_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=hidden-profiles' );
 		$security_url = admin_url( 'tools.php?page=tso-swiss-knife&tab=security' );
-		$items       = array();
+		$items        = array();
 
 		$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
 		$items[]       = array(
@@ -648,7 +742,7 @@ class TSOSK_Mod_Update_Manager {
 				: __( 'WordPress schedules update checks on site traffic (twice daily).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
-		$file_mods = defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS;
+		$file_mods = ! wp_is_file_mod_allowed( 'tsosk_update_manager' );
 		$items[]   = array(
 			'label'   => __( 'File modifications', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'status'  => $file_mods ? __( 'Blocked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Allowed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -739,28 +833,72 @@ class TSOSK_Mod_Update_Manager {
 		);
 
 		$next_plugins = $this->get_next_cron_timestamp( 'wp_update_plugins' );
-		$items[]      = array(
+		if ( ! $next_plugins ) {
+			$cron_status = __( 'Not scheduled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$cron_badge  = 'tsosk-badge-warn';
+			$cron_detail = __( 'No wp_update_plugins event found in the cron table.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} elseif ( $next_plugins < time() - ( 15 * MINUTE_IN_SECONDS ) ) {
+			$cron_status = __( 'Overdue', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$cron_badge  = 'tsosk-badge-warn';
+			$cron_detail = sprintf(
+				/* translators: 1: scheduled date (UTC), 2: how long ago */
+				__( 'It was due on %1$s UTC (%2$s ago) and has not run. WP-Cron needs site traffic or a server cron to fire — check the Cron Manager tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				gmdate( 'Y-m-d H:i:s', $next_plugins ),
+				human_time_diff( $next_plugins, time() )
+			);
+		} else {
+			$cron_status = human_time_diff( time(), $next_plugins );
+			$cron_badge  = 'tsosk-badge-info';
+			$cron_detail = gmdate( 'Y-m-d H:i:s', $next_plugins ) . ' UTC';
+		}
+		$items[] = array(
 			'label'   => __( 'Next plugin check (cron)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => $next_plugins ? human_time_diff( time(), $next_plugins ) : __( 'Not scheduled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'badge'   => $next_plugins ? 'tsosk-badge-info' : 'tsosk-badge-warn',
-			'details' => $next_plugins
-				? gmdate( 'Y-m-d H:i:s', $next_plugins ) . ' UTC'
-				: __( 'No wp_update_plugins event found in the cron table.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => $cron_status,
+			'badge'   => $cron_badge,
+			'details' => $cron_detail,
 		);
 
 		$total_pending = $pending['plugins'] + $pending['themes'] + $pending['translations'] + $pending['core'];
-		$items[]       = array(
+		$blocked       = $this->get_blocked_components();
+		$hidden        = $this->count_hidden_plugin_updates();
+		$pending_note  = sprintf(
+			/* translators: 1: plugins, 2: themes, 3: translations, 4: core */
+			__( 'Plugins: %1$d · Themes: %2$d · Translations: %3$d · Core: %4$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$pending['plugins'],
+			$pending['themes'],
+			$pending['translations'],
+			$pending['core']
+		);
+		if ( $hidden > 0 ) {
+			$pending_note .= '<br>' . esc_html(
+				sprintf(
+					/* translators: %d: number of plugin updates */
+					_n( '%d plugin update is hidden by an individual plugin rule (see “Individual plugins” below).', '%d plugin updates are hidden by individual plugin rules (see “Individual plugins” below).', $hidden, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$hidden
+				)
+			);
+		}
+		if ( ! empty( $blocked ) ) {
+			$pending_note .= '<br>' . esc_html(
+				sprintf(
+					/* translators: %s: comma-separated list of blocked components */
+					__( 'Update checks are blocked by this module for: %s. These counts may be incomplete.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $blocked )
+				)
+			);
+		}
+		if ( $total_pending > 0 ) {
+			$pending_status = (string) $total_pending;
+		} elseif ( ! empty( $blocked ) ) {
+			$pending_status = __( 'Not checked', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$pending_status = __( 'None detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		$items[] = array(
 			'label'   => __( 'Pending updates now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => $total_pending > 0 ? (string) $total_pending : __( 'None detected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'badge'   => $total_pending > 0 ? 'tsosk-badge-warn' : 'tsosk-badge-ok',
-			'details' => sprintf(
-				/* translators: 1: plugins, 2: themes, 3: translations, 4: core */
-				__( 'Plugins: %1$d · Themes: %2$d · Translations: %3$d · Core: %4$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$pending['plugins'],
-				$pending['themes'],
-				$pending['translations'],
-				$pending['core']
-			),
+			'status'  => $pending_status,
+			'badge'   => ( $total_pending > 0 || ! empty( $blocked ) ) ? 'tsosk-badge-warn' : 'tsosk-badge-ok',
+			'details' => $pending_note,
 		);
 
 		return $items;
@@ -804,14 +942,10 @@ class TSOSK_Mod_Update_Manager {
 	 * Contact wordpress.org and refresh plugin/theme update transients (includes translation offers).
 	 */
 	private function refresh_update_transients(): void {
-		wp_version_check( array(), true );
-		wp_update_plugins();
-		wp_update_themes();
-
+		// Drop the cached offers first, then ask wordpress.org once per component.
 		wp_clean_plugins_cache( true );
 		wp_clean_themes_cache( true );
-		delete_site_transient( 'update_plugins' );
-		delete_site_transient( 'update_themes' );
+		wp_version_check( array(), true );
 		wp_update_plugins();
 		wp_update_themes();
 	}
@@ -822,7 +956,7 @@ class TSOSK_Mod_Update_Manager {
 	 * Bundled catalogs are updated with the plugin ZIP, not via wordpress.org language packs.
 	 */
 	private function count_active_plugins_with_bundled_languages(): int {
-		$active = get_option( 'active_plugins', array() );
+		$active = TSOSK_Support::get_active_plugin_files();
 		if ( ! is_array( $active ) || empty( $active ) ) {
 			return 0;
 		}
@@ -873,6 +1007,8 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Summarize language bulk upgrade.
+	 *
 	 * @param mixed $bulk_result Return value from Language_Pack_Upgrader::bulk_upgrade().
 	 * @return array{installed:int,failed:int}
 	 */
@@ -926,13 +1062,13 @@ class TSOSK_Mod_Update_Manager {
 			tsosk_require_wp_admin( 'includes/translation-install.php' );
 		}
 
-		$before = $this->count_pending_updates();
+		$before = $this->count_pending_updates( true );
 
 		$this->refresh_update_transients();
 
 		$this->restore_update_block_filters( $lifted );
 
-		$after = $this->count_pending_updates();
+		$after = $this->count_pending_updates( true );
 
 		TSOSK_Activity_Log::log(
 			'update-manager',
@@ -948,19 +1084,510 @@ class TSOSK_Mod_Update_Manager {
 		wp_send_json_success(
 			array(
 				'message' => sprintf(
-					/* translators: 1: plugins before, 2: themes before, 3: translations before, 4: plugins after, 5: themes after, 6: translations after */
-					__( 'Update check finished. Pending before — plugins: %1$d, themes: %2$d, translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations: %6$d. Install updates from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: 1: plugins before, 2: themes before, 3: translations before, 4: core before, 5: plugins after, 6: themes after, 7: translations after, 8: core after */
+					__( 'Update check finished. Pending before — plugins: %1$d, themes: %2$d, translations: %3$d, core: %4$d. Pending now — plugins: %5$d, themes: %6$d, translations: %7$d, core: %8$d. Install updates from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$before['plugins'],
 					$before['themes'],
 					$before['translations'],
+					$before['core'],
 					$after['plugins'],
 					$after['themes'],
-					$after['translations']
+					$after['translations'],
+					$after['core']
 				),
 				'before'  => $before,
 				'after'   => $after,
 			)
 		);
+	}
+
+	/**
+	 * Plugin updates currently offered by WordPress.org, including those hidden by per-plugin rules.
+	 *
+	 * @return array<string, string> Plugin file => new version.
+	 */
+	private function get_plugin_update_offers(): array {
+		$tag     = self::tsosk_um_build_update_filter( 'plugins' );
+		$was_set = null !== $this->plugin_hide_cb && false !== has_filter( $tag, $this->plugin_hide_cb );
+		if ( $was_set ) {
+			remove_filter( $tag, $this->plugin_hide_cb, 999 );
+		}
+		$transient = get_site_transient( 'update_plugins' );
+		if ( $was_set ) {
+			add_filter( $tag, $this->plugin_hide_cb, 999 );
+		}
+
+		$offers = array();
+		if ( is_object( $transient ) && ! empty( $transient->response ) && is_array( $transient->response ) ) {
+			foreach ( $transient->response as $file => $info ) {
+				if ( is_object( $info ) && ! empty( $info->new_version ) ) {
+					$offers[ (string) $file ] = (string) $info->new_version;
+				}
+			}
+		}
+		return $offers;
+	}
+
+	/**
+	 * Run a callback with every update-check blocker and per-plugin hide rule lifted.
+	 *
+	 * Used by explicit admin install actions, which must see the real offers and package URLs.
+	 *
+	 * @param callable $callback Callback to run.
+	 * @return mixed Callback result.
+	 */
+	private function run_with_blocks_lifted( callable $callback ) {
+		$lifted  = $this->temporarily_lift_update_block_filters();
+		$tag     = self::tsosk_um_build_update_filter( 'plugins' );
+		$was_set = null !== $this->plugin_hide_cb && false !== has_filter( $tag, $this->plugin_hide_cb );
+		if ( $was_set ) {
+			remove_filter( $tag, $this->plugin_hide_cb, 999 );
+		}
+		try {
+			return $callback();
+		} finally {
+			if ( $was_set ) {
+				add_filter( $tag, $this->plugin_hide_cb, 999 );
+			}
+			$this->restore_update_block_filters( $lifted );
+		}
+	}
+
+	/**
+	 * Why the Update Manager cannot install updates right now ('' when it can).
+	 */
+	private function get_install_blocker(): string {
+		if ( 'disable_all' === ( $this->settings['preset'] ?? '' ) ) {
+			return __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( ! wp_is_file_mod_allowed( 'tsosk_update_manager' ) ) {
+			return __( 'File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot update plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		return '';
+	}
+
+	/**
+	 * Load the WordPress admin APIs used by the installers.
+	 */
+	private function load_update_apis(): void {
+		tsosk_require_wp_admin( 'includes/admin.php' );
+		tsosk_require_wp_admin( 'includes/plugin.php' );
+		tsosk_require_wp_admin( 'includes/update.php' );
+		if ( ! function_exists( 'wp_get_translation_updates' ) ) {
+			tsosk_require_wp_admin( 'includes/translation-install.php' );
+		}
+	}
+
+	/**
+	 * Pending plugin and theme installs (plugins hidden by an individual rule are left out).
+	 *
+	 * @return array<int, array{type:string,id:string,name:string,from:string,to:string}>
+	 */
+	private function get_install_queue(): array {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
+		$rules     = is_array( $this->settings['plugin_rules'] ?? null ) ? $this->settings['plugin_rules'] : array();
+		$installed = get_plugins();
+		$queue     = array();
+		$self      = defined( 'TSOSK_BASENAME' ) ? (string) TSOSK_BASENAME : '';
+
+		foreach ( $this->get_plugin_update_offers() as $file => $version ) {
+			if ( ! isset( $installed[ $file ] ) || ! empty( $rules[ $file ]['block'] ) ) {
+				continue;
+			}
+			$queue[] = array(
+				'type' => 'plugin',
+				'id'   => $file,
+				'name' => (string) ( $installed[ $file ]['Name'] ?? $file ),
+				'from' => (string) ( $installed[ $file ]['Version'] ?? '' ),
+				'to'   => $version,
+			);
+		}
+
+		// Update this toolkit last: the request that replaces its own files must be the final one.
+		usort(
+			$queue,
+			static function ( array $a, array $b ) use ( $self ): int {
+				return (int) ( '' !== $self && $a['id'] === $self ) <=> (int) ( '' !== $self && $b['id'] === $self );
+			}
+		);
+
+		$themes = get_site_transient( 'update_themes' );
+		if ( is_object( $themes ) && ! empty( $themes->response ) && is_array( $themes->response ) ) {
+			foreach ( $themes->response as $stylesheet => $info ) {
+				$theme = wp_get_theme( (string) $stylesheet );
+				if ( ! $theme->exists() ) {
+					continue;
+				}
+				$queue[] = array(
+					'type' => 'theme',
+					'id'   => (string) $stylesheet,
+					'name' => (string) $theme->get( 'Name' ),
+					'from' => (string) $theme->get( 'Version' ),
+					'to'   => is_array( $info ) && ! empty( $info['new_version'] ) ? (string) $info['new_version'] : '',
+				);
+			}
+		}
+
+		return $queue;
+	}
+
+	/**
+	 * What "Install pending updates" would install now.
+	 *
+	 * @return array{plugins:int,themes:int,translations:int,total:int,blocker:string}
+	 */
+	public function get_installable_counts(): array {
+		$blocker = $this->get_install_blocker();
+		$out     = array(
+			'plugins'      => 0,
+			'themes'       => 0,
+			'translations' => 0,
+			'total'        => 0,
+			'blocker'      => $blocker,
+		);
+		if ( '' !== $blocker ) {
+			return $out;
+		}
+
+		$this->load_update_apis();
+		foreach ( $this->get_install_queue() as $item ) {
+			if ( 'plugin' === $item['type'] ) {
+				++$out['plugins'];
+			} else {
+				++$out['themes'];
+			}
+		}
+		$pending             = $this->count_pending_updates();
+		$out['translations'] = $this->is_blocking_translation_checks() ? 0 : (int) $pending['translations'];
+		$out['total']        = $out['plugins'] + $out['themes'] + $out['translations'];
+
+		return $out;
+	}
+
+	/**
+	 * Upgrade one plugin from wordpress.org (call inside run_with_blocks_lifted()).
+	 *
+	 * @param string $plugin Plugin basename.
+	 * @return array{ok:bool,error:string,name:string,old:string,new:string}
+	 */
+	private function upgrade_one_plugin( string $plugin ): array {
+		$installed = get_plugins();
+		$out       = array(
+			'ok'    => false,
+			'error' => '',
+			'name'  => (string) ( $installed[ $plugin ]['Name'] ?? $plugin ),
+			'old'   => (string) ( $installed[ $plugin ]['Version'] ?? '' ),
+			'new'   => '',
+		);
+
+		$offers = $this->get_plugin_update_offers();
+		if ( ! isset( $offers[ $plugin ] ) ) {
+			wp_update_plugins();
+			$offers = $this->get_plugin_update_offers();
+		}
+		if ( ! isset( $offers[ $plugin ] ) ) {
+			$out['error'] = __( 'WordPress.org reports no update for this plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return $out;
+		}
+		if ( ! $this->init_upgrade_filesystem() ) {
+			$out['error'] = __( 'WordPress cannot write files directly on this server (filesystem credentials required). Update it from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return $out;
+		}
+
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Plugin_Upgrader( $skin );
+		try {
+			$result = $upgrader->upgrade( $plugin );
+		} catch ( \Throwable $e ) {
+			$result = new WP_Error( 'tsosk_um_update_exception', $e->getMessage() );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			$out['error'] = $result->get_error_message();
+		} elseif ( false === $result || null === $result ) {
+			$messages     = $skin->get_upgrade_messages();
+			$out['error'] = ! empty( $messages ) ? wp_strip_all_tags( (string) end( $messages ) ) : __( 'The update failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		if ( '' === $out['error'] ) {
+			wp_clean_plugins_cache( true );
+			wp_update_plugins();
+			$fresh      = get_plugins();
+			$out['new'] = (string) ( $fresh[ $plugin ]['Version'] ?? '' );
+			$out['ok']  = true;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Upgrade one theme from wordpress.org (call inside run_with_blocks_lifted()).
+	 *
+	 * @param string $stylesheet Theme stylesheet (directory name).
+	 * @return array{ok:bool,error:string,name:string,old:string,new:string}
+	 */
+	private function upgrade_one_theme( string $stylesheet ): array {
+		$theme = wp_get_theme( $stylesheet );
+		$out   = array(
+			'ok'    => false,
+			'error' => '',
+			'name'  => $theme->exists() ? (string) $theme->get( 'Name' ) : $stylesheet,
+			'old'   => $theme->exists() ? (string) $theme->get( 'Version' ) : '',
+			'new'   => '',
+		);
+		if ( ! $theme->exists() ) {
+			$out['error'] = __( 'Theme not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return $out;
+		}
+		if ( ! $this->init_upgrade_filesystem() ) {
+			$out['error'] = __( 'WordPress cannot write files directly on this server (filesystem credentials required). Update it from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return $out;
+		}
+
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Theme_Upgrader( $skin );
+		try {
+			$result = $upgrader->upgrade( $stylesheet );
+		} catch ( \Throwable $e ) {
+			$result = new WP_Error( 'tsosk_um_update_exception', $e->getMessage() );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			$out['error'] = $result->get_error_message();
+		} elseif ( false === $result || null === $result ) {
+			$messages     = $skin->get_upgrade_messages();
+			$out['error'] = ! empty( $messages ) ? wp_strip_all_tags( (string) end( $messages ) ) : __( 'The update failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		if ( '' === $out['error'] ) {
+			wp_clean_themes_cache( true );
+			wp_update_themes();
+			$out['new'] = (string) wp_get_theme( $stylesheet )->get( 'Version' );
+			$out['ok']  = true;
+		}
+
+		return $out;
+	}
+
+	/** AJAX: force-update one plugin now (explicit admin action; ignores update-check blocks and hidden rules). */
+	public function ajax_update_plugin(): void {
+		check_ajax_referer( 'tsosk_um_nonce', 'nonce' );
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		if ( ! wp_is_file_mod_allowed( 'tsosk_update_manager' ) ) {
+			wp_send_json_error( __( 'File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot update plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$plugin = isset( $_POST['plugin'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin'] ) ) : '';
+
+		$this->load_update_apis();
+
+		if ( '' === $plugin || ! isset( get_plugins()[ $plugin ] ) ) {
+			wp_send_json_error( __( 'Plugin not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$res = $this->run_with_blocks_lifted(
+			function () use ( $plugin ) {
+				return $this->upgrade_one_plugin( $plugin );
+			}
+		);
+
+		if ( ! $res['ok'] ) {
+			wp_send_json_error( $res['error'] );
+		}
+
+		$this->log_plugin_update( $res );
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: plugin name, 2: old version, 3: new version */
+					__( '%1$s updated (%2$s → %3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$res['name'],
+					$res['old'],
+					$res['new']
+				),
+			)
+		);
+	}
+
+	/**
+	 * Activity-log entry for a manual plugin update.
+	 *
+	 * @param array{name:string,old:string,new:string} $res Upgrade result.
+	 */
+	private function log_plugin_update( array $res ): void {
+		TSOSK_Activity_Log::log(
+			'update-manager',
+			'update-plugin',
+			sprintf(
+				/* translators: 1: plugin name, 2: old version, 3: new version */
+				__( 'Plugin updated manually: %1$s (%2$s → %3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$res['name'],
+				$res['old'],
+				$res['new']
+			)
+		);
+	}
+
+	/**
+	 * Install pending wordpress.org language packs (call inside run_with_blocks_lifted()).
+	 *
+	 * @return array{installed:int,failed:int,error:string}
+	 */
+	private function install_pending_language_packs(): array {
+		$out     = array(
+			'installed' => 0,
+			'failed'    => 0,
+			'error'     => '',
+		);
+		$updates = wp_get_translation_updates();
+		if ( ! is_array( $updates ) || empty( $updates ) ) {
+			return $out;
+		}
+		if ( ! $this->init_upgrade_filesystem() ) {
+			$out['error'] = __( 'Could not initialize the WordPress filesystem. Check file permissions or FTP credentials.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			return $out;
+		}
+
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Language_Pack_Upgrader( $skin );
+		try {
+			$result = $upgrader->bulk_upgrade( $updates, array( 'clear_update_cache' => true ) );
+		} catch ( \Throwable $e ) {
+			$out['error'] = $e->getMessage();
+			return $out;
+		}
+
+		if ( is_wp_error( $result ) ) {
+			$out['error'] = $result->get_error_message();
+			return $out;
+		}
+
+		$summary          = $this->summarize_language_bulk_upgrade( $result );
+		$out['installed'] = $summary['installed'];
+		$out['failed']    = $summary['failed'];
+		if ( 0 === $summary['installed'] && $summary['failed'] > 0 ) {
+			$out['error'] = __( 'Could not install the pending language packs. Check file permissions and try Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * AJAX: install the next pending item (plugin, then theme, then language packs).
+	 *
+	 * The browser calls this repeatedly, one item per request, so a slow host never hits the PHP time limit.
+	 */
+	public function ajax_install_next(): void {
+		check_ajax_referer( 'tsosk_um_nonce', 'nonce' );
+		if ( ! current_user_can( 'update_plugins' ) || ! current_user_can( 'update_themes' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$blocker = $this->get_install_blocker();
+		if ( '' !== $blocker ) {
+			wp_send_json_error( $blocker );
+		}
+
+		$first = ! empty( $_POST['first'] );
+		$skip  = isset( $_POST['skip'] ) ? array_filter( explode( ',', sanitize_text_field( wp_unslash( $_POST['skip'] ) ) ) ) : array();
+
+		$this->load_update_apis();
+
+		$data = $this->run_with_blocks_lifted(
+			function () use ( $first, $skip ) {
+				if ( $first ) {
+					$this->refresh_update_transients();
+				}
+
+				$item  = null;
+				$queue = array_values(
+					array_filter(
+						$this->get_install_queue(),
+						static function ( array $q ) use ( $skip ): bool {
+							return ! in_array( $q['type'] . ':' . $q['id'], $skip, true );
+						}
+					)
+				);
+
+				if ( ! empty( $queue ) ) {
+					$next = $queue[0];
+					$res  = 'plugin' === $next['type'] ? $this->upgrade_one_plugin( $next['id'] ) : $this->upgrade_one_theme( $next['id'] );
+					$item = array(
+						'key'   => $next['type'] . ':' . $next['id'],
+						'type'  => $next['type'],
+						'name'  => $res['name'],
+						'from'  => $res['old'],
+						'to'    => $res['new'],
+						'ok'    => $res['ok'],
+						'error' => $res['error'],
+					);
+					if ( $res['ok'] && 'plugin' === $next['type'] ) {
+						$this->log_plugin_update( $res );
+					} elseif ( $res['ok'] ) {
+						TSOSK_Activity_Log::log(
+							'update-manager',
+							'update-plugin',
+							sprintf(
+								/* translators: 1: theme name, 2: old version, 3: new version */
+								__( 'Theme updated manually: %1$s (%2$s → %3$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								$res['name'],
+								$res['old'],
+								$res['new']
+							)
+						);
+					}
+				} elseif ( ! in_array( 'translations', $skip, true ) && ! $this->is_blocking_translation_checks() && count( wp_get_translation_updates() ) > 0 ) {
+					$res  = $this->install_pending_language_packs();
+					$item = array(
+						'key'   => 'translations',
+						'type'  => 'translations',
+						'name'  => __( 'Translations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'from'  => '',
+						'to'    => (string) $res['installed'],
+						'ok'    => '' === $res['error'],
+						'error' => $res['error'],
+					);
+					if ( '' === $res['error'] ) {
+						TSOSK_Activity_Log::log(
+							'update-manager',
+							'install-translations',
+							sprintf(
+								/* translators: 1: installed count, 2: failed count, 3: pending after */
+								__( 'Language packs installed: %1$d succeeded, %2$d failed. Pending now: %3$d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								$res['installed'],
+								$res['failed'],
+								max( 0, count( wp_get_translation_updates() ) )
+							)
+						);
+					}
+				}
+
+				// What is still left to do after this step (items that failed are skipped, not retried).
+				if ( null !== $item ) {
+					$skip[] = $item['key'];
+				}
+				$remaining = 0;
+				foreach ( $this->get_install_queue() as $q ) {
+					if ( ! in_array( $q['type'] . ':' . $q['id'], $skip, true ) ) {
+						++$remaining;
+					}
+				}
+				if ( ! in_array( 'translations', $skip, true ) && ! $this->is_blocking_translation_checks() && count( wp_get_translation_updates() ) > 0 ) {
+					++$remaining;
+				}
+
+				return array(
+					'item'      => $item,
+					'remaining' => $remaining,
+				);
+			}
+		);
+
+		wp_send_json_success( $data );
 	}
 
 	/** AJAX: install pending wordpress.org language packs (explicit admin action). */
@@ -974,7 +1601,7 @@ class TSOSK_Mod_Update_Manager {
 			wp_send_json_error( __( 'Update Manager is blocking all updates. Change the preset first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		if ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS ) {
+		if ( ! wp_is_file_mod_allowed( 'tsosk_update_manager' ) ) {
 			wp_send_json_error( __( 'File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot install language packs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
@@ -990,7 +1617,7 @@ class TSOSK_Mod_Update_Manager {
 			tsosk_require_wp_admin( 'includes/translation-install.php' );
 		}
 
-		$before = $this->count_pending_updates();
+		$before = $this->count_pending_updates( true );
 		$this->refresh_update_transients();
 
 		$updates = wp_get_translation_updates();
@@ -1000,7 +1627,7 @@ class TSOSK_Mod_Update_Manager {
 				array(
 					'message' => __( 'No pending wordpress.org language packs to install. Plugins that ship .mo files inside their ZIP are updated when you update the plugin itself.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'before'  => $before,
-					'after'   => $this->count_pending_updates(),
+					'after'   => $this->count_pending_updates( true ),
 				)
 			);
 		}
@@ -1021,7 +1648,7 @@ class TSOSK_Mod_Update_Manager {
 		}
 
 		$summary = $this->summarize_language_bulk_upgrade( $result );
-		$after   = $this->count_pending_updates();
+		$after   = $this->count_pending_updates( true );
 
 		TSOSK_Activity_Log::log(
 			'update-manager',
@@ -1057,12 +1684,54 @@ class TSOSK_Mod_Update_Manager {
 		);
 	}
 
+	/**
+	 * "Install pending updates" button (plugins, themes and language packs) with its message area.
+	 *
+	 * Shared by the Update Manager screen and the Overview.
+	 */
+	public function render_install_all_button(): void {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return;
+		}
+		$counts = $this->get_installable_counts();
+		$title  = '' !== $counts['blocker']
+			? $counts['blocker']
+			: sprintf(
+				/* translators: 1: plugin updates, 2: theme updates, 3: language packs */
+				__( 'Plugins: %1$d · Themes: %2$d · Translations: %3$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$counts['plugins'],
+				$counts['themes'],
+				$counts['translations']
+			);
+		?>
+		<button type="button" class="button button-primary tsosk-um-install-all"
+				data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_um_nonce' ) ); ?>"
+				data-plugins="<?php echo esc_attr( (string) $counts['plugins'] ); ?>"
+				data-themes="<?php echo esc_attr( (string) $counts['themes'] ); ?>"
+				data-translations="<?php echo esc_attr( (string) $counts['translations'] ); ?>"
+				title="<?php echo esc_attr( $title ); ?>"
+			<?php disabled( 0 === $counts['total'] || '' !== $counts['blocker'] ); ?>>
+			<?php
+			printf(
+				/* translators: %d: number of pending updates that can be installed */
+				esc_html__( 'Install pending updates (%d)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				absint( $counts['total'] )
+			);
+			?>
+		</button>
+		<span class="tsosk-ajax-msg tsosk-um-install-msg" role="status"></span>
+		<?php
+	}
+
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$nonce            = wp_create_nonce( 'tsosk_um_nonce' );
-		$settings         = self::get_settings();
-		$preset           = $settings['preset'];
-		$environment      = $this->get_update_environment();
-		$pending_updates  = $this->count_pending_updates();
+		$nonce                = wp_create_nonce( 'tsosk_um_nonce' );
+		$settings             = self::get_settings();
+		$preset               = $settings['preset'];
+		$environment          = $this->get_update_environment();
+		$pending_updates      = $this->count_pending_updates();
 		$translations_pending = (int) $pending_updates['translations'];
 		?>
 		<p class="tsosk-desc">
@@ -1116,12 +1785,13 @@ class TSOSK_Mod_Update_Manager {
 			</table>
 			<p style="margin-top:14px;margin-bottom:0;">
 				<button type="button" class="button button-primary" id="tsosk-um-run-updates"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Check for updates now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
+				<?php $this->render_install_all_button(); ?>
 				<button type="button" class="button" id="tsosk-um-install-translations"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-				        data-pending="<?php echo esc_attr( (string) $translations_pending ); ?>"
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"
+						data-pending="<?php echo esc_attr( (string) $translations_pending ); ?>"
 					<?php disabled( 0 === $translations_pending ); ?>>
 					<?php
 					printf(
@@ -1195,12 +1865,12 @@ class TSOSK_Mod_Update_Manager {
 		<div class="tsosk-card" id="tsosk-um-plugins">
 			<h3><?php esc_html_e( 'Individual plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Hide available updates for specific plugins in the dashboard. Does not change WordPress auto-update settings — use Dashboard → Updates for that.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Hide available updates for specific plugins in the dashboard. Does not change WordPress auto-update settings — use Dashboard → Updates for that. The Update column shows the version offered by WordPress.org; “Update now” forces that plugin update right away, even if its update is hidden or checks are blocked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<p style="margin:0 0 10px;">
 				<input type="search" id="tsosk-um-plugin-filter" class="regular-text"
-				       placeholder="<?php esc_attr_e( 'Filter plugins…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-				       autocomplete="off">
+						placeholder="<?php esc_attr_e( 'Filter plugins…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+						autocomplete="off">
 			</p>
 			<div class="tsosk-table-wrap tsosk-um-plugin-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-um-plugin-table">
@@ -1209,6 +1879,7 @@ class TSOSK_Mod_Update_Manager {
 							<th><?php esc_html_e( 'Plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th style="width:90px;"><?php esc_html_e( 'Version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th style="width:90px;"><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th style="width:190px;"><?php esc_html_e( 'Update', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th style="width:120px;text-align:center;"><?php esc_html_e( 'Block updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
@@ -1219,7 +1890,7 @@ class TSOSK_Mod_Update_Manager {
 						if ( empty( $plugins_ui ) ) :
 							?>
 						<tr>
-							<td colspan="4" style="text-align:center;color:#646970;">
+							<td colspan="5" style="text-align:center;color:#646970;">
 								<?php esc_html_e( 'No plugins installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</td>
 						</tr>
@@ -1230,7 +1901,7 @@ class TSOSK_Mod_Update_Manager {
 								$block = ! empty( $rule['block'] );
 								?>
 						<tr class="tsosk-um-plugin-row" data-plugin="<?php echo esc_attr( $plugin['file'] ); ?>"
-						    data-search="<?php echo esc_attr( strtolower( $plugin['name'] . ' ' . $plugin['file'] ) ); ?>">
+							data-search="<?php echo esc_attr( strtolower( $plugin['name'] . ' ' . $plugin['file'] ) ); ?>">
 							<td>
 								<strong><?php echo esc_html( $plugin['name'] ); ?></strong><br>
 								<code class="tsosk-code" style="font-size:11px;"><?php echo esc_html( $plugin['file'] ); ?></code>
@@ -1243,9 +1914,25 @@ class TSOSK_Mod_Update_Manager {
 									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
+							<td>
+								<?php if ( '' !== $plugin['new_version'] ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn"><?php echo esc_html( $plugin['new_version'] ); ?></span>
+									<button type="button" class="button button-small tsosk-um-update-plugin"
+											data-plugin="<?php echo esc_attr( $plugin['file'] ); ?>"
+											data-name="<?php echo esc_attr( $plugin['name'] ); ?>"
+											data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										<?php esc_html_e( 'Update now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</button>
+									<?php if ( $block ) : ?>
+										<br><span class="description"><?php esc_html_e( 'Hidden in the dashboard', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php endif; ?>
+								<?php else : ?>
+									<span class="description">&mdash;</span>
+								<?php endif; ?>
+							</td>
 							<td style="text-align:center;">
 								<input type="checkbox" class="tsosk-um-plugin-block" <?php checked( $block ); ?>
-								       aria-label="<?php esc_attr_e( 'Block updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+										aria-label="<?php esc_attr_e( 'Block updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 							</td>
 						</tr>
 								<?php
@@ -1298,7 +1985,7 @@ class TSOSK_Mod_Update_Manager {
 		</div>
 
 		<button class="button button-primary" id="tsosk-um-save"
-		        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				data-nonce="<?php echo esc_attr( $nonce ); ?>">
 			<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</button>
 		<span class="tsosk-ajax-msg" id="tsosk-um-msg"></span>

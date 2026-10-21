@@ -37,9 +37,39 @@ class TSOSK_Mod_Search_Replace {
 	/** Max number of changed cells kept in the automatic backup snapshot. */
 	private const BACKUP_CELL_CAP = 5000;
 
-	/** @var TSOSK_Mod_Search_Replace|null */
+	/**
+	 * Cells that matched but were left untouched (PHP objects / unreadable serialized data) in this request.
+	 *
+	 * @var int
+	 */
+	private $skipped_cells = 0;
+
+	/**
+	 * Tables whose preview was cut short (row cap / scan cap reached), keyed by table name.
+	 *
+	 * @var array<string, bool>
+	 */
+	private $truncated_tables = array();
+
+	/**
+	 * Cached option_id values of this plugin's own bookkeeping rows (backup, logs).
+	 *
+	 * @var int[]|null
+	 */
+	private $protected_row_ids = null;
+
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Search_Replace|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -47,6 +77,9 @@ class TSOSK_Mod_Search_Replace {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sr_preview', array( $this, 'ajax_preview' ) );
 		add_action( 'wp_ajax_tsosk_sr_execute', array( $this, 'ajax_execute' ) );
@@ -111,8 +144,8 @@ class TSOSK_Mod_Search_Replace {
 		$tables = array();
 		foreach ( (array) $results as $row ) {
 			// Some drivers return the column aliases in upper case (or the raw column names).
-			$row      = array_change_key_case( (array) $row, CASE_LOWER );
-			$name     = (string) ( $row['name'] ?? $row['table_name'] ?? '' );
+			$row  = array_change_key_case( (array) $row, CASE_LOWER );
+			$name = (string) ( $row['name'] ?? $row['table_name'] ?? '' );
 			if ( '' === $name ) {
 				continue;
 			}
@@ -213,21 +246,21 @@ class TSOSK_Mod_Search_Replace {
 	 * @param string $search      Search term (plain text or regex pattern).
 	 * @param string $replace_str Replacement string.
 	 * @param string $subject     The raw DB cell value.
-	 * @param bool   $case        True = case-sensitive.
+	 * @param bool   $case_sensitive        True = case-sensitive.
 	 * @param bool   $is_regex    True = treat $search as a regex pattern.
 	 * @return string Modified value.
 	 */
-	private function safe_replace( string $search, string $replace_str, string $subject, bool $case, bool $is_regex ): string {
+	private function safe_replace( string $search, string $replace_str, string $subject, bool $case_sensitive, bool $is_regex ): string {
 		if ( '' === $search || '' === $subject ) {
 			return $subject;
 		}
 
 		// Fast path: not serialized — plain replace.
 		if ( ! $this->looks_serialized( $subject ) ) {
-			return $this->do_replace( $search, $replace_str, $subject, $case, $is_regex );
+			return $this->do_replace( $search, $replace_str, $subject, $case_sensitive, $is_regex );
 		}
 
-		$data = @unserialize( $subject, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+		$data = @unserialize( $subject, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 		if ( false !== $data || 'b:0;' === $subject ) {
 			// allowed_classes => false already turned any serialized PHP object
 			// into a __PHP_Incomplete_Class stand-in at unserialize time. Its
@@ -236,13 +269,15 @@ class TSOSK_Mod_Search_Replace {
 			// not a preserved one, even if we never touch its properties. Treat
 			// it exactly like an opaque blob we can't safely round-trip.
 			if ( $this->contains_incomplete_class( $data ) ) {
+				++$this->skipped_cells;
 				return $subject;
 			}
-			$replaced = $this->replace_in_data( $data, $search, $replace_str, $case, $is_regex );
+			$replaced = $this->replace_in_data( $data, $search, $replace_str, $case_sensitive, $is_regex );
 			return serialize( $replaced ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		}
 
 		// Do not rewrite opaque serialized blobs with string heuristics — lengths break easily.
+		++$this->skipped_cells;
 		return $subject;
 	}
 
@@ -283,23 +318,30 @@ class TSOSK_Mod_Search_Replace {
 	 * @param mixed  $data        Decoded value.
 	 * @param string $search      Search term.
 	 * @param string $replace_str Replacement.
-	 * @param bool   $case        Case-sensitive.
+	 * @param bool   $case_sensitive        Case-sensitive.
 	 * @param bool   $is_regex    Regex mode.
 	 * @return mixed
 	 */
-	private function replace_in_data( $data, string $search, string $replace_str, bool $case, bool $is_regex ) {
+	private function replace_in_data( $data, string $search, string $replace_str, bool $case_sensitive, bool $is_regex ) {
 		if ( is_string( $data ) ) {
-			return $this->do_replace( $search, $replace_str, $data, $case, $is_regex );
+			// A string that is itself serialized data (common in plugin options): go through the same safe path, or its inner lengths break.
+			if ( $this->looks_serialized( $data ) ) {
+				$inner = @unserialize( $data, array( 'allowed_classes' => false ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
+				if ( ( false !== $inner || 'b:0;' === $data ) && ! $this->contains_incomplete_class( $inner ) ) {
+					return serialize( $this->replace_in_data( $inner, $search, $replace_str, $case_sensitive, $is_regex ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				}
+			}
+			return $this->do_replace( $search, $replace_str, $data, $case_sensitive, $is_regex );
 		}
 		if ( is_array( $data ) ) {
 			foreach ( $data as $key => $value ) {
-				$data[ $key ] = $this->replace_in_data( $value, $search, $replace_str, $case, $is_regex );
+				$data[ $key ] = $this->replace_in_data( $value, $search, $replace_str, $case_sensitive, $is_regex );
 			}
 			return $data;
 		}
 		if ( is_object( $data ) ) {
 			foreach ( get_object_vars( $data ) as $key => $value ) {
-				$data->$key = $this->replace_in_data( $value, $search, $replace_str, $case, $is_regex );
+				$data->$key = $this->replace_in_data( $value, $search, $replace_str, $case_sensitive, $is_regex );
 			}
 			return $data;
 		}
@@ -312,13 +354,13 @@ class TSOSK_Mod_Search_Replace {
 	 * @param string $search  Search string or regex.
 	 * @param string $replace Replacement string.
 	 * @param string $subject Target string.
-	 * @param bool   $case    True = case-sensitive.
+	 * @param bool   $case_sensitive    True = case-sensitive.
 	 * @param bool   $is_regex True = $search is a regex.
 	 * @return string
 	 */
-	private function do_replace( string $search, string $replace, string $subject, bool $case, bool $is_regex ): string {
+	private function do_replace( string $search, string $replace, string $subject, bool $case_sensitive, bool $is_regex ): string {
 		if ( $is_regex ) {
-			$pattern = $this->build_regex_pattern( $search, $case );
+			$pattern = $this->build_regex_pattern( $search, $case_sensitive );
 			if ( '' === $pattern ) {
 				return $subject;
 			}
@@ -330,25 +372,49 @@ class TSOSK_Mod_Search_Replace {
 			}
 			return $replaced;
 		}
-		if ( $case ) {
-			return str_replace( $search, $replace, $subject );
+		$variant = $this->json_variant( $search );
+		if ( $case_sensitive ) {
+			$subject = str_replace( $search, $replace, $subject );
+			if ( '' !== $variant ) {
+				$subject = str_replace( $variant, $this->json_variant( $replace, true ), $subject );
+			}
+			return $subject;
 		}
-		return str_ireplace( $search, $replace, $subject );
+		$subject = str_ireplace( $search, $replace, $subject );
+		if ( '' !== $variant ) {
+			$subject = str_ireplace( $variant, $this->json_variant( $replace, true ), $subject );
+		}
+		return $subject;
+	}
+
+	/**
+	 * JSON-escaped form of a plain search/replace text ("/" stored as "\/"), as found in
+	 * Elementor, block and other JSON data. Empty when the text has no slash.
+	 *
+	 * @param string $text  Plain text.
+	 * @param bool   $force Return the escaped text even when identical (for the replacement side).
+	 * @return string
+	 */
+	private function json_variant( string $text, bool $force = false ): string {
+		if ( false === strpos( $text, '/' ) ) {
+			return $force ? $text : '';
+		}
+		return str_replace( '/', '\\/', $text );
 	}
 
 	/**
 	 * Build a delimited regex pattern, or empty string when unsafe/invalid.
 	 *
 	 * @param string $search Pattern without delimiters.
-	 * @param bool   $case   Case-sensitive when true.
+	 * @param bool   $case_sensitive   Case-sensitive when true.
 	 * @return string
 	 */
-	private function build_regex_pattern( string $search, bool $case ): string {
+	private function build_regex_pattern( string $search, bool $case_sensitive ): string {
 		if ( ! $this->is_safe_regex_pattern( $search ) ) {
 			return '';
 		}
-		$flags = $case ? '' : 'i';
-		return '#' . str_replace( '#', '\#', $search ) . '#' . $flags . 'u';
+		$flags = $case_sensitive ? '' : 'i';
+		return '#' . preg_replace( '/(?<!\\\\)#/', '\\#', $search ) . '#' . $flags . 'u';
 	}
 
 	/**
@@ -365,7 +431,7 @@ class TSOSK_Mod_Search_Replace {
 		if ( preg_match( '/\([^()]*[+*][^()]*\)[+*]/', $source ) ) {
 			return false;
 		}
-		$pattern = '#' . str_replace( '#', '\#', $source ) . '#u';
+		$pattern = '#' . preg_replace( '/(?<!\\\\)#/', '\\#', $source ) . '#u';
 		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Compile-check only.
 		return false !== @preg_match( $pattern, '' );
 	}
@@ -388,22 +454,52 @@ class TSOSK_Mod_Search_Replace {
 	 *
 	 * @param string $search  Search term.
 	 * @param string $subject Value to search.
-	 * @param bool   $case    True = case-sensitive.
+	 * @param bool   $case_sensitive    True = case-sensitive.
 	 * @param bool   $is_regex True = regex.
 	 * @return bool
 	 */
-	private function value_contains( string $search, string $subject, bool $case, bool $is_regex ): bool {
+	private function value_contains( string $search, string $subject, bool $case_sensitive, bool $is_regex ): bool {
 		if ( $is_regex ) {
-			$pattern = $this->build_regex_pattern( $search, $case );
+			$pattern = $this->build_regex_pattern( $search, $case_sensitive );
 			if ( '' === $pattern ) {
 				return false;
 			}
 			return 1 === preg_match( $pattern, $subject );
 		}
-		if ( $case ) {
-			return false !== strpos( $subject, $search );
+		$variant = $this->json_variant( $search );
+		if ( $case_sensitive ) {
+			return false !== strpos( $subject, $search ) || ( '' !== $variant && false !== strpos( $subject, $variant ) );
 		}
-		return false !== stripos( $subject, $search );
+		return false !== stripos( $subject, $search ) || ( '' !== $variant && false !== stripos( $subject, $variant ) );
+	}
+
+	/**
+	 * Build the "(col LIKE %s OR ...)" clause for a plain-text search, including the JSON-escaped variant.
+	 *
+	 * @param string[] $cols   Text columns.
+	 * @param string   $search Plain search text.
+	 * @param array    $args   prepare() arguments, appended to.
+	 * @return string Clause, or empty string when a column name is invalid.
+	 */
+	private function build_like_clause( array $cols, string $search, array &$args ): string {
+		global $wpdb;
+		$terms   = array( '%' . $wpdb->esc_like( $search ) . '%' );
+		$variant = $this->json_variant( $search );
+		if ( '' !== $variant ) {
+			$terms[] = '%' . $wpdb->esc_like( $variant ) . '%';
+		}
+		$parts = array();
+		foreach ( $cols as $col ) {
+			$col_sql = $this->sql_ident( (string) $col );
+			if ( '' === $col_sql ) {
+				return '';
+			}
+			foreach ( $terms as $term ) {
+				$parts[] = $col_sql . ' LIKE %s';
+				$args[]  = $term;
+			}
+		}
+		return '(' . implode( ' OR ', $parts ) . ')';
 	}
 
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
@@ -411,7 +507,7 @@ class TSOSK_Mod_Search_Replace {
 	/** AJAX: dry-run preview — returns matches without modifying the DB. */
 	public function ajax_preview(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -421,8 +517,9 @@ class TSOSK_Mod_Search_Replace {
 		}
 
 		global $wpdb;
-		$results    = array();
-		$total_rows = 0;
+		$results        = array();
+		$total_rows     = 0;
+		$skipped_tables = array();
 
 		foreach ( $params['tables'] as $table ) {
 			if ( ! $this->table_exists( $table ) ) {
@@ -430,7 +527,12 @@ class TSOSK_Mod_Search_Replace {
 			}
 			$cols = $this->get_text_columns( $table );
 			$pk   = $this->get_primary_key( $table );
-			if ( empty( $cols ) || '' === $pk ) {
+			if ( empty( $cols ) ) {
+				continue;
+			}
+			if ( '' === $pk ) {
+				// Execute skips these tables too; tell the user now instead of silently ignoring them.
+				$skipped_tables[] = $table;
 				continue;
 			}
 			$matches = $this->find_matches( $table, $cols, $pk, $params, true );
@@ -440,18 +542,108 @@ class TSOSK_Mod_Search_Replace {
 			}
 		}
 
-		wp_send_json_success( array(
-			'results'    => $results,
-			'total_rows' => $total_rows,
-			'tables'     => array_keys( $results ),
-			'approval'   => $this->store_preview_approval( $params ),
-		) );
+		wp_send_json_success(
+			array(
+				'results'        => $results,
+				'total_rows'     => $total_rows,
+				'tables'         => array_keys( $results ),
+				'approval'       => $this->store_preview_approval( $params ),
+				'truncated'      => array_keys( $this->truncated_tables ),
+				'skipped_tables' => $skipped_tables,
+				'skipped_cells'  => $this->skipped_cells,
+				'has_backup'     => is_array( get_option( self::BACKUP_OPTION ) ),
+				'content_tables' => $this->get_content_tables(),
+			)
+		);
+	}
+
+	/**
+	 * Preview snippet centred on the first match, so the text shown is the part that actually changes
+	 * (a long cell used to be cut at its start, which hid the match).
+	 *
+	 * @param string $orig     Original cell value.
+	 * @param string $after    Value after the replacement.
+	 * @param bool   $before   True to return the original side, false for the replaced side.
+	 * @param array  $params   Request params (search, case_sensitive, is_regex).
+	 */
+	private function preview_excerpt( string $orig, string $after, bool $before, array $params ): string {
+		$search = (string) $params['search'];
+		$pos    = false;
+		if ( ! empty( $params['is_regex'] ) ) {
+			$pattern = $this->build_regex_pattern( $search, (bool) $params['case_sensitive'] );
+			if ( '' !== $pattern && 1 === preg_match( $pattern, $orig, $m, PREG_OFFSET_CAPTURE ) ) {
+				$pos = (int) $m[0][1];
+			}
+		} else {
+			$needles = array_filter( array( $search, $this->json_variant( $search ) ), 'strlen' );
+			foreach ( $needles as $needle ) {
+				$found = $params['case_sensitive'] ? strpos( $orig, $needle ) : stripos( $orig, $needle );
+				if ( false !== $found && ( false === $pos || $found < $pos ) ) {
+					$pos = $found;
+				}
+			}
+		}
+		if ( false === $pos ) {
+			// Fallback: first byte that differs.
+			$n   = min( strlen( $orig ), strlen( $after ) );
+			$pos = 0;
+			while ( $pos < $n && $orig[ $pos ] === $after[ $pos ] ) {
+				++$pos;
+			}
+		}
+		$start = max( 0, mb_strlen( mb_strcut( $orig, 0, $pos ) ) - 60 );
+		$out   = mb_substr( $before ? $orig : $after, $start, 300 );
+		return ( $start > 0 ? '…' : '' ) . $out;
+	}
+
+	/**
+	 * True for the options rows this plugin keeps for its own bookkeeping: the automatic backup of
+	 * this tool, the activity log (audit trail) and the slow-query log. They are never searched or
+	 * rewritten: the backup holds the values needed to restore and the logs only record what happened.
+	 *
+	 * @param string $table  Table name.
+	 * @param mixed  $pk_val Row primary key value.
+	 */
+	private function is_own_backup_row( string $table, $pk_val ): bool {
+		global $wpdb;
+		if ( $table !== $wpdb->options ) {
+			return false;
+		}
+		if ( null === $this->protected_row_ids ) {
+			$names                   = array( self::BACKUP_OPTION, 'tsosk_activity_log', 'tsosk_slow_query_log' );
+			$ids                     = $wpdb->get_col( $wpdb->prepare( "SELECT option_id FROM {$wpdb->options} WHERE option_name IN (%s, %s, %s)", $names[0], $names[1], $names[2] ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Core table name; one cheap lookup per request.
+			$this->protected_row_ids = array_map( 'intval', (array) $ids );
+		}
+		return in_array( (int) $pk_val, $this->protected_row_ids, true );
+	}
+
+	/**
+	 * Core tables that hold visible site content (used to tell content matches from internal data).
+	 *
+	 * @return string[]
+	 */
+	private function get_content_tables(): array {
+		global $wpdb;
+		return array_values(
+			array_filter(
+				array(
+					$wpdb->posts,
+					$wpdb->postmeta,
+					$wpdb->comments,
+					$wpdb->commentmeta,
+					$wpdb->terms,
+					$wpdb->term_taxonomy,
+					$wpdb->termmeta,
+					$wpdb->links,
+				)
+			)
+		);
 	}
 
 	/** AJAX: execute the search-replace and write to DB. */
 	public function ajax_execute(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -465,9 +657,19 @@ class TSOSK_Mod_Search_Replace {
 		}
 
 		global $wpdb;
-		$stats            = array( 'tables' => 0, 'rows' => 0, 'cells' => 0, 'errors' => array() );
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 300 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, Squiz.PHP.DiscouragedFunctions.Discouraged -- Large tables may need more than the default limit.
+		}
+		$stats            = array(
+			'tables' => 0,
+			'rows'   => 0,
+			'cells'  => 0,
+			'errors' => array(),
+		);
 		$backup_cells     = array();
 		$backup_truncated = false;
+		$backup_id        = function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : md5( uniqid( 'tsosksr', true ) );
+		$url_before       = array( (string) get_option( 'siteurl' ), (string) get_option( 'home' ) );
 
 		foreach ( $params['tables'] as $table ) {
 			if ( ! $this->table_exists( $table ) ) {
@@ -488,9 +690,11 @@ class TSOSK_Mod_Search_Replace {
 			}
 			$table_stats = $this->replace_in_table( $table, $cols, $pk, $params, $backup_cells, $backup_truncated );
 			if ( $table_stats['rows'] > 0 ) {
-				$stats['tables']++;
+				++$stats['tables'];
 				$stats['rows']  += $table_stats['rows'];
 				$stats['cells'] += $table_stats['cells'];
+				// Persist the snapshot after every changed table so a timeout or fatal later in the run still leaves an undo point.
+				$this->save_backup( $backup_id, $params, $stats, $backup_cells, $backup_truncated );
 			}
 			if ( ! empty( $table_stats['errors'] ) ) {
 				$stats['errors'] = array_merge( $stats['errors'], $table_stats['errors'] );
@@ -500,27 +704,23 @@ class TSOSK_Mod_Search_Replace {
 		// Snapshot the original + new value of every changed cell (capped) so the
 		// whole operation can be undone from the "Automatic backup" panel, even
 		// though every match already went through the mandatory Preview step.
-		$backup_created = ! empty( $backup_cells );
-		if ( $backup_created ) {
-			$current_user = wp_get_current_user();
-			update_option(
-				self::BACKUP_OPTION,
-				array(
-					'id'             => function_exists( 'wp_generate_uuid4' ) ? wp_generate_uuid4() : md5( uniqid( 'tsosksr', true ) ),
-					'time'           => time(),
-					'user'           => sanitize_user( (string) $current_user->user_login, true ),
-					'search'         => $params['search'],
-					'replace'        => $params['replace'],
-					'case_sensitive' => (bool) $params['case_sensitive'],
-					'is_regex'       => (bool) $params['is_regex'],
-					'rows'           => $stats['rows'],
-					'cells'          => count( $backup_cells ),
-					'cells_total'    => $stats['cells'],
-					'truncated'      => $backup_truncated,
-					'cells_data'     => $backup_cells,
-				),
-				false
-			);
+		$backup_created = ! empty( $backup_cells ) && $this->save_backup( $backup_id, $params, $stats, $backup_cells, $backup_truncated );
+		if ( ! empty( $backup_cells ) && ! $backup_created ) {
+			$stats['errors'][] = __( 'The automatic backup could not be saved (it was too large for the database), so this replace cannot be undone from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		// The rows were changed directly in the database: drop cached options/meta so the site sees the new values.
+		if ( $stats['rows'] > 0 ) {
+			wp_cache_flush();
+		}
+
+		$url_notice = '';
+		if ( $stats['rows'] > 0 ) {
+			$url_after = array( (string) get_option( 'siteurl' ), (string) get_option( 'home' ) );
+			if ( $url_after !== $url_before ) {
+				$url_notice        = __( 'Warning: the Site URL / Home URL stored in the database changed. If the site stops loading, restore the previous values (wp-config.php WP_HOME / WP_SITEURL) or use the backup restore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				$stats['errors'][] = $url_notice;
+			}
 		}
 
 		// Record in central activity log.
@@ -545,19 +745,58 @@ class TSOSK_Mod_Search_Replace {
 			)
 		);
 
-		wp_send_json_success( array(
-			'tables' => $stats['tables'],
-			'rows'   => $stats['rows'],
-			'cells'  => $stats['cells'],
-			'errors' => $stats['errors'],
-			'message' => sprintf(
+		wp_send_json_success(
+			array(
+				'tables'           => $stats['tables'],
+				'rows'             => $stats['rows'],
+				'cells'            => $stats['cells'],
+				'errors'           => $stats['errors'],
+				'skipped_cells'    => $this->skipped_cells,
+				'backup'           => $backup_created,
+				'backup_truncated' => $backup_truncated,
+				'message'          => sprintf(
 				/* translators: 1: tables, 2: rows, 3: cells */
-				__( 'Done. Replaced in %1$d table(s), %2$d row(s), %3$d cell(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$stats['tables'],
-				$stats['rows'],
-				$stats['cells']
+					__( 'Done. Replaced in %1$d table(s), %2$d row(s), %3$d cell(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$stats['tables'],
+					$stats['rows'],
+					$stats['cells']
+				),
+			)
+		);
+	}
+
+	/**
+	 * Store (or refresh) the automatic backup snapshot and confirm it really persisted.
+	 *
+	 * @param string $backup_id  Backup ID, stable for the whole run.
+	 * @param array  $params     Request params.
+	 * @param array  $stats      Running stats.
+	 * @param array  $cells      Changed cells (before/after).
+	 * @param bool   $truncated  Whether the snapshot hit the size cap.
+	 * @return bool
+	 */
+	private function save_backup( string $backup_id, array $params, array $stats, array $cells, bool $truncated ): bool {
+		$current_user = wp_get_current_user();
+		update_option(
+			self::BACKUP_OPTION,
+			array(
+				'id'             => $backup_id,
+				'time'           => time(),
+				'user'           => sanitize_user( (string) $current_user->user_login, true ),
+				'search'         => $params['search'],
+				'replace'        => $params['replace'],
+				'case_sensitive' => (bool) $params['case_sensitive'],
+				'is_regex'       => (bool) $params['is_regex'],
+				'rows'           => $stats['rows'],
+				'cells'          => count( $cells ),
+				'cells_total'    => $stats['cells'],
+				'truncated'      => $truncated,
+				'cells_data'     => $cells,
 			),
-		) );
+			false
+		);
+		$saved = get_option( self::BACKUP_OPTION );
+		return is_array( $saved ) && ( $saved['id'] ?? '' ) === $backup_id && ( (int) ( $saved['cells'] ?? 0 ) ) === count( $cells );
 	}
 
 	/**
@@ -570,7 +809,7 @@ class TSOSK_Mod_Search_Replace {
 	 */
 	public function ajax_restore_backup(): void {
 		check_ajax_referer( 'tsosk_sr_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -585,6 +824,7 @@ class TSOSK_Mod_Search_Replace {
 		$errors        = array();
 		$restored_rows = array();
 		$pk_cache      = array();
+		$failed_cells  = array();
 
 		foreach ( $backup['cells_data'] as $cell ) {
 			$table  = sanitize_text_field( (string) ( $cell['table'] ?? '' ) );
@@ -622,15 +862,25 @@ class TSOSK_Mod_Search_Replace {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$result = $wpdb->update( $table, array( $col => $before ), array( $pk => $pk_val ), array( '%s' ), array( '%s' ) );
 			if ( false === $result ) {
-				$errors[] = "Table {$table} PK {$pk_val}: " . $wpdb->last_error;
+				$errors[]       = "Table {$table} PK {$pk_val}: " . $wpdb->last_error;
+				$failed_cells[] = $cell;
 				continue;
 			}
 			++$restored;
 			$restored_rows[ $table . '|' . $pk_val ] = true;
 		}
 
-		// Consumed: a backup can only be restored once, so a stale snapshot can't be reapplied twice.
-		delete_option( self::BACKUP_OPTION );
+		// Consumed once restored. Cells whose write failed stay in the backup so the restore can be retried.
+		if ( empty( $failed_cells ) ) {
+			delete_option( self::BACKUP_OPTION );
+		} else {
+			$backup['cells_data'] = $failed_cells;
+			$backup['cells']      = count( $failed_cells );
+			update_option( self::BACKUP_OPTION, $backup, false );
+		}
+		if ( $restored > 0 ) {
+			wp_cache_flush();
+		}
 
 		TSOSK_Activity_Log::log(
 			'search-replace',
@@ -672,7 +922,7 @@ class TSOSK_Mod_Search_Replace {
 	 * Download the current automatic backup as a JSON file.
 	 */
 	public function download_backup(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		check_admin_referer( 'tsosk_sr_download_backup' );
@@ -736,15 +986,19 @@ class TSOSK_Mod_Search_Replace {
 			$scanned  = 0;
 
 			do {
-				$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d OFFSET %d';
-				$rows = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
+				$sql     = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d OFFSET %d';
+				$rows    = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
+				$fetched = is_array( $rows ) ? count( $rows ) : 0;
 				if ( ! $rows ) {
 					break;
 				}
 				$scanned += count( $rows );
 
 				foreach ( $rows as $row ) {
-					$pk_val  = $row[ $pk ] ?? null;
+					$pk_val = $row[ $pk ] ?? null;
+					if ( $this->is_own_backup_row( $table, $pk_val ) ) {
+						continue;
+					}
 					$changes = array();
 					foreach ( $cols as $col ) {
 						$orig = (string) ( $row[ $col ] ?? '' );
@@ -754,8 +1008,8 @@ class TSOSK_Mod_Search_Replace {
 						$after = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
 						if ( $after !== $orig ) {
 							$changes[ $col ] = array(
-								'before' => $preview ? mb_substr( $orig, 0, 300 ) : '',
-								'after'  => $preview ? mb_substr( $after, 0, 300 ) : '',
+								'before' => $preview ? $this->preview_excerpt( $orig, $after, true, $params ) : '',
+								'after'  => $preview ? $this->preview_excerpt( $orig, $after, false, $params ) : '',
 							);
 						}
 					}
@@ -765,35 +1019,42 @@ class TSOSK_Mod_Search_Replace {
 							'changes' => $changes,
 						);
 						if ( $preview && count( $matches ) >= $limit ) {
+							$this->truncated_tables[ $table ] = true;
 							return $matches;
 						}
 					}
 				}
 
 				$offset += $batch;
-			} while ( count( $rows ) === $batch && $scanned < $scan_cap );
+			} while ( $fetched === $batch && $scanned < $scan_cap );
+
+			if ( $preview && count( $rows ) === $batch && $scanned >= $scan_cap ) {
+				$this->truncated_tables[ $table ] = true;
+			}
 
 			return $matches;
 		}
 
-		$like_parts = array();
-		foreach ( $cols as $col ) {
-			$col_sql = $this->sql_ident( (string) $col );
-			if ( '' === $col_sql ) {
-				return array();
-			}
-			$like_parts[] = $col_sql . ' LIKE %s';
+		$args  = array();
+		$where = $this->build_like_clause( $cols, $search, $args );
+		if ( '' === $where ) {
+			return array();
 		}
-		$like_term = '%' . $wpdb->esc_like( $search ) . '%';
-		$where     = '(' . implode( ' OR ', $like_parts ) . ')';
-		$sql       = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' LIMIT %d';
-		$args      = array_merge( array_fill( 0, count( $cols ), $like_term ), array( $limit ) );
-		$rows      = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
+		$sql    = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d';
+		$args[] = $limit;
+		$rows   = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 		// phpcs:enable
+
+		if ( $preview && is_array( $rows ) && count( $rows ) >= $limit ) {
+			$this->truncated_tables[ $table ] = true;
+		}
 
 		$matches = array();
 		foreach ( (array) $rows as $row ) {
-			$pk_val  = $row[ $pk ] ?? null;
+			$pk_val = $row[ $pk ] ?? null;
+			if ( $this->is_own_backup_row( $table, $pk_val ) ) {
+				continue;
+			}
 			$changes = array();
 			foreach ( $cols as $col ) {
 				$orig = (string) ( $row[ $col ] ?? '' );
@@ -803,8 +1064,8 @@ class TSOSK_Mod_Search_Replace {
 				$after = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
 				if ( $after !== $orig ) {
 					$changes[ $col ] = array(
-						'before' => $preview ? mb_substr( $orig, 0, 300 ) : '',
-						'after'  => $preview ? mb_substr( $after, 0, 300 ) : '',
+						'before' => $preview ? $this->preview_excerpt( $orig, $after, true, $params ) : '',
+						'after'  => $preview ? $this->preview_excerpt( $orig, $after, false, $params ) : '',
 					);
 				}
 			}
@@ -840,10 +1101,18 @@ class TSOSK_Mod_Search_Replace {
 		$safe_pk    = $this->sql_ident( $pk );
 		$safe_cols  = $this->sql_ident_list( $cols );
 		if ( '' === $safe_table || '' === $safe_pk || '' === $safe_cols ) {
-			return array( 'rows' => 0, 'cells' => 0, 'errors' => array( __( 'Invalid table or column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) );
+			return array(
+				'rows'   => 0,
+				'cells'  => 0,
+				'errors' => array( __( 'Invalid table or column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			);
 		}
 
-		$stats = array( 'rows' => 0, 'cells' => 0, 'errors' => array() );
+		$stats = array(
+			'rows'   => 0,
+			'cells'  => 0,
+			'errors' => array(),
+		);
 
 		// Non-regex: always fetch from the start of the matching set — updated rows drop out of LIKE.
 		// Regex: scan the full table once with OFFSET (each row is visited exactly once).
@@ -853,8 +1122,9 @@ class TSOSK_Mod_Search_Replace {
 
 			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident().
 			do {
-				$sql  = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' LIMIT %d OFFSET %d';
-				$rows = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
+				$sql     = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d OFFSET %d';
+				$rows    = $wpdb->get_results( $wpdb->prepare( $sql, $batch, $offset ), ARRAY_A );
+				$fetched = is_array( $rows ) ? count( $rows ) : 0;
 
 				if ( ! $rows ) {
 					break;
@@ -862,7 +1132,7 @@ class TSOSK_Mod_Search_Replace {
 
 				$this->apply_row_updates( $table, $cols, $pk, $rows, $search, $replace, $case, $is_regex, $stats, $backup_cells, $backup_truncated );
 				$offset += $batch;
-			} while ( count( $rows ) === $batch );
+			} while ( $fetched === $batch );
 			// phpcs:enable
 
 			return $stats;
@@ -873,18 +1143,12 @@ class TSOSK_Mod_Search_Replace {
 
 		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Identifiers validated via sql_ident(); LIKE/PK values use prepare placeholders.
 		do {
-			$like_parts = array();
-			foreach ( $cols as $col ) {
-				$col_sql = $this->sql_ident( (string) $col );
-				if ( '' === $col_sql ) {
-					$stats['errors'][] = __( 'Invalid column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-					return $stats;
-				}
-				$like_parts[] = $col_sql . ' LIKE %s';
+			$args  = array();
+			$where = $this->build_like_clause( $cols, $search, $args );
+			if ( '' === $where ) {
+				$stats['errors'][] = __( 'Invalid column name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				return $stats;
 			}
-			$like_term = '%' . $wpdb->esc_like( $search ) . '%';
-			$where     = '(' . implode( ' OR ', $like_parts ) . ')';
-			$args      = array_fill( 0, count( $cols ), $like_term );
 
 			// Keyset pagination (PK > last seen), not a plain re-query from the
 			// start: re-querying "WHERE ... LIKE ..." with no lower bound
@@ -900,9 +1164,10 @@ class TSOSK_Mod_Search_Replace {
 				$args[] = (string) $last_pk;
 			}
 
-			$sql    = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d';
-			$args[] = $batch;
-			$rows   = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
+			$sql     = 'SELECT ' . $safe_pk . ', ' . $safe_cols . ' FROM ' . $safe_table . ' WHERE ' . $where . ' ORDER BY ' . $safe_pk . ' ASC LIMIT %d';
+			$args[]  = $batch;
+			$rows    = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
+			$fetched = is_array( $rows ) ? count( $rows ) : 0;
 			// phpcs:enable
 
 			if ( ! $rows ) {
@@ -916,7 +1181,7 @@ class TSOSK_Mod_Search_Replace {
 			if ( null === $last_pk ) {
 				break;
 			}
-		} while ( count( $rows ) === $batch );
+		} while ( $fetched === $batch );
 
 		return $stats;
 	}
@@ -930,18 +1195,18 @@ class TSOSK_Mod_Search_Replace {
 	 * @param array               $rows             Fetched rows.
 	 * @param string              $search           Search term.
 	 * @param string              $replace          Replacement.
-	 * @param bool                $case             Case-sensitive.
+	 * @param bool                $case_sensitive             Case-sensitive.
 	 * @param bool                $is_regex         Regex mode.
 	 * @param array<string,mixed> $stats            Stats array passed by reference.
 	 * @param array               $backup_cells     Backup snapshot accumulator (by reference, capped).
 	 * @param bool                $backup_truncated Set true once the backup cap is reached (by reference).
 	 */
-	private function apply_row_updates( string $table, array $cols, string $pk, array $rows, string $search, string $replace, bool $case, bool $is_regex, array &$stats, array &$backup_cells, bool &$backup_truncated ): void {
+	private function apply_row_updates( string $table, array $cols, string $pk, array $rows, string $search, string $replace, bool $case_sensitive, bool $is_regex, array &$stats, array &$backup_cells, bool &$backup_truncated ): void {
 		global $wpdb;
 
 		foreach ( $rows as $row ) {
 			$pk_val = $row[ $pk ] ?? null;
-			if ( null === $pk_val ) {
+			if ( null === $pk_val || $this->is_own_backup_row( $table, $pk_val ) ) {
 				continue;
 			}
 			$updates = array();
@@ -949,14 +1214,14 @@ class TSOSK_Mod_Search_Replace {
 
 			foreach ( $cols as $col ) {
 				$orig = (string) ( $row[ $col ] ?? '' );
-				if ( '' === $orig || ! $this->value_contains( $search, $orig, $case, $is_regex ) ) {
+				if ( '' === $orig || ! $this->value_contains( $search, $orig, $case_sensitive, $is_regex ) ) {
 					continue;
 				}
-				$new = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
+				$new = $this->safe_replace( $search, $replace, $orig, $case_sensitive, $is_regex );
 				if ( $new !== $orig ) {
 					$updates[ $col ] = $new;
 					$formats[]       = '%s';
-					$stats['cells']++;
+					++$stats['cells'];
 
 					if ( count( $backup_cells ) < self::BACKUP_CELL_CAP ) {
 						$backup_cells[] = array(
@@ -978,7 +1243,7 @@ class TSOSK_Mod_Search_Replace {
 				if ( false === $result ) {
 					$stats['errors'][] = "Table {$table} PK {$pk_val}: " . $wpdb->last_error;
 				} else {
-					$stats['rows']++;
+					++$stats['rows'];
 				}
 			}
 		}
@@ -1243,7 +1508,7 @@ class TSOSK_Mod_Search_Replace {
 				<?php endif; ?>
 				<p>
 					<button type="button" class="button button-primary" id="tsosk-sr-backup-restore-btn"
-					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Restore backup', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 					<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tsosk_sr_download_backup' ), 'tsosk_sr_download_backup' ) ); ?>">
@@ -1263,7 +1528,7 @@ class TSOSK_Mod_Search_Replace {
 		?>
 		<div class="tsosk-field-help-list">
 			<p><strong><?php esc_html_e( 'Search for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
-				<?php esc_html_e( 'The exact text you want to find. It is matched inside table cells (post content, options, meta, etc.).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<?php esc_html_e( 'The exact text you want to find. It is matched inside table cells (post content, options, meta, etc.). URLs are also replaced where they are stored in JSON with escaped slashes (https:\\/\\/…), as in Elementor or block data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<p><strong><?php esc_html_e( 'Replace with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
 				<?php esc_html_e( 'The new text. Leave empty to delete the matched text.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<p><strong><?php esc_html_e( 'Case-sensitive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
@@ -1276,6 +1541,9 @@ class TSOSK_Mod_Search_Replace {
 		<?php
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		global $wpdb;
 		$nonce           = wp_create_nonce( 'tsosk_sr_nonce' );
@@ -1312,18 +1580,18 @@ class TSOSK_Mod_Search_Replace {
 					<th style="width:180px;"><?php esc_html_e( 'Search for', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sr-search"
-						       style="width:100%;" autocomplete="off" spellcheck="false"
-						       value="<?php echo esc_attr( $prefill_search ); ?>"
-						       placeholder="<?php esc_attr_e( 'Text or regex pattern to find…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								style="width:100%;" autocomplete="off" spellcheck="false"
+								value="<?php echo esc_attr( $prefill_search ); ?>"
+								placeholder="<?php esc_attr_e( 'Text or regex pattern to find…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Replace with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<input type="text" id="tsosk-sr-replace"
-						       style="width:100%;" autocomplete="off" spellcheck="false"
-						       value="<?php echo esc_attr( $prefill_replace ); ?>"
-						       placeholder="<?php esc_attr_e( 'Replacement text (leave empty to delete matches)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								style="width:100%;" autocomplete="off" spellcheck="false"
+								value="<?php echo esc_attr( $prefill_replace ); ?>"
+								placeholder="<?php esc_attr_e( 'Replacement text (leave empty to delete matches)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					</td>
 				</tr>
 				<tr>
@@ -1344,16 +1612,22 @@ class TSOSK_Mod_Search_Replace {
 				</tr>
 			</table>
 
-			<?php $this->render_field_help(); ?>
-
-			<?php /* ── Table selection ── */ ?>
-			<div class="tsosk-sr-tables-block">
-				<label class="tsosk-sr-tables-label">
-					<?php esc_html_e( 'Tables to search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</label>
+			<?php /* ── Table selection (collapsed: the defaults suit most searches) ── */ ?>
+			<details class="tsosk-sr-tables-block">
+				<summary class="tsosk-sr-tables-summary">
+					<span class="tsosk-sr-tables-label"><?php esc_html_e( 'Tables to search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<span class="description" id="tsosk-sr-table-count"
+							data-template="<?php echo esc_attr( __( '{shown} of {total} tables shown · {selected} selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>"
+							data-empty="<?php echo esc_attr( __( 'No tables match your search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>"></span>
+				</summary>
 				<p class="description tsosk-sr-tables-desc">
 					<?php esc_html_e( 'Tick the tables where the text might live. Unsure? Start with “Select WordPress tables”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
+				<div class="tsosk-sr-table-filter">
+					<label class="screen-reader-text" for="tsosk-sr-table-filter"><?php esc_html_e( 'Filter tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
+					<input type="search" id="tsosk-sr-table-filter" class="regular-text" autocomplete="off"
+							placeholder="<?php esc_attr_e( 'Type to filter tables (e.g. postmeta, options, woocommerce)…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+				</div>
 				<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
 					<button type="button" class="button button-small" id="tsosk-sr-select-wp">
 						<?php esc_html_e( 'Select WordPress tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1366,30 +1640,30 @@ class TSOSK_Mod_Search_Replace {
 					</button>
 				</div>
 				<div id="tsosk-sr-table-list"
-				     style="max-height:200px;overflow-y:auto;border:1px solid #c3c4c7;border-radius:4px;padding:6px 10px;background:#fff;columns:2 250px;gap:16px;">
+					style="max-height:200px;overflow-y:auto;border:1px solid #c3c4c7;border-radius:4px;padding:6px 10px;background:#fff;columns:2 250px;gap:16px;">
 					<?php foreach ( $tables as $tbl ) : ?>
 					<label style="display:block;white-space:nowrap;font-size:13px;padding:2px 0;">
 						<input type="checkbox" class="tsosk-sr-table-cb"
-						       value="<?php echo esc_attr( $tbl['name'] ); ?>"
-						       data-is-wp="<?php echo $tbl['is_wp'] ? '1' : '0'; ?>"
-						       <?php checked( $tbl['is_wp'] ); ?>>
+								value="<?php echo esc_attr( $tbl['name'] ); ?>"
+								data-is-wp="<?php echo $tbl['is_wp'] ? '1' : '0'; ?>"
+								<?php checked( $tbl['is_wp'] ); ?>>
 						<span class="tsosk-code" style="font-size:12px;"><?php echo esc_html( $tbl['name'] ); ?></span>
 						<span style="color:#8c8f94;font-size:11px;">(<?php echo esc_html( $tbl['size'] ); ?>)</span>
 					</label>
 					<?php endforeach; ?>
 				</div>
-			</div>
+			</details>
 
 			<?php /* ── Action buttons ── */ ?>
 			<div class="tsosk-sr-actions">
 				<button class="button" id="tsosk-sr-preview-btn"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					🔍 <?php esc_html_e( 'Preview changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="description tsosk-sr-action-hint"><?php esc_html_e( 'Step 1 — shows what would change, without writing anything.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<button class="button button-primary" id="tsosk-sr-execute-btn"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-				        style="display:none;">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"
+						style="display:none;">
 					⚡ <?php esc_html_e( 'Execute replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="description tsosk-sr-action-hint tsosk-sr-execute-hint" style="display:none;"><?php esc_html_e( 'Step 2 — applies the replace to the database. Only available after preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -1398,13 +1672,15 @@ class TSOSK_Mod_Search_Replace {
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-sr-msg"></span>
 			</div>
-		</div>
 
-		<?php /* ── Preview results ── */ ?>
-		<div id="tsosk-sr-preview-wrap" style="display:none;" class="tsosk-card">
-			<h3><?php esc_html_e( 'Preview — Changes to be made', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-notice tsosk-notice-warn" id="tsosk-sr-preview-notice"></div>
-			<div id="tsosk-sr-preview-body"></div>
+			<?php /* ── Preview results ── */ ?>
+			<div id="tsosk-sr-preview-wrap" style="display:none;" class="tsosk-sr-preview-inner">
+				<h3><?php esc_html_e( 'Preview — Changes to be made', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<div class="tsosk-notice tsosk-notice-warn" id="tsosk-sr-preview-notice"></div>
+				<div id="tsosk-sr-preview-body"></div>
+			</div>
+
+			<?php $this->render_field_help(); ?>
 		</div>
 
 		<p class="description" style="margin-top:16px;">

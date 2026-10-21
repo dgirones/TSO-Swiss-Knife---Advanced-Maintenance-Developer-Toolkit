@@ -16,10 +16,16 @@ class TSOSK_Mod_Meta_Editor {
 
 	private const PER_PAGE = 80;
 
-	/** @var TSOSK_Mod_Meta_Editor|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Meta_Editor|null
+	 */
 	private static $instance = null;
 
 	/**
+	 * Get instance.
+	 *
 	 * @return TSOSK_Mod_Meta_Editor
 	 */
 	public static function get_instance(): self {
@@ -29,6 +35,9 @@ class TSOSK_Mod_Meta_Editor {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_me_search', array( $this, 'ajax_search' ) );
 		add_action( 'wp_ajax_tsosk_me_get', array( $this, 'ajax_get' ) );
@@ -60,6 +69,64 @@ class TSOSK_Mod_Meta_Editor {
 	}
 
 	/**
+	 * Key fragments that mark a meta key as holding secrets (credentials, tokens, 2FA seeds).
+	 *
+	 * @return string[]
+	 */
+	private static function get_blocked_fragments(): array {
+		return array(
+			'license',
+			'api_key',
+			'api_secret',
+			'secret',
+			'private_key',
+			'password',
+			'token',
+			'credential',
+			'oauth',
+			'jwt',
+			'auth_key',
+			'auth_salt',
+			'totp',
+			'two_factor',
+			'two-factor',
+			'backup_codes',
+		);
+	}
+
+	/**
+	 * SQL that excludes protected keys (used so value searches cannot probe hidden values).
+	 *
+	 * @param string $context post|user.
+	 * @param array  $params  Prepare() arguments, appended to.
+	 * @return string SQL fragment starting with " AND ".
+	 */
+	private function protected_keys_exclusion_sql( string $context, array &$params ): string {
+		global $wpdb;
+		$keys = self::get_protected_keys( $context );
+		if ( 'user' === $context ) {
+			$keys[] = $wpdb->get_blog_prefix() . 'capabilities';
+			$keys[] = $wpdb->get_blog_prefix() . 'user_level';
+		}
+		$sql = ' AND meta_key NOT IN (' . implode( ',', array_fill( 0, count( $keys ), '%s' ) ) . ')';
+		foreach ( $keys as $key ) {
+			$params[] = $key;
+		}
+		$patterns = self::get_blocked_fragments();
+		if ( 'user' === $context ) {
+			$patterns[] = '_capabilities';
+			$patterns[] = '_user_level';
+		}
+		foreach ( $patterns as $fragment ) {
+			$sql     .= ' AND meta_key NOT LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $fragment ) . '%';
+		}
+		return $sql;
+	}
+
+	/**
+	 * Is protected key.
+	 *
 	 * @param string $key     Meta key.
 	 * @param string $context post|user.
 	 * @return bool
@@ -78,9 +145,8 @@ class TSOSK_Mod_Meta_Editor {
 				return true;
 			}
 		}
-		$blocked = array( 'license', 'api_key', 'api_secret', 'secret_key', 'private_key', 'password' );
-		$lower   = strtolower( $key );
-		foreach ( $blocked as $fragment ) {
+		$lower = strtolower( $key );
+		foreach ( self::get_blocked_fragments() as $fragment ) {
 			if ( str_contains( $lower, $fragment ) ) {
 				return true;
 			}
@@ -89,6 +155,8 @@ class TSOSK_Mod_Meta_Editor {
 	}
 
 	/**
+	 * Sanitize context.
+	 *
 	 * @return string post|user
 	 */
 	private function sanitize_context(): string {
@@ -97,6 +165,9 @@ class TSOSK_Mod_Meta_Editor {
 		return 'user' === $context ? 'user' : 'post';
 	}
 
+	/**
+	 * AJAX: search.
+	 */
 	public function ajax_search(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -112,13 +183,13 @@ class TSOSK_Mod_Meta_Editor {
 		$offset    = ( $page - 1 ) * self::PER_PAGE;
 
 		if ( 'user' === $context ) {
-			$table      = $wpdb->usermeta;
-			$id_col     = 'user_id';
-			$meta_id    = 'umeta_id';
+			$table   = $wpdb->usermeta;
+			$id_col  = 'user_id';
+			$meta_id = 'umeta_id';
 		} else {
-			$table      = $wpdb->postmeta;
-			$id_col     = 'post_id';
-			$meta_id    = 'meta_id';
+			$table   = $wpdb->postmeta;
+			$id_col  = 'post_id';
+			$meta_id = 'meta_id';
 		}
 
 		$where  = 'WHERE 1=1';
@@ -131,9 +202,10 @@ class TSOSK_Mod_Meta_Editor {
 		if ( '' !== $search ) {
 			$like = '%' . $wpdb->esc_like( $search ) . '%';
 			if ( $object_id > 0 ) {
-				$where   .= ' AND (meta_key LIKE %s OR meta_value LIKE %s)';
+				$where   .= ' AND (meta_key LIKE %s OR (meta_value LIKE %s';
 				$params[] = $like;
 				$params[] = $like;
+				$where   .= $this->protected_keys_exclusion_sql( $context, $params ) . '))';
 			} else {
 				// Without an object ID, scanning meta_value across the whole table is too heavy and can leak sensitive previews.
 				$where   .= ' AND meta_key LIKE %s';
@@ -149,12 +221,12 @@ class TSOSK_Mod_Meta_Editor {
 			$total = (int) $wpdb->get_var( $count_sql );
 		}
 
-		$list_sql = "SELECT {$meta_id} AS meta_id, {$id_col} AS object_id, meta_key, meta_value
+		$list_sql    = "SELECT {$meta_id} AS meta_id, {$id_col} AS object_id, meta_key, meta_value
 			FROM {$table} {$where}
 			ORDER BY {$meta_id} DESC
 			LIMIT %d OFFSET %d";
 		$list_params = array_merge( $params, array( self::PER_PAGE, $offset ) );
-		$rows = $wpdb->get_results( $wpdb->prepare( $list_sql, ...$list_params ), ARRAY_A );
+		$rows        = $wpdb->get_results( $wpdb->prepare( $list_sql, ...$list_params ), ARRAY_A );
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		$items = array();
@@ -183,6 +255,9 @@ class TSOSK_Mod_Meta_Editor {
 		);
 	}
 
+	/**
+	 * AJAX: get.
+	 */
 	public function ajax_get(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -236,6 +311,9 @@ class TSOSK_Mod_Meta_Editor {
 		);
 	}
 
+	/**
+	 * AJAX: save.
+	 */
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -255,7 +333,7 @@ class TSOSK_Mod_Meta_Editor {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT umeta_id, user_id, meta_key FROM {$wpdb->usermeta} WHERE umeta_id = %d",
+					"SELECT umeta_id, user_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE umeta_id = %d",
 					$meta_id
 				),
 				ARRAY_A
@@ -264,7 +342,7 @@ class TSOSK_Mod_Meta_Editor {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT meta_id, post_id, meta_key FROM {$wpdb->postmeta} WHERE meta_id = %d",
+					"SELECT meta_id, post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_id = %d",
 					$meta_id
 				),
 				ARRAY_A
@@ -323,12 +401,15 @@ class TSOSK_Mod_Meta_Editor {
 				__( 'Meta updated: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
-			array( 'key' => $key )
+			$this->log_details( $context, $row, $key, (string) $row['meta_value'], $stored )
 		);
 
 		wp_send_json_success( __( 'Meta value saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: delete.
+	 */
 	public function ajax_delete(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -346,7 +427,7 @@ class TSOSK_Mod_Meta_Editor {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT umeta_id, user_id, meta_key FROM {$wpdb->usermeta} WHERE umeta_id = %d",
+					"SELECT umeta_id, user_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE umeta_id = %d",
 					$meta_id
 				),
 				ARRAY_A
@@ -362,7 +443,7 @@ class TSOSK_Mod_Meta_Editor {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT meta_id, post_id, meta_key FROM {$wpdb->postmeta} WHERE meta_id = %d",
+					"SELECT meta_id, post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_id = %d",
 					$meta_id
 				),
 				ARRAY_A
@@ -384,12 +465,15 @@ class TSOSK_Mod_Meta_Editor {
 				__( 'Meta deleted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				(string) $key
 			),
-			array( 'key' => (string) $key )
+			$this->log_details( $context, $row, (string) $key, (string) $row['meta_value'], '' )
 		);
 
 		wp_send_json_success( __( 'Meta row deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * AJAX: add.
+	 */
 	public function ajax_add(): void {
 		check_ajax_referer( 'tsosk_me_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -420,7 +504,7 @@ class TSOSK_Mod_Meta_Editor {
 				}
 				global $wpdb;
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->insert(
+				$inserted = $wpdb->insert(
 					$wpdb->usermeta,
 					array(
 						'user_id'    => $object_id,
@@ -429,9 +513,13 @@ class TSOSK_Mod_Meta_Editor {
 					),
 					array( '%d', '%s', '%s' )
 				);
+				if ( false === $inserted ) {
+					wp_send_json_error( __( 'Could not add the meta row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
 				wp_cache_delete( $object_id, 'user_meta' );
-			} else {
-				add_user_meta( $object_id, $key, $value, false );
+			} elseif ( false === add_user_meta( $object_id, $key, wp_slash( $value ), false ) ) {
+				// add_user_meta() unslashes its input; the value is re-slashed above so backslashes survive.
+				wp_send_json_error( __( 'Could not add the meta row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 		} else {
 			if ( ! get_post( $object_id ) ) {
@@ -444,7 +532,7 @@ class TSOSK_Mod_Meta_Editor {
 				}
 				global $wpdb;
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$wpdb->insert(
+				$inserted = $wpdb->insert(
 					$wpdb->postmeta,
 					array(
 						'post_id'    => $object_id,
@@ -453,9 +541,13 @@ class TSOSK_Mod_Meta_Editor {
 					),
 					array( '%d', '%s', '%s' )
 				);
+				if ( false === $inserted ) {
+					wp_send_json_error( __( 'Could not add the meta row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
 				wp_cache_delete( $object_id, 'post_meta' );
-			} else {
-				add_post_meta( $object_id, $key, $value, false );
+			} elseif ( false === add_post_meta( $object_id, $key, wp_slash( $value ), false ) ) {
+				// add_post_meta() unslashes its input; the value is re-slashed above so backslashes survive.
+				wp_send_json_error( __( 'Could not add the meta row.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			}
 		}
 
@@ -467,13 +559,45 @@ class TSOSK_Mod_Meta_Editor {
 				__( 'Meta added: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$key
 			),
-			array( 'key' => $key )
+			array(
+				'name'      => sprintf( '%s (%s #%d)', $key, $context, $object_id ),
+				'key'       => $key,
+				'context'   => $context,
+				'object_id' => $object_id,
+				'new'       => mb_substr( $value, 0, TSOSK_Activity_Log::DETAIL_TRUNCATE ),
+			)
 		);
 
 		wp_send_json_success( __( 'Meta row added.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
+	 * Activity Log details for a meta change (values truncated) so edits and deletes can be recovered by hand.
+	 *
+	 * @param string              $context post|user.
+	 * @param array<string,mixed> $row     DB row (post_id or user_id).
+	 * @param string              $key     Meta key.
+	 * @param string              $old     Previous raw value.
+	 * @param string              $new_value New stored value.
+	 * @return array<string,mixed>
+	 */
+	private function log_details( string $context, array $row, string $key, string $old, string $new_value ): array {
+		$max       = TSOSK_Activity_Log::DETAIL_TRUNCATE;
+		$object_id = (int) ( $row['user_id'] ?? $row['post_id'] ?? 0 );
+		return array(
+			// "name" is what the History tab renders (with Before/After values).
+			'name'      => sprintf( '%s (%s #%d)', $key, $context, $object_id ),
+			'key'       => $key,
+			'context'   => $context,
+			'object_id' => $object_id,
+			'old'       => mb_substr( $old, 0, $max ),
+			'new'       => mb_substr( $new_value, 0, $max ),
+		);
+	}
+
+	/**
+	 * Preview.
+	 *
 	 * @param string $value Raw value.
 	 * @return string
 	 */
@@ -504,7 +628,7 @@ class TSOSK_Mod_Meta_Editor {
 			return maybe_serialize( $value );
 		}
 
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- Admin-only meta editor validates before re-serializing.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged -- Admin-only meta editor validates before re-serializing.
 		$parsed = @unserialize( $value, array( 'allowed_classes' => false ) );
 		if ( false === $parsed && 'b:0;' !== $value ) {
 			return new WP_Error(
@@ -601,13 +725,16 @@ class TSOSK_Mod_Meta_Editor {
 			<p><strong><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
 				<?php esc_html_e( 'Leave empty to search across the whole site, or enter one ID to see only that post or user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<p><strong><?php esc_html_e( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
-				<?php esc_html_e( 'Search in meta key names and values — e.g. “elementor” or “_thumbnail”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<?php esc_html_e( 'Search in meta key names — e.g. “elementor” or “_thumbnail”. Values are searched only when a Post/User ID is set.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<p><strong><?php esc_html_e( 'Protected keys', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
-				<?php esc_html_e( 'Session tokens, capabilities, and keys containing “license” or “api_key” cannot be edited — this prevents breaking logins or licenses.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<?php esc_html_e( 'Session tokens, capabilities, and keys containing words such as “license”, “password”, “token”, “secret” or “two_factor” cannot be viewed or edited — this prevents breaking logins or licenses.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 		</div>
 		<?php
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce = wp_create_nonce( 'tsosk_me_nonce' );
 		?>
@@ -636,19 +763,19 @@ class TSOSK_Mod_Meta_Editor {
 				<div class="tsosk-me-field">
 					<label for="tsosk-me-object-id"><?php esc_html_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 					<input type="number" id="tsosk-me-object-id" min="0" step="1"
-					       placeholder="<?php esc_attr_e( 'All (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-					       style="width:140px;">
+							placeholder="<?php esc_attr_e( 'All (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							style="width:140px;">
 					<span class="tsosk-me-field-hint"><?php esc_html_e( 'One post or user only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-me-field" style="flex:1;min-width:200px;">
 					<label for="tsosk-me-search"><?php esc_html_e( 'Filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 					<input type="text" id="tsosk-me-search"
-					       placeholder="<?php esc_attr_e( 'Key or value contains…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-					       style="width:100%;" autocomplete="off">
+							placeholder="<?php esc_attr_e( 'Key or value contains…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							style="width:100%;" autocomplete="off">
 				</div>
 				<div class="tsosk-me-field" style="align-self:flex-end;">
 					<button type="button" class="button button-primary" id="tsosk-me-search-btn"
-					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Search', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				</div>
@@ -685,9 +812,9 @@ class TSOSK_Mod_Meta_Editor {
 			<textarea id="tsosk-me-edit-value" rows="8" style="width:100%;font-family:monospace;"></textarea>
 			<p style="margin-top:10px;">
 				<button type="button" class="button button-primary" id="tsosk-me-save"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<button type="button" class="button" id="tsosk-me-delete"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Delete row', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Delete row', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-me-edit-msg"></span>
 			</p>
 		</div>
@@ -699,13 +826,13 @@ class TSOSK_Mod_Meta_Editor {
 			</p>
 			<div class="tsosk-toolbar" style="flex-wrap:wrap;gap:8px;">
 				<input type="number" id="tsosk-me-add-object" min="1" step="1"
-				       placeholder="<?php esc_attr_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="width:120px;">
+						placeholder="<?php esc_attr_e( 'Post/User ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="width:120px;">
 				<input type="text" id="tsosk-me-add-key"
-				       placeholder="<?php esc_attr_e( 'Meta key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:180px;">
+						placeholder="<?php esc_attr_e( 'Meta key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:180px;">
 				<input type="text" id="tsosk-me-add-value"
-				       placeholder="<?php esc_attr_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:220px;">
+						placeholder="<?php esc_attr_e( 'Value', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" style="min-width:220px;">
 				<button type="button" class="button" id="tsosk-me-add-btn"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Add meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-me-add-msg"></span>
 			</div>
 		</div>

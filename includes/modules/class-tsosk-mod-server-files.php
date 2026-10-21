@@ -12,10 +12,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Server Files module.
+ */
 class TSOSK_Mod_Server_Files {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Server_Files|null
+	 */
 	private static $instance = null;
 
+	/** Option holding the version each file had before its last save. */
+	private const PREVIOUS_OPTION = 'tsosk_sf_previous';
+
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -23,14 +39,19 @@ class TSOSK_Mod_Server_Files {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sf_save', array( $this, 'ajax_save' ) );
+		add_action( 'wp_ajax_tsosk_sf_previous', array( $this, 'ajax_previous' ) );
+		add_action( 'wp_ajax_tsosk_sf_sitemap_check', array( $this, 'ajax_sitemap_check' ) );
 	}
 
 	/** AJAX: save an editable file. */
 	public function ajax_save(): void {
 		check_ajax_referer( 'tsosk_sf_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -58,10 +79,59 @@ class TSOSK_Mod_Server_Files {
 			wp_send_json_error( __( 'File is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		// A broken .htaccess answers HTTP 500 on the whole site, wp-admin included, and cannot be fixed from here afterwards.
+		// Remember the previous version and the site's status so a save that breaks the site can be undone at once.
+		$is_htaccess = in_array( $key, array( 'htaccess', 'htaccess_root' ), true );
+		$previous    = false;
+		$baseline    = 0;
+		if ( file_exists( $path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local server-root file, not a remote URL.
+			$previous = file_get_contents( $path );
+		}
+		if ( $is_htaccess ) {
+			$baseline = $this->probe_home_status();
+		}
+
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- robots.txt and .htaccess must be written at the server root; wp_upload_dir() is not appropriate for these system files.
-		$result = file_put_contents( $path, $content );
+		$result = file_put_contents( $path, $content, LOCK_EX );
 		if ( false === $result ) {
 			wp_send_json_error( __( 'Could not save the file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( false !== $previous && $previous !== $content ) {
+			$this->store_previous( $key, $previous );
+		}
+
+		if ( $is_htaccess && $baseline > 0 && $baseline < 500 ) {
+			$after = $this->probe_home_status();
+			if ( $after >= 500 ) {
+				if ( false !== $previous ) {
+					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Restoring the server-root file that was just replaced.
+					file_put_contents( $path, $previous, LOCK_EX );
+				} else {
+					wp_delete_file( $path );
+				}
+				TSOSK_Activity_Log::log(
+					'server-files',
+					'rollback',
+					sprintf(
+						/* translators: %s: file key */
+						__( 'Server file save undone because the site stopped responding: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$key
+					),
+					array(
+						'file'   => $key,
+						'status' => $after,
+					)
+				);
+				wp_send_json_error(
+					sprintf(
+						/* translators: %d: HTTP status code returned by the site, e.g. 500 */
+						__( 'The new content made the site answer with HTTP %d, so the previous version was restored. Check the syntax and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$after
+					)
+				);
+			}
 		}
 
 		TSOSK_Activity_Log::log(
@@ -76,6 +146,88 @@ class TSOSK_Mod_Server_Files {
 		);
 
 		wp_send_json_success( __( 'File saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/**
+	 * Remember the version a file had before the last save, so it can be loaded back into the editor.
+	 *
+	 * @param string $key     File key.
+	 * @param string $content Previous file content.
+	 */
+	private function store_previous( string $key, string $content ): void {
+		if ( strlen( $content ) > 262144 ) {
+			return;
+		}
+		$all = get_option( self::PREVIOUS_OPTION, array() );
+		if ( ! is_array( $all ) ) {
+			$all = array();
+		}
+		$all[ $key ] = array(
+			'content' => $content,
+			'time'    => time(),
+		);
+		update_option( self::PREVIOUS_OPTION, $all, false );
+	}
+
+	/**
+	 * Stored previous version of a file.
+	 *
+	 * @param string $key File key.
+	 * @return array{content:string,time:int}|null
+	 */
+	private function get_previous( string $key ): ?array {
+		$all = get_option( self::PREVIOUS_OPTION, array() );
+		if ( ! is_array( $all ) || ! isset( $all[ $key ]['content'] ) ) {
+			return null;
+		}
+		return array(
+			'content' => (string) $all[ $key ]['content'],
+			'time'    => (int) ( $all[ $key ]['time'] ?? 0 ),
+		);
+	}
+
+	/** AJAX: return the version a file had before its last save (loaded into the editor, never written). */
+	public function ajax_previous(): void {
+		check_ajax_referer( 'tsosk_sf_nonce', 'nonce' );
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$key = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+		if ( ! in_array( $key, array( 'robots', 'robots_local', 'htaccess', 'htaccess_root' ), true ) ) {
+			wp_send_json_error( __( 'Invalid file key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$previous = $this->get_previous( $key );
+		if ( null === $previous ) {
+			wp_send_json_error( __( 'There is no previous version stored for this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		wp_send_json_success(
+			array(
+				'content' => $previous['content'],
+				'message' => sprintf(
+					/* translators: %s: date and time of the version */
+					__( 'Version from %s loaded into the editor. Review it and press Save Changes to apply it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $previous['time'] )
+				),
+			)
+		);
+	}
+
+	/**
+	 * HTTP status of the site's home page (0 when the request itself fails, e.g. loopback blocked).
+	 *
+	 * @return int
+	 */
+	private function probe_home_status(): int {
+		$response = wp_remote_get(
+			add_query_arg( 'tsosk_probe', (string) time(), home_url( '/' ) ),
+			array(
+				'timeout'     => 8,
+				'redirection' => 3,
+				'sslverify'   => false, // Local probe of this same site; only the status code is read.
+				'user-agent'  => 'TSO Swiss Knife Server Files Check/1.0',
+			)
+		);
+		return is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
 	}
 
 	/** Detect the robots.txt path (may be in public_html parent or ABSPATH). */
@@ -110,7 +262,7 @@ class TSOSK_Mod_Server_Files {
 				break; // Reached filesystem root.
 			}
 			$dir = $parent;
-			$levels++;
+			++$levels;
 		}
 
 		// 3. Return document root path as the "create here" destination.
@@ -166,7 +318,7 @@ class TSOSK_Mod_Server_Files {
 				return $parent . '/.htaccess';
 			}
 			$dir = $parent;
-			$levels++;
+			++$levels;
 		}
 
 		return tsosk_join_wp_root( '.htaccess' );
@@ -201,41 +353,47 @@ class TSOSK_Mod_Server_Files {
 		return $this->root_robots_path();
 	}
 
-	/** Detect sitemap files from popular plugins. */
-	private function detect_sitemaps(): array {
+	/**
+	 * Detect sitemap files from popular plugins.
+	 *
+	 * @param bool $verify Also request every URL over HTTP. Off while rendering the screen (so the page makes no
+	 *                     HTTP API calls); on for the background check that follows.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function detect_sitemaps( bool $verify = false ): array {
 		$sitemaps = array();
 		$abspath  = tsosk_get_wp_root_dir();
 
-		// Build a helper: known plugin slug → plugin name + sitemap URL pattern
+		// Build a helper: known plugin slug → plugin name + sitemap URL pattern.
 		$known_plugins = array(
-			// XML Sitemap Generator for Google (Auctollo) — multiple known slugs
-			'google-sitemap-generator/sitemap.php'         => 'XML Sitemap Generator for Google',
-			'googlesitemaps/sitemap.php'                    => 'XML Sitemap Generator for Google',
+			// XML Sitemap Generator for Google (Auctollo) — multiple known slugs.
+			'google-sitemap-generator/sitemap.php'        => 'XML Sitemap Generator for Google',
+			'googlesitemaps/sitemap.php'                  => 'XML Sitemap Generator for Google',
 			'google-sitemap-generator/google-sitemap-generator.php' => 'XML Sitemap Generator for Google',
-			// Yoast SEO
-			'wordpress-seo/wp-seo.php'                     => 'Yoast SEO',
-			'wordpress-seo-premium/wp-seo-premium.php'     => 'Yoast SEO Premium',
-			// All in One SEO
-			'all-in-one-seo-pack/all_in_one_seo_pack.php'  => 'All in One SEO',
-			'aioseo/aioseo.php'                            => 'All in One SEO (Pro)',
-			// Rank Math
-			'seo-by-rank-math/rank-math.php'               => 'Rank Math SEO',
-			'seo-by-rank-math-pro/rank-math-pro.php'       => 'Rank Math SEO Pro',
-			// The SEO Framework
-			'autodescription/autodescription.php'          => 'The SEO Framework',
-			// SEOPress
-			'wp-seopress/seopress.php'                     => 'SEOPress',
-			'wp-seopress-pro/seopress-pro.php'             => 'SEOPress Pro',
-			// Slim SEO
-			'slim-seo/slim-seo.php'                        => 'Slim SEO',
-			// XML Sitemap & Google News
-			'xml-sitemap-feed/xml-sitemap.php'             => 'XML Sitemap & Google News',
-			// Jetpack (has sitemap)
-			'jetpack/jetpack.php'                          => 'Jetpack',
+			// Yoast SEO.
+			'wordpress-seo/wp-seo.php'                    => 'Yoast SEO',
+			'wordpress-seo-premium/wp-seo-premium.php'    => 'Yoast SEO Premium',
+			// All in One SEO.
+			'all-in-one-seo-pack/all_in_one_seo_pack.php' => 'All in One SEO',
+			'aioseo/aioseo.php'                           => 'All in One SEO (Pro)',
+			// Rank Math.
+			'seo-by-rank-math/rank-math.php'              => 'Rank Math SEO',
+			'seo-by-rank-math-pro/rank-math-pro.php'      => 'Rank Math SEO Pro',
+			// The SEO Framework.
+			'autodescription/autodescription.php'         => 'The SEO Framework',
+			// SEOPress.
+			'wp-seopress/seopress.php'                    => 'SEOPress',
+			'wp-seopress-pro/seopress-pro.php'            => 'SEOPress Pro',
+			// Slim SEO.
+			'slim-seo/slim-seo.php'                       => 'Slim SEO',
+			// XML Sitemap & Google News.
+			'xml-sitemap-feed/xml-sitemap.php'            => 'XML Sitemap & Google News',
+			// Jetpack (has sitemap).
+			'jetpack/jetpack.php'                         => 'Jetpack',
 		);
 
 		// Which active plugins are actually sitemaps-capable?
-		$active = (array) get_option( 'active_plugins', array() );
+		$active     = TSOSK_Support::get_active_plugin_files();
 		$active_seo = array();
 		foreach ( $active as $plugin_file ) {
 			if ( isset( $known_plugins[ $plugin_file ] ) ) {
@@ -243,10 +401,10 @@ class TSOSK_Mod_Server_Files {
 			}
 		}
 
-		$already_urls = array(); // Track URLs added to avoid duplicates
+		$already_urls = array(); // Track URLs added to avoid duplicates.
 
-		// Helper closure to add without duplicate
-		$add = function( array $entry ) use ( &$sitemaps, &$already_urls ) {
+		// Helper closure to add without duplicate.
+		$add = function ( array $entry ) use ( &$sitemaps, &$already_urls ) {
 			$key = rtrim( $entry['url'], '/' );
 			if ( ! in_array( $key, $already_urls, true ) ) {
 				$sitemaps[]     = $entry;
@@ -255,55 +413,62 @@ class TSOSK_Mod_Server_Files {
 		};
 
 		// ── 1. WordPress Core Sitemap (built-in since WP 5.5) ─────────────────
-		// Only show if NOT disabled by a plugin or filter.
-		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core filter.
-		$core_disabled = ! apply_filters( 'wp_sitemaps_enabled', true );
-		if ( ! $core_disabled ) {
-			$add( array(
-				'label'  => 'WordPress Core Sitemap',
-				'url'    => home_url( '/wp-sitemap.xml' ),
-				'path'   => '',
-				'exists' => true,
-				'plugin' => 'WordPress',
-				'type'   => 'virtual',
-			) );
+		// Only listed when WordPress itself would serve it: not disabled by a plugin or filter, and the site is not
+		// set to discourage search engines. The HTTP check below then confirms it really returns sitemap XML.
+		$core_enabled = function_exists( 'wp_sitemaps_get_server' ) && wp_sitemaps_get_server()->sitemaps_enabled();
+		if ( $core_enabled ) {
+			$add(
+				array(
+					'label'  => 'WordPress Core Sitemap',
+					'url'    => home_url( '/wp-sitemap.xml' ),
+					'path'   => '',
+					'exists' => true,
+					'plugin' => 'WordPress',
+					'type'   => 'virtual',
+					'core'   => true,
+				)
+			);
 		}
 
 		// ── 2. Yoast SEO ──────────────────────────────────────────────────────
 		$yoast_active = isset( $active_seo['wordpress-seo/wp-seo.php'] ) ||
-		               isset( $active_seo['wordpress-seo-premium/wp-seo-premium.php'] );
+						isset( $active_seo['wordpress-seo-premium/wp-seo-premium.php'] );
 		$yoast_index  = $abspath . 'sitemap_index.xml';
 		if ( $yoast_active || file_exists( $yoast_index ) ) {
 			$plugin_name = $active_seo['wordpress-seo-premium/wp-seo-premium.php'] ?? ( $active_seo['wordpress-seo/wp-seo.php'] ?? 'Yoast SEO' );
-			$add( array(
-				'label'  => $plugin_name . ' Sitemap (sitemap_index.xml)',
-				'url'    => home_url( '/sitemap_index.xml' ),
-				'path'   => $yoast_index,
-				'exists' => $yoast_active || file_exists( $yoast_index ),
-				'plugin' => $plugin_name,
-				'type'   => file_exists( $yoast_index ) ? 'physical' : 'virtual',
-			) );
+			$add(
+				array(
+					'label'  => $plugin_name . ' Sitemap (sitemap_index.xml)',
+					'url'    => home_url( '/sitemap_index.xml' ),
+					'path'   => $yoast_index,
+					'exists' => $yoast_active || file_exists( $yoast_index ),
+					'plugin' => $plugin_name,
+					'type'   => file_exists( $yoast_index ) ? 'physical' : 'virtual',
+				)
+			);
 		}
 
 		// ── 3. XML Sitemap Generator for Google (Auctollo) ────────────────────
 		$auctollo_active = isset( $active_seo['google-sitemap-generator/sitemap.php'] ) ||
-		                  isset( $active_seo['googlesitemaps/sitemap.php'] ) ||
-		                  isset( $active_seo['google-sitemap-generator/google-sitemap-generator.php'] );
-		$auctollo_paths = array(
+							isset( $active_seo['googlesitemaps/sitemap.php'] ) ||
+							isset( $active_seo['google-sitemap-generator/google-sitemap-generator.php'] );
+		$auctollo_paths  = array(
 			$abspath . 'sitemap.xml',
 			$abspath . 'sitemap.xml.gz',
 			$abspath . 'sitemap-index.xml',
 		);
 		foreach ( $auctollo_paths as $p ) {
 			if ( file_exists( $p ) ) {
-				$add( array(
-					'label'  => 'XML Sitemap Generator for Google (' . basename( $p ) . ')',
-					'url'    => home_url( '/' . basename( $p ) ),
-					'path'   => $p,
-					'exists' => true,
-					'plugin' => 'XML Sitemap Generator for Google',
-					'type'   => 'physical',
-				) );
+				$add(
+					array(
+						'label'  => 'XML Sitemap Generator for Google (' . basename( $p ) . ')',
+						'url'    => home_url( '/' . basename( $p ) ),
+						'path'   => $p,
+						'exists' => true,
+						'plugin' => 'XML Sitemap Generator for Google',
+						'type'   => 'physical',
+					)
+				);
 				break;
 			}
 		}
@@ -311,45 +476,51 @@ class TSOSK_Mod_Server_Files {
 			// Plugin is active → always show even if file not yet generated.
 			$url_candidate = home_url( '/sitemap.xml' );
 			if ( ! in_array( rtrim( $url_candidate, '/' ), $already_urls, true ) ) {
-				$add( array(
-					'label'  => 'XML Sitemap Generator for Google (sitemap.xml)',
-					'url'    => $url_candidate,
-					'path'   => $abspath . 'sitemap.xml',
-					'exists' => file_exists( $abspath . 'sitemap.xml' ),
-					'plugin' => 'XML Sitemap Generator for Google',
-					'type'   => 'virtual',
-				) );
+				$add(
+					array(
+						'label'  => 'XML Sitemap Generator for Google (sitemap.xml)',
+						'url'    => $url_candidate,
+						'path'   => $abspath . 'sitemap.xml',
+						'exists' => file_exists( $abspath . 'sitemap.xml' ),
+						'plugin' => 'XML Sitemap Generator for Google',
+						'type'   => 'virtual',
+					)
+				);
 			}
 		}
 
 		// ── 4. All in One SEO ─────────────────────────────────────────────────
 		$aioseo_active = isset( $active_seo['all-in-one-seo-pack/all_in_one_seo_pack.php'] ) ||
-		               isset( $active_seo['aioseo/aioseo.php'] );
+						isset( $active_seo['aioseo/aioseo.php'] );
 		if ( $aioseo_active ) {
 			$plugin_name = $active_seo['aioseo/aioseo.php'] ?? 'All in One SEO';
-			$add( array(
-				'label'  => $plugin_name . ' Sitemap (sitemap.xml)',
-				'url'    => home_url( '/sitemap.xml' ),
-				'path'   => '',
-				'exists' => true,
-				'plugin' => $plugin_name,
-				'type'   => 'virtual',
-			) );
+			$add(
+				array(
+					'label'  => $plugin_name . ' Sitemap (sitemap.xml)',
+					'url'    => home_url( '/sitemap.xml' ),
+					'path'   => '',
+					'exists' => true,
+					'plugin' => $plugin_name,
+					'type'   => 'virtual',
+				)
+			);
 		}
 
 		// ── 5. Rank Math ──────────────────────────────────────────────────────
 		$rankmath_active = isset( $active_seo['seo-by-rank-math/rank-math.php'] ) ||
-		                  isset( $active_seo['seo-by-rank-math-pro/rank-math-pro.php'] );
+							isset( $active_seo['seo-by-rank-math-pro/rank-math-pro.php'] );
 		if ( $rankmath_active ) {
 			$plugin_name = $active_seo['seo-by-rank-math-pro/rank-math-pro.php'] ?? 'Rank Math SEO';
-			$add( array(
-				'label'  => $plugin_name . ' Sitemap (sitemap_index.xml)',
-				'url'    => home_url( '/sitemap_index.xml' ),
-				'path'   => '',
-				'exists' => true,
-				'plugin' => $plugin_name,
-				'type'   => 'virtual',
-			) );
+			$add(
+				array(
+					'label'  => $plugin_name . ' Sitemap (sitemap_index.xml)',
+					'url'    => home_url( '/sitemap_index.xml' ),
+					'path'   => '',
+					'exists' => true,
+					'plugin' => $plugin_name,
+					'type'   => 'virtual',
+				)
+			);
 		}
 
 		// ── 6. Other SEO plugins with known sitemap URLs ──────────────────────
@@ -363,14 +534,16 @@ class TSOSK_Mod_Server_Files {
 		foreach ( $other_seo as $plugin_file => $data ) {
 			if ( isset( $active_seo[ $plugin_file ] ) ) {
 				$plugin_name = $known_plugins[ $plugin_file ];
-				$add( array(
-					'label'  => $plugin_name . ' Sitemap',
-					'url'    => $data['url'],
-					'path'   => '',
-					'exists' => true,
-					'plugin' => $plugin_name,
-					'type'   => 'virtual',
-				) );
+				$add(
+					array(
+						'label'  => $plugin_name . ' Sitemap',
+						'url'    => $data['url'],
+						'path'   => '',
+						'exists' => true,
+						'plugin' => $plugin_name,
+						'type'   => 'virtual',
+					)
+				);
 			}
 		}
 
@@ -397,47 +570,158 @@ class TSOSK_Mod_Server_Files {
 					: str_replace( rtrim( $site_path, '/' ), '', $u_path );
 				$local     = tsosk_join_wp_root( $rel );
 				$physical  = file_exists( $local );
-				$add( array(
-					'label'  => basename( $u_path ) . ' (robots.txt)',
-					'url'    => $url,
-					'path'   => $physical ? $local : '',
-					'exists' => true,
-					'plugin' => $attributed_plugin,
-					'type'   => $physical ? 'physical' : 'virtual',
-				) );
+				$add(
+					array(
+						'label'  => basename( $u_path ) . ' (robots.txt)',
+						'url'    => $url,
+						'path'   => $physical ? $local : '',
+						'exists' => true,
+						'plugin' => $attributed_plugin,
+						'type'   => $physical ? 'physical' : 'virtual',
+					)
+				);
 			}
 		}
 
-		// ── HTTP verification: check each URL returns 200 ──────────────────────
-		// Uses wp_remote_head() with a short timeout (5s) to avoid slowing the page.
-		// Physical files are assumed reachable; only virtual URLs need checking.
+		if ( ! $verify ) {
+			return $sitemaps;
+		}
+
+		// ── HTTP verification: each virtual URL must return a real sitemap ─────────
+		// A 200 alone is not enough (themes and caches can answer 200 for unknown URLs), so the body must be sitemap XML.
+		// Physical files are assumed reachable. Results are cached briefly so reloading the screen does not keep
+		// requesting URLs that may not exist.
 		foreach ( $sitemaps as &$entry ) {
-			if ( 'physical' === $entry['type'] ) {
-				$entry['http_status'] = 200;
-			} else {
-				$response = wp_remote_head( $entry['url'], array(
-					'timeout'    => 5,
-					'sslverify'  => false,
-					'user-agent' => 'TSO Swiss Knife Sitemap Checker/1.0',
-				) );
-				if ( is_wp_error( $response ) ) {
-					$entry['http_status'] = 0;
-				} else {
-					$entry['http_status'] = (int) wp_remote_retrieve_response_code( $response );
-				}
-			}
+			$probe                = $this->probe_sitemap_url( (string) $entry['url'], str_ends_with( (string) $entry['url'], '.gz' ) );
+			$entry['http_status'] = $probe['status'];
+			$entry['valid']       = $probe['valid'];
+			$entry['empty']       = $probe['empty'];
+			// A physical file is always listed, but warn when the server does not actually serve it.
+			$entry['unserved'] = 'physical' === $entry['type'] && $probe['status'] > 0 && ! $probe['valid'];
 		}
 		unset( $entry );
 
-		// Remove entries that return 404 or connection error, unless they are physical files.
-		$sitemaps = array_values( array_filter( $sitemaps, static function ( array $e ): bool {
-			// Always keep physical files (they exist on disk).
-			if ( 'physical' === $e['type'] ) { return true; }
-			// Keep if HTTP check succeeded (2xx) or was not checked (status 0 = connection error shown as warning).
-			return $e['http_status'] !== 404;
-		} ) );
+		// Drop what is not a working sitemap (404, soft 404 that returns HTML, empty index). A failed request
+		// (status 0, e.g. loopback blocked) is kept and shown with a warning because nothing was actually proven.
+		$sitemaps = array_values(
+			array_filter(
+				$sitemaps,
+				static function ( array $e ): bool {
+					if ( 'physical' === $e['type'] || 0 === $e['http_status'] ) {
+						return true;
+					}
+					return ! empty( $e['valid'] ) && empty( $e['empty'] );
+				}
+			)
+		);
 
 		return $sitemaps;
+	}
+
+	/**
+	 * Table rows of the sitemap review.
+	 *
+	 * @param array<int, array<string, mixed>> $sitemaps Detected sitemaps.
+	 * @param bool                             $pending  True while the HTTP check has not run yet (no status shown).
+	 */
+	private function render_sitemap_rows( array $sitemaps, bool $pending ): void {
+		foreach ( $sitemaps as $s ) :
+			$http  = (int) ( $s['http_status'] ?? 0 );
+			$is_ok = $pending || 'physical' === $s['type'] || ( $http >= 200 && $http < 300 && ! empty( $s['valid'] ) );
+			?>
+			<tr<?php echo ! $is_ok ? ' style="opacity:.55;"' : ''; ?>>
+				<td><?php echo esc_html( $s['label'] ); ?></td>
+				<td><?php echo esc_html( $s['plugin'] ); ?></td>
+				<td>
+					<?php if ( 'physical' === $s['type'] ) : ?>
+						<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Physical file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<?php else : ?>
+						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Virtual (plugin)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<?php endif; ?>
+				</td>
+				<td>
+					<?php if ( $is_ok ) : ?>
+						<a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php echo esc_html( $s['url'] ); ?>
+						</a>
+						<?php if ( $pending ) : ?>
+						<span class="tsosk-badge tsosk-badge-info" style="font-size:10px;margin-left:6px;"><?php esc_html_e( 'Checking…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<?php elseif ( ! empty( $s['unserved'] ) ) : ?>
+						<span class="tsosk-badge tsosk-badge-warn" style="font-size:10px;margin-left:6px;">HTTP <?php echo esc_html( (string) $http ); ?></span>
+						<br><span class="description"><?php esc_html_e( 'The file exists on disk but the server does not return it as a sitemap. Check .htaccess, caching or redirects.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<?php elseif ( $http > 0 ) : ?>
+						<span class="tsosk-badge tsosk-badge-ok" style="font-size:10px;margin-left:6px;">HTTP <?php echo esc_html( (string) $http ); ?></span>
+						<?php endif; ?>
+					<?php else : ?>
+						<span style="color:#8c8f94;text-decoration:line-through;font-size:12px;"><?php echo esc_html( $s['url'] ); ?></span>
+						<span class="tsosk-badge tsosk-badge-warn" style="font-size:10px;margin-left:6px;">
+							HTTP <?php echo $http > 0 ? esc_html( (string) $http ) : esc_html__( 'error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php
+		endforeach;
+	}
+
+	/** AJAX: verify the detected sitemaps over HTTP (kept out of the page load so the screen makes no HTTP API calls). */
+	public function ajax_sitemap_check(): void {
+		check_ajax_referer( 'tsosk_sf_nonce', 'nonce' );
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		if ( '1' === TSOSK_Support::get_post_scalar( 'refresh' ) ) {
+			foreach ( $this->detect_sitemaps( false ) as $entry ) {
+				delete_transient( 'tsosk_sf_probe_' . md5( (string) $entry['url'] ) );
+			}
+		}
+		ob_start();
+		$this->render_sitemap_rows( $this->detect_sitemaps( true ), false );
+		wp_send_json_success( array( 'html' => (string) ob_get_clean() ) );
+	}
+
+	/**
+	 * Request a sitemap URL and check that the answer is sitemap XML with at least one entry.
+	 *
+	 * @param string $url        Sitemap URL.
+	 * @param bool   $status_only Only check for a 2xx answer (compressed .gz files are not readable XML).
+	 * @return array{status:int,valid:bool,empty:bool}
+	 */
+	private function probe_sitemap_url( string $url, bool $status_only = false ): array {
+		$cache_key = 'tsosk_sf_probe_' . md5( $url );
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) && isset( $cached['status'], $cached['valid'], $cached['empty'] ) ) {
+			return $cached;
+		}
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'             => 5,
+				'redirection'         => 3,
+				'sslverify'           => true, // Public site URLs: verify the certificate (a failure is shown as a warning, not hidden).
+				'user-agent'          => 'TSO Swiss Knife Sitemap Checker/1.0',
+				'limit_response_size' => 262144,
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'status' => 0,
+				'valid'  => false,
+				'empty'  => false,
+			);
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+		$body   = (string) wp_remote_retrieve_body( $response );
+		$is_xml = $status_only || 1 === preg_match( '/<(sitemapindex|urlset)\b/i', $body );
+		$result = array(
+			'status' => $status,
+			'valid'  => $status >= 200 && $status < 300 && $is_xml,
+			'empty'  => ! $status_only && $is_xml && false === stripos( $body, '<loc' ),
+		);
+		set_transient( $cache_key, $result, 10 * MINUTE_IN_SECONDS );
+		return $result;
 	}
 
 	/**
@@ -449,7 +733,7 @@ class TSOSK_Mod_Server_Files {
 	 */
 	private function attribute_sitemap_url( string $url, array $known_plugins ): string {
 		$path   = strtolower( (string) wp_parse_url( $url, PHP_URL_PATH ) );
-		$active = (array) get_option( 'active_plugins', array() );
+		$active = TSOSK_Support::get_active_plugin_files();
 
 		// ── WordPress core sitemap ────────────────────────────────────────────
 		if ( false !== strpos( $path, 'wp-sitemap' ) ) {
@@ -465,7 +749,7 @@ class TSOSK_Mod_Server_Files {
 				'seo-by-rank-math/rank-math.php',
 				'seo-by-rank-math-pro/rank-math-pro.php',
 			),
-			'seopress-sitemap' => array(
+			'seopress-sitemap'  => array(
 				'wp-seopress/seopress.php',
 				'wp-seopress-pro/seopress-pro.php',
 			),
@@ -508,16 +792,16 @@ class TSOSK_Mod_Server_Files {
 			// No physical file → try every known active plugin by slug prefix match.
 			// This covers installs where the plugin slug is different from our list.
 			$slug_keywords = array(
-				'google-sitemap'  => 'XML Sitemap Generator for Google',
-				'googlesitemap'   => 'XML Sitemap Generator for Google',
-				'xml-sitemap'     => 'XML Sitemap Generator for Google',
-				'wordpress-seo'   => 'Yoast SEO',
-				'all-in-one-seo'  => 'All in One SEO',
-				'aioseo'          => 'All in One SEO',
-				'rank-math'       => 'Rank Math SEO',
-				'seopress'        => 'SEOPress',
-				'slim-seo'        => 'Slim SEO',
-				'jetpack'         => 'Jetpack',
+				'google-sitemap' => 'XML Sitemap Generator for Google',
+				'googlesitemap'  => 'XML Sitemap Generator for Google',
+				'xml-sitemap'    => 'XML Sitemap Generator for Google',
+				'wordpress-seo'  => 'Yoast SEO',
+				'all-in-one-seo' => 'All in One SEO',
+				'aioseo'         => 'All in One SEO',
+				'rank-math'      => 'Rank Math SEO',
+				'seopress'       => 'SEOPress',
+				'slim-seo'       => 'Slim SEO',
+				'jetpack'        => 'Jetpack',
 			);
 			foreach ( $active as $plugin_file ) {
 				$folder = strtolower( explode( '/', $plugin_file )[0] );
@@ -541,6 +825,9 @@ class TSOSK_Mod_Server_Files {
 		return __( 'Unknown plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce = wp_create_nonce( 'tsosk_sf_nonce' );
 
@@ -553,13 +840,13 @@ class TSOSK_Mod_Server_Files {
 		$reports = array();
 
 		// Always show the domain-root robots.txt first.
-		$reports['robots'] = $this->get_report( 'robots.txt (domain root)', $root_robots, 'robots' );
+		$reports['robots']              = $this->get_report( 'robots.txt (domain root)', $root_robots, 'robots' );
 		$reports['robots']['is_root']   = true;
 		$reports['robots']['root_note'] = $wp_is_subdir;
 
 		// If WordPress is in a subdirectory, also show the local robots.txt.
 		if ( $wp_is_subdir && '' !== $local_robots ) {
-			$reports['robots_local'] = $this->get_report( 'robots.txt (WordPress subdirectory)', $local_robots, 'robots_local' );
+			$reports['robots_local']              = $this->get_report( 'robots.txt (WordPress subdirectory)', $local_robots, 'robots_local' );
 			$reports['robots_local']['is_root']   = false;
 			$reports['robots_local']['root_note'] = true;
 		}
@@ -569,8 +856,8 @@ class TSOSK_Mod_Server_Files {
 		$same_htaccess  = realpath( dirname( $root_htaccess ) ) === realpath( untrailingslashit( tsosk_get_wp_root_dir() ) );
 
 		if ( ! $same_htaccess ) {
-			$reports['htaccess_root'] = $this->get_report( __( '.htaccess (domain / document root)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $root_htaccess, 'htaccess_root' );
-			$reports['htaccess_root']['is_root']   = true;
+			$reports['htaccess_root']                = $this->get_report( __( '.htaccess (domain / document root)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $root_htaccess, 'htaccess_root' );
+			$reports['htaccess_root']['is_root']     = true;
 			$reports['htaccess_root']['is_htaccess'] = true;
 		}
 
@@ -580,11 +867,11 @@ class TSOSK_Mod_Server_Files {
 			'htaccess'
 		);
 		if ( ! $same_htaccess ) {
-			$reports['htaccess']['is_root']      = false;
-			$reports['htaccess']['is_htaccess']  = true;
-			$reports['htaccess']['root_note']    = true;
+			$reports['htaccess']['is_root']     = false;
+			$reports['htaccess']['is_htaccess'] = true;
+			$reports['htaccess']['root_note']   = true;
 		}
-		$sitemaps = $this->detect_sitemaps();
+		$sitemaps = $this->detect_sitemaps( false );
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Review and edit the server configuration files that control crawling, permalinks and redirects. On subdirectory installs (e.g. /blogbkp2/), Apache may use a root .htaccess in public_html plus a separate one inside WordPress. Also shows all sitemap files detected on this installation.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -595,10 +882,13 @@ class TSOSK_Mod_Server_Files {
 		<?php endforeach; ?>
 
 		<?php /* ── Sitemaps ── */ ?>
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-sf-sitemaps" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 			<h3><?php esc_html_e( 'Sitemaps', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description">
 				<?php esc_html_e( 'Sitemaps are files that list all the pages on your website so that search engines like Google can find them more easily. This panel detects sitemaps generated by popular SEO plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<p>
+				<button type="button" class="button" id="tsosk-sf-sitemaps-recheck" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Check again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</p>
 			<table class="widefat tsosk-table">
 				<thead><tr>
@@ -607,44 +897,22 @@ class TSOSK_Mod_Server_Files {
 					<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<th><?php esc_html_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 				</tr></thead>
-				<tbody>
-				<?php foreach ( $sitemaps as $s ) :
-					$http  = (int) ( $s['http_status'] ?? 0 );
-					$is_ok = 'physical' === $s['type'] || ( $http >= 200 && $http < 300 );
-				?>
-					<tr<?php echo ! $is_ok ? ' style="opacity:.55;"' : ''; ?>>
-						<td><?php echo esc_html( $s['label'] ); ?></td>
-						<td><?php echo esc_html( $s['plugin'] ); ?></td>
-						<td>
-							<?php if ( 'physical' === $s['type'] ) : ?>
-								<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Physical file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-							<?php else : ?>
-								<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Virtual (plugin)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-							<?php endif; ?>
-						</td>
-						<td>
-							<?php if ( $is_ok ) : ?>
-								<a href="<?php echo esc_url( $s['url'] ); ?>" target="_blank" rel="noopener noreferrer">
-									<?php echo esc_html( $s['url'] ); ?>
-								</a>
-								<?php if ( $http > 0 ) : ?>
-								<span class="tsosk-badge tsosk-badge-ok" style="font-size:10px;margin-left:6px;">HTTP <?php echo esc_html( (string) $http ); ?></span>
-								<?php endif; ?>
-							<?php else : ?>
-								<span style="color:#8c8f94;text-decoration:line-through;font-size:12px;"><?php echo esc_html( $s['url'] ); ?></span>
-								<span class="tsosk-badge tsosk-badge-warn" style="font-size:10px;margin-left:6px;">
-									HTTP <?php echo $http > 0 ? esc_html( (string) $http ) : esc_html__( 'error', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</span>
-							<?php endif; ?>
-						</td>
-					</tr>
-				<?php endforeach; ?>
+				<tbody id="tsosk-sf-sitemaps-body">
+				<?php $this->render_sitemap_rows( $sitemaps, true ); ?>
 				</tbody>
 			</table>
 		</div>
 		<?php
 	}
 
+	/**
+	 * Get report.
+	 *
+	 * @param string $label Label.
+	 * @param string $path Path.
+	 * @param string $key Key.
+	 * @return array
+	 */
 	private function get_report( string $label, string $path, string $key ): array {
 		$report = array(
 			'label'    => $label,
@@ -660,22 +928,34 @@ class TSOSK_Mod_Server_Files {
 		);
 
 		if ( ! $report['exists'] ) {
-			$report['notices'][] = array( 'type' => 'info', 'message' => $this->missing_message( $key ) );
+			$report['notices'][] = array(
+				'type'    => 'info',
+				'message' => $this->missing_message( $key ),
+			);
 			return $report;
 		}
 		if ( ! $report['readable'] ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file exists but is not readable by WordPress.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$report['notices'][] = array(
+				'type'    => 'warn',
+				'message' => __( 'The file exists but is not readable by WordPress.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 			return $report;
 		}
 		if ( $report['size'] > 512 * 1024 ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file is larger than expected, so only metadata is reviewed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$report['notices'][] = array(
+				'type'    => 'warn',
+				'message' => __( 'The file is larger than expected, so only metadata is reviewed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 			return $report;
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$content = file_get_contents( $path );
 		if ( false === $content ) {
-			$report['notices'][] = array( 'type' => 'warn', 'message' => __( 'The file could not be read.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$report['notices'][] = array(
+				'type'    => 'warn',
+				'message' => __( 'The file could not be read.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 			return $report;
 		}
 
@@ -686,16 +966,28 @@ class TSOSK_Mod_Server_Files {
 		);
 
 		if ( $report['writable'] ) {
-			$report['notices'][] = array( 'type' => 'info', 'message' => __( 'The file is writable by WordPress. You can edit it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$report['notices'][] = array(
+				'type'    => 'info',
+				'message' => __( 'The file is writable by WordPress. You can edit it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
 
 		if ( empty( array_filter( $report['notices'], fn( $n ) => in_array( $n['type'], array( 'warn', 'error' ), true ) ) ) ) {
-			$report['notices'][] = array( 'type' => 'ok', 'message' => __( 'No obvious issues were detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			$report['notices'][] = array(
+				'type'    => 'ok',
+				'message' => __( 'No obvious issues were detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
 
 		return $report;
 	}
 
+	/**
+	 * Missing message.
+	 *
+	 * @param string $key Key.
+	 * @return string
+	 */
 	private function missing_message( string $key ): string {
 		if ( str_starts_with( $key, 'robots' ) ) {
 			return __( 'No robots.txt file was found. WordPress may serve a default virtual robots.txt. You can create one here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
@@ -703,6 +995,12 @@ class TSOSK_Mod_Server_Files {
 		return __( 'No .htaccess file was found at the WordPress root. This is normal on Nginx servers. On Apache, it is required for pretty permalinks.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 	}
 
+	/**
+	 * Review robots.
+	 *
+	 * @param string $content Content.
+	 * @return array
+	 */
 	private function review_robots( string $content ): array {
 		$notices = array();
 		$parsed  = $this->parse_robots_txt( $content );
@@ -782,8 +1080,8 @@ class TSOSK_Mod_Server_Files {
 
 		if ( empty( $full_site_blocks ) && ! empty( $star_disallows ) ) {
 			$star_disallows = array_values( array_unique( $star_disallows ) );
-			$shown     = array_slice( $star_disallows, 0, 6 );
-			$path_list = implode( ', ', $shown );
+			$shown          = array_slice( $star_disallows, 0, 6 );
+			$path_list      = implode( ', ', $shown );
 			$extra          = count( $star_disallows ) - count( $shown );
 			if ( $extra > 0 ) {
 				$path_list .= sprintf(
@@ -931,6 +1229,8 @@ class TSOSK_Mod_Server_Files {
 	}
 
 	/**
+	 * Robots group targets all crawlers.
+	 *
 	 * @param string[] $user_agents User-agent tokens for one rule group.
 	 */
 	private function robots_group_targets_all_crawlers( array $user_agents ): bool {
@@ -942,13 +1242,19 @@ class TSOSK_Mod_Server_Files {
 		return false;
 	}
 
+	/**
+	 * Review htaccess.
+	 *
+	 * @param string $content Content.
+	 * @return array
+	 */
 	private function review_htaccess( string $content ): array {
-		$notices          = array();
-		$has_wp_block     = false !== strpos( $content, '# BEGIN WordPress' );
-		$has_rewrite_use  = (bool) preg_match( '/^\s*Rewrite(?:Rule|Cond|Base)\b/im', $content );
-		$has_rewrite_on   = (bool) preg_match( '/^\s*RewriteEngine\s+On\b/im', $content );
-		$has_global_deny  = $this->htaccess_has_top_level_deny( $content );
-		$has_forbid_rule  = (bool) preg_match( '/^\s*RewriteRule\b.+\[(?:[^\]]*\bF\b|\bFORBIDDEN\b|\b403\b)/im', $content );
+		$notices         = array();
+		$has_wp_block    = false !== strpos( $content, '# BEGIN WordPress' );
+		$has_rewrite_use = (bool) preg_match( '/^\s*Rewrite(?:Rule|Cond|Base)\b/im', $content );
+		$has_rewrite_on  = (bool) preg_match( '/^\s*RewriteEngine\s+On\b/im', $content );
+		$has_global_deny = $this->htaccess_has_top_level_deny( $content );
+		$has_forbid_rule = (bool) preg_match( '/^\s*RewriteRule\b.+\[(?:[^\]]*\bF\b|\bFORBIDDEN\b|\b403\b)/im', $content );
 
 		if ( ! $has_wp_block ) {
 			$notices[] = array(
@@ -987,6 +1293,13 @@ class TSOSK_Mod_Server_Files {
 			$notices[] = array(
 				'type'    => 'warn',
 				'message' => __( 'Directory indexing appears to be enabled (Options +Indexes). This shows folder contents to visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		if ( ! preg_match( '/^\s*Header\s+(?:always\s+)?(?:set|append|add)\s+(?:X-Frame-Options|X-Content-Type-Options|Referrer-Policy|Strict-Transport-Security)\b/im', $content ) ) {
+			$notices[] = array(
+				'type'    => 'info',
+				'message' => __( 'No security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) are set in this file. Use "Add security headers" to insert them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -1039,14 +1352,33 @@ class TSOSK_Mod_Server_Files {
 		return false;
 	}
 
+	/**
+	 * Active lines.
+	 *
+	 * @param string $content Content.
+	 * @return array
+	 */
 	private function active_lines( string $content ): array {
 		$lines = preg_split( '/\R/', $content );
-		if ( ! is_array( $lines ) ) { return array(); }
-		return array_values( array_filter( array_map( 'trim', $lines ), static function ( string $line ): bool {
-			return '' !== $line && 0 !== strpos( $line, '#' );
-		} ) );
+		if ( ! is_array( $lines ) ) {
+			return array(); }
+		return array_values(
+			array_filter(
+				array_map( 'trim', $lines ),
+				static function ( string $line ): bool {
+					return '' !== $line && 0 !== strpos( $line, '#' );
+				}
+			)
+		);
 	}
 
+	/**
+	 * Render report.
+	 *
+	 * @param string $key Key.
+	 * @param array  $report Report.
+	 * @param string $nonce Nonce.
+	 */
 	private function render_report( string $key, array $report, string $nonce ): void {
 		$is_root     = ! empty( $report['is_root'] );
 		$root_note   = ! empty( $report['root_note'] );
@@ -1118,15 +1450,52 @@ class TSOSK_Mod_Server_Files {
 					<?php endif; ?>
 				</summary>
 				<textarea id="tsosk-sf-content-<?php echo esc_attr( $key ); ?>"
-				          style="width:100%;min-height:220px;font-family:monospace;font-size:12px;resize:vertical;box-sizing:border-box;"
-				          spellcheck="false"><?php echo esc_textarea( $report['content'] ); ?></textarea>
+							style="width:100%;min-height:220px;font-family:monospace;font-size:12px;resize:vertical;box-sizing:border-box;"
+							spellcheck="false" autocomplete="off"><?php echo esc_textarea( $report['content'] ); ?></textarea>
 				<?php if ( $report['writable'] || ( ! $report['exists'] && wp_is_writable( dirname( $report['path'] ) ) ) ) : ?>
 				<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
 					<button class="button button-primary tsosk-sf-save"
-					        data-key="<?php echo esc_attr( $key ); ?>"
-					        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							data-key="<?php echo esc_attr( $key ); ?>"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Save Changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
+					<button type="button" class="button tsosk-sf-discard"
+							data-key="<?php echo esc_attr( $key ); ?>"
+							data-done="<?php echo esc_attr__( 'Unsaved changes discarded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php esc_html_e( 'Discard unsaved changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<?php if ( $is_htaccess ) : ?>
+					<button type="button" class="button tsosk-sf-headers"
+							data-key="<?php echo esc_attr( $key ); ?>"
+							data-block="<?php echo esc_attr( $this->security_headers_block() ); ?>"
+							data-exists="<?php echo esc_attr__( 'The security headers block is already in this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							data-done="<?php echo esc_attr__( 'Security headers block added to the editor. Review it and press Save Changes to apply it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php esc_html_e( 'Add security headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<span class="tsosk-info">
+						<button type="button" class="tsosk-info-btn" aria-expanded="false" aria-label="<?php esc_attr_e( 'More information', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
+						</button>
+						<span class="tsosk-info-pop" role="tooltip" hidden>
+							<p><strong><?php esc_html_e( 'What are security headers?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
+							<p><?php esc_html_e( 'Small instructions your server sends with every page so the visitor’s browser protects them. This button only writes them into the editor: nothing changes until you review the text and press Save Changes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+							<ul>
+								<li><strong>X-Content-Type-Options: nosniff</strong> — <?php esc_html_e( 'the browser must trust the declared file type and not guess it, which blocks attacks that disguise a script as an image or text file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+								<li><strong>X-Frame-Options: SAMEORIGIN</strong> — <?php esc_html_e( 'other websites cannot show your pages inside a frame, which prevents clickjacking (tricking people into clicking hidden buttons).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+								<li><strong>Referrer-Policy: strict-origin-when-cross-origin</strong> — <?php esc_html_e( 'when someone follows a link to another site, only your domain is shared, not the full page address (which may contain private data).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+								<li><strong>Strict-Transport-Security (HSTS)</strong> — <?php esc_html_e( 'added as a comment, off by default. It forces browsers to always use HTTPS. Enable it only if the whole domain works over HTTPS, because browsers remember it for a long time.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+							</ul>
+							<p><?php esc_html_e( 'The block is wrapped in a mod_headers check, so it does nothing (and breaks nothing) on servers without that module. The Health report checks for these headers on your home page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+						</span>
+					</span>
+					<?php endif; ?>
+					<?php if ( null !== $this->get_previous( $key ) ) : ?>
+					<button type="button" class="button tsosk-sf-previous"
+							data-key="<?php echo esc_attr( $key ); ?>"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Load previous version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<?php endif; ?>
 					<span class="tsosk-ajax-msg tsosk-sf-msg-<?php echo esc_attr( $key ); ?>"></span>
 				</div>
 				<?php else : ?>
@@ -1138,10 +1507,34 @@ class TSOSK_Mod_Server_Files {
 		<?php
 	}
 
+	/**
+	 * .htaccess block with the common security headers (HSTS is left commented out on purpose).
+	 */
+	private function security_headers_block(): string {
+		return "# BEGIN TSOSK Security Headers\n"
+			. "<IfModule mod_headers.c>\n"
+			. "Header always set X-Content-Type-Options \"nosniff\"\n"
+			. "Header always set X-Frame-Options \"SAMEORIGIN\"\n"
+			. "Header always set Referrer-Policy \"strict-origin-when-cross-origin\"\n"
+			. "# Uncomment only when the whole domain is always served over HTTPS:\n"
+			. "# Header always set Strict-Transport-Security \"max-age=31536000\"\n"
+			. "</IfModule>\n"
+			. '# END TSOSK Security Headers';
+	}
+
+	/**
+	 * Badge class.
+	 *
+	 * @param string $type Type.
+	 * @return string
+	 */
 	private function badge_class( string $type ): string {
-		if ( 'warn' === $type )  { return 'tsosk-badge-warn'; }
-		if ( 'ok' === $type )    { return 'tsosk-badge-ok'; }
-		if ( 'error' === $type ) { return 'tsosk-badge-warn'; }
+		if ( 'warn' === $type ) {
+			return 'tsosk-badge-warn'; }
+		if ( 'ok' === $type ) {
+			return 'tsosk-badge-ok'; }
+		if ( 'error' === $type ) {
+			return 'tsosk-badge-warn'; }
 		return 'tsosk-badge-info';
 	}
 }

@@ -31,6 +31,8 @@ $tsosk_options = array(
 	'tsosk_email_diagnostics',
 	'tsosk_email_diagnostics_history',
 	'tsosk_login_protect',
+	'tsosk_sf_previous',
+	'tsosk_autoload_schema',
 	'tsosk_login_lockouts',
 	'tsosk_login_attempts',
 	'tsosk_comment_antispam',
@@ -44,6 +46,7 @@ $tsosk_options = array(
 	'tsosk_activity_log',
 	'tsosk_activity_log_settings',
 	'tsosk_activity_log_migrated',
+	'tsosk_dashboard_history',
 	'tsosk_slow_query_settings',
 	'tsosk_slow_query_log',
 	'tsosk_sandbox_sessions',
@@ -54,18 +57,25 @@ $tsosk_options = array(
 	'tsosk_disabled_image_sizes',
 	'tsosk_health_suppress',
 	'tsosk_staging_settings',
+	'tsosk_snapshot_backup',
 	'tsosk_staging_mail_log',
 	'tsosk_view_counter_settings',
 	'tsosk_view_counter_db_version',
 	'tsosk_security_alerts',
 	'tsosk_security_uploads_php_test',
 	'tsosk_cas_learning_log',
+	'tsosk_cas_providers',
+	'tsosk_cas_db_version',
 	'tsosk_media_quarantine',
 	'tsosk_image_sizes_quarantine',
 	'tsosk_seen_image_sizes',
 	'tsosk_rest_blocked_log',
 	'tsosk_sr_last_backup',
 	'tsosk_view_counter_last_import',
+	'tsosk_module_mtimes',
+	'tsosk_vc_legacy_cleanup_errors',
+	'tsosk_vc_legacy_cleanup_last_run',
+	'tsosk_sandbox_sessions',
 );
 
 foreach ( $tsosk_options as $tsosk_option ) {
@@ -150,13 +160,16 @@ $tsosk_delete_uploads_tree = static function ( string $dir ) use ( &$tsosk_delet
 			continue;
 		}
 		$item = trailingslashit( $dir ) . $entry;
-		if ( is_dir( $item ) ) {
+		if ( is_link( $item ) ) {
+			// Never follow a symlink out of the plugin folder: remove only the link itself.
+			wp_delete_file( $item );
+		} elseif ( is_dir( $item ) ) {
 			$tsosk_delete_uploads_tree( $item );
 		} elseif ( is_file( $item ) ) {
 			wp_delete_file( $item );
 		}
 	}
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir, WordPress.PHP.NoSilencedErrors.Discouraged
 	@rmdir( $dir );
 };
 
@@ -164,7 +177,7 @@ $tsosk_upload_targets = array();
 if ( function_exists( 'wp_upload_dir' ) ) {
 	$tsosk_uploads = wp_upload_dir( null, false );
 	if ( ! empty( $tsosk_uploads['basedir'] ) && empty( $tsosk_uploads['error'] ) ) {
-		$tsosk_base = trailingslashit( wp_normalize_path( (string) $tsosk_uploads['basedir'] ) );
+		$tsosk_base             = trailingslashit( wp_normalize_path( (string) $tsosk_uploads['basedir'] ) );
 		$tsosk_upload_targets[] = $tsosk_base . 'tso-swiss-knife-advanced-maintenance-developer-toolkit';
 		$tsosk_upload_targets[] = $tsosk_base . 'tsosk-config';
 		$tsosk_upload_targets[] = $tsosk_base . 'tsosk-logs';
@@ -185,10 +198,63 @@ delete_option( 'rewrite_rules' );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_views" );
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_cas_log" );
 
 wp_clear_scheduled_hook( 'tsosk_vc_weekly_email' );
 wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
 wp_clear_scheduled_hook( 'tsosk_image_sizes_quarantine_purge' );
+
+// ── Catch-all: any remaining plugin-owned options / user meta (all sites on multisite) ─────
+
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like( 'tsosk_' ) . '%' ) );
+
+if ( is_multisite() ) {
+	$tsosk_site_ids = get_sites(
+		array(
+			'fields' => 'ids',
+			'number' => 0,
+		)
+	);
+	foreach ( $tsosk_site_ids as $tsosk_site_id ) {
+		switch_to_blog( (int) $tsosk_site_id );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'tsosk_' ) . '%' ) );
+		// Per-site transients use the `_transient_` prefix, so the query above does not match them.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_tsosk_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_tsosk_' ) . '%'
+			)
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_views" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_cas_log" );
+		wp_clear_scheduled_hook( 'tsosk_vc_weekly_email' );
+		wp_clear_scheduled_hook( 'tsosk_media_quarantine_purge' );
+		wp_clear_scheduled_hook( 'tsosk_image_sizes_quarantine_purge' );
+		restore_current_blog();
+	}
+	// Network-wide options and site transients are stored in sitemeta.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE FROM {$wpdb->sitemeta} WHERE meta_key LIKE %s OR meta_key LIKE %s OR meta_key LIKE %s",
+			$wpdb->esc_like( 'tsosk_' ) . '%',
+			$wpdb->esc_like( '_site_transient_tsosk_' ) . '%',
+			$wpdb->esc_like( '_site_transient_timeout_tsosk_' ) . '%'
+		)
+	);
+} else {
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'tsosk_' ) . '%' ) );
+}
 
 // ── Legacy MU-plugin files (migration cleanup) ─────────────────────────────
 

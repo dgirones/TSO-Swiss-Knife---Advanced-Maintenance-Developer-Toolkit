@@ -18,10 +18,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TSOSK_Mod_Dashboard {
 
 	/** Transient prefix for the cached scan (suffixed with the locale). */
-	private const CACHE_PREFIX = 'tsosk_dashboard_scan_';
+	private const CACHE_PREFIX = 'tsosk_dashboard_scan2_';
 
 	/** Cache lifetime in seconds. */
 	private const CACHE_TTL = 600;
+
+	/** Option that keeps the score of recent scans (trend line). */
+	private const HISTORY_OPTION = 'tsosk_dashboard_history';
+
+	/** Number of scans kept in the history. */
+	private const HISTORY_MAX = 30;
 
 	/** Nonce action for the manual refresh link. */
 	private const REFRESH_NONCE = 'tsosk_dashboard_refresh';
@@ -32,6 +38,13 @@ class TSOSK_Mod_Dashboard {
 	 * @var TSOSK_Mod_Dashboard|null
 	 */
 	private static $instance = null;
+
+	/**
+	 * Cached TSO Link Inspector state for the current request (avoids repeating its two queries).
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private $link_state = null;
 
 	/**
 	 * Returns the singleton instance.
@@ -79,7 +92,7 @@ class TSOSK_Mod_Dashboard {
 	 *
 	 * @param array<string, mixed> $check       Raw check.
 	 * @param string               $default_tab Tab to link to when the check has none.
-	 * @return array{label: string, status: string, details: string, tab: string, anchor: string}
+	 * @return array{label: string, status: string, details: string, tab: string, anchor: string, url: string}
 	 */
 	private function normalise_check( array $check, string $default_tab ): array {
 		$status = (string) ( $check['status'] ?? 'info' );
@@ -103,6 +116,7 @@ class TSOSK_Mod_Dashboard {
 			'details' => (string) ( $check['details'] ?? '' ),
 			'tab'     => sanitize_key( (string) ( $check['tab'] ?? $default_tab ) ),
 			'anchor'  => sanitize_key( (string) ( $check['anchor'] ?? '' ) ),
+			'url'     => '',
 		);
 	}
 
@@ -114,6 +128,9 @@ class TSOSK_Mod_Dashboard {
 	 * @return string
 	 */
 	private function check_url( array $check, string $base ): string {
+		if ( ! empty( $check['url'] ) ) {
+			return (string) $check['url'];
+		}
 		$url = add_query_arg( 'tab', $check['tab'], $base );
 		if ( '' !== $check['anchor'] ) {
 			$url .= '#' . $check['anchor'];
@@ -148,11 +165,15 @@ class TSOSK_Mod_Dashboard {
 			}
 		}
 
+		$checks = array_merge( $checks, $this->get_extra_checks() );
+
 		$scan = array(
 			'checks' => $checks,
+			'recs'   => $this->get_recommendations(),
 			'time'   => time(),
 		);
 		set_transient( $key, $scan, self::CACHE_TTL );
+		$this->record_history( $this->compute_score( $checks )['score'] );
 
 		return $scan;
 	}
@@ -190,7 +211,7 @@ class TSOSK_Mod_Dashboard {
 	/**
 	 * Count pending updates from WordPress' own update transients (no remote call).
 	 *
-	 * @return array{core: int, plugins: int, themes: int}
+	 * @return array{core: int, plugins: int, themes: int, checked: bool, restricted: bool}
 	 */
 	private function get_pending_updates(): array {
 		$core      = 0;
@@ -204,10 +225,25 @@ class TSOSK_Mod_Dashboard {
 		$plugins_data = get_site_transient( 'update_plugins' );
 		$themes_data  = get_site_transient( 'update_themes' );
 
+		// Only plugins that are still installed: a stale transient can keep the entry of a plugin deleted by hand.
+		$plugin_offers = ( is_object( $plugins_data ) && ! empty( $plugins_data->response ) && is_array( $plugins_data->response ) ) ? $plugins_data->response : array();
+		if ( ! empty( $plugin_offers ) ) {
+			if ( ! function_exists( 'get_plugins' ) ) {
+				tsosk_require_wp_admin( 'includes/plugin.php' );
+			}
+			$plugin_offers = function_exists( 'get_plugins' ) ? array_intersect_key( $plugin_offers, get_plugins() ) : $plugin_offers;
+		}
+
+		// While the Update Manager restricts update checks, WordPress hands back an empty "nothing to update" answer: that is not a real zero.
+		$restricted = class_exists( 'TSOSK_Mod_Update_Manager' ) && TSOSK_Mod_Update_Manager::is_restricting_updates();
+
 		return array(
-			'core'    => $core,
-			'plugins' => ( is_object( $plugins_data ) && ! empty( $plugins_data->response ) && is_array( $plugins_data->response ) ) ? count( $plugins_data->response ) : 0,
-			'themes'  => ( is_object( $themes_data ) && ! empty( $themes_data->response ) && is_array( $themes_data->response ) ) ? count( $themes_data->response ) : 0,
+			// False when WordPress has never stored an update check (or checks are disabled): "0" would then be misleading.
+			'checked'    => ! $restricted && is_object( $plugins_data ) && ! empty( $plugins_data->last_checked ),
+			'restricted' => $restricted,
+			'core'       => $core,
+			'plugins'    => count( $plugin_offers ),
+			'themes'     => ( is_object( $themes_data ) && ! empty( $themes_data->response ) && is_array( $themes_data->response ) ) ? count( $themes_data->response ) : 0,
 		);
 	}
 
@@ -289,10 +325,12 @@ class TSOSK_Mod_Dashboard {
 					?>
 					<a class="button button-small" href="<?php echo esc_url( $refresh_url ); ?>"><?php esc_html_e( 'Scan again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</p>
+				<?php $this->render_trend(); ?>
 			</div>
 		</div>
 
 		<?php $this->render_vitals(); ?>
+		<?php $this->render_tiles( $this->get_usage_tiles() ); ?>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
@@ -314,13 +352,669 @@ class TSOSK_Mod_Dashboard {
 			<?php endif; ?>
 		</div>
 
+		<?php $this->render_recommendations( (array) ( $scan['recs'] ?? array() ) ); ?>
+		<?php $this->render_usage( $base ); ?>
 		<?php $this->render_shortcuts( $base ); ?>
 		<?php $this->render_recent_activity( $base ); ?>
 		<?php
-		if ( class_exists( 'TSOSK_Mod_Health' ) ) {
-			TSOSK_Mod_Health::get_instance()->render_suppress_card();
+	}
+
+	/**
+	 * State of TSO Link Inspector: missing, inactive or active (with broken-link counts).
+	 *
+	 * @return array{status: string, broken: int, total: int, has_data: bool}
+	 */
+	private function link_inspector_state(): array {
+		global $wpdb;
+
+		if ( is_array( $this->link_state ) ) {
+			return $this->link_state;
+		}
+
+		$state = array(
+			'status'   => 'missing',
+			'broken'   => 0,
+			'total'    => 0,
+			'has_data' => false,
+		);
+
+		if ( ! function_exists( 'get_plugins' ) || ! function_exists( 'is_plugin_active' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
+
+		$file = 'tso-link-inspector/tso-link-inspector.php';
+		if ( is_plugin_active( $file ) ) {
+			$state['status'] = 'active';
+			$table           = $wpdb->prefix . 'tso_link_inspector';
+			$table_sql       = esc_sql( $table );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
+			if ( $exists === $table ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name built from $wpdb->prefix.
+				$row = $wpdb->get_row( "SELECT COUNT(*) AS total, SUM(CASE WHEN last_checked IS NOT NULL AND is_broken = 1 AND user_verified = 0 THEN 1 ELSE 0 END) AS broken FROM {$table_sql}", ARRAY_A );
+				if ( is_array( $row ) ) {
+					$state['total']    = (int) $row['total'];
+					$state['broken']   = (int) $row['broken'];
+					$state['has_data'] = $state['total'] > 0;
+				}
+			}
+		} elseif ( array_key_exists( $file, get_plugins() ) ) {
+			$state['status'] = 'inactive';
+		}
+
+		$this->link_state = $state;
+
+		return $state;
+	}
+
+	/**
+	 * Extra checks for the Overview score, built from data the site already has.
+	 *
+	 * @return array<int, array{label: string, status: string, details: string, tab: string, anchor: string, url: string}>
+	 */
+	private function get_extra_checks(): array {
+		global $wpdb;
+
+		$checks = array();
+		$make   = static function ( string $label, string $status, string $details, string $tab, string $url = '' ): array {
+			return array(
+				'label'   => $label,
+				'status'  => $status,
+				'details' => $details,
+				'tab'     => $tab,
+				'anchor'  => '',
+				'url'     => $url,
+			);
+		};
+
+		// 1. Broken links (only when TSO Link Inspector is active and has scanned).
+		$links = $this->link_inspector_state();
+		if ( 'active' === $links['status'] && $links['has_data'] ) {
+			$checks[] = $make(
+				__( 'Broken links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$links['broken'] > 0 ? 'warn' : 'ok',
+				$links['broken'] > 0
+					? sprintf(
+						/* translators: 1: broken links, 2: tracked links */
+						__( '%1$d broken links found among %2$d tracked links (TSO Link Inspector).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$links['broken'],
+						$links['total']
+					)
+					: sprintf(
+						/* translators: %d: tracked links */
+						__( 'No broken links found among %d tracked links (TSO Link Inspector).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$links['total']
+					),
+				'dashboard',
+				admin_url( 'tools.php?page=tso-link-inspector' )
+			);
+		}
+
+		// 2. PHP version support window.
+		$eol    = TSOSK_Support::PHP_EOL_DATES;
+		$branch = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+		$label  = __( 'PHP version support', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		if ( isset( $eol[ $branch ] ) ) {
+			$end_ts   = (int) strtotime( $eol[ $branch ] . ' 23:59:59 UTC' );
+			$end_text = wp_date( get_option( 'date_format' ), $end_ts );
+			if ( time() > $end_ts ) {
+				$checks[] = $make(
+					$label,
+					'warn',
+					sprintf(
+						/* translators: 1: PHP branch, 2: date */
+						__( 'PHP %1$s stopped receiving security fixes on %2$s. Ask your host to switch to a newer PHP version.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$branch,
+						$end_text
+					),
+					'runtime-stack'
+				);
+			} elseif ( ( $end_ts - time() ) < 120 * DAY_IN_SECONDS ) {
+				$checks[] = $make(
+					$label,
+					'warn',
+					sprintf(
+						/* translators: 1: PHP branch, 2: date */
+						__( 'PHP %1$s stops receiving security fixes on %2$s. Plan an upgrade soon.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$branch,
+						$end_text
+					),
+					'runtime-stack'
+				);
+			} else {
+				$checks[] = $make(
+					$label,
+					'ok',
+					sprintf(
+						/* translators: 1: PHP branch, 2: date */
+						__( 'PHP %1$s is supported until %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$branch,
+						$end_text
+					),
+					'runtime-stack'
+				);
+			}
+		} elseif ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
+			$checks[] = $make(
+				$label,
+				'warn',
+				sprintf(
+					/* translators: %s: PHP version */
+					__( 'PHP %s is outdated and no longer supported. Ask your host to upgrade.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					PHP_VERSION
+				),
+				'runtime-stack'
+			);
+		}
+
+		// 3. Inactive plugins.
+		if ( function_exists( 'get_plugins' ) ) {
+			$inactive = array();
+			foreach ( get_plugins() as $plugin_file => $plugin_data ) {
+				if ( ! is_plugin_active( $plugin_file ) ) {
+					$inactive[] = (string) ( $plugin_data['Name'] ?? $plugin_file );
+				}
+			}
+			$count    = count( $inactive );
+			$checks[] = $make(
+				__( 'Inactive plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$count >= 3 ? 'warn' : 'ok',
+				$count >= 3
+					? sprintf(
+						/* translators: 1: number of inactive plugins, 2: list of plugin names */
+						__( '%1$d inactive plugins (%2$s). Delete the ones you do not use: they can still be a security risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$count,
+						implode( ', ', array_slice( $inactive, 0, 5 ) ) . ( $count > 5 ? '…' : '' )
+					)
+					: __( 'No more than two inactive plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'update-manager',
+				admin_url( 'plugins.php?plugin_status=inactive' )
+			);
+		}
+
+		// 4. Expired transients still stored.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$expired = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->options} WHERE ( option_name LIKE %s OR option_name LIKE %s ) AND CAST(option_value AS UNSIGNED) < %d",
+				$wpdb->esc_like( '_transient_timeout_' ) . '%',
+				$wpdb->esc_like( '_site_transient_timeout_' ) . '%', // Same set as the Transients tool: normal and site transients.
+				time()
+			)
+		);
+		if ( is_multisite() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$expired += (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->sitemeta} WHERE site_id = %d AND meta_key LIKE %s AND CAST(meta_value AS UNSIGNED) < %d",
+					(int) $wpdb->siteid,
+					$wpdb->esc_like( '_site_transient_timeout_' ) . '%',
+					time()
+				)
+			);
+		}
+		$checks[] = $make(
+			__( 'Expired transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$expired >= 100 ? 'warn' : 'ok',
+			$expired >= 100
+				? sprintf(
+					/* translators: %d: number of expired transients */
+					__( '%d expired transients are still stored in the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$expired
+				)
+				: __( 'No significant amount of expired transients.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'transients'
+		);
+
+		// 5. Compressed files uploaded to the Media Library with no parent post.
+		$archives = array( 'application/zip', 'application/x-zip-compressed', 'application/x-rar-compressed', 'application/vnd.rar', 'application/x-7z-compressed', 'application/x-tar', 'application/gzip', 'application/x-gzip', 'application/x-bzip2', 'application/x-xz' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- placeholders are generated from a fixed list.
+		$zips     = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_parent = 0 AND post_mime_type IN (" . implode( ',', array_fill( 0, count( $archives ), '%s' ) ) . ')', ...$archives ) );
+		$checks[] = $make(
+			__( 'Compressed files in the Media Library', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$zips > 0 ? 'warn' : 'ok',
+			$zips > 0
+				? sprintf(
+					/* translators: %d: number of compressed files */
+					__( '%d compressed files (zip, rar…) without a parent post. They are often plugin or theme packages that can be deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$zips
+				)
+				: __( 'No compressed files without a parent post.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'media-cleaner'
+		);
+
+		return $checks;
+	}
+
+	/**
+	 * Recommendations: useful tools or actions the site does not have yet (never scored).
+	 *
+	 * @return array<int, array{title: string, details: string, buttons: array<int, array{label: string, url: string, external: bool}>}>
+	 */
+	private function get_recommendations(): array {
+		$recs  = array();
+		$state = $this->link_inspector_state();
+		$org   = 'https://wordpress.org/plugins/tso-link-inspector/';
+
+		if ( 'missing' === $state['status'] ) {
+			$buttons = array();
+			if ( current_user_can( 'install_plugins' ) ) {
+				$buttons[] = array(
+					'label'    => __( 'Install TSO Link Inspector', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'url'      => admin_url( 'plugin-install.php?s=' . rawurlencode( 'TSO Link Inspector' ) . '&tab=search&type=term' ),
+					'external' => false,
+				);
+			}
+			$buttons[] = array(
+				'label'    => __( 'View on WordPress.org', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'url'      => $org,
+				'external' => true,
+			);
+			$recs[]    = array(
+				'title'   => __( 'Detect broken links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'details' => __( 'Broken links hurt SEO and visitors. TSO Link Inspector scans posts, pages, menus and comments, checks each URL and lets you fix links from one screen. It is not installed on this site, so broken links are not being monitored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'buttons' => $buttons,
+			);
+		} elseif ( 'inactive' === $state['status'] ) {
+			$recs[] = array(
+				'title'   => __( 'Detect broken links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'details' => __( 'TSO Link Inspector is installed but inactive. Activate it to scan this site for broken links.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'buttons' => array(
+					array(
+						'label'    => __( 'Go to Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'url'      => admin_url( 'plugins.php?plugin_status=inactive' ),
+						'external' => false,
+					),
+				),
+			);
+		} elseif ( ! $state['has_data'] ) {
+			$recs[] = array(
+				'title'   => __( 'Detect broken links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'details' => __( 'TSO Link Inspector is active but has not scanned the site yet. Run the first scan to see broken links here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'buttons' => array(
+					array(
+						'label'    => __( 'Open TSO Link Inspector', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'url'      => admin_url( 'tools.php?page=tso-link-inspector' ),
+						'external' => false,
+					),
+				),
+			);
+		}
+
+		return $recs;
+	}
+
+	/**
+	 * Score history (last scans) for the trend line.
+	 *
+	 * @return array<int, array{time: int, score: int}>
+	 */
+	private function get_history(): array {
+		$history = get_option( self::HISTORY_OPTION, array() );
+		if ( ! is_array( $history ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $history as $row ) {
+			if ( is_array( $row ) && isset( $row['time'], $row['score'] ) ) {
+				$out[] = array(
+					'time'  => (int) $row['time'],
+					'score' => max( 0, min( 100, (int) $row['score'] ) ),
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Remember the score of a fresh scan (skips an identical score recorded less than an hour ago).
+	 *
+	 * @param int $score Score 0-100.
+	 */
+	private function record_history( int $score ): void {
+		$history = $this->get_history();
+		$last    = end( $history );
+		if ( is_array( $last ) && $last['score'] === $score && ( time() - $last['time'] ) < HOUR_IN_SECONDS ) {
+			return;
+		}
+		$history[] = array(
+			'time'  => time(),
+			'score' => $score,
+		);
+		update_option( self::HISTORY_OPTION, array_slice( $history, -self::HISTORY_MAX ), false );
+	}
+
+	/**
+	 * Trend line: change since the previous scan plus a small sparkline.
+	 */
+	private function render_trend(): void {
+		$history = $this->get_history();
+		$n       = count( $history );
+		if ( $n < 2 ) {
+			echo '<p class="tsosk-dash-meta">' . esc_html__( 'The score trend appears after the second scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</p>';
+			return;
+		}
+
+		$delta = $history[ $n - 1 ]['score'] - $history[ $n - 2 ]['score'];
+		if ( 0 === $delta ) {
+			$text = __( 'Same score as the previous scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$text = sprintf(
+				/* translators: %s: signed score change, e.g. +3 or -5 */
+				__( '%s points since the previous scan.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				( $delta > 0 ? '+' : '' ) . $delta
+			);
+		}
+
+		$width  = 160;
+		$height = 36;
+		$points = array();
+		foreach ( $history as $i => $row ) {
+			$x        = round( $i * ( $width / ( $n - 1 ) ), 1 );
+			$y        = round( 2 + ( $height - 4 ) * ( 1 - $row['score'] / 100 ), 1 );
+			$points[] = $x . ',' . $y;
 		}
 		?>
+		<p class="tsosk-dash-meta tsosk-dash-trend">
+			<svg viewBox="0 0 <?php echo esc_attr( (string) $width ); ?> <?php echo esc_attr( (string) $height ); ?>" width="<?php echo esc_attr( (string) $width ); ?>" height="<?php echo esc_attr( (string) $height ); ?>" role="img" aria-label="<?php esc_attr_e( 'Score trend', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" focusable="false">
+				<polyline points="<?php echo esc_attr( implode( ' ', $points ) ); ?>"></polyline>
+			</svg>
+			<span><?php echo esc_html( $text ); ?></span>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Cheap numeric facts for the second row of tiles.
+	 *
+	 * @return array<int, array{label: string, value: string, sub: string, warn?: bool, url?: string}>
+	 */
+	private function get_usage_tiles(): array {
+		global $wpdb;
+
+		$since = wp_date( 'Y-m-d', time() - 6 * DAY_IN_SECONDS );
+		$tiles = array();
+
+		// Visits and downloads (View Counter tables); silent when they do not exist.
+		$suppress = $wpdb->suppress_errors( true );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$visits = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type IN ('post','page') AND view_date >= %s", $since ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$downs     = $wpdb->get_var( $wpdb->prepare( "SELECT SUM(count) FROM {$wpdb->prefix}tsosk_views WHERE object_type = 'download' AND view_date >= %s", $since ) );
+		$vc_failed = '' !== (string) $wpdb->last_error;
+		$wpdb->suppress_errors( $suppress );
+		if ( ! $vc_failed ) {
+			$tiles[] = array(
+				'label' => __( 'Visits (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => number_format_i18n( (int) $visits ),
+				'sub'   => __( 'Posts and pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
+			);
+			$tiles[] = array(
+				'label' => __( 'File downloads (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => number_format_i18n( (int) $downs ),
+				'sub'   => __( 'Counted by the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
+			);
+		}
+
+		// Database size (cached for an hour: information_schema can be slow on big sites).
+		$db = get_transient( 'tsosk_dash_dbsize' );
+		if ( ! is_array( $db ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					'SELECT COUNT(*) AS tables_count, SUM(data_length + index_length) AS bytes FROM information_schema.TABLES WHERE table_schema = %s AND table_name LIKE %s',
+					DB_NAME,
+					$wpdb->esc_like( is_multisite() ? $wpdb->base_prefix : $wpdb->prefix ) . '%'
+				),
+				ARRAY_A
+			);
+			$db  = array(
+				'tables' => is_array( $row ) ? (int) $row['tables_count'] : 0,
+				'bytes'  => is_array( $row ) ? (int) $row['bytes'] : 0,
+			);
+			set_transient( 'tsosk_dash_dbsize', $db, HOUR_IN_SECONDS );
+		}
+		if ( $db['bytes'] > 0 ) {
+			$tiles[] = array(
+				'label' => __( 'Database size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => size_format( $db['bytes'], 1 ),
+				'sub'   => sprintf(
+					/* translators: %d: number of tables */
+					__( '%d tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$db['tables']
+				),
+				'url'   => $this->tile_url( 'database', 'TSOSK_Mod_Database' ),
+			);
+		}
+
+		// Autoloaded options.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$auto = $wpdb->get_row( "SELECT COUNT(*) AS n, SUM(LENGTH(option_value)) AS bytes FROM {$wpdb->options} WHERE autoload IN ('yes','on','auto-on','auto')", ARRAY_A );
+		if ( is_array( $auto ) ) {
+			$tiles[] = array(
+				'label' => __( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => size_format( (int) $auto['bytes'], 1 ),
+				'sub'   => sprintf(
+					/* translators: %d: number of options */
+					__( '%d options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $auto['n']
+				),
+				'warn'  => (int) $auto['bytes'] > 1000000,
+				'url'   => $this->tile_url( 'health', 'TSOSK_Mod_Health' ),
+			);
+		}
+
+		// Uploads folder (from the last Media Footprint scan, never scanned here).
+		$footprint = class_exists( 'TSOSK_Uploads_Scanner' ) ? get_transient( TSOSK_Uploads_Scanner::TRANSIENT_FOOTPRINT ) : false;
+		$tiles[]   = array(
+			'label' => __( 'Uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'value' => is_array( $footprint ) && isset( $footprint['total_bytes'] ) ? size_format( (int) $footprint['total_bytes'], 1 ) : '—',
+			'sub'   => is_array( $footprint ) ? '' : __( 'Run the Media Footprint scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'url'   => $this->tile_url( 'media-footprint', 'TSOSK_Mod_Media_Footprint' ),
+		);
+
+		// debug.log.
+		$log_path = TSOSK_Support::get_active_debug_log_path();
+		$log_size = is_file( $log_path ) && is_readable( $log_path ) ? (int) filesize( $log_path ) : -1;
+		$tiles[]  = array(
+			'label' => 'debug.log',
+			'value' => $log_size >= 0 ? size_format( $log_size, 1 ) : '—',
+			'sub'   => $log_size >= 0 ? '' : __( 'No debug.log file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'warn'  => $log_size > TSOSK_Support::DEBUG_LOG_WARN_BYTES,
+			'url'   => $this->tile_url( 'debug', 'TSOSK_Mod_Debug' ),
+		);
+
+		// Users.
+		$user_query = new WP_User_Query(
+			array(
+				'number'      => 1,
+				'fields'      => 'ID',
+				'count_total' => true,
+			)
+		);
+		$tiles[]    = array(
+			'label' => __( 'Users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'value' => number_format_i18n( (int) $user_query->get_total() ),
+			'sub'   => '',
+			'url'   => $this->tile_url( 'users', 'TSOSK_Mod_Users' ),
+		);
+
+		// Cron events and how many hooks have no registered callback.
+		$events     = 0;
+		$no_handler = array();
+		foreach ( (array) _get_cron_array() as $hooks ) {
+			foreach ( (array) $hooks as $hook => $instances ) {
+				$events += is_array( $instances ) ? count( $instances ) : 0;
+				if ( ! has_action( (string) $hook ) ) {
+					$no_handler[ (string) $hook ] = true;
+				}
+			}
+		}
+		$tiles[] = array(
+			'label' => __( 'Cron events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'value' => number_format_i18n( $events ),
+			'sub'   => empty( $no_handler )
+				? __( 'All have a callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: sprintf(
+					/* translators: %d: number of cron hooks without callback */
+					__( '%d hooks without callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					count( $no_handler )
+				),
+			'warn'  => ! empty( $no_handler ),
+			'url'   => $this->tile_url( 'cron', 'TSOSK_Mod_Cron' ),
+		);
+
+		return $tiles;
+	}
+
+	/**
+	 * Admin URL of a tool tab for a clickable tile (empty when that tool is not loaded).
+	 *
+	 * @param string $slug  Tab slug.
+	 * @param string $module_class Module class that must exist for the tab to be available.
+	 * @return string
+	 */
+	private function tile_url( string $slug, string $module_class ): string {
+		return class_exists( $module_class ) ? add_query_arg( 'tab', $slug, $this->base_url() ) : '';
+	}
+
+	/**
+	 * Tiles grid (shared markup). A tile with a URL is a link to the tool behind the number.
+	 *
+	 * @param array<int, array{label: string, value: string, sub: string, warn?: bool, url?: string}> $tiles Tiles.
+	 */
+	private function render_tiles( array $tiles ): void {
+		?>
+		<div class="tsosk-dash-tiles">
+			<?php foreach ( $tiles as $tile ) : ?>
+				<?php
+				$url   = isset( $tile['url'] ) ? (string) $tile['url'] : '';
+				$class = 'tsosk-dash-tile' . ( ! empty( $tile['warn'] ) ? ' is-warn' : '' );
+				$tag   = '' !== $url ? 'a' : 'div';
+				?>
+				<<?php echo esc_html( $tag ); ?> class="<?php echo esc_attr( $class ); ?>"<?php echo '' !== $url ? ' href="' . esc_url( $url ) . '"' : ''; ?>>
+					<span class="tsosk-dash-tile-label"><?php echo esc_html( $tile['label'] ); ?></span>
+					<span class="tsosk-dash-tile-value"><?php echo esc_html( $tile['value'] ); ?></span>
+					<?php if ( '' !== $tile['sub'] ) : ?>
+						<span class="tsosk-dash-tile-sub"><?php echo esc_html( $tile['sub'] ); ?></span>
+					<?php endif; ?>
+				</<?php echo esc_html( $tag ); ?>>
+			<?php endforeach; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Recommendations card (tools the site could add; never part of the score).
+	 *
+	 * @param array<int, array{title: string, details: string, buttons: array<int, array{label: string, url: string, external: bool}>}> $recs Recommendations.
+	 */
+	private function render_recommendations( array $recs ): void {
+		if ( empty( $recs ) ) {
+			return;
+		}
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Recommendations', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<ul class="tsosk-dash-issues">
+				<?php foreach ( $recs as $rec ) : ?>
+					<li>
+						<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Tip', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<span class="tsosk-dash-issue-body">
+							<strong><?php echo esc_html( $rec['title'] ); ?></strong>
+							<span class="tsosk-dash-issue-details"><?php echo esc_html( $rec['details'] ); ?></span>
+						</span>
+						<span>
+							<?php foreach ( $rec['buttons'] as $button ) : ?>
+								<a class="button button-small" href="<?php echo esc_url( $button['url'] ); ?>"<?php echo ! empty( $button['external'] ) ? ' target="_blank" rel="noopener noreferrer"' : ''; ?>><?php echo esc_html( $button['label'] ); ?></a>
+							<?php endforeach; ?>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Site usage card: most viewed pages, most downloaded files, most frequent 404s (last 7 days).
+	 *
+	 * @param string $base Plugin admin URL.
+	 */
+	private function render_usage( string $base ): void {
+		$posts = array();
+		$downs = array();
+		if ( class_exists( 'TSOSK_Mod_View_Counter' ) ) {
+			global $wpdb;
+			$suppress = $wpdb->suppress_errors( true );
+			$vc       = TSOSK_Mod_View_Counter::get_instance();
+			$posts    = $vc->get_top_posts( 7, 3 );
+			$downs    = $vc->get_top_links( 7, 3, 'download' );
+			$wpdb->suppress_errors( $suppress );
+		}
+
+		$not_found = array();
+		$log       = get_option( 'tsosk_404_log', array() );
+		if ( is_array( $log ) ) {
+			$rows = array_filter(
+				$log,
+				static function ( $row ): bool {
+					return is_array( $row ) && isset( $row['path'] ) && empty( $row['bot_suspect'] );
+				}
+			);
+			usort(
+				$rows,
+				static function ( array $a, array $b ): int {
+					return (int) ( $b['hits'] ?? 0 ) <=> (int) ( $a['hits'] ?? 0 );
+				}
+			);
+			$not_found = array_slice( $rows, 0, 3 );
+		}
+		?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Site usage (last 7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<div class="tsosk-vc-top-wrap">
+				<div class="tsosk-vc-col">
+					<h4><?php esc_html_e( 'Most viewed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<?php if ( empty( $posts ) ) : ?>
+						<p class="tsosk-dash-empty"><?php esc_html_e( 'No data yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<?php else : ?>
+						<ul class="tsosk-dash-activity">
+							<?php foreach ( $posts as $row ) : ?>
+								<li><span><?php echo esc_html( $row['title'] ); ?></span> <strong><?php echo esc_html( number_format_i18n( (int) $row['total'] ) ); ?></strong></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</div>
+				<div class="tsosk-vc-col">
+					<h4><?php esc_html_e( 'Most downloaded files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<?php if ( empty( $downs ) ) : ?>
+						<p class="tsosk-dash-empty"><?php esc_html_e( 'No data yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<?php else : ?>
+						<ul class="tsosk-dash-activity">
+							<?php foreach ( $downs as $row ) : ?>
+								<li><span><?php echo esc_html( wp_basename( (string) wp_parse_url( $row['url'], PHP_URL_PATH ) ) ); ?></span> <strong><?php echo esc_html( number_format_i18n( (int) $row['total'] ) ); ?></strong></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</div>
+				<div class="tsosk-vc-col">
+					<h4><?php esc_html_e( 'Most frequent 404s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<?php if ( empty( $not_found ) ) : ?>
+						<p class="tsosk-dash-empty"><?php esc_html_e( 'No data yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<?php else : ?>
+						<ul class="tsosk-dash-activity">
+							<?php foreach ( $not_found as $row ) : ?>
+								<li><span class="tsosk-code"><?php echo esc_html( (string) $row['path'] ); ?></span> <strong><?php echo esc_html( number_format_i18n( (int) ( $row['hits'] ?? 0 ) ) ); ?></strong></li>
+							<?php endforeach; ?>
+						</ul>
+						<p><a href="<?php echo esc_url( add_query_arg( 'tab', 'redirects', $base ) ); ?>"><?php esc_html_e( 'Open the 404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a></p>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
 		<?php
 	}
 
@@ -330,7 +1024,7 @@ class TSOSK_Mod_Dashboard {
 	private function render_vitals(): void {
 		$updates = $this->get_pending_updates();
 		$total   = $updates['core'] + $updates['plugins'] + $updates['themes'];
-		$active  = get_option( 'active_plugins', array() );
+		$active  = TSOSK_Support::get_active_plugin_files();
 		$active  = is_array( $active ) ? count( $active ) : 0;
 
 		$tiles = array(
@@ -338,6 +1032,7 @@ class TSOSK_Mod_Dashboard {
 				'label' => __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => get_bloginfo( 'version' ),
 				'sub'   => wp_get_environment_type(),
+				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ),
 			),
 			array(
 				'label' => __( 'PHP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -347,38 +1042,41 @@ class TSOSK_Mod_Dashboard {
 					__( 'Memory limit %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(string) ini_get( 'memory_limit' )
 				),
+				'url'   => $this->tile_url( 'runtime-stack', 'TSOSK_Mod_Runtime_Stack' ),
 			),
 			array(
 				'label' => __( 'Active plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => (string) $active,
 				'sub'   => '',
+				'url'   => admin_url( 'plugins.php?plugin_status=active' ),
 			),
 			array(
 				'label' => __( 'Pending updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'value' => (string) $total,
-				'sub'   => sprintf(
+				'value' => $updates['checked'] ? (string) $total : '—',
+				'sub'   => $updates['checked'] ? sprintf(
 					/* translators: 1: core updates, 2: plugin updates, 3: theme updates */
 					__( 'Core %1$d · Plugins %2$d · Themes %3$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$updates['core'],
 					$updates['plugins'],
 					$updates['themes']
-				),
+				) : ( ! empty( $updates['restricted'] )
+					? __( 'Update checks are restricted in the Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'No update check has run yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 				'warn'  => $total > 0,
+				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ),
 			),
 		);
-		?>
-		<div class="tsosk-dash-tiles">
-			<?php foreach ( $tiles as $tile ) : ?>
-				<div class="tsosk-dash-tile<?php echo ! empty( $tile['warn'] ) ? ' is-warn' : ''; ?>">
-					<span class="tsosk-dash-tile-label"><?php echo esc_html( $tile['label'] ); ?></span>
-					<span class="tsosk-dash-tile-value"><?php echo esc_html( $tile['value'] ); ?></span>
-					<?php if ( '' !== $tile['sub'] ) : ?>
-						<span class="tsosk-dash-tile-sub"><?php echo esc_html( $tile['sub'] ); ?></span>
-					<?php endif; ?>
-				</div>
-			<?php endforeach; ?>
-		</div>
-		<?php
+		$this->render_tiles( $tiles );
+
+		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) && current_user_can( 'update_plugins' ) ) {
+			$um     = TSOSK_Mod_Update_Manager::get_instance();
+			$counts = $um->get_installable_counts();
+			if ( $counts['total'] > 0 && '' === $counts['blocker'] ) {
+				echo '<p class="tsosk-dash-actions">';
+				$um->render_install_all_button();
+				echo '</p>';
+			}
+		}
 	}
 
 	/**
@@ -387,7 +1085,7 @@ class TSOSK_Mod_Dashboard {
 	 * @param string $base Plugin admin URL.
 	 */
 	private function render_shortcuts( string $base ): void {
-		$links = array(
+		$links     = array(
 			array( 'health', 'TSOSK_Mod_Health', __( 'Health Report', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'dashicons-chart-area' ),
 			array( 'security', 'TSOSK_Mod_Security', __( 'Security Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'dashicons-shield-alt' ),
 			array( 'debug', 'TSOSK_Mod_Debug', __( 'Debug Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'dashicons-admin-generic' ),
@@ -397,9 +1095,16 @@ class TSOSK_Mod_Dashboard {
 			array( 'maintenance', 'TSOSK_Mod_Maintenance', __( 'Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'dashicons-visibility' ),
 			array( 'sandbox', 'TSOSK_Mod_Sandbox', __( 'Plugin Sandbox', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'dashicons-shield' ),
 		);
+		$favorites = class_exists( 'TSOSK_Admin' ) ? TSOSK_Admin::get_instance()->get_favorite_shortcuts() : array();
+		if ( ! empty( $favorites ) ) {
+			$links = $favorites;
+		}
 		?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Shortcuts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<?php if ( ! empty( $favorites ) ) : ?>
+				<p class="description"><?php esc_html_e( 'Shortcuts follow the tools in your Favorites bar.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php endif; ?>
 			<div class="tsosk-dash-shortcuts">
 				<?php foreach ( $links as $link ) : ?>
 					<?php if ( class_exists( $link[1] ) ) : ?>

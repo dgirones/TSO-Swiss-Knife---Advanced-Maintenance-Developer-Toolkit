@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TSOSK_Mod_File_Integrity {
 
 	/** Transient key for cached scan results. */
-	private const TRANSIENT_RESULTS  = 'tsosk_fi_results';
+	private const TRANSIENT_RESULTS = 'tsosk_fi_results';
 
 	/** Transient key for cached checksums from WordPress.org API. */
 	private const TRANSIENT_CHECKSUMS = 'tsosk_fi_checksums';
@@ -38,7 +38,11 @@ class TSOSK_Mod_File_Integrity {
 	/** WordPress.org checksums API endpoint. */
 	private const API_URL = 'https://api.wordpress.org/core/checksums/1.0/';
 
-	/** @var TSOSK_Mod_File_Integrity|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_File_Integrity|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -53,10 +57,14 @@ class TSOSK_Mod_File_Integrity {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_fi_scan',     array( $this, 'ajax_scan' ) );
-		add_action( 'wp_ajax_tsosk_fi_ignore',   array( $this, 'ajax_ignore' ) );
+		add_action( 'wp_ajax_tsosk_fi_scan', array( $this, 'ajax_scan' ) );
+		add_action( 'wp_ajax_tsosk_fi_ignore', array( $this, 'ajax_ignore' ) );
 		add_action( 'wp_ajax_tsosk_fi_unignore', array( $this, 'ajax_unignore' ) );
+		add_action( 'wp_ajax_tsosk_fi_view', array( $this, 'ajax_view' ) );
 	}
 
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
@@ -90,7 +98,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		$result['html'] = $this->render_results( $result, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
-		$n_issues         = (int) ( $result['n_issues'] ?? 0 );
+		$n_issues       = (int) ( $result['n_issues'] ?? 0 );
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'scan',
@@ -130,6 +138,42 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		return in_array( $file, $known, true );
+	}
+
+	/**
+	 * AJAX: show the first bytes of a flagged file (read-only, never executed) so the admin can judge it.
+	 */
+	public function ajax_view(): void {
+		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$file = isset( $_POST['file'] ) ? sanitize_text_field( wp_unslash( $_POST['file'] ) ) : '';
+		$file = ltrim( str_replace( '\\', '/', $file ), '/' );
+		// Only files listed by the latest scan can be opened, never an arbitrary path.
+		if ( ! $this->is_scannable_ignore_path( $file ) ) {
+			wp_send_json_error( __( 'This file is not part of the latest scan. Run the scan again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$abs  = wp_normalize_path( ABSPATH . $file );
+		$real = realpath( $abs );
+		$root = realpath( ABSPATH );
+		if ( false === $real || false === $root || 0 !== strpos( wp_normalize_path( $real ), wp_normalize_path( trailingslashit( $root ) ) ) || ! is_file( $real ) || ! is_readable( $real ) ) {
+			wp_send_json_error( __( 'The file could not be read.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads a local file, never executes it.
+		$content = file_get_contents( $real, false, null, 0, 2048 );
+		if ( false === $content ) {
+			wp_send_json_error( __( 'The file could not be read.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( false !== strpos( $content, "\0" ) ) {
+			wp_send_json_error( __( 'Binary file: contents not shown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		wp_send_json_success(
+			array(
+				'size'    => (int) filesize( $real ),
+				'content' => $content,
+			)
+		);
 	}
 
 	/**
@@ -219,7 +263,7 @@ class TSOSK_Mod_File_Integrity {
 			if ( ! is_string( $expected_md5 ) && ! is_numeric( $expected_md5 ) ) {
 				continue;
 			}
-			$key = $this->normalize_rel_path( (string) $rel_path );
+			$key  = $this->normalize_rel_path( (string) $rel_path );
 			$hash = strtolower( (string) $expected_md5 );
 			if ( '' !== $key && preg_match( '/^[a-f0-9]{32}$/', $hash ) ) {
 				$normalized[ $key ] = $hash;
@@ -290,7 +334,7 @@ class TSOSK_Mod_File_Integrity {
 			return '';
 		}
 		foreach ( $roots as $root ) {
-			$abs = wp_normalize_path( $root . $rel );
+			$abs    = wp_normalize_path( $root . $rel );
 			$root_n = wp_normalize_path( $root );
 			// Ensure resolved path stays under the candidate core root.
 			if ( 0 !== strpos( $abs, $root_n ) ) {
@@ -319,20 +363,20 @@ class TSOSK_Mod_File_Integrity {
 			return $checksums;
 		}
 
-		$ignored           = $this->get_ignored();
-		$core_roots        = $this->get_core_root_candidates();
+		$ignored    = $this->get_ignored();
+		$core_roots = $this->get_core_root_candidates();
 		if ( empty( $core_roots ) ) {
 			return new WP_Error(
 				'no_core_root',
 				__( 'Could not locate a readable WordPress core directory (wp-includes/version.php). Check open_basedir and file permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
 		}
-		$core_root         = $core_roots[0];
-		$modified          = array();
-		$missing           = array();
-		$missing_optional  = array();
-		$added             = array();
-		$seen_added        = array();
+		$core_root        = $core_roots[0];
+		$modified         = array();
+		$missing          = array();
+		$missing_optional = array();
+		$added            = array();
+		$seen_added       = array();
 
 		// Sanity probe: if common core files are readable, a later mass-missing
 		// result means path/checksum mismatch — not a wiped install.
@@ -430,13 +474,18 @@ class TSOSK_Mod_File_Integrity {
 					if ( in_array( $rel, $ignored, true ) || isset( $seen_added[ $rel ] ) ) {
 						continue;
 					}
+					// PHP error logs (error_log, php_errorlog) are written by the server itself, not code: skip them unless they hold PHP tags.
+					if ( in_array( strtolower( basename( $rel ) ), array( 'error_log', 'php_errorlog' ), true ) && ! $this->file_has_php_tag( (string) $file_info->getPathname() ) ) {
+						continue;
+					}
 					// If this file is NOT in the official checksums, it's unexpected.
 					if ( ! array_key_exists( $rel, $checksums ) ) {
 						$seen_added[ $rel ] = true;
-						$added[] = array(
+						$added[]            = array(
 							'file'  => $rel,
 							'size'  => (int) $file_info->getSize(),
 							'mtime' => (int) $file_info->getMTime(),
+							'inert' => (bool) preg_match( '/\.php$/i', $rel ) && $this->is_inert_php_file( (string) $file_info->getPathname() ),
 						);
 					}
 				}
@@ -570,19 +619,76 @@ class TSOSK_Mod_File_Integrity {
 	 * @return bool
 	 */
 	private function is_benign_index_stub( string $abs ): bool {
-		// Generous but bounded: legitimate stubs are a few dozen bytes.
-		// Anything larger is read and rejected rather than trusted blindly.
-		if ( ! is_readable( $abs ) || filesize( $abs ) > 512 ) {
+		return $this->is_inert_php_file( $abs );
+	}
+
+	/**
+	 * Whether the first 64 KB of a file contain a PHP open tag.
+	 *
+	 * @param string $abs Absolute path.
+	 * @return bool
+	 */
+	private function file_has_php_tag( string $abs ): bool {
+		if ( ! is_file( $abs ) || ! is_readable( $abs ) ) {
+			return true; // Unknown: keep it listed.
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads a local file.
+		$head = file_get_contents( $abs, false, null, 0, 65536 );
+		return false === $head || false !== stripos( $head, '<?php' ) || false !== strpos( $head, '<?=' );
+	}
+
+	/**
+	 * Whether a small .php file holds no executable code at all: no PHP tag, or only the open tag, whitespace,
+	 * comments (//, #, block or doc comments) and, optionally, a closing tag. This covers every
+	 * common "Silence is golden" variant, e.g. a block-comment header or a trailing "?>".
+	 *
+	 * Deliberately strict: any statement, however short, any text outside PHP tags, or a file
+	 * that cannot be tokenized is NOT inert and is still reported.
+	 *
+	 * @param string $abs Absolute path to the file.
+	 * @return bool
+	 */
+	private function is_inert_php_file( string $abs ): bool {
+		// Legitimate stubs are a few dozen bytes; anything larger is never trusted blindly.
+		if ( ! is_file( $abs ) || ! is_readable( $abs ) || filesize( $abs ) > 1024 ) {
 			return false;
 		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads a local file.
 		$contents = file_get_contents( $abs );
 		if ( false === $contents ) {
 			return false;
 		}
-		$contents = trim( $contents );
-		// Must be nothing more than a PHP open tag optionally followed by a
-		// single-line "//" or "#" comment (no closing tag, no other code).
-		return (bool) preg_match( '/^<\?php\s*(?:(?:\/\/|#)[^\r\n]*)?$/s', $contents );
+		if ( '' === trim( $contents ) ) {
+			return true; // An empty .php file runs nothing.
+		}
+		if ( false === strpos( $contents, '<?' ) ) {
+			return true; // No PHP tag at all (plain text or static HTML saved with a .php name): the server never runs any code from it.
+		}
+		if ( ! function_exists( 'token_get_all' ) ) {
+			return (bool) preg_match( '/^<\?php\s*(?:(?:\/\/|#)[^\r\n]*)?(?:\s*\?>)?$/s', trim( $contents ) );
+		}
+		try {
+			$tokens = token_get_all( $contents );
+		} catch ( Throwable $e ) {
+			return false;
+		}
+		$allowed = array( T_OPEN_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT, T_CLOSE_TAG );
+		$opened  = false;
+		foreach ( $tokens as $token ) {
+			if ( ! is_array( $token ) ) {
+				return false; // Any bare symbol (; { ( …) means code.
+			}
+			if ( T_OPEN_TAG === $token[0] ) {
+				$opened = true;
+			}
+			if ( T_INLINE_HTML === $token[0] && '' === trim( $token[1] ) ) {
+				continue; // Whitespace after a closing tag.
+			}
+			if ( ! in_array( $token[0], $allowed, true ) ) {
+				return false;
+			}
+		}
+		return $opened;
 	}
 
 	/**
@@ -704,8 +810,8 @@ class TSOSK_Mod_File_Integrity {
 	 * @return array<string,string>|WP_Error Map of relative-path => MD5 hash.
 	 */
 	private function fetch_checksums() {
-		$version = (string) get_bloginfo( 'version' );
-		$locale  = (string) get_locale();
+		$version        = (string) get_bloginfo( 'version' );
+		$locale         = (string) get_locale();
 		$cache_key_meta = $version . '|' . $locale;
 
 		$cached = get_transient( self::TRANSIENT_CHECKSUMS );
@@ -890,14 +996,14 @@ class TSOSK_Mod_File_Integrity {
 				?>
 			</span>
 			<button class="button button-primary" id="tsosk-fi-scan"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-			        data-force="0">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>"
+					data-force="0">
 				<?php esc_html_e( 'Scan Core Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<button class="button" id="tsosk-fi-force-scan"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>"
-			        data-force="1"
-			        title="<?php esc_attr_e( 'Re-download checksums from WordPress.org and scan again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>"
+					data-force="1"
+					title="<?php esc_attr_e( 'Re-download checksums from WordPress.org and scan again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<?php esc_html_e( 'Force Re-scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-fi-msg"></span>
@@ -906,7 +1012,7 @@ class TSOSK_Mod_File_Integrity {
 		<!-- Progress bar (hidden until scan starts) -->
 		<div id="tsosk-fi-progress" style="display:none;margin-bottom:16px;">
 			<div style="background:var(--wp-admin-theme-color,#2271b1);height:4px;border-radius:2px;
-			            width:0;transition:width .3s;" id="tsosk-fi-bar"></div>
+						width:0;transition:width .3s;" id="tsosk-fi-bar"></div>
 			<p style="font-size:12px;color:#666;margin:4px 0 0;" id="tsosk-fi-progress-label">
 				<?php esc_html_e( 'Connecting to WordPress.org API…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
@@ -940,8 +1046,8 @@ class TSOSK_Mod_File_Integrity {
 						<td class="tsosk-code"><?php echo esc_html( $ign ); ?></td>
 						<td>
 							<button class="button button-small tsosk-fi-unignore"
-							        data-file="<?php echo esc_attr( $ign ); ?>"
-							        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									data-file="<?php echo esc_attr( $ign ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Remove', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
 						</td>
@@ -960,22 +1066,22 @@ class TSOSK_Mod_File_Integrity {
 	 * @param array    $data    Scan result array.
 	 * @param string[] $ignored Ignored files list.
 	 * @param string   $nonce   Security nonce.
-	 * @param bool     $echo    Whether to echo (true) or return (false).
-	 * @return string HTML if $echo is false.
+	 * @param bool     $should_echo    Whether to echo (true) or return (false).
+	 * @return string HTML if $should_echo is false.
 	 */
-	public function render_results( array $data, array $ignored, string $nonce, bool $echo = false ): string {
-		$data              = $this->normalize_scan_result( $data );
-		$modified          = $data['modified'];
-		$missing           = $data['missing'];
-		$missing_optional  = $data['missing_optional'];
-		$added             = $data['added'];
+	public function render_results( array $data, array $ignored, string $nonce, bool $should_echo = false ): string {
+		$data               = $this->normalize_scan_result( $data );
+		$modified           = $data['modified'];
+		$missing            = $data['missing'];
+		$missing_optional   = $data['missing_optional'];
+		$added              = $data['added'];
 		$uploads_suspicious = $data['uploads_suspicious'];
-		$total             = (int) ( $data['total'] ?? 0 );
-		$scanned           = (int) ( $data['scanned_at'] ?? 0 );
-		$from_c            = ! empty( $data['from_cache'] );
-		$wp_ver            = sanitize_text_field( $data['wp_version'] ?? '' );
-		$n_issues          = (int) $data['n_issues'];
-		$n_info            = count( $missing_optional ) + count( $added );
+		$total              = (int) ( $data['total'] ?? 0 );
+		$scanned            = (int) ( $data['scanned_at'] ?? 0 );
+		$from_c             = ! empty( $data['from_cache'] );
+		$wp_ver             = sanitize_text_field( $data['wp_version'] ?? '' );
+		$n_issues           = (int) $data['n_issues'];
+		$n_info             = count( $missing_optional ) + count( $added );
 
 		ob_start();
 		?>
@@ -1015,8 +1121,8 @@ class TSOSK_Mod_File_Integrity {
 
 			<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
 				<?php
-				$status_badge = $n_issues === 0 ? 'tsosk-badge-ok' : 'tsosk-badge-warn';
-				$status_label = $n_issues === 0
+				$status_badge = 0 === $n_issues ? 'tsosk-badge-ok' : 'tsosk-badge-warn';
+				$status_label = 0 === $n_issues
 					? __( 'No core integrity issues', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 					: sprintf(
 						/* translators: %d: number of real issues (modified + missing core) */
@@ -1120,9 +1226,14 @@ class TSOSK_Mod_File_Integrity {
 							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
 							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
 							<td>
+								<button class="button button-small tsosk-fi-view"
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'View contents', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
 								<button class="button button-small tsosk-fi-ignore"
-								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
@@ -1179,8 +1290,8 @@ class TSOSK_Mod_File_Integrity {
 							<td class="tsosk-code" style="font-size:11px;color:#b45309;"><?php echo esc_html( substr( (string) $f['actual'], 0, 12 ) . '…' ); ?></td>
 							<td>
 								<button class="button button-small tsosk-fi-ignore"
-								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
@@ -1214,8 +1325,8 @@ class TSOSK_Mod_File_Integrity {
 							<td class="tsosk-code" style="font-size:11px;color:#666;"><?php echo esc_html( substr( (string) $f['expected'], 0, 12 ) . '…' ); ?></td>
 							<td>
 								<button class="button button-small tsosk-fi-ignore"
-								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
@@ -1252,8 +1363,8 @@ class TSOSK_Mod_File_Integrity {
 								<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
 								<td>
 									<button class="button button-small tsosk-fi-ignore"
-									        data-file="<?php echo esc_attr( $f['file'] ); ?>"
-									        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+											data-file="<?php echo esc_attr( $f['file'] ); ?>"
+											data-nonce="<?php echo esc_attr( $nonce ); ?>">
 										<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 									</button>
 								</td>
@@ -1286,13 +1397,22 @@ class TSOSK_Mod_File_Integrity {
 					<tbody>
 					<?php foreach ( $added as $f ) : ?>
 						<tr>
-							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
+							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?>
+								<?php if ( ! empty( $f['inert'] ) ) : ?>
+									<br><small><?php esc_html_e( 'Inert placeholder: it only contains comments or plain text, no executable code. It is not part of WordPress itself; a plugin or the hosting added it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></small>
+								<?php endif; ?>
+							</td>
 							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
 							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
 							<td>
+								<button class="button button-small tsosk-fi-view"
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'View contents', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
 								<button class="button button-small tsosk-fi-ignore"
-								        data-file="<?php echo esc_attr( $f['file'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-file="<?php echo esc_attr( $f['file'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 							</td>
@@ -1305,7 +1425,7 @@ class TSOSK_Mod_File_Integrity {
 		<?php endif; ?>
 		<?php
 		$html = (string) ob_get_clean();
-		if ( $echo ) {
+		if ( $should_echo ) {
 			echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pre-escaped above
 		}
 		return $html;

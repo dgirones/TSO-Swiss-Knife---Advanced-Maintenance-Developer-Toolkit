@@ -14,9 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Heartbeat {
 
-	/** @var TSOSK_Mod_Heartbeat|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Heartbeat|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -24,6 +33,9 @@ class TSOSK_Mod_Heartbeat {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_heartbeat_save', array( $this, 'ajax_save' ) );
 	}
@@ -38,33 +50,51 @@ class TSOSK_Mod_Heartbeat {
 
 		if ( 'disable_all' === $mode ) {
 			// init fires before wp_enqueue_scripts — safe to deregister here.
-			add_action( 'init', static function () {
-				wp_deregister_script( 'heartbeat' );
-			} );
+			add_action(
+				'init',
+				static function () {
+					wp_deregister_script( 'heartbeat' );
+				}
+			);
 		} elseif ( 'disable_frontend' === $mode ) {
 			// Must hook on wp_enqueue_scripts (priority 999) — not heartbeat_settings
 			// which fires AFTER scripts are already enqueued.
-			add_action( 'wp_enqueue_scripts', static function () {
-				wp_deregister_script( 'heartbeat' );
-			}, 999 );
+			add_action(
+				'wp_enqueue_scripts',
+				static function () {
+					wp_deregister_script( 'heartbeat' );
+				},
+				999
+			);
 		} elseif ( 'disable_post' === $mode ) {
 			// Keep heartbeat ONLY on post-edit screens; remove everywhere else.
-			add_action( 'wp_enqueue_scripts', static function () {
-				wp_deregister_script( 'heartbeat' );
-			}, 999 );
-			add_action( 'admin_enqueue_scripts', static function () {
-				global $pagenow;
-				if ( 'post.php' !== $pagenow && 'post-new.php' !== $pagenow ) {
+			add_action(
+				'wp_enqueue_scripts',
+				static function () {
 					wp_deregister_script( 'heartbeat' );
-				}
-			}, 999 );
+				},
+				999
+			);
+			add_action(
+				'admin_enqueue_scripts',
+				static function () {
+					global $pagenow;
+					if ( 'post.php' !== $pagenow && 'post-new.php' !== $pagenow ) {
+						wp_deregister_script( 'heartbeat' );
+					}
+				},
+				999
+			);
 		}
 
 		if ( $interval > 0 && 'disable_all' !== $mode ) {
-			add_filter( 'heartbeat_settings', static function ( $s ) use ( $interval ) {
-				$s['interval'] = $interval;
-				return $s;
-			} );
+			add_filter(
+				'heartbeat_settings',
+				static function ( $s ) use ( $interval ) {
+					$s['interval'] = $interval;
+					return $s;
+				}
+			);
 		}
 
 		// Measure real Heartbeat traffic regardless of mode, so a later change
@@ -167,7 +197,14 @@ class TSOSK_Mod_Heartbeat {
 			$interval = 0;
 		}
 
-		update_option( 'tsosk_heartbeat_settings', array( 'mode' => $mode, 'interval' => $interval ), false );
+		update_option(
+			'tsosk_heartbeat_settings',
+			array(
+				'mode'     => $mode,
+				'interval' => $interval,
+			),
+			false
+		);
 		TSOSK_Activity_Log::log(
 			'heartbeat',
 			'save',
@@ -181,6 +218,9 @@ class TSOSK_Mod_Heartbeat {
 		wp_send_json_success( __( 'Heartbeat settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce    = wp_create_nonce( 'tsosk_heartbeat_nonce' );
 		$settings = $this->get_settings();
@@ -225,7 +265,7 @@ class TSOSK_Mod_Heartbeat {
 				<label class="tsosk-heartbeat-option <?php echo $mode === $key ? 'is-selected' : ''; ?>">
 					<div class="tsosk-heartbeat-option-header">
 						<input type="radio" name="tsosk_heartbeat_mode" value="<?php echo esc_attr( $key ); ?>"
-						       <?php checked( $mode, $key ); ?>>
+								<?php checked( $mode, $key ); ?>>
 						<strong><?php echo esc_html( $opt['label'] ); ?></strong>
 						<span class="tsosk-badge <?php echo esc_attr( $opt['badge'] ); ?>" style="margin-left:8px;">
 							<?php echo esc_html( 'tsosk-badge-ok' === $opt['badge'] ? __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : ( 'tsosk-badge-warn' === $opt['badge'] ? __( 'Caution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Info', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) ); ?>
@@ -248,7 +288,7 @@ class TSOSK_Mod_Heartbeat {
 				<?php esc_html_e( '60 s on shared hosting or low-traffic sites. 15–30 s only if real-time collaboration is needed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<input type="number" id="tsosk-heartbeat-interval" min="0" max="300" step="5"
-			       value="<?php echo esc_attr( (string) $interval ); ?>" style="width:100px;">
+					value="<?php echo esc_attr( (string) $interval ); ?>" style="width:100px;">
 			<span class="description">&nbsp;<?php esc_html_e( '0 = WordPress default (15 s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 		</div>
 
@@ -293,7 +333,7 @@ class TSOSK_Mod_Heartbeat {
 		</div>
 
 		<button class="button button-primary" id="tsosk-heartbeat-save"
-		        data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:4px;">
+				data-nonce="<?php echo esc_attr( $nonce ); ?>" style="margin-top:4px;">
 			<?php esc_html_e( 'Save Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</button>
 		<span class="tsosk-ajax-msg" id="tsosk-heartbeat-msg"></span>

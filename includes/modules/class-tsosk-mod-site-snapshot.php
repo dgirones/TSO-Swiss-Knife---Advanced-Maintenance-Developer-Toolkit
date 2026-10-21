@@ -23,7 +23,19 @@ class TSOSK_Mod_Site_Snapshot {
 	/** Marker used when an option is missing on the source site. */
 	private const MISSING = '__tsosk_missing__';
 
-	/** @var TSOSK_Mod_Site_Snapshot|null */
+	/** Option that keeps the settings replaced by the last import, so it can be reverted. */
+	public const BACKUP_OPTION = 'tsosk_snapshot_backup';
+
+	/** Secret fields removed from exports unless the admin opts in. */
+	private const SECRET_FIELDS = array(
+		'comment_antispam' => array( 'cleantalk_key', 'abuseipdb_key', 'honeypot_access_key' ),
+	);
+
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Site_Snapshot|null
+	 */
 	private static $instance = null;
 
 	/**
@@ -68,6 +80,11 @@ class TSOSK_Mod_Site_Snapshot {
 		);
 	}
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -75,9 +92,13 @@ class TSOSK_Mod_Site_Snapshot {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'admin_post_tsosk_snapshot_export', array( $this, 'handle_export' ) );
 		add_action( 'wp_ajax_tsosk_snapshot_import', array( $this, 'ajax_import' ) );
+		add_action( 'wp_ajax_tsosk_snapshot_restore', array( $this, 'ajax_restore' ) );
 	}
 
 	/**
@@ -113,9 +134,10 @@ class TSOSK_Mod_Site_Snapshot {
 	 * Build snapshot payload.
 	 *
 	 * @param string[] $sections Section ids to include.
+	 * @param bool     $exclude_secrets Exclude secrets.
 	 * @return array<string, mixed>
 	 */
-	public function build_snapshot( array $sections ): array {
+	public function build_snapshot( array $sections, bool $exclude_secrets = false ): array {
 		$map     = self::get_export_map();
 		$payload = array();
 
@@ -128,6 +150,12 @@ class TSOSK_Mod_Site_Snapshot {
 			$value  = get_option( $option, self::MISSING );
 			// null = option missing on source → import will reset/delete on target.
 			$payload[ $section ] = ( self::MISSING === $value ) ? null : $value;
+
+			if ( $exclude_secrets && is_array( $payload[ $section ] ) && isset( self::SECRET_FIELDS[ $section ] ) ) {
+				foreach ( self::SECRET_FIELDS[ $section ] as $field ) {
+					unset( $payload[ $section ][ $field ] );
+				}
+			}
 		}
 
 		return array(
@@ -172,7 +200,10 @@ class TSOSK_Mod_Site_Snapshot {
 			$sections = array_keys( self::get_export_map() );
 		}
 
-		$data = $this->build_snapshot( $sections );
+		// Nonce verified above with check_admin_referer(). Secrets are excluded unless the box is unticked.
+		$exclude_secrets = isset( $_POST['tsosk_snapshot_export'] ) && ! empty( $_POST['exclude_secrets'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		$data = $this->build_snapshot( $sections, $exclude_secrets );
 		$json = wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		if ( ! is_string( $json ) ) {
 			wp_die( esc_html__( 'Could not encode snapshot.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -264,6 +295,7 @@ class TSOSK_Mod_Site_Snapshot {
 		$imported = array();
 		$skipped  = array();
 		$notes    = array();
+		$backup   = array();
 		$old_lp   = get_option( 'tsosk_login_protect', array() );
 		$old_slug = ( is_array( $old_lp ) && ! empty( $old_lp['login_slug'] ) ) ? (string) $old_lp['login_slug'] : '';
 
@@ -274,6 +306,11 @@ class TSOSK_Mod_Site_Snapshot {
 			}
 			if ( ! empty( $sections_filter ) && ! in_array( $section, $sections_filter, true ) ) {
 				continue;
+			}
+
+			// Keep the current value so the whole import can be reverted.
+			if ( ! isset( $backup[ $section ] ) ) {
+				$backup[ $section ] = get_option( $map[ $section ], self::MISSING );
 			}
 
 			// Explicit null = reset to defaults (delete stored option).
@@ -289,9 +326,20 @@ class TSOSK_Mod_Site_Snapshot {
 				continue;
 			}
 
-			$autoload = ( 'staging' === $section );
+			// Existing options keep their autoload flag (null); new ones autoload only for Staging Mode.
+			$autoload = ( self::MISSING === $backup[ $section ] ) ? ( 'staging' === $section ) : null;
 			update_option( $map[ $section ], $validated, $autoload );
 			$imported[] = $section;
+
+			if ( 'maintenance' === $section && is_array( $validated ) && ! empty( $validated['enabled'] ) ) {
+				$notes[] = __( 'Maintenance mode was imported as enabled: visitors now receive the maintenance page. Turn it off under Maintenance if this is not intended.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( 'rest_api' === $section && is_array( $validated ) && 'disabled' === ( $validated['mode'] ?? '' ) ) {
+				$notes[] = __( 'The REST API was imported as disabled; this can break the block editor and other plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+			if ( 'update_manager' === $section && is_array( $validated ) && ( ! empty( $validated['block_core'] ) || ! empty( $validated['block_plugins'] ) || ! empty( $validated['block_themes'] ) || 'disable_all' === ( $validated['preset'] ?? '' ) ) ) {
+				$notes[] = __( 'Update Manager was imported with updates blocked. Review it under Update Manager.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
 
 			if ( 'slow_queries' === $section && is_array( $validated ) && ! empty( $validated['enabled'] ) ) {
 				$note = $this->maybe_enable_savequeries_after_import();
@@ -303,6 +351,20 @@ class TSOSK_Mod_Site_Snapshot {
 			if ( 'staging' === $section && is_array( $validated ) && in_array( true, $validated, true ) ) {
 				$notes[] = __( 'Staging Mode switches were imported as enabled. Confirm this is a test site, or turn them off under Staging Mode before going live.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
+		}
+
+		if ( ! empty( $imported ) ) {
+			$user = wp_get_current_user();
+			update_option(
+				self::BACKUP_OPTION,
+				array(
+					'time'     => time(),
+					'user'     => $user->exists() ? $user->user_login : '',
+					'sections' => array_intersect_key( $backup, array_flip( $imported ) ),
+				),
+				false
+			);
+			$notes[] = __( 'The previous settings were saved: use "Restore previous settings" below to undo this import.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		if ( in_array( 'login_protect', $imported, true ) ) {
@@ -348,11 +410,68 @@ class TSOSK_Mod_Site_Snapshot {
 				implode( '; ', $skipped )
 			);
 		}
-		if ( ! empty( $notes ) ) {
-			$response .= ' ' . implode( ' ', $notes );
-		}
+		// A note about the saved previous settings is always added above, so there is always something to append.
+		$response .= ' ' . implode( ' ', $notes );
 
 		wp_send_json_success( $response );
+	}
+
+	/**
+	 * AJAX: put back the settings that the last import replaced.
+	 */
+	public function ajax_restore(): void {
+		check_ajax_referer( 'tsosk_snapshot_import_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$backup = get_option( self::BACKUP_OPTION, array() );
+		if ( ! is_array( $backup ) || empty( $backup['sections'] ) || ! is_array( $backup['sections'] ) ) {
+			wp_send_json_error( __( 'There is no saved state to restore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$map      = self::get_export_map();
+		$restored = array();
+		foreach ( $backup['sections'] as $section => $value ) {
+			$section = sanitize_key( (string) $section );
+			if ( ! isset( $map[ $section ] ) ) {
+				continue;
+			}
+			if ( self::MISSING === $value ) {
+				delete_option( $map[ $section ] );
+			} else {
+				update_option( $map[ $section ], $value, 'staging' === $section );
+			}
+			$restored[] = $section;
+		}
+
+		if ( in_array( 'login_protect', $restored, true ) ) {
+			flush_rewrite_rules( false );
+		}
+
+		delete_option( self::BACKUP_OPTION );
+
+		if ( empty( $restored ) ) {
+			wp_send_json_error( __( 'There is no saved state to restore.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		TSOSK_Activity_Log::log(
+			'site-snapshot',
+			'restore',
+			sprintf(
+				/* translators: %s: comma-separated section labels */
+				__( 'Site snapshot import reverted: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$this->format_section_list( $restored )
+			)
+		);
+
+		wp_send_json_success(
+			sprintf(
+				/* translators: %s: comma-separated section labels */
+				__( 'Previous settings restored: %s. Reload affected tabs to verify settings.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$this->format_section_list( $restored )
+			)
+		);
 	}
 
 	/**
@@ -436,6 +555,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize redirects import.
+	 *
 	 * @param mixed $value Raw redirects option.
 	 * @return array|WP_Error
 	 */
@@ -471,6 +592,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize heartbeat import.
+	 *
 	 * @param mixed $value Raw heartbeat settings.
 	 * @return array|WP_Error
 	 */
@@ -489,6 +612,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize update manager import.
+	 *
 	 * @param mixed $value Raw update manager settings.
 	 * @return array|WP_Error
 	 */
@@ -513,7 +638,7 @@ class TSOSK_Mod_Site_Snapshot {
 				'email_manual_core'  => true,
 				'plugin_rules'       => array(),
 			);
-		$preset = sanitize_key( (string) ( $value['preset'] ?? 'default' ) );
+		$preset   = sanitize_key( (string) ( $value['preset'] ?? 'default' ) );
 		if ( ! in_array( $preset, array( 'default', 'disable_all', 'custom' ), true ) ) {
 			$preset = 'default';
 		}
@@ -551,6 +676,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize rest api import.
+	 *
 	 * @param mixed $value Raw REST settings.
 	 * @return array|WP_Error
 	 */
@@ -578,6 +705,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize maintenance import.
+	 *
 	 * @param mixed $value Raw maintenance settings.
 	 * @return array|WP_Error
 	 */
@@ -599,6 +728,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize hidden profiles import.
+	 *
 	 * @param mixed $value Raw hidden profiles runtime flags.
 	 * @return array|WP_Error
 	 */
@@ -615,6 +746,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize alert settings import.
+	 *
 	 * @param mixed $value Raw alert settings.
 	 * @return array|WP_Error
 	 */
@@ -634,6 +767,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize health suppress import.
+	 *
 	 * @param mixed $value Raw health suppress map.
 	 * @return array|WP_Error
 	 */
@@ -653,6 +788,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize login protect import.
+	 *
 	 * @param mixed $value Raw login protect settings.
 	 * @return array|WP_Error
 	 */
@@ -694,6 +831,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize lockout log import.
+	 *
 	 * @param mixed $value Raw lockout log.
 	 * @return array|WP_Error
 	 */
@@ -724,6 +863,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize attempts import.
+	 *
 	 * @param mixed $value Raw attempt counters.
 	 * @return array|WP_Error
 	 */
@@ -754,6 +895,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize slow queries import.
+	 *
 	 * @param mixed $value Raw slow query settings.
 	 * @return array|WP_Error
 	 */
@@ -764,7 +907,10 @@ class TSOSK_Mod_Site_Snapshot {
 		$patterns = array();
 		$raw_p    = $value['ignore_patterns'] ?? array();
 		if ( is_string( $raw_p ) ) {
-			$raw_p = preg_split( '/\r\n|\r|\n/', $raw_p ) ?: array();
+			$raw_p = preg_split( '/\r\n|\r|\n/', $raw_p );
+			if ( false === $raw_p ) {
+				$raw_p = array();
+			}
 		}
 		if ( is_array( $raw_p ) ) {
 			foreach ( $raw_p as $line ) {
@@ -788,12 +934,14 @@ class TSOSK_Mod_Site_Snapshot {
 			'max_entries'     => max( 50, min( 2000, absint( $value['max_entries'] ?? 500 ) ) ),
 			'exclude_ajax'    => ! empty( $value['exclude_ajax'] ),
 			'exclude_cron'    => array_key_exists( 'exclude_cron', $value ) ? ! empty( $value['exclude_cron'] ) : true,
-			'show_admin_bar'   => $show_admin_bar,
+			'show_admin_bar'  => $show_admin_bar,
 			'ignore_patterns' => $patterns,
 		);
 	}
 
 	/**
+	 * Sanitize custom 404 import.
+	 *
 	 * @param mixed $value Raw custom 404 settings.
 	 * @return array|WP_Error
 	 */
@@ -816,6 +964,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize admin menu import.
+	 *
 	 * @param mixed $value Raw admin menu settings.
 	 * @return array|WP_Error
 	 */
@@ -918,6 +1068,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize string keyed lists.
+	 *
 	 * @param mixed $value Raw keyed lists.
 	 * @return array<string, array<int, string>>
 	 */
@@ -937,6 +1089,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize string list flat.
+	 *
 	 * @param mixed $value Raw list.
 	 * @return string[]
 	 */
@@ -955,6 +1109,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize admin menu manifest import.
+	 *
 	 * @param mixed $value Raw admin menu manifest.
 	 * @return array|WP_Error
 	 */
@@ -978,6 +1134,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize staging import.
+	 *
 	 * @param mixed $value Raw staging settings.
 	 * @return array|WP_Error
 	 */
@@ -998,6 +1156,8 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize comment antispam import.
+	 *
 	 * @param mixed $value Raw comment antispam settings.
 	 * @return array|WP_Error
 	 */
@@ -1005,7 +1165,7 @@ class TSOSK_Mod_Site_Snapshot {
 		if ( ! is_array( $value ) ) {
 			return new WP_Error( 'invalid_cas', __( 'Comment Anti-Spam section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		$defaults = class_exists( 'TSOSK_Mod_Comment_Antispam' )
+		$defaults  = class_exists( 'TSOSK_Mod_Comment_Antispam' )
 			? TSOSK_Mod_Comment_Antispam::get_defaults()
 			: array();
 		$bool_keys = array(
@@ -1024,37 +1184,43 @@ class TSOSK_Mod_Site_Snapshot {
 			'skip_logged_in',
 			'log_blocks',
 		);
-		$out = $defaults;
+		$out       = $defaults;
 		foreach ( $bool_keys as $key ) {
 			if ( array_key_exists( $key, $value ) ) {
 				$out[ $key ] = ! empty( $value[ $key ] );
 			}
 		}
-		$out['min_submit_seconds']     = max( 0, min( 600, absint( $value['min_submit_seconds'] ?? ( $defaults['min_submit_seconds'] ?? 3 ) ) ) );
-		$out['max_submit_seconds']     = max( 60, min( 86400, absint( $value['max_submit_seconds'] ?? ( $defaults['max_submit_seconds'] ?? 7200 ) ) ) );
-		$out['rate_limit_count']       = max( 1, min( 100, absint( $value['rate_limit_count'] ?? ( $defaults['rate_limit_count'] ?? 3 ) ) ) );
-		$out['rate_limit_window']      = max( 1, min( 1440, absint( $value['rate_limit_window'] ?? ( $defaults['rate_limit_window'] ?? 60 ) ) ) );
-		$out['max_links']              = max( 0, min( 50, absint( $value['max_links'] ?? ( $defaults['max_links'] ?? 2 ) ) ) );
-		$out['duplicate_window']       = max( 1, min( 1440, absint( $value['duplicate_window'] ?? ( $defaults['duplicate_window'] ?? 60 ) ) ) );
-		$out['sfs_min_confidence']     = max( 0, min( 100, absint( $value['sfs_min_confidence'] ?? ( $defaults['sfs_min_confidence'] ?? 50 ) ) ) );
-		$out['abuseipdb_min_score']    = max( 0, min( 100, absint( $value['abuseipdb_min_score'] ?? ( $defaults['abuseipdb_min_score'] ?? 75 ) ) ) );
-		$out['abuseipdb_max_age_days'] = max( 1, min( 365, absint( $value['abuseipdb_max_age_days'] ?? ( $defaults['abuseipdb_max_age_days'] ?? 30 ) ) ) );
-		$out['honeypot_min_threat']    = max( 0, min( 100, absint( $value['honeypot_min_threat'] ?? ( $defaults['honeypot_min_threat'] ?? 25 ) ) ) );
-		$out['block_keywords']         = sanitize_textarea_field( (string) ( $value['block_keywords'] ?? '' ) );
-		$out['block_urls']             = sanitize_textarea_field( (string) ( $value['block_urls'] ?? '' ) );
+		$out['min_submit_seconds']        = max( 0, min( 600, absint( $value['min_submit_seconds'] ?? ( $defaults['min_submit_seconds'] ?? 3 ) ) ) );
+		$out['max_submit_seconds']        = max( 60, min( 86400, absint( $value['max_submit_seconds'] ?? ( $defaults['max_submit_seconds'] ?? 7200 ) ) ) );
+		$out['rate_limit_count']          = max( 1, min( 100, absint( $value['rate_limit_count'] ?? ( $defaults['rate_limit_count'] ?? 3 ) ) ) );
+		$out['rate_limit_window']         = max( 1, min( 1440, absint( $value['rate_limit_window'] ?? ( $defaults['rate_limit_window'] ?? 60 ) ) ) );
+		$out['max_links']                 = max( 0, min( 50, absint( $value['max_links'] ?? ( $defaults['max_links'] ?? 2 ) ) ) );
+		$out['duplicate_window']          = max( 1, min( 1440, absint( $value['duplicate_window'] ?? ( $defaults['duplicate_window'] ?? 60 ) ) ) );
+		$out['sfs_min_confidence']        = max( 0, min( 100, absint( $value['sfs_min_confidence'] ?? ( $defaults['sfs_min_confidence'] ?? 50 ) ) ) );
+		$out['abuseipdb_min_score']       = max( 0, min( 100, absint( $value['abuseipdb_min_score'] ?? ( $defaults['abuseipdb_min_score'] ?? 75 ) ) ) );
+		$out['abuseipdb_max_age_days']    = max( 1, min( 365, absint( $value['abuseipdb_max_age_days'] ?? ( $defaults['abuseipdb_max_age_days'] ?? 30 ) ) ) );
+		$out['honeypot_min_threat']       = max( 0, min( 100, absint( $value['honeypot_min_threat'] ?? ( $defaults['honeypot_min_threat'] ?? 25 ) ) ) );
+		$out['block_keywords']            = sanitize_textarea_field( (string) ( $value['block_keywords'] ?? '' ) );
+		$out['block_urls']                = sanitize_textarea_field( (string) ( $value['block_urls'] ?? '' ) );
 		$out['custom_disposable_domains'] = sanitize_textarea_field( (string) ( $value['custom_disposable_domains'] ?? '' ) );
-		$out['whitelist_ips']          = sanitize_textarea_field( (string) ( $value['whitelist_ips'] ?? '' ) );
-		$out['cleantalk_key']          = sanitize_text_field( (string) ( $value['cleantalk_key'] ?? '' ) );
-		$out['abuseipdb_key']          = sanitize_text_field( (string) ( $value['abuseipdb_key'] ?? '' ) );
-		$out['honeypot_access_key']    = sanitize_text_field( (string) ( $value['honeypot_access_key'] ?? '' ) );
-		$cloud = sanitize_key( (string) ( $value['cloud_mode'] ?? 'off' ) );
-		$out['cloud_mode'] = in_array( $cloud, array( 'off', 'cleantalk' ), true ) ? $cloud : 'off';
-		$action = sanitize_key( (string) ( $value['spam_action'] ?? 'spam' ) );
+		$out['whitelist_ips']             = sanitize_textarea_field( (string) ( $value['whitelist_ips'] ?? '' ) );
+		// Keys missing from the file (secrets excluded on export) keep the values already stored here.
+		$current = get_option( 'tsosk_comment_antispam', array() );
+		$current = is_array( $current ) ? $current : array();
+		foreach ( self::SECRET_FIELDS['comment_antispam'] as $secret_field ) {
+			$incoming             = sanitize_text_field( (string) ( $value[ $secret_field ] ?? '' ) );
+			$out[ $secret_field ] = ( '' !== $incoming ) ? $incoming : sanitize_text_field( (string) ( $current[ $secret_field ] ?? '' ) );
+		}
+		$cloud              = sanitize_key( (string) ( $value['cloud_mode'] ?? 'off' ) );
+		$out['cloud_mode']  = in_array( $cloud, array( 'off', 'cleantalk' ), true ) ? $cloud : 'off';
+		$action             = sanitize_key( (string) ( $value['spam_action'] ?? 'spam' ) );
 		$out['spam_action'] = in_array( $action, array( 'spam', 'trash', 'reject' ), true ) ? $action : 'spam';
 		return $out;
 	}
 
 	/**
+	 * Sanitize string list import.
+	 *
 	 * @param mixed $value   Raw list.
 	 * @param int   $max     Max items.
 	 * @return string[]|WP_Error
@@ -1187,6 +1353,12 @@ class TSOSK_Mod_Site_Snapshot {
 					<strong><?php esc_html_e( 'Sensitive data:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 					<?php esc_html_e( 'The exported file may contain third-party API keys (for example Comment Anti-Spam). Store it securely, do not commit it to public repositories, and treat shared copies like a password export.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
+				<p>
+					<label>
+						<input type="checkbox" name="exclude_secrets" value="1" checked>
+						<?php esc_html_e( 'Exclude API keys (recommended). Untick only if you need to move the keys to another site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+				</p>
 				<ul class="tsosk-snapshot-section-list">
 					<?php foreach ( $labels as $id => $label ) : ?>
 					<li>
@@ -1202,6 +1374,32 @@ class TSOSK_Mod_Site_Snapshot {
 			</form>
 		</div>
 
+		<?php
+		$saved_backup = get_option( self::BACKUP_OPTION, array() );
+		if ( is_array( $saved_backup ) && ! empty( $saved_backup['sections'] ) ) :
+			?>
+		<div class="tsosk-card tsosk-snapshot-restore-card">
+			<h3><?php esc_html_e( 'Undo last import', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: 1: date and time, 2: section labels */
+					esc_html__( 'The settings replaced by the import of %1$s are saved (%2$s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					esc_html( wp_date( 'Y-m-d H:i', (int) ( $saved_backup['time'] ?? 0 ) ) ),
+					esc_html( $this->format_section_list( array_keys( $saved_backup['sections'] ) ) )
+				);
+				?>
+			</p>
+			<p>
+				<button type="button" class="button" id="tsosk-snapshot-restore"
+						data-nonce="<?php echo esc_attr( $import_nonce ); ?>">
+					<?php esc_html_e( 'Restore previous settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-snapshot-restore-msg"></span>
+			</p>
+		</div>
+		<?php endif; ?>
+
 		<div class="tsosk-card tsosk-snapshot-import-card">
 			<h3><?php esc_html_e( 'Import snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Paste JSON from a previous export or upload a .json file. You can choose which sections to restore. Null sections reset the target option to defaults.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
@@ -1216,7 +1414,7 @@ class TSOSK_Mod_Site_Snapshot {
 			</div>
 			<label for="tsosk-snapshot-json" class="tsosk-snapshot-json-label"><strong><?php esc_html_e( 'Or paste JSON here', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
 			<textarea id="tsosk-snapshot-json" rows="12" class="tsosk-snapshot-json large-text code"
-			          placeholder="<?php esc_attr_e( '{ "format": "tsosk-site-snapshot", ... }', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></textarea>
+						placeholder="<?php esc_attr_e( '{ "format": "tsosk-site-snapshot", ... }', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></textarea>
 			<div id="tsosk-snapshot-import-sections" class="tsosk-card tsosk-snapshot-import-sections">
 				<p class="description tsosk-snapshot-import-sections-desc">
 					<strong><?php esc_html_e( 'Sections in this file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>:</strong>
@@ -1242,7 +1440,7 @@ class TSOSK_Mod_Site_Snapshot {
 			</div>
 			<p class="tsosk-snapshot-import-actions">
 				<button type="button" class="button button-primary" id="tsosk-snapshot-import"
-				        data-nonce="<?php echo esc_attr( $import_nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $import_nonce ); ?>">
 					<?php esc_html_e( 'Import snapshot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-snapshot-msg"></span>

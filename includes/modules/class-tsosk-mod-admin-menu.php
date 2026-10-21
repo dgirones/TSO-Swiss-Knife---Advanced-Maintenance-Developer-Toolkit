@@ -39,12 +39,25 @@ class TSOSK_Mod_Admin_Menu {
 		'options-general.php',
 	);
 
-	/** @var TSOSK_Mod_Admin_Menu|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Admin_Menu|null
+	 */
 	private static $instance = null;
 
-	/** @var array<string, mixed>|null Cached manifest rows (null = not loaded). */
+	/**
+	 * Cached manifest rows (null = not loaded).
+	 *
+	 * @var array<string, mixed>|null
+	 */
 	private static $manifest_cache = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -52,6 +65,9 @@ class TSOSK_Mod_Admin_Menu {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_am_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_am_reset', array( $this, 'ajax_reset' ) );
@@ -74,7 +90,9 @@ class TSOSK_Mod_Admin_Menu {
 	}
 
 	/**
-	 * @return array{hidden:array<int,string>,labels:array<string,string>,top_order:array<int,string>,sub_order:array<string,array<int,string>>,relocations:array<string,string>}
+	 * Get settings.
+	 *
+	 * @return array{hidden:array<int,string>,labels:array<string,string>,top_order:array<int,string>,sub_order:array<string,array<int,string>>,relocations:array<string,string>,sub_order_ids:array<string,array<int,string>>,nested_tops:array<int|string,mixed>}
 	 */
 	public static function get_settings(): array {
 		$stored = get_option( self::OPTION, array() );
@@ -85,15 +103,15 @@ class TSOSK_Mod_Admin_Menu {
 		return wp_parse_args(
 			$stored,
 			array(
-				'hidden'         => array(),
-				'labels'         => array(),
-				'top_order'      => array(),
+				'hidden'             => array(),
+				'labels'             => array(),
+				'top_order'          => array(),
 				'sub_order'          => array(),
 				'sub_order_ids'      => array(),
 				'sub_order_live'     => array(),
 				'sub_order_resolved' => array(),
 				'relocations'        => array(),
-				'nested_tops'    => array(),
+				'nested_tops'        => array(),
 			)
 		);
 	}
@@ -102,12 +120,12 @@ class TSOSK_Mod_Admin_Menu {
 	 * Build a stable item id.
 	 *
 	 * @param string $slug   Menu slug.
-	 * @param string $parent Parent slug for submenus, empty for top level.
+	 * @param string $menu_parent Parent slug for submenus, empty for top level.
 	 * @return string
 	 */
-	public static function item_id( string $slug, string $parent = '' ): string {
-		if ( '' !== $parent ) {
-			return 's:' . $parent . '|' . $slug;
+	public static function item_id( string $slug, string $menu_parent = '' ): string {
+		if ( '' !== $menu_parent ) {
+			return 's:' . $menu_parent . '|' . $slug;
 		}
 		return 't:' . $slug;
 	}
@@ -363,8 +381,8 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Match a posted item id to the snapshot (handles relocated parent ids from the UI).
 	 *
-	 * @param string                              $posted_id  Item id from the browser.
-	 * @param array<int, array<string, mixed>>    $known_rows Menu snapshot rows.
+	 * @param string                           $posted_id  Item id from the browser.
+	 * @param array<int, array<string, mixed>> $known_rows Menu snapshot rows.
 	 */
 	private function resolve_posted_item_id( string $posted_id, array $known_rows ): string {
 		$known_ids = array_column( $known_rows, 'id' );
@@ -415,8 +433,8 @@ class TSOSK_Mod_Admin_Menu {
 			}
 
 			if ( $this->is_menu_separator( $entry ) ) {
-				$slug  = $this->menu_entry_slug( $entry, (int) $position );
-				$id    = $this->top_level_item_id( $entry, (int) $position );
+				$slug    = $this->menu_entry_slug( $entry, (int) $position );
+				$id      = $this->top_level_item_id( $entry, (int) $position );
 				$items[] = array(
 					'id'           => $id,
 					'parent_id'    => '',
@@ -434,8 +452,8 @@ class TSOSK_Mod_Admin_Menu {
 			if ( empty( $entry[2] ) ) {
 				continue;
 			}
-			$slug = (string) $entry[2];
-			$id   = self::item_id( $slug );
+			$slug    = (string) $entry[2];
+			$id      = self::item_id( $slug );
 			$items[] = array(
 				'id'          => $id,
 				'parent_id'   => '',
@@ -457,20 +475,20 @@ class TSOSK_Mod_Admin_Menu {
 				if ( ! is_array( $sub_entry ) || empty( $sub_entry[2] ) ) {
 					continue;
 				}
-				$sub_slug        = $this->canonical_submenu_slug( (string) $sub_entry[2] );
-				$slug_dedupe     = $slug . '|' . $sub_slug;
+				$sub_slug    = $this->canonical_submenu_slug( (string) $sub_entry[2] );
+				$slug_dedupe = $slug . '|' . $sub_slug;
 				if ( isset( $seen_slug[ $slug_dedupe ] ) ) {
 					continue;
 				}
 				$seen_slug[ $slug_dedupe ] = true;
-				$stable_id       = $this->stable_submenu_item_id( $sub_slug, $slug );
+				$stable_id                 = $this->stable_submenu_item_id( $sub_slug, $slug );
 				if ( isset( $seen_sub_ids[ $stable_id ] ) ) {
 					continue;
 				}
 				$seen_sub_ids[ $stable_id ] = true;
-				$stable_parsed   = self::parse_item_id( $stable_id );
-				$original_parent = $stable_parsed ? $stable_parsed['parent'] : $slug;
-				$items[]         = array(
+				$stable_parsed              = self::parse_item_id( $stable_id );
+				$original_parent            = $stable_parsed ? $stable_parsed['parent'] : $slug;
+				$items[]                    = array(
 					'id'          => $stable_id,
 					'parent_id'   => self::item_id( $original_parent ),
 					'slug'        => $sub_slug,
@@ -505,7 +523,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( 1 === (int) ( $row['level'] ?? 0 ) ) {
 				$parsed = self::parse_item_id( $id );
 				if ( $parsed && '' !== $parsed['parent'] ) {
-					$id = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
+					$id          = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
 					$row['id']   = $id;
 					$row['slug'] = $this->canonical_submenu_slug( (string) ( $row['slug'] ?? '' ) );
 				}
@@ -646,7 +664,7 @@ class TSOSK_Mod_Admin_Menu {
 	 */
 	private function decode_manifest_option_value( string $raw ): ?array {
 		if ( is_serialized( $raw ) ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged
 			$decoded = @unserialize( $raw, array( 'allowed_classes' => false ) );
 			if ( false === $decoded && 'b:0;' !== $raw ) {
 				return null;
@@ -876,8 +894,8 @@ class TSOSK_Mod_Admin_Menu {
 			$clean_slug = array();
 			$seen       = array();
 			foreach ( $sub_order[ $parent ] as $slug ) {
-				$slug           = $this->canonical_submenu_slug( (string) $slug );
-				$dedupe_key     = $parent . '|' . $slug;
+				$slug       = $this->canonical_submenu_slug( (string) $slug );
+				$dedupe_key = $parent . '|' . $slug;
 				if ( '' === $slug || isset( $seen[ $dedupe_key ] ) ) {
 					continue;
 				}
@@ -950,7 +968,7 @@ class TSOSK_Mod_Admin_Menu {
 	 * @return array<string, mixed>|null
 	 */
 	private function resolve_nested_top_row( string $item_id, string $parent_slug, array $snapshot, array $tops ): ?array {
-		$parsed = self::parse_item_id( $item_id );
+		$parsed      = self::parse_item_id( $item_id );
 		$parent_slug = $this->sanitize_menu_slug( $parent_slug );
 		if ( ! $parsed || '' !== $parsed['parent'] || '' === $parent_slug ) {
 			return null;
@@ -984,7 +1002,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( null === $row ) {
 				$manifest = $this->get_manifest();
 				if ( isset( $manifest[ $item_id ] ) && is_array( $manifest[ $item_id ] ) ) {
-					$row = $this->normalize_manifest_row( $manifest[ $item_id ] );
+					$row          = $this->normalize_manifest_row( $manifest[ $item_id ] );
 					$row['id']    = $item_id;
 					$row['level'] = 0;
 				}
@@ -1029,7 +1047,7 @@ class TSOSK_Mod_Admin_Menu {
 			}
 			$resolved = $this->resolve_nested_top_row( $item_id, (string) $parent_slug, $rows, $tops );
 			if ( null !== $resolved ) {
-				$rows[]    = $resolved;
+				$rows[]      = $resolved;
 				$known_ids[] = $item_id;
 			}
 		}
@@ -1097,8 +1115,8 @@ class TSOSK_Mod_Admin_Menu {
 			)
 		);
 
-		$relocations = is_array( $settings['relocations'] ) ? $settings['relocations'] : array();
-		$sub_order   = is_array( $settings['sub_order'] ) ? $settings['sub_order'] : array();
+		$relocations   = is_array( $settings['relocations'] ) ? $settings['relocations'] : array();
+		$sub_order     = is_array( $settings['sub_order'] ) ? $settings['sub_order'] : array();
 		$sub_order_ids = is_array( $settings['sub_order_ids'] ?? null ) ? $settings['sub_order_ids'] : array();
 
 		$subs_by_parent = array();
@@ -1110,7 +1128,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( ! isset( $tops[ $effective_parent ] ) ) {
 				$effective_parent = $row['parent_slug'];
 			}
-			$row['effective_parent'] = $effective_parent;
+			$row['effective_parent']               = $effective_parent;
 			$subs_by_parent[ $effective_parent ][] = $row;
 		}
 
@@ -1126,7 +1144,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( null === $row ) {
 				continue;
 			}
-			$parent_slug = (string) $row['effective_parent'];
+			$parent_slug                      = (string) $row['effective_parent'];
 			$subs_by_parent[ $parent_slug ][] = $row;
 		}
 
@@ -1135,7 +1153,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( ! isset( $tops[ $top_slug ] ) ) {
 				continue;
 			}
-			$top_row = $tops[ $top_slug ];
+			$top_row   = $tops[ $top_slug ];
 			$display[] = $top_row;
 
 			$subs = $subs_by_parent[ $top_slug ] ?? array();
@@ -1170,7 +1188,7 @@ class TSOSK_Mod_Admin_Menu {
 			$by_id[ $id ] = $row;
 			$parsed       = self::parse_item_id( $id );
 			if ( $parsed && '' !== $parsed['parent'] ) {
-				$canonical_id                   = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
+				$canonical_id                     = $this->canonical_submenu_item_id( (string) $parsed['slug'], (string) $parsed['parent'] );
 				$by_canonical_id[ $canonical_id ] = $row;
 			}
 		}
@@ -1183,7 +1201,7 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 
-			$row = null;
+			$row        = null;
 			$matched_id = '';
 			if ( isset( $by_id[ $id ] ) && empty( $used[ $id ] ) ) {
 				$row        = $by_id[ $id ];
@@ -1224,6 +1242,7 @@ class TSOSK_Mod_Admin_Menu {
 	 *
 	 * @param array<int, array<string, mixed>> $rows Submenu rows.
 	 * @param array<int, string>               $slug_order Ordered slugs.
+	 * @param string                           $parent_slug Parent slug.
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function sort_sub_rows( array $rows, array $slug_order, string $parent_slug = '' ): array {
@@ -1256,16 +1275,16 @@ class TSOSK_Mod_Admin_Menu {
 	 * Whether a menu slug is protected from hiding.
 	 *
 	 * @param string $slug   Menu slug.
-	 * @param string $parent Parent slug.
+	 * @param string $menu_parent Parent slug.
 	 */
-	private function is_protected_slug( string $slug, string $parent = '' ): bool {
+	private function is_protected_slug( string $slug, string $menu_parent = '' ): bool {
 		if ( self::PROTECTED_SLUG === $slug ) {
 			return true;
 		}
 		if ( $this->normalize_menu_slug_for_compare( $slug ) === self::PROTECTED_SLUG ) {
 			return true;
 		}
-		if ( 'tools.php' === $parent && str_contains( $slug, self::PROTECTED_SLUG ) ) {
+		if ( 'tools.php' === $menu_parent && str_contains( $slug, self::PROTECTED_SLUG ) ) {
 			return true;
 		}
 		return false;
@@ -1312,27 +1331,35 @@ class TSOSK_Mod_Admin_Menu {
 		$nested   = is_array( $settings['nested_tops'] ?? null ) ? $settings['nested_tops'] : array();
 
 		if ( is_array( $menu ) && ! empty( $order ) ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$menu = $this->restore_unnested_top_menus( $menu, $submenu, $order, $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['menu'] = $menu;
 		}
 
 		if ( is_array( $menu ) && ! empty( $nested ) ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$menu = $this->apply_nested_top_menus( $menu, $submenu, $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['menu'] = $menu;
 		}
 
 		if ( is_array( $menu ) && ! empty( $order ) ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$menu = $this->reorder_top_level_menu( $menu, $order );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['menu'] = $menu;
 		}
 
 		if ( is_array( $submenu ) ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$submenu = $this->apply_submenu_layout(
 				$submenu,
 				is_array( $settings['relocations'] ?? null ) ? $settings['relocations'] : array(),
 				is_array( $settings['sub_order'] ?? null ) ? $settings['sub_order'] : array(),
 				is_array( $settings['sub_order_ids'] ?? null ) ? $settings['sub_order_ids'] : array()
 			);
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['submenu'] = $submenu;
 		}
 
@@ -1365,6 +1392,7 @@ class TSOSK_Mod_Admin_Menu {
 				}
 
 				if ( ! empty( $labels[ $id ] ) ) {
+					// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 					$menu[ $key ][0] = esc_html( $labels[ $id ] );
 				}
 			}
@@ -1374,6 +1402,7 @@ class TSOSK_Mod_Admin_Menu {
 			return;
 		}
 
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 		$submenu = $GLOBALS['submenu'] ?? $submenu;
 
 		foreach ( $submenu as $parent_slug => $entries ) {
@@ -1393,6 +1422,7 @@ class TSOSK_Mod_Admin_Menu {
 				}
 
 				if ( ! empty( $labels[ $id ] ) ) {
+					// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 					$submenu[ $parent_slug ][ $sub_key ][0] = esc_html( $labels[ $id ] );
 				}
 			}
@@ -1409,11 +1439,11 @@ class TSOSK_Mod_Admin_Menu {
 
 		global $menu;
 
-		$settings    = self::get_settings();
-		$relocations = is_array( $settings['relocations'] ?? null ) ? $settings['relocations'] : array();
-		$sub_order   = is_array( $settings['sub_order'] ?? null ) ? $settings['sub_order'] : array();
+		$settings      = self::get_settings();
+		$relocations   = is_array( $settings['relocations'] ?? null ) ? $settings['relocations'] : array();
+		$sub_order     = is_array( $settings['sub_order'] ?? null ) ? $settings['sub_order'] : array();
 		$sub_order_ids = is_array( $settings['sub_order_ids'] ?? null ) ? $settings['sub_order_ids'] : array();
-		$nested      = is_array( $settings['nested_tops'] ?? null ) ? $settings['nested_tops'] : array();
+		$nested        = is_array( $settings['nested_tops'] ?? null ) ? $settings['nested_tops'] : array();
 
 		if ( ! is_array( $GLOBALS['submenu'] ?? null ) ) {
 			return;
@@ -1424,16 +1454,21 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		if ( ! empty( $nested ) && is_array( $menu ) ) {
-			$menu            = $this->apply_nested_top_menus( $menu, $GLOBALS['submenu'], $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
+			$menu = $this->apply_nested_top_menus( $menu, $GLOBALS['submenu'], $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['menu'] = $menu;
 		}
 
 		$top_order = is_array( $settings['top_order'] ?? null ) ? $settings['top_order'] : array();
 		if ( ! empty( $top_order ) && is_array( $menu ) ) {
-			$menu            = $this->restore_unnested_top_menus( $menu, $GLOBALS['submenu'], $top_order, $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
+			$menu = $this->restore_unnested_top_menus( $menu, $GLOBALS['submenu'], $top_order, $nested );
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$GLOBALS['menu'] = $menu;
 		}
 
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 		$GLOBALS['submenu'] = $this->apply_submenu_layout(
 			$GLOBALS['submenu'],
 			$relocations,
@@ -1517,6 +1552,7 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		if ( ! is_array( $submenu['tools.php'] ?? null ) ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 			$submenu['tools.php'] = array();
 		}
 
@@ -1529,6 +1565,7 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Reordering the admin menu requires replacing these globals.
 		$submenu['tools.php'][] = array(
 			__( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'manage_options',
@@ -1548,7 +1585,7 @@ class TSOSK_Mod_Admin_Menu {
 	 */
 	private function apply_submenu_layout( array $submenu, array $relocations, array $sub_order, array $sub_order_ids = array() ): array {
 		foreach ( $relocations as $item_id => $new_parent ) {
-			$parsed = self::parse_item_id( (string) $item_id );
+			$parsed     = self::parse_item_id( (string) $item_id );
 			$new_parent = (string) $new_parent;
 			if ( ! $parsed || '' === $parsed['parent'] || '' === $new_parent ) {
 				continue;
@@ -1597,7 +1634,7 @@ class TSOSK_Mod_Admin_Menu {
 
 			$item_ids = is_array( $sub_order_ids[ $parent_slug ] ?? null ) ? $sub_order_ids[ $parent_slug ] : array();
 			if ( array() !== $item_ids ) {
-				$hints = $this->build_entry_slug_hints(
+				$hints                  = $this->build_entry_slug_hints(
 					$item_ids,
 					$submenu[ $parent_key ],
 					$this->get_manifest_slug_map()
@@ -1642,9 +1679,9 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Move configured top-level menu pages under another section as submenu entries.
 	 *
-	 * @param array<int, mixed>                                $menu        Global menu.
+	 * @param array<int, mixed>                                 $menu        Global menu.
 	 * @param array<string, array<int, array<int, mixed>>>|null $submenu    Global submenu.
-	 * @param array<string, string>                            $nested_tops Item id => parent slug.
+	 * @param array<string, string>                             $nested_tops Item id => parent slug.
 	 * @return array<int, mixed>
 	 */
 	private function apply_nested_top_menus( array $menu, ?array &$submenu, array $nested_tops ): array {
@@ -1653,15 +1690,15 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		foreach ( $nested_tops as $item_id => $parent_slug ) {
-			$parsed = self::parse_item_id( (string) $item_id );
+			$parsed      = self::parse_item_id( (string) $item_id );
 			$parent_slug = $this->sanitize_menu_slug( (string) $parent_slug );
 			if ( ! $parsed || '' !== $parsed['parent'] || '' === $parent_slug ) {
 				continue;
 			}
 
-			$slug      = (string) $parsed['slug'];
-			$entry     = null;
-			$menu_key  = null;
+			$slug       = (string) $parsed['slug'];
+			$entry      = null;
+			$menu_key   = null;
 			$parent_key = $this->resolve_submenu_parent_key( $submenu, $parent_slug );
 
 			foreach ( $menu as $key => $menu_entry ) {
@@ -1721,10 +1758,10 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Move plugin menus back to the top-level sidebar when they are no longer nested.
 	 *
-	 * @param array<int, mixed>                                $menu        Global menu.
+	 * @param array<int, mixed>                                 $menu        Global menu.
 	 * @param array<string, array<int, array<int, mixed>>>|null $submenu     Global submenu.
-	 * @param array<int, string>                               $top_order   Saved top-level slug order.
-	 * @param array<string, string>                            $nested_tops Item id => parent slug.
+	 * @param array<int, string>                                $top_order   Saved top-level slug order.
+	 * @param array<string, string>                             $nested_tops Item id => parent slug.
 	 * @return array<int, mixed>
 	 */
 	private function restore_unnested_top_menus( array $menu, ?array &$submenu, array $top_order, array $nested_tops ): array {
@@ -1891,29 +1928,29 @@ class TSOSK_Mod_Admin_Menu {
 	 * Extract a submenu entry using slug matching (supports admin.php?page= variants).
 	 *
 	 * @param array<string, array<int, array<int, mixed>>> $submenu Global submenu.
-	 * @param string                                       $parent  Parent slug.
+	 * @param string                                       $menu_parent  Parent slug.
 	 * @param string                                       $slug    Target slug.
 	 * @return array<int, mixed>|null
 	 */
-	private function extract_submenu_entry_by_match( array &$submenu, string $parent, string $slug ): ?array {
-		if ( ! isset( $submenu[ $parent ] ) || ! is_array( $submenu[ $parent ] ) ) {
+	private function extract_submenu_entry_by_match( array &$submenu, string $menu_parent, string $slug ): ?array {
+		if ( ! isset( $submenu[ $menu_parent ] ) || ! is_array( $submenu[ $menu_parent ] ) ) {
 			return null;
 		}
 
-		foreach ( $submenu[ $parent ] as $key => $entry ) {
+		foreach ( $submenu[ $menu_parent ] as $key => $entry ) {
 			if ( ! is_array( $entry ) || empty( $entry[2] ) ) {
 				continue;
 			}
 			$entry_slug = (string) $entry[2];
-			if ( $this->is_protected_slug( $entry_slug, $parent ) ) {
+			if ( $this->is_protected_slug( $entry_slug, $menu_parent ) ) {
 				continue;
 			}
-			if ( ! $this->submenu_entry_matches_slug( $entry, $slug, $parent, true ) ) {
+			if ( ! $this->submenu_entry_matches_slug( $entry, $slug, $menu_parent, true ) ) {
 				continue;
 			}
 			$found = $entry;
-			unset( $submenu[ $parent ][ $key ] );
-			$submenu[ $parent ] = array_values( $submenu[ $parent ] );
+			unset( $submenu[ $menu_parent ][ $key ] );
+			$submenu[ $menu_parent ] = array_values( $submenu[ $menu_parent ] );
 			return $found;
 		}
 
@@ -1947,15 +1984,15 @@ class TSOSK_Mod_Admin_Menu {
 	 * Remove a submenu entry from its parent.
 	 *
 	 * @param array<string, array<int, array<int, mixed>>> $submenu Global submenu.
-	 * @param string                                       $parent  Parent slug.
+	 * @param string                                       $menu_parent  Parent slug.
 	 * @param string                                       $slug    Submenu slug.
 	 * @return array<int, mixed>|null
 	 */
-	private function extract_submenu_entry( array &$submenu, string $parent, string $slug ): ?array {
-		if ( ! isset( $submenu[ $parent ] ) || ! is_array( $submenu[ $parent ] ) ) {
+	private function extract_submenu_entry( array &$submenu, string $menu_parent, string $slug ): ?array {
+		if ( ! isset( $submenu[ $menu_parent ] ) || ! is_array( $submenu[ $menu_parent ] ) ) {
 			return null;
 		}
-		foreach ( $submenu[ $parent ] as $key => $entry ) {
+		foreach ( $submenu[ $menu_parent ] as $key => $entry ) {
 			if ( ! is_array( $entry ) || empty( $entry[2] ) ) {
 				continue;
 			}
@@ -1963,8 +2000,8 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 			$found = $entry;
-			unset( $submenu[ $parent ][ $key ] );
-			$submenu[ $parent ] = array_values( $submenu[ $parent ] );
+			unset( $submenu[ $menu_parent ][ $key ] );
+			$submenu[ $menu_parent ] = array_values( $submenu[ $menu_parent ] );
 			return $found;
 		}
 		return null;
@@ -2014,7 +2051,7 @@ class TSOSK_Mod_Admin_Menu {
 			if ( ! is_array( $entry ) || empty( $entry[2] ) ) {
 				continue;
 			}
-			$position               += 5;
+			$position                += 5;
 			$new_entries[ $position ] = $entry;
 		}
 
@@ -2027,6 +2064,7 @@ class TSOSK_Mod_Admin_Menu {
 	 *
 	 * @param array<int, array<int, mixed>> $entries  Submenu entries.
 	 * @param array<int, string>            $slug_order Ordered slugs.
+	 * @param string                        $parent_slug Parent slug.
 	 * @return array<int, array<int, mixed>>
 	 */
 	private function reorder_submenu_entries( array $entries, array $slug_order, string $parent_slug = '' ): array {
@@ -2104,6 +2142,7 @@ class TSOSK_Mod_Admin_Menu {
 	 * @param array<int, array<int, mixed>> $entries   Submenu entries.
 	 * @param array<int, string>            $item_ids  Ordered item ids.
 	 * @param array<string, string>         $slug_hints Item id => last known slug.
+	 * @param string                        $parent_slug Parent slug.
 	 * @return array<int, array<int, mixed>>
 	 */
 	private function reorder_submenu_entries_by_item_ids( array $entries, array $item_ids, array $slug_hints, string $parent_slug = '' ): array {
@@ -2169,9 +2208,9 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Map item ids to the live submenu slug currently registered in WordPress.
 	 *
-	 * @param array<int, string>              $item_ids       Ordered item ids.
-	 * @param array<int, array<int, mixed>>   $entries        Live submenu entries.
-	 * @param array<string, string>           $manifest_hints Item id => last known slug.
+	 * @param array<int, string>            $item_ids       Ordered item ids.
+	 * @param array<int, array<int, mixed>> $entries        Live submenu entries.
+	 * @param array<string, string>         $manifest_hints Item id => last known slug.
 	 * @return array<string, string>
 	 */
 	private function build_entry_slug_hints( array $item_ids, array $entries, array $manifest_hints ): array {
@@ -2220,6 +2259,7 @@ class TSOSK_Mod_Admin_Menu {
 	 * @param array<int, string>            $saved_slug_order Slugs saved with the settings (DOM/manifest).
 	 * @param array<int, string>            $item_ids       Ordered stable item ids.
 	 * @param array<string, string>         $slug_hints     Item id => slug hints.
+	 * @param string                        $parent_slug Parent slug.
 	 * @return array<int, string>
 	 */
 	private function resolve_live_submenu_slug_order(
@@ -2248,7 +2288,7 @@ class TSOSK_Mod_Admin_Menu {
 						if ( ! $this->submenu_entry_matches_slug( $entry, $variant, $parent_slug ) ) {
 							continue;
 						}
-						$live_order[]            = (string) $entry[2];
+						$live_order[]           = (string) $entry[2];
 						$used_indexes[ $index ] = true;
 						break 3;
 					}
@@ -2273,7 +2313,7 @@ class TSOSK_Mod_Admin_Menu {
 					if ( ! $this->submenu_entry_matches_slug( $entry, $variant, $parent_slug ) ) {
 						continue;
 					}
-					$live_order[]            = (string) $entry[2];
+					$live_order[]           = (string) $entry[2];
 					$used_indexes[ $index ] = true;
 					break 2;
 				}
@@ -2692,7 +2732,7 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Candidate slugs used to match a saved item id against a live submenu entry.
 	 *
-	 * @param string              $item_id    Stable item id.
+	 * @param string               $item_id    Stable item id.
 	 * @param array<string,string> $slug_hints Item id => slug map.
 	 * @return array<int, string>
 	 */
@@ -2866,9 +2906,9 @@ class TSOSK_Mod_Admin_Menu {
 	/**
 	 * Resolve the parent section used when saving submenu order from a posted row.
 	 *
-	 * @param array<string, mixed>     $row       Posted row.
+	 * @param array<string, mixed>             $row       Posted row.
 	 * @param array{parent:string,slug:string} $parsed Parsed item id.
-	 * @param array<string, bool>      $top_slugs Known top-level slugs.
+	 * @param array<string, bool>              $top_slugs Known top-level slugs.
 	 */
 	private function resolve_posted_order_parent( array $row, array $parsed, array $top_slugs ): string {
 		if ( '' === $parsed['parent'] ) {
@@ -2925,8 +2965,8 @@ class TSOSK_Mod_Admin_Menu {
 				continue;
 			}
 			$new_menu[ $position ] = $by_slug[ $slug ];
-			$used[ $slug ]          = true;
-			$position              += 5;
+			$used[ $slug ]         = true;
+			$position             += 5;
 		}
 
 		foreach ( $by_slug as $slug => $entry ) {
@@ -2985,13 +3025,13 @@ class TSOSK_Mod_Admin_Menu {
 			}
 		}
 
-		$hidden       = array();
-		$labels       = array();
-		$top_order    = array();
-		$sub_order    = array();
+		$hidden        = array();
+		$labels        = array();
+		$top_order     = array();
+		$sub_order     = array();
 		$sub_order_ids = array();
-		$relocations  = array();
-		$nested_tops  = array();
+		$relocations   = array();
+		$nested_tops   = array();
 
 		foreach ( $raw as $row ) {
 			if ( ! is_array( $row ) ) {
@@ -3130,19 +3170,19 @@ class TSOSK_Mod_Admin_Menu {
 				'sub_order_ids' => $sub_order_ids,
 			)
 		);
-		$sub_order     = $clean_settings['sub_order'];
-		$sub_order_ids = $clean_settings['sub_order_ids'];
+		$sub_order      = $clean_settings['sub_order'];
+		$sub_order_ids  = $clean_settings['sub_order_ids'];
 
 		update_option(
 			self::OPTION,
 			array(
-				'hidden'         => array_values( array_unique( $hidden ) ),
-				'labels'         => $labels,
-				'top_order'      => array_values( array_unique( $top_order ) ),
-				'sub_order'      => $sub_order,
-				'sub_order_ids'  => $sub_order_ids,
-				'relocations'    => $relocations,
-				'nested_tops'    => $nested_tops,
+				'hidden'        => array_values( array_unique( $hidden ) ),
+				'labels'        => $labels,
+				'top_order'     => array_values( array_unique( $top_order ) ),
+				'sub_order'     => $sub_order,
+				'sub_order_ids' => $sub_order_ids,
+				'relocations'   => $relocations,
+				'nested_tops'   => $nested_tops,
 			),
 			true // Read on every admin_menu/admin_init/admin_head hook — must autoload.
 		);
@@ -3163,16 +3203,16 @@ class TSOSK_Mod_Admin_Menu {
 
 		wp_send_json_success(
 			array(
-				'message'         => __( 'Sidebar menu saved. Reloading…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'relocated'       => count( $relocations ),
-				'hidden'          => count( $hidden ),
-				'renamed'         => count( $labels ),
-				'sub_order_count' => count( $sub_order, COUNT_RECURSIVE ) - count( $sub_order ),
-				'tools_sub_count' => isset( $sub_order_ids['tools.php'] ) ? count( $sub_order_ids['tools.php'] ) : 0,
-				'tools_sub_slugs' => isset( $sub_order['tools.php'] ) ? count( $sub_order['tools.php'] ) : 0,
-				'tools_slug_first' => isset( $sub_order['tools.php'][0] ) ? (string) $sub_order['tools.php'][0] : '',
+				'message'           => __( 'Sidebar menu saved. Reloading…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'relocated'         => count( $relocations ),
+				'hidden'            => count( $hidden ),
+				'renamed'           => count( $labels ),
+				'sub_order_count'   => count( $sub_order, COUNT_RECURSIVE ) - count( $sub_order ),
+				'tools_sub_count'   => isset( $sub_order_ids['tools.php'] ) ? count( $sub_order_ids['tools.php'] ) : 0,
+				'tools_sub_slugs'   => isset( $sub_order['tools.php'] ) ? count( $sub_order['tools.php'] ) : 0,
+				'tools_slug_first'  => isset( $sub_order['tools.php'][0] ) ? (string) $sub_order['tools.php'][0] : '',
 				'tools_slug_second' => isset( $sub_order['tools.php'][1] ) ? (string) $sub_order['tools.php'][1] : '',
-				'tools_id_first'   => isset( $sub_order_ids['tools.php'][0] ) ? (string) $sub_order_ids['tools.php'][0] : '',
+				'tools_id_first'    => isset( $sub_order_ids['tools.php'][0] ) ? (string) $sub_order_ids['tools.php'][0] : '',
 			)
 		);
 	}
@@ -3233,33 +3273,33 @@ class TSOSK_Mod_Admin_Menu {
 		}
 		?>
 		<tr class="<?php echo esc_attr( $row_class ); ?>"
-		    data-id="<?php echo esc_attr( $id ); ?>"
-		    data-slug="<?php echo esc_attr( $row['slug'] ); ?>"
-		    data-level="<?php echo esc_attr( (string) $row['level'] ); ?>"
-		    data-parent-id="<?php echo esc_attr( $row['parent_id'] ); ?>"
-		    data-orig-parent="<?php echo esc_attr( $row['parent_slug'] ); ?>"
-		    <?php if ( $is_top ) : ?>
-		    data-am-section="<?php echo esc_attr( $row['slug'] ); ?>"
-		    <?php else : ?>
-		    data-am-parent-section="<?php echo esc_attr( (string) $effective_parent ); ?>"
-		    <?php if ( ! $in_hidden_panel ) : ?>
-		    hidden
-		    <?php endif; ?>
-		    <?php endif; ?>>
+			data-id="<?php echo esc_attr( $id ); ?>"
+			data-slug="<?php echo esc_attr( $row['slug'] ); ?>"
+			data-level="<?php echo esc_attr( (string) $row['level'] ); ?>"
+			data-parent-id="<?php echo esc_attr( $row['parent_id'] ); ?>"
+			data-orig-parent="<?php echo esc_attr( $row['parent_slug'] ); ?>"
+			<?php if ( $is_top ) : ?>
+			data-am-section="<?php echo esc_attr( $row['slug'] ); ?>"
+			<?php else : ?>
+			data-am-parent-section="<?php echo esc_attr( (string) $effective_parent ); ?>"
+				<?php if ( ! $in_hidden_panel ) : ?>
+			hidden
+			<?php endif; ?>
+			<?php endif; ?>>
 			<td class="tsosk-am-drag">
 				<?php if ( ! $in_hidden_panel ) : ?>
 				<span class="dashicons dashicons-menu tsosk-am-handle"
-				      title="<?php esc_attr_e( 'Drag to reorder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></span>
+						title="<?php esc_attr_e( 'Drag to reorder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"></span>
 				<?php endif; ?>
 			</td>
 			<td class="tsosk-am-title-cell">
 				<?php if ( $is_top ) : ?>
 					<?php if ( $has_children ) : ?>
 					<button type="button"
-					        class="tsosk-am-toggle"
-					        aria-expanded="false"
-					        aria-controls="tsosk-am-section-<?php echo esc_attr( $row['slug'] ); ?>"
-					        title="<?php esc_attr_e( 'Show or hide sub-items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							class="tsosk-am-toggle"
+							aria-expanded="false"
+							aria-controls="tsosk-am-section-<?php echo esc_attr( $row['slug'] ); ?>"
+							title="<?php esc_attr_e( 'Show or hide sub-items', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 						<span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
 						<span class="screen-reader-text">
 							<?php
@@ -3347,18 +3387,18 @@ class TSOSK_Mod_Admin_Menu {
 			</td>
 			<td class="tsosk-am-hide-cell">
 				<input type="checkbox" class="tsosk-am-hide"
-				       <?php checked( $is_hidden || $in_hidden_panel ); ?>
-				       <?php disabled( ! empty( $row['protected'] ) ); ?>
-				       aria-label="<?php esc_attr_e( 'Hide this menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php checked( $is_hidden || $in_hidden_panel ); ?>
+						<?php disabled( ! empty( $row['protected'] ) ); ?>
+						aria-label="<?php esc_attr_e( 'Hide this menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 			</td>
 			<td class="tsosk-am-label-cell">
 				<?php if ( $is_separator ) : ?>
 					<span class="tsosk-am-separator-note description"><?php esc_html_e( 'Separators cannot be renamed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
 				<input type="text" class="tsosk-am-label"
-				       value="<?php echo esc_attr( $label ); ?>"
-				       placeholder="<?php echo esc_attr( $row['title'] ); ?>"
-				       <?php disabled( ( $is_hidden || $in_hidden_panel ) && empty( $row['protected'] ) ); ?>>
+						value="<?php echo esc_attr( $label ); ?>"
+						placeholder="<?php echo esc_attr( $row['title'] ); ?>"
+						<?php disabled( ( $is_hidden || $in_hidden_panel ) && empty( $row['protected'] ) ); ?>>
 				<?php endif; ?>
 			</td>
 		</tr>
@@ -3425,12 +3465,15 @@ class TSOSK_Mod_Admin_Menu {
 		<?php
 	}
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
-		$nonce        = wp_create_nonce( 'tsosk_am_nonce' );
-		$settings     = self::get_settings();
-		$hidden       = array_flip( $settings['hidden'] );
-		$labels       = $settings['labels'];
-		$snapshot     = $this->get_menu_snapshot();
+		$nonce    = wp_create_nonce( 'tsosk_am_nonce' );
+		$settings = self::get_settings();
+		$hidden   = array_flip( $settings['hidden'] );
+		$labels   = $settings['labels'];
+		$snapshot = $this->get_menu_snapshot();
 		$this->persist_menu_manifest( $snapshot );
 		$display_rows = $this->get_display_rows();
 
@@ -3443,8 +3486,8 @@ class TSOSK_Mod_Admin_Menu {
 			$settings     = $repaired;
 			$display_rows = $this->get_display_rows();
 		}
-		$top_choices      = $this->get_top_level_choices();
-		$hidden_count     = count( $settings['hidden'] ?? array() );
+		$top_choices       = $this->get_top_level_choices();
+		$hidden_count      = count( $settings['hidden'] ?? array() );
 		$hidden_panel_rows = $this->get_hidden_panel_rows( $settings['hidden'] ?? array(), $snapshot );
 		?>
 		<p class="tsosk-desc">
@@ -3470,7 +3513,7 @@ class TSOSK_Mod_Admin_Menu {
 				</button>
 				<?php if ( $hidden_count > 0 ) : ?>
 				<button type="button" class="button button-small" id="tsosk-am-show-hidden"
-				        data-count="<?php echo esc_attr( (string) $hidden_count ); ?>">
+						data-count="<?php echo esc_attr( (string) $hidden_count ); ?>">
 					<?php
 					printf(
 						/* translators: %d: number of hidden menu items */
@@ -3556,11 +3599,11 @@ class TSOSK_Mod_Admin_Menu {
 								</td>
 							</tr>
 							<?php else : ?>
-							<?php
-							foreach ( $hidden_panel_rows as $row ) :
-								$this->render_menu_row( $row, $hidden, $labels, $top_choices, $sub_counts, true );
+								<?php
+								foreach ( $hidden_panel_rows as $row ) :
+									$this->render_menu_row( $row, $hidden, $labels, $top_choices, $sub_counts, true );
 							endforeach;
-							?>
+								?>
 							<?php endif; ?>
 						</tbody>
 					</table>
@@ -3570,11 +3613,11 @@ class TSOSK_Mod_Admin_Menu {
 
 			<p style="margin-top:16px;">
 				<button type="button" class="button button-primary" id="tsosk-am-save"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Save sidebar menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<button type="button" class="button" id="tsosk-am-reset"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Reset to defaults', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-am-msg"></span>

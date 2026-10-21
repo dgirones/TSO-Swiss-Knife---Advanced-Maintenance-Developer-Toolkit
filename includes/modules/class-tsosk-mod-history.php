@@ -16,10 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_History {
 
-	/** @var TSOSK_Mod_History|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_History|null
+	 */
 	private static $instance = null;
 
 	/**
+	 * Get instance.
+	 *
 	 * @return self
 	 */
 	public static function get_instance(): self {
@@ -29,6 +35,9 @@ class TSOSK_Mod_History {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_history_clear', array( $this, 'ajax_clear' ) );
 		add_action( 'wp_ajax_tsosk_history_save', array( $this, 'ajax_save_settings' ) );
@@ -62,6 +71,11 @@ class TSOSK_Mod_History {
 		$log_all = ! empty( $_POST['log_all'] );
 		$limit   = max( 25, min( 500, absint( wp_unslash( $_POST['limit'] ?? TSOSK_Activity_Log::LIMIT ) ) ) );
 
+		// An empty module list is stored as "log everything", so never let "nothing selected" silently become that.
+		if ( ! $log_all && empty( $modules ) ) {
+			wp_send_json_error( __( 'Select at least one module, or enable "Log all tools".', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		TSOSK_Activity_Log::save_settings(
 			array(
 				'modules' => $log_all ? array() : $modules,
@@ -76,10 +90,10 @@ class TSOSK_Mod_History {
 	 * Render the Activity History tab.
 	 */
 	public function render(): void {
-		$nonce    = wp_create_nonce( 'tsosk_history_nonce' );
-		$entries  = TSOSK_Activity_Log::get_entries();
-		$settings = TSOSK_Activity_Log::get_settings();
-		$limit    = TSOSK_Activity_Log::get_limit();
+		$nonce           = wp_create_nonce( 'tsosk_history_nonce' );
+		$entries         = TSOSK_Activity_Log::get_entries();
+		$settings        = TSOSK_Activity_Log::get_settings();
+		$limit           = TSOSK_Activity_Log::get_limit();
 		$enabled_modules = array_map( 'sanitize_key', $settings['modules'] );
 		$log_all         = empty( $enabled_modules );
 		?>
@@ -121,7 +135,7 @@ class TSOSK_Mod_History {
 			<?php else : ?>
 			<p class="tsosk-history-actions">
 				<button type="button" class="button button-link-delete" id="tsosk-history-clear"
-				        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 					<?php esc_html_e( 'Clear history', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</button>
 				<span class="tsosk-ajax-msg" id="tsosk-history-msg"></span>
@@ -160,7 +174,7 @@ class TSOSK_Mod_History {
 			<label style="display:block;margin-bottom:12px;">
 				<?php esc_html_e( 'Maximum entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<input type="number" id="tsosk-history-limit" min="25" max="500" step="25"
-				       value="<?php echo esc_attr( (string) $limit ); ?>" style="width:80px;margin-left:8px;">
+						value="<?php echo esc_attr( (string) $limit ); ?>" style="width:80px;margin-left:8px;">
 			</label>
 			<div class="tsosk-history-modules" id="tsosk-history-modules" <?php echo $log_all ? 'style="opacity:.55;"' : ''; ?>>
 				<?php
@@ -168,8 +182,8 @@ class TSOSK_Mod_History {
 					?>
 				<label class="tsosk-history-module-row">
 					<input type="checkbox" class="tsosk-history-module" name="tsosk_history_modules[]"
-					       value="<?php echo esc_attr( $module ); ?>"
-					       <?php checked( $log_all || in_array( $module, $enabled_modules, true ) ); ?>>
+							value="<?php echo esc_attr( $module ); ?>"
+							<?php checked( $log_all || in_array( $module, $enabled_modules, true ) ); ?>>
 					<span><?php echo esc_html( TSOSK_Activity_Log::module_label( $module ) ); ?></span>
 				</label>
 				<?php endforeach; ?>
@@ -178,7 +192,7 @@ class TSOSK_Mod_History {
 				<?php esc_html_e( 'Tip: check only the modules you care about to reduce noise. Save, then uncheck modules you want to exclude — or clear history after changing filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<button type="button" class="button button-primary" id="tsosk-history-save-settings"
-			        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
 				<?php esc_html_e( 'Save logging preferences', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</button>
 			<span class="tsosk-ajax-msg" id="tsosk-history-settings-msg"></span>
@@ -187,17 +201,19 @@ class TSOSK_Mod_History {
 	}
 
 	/**
+	 * Render row.
+	 *
 	 * @param array<string, mixed> $entry Log entry.
 	 * @return string
 	 */
 	private function render_row( array $entry ): string {
-		$id      = sanitize_text_field( (string) ( $entry['id'] ?? '' ) );
-		$module  = sanitize_key( (string) ( $entry['module'] ?? '' ) );
-		$action  = sanitize_key( (string) ( $entry['action'] ?? '' ) );
-		$time    = (int) ( $entry['time'] ?? 0 );
-		$user    = sanitize_user( (string) ( $entry['user'] ?? '' ), true );
-		$summary = (string) ( $entry['summary'] ?? '' );
-		$details = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
+		$id       = sanitize_text_field( (string) ( $entry['id'] ?? '' ) );
+		$module   = sanitize_key( (string) ( $entry['module'] ?? '' ) );
+		$action   = sanitize_key( (string) ( $entry['action'] ?? '' ) );
+		$time     = (int) ( $entry['time'] ?? 0 );
+		$user     = sanitize_user( (string) ( $entry['user'] ?? '' ), true );
+		$summary  = (string) ( $entry['summary'] ?? '' );
+		$details  = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
 		$reverted = ! empty( $entry['reverted'] );
 
 		$badge_class = 'delete' === $action ? 'tsosk-badge-warn' : ( 'enable' === $action || 'add' === $action ? 'tsosk-badge-ok' : 'tsosk-badge-info' );
@@ -228,8 +244,8 @@ class TSOSK_Mod_History {
 			<td class="tsosk-history-undo">
 				<?php if ( $can_undo ) : ?>
 					<button type="button" class="button button-small tsosk-history-undo-btn"
-					        data-id="<?php echo esc_attr( $id ); ?>"
-					        data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_history_nonce' ) ); ?>">
+							data-id="<?php echo esc_attr( $id ); ?>"
+							data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_history_nonce' ) ); ?>">
 						<?php esc_html_e( 'Undo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				<?php elseif ( $reverted ) : ?>
@@ -242,6 +258,8 @@ class TSOSK_Mod_History {
 	}
 
 	/**
+	 * Format details.
+	 *
 	 * @param array<string, mixed> $details Entry details.
 	 * @return string
 	 */

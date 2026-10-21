@@ -17,9 +17,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class TSOSK_Mod_Cron {
 
-	/** @var TSOSK_Mod_Cron|null */
+	/**
+	 * Instance.
+	 *
+	 * @var TSOSK_Mod_Cron|null
+	 */
 	private static $instance = null;
 
+	/**
+	 * Get instance.
+	 *
+	 * @return self
+	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -27,9 +36,12 @@ class TSOSK_Mod_Cron {
 		return self::$instance;
 	}
 
+	/**
+	 * Construct.
+	 */
 	private function __construct() {
-		add_action( 'wp_ajax_tsosk_cron_run',        array( $this, 'ajax_run' ) );
-		add_action( 'wp_ajax_tsosk_cron_delete',     array( $this, 'ajax_delete' ) );
+		add_action( 'wp_ajax_tsosk_cron_run', array( $this, 'ajax_run' ) );
+		add_action( 'wp_ajax_tsosk_cron_delete', array( $this, 'ajax_delete' ) );
 		add_action( 'wp_ajax_tsosk_cron_reschedule', array( $this, 'ajax_reschedule' ) );
 	}
 
@@ -41,9 +53,9 @@ class TSOSK_Mod_Cron {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
-		$hook      = isset( $_POST['hook'] )      ? sanitize_text_field( wp_unslash( $_POST['hook'] ) )      : '';
-		$timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) )               : 0;
-		$sig       = isset( $_POST['sig'] )       ? sanitize_text_field( wp_unslash( $_POST['sig'] ) )       : '';
+		$hook      = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+		$timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) ) : 0;
+		$sig       = isset( $_POST['sig'] ) ? sanitize_text_field( wp_unslash( $_POST['sig'] ) ) : '';
 
 		if ( ! $hook || ! $timestamp ) {
 			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -89,9 +101,9 @@ class TSOSK_Mod_Cron {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
-		$hook      = isset( $_POST['hook'] )      ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
-		$timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) )          : 0;
-		$sig       = isset( $_POST['sig'] )       ? sanitize_text_field( wp_unslash( $_POST['sig'] ) ) : '';
+		$hook      = isset( $_POST['hook'] ) ? sanitize_text_field( wp_unslash( $_POST['hook'] ) ) : '';
+		$timestamp = isset( $_POST['timestamp'] ) ? absint( wp_unslash( $_POST['timestamp'] ) ) : 0;
+		$sig       = isset( $_POST['sig'] ) ? sanitize_text_field( wp_unslash( $_POST['sig'] ) ) : '';
 
 		if ( ! $hook || ! $timestamp ) {
 			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -185,6 +197,9 @@ class TSOSK_Mod_Cron {
 
 	// ── Render ────────────────────────────────────────────────────────────────
 
+	/**
+	 * Render.
+	 */
 	public function render(): void {
 		$nonce     = wp_create_nonce( 'tsosk_cron_nonce' );
 		$crons     = _get_cron_array();
@@ -201,8 +216,8 @@ class TSOSK_Mod_Cron {
 							'hook'      => $hook,
 							'sig'       => $sig,
 							'schedule'  => $data['schedule'] ?? false,
-							'interval'  => $data['interval']  ?? 0,
-							'args'      => $data['args']       ?? array(),
+							'interval'  => $data['interval'] ?? 0,
+							'args'      => $data['args'] ?? array(),
 							'source'    => $this->detect_hook_source( (string) $hook ),
 						);
 					}
@@ -210,9 +225,12 @@ class TSOSK_Mod_Cron {
 			}
 		}
 
-		usort( $events, static function ( $a, $b ) {
-			return $a['timestamp'] - $b['timestamp'];
-		} );
+		usort(
+			$events,
+			static function ( $a, $b ) {
+				return $a['timestamp'] - $b['timestamp'];
+			}
+		);
 
 		$health = $this->get_cron_health( $events );
 		$missed = $this->get_missed_scheduled_posts();
@@ -293,7 +311,7 @@ class TSOSK_Mod_Cron {
 								<tr>
 									<td>
 										<a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" target="_blank" rel="noopener noreferrer">
-											<?php echo esc_html( get_the_title( $post ) ?: '#' . $post->ID ); ?>
+											<?php echo esc_html( '' !== get_the_title( $post ) ? get_the_title( $post ) : '#' . $post->ID ); ?>
 										</a>
 									</td>
 									<td><?php echo esc_html( get_date_from_gmt( $post->post_date_gmt, get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
@@ -350,7 +368,7 @@ class TSOSK_Mod_Cron {
 							</td>
 							<td><?php echo esc_html( $interval_label ); ?></td>
 							<td>
-								<?php if ( 'wordpress' === $source['type'] ) : ?>
+								<?php if ( 'wordpress' === $source['type'] ) : // phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- Internal source-type key, not visible text. ?>
 									<span class="tsosk-badge tsosk-badge-core">WordPress</span>
 								<?php elseif ( 'plugin' === $source['type'] ) : ?>
 									<span class="tsosk-badge tsosk-badge-custom" title="<?php echo esc_attr( $source['file'] ); ?>">
@@ -375,25 +393,25 @@ class TSOSK_Mod_Cron {
 							<td class="tsosk-actions">
 								<?php if ( ! $is_core ) : ?>
 								<button class="button button-small tsosk-cron-run"
-								        data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-								        data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
-								        data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+										data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
+										data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<button class="button button-small tsosk-cron-edit"
-								        data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-								        data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
-								        data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
-								        data-schedule="<?php echo esc_attr( $event['schedule'] ? (string) $event['schedule'] : 'single' ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+										data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
+										data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
+										data-schedule="<?php echo esc_attr( $event['schedule'] ? (string) $event['schedule'] : 'single' ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<button class="button button-small button-link-delete tsosk-cron-delete"
-								        data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
-								        data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
-								        data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
-								        data-nonce="<?php echo esc_attr( $nonce ); ?>">
+										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+										data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
+										data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
 								<?php endif; ?>
@@ -449,11 +467,19 @@ class TSOSK_Mod_Cron {
 	private function detect_hook_source( string $hook ): array {
 		global $wp_filter;
 
-		$unknown = array( 'type' => 'unknown', 'name' => '', 'file' => '' );
+		$unknown = array(
+			'type' => 'unknown',
+			'name' => '',
+			'file' => '',
+		);
 
 		// 1. Known WP core hooks.
 		if ( $this->is_core_hook( $hook ) ) {
-			return array( 'type' => 'wordpress', 'name' => 'WordPress', 'file' => '' );
+			return array(
+				'type' => 'wordpress',
+				'name' => 'WordPress',
+				'file' => '',
+			);
 		}
 
 		$hook_lower = strtolower( $hook );
@@ -498,7 +524,11 @@ class TSOSK_Mod_Cron {
 				$wp_admin    = wp_normalize_path( tsosk_get_wp_admin_dir() );
 				$norm        = wp_normalize_path( $file );
 				if ( str_starts_with( $norm, $wp_includes ) || str_starts_with( $norm, $wp_admin ) ) {
-					return array( 'type' => 'wordpress', 'name' => 'WordPress', 'file' => $file );
+					return array(
+						'type' => 'wordpress',
+						'name' => 'WordPress',
+						'file' => $file,
+					);
 				}
 				// Try to extract plugin name from path.
 				$plugins_dir = tsosk_get_plugins_dir();
@@ -518,18 +548,30 @@ class TSOSK_Mod_Cron {
 							break;
 						}
 					}
-					return array( 'type' => 'plugin', 'name' => $name, 'file' => $rel );
+					return array(
+						'type' => 'plugin',
+						'name' => $name,
+						'file' => $rel,
+					);
 				}
 				// mu-plugins.
 				$mu_dir = wp_normalize_path( WPMU_PLUGIN_DIR . '/' );
 				if ( str_starts_with( $norm, $mu_dir ) ) {
-					return array( 'type' => 'plugin', 'name' => 'MU-Plugin', 'file' => substr( $norm, strlen( $mu_dir ) ) );
+					return array(
+						'type' => 'plugin',
+						'name' => 'MU-Plugin',
+						'file' => substr( $norm, strlen( $mu_dir ) ),
+					);
 				}
 			}
 		}
 
 		if ( $this->is_core_hook( $hook ) ) {
-			return array( 'type' => 'wordpress', 'name' => 'WordPress', 'file' => '' );
+			return array(
+				'type' => 'wordpress',
+				'name' => 'WordPress',
+				'file' => '',
+			);
 		}
 
 		return $unknown;
@@ -626,40 +668,142 @@ class TSOSK_Mod_Cron {
 	 */
 	private function match_known_hook_source( string $hook ): ?array {
 		$map = array(
-			'action_scheduler'       => array( 'folder' => 'woocommerce', 'name' => 'Action Scheduler' ),
-			'action_scheduler_run'   => array( 'folder' => 'woocommerce', 'name' => 'Action Scheduler' ),
-			'wc_'                    => array( 'folder' => 'woocommerce', 'name' => 'WooCommerce' ),
-			'woocommerce_'           => array( 'folder' => 'woocommerce', 'name' => 'WooCommerce' ),
-			'itsec_'                 => array( 'folder' => 'better-wp-security', 'name' => 'Solid Security' ),
-			'ithemes_'               => array( 'folder' => 'better-wp-security', 'name' => 'Solid Security' ),
-			'wordfence_'             => array( 'folder' => 'wordfence', 'name' => 'Wordfence' ),
-			'wfls_'                  => array( 'folder' => 'wordfence', 'name' => 'Wordfence' ),
-			'wpseo_'                 => array( 'folder' => 'wordpress-seo', 'name' => 'Yoast SEO' ),
-			'yoast_'                 => array( 'folder' => 'wordpress-seo', 'name' => 'Yoast SEO' ),
-			'rank_math_'             => array( 'folder' => 'seo-by-rank-math', 'name' => 'Rank Math' ),
-			'elementor_'             => array( 'folder' => 'elementor', 'name' => 'Elementor' ),
-			'jetpack_'               => array( 'folder' => 'jetpack', 'name' => 'Jetpack' ),
-			'akismet_'               => array( 'folder' => 'akismet', 'name' => 'Akismet' ),
-			'gravityforms_'          => array( 'folder' => 'gravityforms', 'name' => 'Gravity Forms' ),
-			'gf_'                    => array( 'folder' => 'gravityforms', 'name' => 'Gravity Forms' ),
-			'wpforms_'               => array( 'folder' => 'wpforms-lite', 'name' => 'WPForms' ),
-			'kadence_'               => array( 'folder' => 'kadence-blocks', 'name' => 'Kadence' ),
-			'kb_'                    => array( 'folder' => 'kadence-blocks', 'name' => 'Kadence' ),
-			'stellarwp_'             => array( 'folder' => 'kadence-blocks', 'name' => 'Kadence' ),
-			'redirection_'           => array( 'folder' => 'redirection', 'name' => 'Redirection' ),
-			'wp_mail_smtp_'          => array( 'folder' => 'wp-mail-smtp', 'name' => 'WP Mail SMTP' ),
-			'wpml_'                  => array( 'folder' => 'sitepress-multilingual-cms', 'name' => 'WPML' ),
-			'acf_'                   => array( 'folder' => 'advanced-custom-fields', 'name' => 'ACF' ),
-			'updraft_'               => array( 'folder' => 'updraftplus', 'name' => 'UpdraftPlus' ),
-			'backwpup_'              => array( 'folder' => 'backwpup', 'name' => 'BackWPup' ),
-			'sg_'                    => array( 'folder' => 'sg-cachepress', 'name' => 'SiteGround Optimizer' ),
-			'litespeed_'             => array( 'folder' => 'litespeed-cache', 'name' => 'LiteSpeed Cache' ),
-			'wp_rocket_'             => array( 'folder' => 'wp-rocket', 'name' => 'WP Rocket' ),
-			'w3tc_'                  => array( 'folder' => 'w3-total-cache', 'name' => 'W3 Total Cache' ),
-			'edd_'                   => array( 'folder' => 'easy-digital-downloads', 'name' => 'Easy Digital Downloads' ),
-			'pmpro_'                 => array( 'folder' => 'paid-memberships-pro', 'name' => 'Paid Memberships Pro' ),
-			'fluentform_'            => array( 'folder' => 'fluentform', 'name' => 'Fluent Forms' ),
-			'fluentcrm_'             => array( 'folder' => 'fluent-crm', 'name' => 'FluentCRM' ),
+			'action_scheduler'     => array(
+				'folder' => 'woocommerce',
+				'name'   => 'Action Scheduler',
+			),
+			'action_scheduler_run' => array(
+				'folder' => 'woocommerce',
+				'name'   => 'Action Scheduler',
+			),
+			'wc_'                  => array(
+				'folder' => 'woocommerce',
+				'name'   => 'WooCommerce',
+			),
+			'woocommerce_'         => array(
+				'folder' => 'woocommerce',
+				'name'   => 'WooCommerce',
+			),
+			'itsec_'               => array(
+				'folder' => 'better-wp-security',
+				'name'   => 'Solid Security',
+			),
+			'ithemes_'             => array(
+				'folder' => 'better-wp-security',
+				'name'   => 'Solid Security',
+			),
+			'wordfence_'           => array(
+				'folder' => 'wordfence',
+				'name'   => 'Wordfence',
+			),
+			'wfls_'                => array(
+				'folder' => 'wordfence',
+				'name'   => 'Wordfence',
+			),
+			'wpseo_'               => array(
+				'folder' => 'wordpress-seo',
+				'name'   => 'Yoast SEO',
+			),
+			'yoast_'               => array(
+				'folder' => 'wordpress-seo',
+				'name'   => 'Yoast SEO',
+			),
+			'rank_math_'           => array(
+				'folder' => 'seo-by-rank-math',
+				'name'   => 'Rank Math',
+			),
+			'elementor_'           => array(
+				'folder' => 'elementor',
+				'name'   => 'Elementor',
+			),
+			'jetpack_'             => array(
+				'folder' => 'jetpack',
+				'name'   => 'Jetpack',
+			),
+			'akismet_'             => array(
+				'folder' => 'akismet',
+				'name'   => 'Akismet',
+			),
+			'gravityforms_'        => array(
+				'folder' => 'gravityforms',
+				'name'   => 'Gravity Forms',
+			),
+			'gf_'                  => array(
+				'folder' => 'gravityforms',
+				'name'   => 'Gravity Forms',
+			),
+			'wpforms_'             => array(
+				'folder' => 'wpforms-lite',
+				'name'   => 'WPForms',
+			),
+			'kadence_'             => array(
+				'folder' => 'kadence-blocks',
+				'name'   => 'Kadence',
+			),
+			'kb_'                  => array(
+				'folder' => 'kadence-blocks',
+				'name'   => 'Kadence',
+			),
+			'stellarwp_'           => array(
+				'folder' => 'kadence-blocks',
+				'name'   => 'Kadence',
+			),
+			'redirection_'         => array(
+				'folder' => 'redirection',
+				'name'   => 'Redirection',
+			),
+			'wp_mail_smtp_'        => array(
+				'folder' => 'wp-mail-smtp',
+				'name'   => 'WP Mail SMTP',
+			),
+			'wpml_'                => array(
+				'folder' => 'sitepress-multilingual-cms',
+				'name'   => 'WPML',
+			),
+			'acf_'                 => array(
+				'folder' => 'advanced-custom-fields',
+				'name'   => 'ACF',
+			),
+			'updraft_'             => array(
+				'folder' => 'updraftplus',
+				'name'   => 'UpdraftPlus',
+			),
+			'backwpup_'            => array(
+				'folder' => 'backwpup',
+				'name'   => 'BackWPup',
+			),
+			'sg_'                  => array(
+				'folder' => 'sg-cachepress',
+				'name'   => 'SiteGround Optimizer',
+			),
+			'litespeed_'           => array(
+				'folder' => 'litespeed-cache',
+				'name'   => 'LiteSpeed Cache',
+			),
+			'wp_rocket_'           => array(
+				'folder' => 'wp-rocket',
+				'name'   => 'WP Rocket',
+			),
+			'w3tc_'                => array(
+				'folder' => 'w3-total-cache',
+				'name'   => 'W3 Total Cache',
+			),
+			'edd_'                 => array(
+				'folder' => 'easy-digital-downloads',
+				'name'   => 'Easy Digital Downloads',
+			),
+			'pmpro_'               => array(
+				'folder' => 'paid-memberships-pro',
+				'name'   => 'Paid Memberships Pro',
+			),
+			'fluentform_'          => array(
+				'folder' => 'fluentform',
+				'name'   => 'Fluent Forms',
+			),
+			'fluentcrm_'           => array(
+				'folder' => 'fluent-crm',
+				'name'   => 'FluentCRM',
+			),
 		);
 
 		$best_key = '';
@@ -723,7 +867,7 @@ class TSOSK_Mod_Cron {
 			return $cache[ $hook ];
 		}
 
-		$needle = preg_quote( $hook, '/' );
+		$needle  = preg_quote( $hook, '/' );
 		$plugins = get_plugins();
 
 		foreach ( $plugins as $file => $data ) {
@@ -734,6 +878,7 @@ class TSOSK_Mod_Cron {
 			}
 			$paths = array( $plugin_file );
 			foreach ( array( 'includes', 'src', 'admin', 'classes' ) as $sub ) {
+				// phpcs:ignore Universal.Operators.DisallowShortTernary.Found -- Falsy fallback of a function result is intended.
 				foreach ( glob( $dir . '/' . $sub . '/*.php' ) ?: array() as $php ) {
 					$paths[] = $php;
 				}
@@ -800,7 +945,7 @@ class TSOSK_Mod_Cron {
 	private function callback_to_file( $callback ): string {
 		try {
 			if ( $callback instanceof Closure ) {
-				$ref  = new ReflectionFunction( $callback );
+				$ref = new ReflectionFunction( $callback );
 				return (string) $ref->getFileName();
 			}
 			if ( is_array( $callback ) ) {
@@ -819,7 +964,7 @@ class TSOSK_Mod_Cron {
 				}
 			}
 		} catch ( ReflectionException $e ) {
-			// Ignore.
+			return '';
 		}
 		return '';
 	}
@@ -843,6 +988,7 @@ class TSOSK_Mod_Cron {
 				'wp_maybe_auto_update'               => true,
 				'wp_network_dashboard_setup'         => true,
 				'wp_privacy_delete_old_export_files' => true,
+				'wp_privacy_personal_data_cleanup_requests' => true,
 				'wp_scheduled_auto_draft_delete'     => true,
 				'wp_scheduled_comment_purge'         => true,
 				'wp_scheduled_delete'                => true,
@@ -850,6 +996,10 @@ class TSOSK_Mod_Cron {
 				'wp_site_health_scheduled_check'     => true,
 				'wp_split_shared_term_batch'         => true,
 				'wp_update_comment_type'             => true,
+				'wp_update_comment_type_batch'       => true,
+				// This plugin's own one-shot jobs that purge quarantined files after 30 days: deleting them would keep those files forever.
+				'tsosk_media_quarantine_purge'       => true,
+				'tsosk_image_sizes_quarantine_purge' => true,
 				'wp_update_plugins'                  => true,
 				'wp_update_themes'                   => true,
 				'wp_update_user_counts'              => true,
@@ -884,30 +1034,50 @@ class TSOSK_Mod_Cron {
 		);
 	}
 
-	/** Build cron health diagnostics. */
+	/**
+	 * Build cron health diagnostics.
+	 *
+	 * @param array $events Events.
+	 * @return array
+	 */
 	private function get_cron_health( array $events ): array {
-		$now = time();
-		$overdue = 0; $very_frequent = 0; $without_callback = array();
+		$now              = time();
+		$overdue          = 0;
+		$very_frequent    = 0;
+		$without_callback = array();
 		foreach ( $events as $event ) {
-			if ( absint( $event['timestamp'] ) < $now - HOUR_IN_SECONDS ) { $overdue++; }
-			if ( ! empty( $event['interval'] ) && absint( $event['interval'] ) < 5 * MINUTE_IN_SECONDS ) { $very_frequent++; }
-			if ( ! has_action( (string) $event['hook'] ) ) { $without_callback[] = (string) $event['hook']; }
+			if ( absint( $event['timestamp'] ) < $now - HOUR_IN_SECONDS ) {
+				++$overdue; }
+			if ( ! empty( $event['interval'] ) && absint( $event['interval'] ) < 5 * MINUTE_IN_SECONDS ) {
+				++$very_frequent; }
+			if ( ! has_action( (string) $event['hook'] ) ) {
+				$without_callback[] = (string) $event['hook']; }
 		}
-		$lock = get_transient( 'doing_cron' );
-		$cron_disabled = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
-		$overdue_status = $overdue > 0
+		$lock            = get_transient( 'doing_cron' );
+		$cron_disabled   = defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON;
+		$overdue_status  = $overdue > 0
 			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		$frequent_status = $very_frequent > 0
 			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-		$missing_status = ! empty( $without_callback )
+		$missing_status  = ! empty( $without_callback )
 			? __( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			: __( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
 		return array(
-			array( 'label' => __( 'WP-Cron execution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $cron_disabled ? __( 'External', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $cron_disabled ? 'tsosk-badge-info' : 'tsosk-badge-ok', 'details' => $cron_disabled ? __( 'DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WP-Cron is triggered by site traffic.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-			array( 'label' => __( 'Cron lock', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $lock ? __( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'badge' => $lock ? 'tsosk-badge-info' : 'tsosk-badge-ok', 'details' => $lock ? __( 'A cron process appears to be running.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No doing_cron lock found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			array(
+				'label'   => __( 'WP-Cron execution', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => $cron_disabled ? __( 'External', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'badge'   => $cron_disabled ? 'tsosk-badge-info' : 'tsosk-badge-ok',
+				'details' => $cron_disabled ? __( 'DISABLE_WP_CRON is enabled. A real server cron should call wp-cron.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'WP-Cron is triggered by site traffic.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			),
+			array(
+				'label'   => __( 'Cron lock', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => $lock ? __( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'badge'   => $lock ? 'tsosk-badge-info' : 'tsosk-badge-ok',
+				'details' => $lock ? __( 'A cron process appears to be running.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'No doing_cron lock found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			),
 			array(
 				'label'   => __( 'Overdue events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'status'  => $overdue_status,
@@ -928,7 +1098,12 @@ class TSOSK_Mod_Cron {
 					$very_frequent
 				),
 			),
-			array( 'label' => __( 'Hooks without callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'status' => $missing_status, 'badge' => ! empty( $without_callback ) ? 'tsosk-badge-warn' : 'tsosk-badge-ok', 'details' => empty( $without_callback ) ? __( 'All scheduled hooks have callbacks loaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : implode( ', ', array_slice( array_unique( $without_callback ), 0, 8 ) ) ),
+			array(
+				'label'   => __( 'Hooks without callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'status'  => $missing_status,
+				'badge'   => ! empty( $without_callback ) ? 'tsosk-badge-warn' : 'tsosk-badge-ok',
+				'details' => empty( $without_callback ) ? __( 'All scheduled hooks have callbacks loaded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : implode( ', ', array_slice( array_unique( $without_callback ), 0, 8 ) ),
+			),
 		);
 	}
 }

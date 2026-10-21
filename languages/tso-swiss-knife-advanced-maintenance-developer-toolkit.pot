@@ -1443,10 +1443,6 @@ msgstr ""
 msgid "Developer mode"
 msgstr ""
 
-#: includes/class-tsosk-admin.php:1147
-msgid "Enable WP_DEBUG, debug.log and SAVEQUERIES"
-msgstr ""
-
 #: includes/class-tsosk-admin.php:1164
 msgid "You do not have permission to access this page."
 msgstr ""
@@ -2242,10 +2238,6 @@ msgstr ""
 msgid "Submission blocked by Project Honey Pot bot reputation list."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-comment-antispam.php:1916
-msgid "Enable at least one protection target: comments or contact forms."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1924
 #: includes/modules/class-tsosk-mod-comment-antispam.php:1926
 msgid "Comment anti-spam settings saved."
@@ -2322,10 +2314,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2010
 msgid "Blocked (24 h)"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-comment-antispam.php:2014
-msgid "Blocked (log)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2021
@@ -2421,12 +2409,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2081
 msgid "Max. form age (seconds)"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-comment-antispam.php:2084
-msgid ""
-"Maximum time a form stays valid after it was opened. Older tokens are "
-"rejected (e.g. a tab left open overnight). Default: 7200 (2 hours)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2088
@@ -2551,10 +2533,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2167
 msgid "Stop Forum Spam"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-comment-antispam.php:2168
-msgid "Free API, no key required. Checks IP, email and username."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2169
@@ -4817,12 +4795,6 @@ msgstr ""
 msgid "Email Alerts"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-health.php:299
-msgid ""
-"Optional email when the Redirects 404 monitor sees too much traffic to "
-"missing pages. Useful to catch broken links or bots scanning your site."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-health.php:303
 msgid "Enable email alerts"
 msgstr ""
@@ -4847,14 +4819,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:330
 msgid "Hide WordPress Site Health notices"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-health.php:332
-msgid ""
-"On staging or private test sites, WordPress may show heavy warnings on Tools"
-" › Site Health about search-engine visibility or debug.log being public. "
-"Enable the options below to hide those specific tests. This does not change "
-"your real settings — it only removes the notices from Site Health."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-health.php:336
@@ -7601,14 +7565,6 @@ msgstr ""
 msgid "What does blocking do?"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-rest-api.php:159
-msgid ""
-"When you tick a namespace below, every request to that API group returns an "
-"error — for visitors and for logged-in admins alike. It is a surgical “off "
-"switch” for one API group, not the same as the access mode above (which only"
-" affects logged-out users)."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-rest-api.php:162
 msgid "Why would you use this?"
 msgstr ""
@@ -7627,14 +7583,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:171
 msgid "Is it dangerous?"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-rest-api.php:172
-msgid ""
-"Yes, if you block the wrong namespace. Core groups (wp/v2, wp-block-editor) "
-"will break the Block Editor immediately. Plugin namespaces will break that "
-"plugin’s features. Leave everything unchecked unless you have a specific "
-"reason and have tested on staging."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-rest-api.php:194
@@ -10581,16 +10529,6 @@ msgstr ""
 msgid "Update Manager is blocking all updates. Change the preset first."
 msgstr ""
 
-#. translators: 1: plugins before, 2: themes before, 3: translations before,
-#. 4: plugins after, 5: themes after, 6: translations after
-#: includes/modules/class-tsosk-mod-update-manager.php:799
-#, php-format
-msgid ""
-"Update check finished. Pending before — plugins: %1$d, themes: %2$d, "
-"translations: %3$d. Pending now — plugins: %4$d, themes: %5$d, translations:"
-" %6$d. Install updates from Dashboard → Updates."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-update-manager.php:820
 msgid ""
 "Monitor WordPress update status, optionally block update checks (staging), "
@@ -10701,12 +10639,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:932
 msgid "Individual plugins"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-update-manager.php:934
-msgid ""
-"Hide available updates for specific plugins in the dashboard. Does not "
-"change WordPress auto-update settings — use Dashboard → Updates for that."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-update-manager.php:938
@@ -11710,8 +11642,8 @@ msgid ""
 "The single control that most often stops an arbitrary-file-upload attack "
 "from becoming a full takeover: even if a vulnerable plugin lets an attacker "
 "write a PHP file into wp-content/uploads, the file can never run if the "
-"server refuses to execute PHP there. This test writes a harmless temporary "
-"PHP file, requests it over HTTP, then deletes it."
+"server refuses to execute PHP there. This check only reads the rules in "
+"uploads/.htaccess; it does not write or run any file."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:1
@@ -11783,10 +11715,6 @@ msgid "%d other user(s)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:1
-msgid "Could not write a test file to the uploads folder to run this check."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-security.php:1
 #, php-format
 msgid ""
 "Could not reach the test file over HTTP to verify: %s. Test manually if in "
@@ -11798,13 +11726,6 @@ msgid ""
 "PHP files placed inside wp-content/uploads are executed by your server. If "
 "any plugin ever allows an unvalidated file upload there, an uploaded PHP "
 "file could run immediately. Use \"Enable protection\" below to block this."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-security.php:1
-#, php-format
-msgid ""
-"PHP execution inside wp-content/uploads is blocked (HTTP %d). Even if a "
-"malicious file were ever uploaded there, it could not run."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:1
@@ -12620,9 +12541,6 @@ msgstr ""
 msgid "Would block (24 h)"
 msgstr ""
 
-msgid "Would block (log)"
-msgstr ""
-
 msgid "Learning log (would-be blocks)"
 msgstr ""
 
@@ -13398,16 +13316,6 @@ msgstr ""
 msgid "Size without its original"
 msgstr ""
 
-msgid ""
-"Media Library items with no parent post, or whose parent post was deleted. "
-"Unattached does not mean unused: featured images, widgets, page builders and"
-" custom fields often use media that is not attached. Regenerate thumbnails "
-"only applies to image attachments."
-msgstr ""
-
-msgid "In use: featured image"
-msgstr ""
-
 msgid "Parent post deleted"
 msgstr ""
 
@@ -13826,16 +13734,2324 @@ msgid ""
 "for it. Existing files can be moved to quarantine below."
 msgstr ""
 
-#. translators: 1: size name, 2: number of posts/pages, 3: number of post meta values
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
-#, php-format
-msgid "%1$s: %2$d post(s)/page(s), %3$d meta value(s)"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Some content still links directly to files of these sizes. Those images will show as broken until you restore the files:"
+msgid ""
+"Some content still links directly to files of these sizes. Those images will"
+" show as broken until you restore the files:"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "Move them to quarantine anyway?"
+msgstr ""
+
+#. translators: 1: size name, 2: number of posts/pages, 3: number of post meta
+#. values, 4: number of option values
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "%1$s: %2$d post(s)/page(s), %3$d meta value(s), %4$d option(s)"
+msgstr ""
+
+#. translators: 1: size name, 2: comma-separated theme/plugin names
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "%1$s: requested by %2$s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Active code still asks for these sizes by name. Its thumbnails will break or"
+" fall back to another size until you restore the files:"
+msgstr ""
+
+#. translators: %s: comma-separated old size names (same dimensions) whose
+#. files still exist
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid ""
+"Existing images are still saved under the old name %s (same dimensions). "
+"Regenerate thumbnails to fill this size."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Detected references"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Sizes with no detected references are pre-selected; the others are left "
+"unselected. The check looks at post content, post meta and options, and (for"
+" sizes no longer registered) at the PHP code of the active theme and "
+"plugins. It cannot see external hotlinks, cached pages, page-builder "
+"settings stored elsewhere or sizes built dynamically in code — \"no "
+"references detected\" does not mean \"not used\". The 30-day quarantine is "
+"the safety net."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "The code scan hit its file or time limit, so it may be incomplete."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Run the audit again to detect references."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Not checked"
+msgstr ""
+
+#. translators: 1: number of posts/pages, 2: number of post meta values, 3:
+#. number of option values that link to files of this size
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Linked in content: %1$d post(s), %2$d meta, %3$d option(s)"
+msgstr ""
+
+#. translators: %s: comma-separated theme/plugin names whose code mentions
+#. this size
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Requested by code: %s"
+msgstr ""
+
+#. translators: %s: name of the registered size with the same dimensions
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Probably replaced by %s (same dimensions)"
+msgstr ""
+
+#. translators: 1: name of the similarly named registered size, 2: its width,
+#. 3: its height
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "No equivalent: %1$s has different dimensions (%2$d × %3$d)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "No references detected"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "off in Settings > Media"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Width and height are 0 in Settings > Media, so WordPress generates no files "
+"for this size."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "hidden by a filter"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "A theme or plugin removes this size from the list of registered sizes."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Not generated (0 × 0 in Settings > Media)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Turned off: its existing files are listed in the quarantine section below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Untick it and save to list its existing files in the quarantine section "
+"below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid ""
+"%1$s: same dimensions as the active size %2$s (%3$d file(s) there, %4$d "
+"here)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"An active size with the same dimensions has fewer files. These files are the"
+" only copy of that crop until you regenerate thumbnails for the active size:"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Use \"Delete now\" on this batch to discard what is left."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid ""
+"Same dimensions as the active size %1$s, which has %2$d file(s) against %3$d"
+" here. Regenerate thumbnails for %1$s before moving these files."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Run the image sizes audit to list the sizes that still have files on disk."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "site icon (protected)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Created by WordPress for the site icon (favicon): it cannot be turned off or"
+" moved to quarantine."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"It was seen registered on the front end: check that no theme still uses it "
+"before moving its files."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "off (options set to 0)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"WordPress has no field for this size in Settings > Media. Its options "
+"medium_large_size_w and medium_large_size_h are 0, so WordPress generates no"
+" files for it (the default is 768 × 0)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Not generated (options set to 0 × 0)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "More information"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Protected (site icon)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Turned off — see quarantine below"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Untick to quarantine"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Regenerate %s first"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "… and %d more"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "(no title)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Posts and pages with a link to this size"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Post meta (page builders, custom fields) with a link to this size"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Options (widgets, theme settings) with a link to this size"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Where the code asks for this size (file:line)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Not registered by any active theme or plugin — no new files are generated "
+"for it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Name found in code (not confirmed)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"The name appears between quotes in this code, but not as an argument of an "
+"image function or as a size value, so it may be something unrelated (for "
+"example an array key)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Where it appears (file:line)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Invalid sizes."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "The destination size is not an active registered size."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Run the image sizes audit first."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "The two sizes do not have identical dimensions."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Size %1$s now reuses the existing files of %2$s (%3$d images)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid ""
+"%1$s now uses the existing files of %3$s for %2$d image(s). No file was "
+"changed."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "Reuse the files of %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid ""
+"Make the existing files of \"%2$s\" (%1$d images) available as \"%3$s\"? "
+"Only the image data stored in the database is updated: no file is moved, "
+"copied or deleted, and \"%2$s\" keeps working. Continue?"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Always generated. Set 0 × 0 in Settings > Media to turn it off."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid ""
+"Also count clicks on external links in the theme header (e.g. social icons) "
+"— visitors only, never the admin bar"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid "Total file downloads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid ""
+"Page views are counted for posts and pages only. Download buttons (links "
+"with the download attribute that point to files on this site) are counted "
+"separately when enabled in the settings below; media attachment pages are "
+"not tracked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid "Most downloaded files"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid "Downloads"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid ""
+"Count downloads: clicks on links with the download attribute that point to "
+"files on this site (respects the logged-in users setting above)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+#, php-format
+msgid "Total file downloads (last %1$d days): %2$s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid "Top downloaded files:"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+#, php-format
+msgid ""
+"This source was already imported on %s. Importing it again would add the "
+"same views a second time."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid "Download CSV for Excel (Spanish/Catalan, semicolon)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php
+msgid ""
+"This source was already imported. Importing it again adds the same views a "
+"second time and doubles those numbers. Import anyway?"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-users.php
+#, php-format
+msgid "%d users were not deleted because they own posts or other content."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php
+msgid ""
+"Warning: the Site URL / Home URL stored in the database changed. If the site"
+" stops loading, restore the previous values (wp-config.php WP_HOME / "
+"WP_SITEURL) or use the backup restore."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+msgid "The uploads folder could not be located to run this check."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+msgid ""
+"A rule that blocks PHP execution inside wp-content/uploads was found in its "
+".htaccess file."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php
+msgid ""
+"No rule blocking PHP execution inside wp-content/uploads was found in its "
+".htaccess file. Use \"Enable protection\" below (Apache/LiteSpeed). On Nginx"
+" or IIS, add the equivalent rule to the server configuration."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-staging.php
+msgid ""
+"Note: this also blocks password-reset emails and login verification codes. "
+"Keep an administrator session open, or turn this option off before you need "
+"to sign in again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php
+msgid ""
+"This value contains serialized PHP objects and cannot be edited here without"
+" corrupting it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php
+msgid "No update check has run yet"
+msgstr ""
+
+msgid "Unattached archives (zip, rar…)"
+msgstr ""
+
+msgid ""
+"Compressed files (zip, rar, 7z, tar, gz) uploaded to the Media Library with "
+"no parent post. They are not images or media: they are usually plugin or "
+"theme packages uploaded by hand and can often be removed once installed."
+msgstr ""
+
+msgid "Excluded roles"
+msgstr ""
+
+msgid ""
+"Do not count visits and downloads from logged-in users with these roles. Not"
+" needed when \"Don't count views from logged-in users\" is on."
+msgstr ""
+
+msgid "Excluded IP addresses"
+msgstr ""
+
+#, php-format
+msgid ""
+"One IP or range (CIDR, e.g. 203.0.113.0/24) per line; IPv4 and IPv6. Visits "
+"and downloads from these addresses are not counted, even if the visitor is "
+"not logged in. Your current IP: %s"
+msgstr ""
+
+msgid ""
+"Also count normal links to files with these extensions (no download "
+"attribute needed):"
+msgstr ""
+
+msgid ""
+"Also count links to image files (jpg, png, gif, webp, svg…). Off by default:"
+" a link to an image is often a lightbox, not a download."
+msgstr ""
+
+msgid "TSO Downloads"
+msgstr ""
+
+msgid "Broken links"
+msgstr ""
+
+#, php-format
+msgid "%1$d broken links found among %2$d tracked links (TSO Link Inspector)."
+msgstr ""
+
+#, php-format
+msgid "No broken links found among %d tracked links (TSO Link Inspector)."
+msgstr ""
+
+msgid "PHP version support"
+msgstr ""
+
+#, php-format
+msgid ""
+"PHP %1$s stopped receiving security fixes on %2$s. Ask your host to switch "
+"to a newer PHP version."
+msgstr ""
+
+#, php-format
+msgid "PHP %1$s stops receiving security fixes on %2$s. Plan an upgrade soon."
+msgstr ""
+
+#, php-format
+msgid "PHP %1$s is supported until %2$s."
+msgstr ""
+
+#, php-format
+msgid "PHP %s is outdated and no longer supported. Ask your host to upgrade."
+msgstr ""
+
+msgid "Inactive plugins"
+msgstr ""
+
+#, php-format
+msgid ""
+"%1$d inactive plugins (%2$s). Delete the ones you do not use: they can still"
+" be a security risk."
+msgstr ""
+
+msgid "No more than two inactive plugins."
+msgstr ""
+
+msgid "Expired transients"
+msgstr ""
+
+#, php-format
+msgid "%d expired transients are still stored in the database."
+msgstr ""
+
+msgid "No significant amount of expired transients."
+msgstr ""
+
+msgid "Compressed files in the Media Library"
+msgstr ""
+
+#, php-format
+msgid ""
+"%d compressed files (zip, rar…) without a parent post. They are often plugin"
+" or theme packages that can be deleted."
+msgstr ""
+
+msgid "No compressed files without a parent post."
+msgstr ""
+
+msgid "Install TSO Link Inspector"
+msgstr ""
+
+msgid "Detect broken links"
+msgstr ""
+
+msgid ""
+"Broken links hurt SEO and visitors. TSO Link Inspector scans posts, pages, "
+"menus and comments, checks each URL and lets you fix links from one screen. "
+"It is not installed on this site, so broken links are not being monitored."
+msgstr ""
+
+msgid ""
+"TSO Link Inspector is installed but inactive. Activate it to scan this site "
+"for broken links."
+msgstr ""
+
+msgid "Go to Plugins"
+msgstr ""
+
+msgid ""
+"TSO Link Inspector is active but has not scanned the site yet. Run the first"
+" scan to see broken links here."
+msgstr ""
+
+msgid "The score trend appears after the second scan."
+msgstr ""
+
+msgid "Same score as the previous scan."
+msgstr ""
+
+#, php-format
+msgid "%s points since the previous scan."
+msgstr ""
+
+msgid "Score trend"
+msgstr ""
+
+msgid "Visits (7 days)"
+msgstr ""
+
+msgid "Posts and pages"
+msgstr ""
+
+msgid "File downloads (7 days)"
+msgstr ""
+
+msgid "Counted by the View Counter"
+msgstr ""
+
+msgid "Database size"
+msgstr ""
+
+#, php-format
+msgid "%d tables"
+msgstr ""
+
+msgid "Uploads folder"
+msgstr ""
+
+msgid "Run the Media Footprint scan"
+msgstr ""
+
+msgid "No debug.log file"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "Cron events"
+msgstr ""
+
+msgid "All have a callback"
+msgstr ""
+
+#, php-format
+msgid "%d hooks without callback"
+msgstr ""
+
+msgid "Recommendations"
+msgstr ""
+
+msgid "Tip"
+msgstr ""
+
+msgid "Site usage (last 7 days)"
+msgstr ""
+
+msgid "Most viewed"
+msgstr ""
+
+msgid "No data yet."
+msgstr ""
+
+msgid "Most frequent 404s"
+msgstr ""
+
+msgid "Open the 404 monitor"
+msgstr ""
+
+msgid "Shortcuts follow the tools in your Favorites bar."
+msgstr ""
+
+msgid ""
+"Other users or accounts on the server can modify this file. Whoever edits it"
+" can change the database connection or inject code into the whole site. "
+"Recommended: 0640 (or 0600 if PHP runs as the file owner). Never 0666 or "
+"0777. Nothing in WordPress needs to write to this file, so tightening it "
+"does not block updates or plugins."
+msgstr ""
+
+msgid ""
+"Other users or accounts on the server can modify this file. Whoever edits it"
+" can add redirects or rewrite rules to your site. Recommended: 0644. Do not "
+"go stricter than 0444: WordPress and some plugins (permalinks, cache, "
+"security) need to write to it."
+msgstr ""
+
+msgid ""
+"Optional hardening: the file is readable by every account on the server, "
+"which on shared hosting can expose the database password. Recommended: 0640 "
+"or 0600. WordPress, updates and plugins keep working because none of them "
+"write to wp-config.php. After changing it, reload the site: if you see a "
+"blank page or a database connection error, set it back to 0644 (PHP runs as "
+"a different user than the file owner)."
+msgstr ""
+
+msgid "Good: only the owner and group can read it."
+msgstr ""
+
+msgid ""
+"Good: this is the recommended value. Only the owner can modify it, and "
+"WordPress can still update permalink rules."
+msgstr ""
+
+msgid ""
+"The file is read-only: it is safe, but WordPress and some plugins cannot "
+"save permalink or cache rules into it. Use 0644 if you need that."
+msgstr ""
+
+msgid "Filter tables"
+msgstr ""
+
+msgid "Type to filter tables (e.g. postmeta, options, woocommerce)…"
+msgstr ""
+
+msgid "{shown} of {total} tables shown · {selected} selected"
+msgstr ""
+
+msgid "No tables match your search."
+msgstr ""
+
+msgid "Search missing URLs, referrers or IPs…"
+msgstr ""
+
+msgid "Search the 404 log"
+msgstr ""
+
+msgid "{shown} of {total} missing URLs shown"
+msgstr ""
+
+msgid "No missing URL matches your search."
+msgstr ""
+
+msgid ""
+"%1$d queries on last page · Selected-plugin duplicates: %2$d · %3$d slow · "
+"%4$s · %5$s"
+msgstr ""
+
+msgid "%d Q"
+msgstr ""
+
+msgid "%s s"
+msgstr ""
+
+msgid "Database time"
+msgstr ""
+
+msgid "Duplicate patterns"
+msgstr ""
+
+msgid "Duplicate queries"
+msgstr ""
+
+msgid "Duplicated %d×"
+msgstr ""
+
+msgid "Duplicates by origin"
+msgstr ""
+
+msgid "Duplicates by origin:"
+msgstr ""
+
+msgid "Duplicate queries from plugins selected in settings"
+msgstr ""
+
+msgid ""
+"Exact duplicates from the last page you opened, limited to plugins chosen "
+"under Monitor Settings → Copy to AI (e.g. tso-*). All duplicates on this "
+"admin page appear in the live table below."
+msgstr ""
+
+msgid ""
+"Filters the “Duplicate queries from plugins selected in settings” panel (and"
+" its Copy to AI). The live table below still lists every duplicate on this "
+"admin page. None selected = all. Defaults to tso-* until you save. Needs "
+"Origin detection."
+msgstr ""
+
+msgid ""
+"%1$d queries on last page · Selected-plugin duplicates: %2$d (of %3$d on "
+"that page) · %4$d slow · %5$s · %6$s"
+msgstr ""
+
+msgid "MU-plugin: %s"
+msgstr ""
+
+msgid "No exact duplicate queries on that page."
+msgstr ""
+
+msgid "No query reached the slow threshold (%d ms) on that page."
+msgstr ""
+
+msgid "Page time"
+msgstr ""
+
+msgid "Peak memory"
+msgstr ""
+
+msgid "Queries"
+msgstr ""
+
+msgid ""
+"Record which plugin, theme, or WordPress core each slow or duplicate query "
+"came from"
+msgstr ""
+
+msgid ""
+"Shows the plugin or theme next to duplicate and slow queries (last page "
+"panel, live table, log and admin bar). Adds a small backtrace per query "
+"while this is on — leave it off unless you are actively investigating."
+msgstr ""
+
+msgid "Slow (≥ %d ms)"
+msgstr ""
+
+msgid "Slow Query Monitor — SAVEQUERIES is off."
+msgstr ""
+
+msgid ""
+"Slow Query Monitor — this request: %1$s s load, %2$d queries, %3$d duplicate"
+" patterns, %4$d slow queries."
+msgstr ""
+
+msgid "Slowest queries"
+msgstr ""
+
+msgid "Slowest · %s ms"
+msgstr ""
+
+msgid ""
+"The same request the admin bar was describing: its duplicate and slow "
+"queries. Saved when that page finished loading. The live table further down "
+"only shows queries for this Slow Query Monitor page."
+msgstr ""
+
+msgid "This request"
+msgstr ""
+
+msgid ""
+"To see which plugin or theme runs each query, turn on \"Origin detection\" "
+"in Monitor Settings below and visit the page again."
+msgstr ""
+
+msgid "Top pattern · %1$d× · max %2$s ms"
+msgstr ""
+
+msgid ""
+"Turn on \"Origin detection\" in Monitor Settings to see which plugin or "
+"theme causes them."
+msgstr ""
+
+msgid "Which plugin causes them? Turn on Origin detection"
+msgstr ""
+
+msgid "Worst queries"
+msgstr ""
+
+msgid "%d dup"
+msgid_plural "%d dups"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "%d run"
+msgid_plural "%d runs"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "%d slow query logged"
+msgid_plural "%d slow queries logged"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "%d request"
+msgid_plural "%d requests"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Copy for Cursor"
+msgstr ""
+
+msgid "Callers"
+msgstr ""
+
+msgid "Components"
+msgstr ""
+
+msgid "Potential troublemakers"
+msgstr ""
+
+msgid ""
+"Copy for Cursor pastes an English report (SQL, counts, callers, which "
+"plugin, troublemakers) ready to drop into an AI chat — same idea as "
+"selecting Query Monitor’s Duplicate Queries table."
+msgstr ""
+
+msgid "Duplicate report copied — paste it into Cursor."
+msgstr ""
+
+msgid "Copy to AI"
+msgstr ""
+
+msgid "Copy to AI — plugins"
+msgstr ""
+
+msgid "Select tso-*"
+msgstr ""
+
+msgid "Clear (all plugins)"
+msgstr ""
+
+msgid "No plugins found."
+msgstr ""
+
+msgid ""
+"Copy to AI pastes an English report of duplicates from the plugins selected "
+"in Monitor Settings (SQL, counts, callers, components, troublemakers) — "
+"ready for an AI chat."
+msgstr ""
+
+msgid "Duplicate report copied — paste it into your AI chat."
+msgstr ""
+
+msgid ""
+"Only duplicates attributed to the plugins you tick are included in \"Copy to"
+" AI\". Leave none ticked to include every plugin. Defaults to folders "
+"starting with tso- until you save."
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php:337
+msgid "Install translations"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:307
+#, php-format
+msgid ""
+"Install %d pending wordpress.org language pack(s) now? Files will be written"
+" under wp-content/languages/. Bundled .mo files inside plugins are not "
+"changed."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:351
+msgid "Select at least one duplicate row to copy."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:366
+#, php-format
+msgid ""
+"The preview shows only a sample for these tables; Execute will replace every"
+" match: %s."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:368
+#, php-format
+msgid ""
+"These tables have no single-column primary key and will be skipped: %s."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:370
+#, php-format
+msgid ""
+"%d cell(s) contain PHP objects or unreadable serialized data and will be "
+"left unchanged."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:371
+msgid ""
+"An automatic backup from a previous replace exists. Running this replace "
+"overwrites it, so the previous one can no longer be undone from here. "
+"Continue?"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:372
+msgid "Finished with warnings:"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:377
+msgid ""
+"Restore the settings that were replaced by the last import? Changes made "
+"since then in those sections will be lost."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-cron.php:64
+msgid "Core cron events cannot be run manually."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:401
+#: includes/modules/class-tsosk-mod-custom-404.php:406
+#: includes/modules/class-tsosk-mod-custom-404.php:410
+msgid "Test 404"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:406
+msgid "Invalid test link."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:410
+msgid "Select and save a published 404 page first."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:673
+msgid "Pretty permalinks are not reaching WordPress"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:675
+msgid ""
+"Permalink structure is set to Plain. Missing URLs never reach WordPress, so "
+"this custom page will not run for visitors. Choose a pretty structure (e.g. "
+"Post name) and save."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:679
+msgid "Settings → Permalinks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:680
+msgid "— choose a non-Plain structure and click Save (even if unchanged)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:683
+msgid "Swiss Knife → Rewrite"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:684
+msgid "— Hard Flush (regenerates .htaccess / web.config)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:687
+msgid "Swiss Knife → Server Files"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:688
+msgid ""
+"— confirm the WordPress .htaccess contains RewriteEngine On and RewriteBase "
+"for your folder (e.g. /plugins/)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:692
+msgid ""
+"If it still fails after that, the host is blocking rewrites (AllowOverride /"
+" nginx). Ask them to route all non-file requests under the WordPress folder "
+"to index.php."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:739
+#, php-format
+msgid ""
+"This page’s slug is “%s”. Paths containing “404” often trigger a bare server"
+" error (not your custom page). Rename the slug under Edit page (e.g. pagina-"
+"error), then save permalinks if needed."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-custom-404.php:756
+msgid ""
+"Edit page: change the content. Preview 404 page (below): see the design as a"
+" 404. Test 404 response: same custom page with a real HTTP 404/410 (admin-"
+"only link through WordPress)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:142
+msgid "TSO managed debug log (uploads)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:790
+msgid ""
+"Debug constants are already active on this site (usually from wp-"
+"config.php). That is separate from this plugin preset — the bar above shows "
+"site-wide debug, while Developer mode here only reflects the saved JSON "
+"preset."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1153
+msgid "Scroll to end"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1158
+msgid ""
+"WordPress.org policy prevents this plugin from rewriting wp-"
+"content/debug.log. Use Download, then clear the file on the server, or point"
+" WP_DEBUG_LOG to the managed uploads path shown above to enable Shrink here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:540
+#: includes/modules/class-tsosk-mod-health.php:571
+#, php-format
+msgid "Could not probe the home page (%s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php:517
+#: includes/modules/class-tsosk-mod-meta-editor.php:522
+#: includes/modules/class-tsosk-mod-meta-editor.php:545
+msgid "Could not add the meta row."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php:728
+msgid ""
+"Search in meta key names — e.g. “elementor” or “_thumbnail”. Values are "
+"searched only when a Post/User ID is set."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php:730
+msgid ""
+"Session tokens, capabilities, and keys containing words such as “license”, "
+"“password”, “token”, “secret” or “two_factor” cannot be viewed or edited — "
+"this prevents breaking logins or licenses."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-option-library.php:58
+msgid "This option cannot be viewed here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:920
+msgid "Option not found. Use \"Add new option\" to create it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-options-editor.php:929
+msgid "This option is documented as read-only and cannot be edited here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php:611
+msgid ""
+"The automatic backup could not be saved (it was too large for the database),"
+" so this replace cannot be undone from here."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-search-replace.php:1427
+msgid ""
+"The exact text you want to find. It is matched inside table cells (post "
+"content, options, meta, etc.). URLs are also replaced where they are stored "
+"in JSON with escaped slashes (https:\\/\\/…), as in Elementor or block data."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:460
+#, php-format
+msgid ""
+"A new Administrator account was just created on your site.\n"
+"\n"
+"Username: %1$s\n"
+"Email: %2$s\n"
+"IP address: %3$s\n"
+"Browser: %4$s\n"
+"Created via: %5$s\n"
+"\n"
+"If you did not do this yourself, change your WordPress and hosting passwords immediately and review Tools > TSO Swiss Knife > Security."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:507
+#: includes/modules/class-tsosk-mod-security.php:557
+#, php-format
+msgid ""
+"The user \"%1$s\" (%2$s) was just promoted to Administrator.\n"
+"\n"
+"IP address: %3$s\n"
+"Done via: %4$s\n"
+"\n"
+"If you did not do this yourself, change your WordPress and hosting passwords immediately and review Tools > TSO Swiss Knife > Security."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:858
+#, php-format
+msgid "Line %2$d blocks the entire site for User-agent: %1$s (%3$s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:874
+#, php-format
+msgid " …and %d more"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:882
+#, php-format
+msgid "User-agent: * blocks %1$d path prefix(es), not the whole site: %2$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1054
+msgid ""
+"RewriteRule/RewriteCond directives were found but RewriteEngine On is "
+"missing. Pretty permalinks may not work on Apache."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1059
+msgid ""
+"No RewriteRule directives were found. This file may only contain redirects "
+"or security headers."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1066
+msgid ""
+"A top-level “deny all” rule was found. Unless it is scoped to a sensitive "
+"file, it can block public access to the site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1073
+msgid ""
+"At least one RewriteRule returns forbidden (403). Review that it targets the"
+" intended URLs only."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:335
+msgid ""
+"Maintenance mode was imported as enabled: visitors now receive the "
+"maintenance page. Turn it off under Maintenance if this is not intended."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:338
+msgid ""
+"The REST API was imported as disabled; this can break the block editor and "
+"other plugins."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:341
+msgid ""
+"Update Manager was imported with updates blocked. Review it under Update "
+"Manager."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:367
+msgid ""
+"The previous settings were saved: use \"Restore previous settings\" below to"
+" undo this import."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:430
+#: includes/modules/class-tsosk-mod-site-snapshot.php:455
+msgid "There is no saved state to restore."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:463
+#, php-format
+msgid "Site snapshot import reverted: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:471
+#, php-format
+msgid ""
+"Previous settings restored: %s. Reload affected tabs to verify settings."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1359
+msgid ""
+"Exclude API keys (recommended). Untick only if you need to move the keys to "
+"another site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1382
+msgid "Undo last import"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1387
+#, php-format
+msgid "The settings replaced by the import of %1$s are saved (%2$s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1396
+msgid "Restore previous settings"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:364
+msgid "Show full SQL"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:365
+msgid "Hide SQL"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1528
+msgid ""
+"Turn on Origin detection in Monitor Settings, save, then visit another page "
+"— otherwise this panel cannot attribute duplicates to your selected plugins."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1530
+msgid ""
+"No duplicates from the plugins selected in Monitor Settings → Copy to AI. "
+"Other plugins’ duplicates (if any) appear in the live table below."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1538
+msgid "Tick the rows to include, then Copy to AI."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1545
+#: includes/modules/class-tsosk-mod-slow-queries.php:1546
+#: includes/modules/class-tsosk-mod-slow-queries.php:3183
+msgid "Select all for Copy to AI"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:1560
+#: includes/modules/class-tsosk-mod-slow-queries.php:3198
+msgid "Include this duplicate in Copy to AI"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2723
+#, php-format
+msgid "On · ≥ %d ms"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2747
+msgid "ms (recommended: 100)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2756
+msgid "request batches"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2764
+msgid "AJAX"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2768
+msgid "WP-Cron"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2777
+msgid "Show in the toolbar"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2786
+msgid "Attribute queries to plugin / theme / core (extra overhead)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2823
+msgid "One pattern per line. Example: action_scheduler"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2872
+msgid ""
+"Queries grouped by SQL fingerprint (literals replaced with ?). Ignore stops "
+"logging a noisy pattern."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:2875
+msgid ""
+"Index hint: a best-effort suggestion when a WHERE/ORDER BY column has no "
+"matching index on that table (— means none / already indexed / shape not "
+"recognised). It never creates the index for you."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:3162
+msgid ""
+"Tick the rows below to choose what Copy to AI includes. This list shows "
+"every duplicate on this page."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slow-queries.php:3168
+#, php-format
+msgid ""
+"Showing the top %1$d of %2$d patterns (Copy to AI uses the ticked rows "
+"below)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slug-manager.php:495
+#, php-format
+msgid "%1$d slug will be shortened to a maximum of %2$d characters."
+msgid_plural "%1$d slugs will be shortened to a maximum of %2$d characters."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-slug-manager.php:508
+#, php-format
+msgid "%d item will be skipped."
+msgid_plural "%d items will be skipped."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:730
+#: includes/modules/class-tsosk-mod-update-manager.php:737
+msgid "Translation update checks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:733
+msgid ""
+"This module is blocking wordpress.org translation lookups. Disable “Block "
+"translation updates” (or change the preset) so language packs can be "
+"detected and installed."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:740
+msgid "WordPress can query translate.wordpress.org for language packs."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:747
+msgid "Language packs directory"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:754
+#, php-format
+msgid ""
+"WordPress installs language packs under %s. Fix permissions so the web "
+"server can write there."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:761
+msgid "Bundled plugin translations"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:765
+msgid ""
+"Active plugins with .mo files in their own languages/ folder. Those catalogs"
+" update when you update the plugin ZIP — not via language packs."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:766
+msgid "No active plugins with bundled .mo catalogs detected."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1008
+msgid ""
+"File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot "
+"install language packs."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1012
+msgid "WordPress blocked automatic file updates on this site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1031
+msgid ""
+"No pending wordpress.org language packs to install. Plugins that ship .mo "
+"files inside their ZIP are updated when you update the plugin itself."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1040
+msgid ""
+"Could not initialize the WordPress filesystem. Check file permissions or FTP"
+" credentials."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1061
+#, php-format
+msgid ""
+"Language packs installed: %1$d succeeded, %2$d failed. Pending now: %3$d."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1070
+msgid ""
+"Could not install the pending language packs. Check file permissions and try"
+" Dashboard → Updates."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1078
+#, php-format
+msgid ""
+"Language pack install finished: %1$d installed, %2$d failed. Translations "
+"still pending: %3$d. Bundled plugin translations (.mo inside the plugin "
+"folder) update only with a plugin version bump."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1123
+msgid ""
+"Two translation sources: (1) wordpress.org language packs installed under "
+"wp-content/languages/ — use the buttons below; (2) .mo files bundled inside "
+"a plugin folder — updated only when that plugin is updated."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1133
+msgid ""
+"If updates stay pending for days, check the blockers below. “Check for "
+"updates now” refreshes the pending list from wordpress.org. “Install pending"
+" translations” downloads language packs into wp-content/languages/ (does not"
+" update bundled .mo files inside plugins)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:1162
+#, php-format
+msgid "Install pending translations (%d)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:553
+#, php-format
+msgid ""
+"This site answered with redirect status %1$d to %2$s (redirects are not "
+"followed by this check)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-url-doctor.php:559
+#, php-format
+msgid ""
+"This site answered with redirect status %1$d toward a different domain "
+"(%2$s). Check CDN or leftover URLs."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1943
+msgid ""
+"TSO Swiss Knife — could not remove the following leftover legacy table(s):"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:110
+#, php-format
+msgid "Server file save undone because the site stopped responding: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:121
+#, php-format
+msgid ""
+"The new content made the site answer with HTTP %d, so the previous version "
+"was restored. Check the syntax and try again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-maintenance.php:396
+msgid "You can also use CIDR ranges, for example 203.0.113.0/24."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:200
+msgid "There is no previous version stored for this file."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:207
+#, php-format
+msgid ""
+"Version from %s loaded into the editor. Review it and press Save Changes to "
+"apply it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1379
+msgid "Load previous version"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:847
+msgid ""
+"The file exists on disk but the server does not return it as a sitemap. "
+"Check .htaccess, caching or redirects."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:648
+msgid "Checking…"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:891
+msgid "Check again"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1760
+#, php-format
+msgid "View Counter: counts of %1$s handled (%2$s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:1766
+msgid "Done."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:2275
+msgid "These days have unusually high totals"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:2276
+msgid ""
+"This usually means totals imported from another plugin were saved under the "
+"import date (or imported twice), which inflates the 7/30/90-day figures. "
+"Move them to \"All time\" so they stop counting as recent traffic, or delete"
+" a day that was imported twice."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:2283
+msgid "Move to \"All time\""
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:2284
+msgid "Delete every count recorded on this day? This cannot be undone."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-view-counter.php:2284
+msgid "Delete day"
+msgstr ""
+
+msgid ""
+"The counter already contains data. If you imported this source before, "
+"importing it again adds the same views a second time and doubles those "
+"numbers. Import anyway?"
+msgstr ""
+
+msgid ""
+"An import is already running. Wait a minute and check the results before "
+"trying again."
+msgstr ""
+
+msgid ""
+"Inert placeholder: it only contains comments or plain text, no executable "
+"code. It is not part of WordPress itself; a plugin or the hosting added it."
+msgstr ""
+
+msgid "View contents"
+msgstr ""
+
+msgid "This file is not part of the latest scan. Run the scan again."
+msgstr ""
+
+msgid "Binary file: contents not shown."
+msgstr ""
+
+msgid "Enable SAVEQUERIES so the Slow Query Monitor can record queries"
+msgstr ""
+
+msgid ""
+"Maximum time a form stays valid after it was opened. Older tokens are "
+"rejected (e.g. a tab left open overnight). If a page cache serves your "
+"pages, keep this higher than the cache lifetime, or visitors on cached pages"
+" will be rejected. Default: 7200 (2 hours)."
+msgstr ""
+
+msgid "Update checks are restricted in the Update Manager"
+msgstr ""
+
+msgid "Select at least one module, or enable \"Log all tools\"."
+msgstr ""
+
+msgid ""
+"\"%s\" is already the address of a post or page on this site. Choose a "
+"different login URL."
+msgstr ""
+
+msgid ""
+"When you tick a namespace below, every request to that API group returns an "
+"error. Plugin namespaces are blocked for everyone, admins included; the core"
+" groups the Block Editor needs (wp/v2, wp-block-editor, wp-site-health, "
+"oEmbed) stay available to logged-in users who can edit content. It is a "
+"surgical “off switch” for one API group, not the same as the access mode "
+"above (which only affects logged-out users)."
+msgstr ""
+
+msgid ""
+"Yes, if you block the wrong namespace. Blocking a core group (wp/v2, for "
+"example) breaks the public site features and apps that read it, even though "
+"editors keep the Block Editor. Blocking a plugin namespace breaks that "
+"plugin’s features for everyone. Leave everything unchecked unless you have a"
+" specific reason and have tested on staging."
+msgstr ""
+
+msgid ""
+"Update checks are restricted in the Update Manager, so pending updates "
+"cannot be detected here."
+msgstr ""
+
+msgid "The security headers block is already in this file."
+msgstr ""
+
+msgid ""
+"Security headers block added to the editor. Review it and press Save Changes"
+" to apply it."
+msgstr ""
+
+msgid "Add security headers"
+msgstr ""
+
+msgid ""
+"No security headers (X-Content-Type-Options, X-Frame-Options, Referrer-"
+"Policy) are set in this file. Use \"Add security headers\" to insert them."
+msgstr ""
+
+msgid "Unsaved changes discarded."
+msgstr ""
+
+msgid "Discard unsaved changes"
+msgstr ""
+
+msgid "What are security headers?"
+msgstr ""
+
+msgid ""
+"Small instructions your server sends with every page so the visitor’s "
+"browser protects them. This button only writes them into the editor: nothing"
+" changes until you review the text and press Save Changes."
+msgstr ""
+
+msgid ""
+"the browser must trust the declared file type and not guess it, which blocks"
+" attacks that disguise a script as an image or text file."
+msgstr ""
+
+msgid ""
+"other websites cannot show your pages inside a frame, which prevents "
+"clickjacking (tricking people into clicking hidden buttons)."
+msgstr ""
+
+msgid ""
+"when someone follows a link to another site, only your domain is shared, not"
+" the full page address (which may contain private data)."
+msgstr ""
+
+msgid ""
+"added as a comment, off by default. It forces browsers to always use HTTPS. "
+"Enable it only if the whole domain works over HTTPS, because browsers "
+"remember it for a long time."
+msgstr ""
+
+msgid ""
+"The block is wrapped in a mod_headers check, so it does nothing (and breaks "
+"nothing) on servers without that module. The Health report checks for these "
+"headers on your home page."
+msgstr ""
+
+msgid ""
+"The \"Replace with\" field is empty: every match will be deleted, not "
+"replaced. To fix a missing image, replace it with a valid file or edit the "
+"affected post instead."
+msgstr ""
+
+msgid ""
+"None of the matches are in post content. They are all in internal tables "
+"(options, SEO index, logs, sessions…), which usually regenerate on their "
+"own. If you are not sure, do not execute."
+msgstr ""
+
+msgid ""
+"The replacement is empty, so the matched text will be deleted. Continue?"
+msgstr ""
+
+msgid ""
+"All matches are in internal tables, not in your content. Execute anyway?"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Internal data"
+msgstr ""
+
+#. translators: 1: number of matching rows, 2: number of tables
+#, php-format
+msgid "%1$s rows match in %2$s tables."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Core"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Plugins"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Themes"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Translations"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Overdue"
+msgstr ""
+
+#. translators: 1: scheduled date (UTC), 2: how long ago
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid ""
+"It was due on %1$s UTC (%2$s ago) and has not run. WP-Cron needs site "
+"traffic or a server cron to fire — check the Cron Manager tab."
+msgstr ""
+
+#. translators: %s: comma-separated list of blocked components
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid ""
+"Update checks are blocked by this module for: %s. These counts may be "
+"incomplete."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid ""
+"File modifications are disabled (DISALLOW_FILE_MODS). WordPress cannot "
+"update plugins."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Plugin not found."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "WordPress.org reports no update for this plugin."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid ""
+"WordPress cannot write files directly on this server (filesystem credentials"
+" required). Update it from Dashboard → Updates."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "The update failed."
+msgstr ""
+
+#. translators: 1: plugin name, 2: old version, 3: new version
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid "Plugin updated manually: %1$s (%2$s → %3$s)."
+msgstr ""
+
+#. translators: 1: plugin name, 2: old version, 3: new version
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid "%1$s updated (%2$s → %3$s)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Update now"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Hidden in the dashboard"
+msgstr ""
+
+#: includes/class-tsosk-activity-log.php:0
+msgid "Update plugin"
+msgstr ""
+
+#. translators: %s: plugin name
+#: includes/class-tsosk-admin.php:0
+#, php-format
+msgid ""
+"Update %s now? The plugin files will be replaced with the latest version "
+"from WordPress.org."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid ""
+"Hide available updates for specific plugins in the dashboard. Does not "
+"change WordPress auto-update settings — use Dashboard → Updates for that. "
+"The Update column shows the version offered by WordPress.org; “Update now” "
+"forces that plugin update right away, even if its update is hidden or checks"
+" are blocked."
+msgstr ""
+
+#. translators: 1: plugins before, 2: themes before, 3: translations before,
+#. 4: core before, 5: plugins after, 6: themes after, 7: translations after,
+#. 8: core after
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid ""
+"Update check finished. Pending before — plugins: %1$d, themes: %2$d, "
+"translations: %3$d, core: %4$d. Pending now — plugins: %5$d, themes: %6$d, "
+"translations: %7$d, core: %8$d. Install updates from Dashboard → Updates."
+msgstr ""
+
+#. translators: %d: number of plugin updates
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid ""
+"%d plugin update is hidden by an individual plugin rule (see “Individual "
+"plugins” below)."
+msgid_plural ""
+"%d plugin updates are hidden by individual plugin rules (see “Individual "
+"plugins” below)."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of pending updates that can be installed
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid "Install pending updates (%d)"
+msgstr ""
+
+#. translators: 1: plugin updates, 2: theme updates, 3: language packs
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid "Plugins: %1$d · Themes: %2$d · Translations: %3$d"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+msgid "Theme not found."
+msgstr ""
+
+#. translators: 1: theme name, 2: old version, 3: new version
+#: includes/modules/class-tsosk-mod-update-manager.php:0
+#, php-format
+msgid "Theme updated manually: %1$s (%2$s → %3$s)."
+msgstr ""
+
+#. translators: 1: plugin updates, 2: theme updates, 3: language packs
+#: includes/class-tsosk-admin.php:0
+#, php-format
+msgid ""
+"Install the pending updates now? Plugins: %1$d, themes: %2$d, language "
+"packs: %3$d. Plugins hidden by an individual rule are skipped. Files are "
+"replaced with the latest versions from WordPress.org."
+msgstr ""
+
+#. translators: %d: number of items installed so far
+#: includes/class-tsosk-admin.php:0
+#, php-format
+msgid "Installing… (%d done)"
+msgstr ""
+
+#. translators: %d: number of items installed
+#: includes/class-tsosk-admin.php:0
+#, php-format
+msgid "Pending updates installed: %d."
+msgstr ""
+
+#. translators: 1: number installed, 2: list of failures
+#: includes/class-tsosk-admin.php:0
+#, php-format
+msgid "Installed: %1$d. Failed: %2$s"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:0
+msgid "Nothing to install."
+msgstr ""
+
+#. translators: 1: plugin name, 2: site name
+#: includes/class-tsosk-email-template.php:0
+#, php-format
+msgid "This notification was sent by %1$s on %2$s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "404 visits this hour"
+msgstr ""
+
+#. translators: 1: 404 visits this hour, 2: configured threshold
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "%1$d (threshold: %2$d)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "Missing URL:"
+msgstr ""
+
+#. translators: 1: hits text, 2: referrer URL
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "%1$s · Referrer: %2$s"
+msgstr ""
+
+#. translators: %s: site name
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "[%s] 404 alert test"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "404 alert — test email"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "404 alert"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "Redirect alert settings saved."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid ""
+"The test email could not be sent. Check your WordPress mail setup (SMTP)."
+msgstr ""
+
+#. translators: %s: recipient email address
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "Test email sent to %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "Email alerts"
+msgstr ""
+
+#. translators: %d: 404 visits per hour that trigger the email
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "On — alert at %d visits/hour"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid ""
+"Optional email when the 404 monitor sees too much traffic to missing pages. "
+"Useful to catch broken links or bots scanning your site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "Send test email"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid "Inactive plugins notice hidden by TSO Swiss Knife"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid "Inactive themes notice hidden by TSO Swiss Knife"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid ""
+"This notice is hidden from TSO Swiss Knife → Health Report. Your site and "
+"its settings are not changed."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid ""
+"On staging or private test sites (or when you keep unused plugins and themes"
+" on purpose), WordPress may show warnings on Tools › Site Health about "
+"search-engine visibility, debug.log being public, or inactive plugins and "
+"themes. Enable the options below to hide those specific tests. This does not"
+" change your real settings — it only removes the notices from Site Health."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid "Hide “You should remove inactive plugins” notice"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:0
+msgid "Hide “You should remove inactive themes” notice"
+msgstr ""
+
+#. translators: %d: number of recorded hits
+#: includes/modules/class-tsosk-mod-redirects.php:0
+#, php-format
+msgid "%d hit recorded"
+msgid_plural "%d hits recorded"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"Free lookups, no account or key required. Checks the IP and a hash of the "
+"email."
+msgstr ""
+
+msgid "Honeypot"
+msgstr ""
+
+msgid "Time trap"
+msgstr ""
+
+msgid "Rate limit"
+msgstr ""
+
+msgid "Cloud filter"
+msgstr ""
+
+msgid "Too many links"
+msgstr ""
+
+msgid "Disposable email"
+msgstr ""
+
+msgid "Blocked characters"
+msgstr ""
+
+msgid "Blocked keyword"
+msgstr ""
+
+msgid "Blocked URL"
+msgstr ""
+
+msgid "Duplicate"
+msgstr ""
+
+msgid "Project Honey Pot"
+msgstr ""
+
+msgid "Provider status"
+msgstr ""
+
+msgid ""
+"Last real response from each external service and its usage in the last 24 "
+"hours. The test button uses the saved settings, so save first after changing"
+" a key."
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "Configuration"
+msgstr ""
+
+msgid "Last result"
+msgstr ""
+
+msgid "Calls (24 h)"
+msgstr ""
+
+msgid "Errors (24 h)"
+msgstr ""
+
+msgid "Test"
+msgstr ""
+
+msgid "Missing key"
+msgstr ""
+
+msgid "Plugin not active"
+msgstr ""
+
+msgid "No calls yet"
+msgstr ""
+
+msgid "%s ago"
+msgstr ""
+
+msgid ""
+"Add this IP to the whitelist? It will skip every anti-spam rule from now on."
+msgstr ""
+
+msgid "Allow IP"
+msgstr ""
+
+msgid "Unknown provider."
+msgstr ""
+
+msgid "Unexpected response (HTTP %d)."
+msgstr ""
+
+msgid "Stop Forum Spam responded correctly."
+msgstr ""
+
+msgid "No API key saved."
+msgstr ""
+
+msgid "AbuseIPDB rejected the API key."
+msgstr ""
+
+msgid "AbuseIPDB daily limit reached."
+msgstr ""
+
+msgid "AbuseIPDB accepted the API key."
+msgstr ""
+
+msgid "No access key saved."
+msgstr ""
+
+msgid "Project Honey Pot reported an invalid access key."
+msgstr ""
+
+msgid "DNS lookup completed without errors (a clean IP returns no record)."
+msgstr ""
+
+msgid "The Akismet plugin is not active."
+msgstr ""
+
+msgid "Akismet has no API key configured."
+msgstr ""
+
+msgid "Akismet API key is valid."
+msgstr ""
+
+msgid "Akismet reports the API key as invalid."
+msgstr ""
+
+msgid "Could not reach Akismet."
+msgstr ""
+
+msgid "CleanTalk accepted the access key."
+msgstr ""
+
+msgid "Invalid response."
+msgstr ""
+
+msgid "IP %s added to the comment anti-spam whitelist."
+msgstr ""
+
+msgid "IP %s added to the whitelist."
+msgstr ""
+
+msgid "Blocks by reason (log)"
+msgstr ""
+
+msgid "Local rules"
+msgstr ""
+
+msgid "External services"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgid "Last error"
+msgstr ""
+
+msgid "Comment anti-spam: service failing"
+msgstr ""
+
+msgid ""
+"%1$s returned %2$d errors in the last 24 hours. The service may be down or "
+"its key may be invalid; submissions are being allowed through that check."
+msgstr ""
+
+msgid "[%s] Comment anti-spam: a service is failing"
+msgstr ""
+
+msgid "Comment anti-spam alert"
+msgstr ""
+
+msgid ""
+"%1$d submissions were blocked in the last hour (threshold: %2$d). Review the"
+" logs to check there are no false positives."
+msgstr ""
+
+msgid "[%s] Comment anti-spam alert"
+msgstr ""
+
+msgid "Comment anti-spam: test email"
+msgstr ""
+
+msgid ""
+"This is a test email. If you can read it, alerts will reach this address."
+msgstr ""
+
+msgid "[%s] Comment anti-spam test"
+msgstr ""
+
+msgid "Open comment anti-spam"
+msgstr ""
+
+msgid "The email could not be sent. Check your site mail configuration."
+msgstr ""
+
+msgid ""
+"Get an email when the site is receiving a burst of spam, or when an external"
+" service keeps failing."
+msgstr ""
+
+msgid "Send alerts to"
+msgstr ""
+
+msgid "Leave empty to use the site administrator email."
+msgstr ""
+
+msgid "Blocks per hour"
+msgstr ""
+
+msgid ""
+"An alert is sent when the blocked submissions in one hour reach this number "
+"(at most one email every 3 hours)."
+msgstr ""
+
+msgid "Also alert when a service keeps failing"
+msgstr ""
+
+msgid "5 or more errors in 24 hours (at most one email per service per day)."
+msgstr ""
+
+msgid ""
+"The test email uses the saved settings: save first if you changed the "
+"address."
+msgstr ""
+
+msgid "Log storage"
+msgstr ""
+
+msgid ""
+"Entries are stored in a dedicated database table (not in the options table),"
+" so long logs do not slow the site down. The lists below show the latest 50 "
+"entries; export the CSV to get the full log."
+msgstr ""
+
+msgid "Max. entries per log"
+msgstr ""
+
+msgid ""
+"The oldest entries are deleted automatically beyond this number (100–10000)."
+msgstr ""
+
+msgid "Export blocks (CSV)"
+msgstr ""
+
+msgid "Export learning log (CSV)"
+msgstr ""
+
+msgid "No log entries yet."
+msgstr ""
+
+msgid "Blocked (total)"
+msgstr ""
+
+msgid "Would block (total)"
+msgstr ""
+
+msgid "Blocks per day (last 14 days)"
+msgstr ""
+
+msgid "Repeat offenders"
+msgstr ""
+
+msgid ""
+"Ban an IP address temporarily after several blocked submissions. Banned "
+"visitors are rejected immediately, without querying any external service."
+msgstr ""
+
+msgid "Ban repeat offenders"
+msgstr ""
+
+msgid "Blocks before banning"
+msgstr ""
+
+msgid ""
+"Blocked submissions from the same IP within 24 hours. Whitelisted IPs are "
+"never banned."
+msgstr ""
+
+msgid "Ban duration (hours)"
+msgstr ""
+
+msgid "Exceptions and messages"
+msgstr ""
+
+msgid "Trust returning commenters"
+msgstr ""
+
+msgid ""
+"Skip the external reputation and cloud checks when the email already has an "
+"approved comment. Local rules still apply."
+msgstr ""
+
+msgid "Message for blocked visitors"
+msgstr ""
+
+msgid ""
+"Shown instead of the technical reason when a comment or form is rejected. "
+"Leave empty to show the default message for each rule."
+msgstr ""
+
+msgid "Test individual rules"
+msgstr ""
+
+msgid ""
+"Rules ticked here do not block: when they match, the submission is allowed "
+"and written to the learning log, while every other rule keeps working "
+"normally. Useful to try a new rule safely. A submission that matches an "
+"observed rule is not checked against the rules that come after it."
+msgstr ""
+
+msgid ""
+"Too many blocked attempts from your IP address. Please try again later."
+msgstr ""
+
+msgid "Temporarily banned IP"
+msgstr ""
+
+msgid ""
+"Enable at least one protection target: comments, contact forms or "
+"registration."
+msgstr ""
+
+msgid "Product reviews"
+msgstr ""
+
+msgid ""
+"Also protects WooCommerce product reviews (they are comments of type "
+"\"review\"). Needs WordPress comments protection enabled."
+msgstr ""
+
+msgid "User registration"
+msgstr ""
+
+msgid ""
+"Applies the rules to the WordPress and WooCommerce registration forms "
+"(honeypot, time trap, disposable emails, reputation lists)."
+msgstr ""
+
+msgid ""
+"Protection is disabled: none of the options on these tabs has any effect "
+"until you enable it in Overview."
+msgstr ""
+
+msgid ""
+"You can also use CIDR ranges, for example 203.0.113.0/24 or 2001:db8::/32."
+msgstr ""
+
+msgid "Featured image"
+msgstr ""
+
+msgid "Site logo or icon"
+msgstr ""
+
+msgid "In use: %s"
+msgstr ""
+
+msgid "Unattached media in use"
+msgstr ""
+
+msgid ""
+"These items have no parent post but are in use (featured image, site logo or"
+" icon). Do not delete them."
+msgstr ""
+
+msgid ""
+"Media Library items with no parent post (or whose parent post was deleted) "
+"and that are not used as a featured image, site logo or icon. They may still"
+" be used inside content, widgets, page builders or custom fields: check "
+"before deleting anything."
 msgstr ""
