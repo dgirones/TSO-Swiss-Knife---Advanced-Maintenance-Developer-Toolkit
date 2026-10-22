@@ -5634,6 +5634,7 @@ a.tsosk-dash-tile.is-warn:focus {
 .tsosk-footprint-table td.tsosk-num {
 	white-space: nowrap;
 	text-align: right;
+	font-variant-numeric: tabular-nums;
 }
 
 .tsosk-footprint-table td.tsosk-col-share {
