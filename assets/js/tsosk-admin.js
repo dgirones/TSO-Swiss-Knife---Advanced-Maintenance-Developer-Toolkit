@@ -1050,7 +1050,8 @@
 		var skip   = [];
 
 		$( '.tsosk-um-install-all, .tsosk-um-update-plugin, #tsosk-um-run-updates, #tsosk-um-install-translations' ).prop( 'disabled', true );
-		$btn.text( tsosk.i18n.running );
+		// Keep the button the same width while it says "Running…", so nothing next to it moves.
+		$btn.css( 'min-width', $btn.outerWidth() + 'px' ).text( tsosk.i18n.running );
 
 		function finish( errorText ) {
 			var text;
@@ -2598,6 +2599,17 @@
 		} );
 	} );
 
+	// After ignoring / un-ignoring a file the server sends back the results (without the ignored files) and the
+	// "Ignored Files" card, so the lists and counters are right at once and a file is never shown in both.
+	function tsoskFiApplyIgnoreChange( data, $msg ) {
+		var d = ( data && 'object' === typeof data ) ? data : { message: data };
+		if ( d.html ) {
+			$( '#tsosk-fi-results' ).html( d.html );
+		}
+		$( '#tsosk-fi-ignored-wrap' ).html( d.ignored_html || '' );
+		showMsg( $msg, d.message || tsosk.i18n.done, 'ok' );
+	}
+
 	$( document ).on( 'click', '.tsosk-fi-ignore', function () {
 		var $btn  = $( this );
 		var file  = $btn.data( 'file' );
@@ -2611,8 +2623,7 @@
 			data   : { nonce: nonce, file: file },
 			success: function ( r ) {
 				if ( r.success ) {
-					$btn.closest( 'tr' ).fadeOut( 300, function () { $( this ).remove(); } );
-					showMsg( $msg, r.data, 'ok' );
+					tsoskFiApplyIgnoreChange( r.data, $msg );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false ).text( tsosk.i18n.fi_ignore );
@@ -2638,8 +2649,7 @@
 			data   : { nonce: nonce, file: file },
 			success: function ( r ) {
 				if ( r.success ) {
-					$btn.closest( 'tr' ).fadeOut( 300, function () { $( this ).remove(); } );
-					showMsg( $msg, r.data, 'ok' );
+					tsoskFiApplyIgnoreChange( r.data, $msg );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false ).text( tsosk.i18n.fi_remove );

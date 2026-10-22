@@ -1,6 +1,14 @@
 Tu Soporte Online — Swiss Knife: Advanced Maintenance & Developer Toolkit
 Changelog (older versions). The three latest versions are in readme.txt.
 
+= 1.2.0 =
+* Improved: header, tool finder (more keywords, sections inside tools) and Overview tiles (all link to their tool, new design, more accurate counts).
+* Improved modules: Server Files (safer .htaccess saving, sitemap review, "Load previous version", "Discard unsaved changes", "Add security headers"), Maintenance (CIDR ranges in the IP whitelist), Redirects, Update Manager, Health, Security, Users, Roles, Transients, Cron, Custom 404, Content Audit, Media Cleaner, Uploads footprint, Activity History, REST API, Developer mode.
+* Fixed: View Counter imports (duplicate-import warning, lock, WP Statistics archives, inflated days), File Integrity false positives (index.php placeholders, error_log) with a read-only "View contents" button, and options stored as "auto-on" in the Options Editor and Health.
+* Fixed: Login Protect (real client IP behind proxies, 2FA and role IP rules only after a correct password, custom login URL with maintenance mode, single mass-lockout alert).
+* Fixed: Search & Replace with nested serialized data, super-admin only for shared data on multisite, complete uninstall on multisite.
+* Performance and translations: fewer database queries per request, more autoloaded settings, Catalan and Spanish catalogs complete.
+
 = 1.1.8 =
 * Overview: new checks (broken links via TSO Link Inspector, PHP support window, inactive plugins, expired transients, compressed files), a TSO Link Inspector recommendation, score trend, more status tiles, a 7-day usage card and shortcuts that follow your Favorites bar.
 * Redirects: sortable 404 Monitor columns, live search in the 404 log (bulk actions only affect the rows shown) and a readable column layout in the rules table.

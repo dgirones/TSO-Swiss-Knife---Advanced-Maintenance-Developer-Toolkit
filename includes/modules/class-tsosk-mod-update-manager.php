@@ -70,6 +70,16 @@ class TSOSK_Mod_Update_Manager {
 		add_action( 'wp_ajax_tsosk_um_install_translations', array( $this, 'ajax_install_translations' ) );
 		add_action( 'wp_ajax_tsosk_um_update_plugin', array( $this, 'ajax_update_plugin' ) );
 		add_action( 'wp_ajax_tsosk_um_install_next', array( $this, 'ajax_install_next' ) );
+		add_action( 'upgrader_process_complete', array( $this, 'refresh_dashboard_scan' ) );
+	}
+
+	/**
+	 * Drop the Overview's cached scan after an update/install, so it never keeps listing "N updates detected".
+	 */
+	public function refresh_dashboard_scan(): void {
+		if ( class_exists( 'TSOSK_Mod_Dashboard' ) ) {
+			TSOSK_Mod_Dashboard::bust_scan_cache();
+		}
 	}
 
 	/**
@@ -669,6 +679,22 @@ class TSOSK_Mod_Update_Manager {
 		);
 
 		return $this->pending_cache;
+	}
+
+	/**
+	 * Pending update counts for other screens (the Overview tile and list).
+	 *
+	 * Same numbers as the install button and the status table, so the three can never disagree.
+	 *
+	 * @return array{plugins:int,themes:int,translations:int,core:int}
+	 */
+	public function get_pending_counts(): array {
+		$counts = $this->count_pending_updates();
+		// Same rule as the install button: language packs do not count while their checks are blocked.
+		if ( $this->is_blocking_translation_checks() ) {
+			$counts['translations'] = 0;
+		}
+		return $counts;
 	}
 
 	/**
@@ -1439,38 +1465,59 @@ class TSOSK_Mod_Update_Manager {
 	 * @return array{installed:int,failed:int,error:string}
 	 */
 	private function install_pending_language_packs(): array {
-		$out     = array(
+		$out = array(
 			'installed' => 0,
 			'failed'    => 0,
 			'error'     => '',
 		);
-		$updates = wp_get_translation_updates();
-		if ( ! is_array( $updates ) || empty( $updates ) ) {
-			return $out;
-		}
+
 		if ( ! $this->init_upgrade_filesystem() ) {
-			$out['error'] = __( 'Could not initialize the WordPress filesystem. Check file permissions or FTP credentials.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			// Nothing to install is not an error: only complain when there really is something offered.
+			$updates = wp_get_translation_updates();
+			if ( is_array( $updates ) && ! empty( $updates ) ) {
+				$out['error'] = __( 'Could not initialize the WordPress filesystem. Check file permissions or FTP credentials.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
 			return $out;
 		}
 
-		$skin     = new Automatic_Upgrader_Skin();
-		$upgrader = new Language_Pack_Upgrader( $skin );
-		try {
-			$result = $upgrader->bulk_upgrade( $updates, array( 'clear_update_cache' => true ) );
-		} catch ( \Throwable $e ) {
-			$out['error'] = $e->getMessage();
-			return $out;
+		$offered = false;
+		for ( $attempt = 1; $attempt <= 2; $attempt++ ) {
+			$updates = wp_get_translation_updates();
+			if ( ! is_array( $updates ) || empty( $updates ) ) {
+				break;
+			}
+			$offered = true;
+
+			$skin     = new Automatic_Upgrader_Skin();
+			$upgrader = new Language_Pack_Upgrader( $skin );
+			try {
+				$result = $upgrader->bulk_upgrade( $updates, array( 'clear_update_cache' => true ) );
+			} catch ( \Throwable $e ) {
+				$out['error'] = $e->getMessage();
+				return $out;
+			}
+
+			if ( is_wp_error( $result ) ) {
+				$out['error'] = $result->get_error_message();
+				return $out;
+			}
+
+			$summary          = $this->summarize_language_bulk_upgrade( $result );
+			$out['installed'] = $summary['installed'];
+			$out['failed']    = $summary['failed'];
+			if ( $summary['installed'] > 0 || $summary['failed'] > 0 ) {
+				break;
+			}
+
+			// WordPress gave no result at all (it returned false). Pressing the button again used to fix it, because the
+			// second press refreshed the offers first: do that here, once, instead of reporting an install that did not happen.
+			if ( 1 === $attempt ) {
+				$this->refresh_update_transients();
+			}
 		}
 
-		if ( is_wp_error( $result ) ) {
-			$out['error'] = $result->get_error_message();
-			return $out;
-		}
-
-		$summary          = $this->summarize_language_bulk_upgrade( $result );
-		$out['installed'] = $summary['installed'];
-		$out['failed']    = $summary['failed'];
-		if ( 0 === $summary['installed'] && $summary['failed'] > 0 ) {
+		// Offered but nothing installed (whether packs failed or WordPress did nothing): say so, never "installed".
+		if ( $offered && 0 === $out['installed'] ) {
 			$out['error'] = __( 'Could not install the pending language packs. Check file permissions and try Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
@@ -1551,6 +1598,10 @@ class TSOSK_Mod_Update_Manager {
 						'ok'    => '' === $res['error'],
 						'error' => $res['error'],
 					);
+					if ( $res['installed'] > 0 && count( wp_get_translation_updates() ) > 0 ) {
+						// WordPress still lists packs it just installed: refresh the offers so the Overview shows the real number.
+						$this->refresh_update_transients();
+					}
 					if ( '' === $res['error'] ) {
 						TSOSK_Activity_Log::log(
 							'update-manager',
@@ -1688,8 +1739,10 @@ class TSOSK_Mod_Update_Manager {
 	 * "Install pending updates" button (plugins, themes and language packs) with its message area.
 	 *
 	 * Shared by the Update Manager screen and the Overview.
+	 *
+	 * @param bool $compact Small secondary button, for rows of a list (the Overview's "Needs attention").
 	 */
-	public function render_install_all_button(): void {
+	public function render_install_all_button( bool $compact = false ): void {
 		if ( ! current_user_can( 'update_plugins' ) || ! current_user_can( 'update_themes' ) ) {
 			return;
 		}
@@ -1704,7 +1757,7 @@ class TSOSK_Mod_Update_Manager {
 				$counts['translations']
 			);
 		?>
-		<button type="button" class="button button-primary tsosk-um-install-all"
+		<button type="button" class="button <?php echo $compact ? 'button-small' : 'button-primary'; ?> tsosk-um-install-all"
 				data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_um_nonce' ) ); ?>"
 				data-plugins="<?php echo esc_attr( (string) $counts['plugins'] ); ?>"
 				data-themes="<?php echo esc_attr( (string) $counts['themes'] ); ?>"

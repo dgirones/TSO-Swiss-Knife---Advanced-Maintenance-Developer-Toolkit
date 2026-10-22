@@ -362,6 +362,47 @@ class TSOSK_Support {
 	}
 
 	/**
+	 * Debug log files that exist right now.
+	 *
+	 * That is the log WordPress writes to (see get_active_debug_log_path()) plus wp-content/debug.log: when
+	 * WP_DEBUG_LOG points somewhere else (the managed log of the Debug tab) an older wp-content/debug.log is
+	 * often still on disk, and the Debug tab lists it, so the Overview and the Health Report must see it too.
+	 *
+	 * @return array<int, array{path: string, size: int, readable: bool, active: bool}>
+	 */
+	public static function get_debug_log_files(): array {
+		$active = self::get_active_debug_log_path();
+		$paths  = array(
+			$active,
+			trailingslashit( wp_normalize_path( (string) WP_CONTENT_DIR ) ) . 'debug.log',
+		);
+
+		$seen = array();
+		$out  = array();
+		foreach ( $paths as $path ) {
+			if ( '' === $path || ! is_file( $path ) ) {
+				continue;
+			}
+			$real     = realpath( $path );
+			$identity = false !== $real ? wp_normalize_path( $real ) : $path;
+			if ( isset( $seen[ $identity ] ) ) {
+				continue;
+			}
+			$seen[ $identity ] = true;
+
+			$readable = is_readable( $path );
+			$out[]    = array(
+				'path'     => $path,
+				'size'     => $readable ? (int) filesize( $path ) : 0,
+				'readable' => $readable,
+				'active'   => $path === $active,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Best-effort visitor IP, shared by every module.
 	 *
 	 * Uses REMOTE_ADDR by default. Behind a CDN or reverse proxy REMOTE_ADDR is the proxy's address, so

@@ -4946,6 +4946,45 @@ a.tsosk-dash-tile.is-warn:focus {
     }
 }
 
+/* "Needs attention" row with an action button (install pending updates): same spot as "Open tool". */
+.tsosk-dash-issue-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+/* The progress/result message sits under the button: beside it, it widened the row and pushed the rest around. */
+.tsosk-dash-issue-action .tsosk-um-install-msg {
+    max-width: 280px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.3;
+    text-align: right;
+}
+
+.tsosk-dash-issue-action .tsosk-um-install-msg:empty {
+    display: none;
+}
+
+@media (max-width: 782px) {
+    .tsosk-dash-issues li.tsosk-dash-issue-updates {
+        flex-wrap: wrap;
+    }
+    .tsosk-dash-issue-action {
+        flex: 1 0 100%;
+        align-items: stretch;
+    }
+    .tsosk-dash-issue-action .button {
+        text-align: center;
+    }
+    .tsosk-dash-issue-action .tsosk-um-install-msg {
+        max-width: none;
+        text-align: left;
+    }
+}
+
 /* Overview pinned above the favorites list (not draggable, not removable). */
 .tsosk-sidebar-favorites .tsosk-fav-fixed {
     padding: 0 8px;
@@ -5648,10 +5687,6 @@ a.tsosk-dash-tile.is-warn:focus {
 }
 @media (prefers-reduced-motion: reduce) {
 	.tsosk-section-flash { animation: none; box-shadow: 0 0 0 3px #2271b1; }
-}
-
-.tsosk-dash-actions {
-    margin: -8px 0 20px;
 }
 
 /* Comment anti-spam: sub-tabs */

@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -201,6 +201,26 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.2.3 =
+* Fixed: Redirects — "Create redirect" in the 404 Monitor now switches to the Redirects tab, so the form is visible instead of filling it out of sight.
+* Improved: Debug Mode lists only the error logs that exist, and new ones appear automatically; it also finds custom WP_DEBUG_LOG paths and error_log files inside plugin and theme folders, works on hosts with symlinked paths and flags logs that cannot be read.
+* Fixed: Image Sizes Audit refreshes itself when images are added, deleted or regenerated from anywhere (Media Library, Image Master, other plugins), so it no longer shows outdated counts.
+* Fixed: Rewrite Rules — the route simulator now works on subdirectory installs and follows WordPress's own matching (slashes trimmed, unmatched groups left empty, values URL-encoded); a bare domain or "?p=1" is read as the home page.
+* Fixed: Rewrite Rules — a hard flush now says whether .htaccess was really updated (and warns when it is read-only, on nginx or on multisite) instead of always reporting success; plain permalinks get their own message. Soft and hard flush can no longer run at the same time.
+* Fixed: Server & Runtime — no more PHP warnings or a false "OPcache off" on hosts that restrict the OPcache API (the Reset button is hidden there); the temporary-folder check uses upload_tmp_dir; limits of 0 / -1 are shown as "no limit".
+* Improved: Server & Runtime — warns when an object-cache.php drop-in is on disk but WordPress is not using it, and the summary for hosting includes more limits.
+* Fixed: Content Audit — the duplicate-titles list no longer cuts its post IDs on MySQL servers (the last one could be wrong) and matches exactly, so "Café" and "Cafe" are no longer reported as the same title.
+* Fixed: Content Audit — card headings show the real total ("30 of 412") instead of the size of the capped list; the shortcode inventory no longer lists Markdown links or escaped [[tags]] as shortcodes and keeps their upper/lower case.
+* Fixed: Content Audit — removing a broken shortcode no longer touches Markdown links or escaped [[tags]], counts [tag]…[/tag] as one shortcode, and two removals can no longer overwrite each other; it now requires an administrator.
+* Improved: Content Audit — the "Long Slugs" card was removed (the Slug Manager already covers it with a configurable threshold, every public post type and bulk fixes) and links to it instead. Scheduled posts are now included, and old pending/private/draft content lists the most neglected items first.
+* Fixed: Overview — "Pending updates" now counts language packs too and uses the same numbers as the install button (it showed 0 while the button said 2); the install button moved into the "Needs attention" list as an "updates pending" row, and the list no longer keeps stale plugin/theme update warnings after an install.
+* Improved: Overview — visits and downloads show "—" instead of 0 when the View Counter is not counting; the updates row wraps cleanly on phones.
+* Fixed: Core File Integrity — an ignored file no longer shows up in both "Modified Files" and "Ignored Files": ignoring or removing a file now takes effect at once, without scanning again, and the lists and counters refresh on their own.
+* Improved: Core File Integrity — "Ignored Files" shows whether each file is still flagged; a failed scan keeps the last good result; ignore paths are normalised; dates follow the site time zone.
+* Fixed: Update Manager — "Install pending updates" no longer reports language packs as installed when WordPress installed none (the Overview kept showing them and a second press was needed); it now refreshes the offers and retries once, and shows an error if nothing could be installed.
+* Fixed: Overview — the progress message of the "updates pending" row sits under the button instead of beside it, so the row no longer jumps while installing; the button keeps its width while it says "Running…".
+* Fixed: Overview and Health Report — the debug.log tile and the "debug.log size" check only looked at the log WordPress is writing to, so they said "no file" while the Debug tab listed an older wp-content/debug.log; they now check the same files, name the file when there are several and say "Not readable" when one cannot be read. A memory limit of -1 now reads "-1 (no limit)".
+
 = 1.2.2 =
 * Users & Sessions: the "Close" button of a single session never found the session (the table lists WordPress's stored hashes, not the cookie token); it now removes it correctly and logs it. Repeated wrong 2FA codes no longer fill the login history.
 * Update Manager: the status table now stacks on phones instead of running out of its card; the Overview and the Update Manager only show the "Install pending updates" button to users who can update both plugins and themes.
@@ -245,28 +265,9 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Improved: Update Manager shows the version offered per plugin and adds an "Update now" button to force a plugin update (even if hidden or checks are blocked).
 * Fixed: Update Manager now flags an overdue update-check cron, warns when counts are incomplete because checks are blocked or updates are hidden, includes core in the manual check result and no longer queries wordpress.org twice.
 * Fixed: Update Manager "Update now" button no longer ends in a critical error after installing the plugin.
-* Fixed: Redirects — "Create redirect" in the 404 Monitor now switches to the Redirects tab, so the form is visible instead of filling it out of sight.
-* Improved: Debug Mode lists only the error logs that exist, and new ones appear automatically; it also finds custom WP_DEBUG_LOG paths and error_log files inside plugin and theme folders, works on hosts with symlinked paths and flags logs that cannot be read.
-* Fixed: Image Sizes Audit refreshes itself when images are added, deleted or regenerated from anywhere (Media Library, Image Master, other plugins), so it no longer shows outdated counts.
-* Fixed: Rewrite Rules — the route simulator now works on subdirectory installs and follows WordPress's own matching (slashes trimmed, unmatched groups left empty, values URL-encoded); a bare domain or "?p=1" is read as the home page.
-* Fixed: Rewrite Rules — a hard flush now says whether .htaccess was really updated (and warns when it is read-only, on nginx or on multisite) instead of always reporting success; plain permalinks get their own message. Soft and hard flush can no longer run at the same time.
-* Fixed: Server & Runtime — no more PHP warnings or a false "OPcache off" on hosts that restrict the OPcache API (the Reset button is hidden there); the temporary-folder check uses upload_tmp_dir; limits of 0 / -1 are shown as "no limit".
-* Improved: Server & Runtime — warns when an object-cache.php drop-in is on disk but WordPress is not using it, and the summary for hosting includes more limits.
-* Fixed: Content Audit — the duplicate-titles list no longer cuts its post IDs on MySQL servers (the last one could be wrong) and matches exactly, so "Café" and "Cafe" are no longer reported as the same title.
-* Fixed: Content Audit — card headings show the real total ("30 of 412") instead of the size of the capped list; the shortcode inventory no longer lists Markdown links or escaped [[tags]] as shortcodes and keeps their upper/lower case.
-* Fixed: Content Audit — removing a broken shortcode no longer touches Markdown links or escaped [[tags]], counts [tag]…[/tag] as one shortcode, and two removals can no longer overwrite each other; it now requires an administrator.
-* Improved: Content Audit — the "Long Slugs" card was removed (the Slug Manager already covers it with a configurable threshold, every public post type and bulk fixes) and links to it instead. Scheduled posts are now included, and old pending/private/draft content lists the most neglected items first.
 
 = 1.2.1 =
 * Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.
 * Improved: Search & Replace now warns when the replacement is empty (matches get deleted) and when all matches are in internal tables rather than post content.
 * Improved: Search & Replace result summary now reads as a proper sentence in every language.
 * Fixed: Search & Replace no longer scans or rewrites its own automatic backup, activity log and slow-query log, and the preview now shows the part of the cell where the match is instead of its first characters.
-
-= 1.2.0 =
-* Improved: header, tool finder (more keywords, sections inside tools) and Overview tiles (all link to their tool, new design, more accurate counts).
-* Improved modules: Server Files (safer .htaccess saving, sitemap review, "Load previous version", "Discard unsaved changes", "Add security headers"), Maintenance (CIDR ranges in the IP whitelist), Redirects, Update Manager, Health, Security, Users, Roles, Transients, Cron, Custom 404, Content Audit, Media Cleaner, Uploads footprint, Activity History, REST API, Developer mode.
-* Fixed: View Counter imports (duplicate-import warning, lock, WP Statistics archives, inflated days), File Integrity false positives (index.php placeholders, error_log) with a read-only "View contents" button, and options stored as "auto-on" in the Options Editor and Health.
-* Fixed: Login Protect (real client IP behind proxies, 2FA and role IP rules only after a correct password, custom login URL with maintenance mode, single mass-lockout alert).
-* Fixed: Search & Replace with nested serialized data, super-admin only for shared data on multisite, complete uninstall on multisite.
-* Performance and translations: fewer database queries per request, more autoloaded settings, Catalan and Spanish catalogs complete.

@@ -689,13 +689,27 @@ class TSOSK_Mod_Health {
 	 * @return array
 	 */
 	private function debug_log_check(): array {
-		$path = TSOSK_Support::get_active_debug_log_path();
-		$size = is_file( $path ) ? (int) filesize( $path ) : 0;
+		// Same files as the Debug tab and the Overview tile (the active log and wp-content/debug.log).
+		$logs    = TSOSK_Support::get_debug_log_files();
+		$largest = array();
+		foreach ( $logs as $log ) {
+			if ( $log['readable'] && ( empty( $largest ) || $log['size'] > $largest['size'] ) ) {
+				$largest = $log;
+			}
+		}
+
+		if ( empty( $logs ) ) {
+			$details = __( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} elseif ( empty( $largest ) ) {
+			$details = __( 'Not readable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$details = size_format( $largest['size'], 2 ) . ( count( $logs ) > 1 ? ' (' . wp_basename( $largest['path'] ) . ')' : '' );
+		}
 
 		return array(
 			'label'   => __( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'status'  => $size > TSOSK_Support::DEBUG_LOG_WARN_BYTES ? 'warn' : 'ok',
-			'details' => is_file( $path ) ? size_format( $size, 2 ) : __( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'status'  => ( ! empty( $largest ) && $largest['size'] > TSOSK_Support::DEBUG_LOG_WARN_BYTES ) ? 'warn' : 'ok',
+			'details' => $details,
 		);
 	}
 

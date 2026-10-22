@@ -64,6 +64,16 @@ class TSOSK_Mod_Dashboard {
 	private function __construct() {}
 
 	/**
+	 * Drop the cached scan (every language), e.g. after updates were installed.
+	 */
+	public static function bust_scan_cache(): void {
+		$locales = array_unique( array_merge( array( get_locale(), 'en_US' ), function_exists( 'get_available_languages' ) ? get_available_languages() : array() ) );
+		foreach ( $locales as $locale ) {
+			delete_transient( self::CACHE_PREFIX . sanitize_key( (string) $locale ) );
+		}
+	}
+
+	/**
 	 * Base URL of the plugin admin page.
 	 *
 	 * @return string
@@ -209,11 +219,33 @@ class TSOSK_Mod_Dashboard {
 	}
 
 	/**
-	 * Count pending updates from WordPress' own update transients (no remote call).
+	 * Pending updates, with the same numbers as the "Install pending updates" button.
 	 *
-	 * @return array{core: int, plugins: int, themes: int, checked: bool, restricted: bool}
+	 * Language packs are counted too: before, the tile ignored them and showed 0 while the button said 2.
+	 *
+	 * @return array{core: int, plugins: int, themes: int, translations: int, checked: bool, restricted: bool}
 	 */
 	private function get_pending_updates(): array {
+		// While the Update Manager restricts update checks, WordPress hands back an empty "nothing to update" answer: that is not a real zero.
+		$restricted   = class_exists( 'TSOSK_Mod_Update_Manager' ) && TSOSK_Mod_Update_Manager::is_restricting_updates();
+		$plugins_data = get_site_transient( 'update_plugins' );
+		// False when WordPress has never stored an update check (or checks are disabled): "0" would then be misleading.
+		$checked = ! $restricted && is_object( $plugins_data ) && ! empty( $plugins_data->last_checked );
+
+		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) ) {
+			$counts = TSOSK_Mod_Update_Manager::get_instance()->get_pending_counts();
+
+			return array(
+				'checked'      => $checked,
+				'restricted'   => $restricted,
+				'core'         => (int) $counts['core'],
+				'plugins'      => (int) $counts['plugins'],
+				'themes'       => (int) $counts['themes'],
+				'translations' => (int) $counts['translations'],
+			);
+		}
+
+		// Fallback when the Update Manager is not loaded: read WordPress' own transients (no remote call).
 		$core      = 0;
 		$core_data = get_site_transient( 'update_core' );
 		if ( is_object( $core_data ) && ! empty( $core_data->updates ) && is_array( $core_data->updates ) ) {
@@ -222,28 +254,46 @@ class TSOSK_Mod_Dashboard {
 				$core = 1;
 			}
 		}
-		$plugins_data = get_site_transient( 'update_plugins' );
-		$themes_data  = get_site_transient( 'update_themes' );
-
-		// Only plugins that are still installed: a stale transient can keep the entry of a plugin deleted by hand.
-		$plugin_offers = ( is_object( $plugins_data ) && ! empty( $plugins_data->response ) && is_array( $plugins_data->response ) ) ? $plugins_data->response : array();
-		if ( ! empty( $plugin_offers ) ) {
+		$themes_data = get_site_transient( 'update_themes' );
+		$plugin_resp = ( is_object( $plugins_data ) && ! empty( $plugins_data->response ) && is_array( $plugins_data->response ) ) ? $plugins_data->response : array();
+		if ( ! empty( $plugin_resp ) ) {
 			if ( ! function_exists( 'get_plugins' ) ) {
 				tsosk_require_wp_admin( 'includes/plugin.php' );
 			}
-			$plugin_offers = function_exists( 'get_plugins' ) ? array_intersect_key( $plugin_offers, get_plugins() ) : $plugin_offers;
+			$plugin_resp = function_exists( 'get_plugins' ) ? array_intersect_key( $plugin_resp, get_plugins() ) : $plugin_resp;
 		}
 
-		// While the Update Manager restricts update checks, WordPress hands back an empty "nothing to update" answer: that is not a real zero.
-		$restricted = class_exists( 'TSOSK_Mod_Update_Manager' ) && TSOSK_Mod_Update_Manager::is_restricting_updates();
+		return array(
+			'checked'      => $checked,
+			'restricted'   => $restricted,
+			'core'         => $core,
+			'plugins'      => count( $plugin_resp ),
+			'themes'       => ( is_object( $themes_data ) && ! empty( $themes_data->response ) && is_array( $themes_data->response ) ) ? count( $themes_data->response ) : 0,
+			'translations' => 0,
+		);
+	}
+
+	/**
+	 * The "updates pending" row of "Needs attention": live data, never from the cached scan.
+	 *
+	 * @param array{core: int, plugins: int, themes: int, translations: int, checked: bool, restricted: bool} $updates Pending updates.
+	 * @return array{total: int, installable: bool}|null Null when nothing is pending (or the count cannot be trusted).
+	 */
+	private function get_update_attention( array $updates ): ?array {
+		$total = $updates['core'] + $updates['plugins'] + $updates['themes'] + $updates['translations'];
+		if ( ! $updates['checked'] || $total < 1 ) {
+			return null;
+		}
+
+		$installable = false;
+		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) && current_user_can( 'update_plugins' ) && current_user_can( 'update_themes' ) ) {
+			$counts      = TSOSK_Mod_Update_Manager::get_instance()->get_installable_counts();
+			$installable = $counts['total'] > 0 && '' === $counts['blocker'];
+		}
 
 		return array(
-			// False when WordPress has never stored an update check (or checks are disabled): "0" would then be misleading.
-			'checked'    => ! $restricted && is_object( $plugins_data ) && ! empty( $plugins_data->last_checked ),
-			'restricted' => $restricted,
-			'core'       => $core,
-			'plugins'    => count( $plugin_offers ),
-			'themes'     => ( is_object( $themes_data ) && ! empty( $themes_data->response ) && is_array( $themes_data->response ) ) ? count( $themes_data->response ) : 0,
+			'total'       => $total,
+			'installable' => $installable,
 		);
 	}
 
@@ -269,6 +319,9 @@ class TSOSK_Mod_Dashboard {
 		$circ = 2 * M_PI * 54;
 		$dash = round( $circ * $stats['score'] / 100, 2 );
 
+		$updates    = $this->get_pending_updates();
+		$update_row = $this->get_update_attention( $updates );
+
 		$issues = array_values(
 			array_filter(
 				$scan['checks'],
@@ -277,6 +330,20 @@ class TSOSK_Mod_Dashboard {
 				}
 			)
 		);
+
+		if ( null !== $update_row ) {
+			// The live "updates pending" row replaces the cached plugin/theme update checks: same facts, but those can be stale.
+			$issues = array_values(
+				array_filter(
+					$issues,
+					static function ( array $check ): bool {
+						return ! ( 'update-manager' === $check['tab'] && in_array( $check['anchor'], array( 'tsosk-um-plugins', 'tsosk-um-status' ), true ) );
+					}
+				)
+			);
+		}
+		// What the list shows is what the hero counts.
+		$review_count = count( $issues ) + ( null !== $update_row ? 1 : 0 );
 
 		$refresh_url = add_query_arg(
 			array(
@@ -308,7 +375,7 @@ class TSOSK_Mod_Dashboard {
 							/* translators: 1: checks passed, 2: checks needing review */
 							__( '%1$d checks passed, %2$d need review.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 							$stats['ok'],
-							$stats['warn']
+							$review_count
 						)
 					);
 					?>
@@ -329,15 +396,41 @@ class TSOSK_Mod_Dashboard {
 			</div>
 		</div>
 
-		<?php $this->render_vitals(); ?>
+		<?php $this->render_vitals( $updates ); ?>
 		<?php $this->render_tiles( $this->get_usage_tiles() ); ?>
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Needs attention', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<?php if ( empty( $issues ) ) : ?>
+			<?php if ( empty( $issues ) && null === $update_row ) : ?>
 				<p class="tsosk-dash-empty"><?php esc_html_e( 'Nothing to review right now.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
 				<ul class="tsosk-dash-issues">
+					<?php if ( null !== $update_row ) : ?>
+						<li class="tsosk-dash-issue-updates">
+							<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+							<span class="tsosk-dash-issue-body">
+								<strong>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %d: number of pending updates */
+											_n( '%d update pending', '%d updates pending', $update_row['total'], 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+											$update_row['total']
+										)
+									);
+									?>
+								</strong>
+								<span class="tsosk-dash-issue-details"><?php echo esc_html( $this->updates_breakdown( $updates ) ); ?></span>
+							</span>
+							<span class="tsosk-dash-issue-action">
+								<?php if ( $update_row['installable'] ) : ?>
+									<?php TSOSK_Mod_Update_Manager::get_instance()->render_install_all_button( true ); ?>
+								<?php else : ?>
+									<a class="button button-small" href="<?php echo esc_url( $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ) ); ?>"><?php esc_html_e( 'Open tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+								<?php endif; ?>
+							</span>
+						</li>
+					<?php endif; ?>
 					<?php foreach ( $issues as $issue ) : ?>
 						<li>
 							<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -744,16 +837,19 @@ class TSOSK_Mod_Dashboard {
 		$vc_failed = '' !== (string) $wpdb->last_error;
 		$wpdb->suppress_errors( $suppress );
 		if ( ! $vc_failed ) {
-			$tiles[] = array(
+			$vc_settings   = class_exists( 'TSOSK_Mod_View_Counter' ) ? TSOSK_Mod_View_Counter::get_instance()->get_settings() : array();
+			$counts_visits = empty( $vc_settings ) || ! empty( $vc_settings['post_types'] );
+			$counts_downs  = empty( $vc_settings ) || ! empty( $vc_settings['track_downloads'] );
+			$tiles[]       = array(
 				'label' => __( 'Visits (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'value' => number_format_i18n( (int) $visits ),
-				'sub'   => __( 'Posts and pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => $counts_visits ? number_format_i18n( (int) $visits ) : '—',
+				'sub'   => $counts_visits ? __( 'Posts and pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Counting is off in the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
 			);
-			$tiles[] = array(
+			$tiles[]       = array(
 				'label' => __( 'File downloads (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'value' => number_format_i18n( (int) $downs ),
-				'sub'   => __( 'Counted by the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'value' => $counts_downs ? number_format_i18n( (int) $downs ) : '—',
+				'sub'   => $counts_downs ? __( 'Counted by the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Counting is off in the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
 			);
 		}
@@ -815,14 +911,37 @@ class TSOSK_Mod_Dashboard {
 			'url'   => $this->tile_url( 'media-footprint', 'TSOSK_Mod_Media_Footprint' ),
 		);
 
-		// debug.log.
-		$log_path = TSOSK_Support::get_active_debug_log_path();
-		$log_size = is_file( $log_path ) && is_readable( $log_path ) ? (int) filesize( $log_path ) : -1;
-		$tiles[]  = array(
+		// debug.log: same files the Debug tab lists (the active log and wp-content/debug.log), not only the active path.
+		$logs     = TSOSK_Support::get_debug_log_files();
+		$readable = array_values(
+			array_filter(
+				$logs,
+				static function ( array $log ): bool {
+					return $log['readable'];
+				}
+			)
+		);
+		$largest  = array();
+		foreach ( $readable as $log ) {
+			if ( empty( $largest ) || $log['size'] > $largest['size'] ) {
+				$largest = $log;
+			}
+		}
+		if ( ! empty( $largest ) ) {
+			$log_value = size_format( $largest['size'], 1 );
+			// Name the file only when it is not the usual debug.log, or when there are several.
+			$log_sub = ( 'debug.log' !== wp_basename( $largest['path'] ) || count( $readable ) > 1 )
+				? wp_basename( $largest['path'] ) . ( count( $readable ) > 1 ? ' +' . ( count( $readable ) - 1 ) : '' )
+				: '';
+		} else {
+			$log_value = '—';
+			$log_sub   = empty( $logs ) ? __( 'No debug.log file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Not readable', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		$tiles[] = array(
 			'label' => 'debug.log',
-			'value' => $log_size >= 0 ? size_format( $log_size, 1 ) : '—',
-			'sub'   => $log_size >= 0 ? '' : __( 'No debug.log file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'warn'  => $log_size > TSOSK_Support::DEBUG_LOG_WARN_BYTES,
+			'value' => $log_value,
+			'sub'   => $log_sub,
+			'warn'  => ! empty( $largest ) && $largest['size'] > TSOSK_Support::DEBUG_LOG_WARN_BYTES,
 			'url'   => $this->tile_url( 'debug', 'TSOSK_Mod_Debug' ),
 		);
 
@@ -1019,13 +1138,30 @@ class TSOSK_Mod_Dashboard {
 	}
 
 	/**
-	 * Vitals tiles (cheap, local data only).
+	 * "Core 0 · Plugins 0 · Themes 0 · Translations 2": same wording in the tile and in the "Needs attention" row.
+	 *
+	 * @param array{core: int, plugins: int, themes: int, translations: int} $updates Pending updates.
 	 */
-	private function render_vitals(): void {
-		$updates = $this->get_pending_updates();
-		$total   = $updates['core'] + $updates['plugins'] + $updates['themes'];
-		$active  = TSOSK_Support::get_active_plugin_files();
-		$active  = is_array( $active ) ? count( $active ) : 0;
+	private function updates_breakdown( array $updates ): string {
+		return sprintf(
+			/* translators: 1: core updates, 2: plugin updates, 3: theme updates, 4: language pack updates */
+			__( 'Core %1$d · Plugins %2$d · Themes %3$d · Translations %4$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$updates['core'],
+			$updates['plugins'],
+			$updates['themes'],
+			$updates['translations']
+		);
+	}
+
+	/**
+	 * Vitals tiles (cheap, local data only).
+	 *
+	 * @param array{core: int, plugins: int, themes: int, translations: int, checked: bool, restricted: bool} $updates Pending updates.
+	 */
+	private function render_vitals( array $updates ): void {
+		$total  = $updates['core'] + $updates['plugins'] + $updates['themes'] + $updates['translations'];
+		$active = TSOSK_Support::get_active_plugin_files();
+		$active = is_array( $active ) ? count( $active ) : 0;
 
 		$tiles = array(
 			array(
@@ -1040,7 +1176,10 @@ class TSOSK_Mod_Dashboard {
 				'sub'   => sprintf(
 					/* translators: %s: PHP memory limit, e.g. 256M */
 					__( 'Memory limit %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					(string) ini_get( 'memory_limit' )
+					// -1 means "no limit", not a literal value.
+					'-1' === (string) ini_get( 'memory_limit' )
+						? sprintf( __( '%s (no limit)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '-1' )
+						: (string) ini_get( 'memory_limit' )
 				),
 				'url'   => $this->tile_url( 'runtime-stack', 'TSOSK_Mod_Runtime_Stack' ),
 			),
@@ -1053,30 +1192,16 @@ class TSOSK_Mod_Dashboard {
 			array(
 				'label' => __( 'Pending updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => $updates['checked'] ? (string) $total : '—',
-				'sub'   => $updates['checked'] ? sprintf(
-					/* translators: 1: core updates, 2: plugin updates, 3: theme updates */
-					__( 'Core %1$d · Plugins %2$d · Themes %3$d', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					$updates['core'],
-					$updates['plugins'],
-					$updates['themes']
-				) : ( ! empty( $updates['restricted'] )
-					? __( 'Update checks are restricted in the Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-					: __( 'No update check has run yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-				'warn'  => $total > 0,
+				'sub'   => $updates['checked']
+					? $this->updates_breakdown( $updates )
+					: ( ! empty( $updates['restricted'] )
+						? __( 'Update checks are restricted in the Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+						: __( 'No update check has run yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+				'warn'  => $updates['checked'] && $total > 0,
 				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ),
 			),
 		);
 		$this->render_tiles( $tiles );
-
-		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) && current_user_can( 'update_plugins' ) && current_user_can( 'update_themes' ) ) {
-			$um     = TSOSK_Mod_Update_Manager::get_instance();
-			$counts = $um->get_installable_counts();
-			if ( $counts['total'] > 0 && '' === $counts['blocker'] ) {
-				echo '<p class="tsosk-dash-actions">';
-				$um->render_install_all_button();
-				echo '</p>';
-			}
-		}
 	}
 
 	/**

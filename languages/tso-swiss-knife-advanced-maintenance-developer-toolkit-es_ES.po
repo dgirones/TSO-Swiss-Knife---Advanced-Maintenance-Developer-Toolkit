@@ -1774,10 +1774,6 @@ msgstr "No se pudo acceder a la API de checksums de WordPress.org: %s"
 msgid "Expected MD5"
 msgstr "MD5 esperado"
 
-#: includes/modules/class-tsosk-mod-file-integrity.php:166
-msgid "File ignored. Re-scan to update results."
-msgstr "Archivo ignorado. Vuelva a analizar para actualizar los resultados."
-
 #: includes/class-tsosk-activity-log.php:378
 #: includes/modules/class-tsosk-mod-file-integrity.php:187
 #: includes/modules/class-tsosk-mod-file-integrity.php:191
@@ -13868,11 +13864,6 @@ msgid "Pending updates"
 msgstr "Actualizaciones pendientes"
 
 #: includes/modules/class-tsosk-mod-dashboard.php
-#, php-format
-msgid "Core %1$d · Plugins %2$d · Themes %3$d"
-msgstr "Núcleo %1$d · Plugins %2$d · Temas %3$d"
-
-#: includes/modules/class-tsosk-mod-dashboard.php
 msgid "Shortcuts"
 msgstr "Accesos directos"
 
@@ -18736,3 +18727,58 @@ msgstr ""
 
 msgid "A session was closed for user #%d."
 msgstr "Se ha cerrado una sesión del usuario #%d."
+
+# %d: number of pending updates
+#: includes/modules/class-tsosk-mod-dashboard.php:417
+#, php-format
+msgid "%d update pending"
+msgid_plural "%d updates pending"
+msgstr[0] "%d actualización pendiente"
+msgstr[1] "%d actualizaciones pendientes"
+
+# 1: core updates, 2: plugin updates, 3: theme updates, 4: language pack
+# updates
+#: includes/modules/class-tsosk-mod-dashboard.php:1125
+#, php-format
+msgid "Core %1$d · Plugins %2$d · Themes %3$d · Translations %4$d"
+msgstr "Núcleo %1$d · Plugins %2$d · Temas %3$d · Traducciones %4$d"
+
+#: includes/modules/class-tsosk-mod-dashboard.php:846
+msgid "Counting is off in the View Counter"
+msgstr "El recuento está desactivado en el Contador de visitas"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:272
+msgid "File ignored."
+msgstr "Archivo ignorado."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:299
+msgid "File removed from the ignore list. Run a new scan to check it again."
+msgstr ""
+"Archivo eliminado de la lista de ignorados. Vuelva a analizar para "
+"comprobarlo de nuevo."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1133
+msgid "In the last scan"
+msgstr "En el último análisis"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1144
+msgid "Still flagged"
+msgstr "Sigue marcado"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1146
+msgid "Not flagged"
+msgstr "No marcado"
+
+# %d: number of ignored files hidden from the results
+#: includes/modules/class-tsosk-mod-file-integrity.php:1302
+#, php-format
+msgid ""
+"%d ignored file is hidden from these results (see Ignored Files below)."
+msgid_plural ""
+"%d ignored files are hidden from these results (see Ignored Files below)."
+msgstr[0] ""
+"Se ha ocultado %d archivo ignorado de estos resultados (vea Archivos "
+"ignorados más abajo)."
+msgstr[1] ""
+"Se han ocultado %d archivos ignorados de estos resultados (vea Archivos "
+"ignorados más abajo)."

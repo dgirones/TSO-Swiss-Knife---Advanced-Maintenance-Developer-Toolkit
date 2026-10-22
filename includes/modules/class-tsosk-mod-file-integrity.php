@@ -70,9 +70,9 @@ class TSOSK_Mod_File_Integrity {
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
 
 	/**
-	 * AJAX: run (or return cached) file integrity scan.
+	 * AJAX: run a fresh file integrity scan.
 	 *
-	 * Accepts optional POST param `force` (1) to bypass the cache.
+	 * Accepts optional POST param `force` (1) to also re-download the checksums.
 	 */
 	public function ajax_scan(): void {
 		check_ajax_referer( 'tsosk_fi_nonce', 'nonce' );
@@ -82,11 +82,8 @@ class TSOSK_Mod_File_Integrity {
 
 		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
 
-		// Always re-check the server when the admin clicks Scan. Cached results are
-		// only used for the initial tab render — returning them here caused false
-		// "missing" lists after a bad/outdated scan.
-		delete_transient( self::TRANSIENT_RESULTS );
-		delete_option( self::OPTION_RESULTS );
+		// run_scan() always reads the server again and only stores its results when it succeeds, so the previous
+		// scan is kept if this one fails (API down, timeout) instead of being thrown away before it starts.
 		if ( $force ) {
 			delete_transient( self::TRANSIENT_CHECKSUMS );
 		}
@@ -97,18 +94,19 @@ class TSOSK_Mod_File_Integrity {
 			wp_send_json_error( $result->get_error_message() );
 		}
 
-		$result['html'] = $this->render_results( $result, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
-		$n_issues       = (int) ( $result['n_issues'] ?? 0 );
+		// The scan keeps every finding; ignored files are hidden here, so the counts match what the page lists.
+		$view         = $this->apply_ignored( $result, $this->get_ignored() );
+		$view['html'] = $this->render_results( $result, $this->get_ignored(), wp_create_nonce( 'tsosk_fi_nonce' ), false );
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'scan',
 			sprintf(
-					/* translators: %d: number of issues */
+				/* translators: %d: number of issues */
 				__( 'File integrity scan completed (%d issue(s)).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				$n_issues
+				(int) $view['n_issues']
 			)
 		);
-		wp_send_json_success( $result );
+		wp_send_json_success( $view );
 	}
 
 	/**
@@ -118,8 +116,8 @@ class TSOSK_Mod_File_Integrity {
 	 * @return bool
 	 */
 	private function is_scannable_ignore_path( string $file ): bool {
-		$file = ltrim( str_replace( '\\', '/', $file ), '/' );
-		if ( '' === $file || str_contains( $file, '..' ) || str_starts_with( $file, '/' ) ) {
+		$file = $this->normalize_rel_path( $file );
+		if ( '' === $file ) {
 			return false;
 		}
 
@@ -128,16 +126,62 @@ class TSOSK_Mod_File_Integrity {
 			return false;
 		}
 
-		$known = array();
+		// Raw results on purpose: a file that is already ignored must still be recognised.
+		return isset( $this->collect_flagged_files( $cached )[ $file ] );
+	}
+
+	/**
+	 * Every file path listed by a stored scan, whatever the section.
+	 *
+	 * @param array<string,mixed> $raw Stored scan results.
+	 * @return array<string,true>
+	 */
+	private function collect_flagged_files( array $raw ): array {
+		$flagged = array();
 		foreach ( array( 'modified', 'missing', 'missing_optional', 'added', 'uploads_suspicious' ) as $bucket ) {
-			foreach ( $cached[ $bucket ] ?? array() as $row ) {
+			foreach ( is_array( $raw[ $bucket ] ?? null ) ? $raw[ $bucket ] : array() as $row ) {
 				if ( ! empty( $row['file'] ) ) {
-					$known[] = (string) $row['file'];
+					$flagged[ (string) $row['file'] ] = true;
 				}
 			}
 		}
+		return $flagged;
+	}
 
-		return in_array( $file, $known, true );
+	/**
+	 * Hide the ignored files from a scan result and recount.
+	 *
+	 * The stored scan is complete (it lists ignored files too), so ignoring or un-ignoring a file takes effect
+	 * at once, without scanning again, and a file can never appear both here and in "Ignored Files".
+	 *
+	 * @param array<string,mixed> $data    Scan result.
+	 * @param string[]            $ignored Ignored relative paths.
+	 * @return array<string,mixed> Result with `ignored_hidden` (rows hidden) and a fresh `n_issues`.
+	 */
+	private function apply_ignored( array $data, array $ignored ): array {
+		$hidden = 0;
+		if ( ! empty( $ignored ) ) {
+			$skip = array_flip( $ignored );
+			foreach ( array( 'modified', 'missing', 'missing_optional', 'added', 'uploads_suspicious' ) as $bucket ) {
+				if ( ! is_array( $data[ $bucket ] ?? null ) ) {
+					continue;
+				}
+				$kept = array();
+				foreach ( $data[ $bucket ] as $row ) {
+					if ( isset( $row['file'] ) && isset( $skip[ (string) $row['file'] ] ) ) {
+						++$hidden;
+						continue;
+					}
+					$kept[] = $row;
+				}
+				$data[ $bucket ] = $kept;
+			}
+		}
+
+		$data                   = $this->normalize_scan_result( $data );
+		$data['ignored_hidden'] = $hidden;
+
+		return $data;
 	}
 
 	/**
@@ -177,6 +221,26 @@ class TSOSK_Mod_File_Integrity {
 	}
 
 	/**
+	 * Fresh HTML after the ignore list changed: results (without the ignored files) and the "Ignored Files" card.
+	 *
+	 * @param string $message Message for the admin.
+	 * @return array{message:string,html:string,ignored_html:string,n_issues:int}
+	 */
+	private function ignore_response( string $message ): array {
+		$nonce   = wp_create_nonce( 'tsosk_fi_nonce' );
+		$ignored = $this->get_ignored();
+		$raw     = $this->get_stored_results();
+		$view    = is_array( $raw ) ? $this->apply_ignored( $raw, $ignored ) : null;
+
+		return array(
+			'message'      => $message,
+			'html'         => is_array( $raw ) ? $this->render_results( $raw, $ignored, $nonce, false ) : '',
+			'ignored_html' => $this->render_ignored_card( $ignored, $nonce, $raw ),
+			'n_issues'     => is_array( $view ) ? (int) $view['n_issues'] : 0,
+		);
+	}
+
+	/**
 	 * AJAX: add a file path to the ignored list.
 	 */
 	public function ajax_ignore(): void {
@@ -185,7 +249,8 @@ class TSOSK_Mod_File_Integrity {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$file = isset( $_POST['file'] ) ? sanitize_text_field( wp_unslash( $_POST['file'] ) ) : '';
+		// Stored normalised (no leading slash, forward slashes): the scan compares it with normalised paths.
+		$file = isset( $_POST['file'] ) ? $this->normalize_rel_path( sanitize_text_field( wp_unslash( $_POST['file'] ) ) ) : '';
 		if ( '' === $file ) {
 			wp_send_json_error( __( 'No file specified.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -197,9 +262,6 @@ class TSOSK_Mod_File_Integrity {
 		$ignored[] = $file;
 		update_option( self::OPTION_IGNORED, array_values( array_unique( $ignored ) ), false );
 
-		// Invalidate cached results so the ignored file disappears on next load.
-		delete_transient( self::TRANSIENT_RESULTS );
-
 		TSOSK_Activity_Log::log(
 			'file-integrity',
 			'update',
@@ -207,7 +269,7 @@ class TSOSK_Mod_File_Integrity {
 			array( 'file' => $file )
 		);
 
-		wp_send_json_success( __( 'File ignored. Re-scan to update results.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success( $this->ignore_response( __( 'File ignored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) );
 	}
 
 	/**
@@ -219,11 +281,9 @@ class TSOSK_Mod_File_Integrity {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$file    = isset( $_POST['file'] ) ? sanitize_text_field( wp_unslash( $_POST['file'] ) ) : '';
-		$ignored = $this->get_ignored();
-		$ignored = array_values( array_filter( $ignored, static fn( $f ) => $f !== $file ) );
+		$file    = isset( $_POST['file'] ) ? $this->normalize_rel_path( sanitize_text_field( wp_unslash( $_POST['file'] ) ) ) : '';
+		$ignored = array_values( array_filter( $this->get_ignored(), static fn( $f ) => $f !== $file ) );
 		update_option( self::OPTION_IGNORED, $ignored, false );
-		delete_transient( self::TRANSIENT_RESULTS );
 
 		TSOSK_Activity_Log::log(
 			'file-integrity',
@@ -232,7 +292,13 @@ class TSOSK_Mod_File_Integrity {
 			array( 'file' => $file )
 		);
 
-		wp_send_json_success( __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		// A scan from before this version skipped the ignored files, so it cannot tell whether this one is still flagged.
+		$raw     = $this->get_stored_results();
+		$message = ( is_array( $raw ) && ! empty( $raw['complete'] ) )
+			? __( 'File removed from ignore list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			: __( 'File removed from the ignore list. Run a new scan to check it again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+
+		wp_send_json_success( $this->ignore_response( $message ) );
 	}
 
 	// ── Scan logic ────────────────────────────────────────────────────────────
@@ -363,7 +429,6 @@ class TSOSK_Mod_File_Integrity {
 			return $checksums;
 		}
 
-		$ignored    = $this->get_ignored();
 		$core_roots = $this->get_core_root_candidates();
 		if ( empty( $core_roots ) ) {
 			return new WP_Error(
@@ -387,10 +452,6 @@ class TSOSK_Mod_File_Integrity {
 		foreach ( $checksums as $rel_path => $expected_md5 ) {
 			// Skip non-PHP root files that differ by installation (e.g. wp-config-sample.php is OK to skip).
 			if ( in_array( $rel_path, array( 'wp-config-sample.php', 'php.ini' ), true ) ) {
-				continue;
-			}
-
-			if ( in_array( $rel_path, $ignored, true ) ) {
 				continue;
 			}
 
@@ -471,7 +532,7 @@ class TSOSK_Mod_File_Integrity {
 					$subpath = $iterator->getSubPathname();
 					$rel     = $this->normalize_rel_path( $dir . '/' . str_replace( '\\', '/', (string) $subpath ) );
 
-					if ( in_array( $rel, $ignored, true ) || isset( $seen_added[ $rel ] ) ) {
+					if ( isset( $seen_added[ $rel ] ) ) {
 						continue;
 					}
 					// PHP error logs (error_log, php_errorlog) are written by the server itself, not code: skip them unless they hold PHP tags.
@@ -493,14 +554,7 @@ class TSOSK_Mod_File_Integrity {
 		}
 
 		// ── Scan wp-content/uploads for executable script files ────────────
-		$uploads_suspicious = array_values(
-			array_filter(
-				$this->scan_uploads_for_php(),
-				static function ( $row ) use ( $ignored ) {
-					return ! in_array( $row['file'], $ignored, true );
-				}
-			)
-		);
+		$uploads_suspicious = $this->scan_uploads_for_php();
 
 		$result = array(
 			'modified'           => $modified,
@@ -514,6 +568,8 @@ class TSOSK_Mod_File_Integrity {
 			'wp_version'         => get_bloginfo( 'version' ),
 			'core_root'          => $core_root,
 			'from_cache'         => false,
+			// Every finding is stored, ignored files included; they are hidden when shown (see apply_ignored()).
+			'complete'           => true,
 		);
 
 		$this->store_results( $result );
@@ -917,7 +973,18 @@ class TSOSK_Mod_File_Integrity {
 	 */
 	private function get_ignored(): array {
 		$v = get_option( self::OPTION_IGNORED, array() );
-		return is_array( $v ) ? $v : array();
+		if ( ! is_array( $v ) ) {
+			return array();
+		}
+		// Same form as the scan uses, whatever was stored before (leading slash, backslashes, repeats, non-strings).
+		$out = array();
+		foreach ( $v as $file ) {
+			$file = is_string( $file ) ? $this->normalize_rel_path( $file ) : '';
+			if ( '' !== $file ) {
+				$out[] = $file;
+			}
+		}
+		return array_values( array_unique( $out ) );
 	}
 
 	// ── Render ────────────────────────────────────────────────────────────────
@@ -1029,35 +1096,71 @@ class TSOSK_Mod_File_Integrity {
 			<?php endif; ?>
 		</div>
 
-		<?php if ( ! empty( $ignored ) ) : ?>
+		<div id="tsosk-fi-ignored-wrap">
+			<?php echo $this->render_ignored_card( $ignored, $nonce, $has_cache ? $cached : null ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pre-escaped in render_ignored_card(). ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The "Ignored Files" card (empty string when nothing is ignored).
+	 *
+	 * @param string[]                 $ignored Ignored relative paths.
+	 * @param string                   $nonce   Security nonce.
+	 * @param array<string,mixed>|null $raw     Latest stored scan (all findings), or null when there is none.
+	 * @return string HTML.
+	 */
+	private function render_ignored_card( array $ignored, string $nonce, ?array $raw ): string {
+		if ( empty( $ignored ) ) {
+			return '';
+		}
+
+		// Whether each ignored file is still listed by the scan. A scan from before this version skipped the
+		// ignored files, so it cannot answer: show a dash instead of a wrong "not flagged".
+		$flagged = ( is_array( $raw ) && ! empty( $raw['complete'] ) ) ? $this->collect_flagged_files( $raw ) : null;
+
+		ob_start();
+		?>
 		<div class="tsosk-card" id="tsosk-fi-ignored-card" style="margin-top:20px;">
 			<h3><?php esc_html_e( 'Ignored Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $ignored ) ); ?>)</h3>
 			<p class="description">
 				<?php esc_html_e( 'These files are excluded from scan results. Remove them from this list to include them again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
-			<table class="widefat tsosk-table" id="tsosk-fi-ignored-table">
-				<thead><tr>
-					<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th style="width:100px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-				</tr></thead>
-				<tbody>
-					<?php foreach ( $ignored as $ign ) : ?>
-					<tr data-file="<?php echo esc_attr( $ign ); ?>">
-						<td class="tsosk-code"><?php echo esc_html( $ign ); ?></td>
-						<td>
-							<button class="button button-small tsosk-fi-unignore"
-									data-file="<?php echo esc_attr( $ign ); ?>"
-									data-nonce="<?php echo esc_attr( $nonce ); ?>">
-								<?php esc_html_e( 'Remove', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-							</button>
-						</td>
-					</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+			<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table" id="tsosk-fi-ignored-table">
+					<thead><tr>
+						<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'In the last scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th style="width:100px;"><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					</tr></thead>
+					<tbody>
+						<?php foreach ( $ignored as $ign ) : ?>
+						<tr data-file="<?php echo esc_attr( $ign ); ?>">
+							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $ign ); ?></td>
+							<td>
+								<?php if ( null === $flagged ) : ?>
+									<span class="description">—</span>
+								<?php elseif ( isset( $flagged[ $ign ] ) ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Still flagged', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php else : ?>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Not flagged', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td>
+								<button class="button button-small tsosk-fi-unignore"
+										data-file="<?php echo esc_attr( $ign ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>">
+									<?php esc_html_e( 'Remove', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</button>
+							</td>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		</div>
-		<?php endif; ?>
 		<?php
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -1070,7 +1173,8 @@ class TSOSK_Mod_File_Integrity {
 	 * @return string HTML if $should_echo is false.
 	 */
 	public function render_results( array $data, array $ignored, string $nonce, bool $should_echo = false ): string {
-		$data               = $this->normalize_scan_result( $data );
+		$data               = $this->apply_ignored( $data, $ignored );
+		$hidden             = (int) $data['ignored_hidden'];
 		$modified           = $data['modified'];
 		$missing            = $data['missing'];
 		$missing_optional   = $data['missing_optional'];
@@ -1103,8 +1207,8 @@ class TSOSK_Mod_File_Integrity {
 					printf(
 						/* translators: 1: date, 2: time */
 						esc_html__( 'Last scan: %1$s at %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						esc_html( gmdate( 'Y-m-d', $scanned ) ),
-						esc_html( gmdate( 'H:i', $scanned ) )
+						esc_html( wp_date( 'Y-m-d', $scanned ) ),
+						esc_html( wp_date( 'H:i', $scanned ) )
 					);
 					?>
 					<?php if ( $from_c ) : ?>
@@ -1189,6 +1293,19 @@ class TSOSK_Mod_File_Integrity {
 				</span>
 				<?php endif; ?>
 			</div>
+			<?php if ( $hidden > 0 ) : ?>
+			<p class="description" style="margin:10px 0 0;">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %d: number of ignored files hidden from the results */
+						_n( '%d ignored file is hidden from these results (see Ignored Files below).', '%d ignored files are hidden from these results (see Ignored Files below).', $hidden, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$hidden
+					)
+				);
+				?>
+			</p>
+			<?php endif; ?>
 			<?php if ( 0 === $n_issues && $n_info > 0 ) : ?>
 			<p class="description" style="margin:10px 0 0;">
 				<?php esc_html_e( 'Informational findings (removed default themes/plugins, or files not in the official release) are listed below but are not counted as problems.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1224,7 +1341,7 @@ class TSOSK_Mod_File_Integrity {
 						<tr class="tsosk-row-warn">
 							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
 							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
-							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
+							<td style="white-space:nowrap;"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
 							<td>
 								<button class="button button-small tsosk-fi-view"
 										data-file="<?php echo esc_attr( $f['file'] ); ?>"
@@ -1285,7 +1402,7 @@ class TSOSK_Mod_File_Integrity {
 						<tr class="tsosk-row-warn">
 							<td class="tsosk-code" style="word-break:break-all;"><?php echo esc_html( $f['file'] ); ?></td>
 							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
-							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
+							<td style="white-space:nowrap;"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
 							<td class="tsosk-code" style="font-size:11px;color:#666;"><?php echo esc_html( substr( (string) $f['expected'], 0, 12 ) . '…' ); ?></td>
 							<td class="tsosk-code" style="font-size:11px;color:#b45309;"><?php echo esc_html( substr( (string) $f['actual'], 0, 12 ) . '…' ); ?></td>
 							<td>
@@ -1403,7 +1520,7 @@ class TSOSK_Mod_File_Integrity {
 								<?php endif; ?>
 							</td>
 							<td><?php echo esc_html( size_format( (int) $f['size'] ) ); ?></td>
-							<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
+							<td style="white-space:nowrap;"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $f['mtime'] ) ); ?></td>
 							<td>
 								<button class="button button-small tsosk-fi-view"
 										data-file="<?php echo esc_attr( $f['file'] ); ?>"

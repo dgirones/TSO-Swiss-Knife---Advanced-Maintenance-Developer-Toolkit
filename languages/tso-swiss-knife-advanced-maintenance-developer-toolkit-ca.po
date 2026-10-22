@@ -1770,10 +1770,6 @@ msgstr "No s'ha pogut accedir a l'API de checksums de WordPress.org: %s"
 msgid "Expected MD5"
 msgstr "MD5 esperat"
 
-#: includes/modules/class-tsosk-mod-file-integrity.php:166
-msgid "File ignored. Re-scan to update results."
-msgstr "Fitxer ignorat. Torneu a analitzar per actualitzar els resultats."
-
 #: includes/class-tsosk-activity-log.php:378
 #: includes/modules/class-tsosk-mod-file-integrity.php:187
 #: includes/modules/class-tsosk-mod-file-integrity.php:191
@@ -13829,11 +13825,6 @@ msgid "Pending updates"
 msgstr "Actualitzacions pendents"
 
 #: includes/modules/class-tsosk-mod-dashboard.php
-#, php-format
-msgid "Core %1$d · Plugins %2$d · Themes %3$d"
-msgstr "Nucli %1$d · Connectors %2$d · Temes %3$d"
-
-#: includes/modules/class-tsosk-mod-dashboard.php
 msgid "Shortcuts"
 msgstr "Dreceres"
 
@@ -18692,3 +18683,58 @@ msgstr ""
 
 msgid "A session was closed for user #%d."
 msgstr "S'ha tancat una sessió de l'usuari #%d."
+
+# %d: number of pending updates
+#: includes/modules/class-tsosk-mod-dashboard.php:417
+#, php-format
+msgid "%d update pending"
+msgid_plural "%d updates pending"
+msgstr[0] "%d actualització pendent"
+msgstr[1] "%d actualitzacions pendents"
+
+# 1: core updates, 2: plugin updates, 3: theme updates, 4: language pack
+# updates
+#: includes/modules/class-tsosk-mod-dashboard.php:1125
+#, php-format
+msgid "Core %1$d · Plugins %2$d · Themes %3$d · Translations %4$d"
+msgstr "Nucli %1$d · Connectors %2$d · Temes %3$d · Traduccions %4$d"
+
+#: includes/modules/class-tsosk-mod-dashboard.php:846
+msgid "Counting is off in the View Counter"
+msgstr "El recompte està desactivat al Comptador de visites"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:272
+msgid "File ignored."
+msgstr "Fitxer ignorat."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:299
+msgid "File removed from the ignore list. Run a new scan to check it again."
+msgstr ""
+"Fitxer eliminat de la llista d'ignorats. Torneu a analitzar per comprovar-lo"
+" de nou."
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1133
+msgid "In the last scan"
+msgstr "A l'últim anàlisi"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1144
+msgid "Still flagged"
+msgstr "Encara marcat"
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1146
+msgid "Not flagged"
+msgstr "No marcat"
+
+# %d: number of ignored files hidden from the results
+#: includes/modules/class-tsosk-mod-file-integrity.php:1302
+#, php-format
+msgid ""
+"%d ignored file is hidden from these results (see Ignored Files below)."
+msgid_plural ""
+"%d ignored files are hidden from these results (see Ignored Files below)."
+msgstr[0] ""
+"%d fitxer ignorat s'ha amagat d'aquests resultats (vegeu Fitxers ignorats "
+"més avall)."
+msgstr[1] ""
+"%d fitxers ignorats s'han amagat d'aquests resultats (vegeu Fitxers ignorats"
+" més avall)."

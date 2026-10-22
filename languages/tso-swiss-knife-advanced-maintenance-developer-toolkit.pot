@@ -4358,10 +4358,6 @@ msgstr ""
 msgid "Invalid file path. Only files from the latest scan can be ignored."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-file-integrity.php:166
-msgid "File ignored. Re-scan to update results."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-file-integrity.php:327
 msgid ""
 "Could not locate a readable WordPress core directory (wp-"
@@ -11969,11 +11965,6 @@ msgid "Pending updates"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-dashboard.php
-#, php-format
-msgid "Core %1$d · Plugins %2$d · Themes %3$d"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-dashboard.php
 msgid "Shortcuts"
 msgstr ""
 
@@ -16203,3 +16194,52 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-users.php:0
 msgid "A session was closed for user #%d."
 msgstr ""
+
+# %d: number of pending updates
+#: includes/modules/class-tsosk-mod-dashboard.php:417
+#, php-format
+msgid "%d update pending"
+msgid_plural "%d updates pending"
+msgstr[0] ""
+msgstr[1] ""
+
+# 1: core updates, 2: plugin updates, 3: theme updates, 4: language pack
+# updates
+#: includes/modules/class-tsosk-mod-dashboard.php:1125
+#, php-format
+msgid "Core %1$d · Plugins %2$d · Themes %3$d · Translations %4$d"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:846
+msgid "Counting is off in the View Counter"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:272
+msgid "File ignored."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:299
+msgid "File removed from the ignore list. Run a new scan to check it again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1133
+msgid "In the last scan"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1144
+msgid "Still flagged"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-file-integrity.php:1146
+msgid "Not flagged"
+msgstr ""
+
+# %d: number of ignored files hidden from the results
+#: includes/modules/class-tsosk-mod-file-integrity.php:1302
+#, php-format
+msgid ""
+"%d ignored file is hidden from these results (see Ignored Files below)."
+msgid_plural ""
+"%d ignored files are hidden from these results (see Ignored Files below)."
+msgstr[0] ""
+msgstr[1] ""
