@@ -5578,6 +5578,132 @@ a.tsosk-dash-tile.is-warn:focus {
 	}
 }
 
+/* Uploads Disk Footprint tables: one width, tight rows, no sideways scroll. */
+.tsosk-table-wrap.tsosk-footprint-wrap {
+	overflow-x: hidden;
+	max-width: 100%;
+}
+
+.tsosk-footprint-table {
+	width: 100%;
+	max-width: 100%;
+	table-layout: fixed;
+	border-collapse: collapse;
+	font-size: 12px;
+	line-height: 1.3;
+}
+
+.tsosk-footprint-table col.tsosk-col-files { width: 78px; }
+.tsosk-footprint-table col.tsosk-col-bytes { width: 88px; }
+.tsosk-footprint-table col.tsosk-col-share { width: 118px; }
+.tsosk-footprint-table col.tsosk-col-type { width: 22%; }
+.tsosk-footprint-table col.tsosk-col-kind { width: 108px; }
+.tsosk-footprint-table col.tsosk-col-library { width: 22%; }
+.tsosk-footprint-table col.tsosk-col-confidence { width: 84px; }
+.tsosk-footprint-table col.tsosk-col-name { width: 22%; }
+.tsosk-footprint-table col.tsosk-col-reason { width: auto; }
+.tsosk-footprint-table col.tsosk-col-action { width: 148px; }
+.tsosk-footprint-table col.tsosk-col-actions { width: 196px; }
+.tsosk-footprint-table col.tsosk-col-when { width: 108px; }
+.tsosk-footprint-table col.tsosk-col-when-long { width: 132px; }
+.tsosk-footprint-table col.tsosk-col-ext { width: 16%; }
+
+.tsosk-footprint-table th,
+.tsosk-footprint-table td {
+	padding: 3px 8px;
+	vertical-align: middle;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	hyphens: manual;
+}
+
+.tsosk-footprint-table thead th {
+	font-size: 11px;
+	font-weight: 600;
+	color: #50575e;
+	background: #f6f7f7;
+	overflow-wrap: normal;
+	word-break: normal;
+	line-height: 1.25;
+}
+
+.tsosk-footprint-table td:first-child {
+	white-space: normal;
+}
+
+.tsosk-footprint-table td.tsosk-num {
+	white-space: nowrap;
+	text-align: right;
+}
+
+.tsosk-footprint-table td.tsosk-col-share {
+	white-space: nowrap;
+}
+
+.tsosk-footprint-table .tsosk-share-bar {
+	width: 42px;
+	height: 6px;
+	margin-right: 4px;
+}
+
+.tsosk-footprint-table .tsosk-code,
+.tsosk-footprint-table code {
+	font-size: 12px;
+	line-height: 1.3;
+}
+
+.tsosk-footprint-table td .tsosk-badge {
+	margin: 0;
+	padding: 0 6px;
+	font-size: 11px;
+	line-height: 1.35;
+	white-space: normal;
+}
+
+.tsosk-footprint-table td.tsosk-actions .button {
+	white-space: normal;
+	height: auto;
+	min-height: 0;
+	max-width: 100%;
+	box-sizing: border-box;
+	line-height: 1.25;
+	padding: 2px 8px;
+	margin: 1px 4px 1px 0;
+}
+
+.tsosk-footprint-pairs td.tsosk-pair-start,
+.tsosk-footprint-pairs th.tsosk-pair-start {
+	border-left: 1px solid #dcdcde;
+}
+
+@media (max-width: 782px) {
+	.tsosk-table-wrap.tsosk-footprint-wrap > .widefat.tsosk-table.tsosk-footprint-table {
+		min-width: 0;
+		table-layout: auto;
+	}
+
+	.tsosk-footprint-table col {
+		width: auto !important;
+	}
+
+	.tsosk-footprint-table td.tsosk-num,
+	.tsosk-footprint-table td.tsosk-col-share {
+		white-space: normal;
+		text-align: left;
+	}
+
+	.tsosk-footprint-table .tsosk-pair-empty {
+		display: none;
+	}
+
+	.tsosk-footprint-pairs td.tsosk-pair-start {
+		margin-top: 8px;
+		padding-top: 8px;
+		border-left: 0;
+		border-top: 1px solid #f0f0f1;
+	}
+}
+
 
 /* ── Info popover (long explanations out of table cells) ───────────────────── */
 .tsosk-info {

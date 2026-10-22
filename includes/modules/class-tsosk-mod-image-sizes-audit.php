@@ -1885,8 +1885,8 @@ class TSOSK_Mod_Image_Sizes_Audit {
 				);
 				?>
 			</p>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table" id="tsosk-image-sizes-quarantine-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-footprint-table" id="tsosk-image-sizes-quarantine-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>

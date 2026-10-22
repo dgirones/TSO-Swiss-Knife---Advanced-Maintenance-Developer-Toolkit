@@ -499,8 +499,15 @@ class TSOSK_Mod_Media_Footprint {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Space by folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Where the disk space goes, by first-level folder. Year folders are your Media Library; the rest is plugin data or files that are not in the Media Library.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table">
+					<colgroup>
+						<col class="tsosk-col-name">
+						<col class="tsosk-col-type">
+						<col class="tsosk-col-files">
+						<col class="tsosk-col-bytes">
+						<col class="tsosk-col-share">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -526,11 +533,11 @@ class TSOSK_Mod_Media_Footprint {
 						$share = $total > 0 ? min( 100, round( ( (int) ( $row['bytes'] ?? 0 ) / $total ) * 100, 1 ) ) : 0;
 						?>
 						<tr>
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( '' === $name ? '/' : $name . '/' ); ?></td>
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( '' === $name ? '/' : $name . '/' ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><span class="tsosk-badge tsosk-badge-<?php echo esc_attr( $badge[0] ); ?>"><?php echo esc_html( $badge[1] ); ?></span></td>
-							<td data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Share', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
+							<td class="tsosk-col-share" data-label="<?php esc_attr_e( 'Share', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<span class="tsosk-share-bar" aria-hidden="true"><i style="width:<?php echo esc_attr( (string) $share ); ?>%"></i></span>
 								<?php echo esc_html( number_format_i18n( $share, 1 ) . '%' ); ?>
 							</td>
@@ -557,8 +564,13 @@ class TSOSK_Mod_Media_Footprint {
 					?>
 				</p>
 			<?php endif; ?>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table">
+					<colgroup>
+						<col class="tsosk-col-name">
+						<col class="tsosk-col-files">
+						<col class="tsosk-col-bytes">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Month', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -576,8 +588,8 @@ class TSOSK_Mod_Media_Footprint {
 									<code><?php echo esc_html( (string) $month ); ?></code>
 								<?php endif; ?>
 							</td>
-							<td data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -594,21 +606,42 @@ class TSOSK_Mod_Media_Footprint {
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Usage by file type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table tsosk-footprint-pairs">
+					<colgroup>
+						<col class="tsosk-col-ext">
+						<col class="tsosk-col-files">
+						<col class="tsosk-col-bytes">
+						<col class="tsosk-col-ext">
+						<col class="tsosk-col-files">
+						<col class="tsosk-col-bytes">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Extension', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th class="tsosk-pair-start"><?php esc_html_e( 'Extension', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
-					<?php foreach ( array_slice( $stats['by_extension'], 0, 20, true ) as $ext => $row ) : ?>
+					<?php foreach ( array_chunk( array_slice( $stats['by_extension'], 0, 20, true ), 2, true ) as $pair ) : ?>
 						<tr>
-							<td data-label="<?php esc_attr_e( 'Extension', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><code>.<?php echo esc_html( (string) $ext ); ?></code></td>
-							<td data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
+							<?php
+							$tsosk_pair_index = 0;
+							foreach ( $pair as $ext => $row ) :
+								$tsosk_pair_class = $tsosk_pair_index > 0 ? ' tsosk-pair-start' : '';
+								++$tsosk_pair_index;
+								?>
+							<td class="<?php echo esc_attr( trim( $tsosk_pair_class ) ); ?>" data-label="<?php esc_attr_e( 'Extension', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><code>.<?php echo esc_html( (string) $ext ); ?></code></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (int) ( $row['files'] ?? 0 ) ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $row['bytes'] ?? 0 ), 2 ) ); ?></td>
+							<?php endforeach; ?>
+							<?php if ( 1 === $tsosk_pair_index ) : ?>
+							<td class="tsosk-pair-start tsosk-pair-empty" colspan="3"></td>
+							<?php endif; ?>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -620,8 +653,14 @@ class TSOSK_Mod_Media_Footprint {
 		<?php if ( ! empty( $stats['largest'] ) && is_array( $stats['largest'] ) ) : ?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Largest files (top 20)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table">
+					<colgroup>
+						<col class="tsosk-col-path">
+						<col class="tsosk-col-bytes">
+						<col class="tsosk-col-kind">
+						<col class="tsosk-col-library">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -634,8 +673,8 @@ class TSOSK_Mod_Media_Footprint {
 					<?php foreach ( $stats['largest'] as $file ) : ?>
 						<?php $attachment_id = (int) ( $file['attachment_id'] ?? 0 ); ?>
 						<tr>
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $file['relative'] ?? '' ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $file['size'] ?? 0 ), 2 ) ); ?></td>
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $file['relative'] ?? '' ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $file['size'] ?? 0 ), 2 ) ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php
 								echo ! empty( $file['is_derivative'] )
@@ -779,8 +818,16 @@ class TSOSK_Mod_Media_Footprint {
 			<?php if ( empty( $items ) ) : ?>
 			<p><?php esc_html_e( 'No classified folders were found under uploads or known cache paths.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table" id="tsosk-media-hygiene-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table" id="tsosk-media-hygiene-table">
+					<colgroup>
+						<col class="tsosk-col-name">
+						<col class="tsosk-col-bytes">
+						<col class="tsosk-col-files">
+						<col class="tsosk-col-confidence">
+						<col class="tsosk-col-reason">
+						<col class="tsosk-col-action">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -807,9 +854,9 @@ class TSOSK_Mod_Media_Footprint {
 						$capped = ! empty( $item['capped'] );
 						?>
 						<tr id="tsosk-hygiene-<?php echo esc_attr( (string) ( $item['id'] ?? '' ) ); ?>">
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $item['relative'] ?? '' ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( ( $capped ? '≥ ' : '' ) . size_format( (int) ( $item['size'] ?? 0 ), 2 ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( ( $capped ? '≥ ' : '' ) . number_format_i18n( (int) ( $item['files'] ?? 0 ) ) ); ?></td>
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $item['relative'] ?? '' ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( ( $capped ? '≥ ' : '' ) . size_format( (int) ( $item['size'] ?? 0 ), 2 ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( ( $capped ? '≥ ' : '' ) . number_format_i18n( (int) ( $item['files'] ?? 0 ) ) ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Confidence', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><span class="tsosk-badge <?php echo esc_attr( $badge ); ?>"><?php echo esc_html( $label ); ?></span></td>
 							<td data-label="<?php esc_attr_e( 'Reason', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php echo esc_html( (string) ( $item['reason'] ?? '' ) ); ?>
@@ -873,8 +920,15 @@ class TSOSK_Mod_Media_Footprint {
 				);
 				?>
 			</p>
-			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table tsosk-media-table" id="tsosk-media-quarantine-table">
+			<div class="tsosk-table-wrap tsosk-footprint-wrap">
+				<table class="widefat tsosk-table tsosk-media-table tsosk-footprint-table" id="tsosk-media-quarantine-table">
+					<colgroup>
+						<col class="tsosk-col-name">
+						<col class="tsosk-col-bytes">
+						<col class="tsosk-col-when">
+						<col class="tsosk-col-when-long">
+						<col class="tsosk-col-actions">
+					</colgroup>
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -891,8 +945,8 @@ class TSOSK_Mod_Media_Footprint {
 						$tsosk_q_expires = $tsosk_q_at + ( TSOSK_Uploads_Scanner::QUARANTINE_DAYS * DAY_IN_SECONDS );
 						?>
 						<tr id="tsosk-quarantine-<?php echo esc_attr( (string) ( $entry['id'] ?? '' ) ); ?>">
-							<td class="tsosk-code" style="word-break:break-all;" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $entry['label'] ?? '' ) ); ?></td>
-							<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $entry['size'] ?? 0 ), 2 ) ); ?></td>
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $entry['label'] ?? '' ) ); ?></td>
+							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $entry['size'] ?? 0 ), 2 ) ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Quarantined', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $tsosk_q_at > 0 ? wp_date( 'Y-m-d H:i', $tsosk_q_at ) : '—' ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Auto-deletes on', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $tsosk_q_at > 0 ? wp_date( 'Y-m-d', $tsosk_q_expires ) : '—' ); ?></td>
 							<td class="tsosk-actions" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
