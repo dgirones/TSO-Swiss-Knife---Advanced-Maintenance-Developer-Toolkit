@@ -8547,13 +8547,14 @@ msgstr "Ejecutar auditoría de tamaños de imagen"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:345
 msgid ""
-"Counts are based on attachment metadata and a disk scan for unmatched "
-"derivative files. Disabling a size only affects new uploads — existing files"
-" are not deleted."
+"Counts come from attachment metadata and a disk scan for resized copies "
+"that match no known image size. Turning a size off only affects new uploads "
+"— existing files are not deleted."
 msgstr ""
-"Los recuentos se basan en metadatos de adjuntos y un análisis de derivados "
-"no coincidentes. Desactivar un tamaño solo afecta a nuevas subidas — no se "
-"borran archivos existentes."
+"Los recuentos salen de los metadatos de los adjuntos y de un escaneo del "
+"disco de copias redimensionadas que no coinciden con ningún tamaño "
+"conocido. Desactivar un tamaño solo afecta a las nuevas subidas — los "
+"archivos existentes no se borran."
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:467
 msgid ""
@@ -8590,11 +8591,47 @@ msgstr "Archivos a tamaño completo en disco"
 msgid "%1$s files — %2$s"
 msgstr "%1$s archivos — %2$s"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:425
-msgid "Unmatched derivatives"
-msgstr "Derivados no coincidentes"
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Resized files with no matching size"
+msgstr "Archivos redimensionados sin tamaño coincidente"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Resized copies on disk named like a WordPress thumbnail (photo-300x200.jpg) "
+"that no media item lists, and whose dimensions match no image size in the "
+"table below. They are left out of those rows. Zero means every resized file "
+"was matched to a size."
+msgstr ""
+"Copias redimensionadas en disco con nombre de miniatura de WordPress "
+"(foto-300x200.jpg) que ningún medio lista y cuyas dimensiones no coinciden "
+"con ningún tamaño de la tabla de abajo. No entran en esas filas. Cero "
+"significa que cada archivo redimensionado se ha asignado a un tamaño."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "In quarantine"
+msgstr "En cuarentena"
+
+#. translators: %s: number of quarantine batches
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "%s batch."
+msgid_plural "%s batches."
+msgstr[0] "%s lote."
+msgstr[1] "%s lotes."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"These files were moved out of the uploads folders instead of being deleted. "
+"They still use disk until you restore them, delete them, or 30 days pass."
+msgstr ""
+"Estos archivos se movieron fuera de las carpetas de subidas en lugar de "
+"borrarse. Siguen ocupando disco hasta que los restaures, los borres o pasen "
+"30 días."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Open the quarantine list"
+msgstr "Abrir la lista de cuarentena"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "Last audit"
 msgstr "Última auditoría"
 

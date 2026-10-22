@@ -8540,13 +8540,14 @@ msgstr "Executar auditoria de mides d'imatge"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:345
 msgid ""
-"Counts are based on attachment metadata and a disk scan for unmatched "
-"derivative files. Disabling a size only affects new uploads — existing files"
-" are not deleted."
+"Counts come from attachment metadata and a disk scan for resized copies "
+"that match no known image size. Turning a size off only affects new uploads "
+"— existing files are not deleted."
 msgstr ""
-"Els recomptes es basen en metadades d'adjunts i un escaneig de derivats no "
-"coincidents. Desactivar una mida només afecta noves pujades — no s'esborren "
-"fitxers existents."
+"Els recomptes surten de les metadades dels adjunts i d'un escaneig del disc "
+"de còpies redimensionades que no coincideixen amb cap mida coneguda. "
+"Desactivar una mida només afecta les noves pujades — els fitxers existents "
+"no s'esborren."
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:467
 msgid ""
@@ -8582,11 +8583,47 @@ msgstr "Fitxers a mida completa al disc"
 msgid "%1$s files — %2$s"
 msgstr "%1$s fitxers — %2$s"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:425
-msgid "Unmatched derivatives"
-msgstr "Derivats no coincidents"
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Resized files with no matching size"
+msgstr "Fitxers redimensionats sense mida coincident"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Resized copies on disk named like a WordPress thumbnail (photo-300x200.jpg) "
+"that no media item lists, and whose dimensions match no image size in the "
+"table below. They are left out of those rows. Zero means every resized file "
+"was matched to a size."
+msgstr ""
+"Còpies redimensionades al disc amb nom de miniatura de WordPress "
+"(foto-300x200.jpg) que cap mitjà llista i les dimensions de les quals no "
+"coincideixen amb cap mida de la taula de sota. No entren en aquestes files. "
+"Zero vol dir que cada fitxer redimensionat s'ha assignat a una mida."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "In quarantine"
+msgstr "En quarantena"
+
+#. translators: %s: number of quarantine batches
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "%s batch."
+msgid_plural "%s batches."
+msgstr[0] "%s lot."
+msgstr[1] "%s lots."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"These files were moved out of the uploads folders instead of being deleted. "
+"They still use disk until you restore them, delete them, or 30 days pass."
+msgstr ""
+"Aquests fitxers s'han mogut fora de les carpetes de pujades en lloc "
+"d'esborrar-se. Continuen ocupant disc fins que els restauris, els esborris "
+"o passin 30 dies."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Open the quarantine list"
+msgstr "Obrir la llista de quarantena"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "Last audit"
 msgstr "Darrera auditoria"
 

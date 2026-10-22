@@ -1017,8 +1017,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 
 		wp_send_json_success(
 			array(
-				'message'         => $message,
-				'quarantine_html' => $this->render_sizes_quarantine_html(),
+				'message'              => $message,
+				'quarantine_html'      => $this->render_sizes_quarantine_html(),
+				'quarantine_card_html' => $this->render_quarantine_summary_card(),
 			)
 		);
 	}
@@ -1057,8 +1058,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 
 		wp_send_json_success(
 			array(
-				'message'         => __( 'Quarantined files permanently deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'quarantine_html' => $this->render_sizes_quarantine_html(),
+				'message'              => __( 'Quarantined files permanently deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'quarantine_html'      => $this->render_sizes_quarantine_html(),
+				'quarantine_card_html' => $this->render_quarantine_summary_card(),
 			)
 		);
 	}
@@ -1089,7 +1091,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			<span class="tsosk-ajax-msg" id="tsosk-image-sizes-scan-msg"></span>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'Counts are based on attachment metadata and a disk scan for unmatched derivative files. Disabling a size only affects new uploads — existing files are not deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Counts come from attachment metadata and a disk scan for resized copies that match no known image size. Turning a size off only affects new uploads — existing files are not deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 		<p>
 			<a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=media-footprint' ) ); ?>">
@@ -1107,7 +1109,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			?>
 		</div>
 
-		<h3><?php esc_html_e( 'Image sizes quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+		<h3 id="tsosk-image-sizes-quarantine"><?php esc_html_e( 'Image sizes quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 		<div id="tsosk-image-sizes-quarantine-results">
 			<?php echo $this->render_sizes_quarantine_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
 		</div>
@@ -1131,6 +1133,80 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	}
 
 	/**
+	 * File count and disk size, same wording on every summary card.
+	 *
+	 * @param int $files File count.
+	 * @param int $bytes Total bytes.
+	 */
+	private function render_files_and_size( int $files, int $bytes ): void {
+		printf(
+			/* translators: 1: file count, 2: formatted size */
+			esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			esc_html( number_format_i18n( $files ) ),
+			esc_html( size_format( $bytes, 2 ) )
+		);
+	}
+
+	/**
+	 * Totals for image-size files currently in quarantine.
+	 *
+	 * @return array{batches: int, files: int, bytes: int}
+	 */
+	private function get_quarantine_totals(): array {
+		$entries = TSOSK_Uploads_Scanner::get_sizes_quarantine_entries();
+		$files   = 0;
+		$bytes   = 0;
+		foreach ( $entries as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$files += (int) ( $entry['files'] ?? 0 );
+			$bytes += (int) ( $entry['bytes'] ?? 0 );
+		}
+		return array(
+			'batches' => count( $entries ),
+			'files'   => $files,
+			'bytes'   => $bytes,
+		);
+	}
+
+	/**
+	 * Summary card for files moved to quarantine (still on disk).
+	 *
+	 * @return string
+	 */
+	private function render_quarantine_summary_card(): string {
+		$totals  = $this->get_quarantine_totals();
+		$batches = (int) $totals['batches'];
+		$warn    = (int) $totals['bytes'] > 0 ? ' tsosk-isa-card-info' : '';
+
+		ob_start();
+		?>
+		<div class="tsosk-isa-card<?php echo esc_attr( $warn ); ?>" id="tsosk-isa-quarantine-card">
+			<p class="tsosk-isa-card-value"><?php $this->render_files_and_size( (int) $totals['files'], (int) $totals['bytes'] ); ?></p>
+			<p class="tsosk-isa-card-label"><?php esc_html_e( 'In quarantine', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<p class="tsosk-isa-card-help">
+				<?php if ( $batches > 0 ) : ?>
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: number of quarantine batches */
+							_n( '%s batch.', '%s batches.', $batches, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							number_format_i18n( $batches )
+						)
+					);
+					echo ' ';
+					?>
+				<?php endif; ?>
+				<?php esc_html_e( 'These files were moved out of the uploads folders instead of being deleted. They still use disk until you restore them, delete them, or 30 days pass.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<a href="#tsosk-image-sizes-quarantine"><?php esc_html_e( 'Open the quarantine list', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			</p>
+		</div>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
 	 * Render audit html.
 	 *
 	 * @param array<string, mixed> $audit    Audit data.
@@ -1145,51 +1221,36 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		$full       = is_array( $audit['full'] ?? null ) ? $audit['full'] : array();
 		$unmatched  = is_array( $audit['unmatched_derivatives'] ?? null ) ? $audit['unmatched_derivatives'] : array();
 
+		$unmatched_files = (int) ( $unmatched['files'] ?? 0 );
 		ob_start();
 		?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Audit summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-kv-table">
-				<tbody>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td><?php echo esc_html( number_format_i18n( (int) ( $audit['attachments_scanned'] ?? 0 ) ) ); ?></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td>
-							<?php
-							printf(
-								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								esc_html( number_format_i18n( (int) ( $full['files'] ?? 0 ) ) ),
-								esc_html( size_format( (int) ( $full['bytes'] ?? 0 ), 2 ) )
-							);
-							?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Unmatched derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td>
-							<?php
-							printf(
-								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								esc_html( number_format_i18n( (int) ( $unmatched['files'] ?? 0 ) ) ),
-								esc_html( size_format( (int) ( $unmatched['bytes'] ?? 0 ), 2 ) )
-							);
-							?>
-						</td>
-					</tr>
-					<?php if ( ! empty( $audit['scanned_at'] ) ) : ?>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Last audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $audit['scanned_at'] ) ); ?></td>
-					</tr>
-					<?php endif; ?>
-				</tbody>
-			</table>
+			<div class="tsosk-isa-summary">
+				<div class="tsosk-isa-card">
+					<p class="tsosk-isa-card-value"><?php echo esc_html( number_format_i18n( (int) ( $audit['attachments_scanned'] ?? 0 ) ) ); ?></p>
+					<p class="tsosk-isa-card-label"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				</div>
+				<div class="tsosk-isa-card">
+					<p class="tsosk-isa-card-value"><?php $this->render_files_and_size( (int) ( $full['files'] ?? 0 ), (int) ( $full['bytes'] ?? 0 ) ); ?></p>
+					<p class="tsosk-isa-card-label"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				</div>
+				<?php if ( ! empty( $audit['scanned_at'] ) ) : ?>
+				<div class="tsosk-isa-card">
+					<p class="tsosk-isa-card-value"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $audit['scanned_at'] ) ); ?></p>
+					<p class="tsosk-isa-card-label"><?php esc_html_e( 'Last audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				</div>
+				<?php endif; ?>
+			</div>
+			<div class="tsosk-isa-summary tsosk-isa-summary-notes">
+				<div class="tsosk-isa-card<?php echo $unmatched_files > 0 ? ' tsosk-isa-card-warn' : ''; ?>">
+					<p class="tsosk-isa-card-value"><?php $this->render_files_and_size( $unmatched_files, (int) ( $unmatched['bytes'] ?? 0 ) ); ?></p>
+					<p class="tsosk-isa-card-label"><?php esc_html_e( 'Resized files with no matching size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<p class="tsosk-isa-card-help">
+						<?php esc_html_e( 'Resized copies on disk named like a WordPress thumbnail (photo-300x200.jpg) that no media item lists, and whose dimensions match no image size in the table below. They are left out of those rows. Zero means every resized file was matched to a size.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</p>
+				</div>
+				<?php echo $this->render_quarantine_summary_card(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
 			</div>
 		</div>
 		<?php

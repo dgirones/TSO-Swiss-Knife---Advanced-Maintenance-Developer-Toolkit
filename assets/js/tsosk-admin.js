@@ -5341,6 +5341,9 @@
 					if ( r.data && r.data.quarantine_html ) {
 						$out.html( r.data.quarantine_html );
 					}
+					if ( r.data && r.data.quarantine_card_html ) {
+						$( '#tsosk-isa-quarantine-card' ).replaceWith( r.data.quarantine_card_html );
+					}
 					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
@@ -5381,6 +5384,9 @@
 				if ( r.success ) {
 					if ( r.data && r.data.quarantine_html ) {
 						$out.html( r.data.quarantine_html );
+					}
+					if ( r.data && r.data.quarantine_card_html ) {
+						$( '#tsosk-isa-quarantine-card' ).replaceWith( r.data.quarantine_card_html );
 					}
 					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
 				} else {

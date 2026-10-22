@@ -5419,9 +5419,9 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:345
 msgid ""
-"Counts are based on attachment metadata and a disk scan for unmatched "
-"derivative files. Disabling a size only affects new uploads — existing files"
-" are not deleted."
+"Counts come from attachment metadata and a disk scan for resized copies "
+"that match no known image size. Turning a size off only affects new uploads "
+"— existing files are not deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-media-cleaner.php:184
@@ -5452,11 +5452,40 @@ msgstr ""
 msgid "%1$s files — %2$s"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:425
-msgid "Unmatched derivatives"
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Resized files with no matching size"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Resized copies on disk named like a WordPress thumbnail (photo-300x200.jpg) "
+"that no media item lists, and whose dimensions match no image size in the "
+"table below. They are left out of those rows. Zero means every resized file "
+"was matched to a size."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "In quarantine"
+msgstr ""
+
+#. translators: %s: number of quarantine batches
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "%s batch."
+msgid_plural "%s batches."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"These files were moved out of the uploads folders instead of being deleted. "
+"They still use disk until you restore them, delete them, or 30 days pass."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid "Open the quarantine list"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "Last audit"
 msgstr ""
 
