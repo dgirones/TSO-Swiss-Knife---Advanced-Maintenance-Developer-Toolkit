@@ -73,7 +73,7 @@ class TSOSK_Mod_Rest_Api {
 					if ( is_user_logged_in() ) {
 						return $result;
 					}
-					$route = ltrim( (string) $request->get_route(), '/' );
+					$route = self::normalize_route( (string) $request->get_route() );
 					if ( preg_match( '#^wp/v2/users(?:/(\d+|me))?$#', $route ) ) {
 						self::log_blocked_request( 'user_enumeration', __( 'User listing via the REST API is disabled on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $route );
 						return new WP_Error(
@@ -94,7 +94,7 @@ class TSOSK_Mod_Rest_Api {
 			add_filter(
 				'rest_pre_dispatch',
 				static function ( $result, $server, $request ) use ( $disabled_ns ) {
-					$route = ltrim( (string) $request->get_route(), '/' );
+					$route = self::normalize_route( (string) $request->get_route() );
 					// Editors keep the namespaces the block editor and Site Health depend on, so a mistaken setting cannot lock them out.
 					$core_ns = array( 'wp/v2', 'wp-block-editor/v1', 'wp-site-health/v1', 'oembed/1.0' );
 					$is_core = false;
@@ -108,7 +108,10 @@ class TSOSK_Mod_Rest_Api {
 						return $result;
 					}
 					foreach ( $disabled_ns as $ns ) {
-						$ns_clean = ltrim( (string) $ns, '/' );
+						$ns_clean = self::normalize_route( (string) $ns );
+						if ( '' === $ns_clean ) {
+							continue;
+						}
 						// Match the namespace itself or a route inside it, on a
 						// "/" boundary — a plain strpos() prefix match would also
 						// block an unrelated namespace that merely starts with the
@@ -138,6 +141,20 @@ class TSOSK_Mod_Rest_Api {
 				3
 			);
 		}
+	}
+
+	/**
+	 * Canonical form of a REST route for comparisons: lowercase, no repeated or surrounding slashes.
+	 *
+	 * WordPress matches routes case-insensitively, so "/WP/V2/Users" reaches the same endpoint as "/wp/v2/users"
+	 * and a case-sensitive comparison would let it slip past the blocks.
+	 *
+	 * @param string $route Raw route or namespace.
+	 * @return string
+	 */
+	private static function normalize_route( string $route ): string {
+		$route = (string) preg_replace( '#/+#', '/', $route );
+		return strtolower( trim( $route, '/' ) );
 	}
 
 	/** AJAX: save settings. */

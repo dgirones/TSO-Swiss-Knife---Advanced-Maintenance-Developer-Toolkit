@@ -3054,22 +3054,8 @@ msgid_plural "%d shortcodes removed."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/modules/class-tsosk-mod-content-audit.php:124
-msgid ""
-"Find hidden content problems: empty titles, missing featured images, old "
-"pending/private content, long slugs and broken shortcodes."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-content-audit.php:127
-msgid "Posts Without Title"
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-content-audit.php:128
 msgid "Published Posts Without Featured Image"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-content-audit.php:129
-msgid "Old Pending or Private Content"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-content-audit.php:130
@@ -5204,7 +5190,9 @@ msgid "Increase autosave interval (seconds) to reduce editor autosave load."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:534
-msgid "Automatically empty trash after N days (0 = disable trash expiry)."
+msgid ""
+"Automatically empty trash after N days. Warning: 0 disables the trash "
+"completely and deleted items are removed permanently."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:543
@@ -16122,4 +16110,96 @@ msgid ""
 "The object-cache.php file is on disk, but WordPress is not using a "
 "persistent cache. The cache service may be down or turned off, or the drop-"
 "in may not be compatible with this server."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-content-audit.php:175
+msgid ""
+"Find hidden content problems: empty titles, missing featured images, old "
+"pending/private/draft content, duplicate titles and broken shortcodes."
+msgstr ""
+
+# %s: link to the Slug Manager tab
+#: includes/modules/class-tsosk-mod-content-audit.php:182
+#, php-format
+msgid "Long slugs are reviewed — and can be fixed — in the %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-content-audit.php:190
+msgid "Published Posts and Pages Without Title"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-content-audit.php:192
+msgid "Old Pending, Private or Draft Content"
+msgstr ""
+
+# %d: number of post IDs not listed
+#: includes/modules/class-tsosk-mod-content-audit.php:225
+#, php-format
+msgid "+%d more"
+msgstr ""
+
+# 1: rows shown, 2: real total
+#: includes/modules/class-tsosk-mod-content-audit.php:441
+#, php-format
+msgid "%1$s of %2$s"
+msgstr ""
+
+#. translators: %d: number of items not processed
+#: includes/modules/class-tsosk-mod-slug-manager.php:352
+msgid ""
+"%d item(s) were not processed because the time limit was reached. Run the "
+"fix again for the rest."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slug-manager.php:133
+msgid "page"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-slug-manager.php:133
+msgid "post"
+msgstr ""
+
+msgid "The event failed: %s"
+msgstr ""
+
+msgid ""
+"Event executed, but no callback is registered for this hook right now (it "
+"may belong to a deactivated plugin)."
+msgstr ""
+
+#. translators: %d: interval in seconds
+msgid ""
+"Heartbeat settings saved. The interval was adjusted to %d s (allowed range: "
+"15–300 s)."
+msgstr ""
+
+#. translators: %s: size of the option value (for example 2 MB)
+msgid "This option is too large (%s) to open in the editor."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php:0
+msgid "This meta value is too large to edit here (over 1 MB)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-meta-editor.php:0
+msgid "The meta key is too long (255 characters maximum)."
+msgstr ""
+
+#. translators: %s: current IP address
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+#, php-format
+msgid ""
+"Your own role would be locked out: your current IP (%s) is not in the "
+"allowed list for your role. Add it, or add it to the whitelist, before "
+"saving."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-users.php:0
+msgid ""
+"This site uses a custom session storage that does not allow closing a single"
+" session. Use \"Close all sessions\"."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-users.php:0
+msgid "A session was closed for user #%d."
 msgstr ""

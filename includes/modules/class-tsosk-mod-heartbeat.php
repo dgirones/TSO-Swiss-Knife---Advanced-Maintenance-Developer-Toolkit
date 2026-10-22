@@ -41,6 +41,22 @@ class TSOSK_Mod_Heartbeat {
 	}
 
 	/**
+	 * Stop the Heartbeat script without unregistering its handle.
+	 *
+	 * Core scripts (wp-editor, wp-autosave, the block editor) list "heartbeat" as a dependency:
+	 * deregistering it leaves them unloaded and the post editor renders blank. An empty stub under
+	 * the same handle keeps every dependency satisfied while no request is ever sent.
+	 */
+	private static function neutralize_heartbeat_script(): void {
+		wp_deregister_script( 'heartbeat' );
+		wp_register_script( 'heartbeat', '', array( 'jquery' ), TSOSK_VERSION, true );
+		wp_add_inline_script(
+			'heartbeat',
+			'window.wp=window.wp||{};window.wp.heartbeat=new Proxy({},{get:function(){return function(){return false;};}});'
+		);
+	}
+
+	/**
 	 * Apply settings on plugins_loaded so hooks fire early enough.
 	 */
 	public function init(): void {
@@ -53,7 +69,7 @@ class TSOSK_Mod_Heartbeat {
 			add_action(
 				'init',
 				static function () {
-					wp_deregister_script( 'heartbeat' );
+					self::neutralize_heartbeat_script();
 				}
 			);
 		} elseif ( 'disable_frontend' === $mode ) {
@@ -62,7 +78,7 @@ class TSOSK_Mod_Heartbeat {
 			add_action(
 				'wp_enqueue_scripts',
 				static function () {
-					wp_deregister_script( 'heartbeat' );
+					self::neutralize_heartbeat_script();
 				},
 				999
 			);
@@ -71,7 +87,7 @@ class TSOSK_Mod_Heartbeat {
 			add_action(
 				'wp_enqueue_scripts',
 				static function () {
-					wp_deregister_script( 'heartbeat' );
+					self::neutralize_heartbeat_script();
 				},
 				999
 			);
@@ -80,7 +96,7 @@ class TSOSK_Mod_Heartbeat {
 				static function () {
 					global $pagenow;
 					if ( 'post.php' !== $pagenow && 'post-new.php' !== $pagenow ) {
-						wp_deregister_script( 'heartbeat' );
+						self::neutralize_heartbeat_script();
 					}
 				},
 				999
@@ -193,8 +209,11 @@ class TSOSK_Mod_Heartbeat {
 			$mode = 'default';
 		}
 		$interval = isset( $_POST['interval'] ) ? max( 0, absint( wp_unslash( $_POST['interval'] ) ) ) : 0;
+		$adjusted = 0;
 		if ( $interval > 0 && ( $interval < 15 || $interval > 300 ) ) {
-			$interval = 0;
+			// Keep the closest allowed value instead of silently falling back to the default.
+			$interval = max( 15, min( 300, $interval ) );
+			$adjusted = $interval;
 		}
 
 		update_option(
@@ -215,6 +234,15 @@ class TSOSK_Mod_Heartbeat {
 			),
 			array( 'mode' => $mode )
 		);
+		if ( $adjusted > 0 ) {
+			wp_send_json_success(
+				sprintf(
+					/* translators: %d: interval in seconds */
+					__( 'Heartbeat settings saved. The interval was adjusted to %d s (allowed range: 15–300 s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$adjusted
+				)
+			);
+		}
 		wp_send_json_success( __( 'Heartbeat settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 

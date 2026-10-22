@@ -56,7 +56,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Staging Mode** — For test copies only (all off by default): red STAGING admin-bar label, ask search engines not to list this copy (without changing Settings → Reading), hold outbound email, pause WP-Cron execution, and keep a short administrator-only mail log in the database (CSV export). Turn everything off before copying the database back to production.
 * **URL & HTTPS Doctor** — Explain whether the saved Home and Site addresses still match https, www, and how you opened the admin. Optional one-click loopback check of this site’s own home URL (redirects are not followed), and an optional count of leftover http:// copies of that address. Does not change the database.
 * **Server & Runtime** — Read-only view of PHP limits, object-cache drop-in, other wp-content drop-ins, must-use plugins, and optional OPcache reset when the host allows it.
-* **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, long slugs, and broken shortcodes.
+* **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, duplicate titles, and broken shortcodes. Long slugs are reviewed and fixed in the Slug Manager.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
 * **Plugin Sandbox** — Isolate plugin conflicts via a must-use loader: only your selected plugins load for your admin session.
 
@@ -202,6 +202,24 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 == Changelog ==
 
 = 1.2.2 =
+* Users & Sessions: the "Close" button of a single session never found the session (the table lists WordPress's stored hashes, not the cookie token); it now removes it correctly and logs it. Repeated wrong 2FA codes no longer fill the login history.
+* Update Manager: the status table now stacks on phones instead of running out of its card; the Overview and the Update Manager only show the "Install pending updates" button to users who can update both plugins and themes.
+* REST API: the "block user listing" and namespace blocks could be bypassed by changing the letter case of the URL (for example /wp-json/WP/V2/Users); routes are now compared case-insensitively.
+* Login Protection: the login page served at the custom URL is now excluded from page caches (LiteSpeed and others), which could keep serving it at that address even after the custom URL was turned off.
+* Login Protection: a locked-out IP now always gets the lockout message and cannot authenticate through other handlers (before, unknown usernames bypassed the message because core overwrote it); saving is refused when a per-role IP rule would lock out the administrator saving it; IP whitelists and role rules now match IPv6 addresses written in a different notation; more reserved login slugs (wp-json, feed, sitemap…).
+* Export/Import configuration: importing the Slow Query Monitor section no longer drops the "capture origin" and "copy to AI plugins" settings.
+* Heartbeat: "Disable everywhere" (and the other modes) no longer leave the post editor blank: the Heartbeat script is replaced by an inert stub instead of being unregistered, so the editor scripts that depend on it still load.
+* Options Library: option tables now share the same column widths (they were uneven between libraries); previews of very large options no longer load the full value into memory.
+* Meta Editor: the search toolbar fields (type, ID, filter, button) are now aligned on one line; the hint no longer shifts the inputs.
+* Meta Editor: the list no longer loads the full content of huge meta values just for the preview; values over 1 MB are not opened in the editor; meta keys over 255 characters are rejected when adding.
+* Options Editor: sorting and filtering by value type now inspects only the first characters of each value (much faster on large options tables), and options over 1 MB are no longer opened in the editor.
+* Options Editor: the list no longer loads the full content of very large options (over 100 KB) just to build a preview, which could exhaust memory or leave the page blank.
+* Slow Query Monitor: the plugin/theme origin of a slow query was shifted by the queries WordPress runs before the monitor loads (wrong culprit shown); stored SQL is capped and the log is kept under 2 MB so a single huge query can no longer bloat or break the log; the log lock waits less at the end of a request; the JSON export is no longer corrupted by stray output.
+* Heartbeat: an interval outside 15–300 s is now adjusted to the nearest allowed value and the message says so, instead of silently resetting to the WordPress default.
+* Cron Manager: the page no longer rescans every plugin's files on each load to find who owns a hook (results are cached and limited to 3 seconds), which could make it slow or blank on sites with many plugins; running an event no longer breaks if its callback prints output or throws an error; rescheduling an event close to its current time no longer fails; stuck scheduled posts of any public post type are listed.
+* Hidden WordPress Profiles: post revisions, autosave interval and trash days can be changed again (they were wrongly shown as locked by wp-config.php when WordPress only had its default value); number fields now use the allowed ranges and the trash option warns that 0 disables the trash.
+* Slug Manager: the "URL already used" message now names the content type in the site language ("page"/"post" translated).
+* Slug Manager: bulk fix now ignores duplicated ids, is capped at 200 posts per request and stops cleanly after 20 seconds (reporting what is left) instead of timing out; shortening a slug can no longer cut a percent-encoded character in half.
 * Media Cleaner: unattached media that is in use (featured image, site logo or icon) is now listed apart instead of mixed with the unused ones; the broken-files table no longer repeats the same path or breaks words, and uses red/amber badges as described; the uploads scan processes more files per request, so large libraries finish with far fewer requests.
 * Comment Antispam: fixed a bug where blocked comments were still published when the action was "Mark as spam" or "Move to trash" (WordPress overwrote the status); they now really go to spam/trash.
 * Comment Antispam: comments posted through Jetpack Comments (iframe form) are no longer rejected by the honeypot/time trap, which cannot exist inside the iframe.
@@ -234,6 +252,10 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Fixed: Rewrite Rules — a hard flush now says whether .htaccess was really updated (and warns when it is read-only, on nginx or on multisite) instead of always reporting success; plain permalinks get their own message. Soft and hard flush can no longer run at the same time.
 * Fixed: Server & Runtime — no more PHP warnings or a false "OPcache off" on hosts that restrict the OPcache API (the Reset button is hidden there); the temporary-folder check uses upload_tmp_dir; limits of 0 / -1 are shown as "no limit".
 * Improved: Server & Runtime — warns when an object-cache.php drop-in is on disk but WordPress is not using it, and the summary for hosting includes more limits.
+* Fixed: Content Audit — the duplicate-titles list no longer cuts its post IDs on MySQL servers (the last one could be wrong) and matches exactly, so "Café" and "Cafe" are no longer reported as the same title.
+* Fixed: Content Audit — card headings show the real total ("30 of 412") instead of the size of the capped list; the shortcode inventory no longer lists Markdown links or escaped [[tags]] as shortcodes and keeps their upper/lower case.
+* Fixed: Content Audit — removing a broken shortcode no longer touches Markdown links or escaped [[tags]], counts [tag]…[/tag] as one shortcode, and two removals can no longer overwrite each other; it now requires an administrator.
+* Improved: Content Audit — the "Long Slugs" card was removed (the Slug Manager already covers it with a configurable threshold, every public post type and bulk fixes) and links to it instead. Scheduled posts are now included, and old pending/private/draft content lists the most neglected items first.
 
 = 1.2.1 =
 * Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.

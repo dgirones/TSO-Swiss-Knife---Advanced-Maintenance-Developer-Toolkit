@@ -100,6 +100,10 @@ class TSOSK_Mod_Login_Protect {
 		// ── Brute-force protection ────────────────────────────────────────
 		if ( $lockout_enforcement ) {
 			add_filter( 'authenticate', array( $this, 'check_lockout_authenticate' ), 1, 3 );
+			// Core's own username/password filter (priority 20) replaces any error set above it, so enforce again
+			// after it: a locked IP then also gets the lockout message for unknown usernames and cannot sign in
+			// through other authenticate handlers (application passwords over XML-RPC/REST).
+			add_filter( 'authenticate', array( $this, 'enforce_lockout_late' ), 100, 1 );
 		}
 
 		if ( $s['brute_force'] && $s['max_attempts'] > 0 ) {
@@ -253,6 +257,15 @@ class TSOSK_Mod_Login_Protect {
 			// Correct secret slug — serve the login page.
 			// Prevent browsers and proxies from caching the login page.
 			nocache_headers();
+			// Page caches (LiteSpeed, WP Super Cache, W3TC…) can ignore no-store headers and keep serving the login page
+			// at the secret URL — even after the custom URL is switched off — so tell them explicitly.
+			if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+				define( 'DONOTCACHEPAGE', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Constant defined by cache plugins.
+			}
+			if ( ! headers_sent() ) {
+				header( 'X-LiteSpeed-Cache-Control: no-cache, no-store' );
+			}
+			do_action( 'litespeed_control_set_nocache', 'TSO Swiss Knife custom login page' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Hook defined by LiteSpeed Cache.
 			$login = tsosk_join_wp_root( 'wp-login.php' );
 			if ( is_readable( $login ) ) {
 				// wp-login.php expects these as globals; a require inside a function would make them local and break login messages and redirects.
@@ -458,6 +471,17 @@ class TSOSK_Mod_Login_Protect {
 			return $user;
 		}
 
+		$error = $this->get_lockout_error_for_ip( $this->get_client_ip() );
+		return $error ?? $user;
+	}
+
+	/**
+	 * Final authenticate pass: a locked-out IP never gets authenticated, whatever earlier handlers decided.
+	 *
+	 * @param WP_User|WP_Error|null $user Result of the previous handlers.
+	 * @return WP_User|WP_Error|null
+	 */
+	public function enforce_lockout_late( $user ) {
 		$error = $this->get_lockout_error_for_ip( $this->get_client_ip() );
 		return $error ?? $user;
 	}
@@ -800,7 +824,7 @@ class TSOSK_Mod_Login_Protect {
 			return $user;
 		}
 		foreach ( $roles_with_rules as $role ) {
-			if ( in_array( $ip, $rules[ $role ], true ) ) {
+			if ( $this->ip_in_list( $ip, $rules[ $role ] ) ) {
 				return $user;
 			}
 		}
@@ -1017,7 +1041,7 @@ class TSOSK_Mod_Login_Protect {
 		}
 
 		// Prevent slug collisions with existing WP slugs.
-		$reserved = array( 'wp-admin', 'wp-login', 'login', 'admin', 'wp-content', 'wp-includes', '' );
+		$reserved = array( 'wp-admin', 'wp-login', 'login', 'admin', 'wp-content', 'wp-includes', 'wp-json', 'wp-cron', 'wp-signup', 'wp-activate', 'wp-comments-post', 'xmlrpc', 'feed', 'sitemap', 'robots', '' );
 		if ( $new['custom_url'] && in_array( $new['login_slug'], $reserved, true ) ) {
 			wp_send_json_error(
 				sprintf(
@@ -1057,6 +1081,31 @@ class TSOSK_Mod_Login_Protect {
 			&& '' === trim( (string) $new['whitelist_ips'] )
 		) {
 			wp_send_json_error( __( 'Add at least one trusted IP (maintenance list or whitelist) before enabling login maintenance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// A per-role IP rule that excludes the administrator saving it would lock that administrator out on the next login.
+		if ( '' !== trim( (string) $new['role_whitelist_ips'] ) ) {
+			$rules   = $this->parse_role_ip_rules( (string) $new['role_whitelist_ips'] );
+			$my_ip   = $this->get_client_ip();
+			$my_rule = array_values( array_intersect( wp_get_current_user()->roles, array_keys( $rules ) ) );
+			if ( ! empty( $my_rule ) && ! $this->is_ip_whitelisted( $my_ip, (string) $new['whitelist_ips'] ) ) {
+				$allowed = false;
+				foreach ( $my_rule as $role ) {
+					if ( $this->ip_in_list( $my_ip, $rules[ $role ] ) ) {
+						$allowed = true;
+						break;
+					}
+				}
+				if ( ! $allowed ) {
+					wp_send_json_error(
+						sprintf(
+							/* translators: %s: current IP address */
+							__( 'Your own role would be locked out: your current IP (%s) is not in the allowed list for your role. Add it, or add it to the whitelist, before saving.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							$my_ip
+						)
+					);
+				}
+			}
 		}
 
 		update_option( self::OPTION_SETTINGS, $new, true ); // Read on every request via init() — must autoload.
@@ -1327,7 +1376,28 @@ class TSOSK_Mod_Login_Protect {
 			return false;
 		}
 		$list = array_filter( array_map( 'trim', explode( "\n", str_replace( "\r", '', $whitelist_raw ) ) ) );
-		return in_array( $ip, $list, true );
+		return $this->ip_in_list( $ip, $list );
+	}
+
+	/**
+	 * Whether an IP is in a list, comparing the real address (so "::1" matches "0:0:0:0:0:0:0:1").
+	 *
+	 * @param string   $ip   Client IP.
+	 * @param string[] $addresses IP strings.
+	 * @return bool
+	 */
+	private function ip_in_list( string $ip, array $addresses ): bool {
+		$packed = filter_var( $ip, FILTER_VALIDATE_IP ) ? inet_pton( $ip ) : false;
+		foreach ( $addresses as $item ) {
+			$item = (string) $item;
+			if ( $item === $ip ) {
+				return true;
+			}
+			if ( false !== $packed && filter_var( $item, FILTER_VALIDATE_IP ) && inet_pton( $item ) === $packed ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

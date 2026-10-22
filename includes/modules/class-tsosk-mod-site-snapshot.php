@@ -928,15 +928,31 @@ class TSOSK_Mod_Site_Snapshot {
 			? ! empty( $value['show_admin_bar'] )
 			: true;
 
-		return array(
+		$settings = array(
 			'enabled'         => ! empty( $value['enabled'] ),
 			'threshold_ms'    => max( 1, min( 10000, absint( $value['threshold_ms'] ?? 100 ) ) ),
 			'max_entries'     => max( 50, min( 2000, absint( $value['max_entries'] ?? 500 ) ) ),
 			'exclude_ajax'    => ! empty( $value['exclude_ajax'] ),
 			'exclude_cron'    => array_key_exists( 'exclude_cron', $value ) ? ! empty( $value['exclude_cron'] ) : true,
 			'show_admin_bar'  => $show_admin_bar,
+			'capture_origin'  => ! empty( $value['capture_origin'] ),
 			'ignore_patterns' => $patterns,
 		);
+		// Copy-to-AI plugin filter: only when present in the file (absent = the module's own default applies).
+		if ( array_key_exists( 'copy_plugins', $value ) ) {
+			$copy = $this->sanitize_string_list_import( $value['copy_plugins'], 80 );
+			if ( ! is_wp_error( $copy ) ) {
+				$settings['copy_plugins'] = array_values(
+					array_filter(
+						array_map( 'sanitize_key', $copy ),
+						static function ( $slug ) {
+							return '' !== $slug && strlen( $slug ) <= 100;
+						}
+					)
+				);
+			}
+		}
+		return $settings;
 	}
 
 	/**

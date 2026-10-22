@@ -978,10 +978,6 @@ msgstr "Memòria cau d’objectes"
 msgid "Off"
 msgstr "Desactivat"
 
-#: includes/modules/class-tsosk-mod-content-audit.php:129
-msgid "Old Pending or Private Content"
-msgstr "Contingut antic pendent o privat"
-
 #: includes/class-tsosk-admin.php:405
 msgid "Open"
 msgstr "Obrir"
@@ -1090,10 +1086,6 @@ msgstr "Sandbox de plugins"
 #: includes/modules/class-tsosk-mod-security.php:352
 msgid "Plugin updates"
 msgstr "Actualitzacions de plugins"
-
-#: includes/modules/class-tsosk-mod-content-audit.php:127
-msgid "Posts Without Title"
-msgstr "Entrades sense títol"
 
 #: includes/modules/class-tsosk-mod-security.php:177
 msgid ""
@@ -3748,14 +3740,6 @@ msgstr "Funció mail de PHP"
 msgid "No test email has been sent yet."
 msgstr "Encara no s’ha enviat cap email de prova."
 
-#: includes/modules/class-tsosk-mod-content-audit.php:124
-msgid ""
-"Find hidden content problems: empty titles, missing featured images, old "
-"pending/private content, long slugs and broken shortcodes."
-msgstr ""
-"Troba problemes amagats de contingut: títols buits, imatges destacades "
-"absents, contingut pendent/privat antic, slugs llargs i shortcodes trencats."
-
 #: includes/modules/class-tsosk-mod-content-audit.php:221
 msgid "No broken shortcodes detected in the sampled content."
 msgstr "No s’han detectat shortcodes trencats en el contingut mostrejat."
@@ -4652,10 +4636,12 @@ msgid "Active profiles config: %s"
 msgstr "Configuració de perfils activa: %s"
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:534
-msgid "Automatically empty trash after N days (0 = disable trash expiry)."
+msgid ""
+"Automatically empty trash after N days. Warning: 0 disables the trash "
+"completely and deleted items are removed permanently."
 msgstr ""
-"Buida automàticament la paperera al cap de N dies (0 = desactiva la "
-"caducitat de la paperera)."
+"Buida automàticament la paperera després de N dies. Atenció: 0 desactiva la "
+"paperera del tot i els elements eliminats s'esborren per sempre."
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:465
 msgid ""
@@ -18609,3 +18595,100 @@ msgstr ""
 "El fitxer object-cache.php és al disc, però WordPress no fa servir una "
 "memòria cau persistent. El servei de memòria cau pot estar aturat o "
 "desactivat, o el drop-in pot no ser compatible amb aquest servidor."
+
+#: includes/modules/class-tsosk-mod-content-audit.php:175
+msgid ""
+"Find hidden content problems: empty titles, missing featured images, old "
+"pending/private/draft content, duplicate titles and broken shortcodes."
+msgstr ""
+"Troba problemes amagats de contingut: títols buits, imatges destacades "
+"absents, contingut pendent, privat o en esborrany antic, títols duplicats i "
+"shortcodes trencats."
+
+# %s: link to the Slug Manager tab
+#: includes/modules/class-tsosk-mod-content-audit.php:182
+#, php-format
+msgid "Long slugs are reviewed — and can be fixed — in the %s."
+msgstr "Els slugs llargs es revisen —i es poden arreglar— al %s."
+
+#: includes/modules/class-tsosk-mod-content-audit.php:190
+msgid "Published Posts and Pages Without Title"
+msgstr "Entrades i pàgines publicades sense títol"
+
+#: includes/modules/class-tsosk-mod-content-audit.php:192
+msgid "Old Pending, Private or Draft Content"
+msgstr "Contingut antic pendent, privat o en esborrany"
+
+# %d: number of post IDs not listed
+#: includes/modules/class-tsosk-mod-content-audit.php:225
+#, php-format
+msgid "+%d more"
+msgstr "+%d més"
+
+# 1: rows shown, 2: real total
+#: includes/modules/class-tsosk-mod-content-audit.php:441
+#, php-format
+msgid "%1$s of %2$s"
+msgstr "%1$s de %2$s"
+
+#. translators: %d: number of items not processed
+msgid ""
+"%d item(s) were not processed because the time limit was reached. Run the "
+"fix again for the rest."
+msgstr ""
+"%d element(s) no s'han processat perquè s'ha arribat al límit de temps. "
+"Torna a executar la correcció per als restants."
+
+msgid "page"
+msgstr "pàgina"
+
+msgid "post"
+msgstr "entrada"
+
+msgid "The event failed: %s"
+msgstr "L'esdeveniment ha fallat: %s"
+
+msgid ""
+"Event executed, but no callback is registered for this hook right now (it "
+"may belong to a deactivated plugin)."
+msgstr ""
+"Esdeveniment executat, però ara mateix no hi ha cap callback registrat per a"
+" aquest hook (pot ser d'un plugin desactivat)."
+
+#. translators: %d: interval in seconds
+msgid ""
+"Heartbeat settings saved. The interval was adjusted to %d s (allowed range: "
+"15–300 s)."
+msgstr ""
+"Configuració del Heartbeat desada. L'interval s'ha ajustat a %d s (rang "
+"permès: 15–300 s)."
+
+#. translators: %s: size of the option value (for example 2 MB)
+msgid "This option is too large (%s) to open in the editor."
+msgstr "Aquesta opció és massa gran (%s) per obrir-la a l'editor."
+
+msgid "This meta value is too large to edit here (over 1 MB)."
+msgstr "Aquest valor de meta és massa gran per editar-lo aquí (més d'1 MB)."
+
+msgid "The meta key is too long (255 characters maximum)."
+msgstr "La clau de meta és massa llarga (màxim 255 caràcters)."
+
+#, php-format
+msgid ""
+"Your own role would be locked out: your current IP (%s) is not in the "
+"allowed list for your role. Add it, or add it to the whitelist, before "
+"saving."
+msgstr ""
+"El teu propi rol quedaria bloquejat: la teva IP actual (%s) no és a la "
+"llista permesa per al teu rol. Afegeix-la, o afegeix-la a la llista blanca, "
+"abans de desar."
+
+msgid ""
+"This site uses a custom session storage that does not allow closing a single"
+" session. Use \"Close all sessions\"."
+msgstr ""
+"Aquest lloc usa un emmagatzematge de sessions personalitzat que no permet "
+"tancar una sola sessió. Usa «Tancar totes les sessions»."
+
+msgid "A session was closed for user #%d."
+msgstr "S'ha tancat una sessió de l'usuari #%d."

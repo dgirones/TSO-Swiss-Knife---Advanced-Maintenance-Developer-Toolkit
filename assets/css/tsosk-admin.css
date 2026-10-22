@@ -796,8 +796,9 @@
 .tsosk-me-toolbar {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
+    padding-bottom: 20px;
 }
 
 .tsosk-me-toolbar label {
@@ -806,17 +807,29 @@
 }
 
 .tsosk-me-toolbar .tsosk-me-field {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.tsosk-me-toolbar .tsosk-me-field input,
+.tsosk-me-toolbar .tsosk-me-field select {
+    box-sizing: border-box;
+    min-height: 30px;
+    margin: 0;
 }
 
 .tsosk-me-toolbar .tsosk-me-field-hint {
     font-size: 11px;
     color: #646970;
     font-weight: 400;
-    max-width: 200px;
+    white-space: nowrap;
     line-height: 1.4;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 2px;
 }
 
 .tsosk-me-examples {
@@ -1389,6 +1402,21 @@
 }
 
 /* Option Library preview */
+.tsosk-ol-library table.tsosk-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tsosk-ol-library table.tsosk-table th:nth-child(1) { width: 28%; }
+.tsosk-ol-library table.tsosk-table th:nth-child(2) { width: 34%; }
+.tsosk-ol-library table.tsosk-table th:nth-child(3) { width: 16%; }
+.tsosk-ol-library table.tsosk-table th:nth-child(4) { width: 22%; }
+
+.tsosk-ol-library table.tsosk-table td {
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
 .tsosk-ol-preview-panel {
     border-left: 4px solid #2271b1;
     margin-bottom: 16px;
@@ -2291,6 +2319,11 @@
     .tsosk-toolbar {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .tsosk-me-toolbar .tsosk-me-field-hint {
+        position: static;
+        white-space: normal;
     }
 
     .tsosk-me-toolbar .button,
@@ -5631,3 +5664,43 @@ a.tsosk-dash-tile.is-warn:focus {
 .tsosk-cas-chart { display: flex; align-items: flex-end; gap: 4px; height: 70px; max-width: 480px; }
 .tsosk-cas-bar { flex: 1; min-width: 6px; background: #2271b1; border-radius: 2px 2px 0 0; }
 .tsosk-cas-bar-empty { background: #c3c4c7; }
+
+/* Update Manager: status table stacks on narrow screens instead of overflowing its card. */
+@media (max-width: 782px) {
+    .tsosk-um-status-table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .tsosk-um-status-table thead {
+        display: none;
+    }
+
+    .tsosk-um-status-table tbody,
+    .tsosk-um-status-table tr,
+    .tsosk-um-status-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tsosk-um-status-table tr {
+        padding: 8px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .tsosk-um-status-table tr:last-child {
+        border-bottom: 0;
+    }
+
+    .tsosk-um-status-table td {
+        padding: 2px 10px;
+        border: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .tsosk-um-status-table td:first-child {
+        font-weight: 600;
+    }
+}

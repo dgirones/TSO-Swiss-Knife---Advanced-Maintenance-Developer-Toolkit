@@ -545,10 +545,11 @@ class TSOSK_Mod_Options_Editor {
 		$dir = ( 'DESC' === $sort_dir ) ? 'DESC' : 'ASC';
 
 		if ( 'type' === $sort_col ) {
+			// Prefix tests look only at the first characters: running REGEXP over multi-MB values is what made this sort slow.
 			return "ORDER BY CASE
-				WHEN option_value REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)' THEN 'serialized'
-				WHEN option_value REGEXP '^[{\\[]' THEN 'json'
-				WHEN option_value REGEXP '^[0-9]+\$' THEN 'integer'
+				WHEN LEFT(option_value, 24) REGEXP '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)' THEN 'serialized'
+				WHEN LEFT(option_value, 1) REGEXP '^[{\\[]' THEN 'json'
+				WHEN LENGTH(option_value) < 20 AND option_value REGEXP '^-?[0-9]+\$' THEN 'integer'
 				ELSE 'text'
 			END {$dir}, option_name ASC";
 		}
@@ -574,20 +575,20 @@ class TSOSK_Mod_Options_Editor {
 	private function append_options_type_filter_sql( string $filter_type, string &$where, array &$args ): void {
 		$serialized = '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:)';
 		$json       = '^[{\\[]';
-		$integer    = '^[0-9]+$';
+		$integer    = '^-?[0-9]+$';
 		$text_skip  = '^(a:[0-9]+:|s:[0-9]+:|i:|b:[01];|O:[0-9]+:|N;|d:|C:[0-9]+:|[{\\[])';
 
 		if ( 'serialized' === $filter_type ) {
-			$where .= ' AND option_value REGEXP %s';
+			$where .= ' AND LEFT(option_value, 24) REGEXP %s';
 			$args[] = $serialized;
 		} elseif ( 'json' === $filter_type ) {
-			$where .= ' AND option_value REGEXP %s';
+			$where .= ' AND LEFT(option_value, 1) REGEXP %s';
 			$args[] = $json;
 		} elseif ( 'integer' === $filter_type ) {
-			$where .= ' AND option_value REGEXP %s AND LENGTH(option_value) < 20';
+			$where .= ' AND LENGTH(option_value) < 20 AND option_value REGEXP %s';
 			$args[] = $integer;
 		} elseif ( 'text' === $filter_type ) {
-			$where .= ' AND option_value NOT REGEXP %s AND NOT (option_value REGEXP %s AND LENGTH(option_value) < 20)';
+			$where .= ' AND LEFT(option_value, 24) NOT REGEXP %s AND NOT (LENGTH(option_value) < 20 AND option_value REGEXP %s)';
 			$args[] = $text_skip;
 			$args[] = $integer;
 		}
@@ -803,7 +804,7 @@ class TSOSK_Mod_Options_Editor {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT option_name, option_value, autoload FROM {$wpdb->options} {$where} {$orderby} LIMIT %d OFFSET %d",
+				"SELECT option_name, IF( LENGTH(option_value) > 102400, LEFT(option_value, 600), option_value ) AS option_value, LENGTH(option_value) AS value_size, autoload FROM {$wpdb->options} {$where} {$orderby} LIMIT %d OFFSET %d",
 				...$list_args
 			),
 			ARRAY_A
@@ -816,9 +817,17 @@ class TSOSK_Mod_Options_Editor {
 
 		$items = array();
 		foreach ( $rows as $row ) {
-			$name         = (string) $row['option_name'];
-			$value        = (string) $row['option_value'];
-			$type         = $this->detect_type( $value );
+			$name       = (string) $row['option_name'];
+			$value      = (string) $row['option_value'];
+			$value_size = (int) ( $row['value_size'] ?? strlen( $value ) );
+			$is_large   = $value_size > 102400; // Only the first 600 characters were loaded: never parse the whole value.
+			if ( $is_large ) {
+				$type    = $this->looks_serialized( $value ) ? 'serialized' : ( in_array( $value[0] ?? '', array( '{', '[' ), true ) ? 'json' : 'text' );
+				$preview = 'text' === $type ? mb_substr( $value, 0, 80 ) . '…' : '[' . $type . ', ' . size_format( $value_size ) . ']';
+			} else {
+				$type    = $this->detect_type( $value );
+				$preview = $this->make_preview( $value, $type );
+			}
 			$is_caution   = in_array( $name, $caution, true ) || $this->is_readonly_option( $name );
 			$is_protected = $this->is_protected_core( $name );
 			$is_secret    = $this->is_secret_option( $name );
@@ -826,9 +835,9 @@ class TSOSK_Mod_Options_Editor {
 			$items[] = array(
 				'name'      => $name,
 				'type'      => $type,
-				'size'      => strlen( $value ),
+				'size'      => $value_size,
 				'autoload'  => $row['autoload'],
-				'preview'   => $is_secret ? '••••••' : $this->make_preview( $value, $type ),
+				'preview'   => $is_secret ? '••••••' : $preview,
 				'caution'   => $is_caution,
 				'protected' => $is_protected,
 			);
@@ -880,7 +889,17 @@ class TSOSK_Mod_Options_Editor {
 		}
 
 		$value = (string) $row['option_value'];
-		$type  = $this->detect_type( $value );
+		// Editing is a full read-modify-write of the value: refuse what the browser cannot handle safely.
+		if ( strlen( $value ) > MB_IN_BYTES ) {
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: size of the option value (for example 2 MB) */
+					__( 'This option is too large (%s) to open in the editor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					size_format( strlen( $value ) )
+				)
+			);
+		}
+		$type = $this->detect_type( $value );
 
 		wp_send_json_success(
 			array(

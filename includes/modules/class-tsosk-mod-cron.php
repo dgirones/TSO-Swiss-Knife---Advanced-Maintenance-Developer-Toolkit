@@ -70,7 +70,25 @@ class TSOSK_Mod_Cron {
 		$event = $crons[ $timestamp ][ $hook ][ $sig ];
 		$args  = isset( $event['args'] ) && is_array( $event['args'] ) ? $event['args'] : array();
 
-		do_action_ref_array( $hook, $args ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores, WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+		// Callbacks may print output or throw: neither may corrupt the JSON answer.
+		if ( function_exists( 'set_time_limit' ) ) {
+			// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged, WordPress.PHP.NoSilencedErrors.Discouraged -- Raising the limit is best effort for a long cron callback.
+			@set_time_limit( 120 );
+		}
+		ob_start();
+		try {
+			do_action_ref_array( $hook, $args ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores, WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+		} catch ( \Throwable $e ) {
+			ob_end_clean();
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: error message thrown by the cron callback */
+					__( 'The event failed: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$e->getMessage()
+				)
+			);
+		}
+		ob_end_clean();
 
 		// Mirror wp_cron(): reschedule recurring hooks, then remove the fired occurrence.
 		if ( ! empty( $event['schedule'] ) ) {
@@ -92,6 +110,9 @@ class TSOSK_Mod_Cron {
 			array( 'hook' => $hook )
 		);
 
+		if ( ! has_action( $hook ) ) {
+			wp_send_json_success( __( 'Event executed, but no callback is registered for this hook right now (it may belong to a deactivated plugin).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		wp_send_json_success( __( 'Event executed successfully.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
@@ -164,22 +185,29 @@ class TSOSK_Mod_Cron {
 		$event = $crons[ $old_timestamp ][ $hook ][ $sig ];
 		$args  = isset( $event['args'] ) && is_array( $event['args'] ) ? $event['args'] : array();
 
-		// Validate and schedule the new occurrence first so a failure never drops the old event.
+		if ( 'single' !== $schedule && '' !== $schedule && ! isset( wp_get_schedules()[ $schedule ] ) ) {
+			wp_send_json_error( __( 'Invalid schedule interval.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// WordPress refuses a second event with the same hook and args within 10 minutes, so the old one goes first
+		// and is put back if the new one cannot be scheduled.
+		$old_schedule = ! empty( $event['schedule'] ) ? (string) $event['schedule'] : '';
+		wp_unschedule_event( $old_timestamp, $hook, $args );
+
 		if ( 'single' === $schedule || '' === $schedule ) {
 			$scheduled = wp_schedule_single_event( $new_timestamp, $hook, $args );
 		} else {
-			$schedules = wp_get_schedules();
-			if ( ! isset( $schedules[ $schedule ] ) ) {
-				wp_send_json_error( __( 'Invalid schedule interval.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-			}
 			$scheduled = wp_schedule_event( $new_timestamp, $schedule, $hook, $args );
 		}
 
-		if ( false === $scheduled ) {
+		if ( true !== $scheduled ) {
+			if ( '' === $old_schedule ) {
+				wp_schedule_single_event( $old_timestamp, $hook, $args );
+			} else {
+				wp_schedule_event( $old_timestamp, $old_schedule, $hook, $args );
+			}
 			wp_send_json_error( __( 'Could not reschedule the event.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-
-		wp_unschedule_event( $old_timestamp, $hook, $args );
 
 		TSOSK_Activity_Log::log(
 			'cron',
@@ -862,15 +890,33 @@ class TSOSK_Mod_Cron {
 			tsosk_require_wp_admin( 'includes/plugin.php' );
 		}
 
-		static $cache = array();
-		if ( isset( $cache[ $hook ] ) ) {
-			return $cache[ $hook ];
+		// Reading plugin files is slow: remember results per plugin set and stop after a time budget.
+		static $store   = null;
+		static $started = 0.0;
+		if ( null === $store ) {
+			$sig    = md5( (string) wp_json_encode( array( get_option( 'active_plugins', array() ), count( get_plugins() ) ) ) );
+			$stored = get_transient( 'tsosk_cron_sources' );
+			$store  = ( is_array( $stored ) && ( $stored['sig'] ?? '' ) === $sig && is_array( $stored['hooks'] ?? null ) )
+				? $stored
+				: array(
+					'sig'   => $sig,
+					'hooks' => array(),
+				);
+		}
+		if ( array_key_exists( $hook, $store['hooks'] ) ) {
+			return is_array( $store['hooks'][ $hook ] ) ? $store['hooks'][ $hook ] : null;
+		}
+		if ( 0.0 === $started ) {
+			$started = microtime( true );
+		}
+		if ( microtime( true ) - $started > 3 ) {
+			return null; // Over budget: shown as unknown now, resolved on a later load.
 		}
 
-		$needle  = preg_quote( $hook, '/' );
-		$plugins = get_plugins();
+		$needle = preg_quote( $hook, '/' );
+		$found  = null;
 
-		foreach ( $plugins as $file => $data ) {
+		foreach ( get_plugins() as $file => $data ) {
 			$plugin_file = tsosk_get_plugin_file_path( $file );
 			$dir         = '' !== $plugin_file ? dirname( $plugin_file ) : '';
 			if ( '' === $dir || ! is_dir( $dir ) ) {
@@ -890,18 +936,22 @@ class TSOSK_Mod_Cron {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				$content = (string) file_get_contents( $path, false, null, 0, 131072 );
 				if ( preg_match( "/['\"]{$needle}['\"]/", $content ) ) {
-					$cache[ $hook ] = array(
+					$found = array(
 						'type' => 'plugin',
 						'name' => (string) ( $data['Name'] ?? dirname( $file ) ),
 						'file' => $file,
 					);
-					return $cache[ $hook ];
+					break 2;
 				}
+			}
+			if ( microtime( true ) - $started > 3 ) {
+				return null;
 			}
 		}
 
-		$cache[ $hook ] = null;
-		return null;
+		$store['hooks'][ $hook ] = $found ?? false;
+		set_transient( 'tsosk_cron_sources', $store, 6 * HOUR_IN_SECONDS );
+		return $found;
 	}
 
 	/**
@@ -1017,7 +1067,7 @@ class TSOSK_Mod_Cron {
 	private function get_missed_scheduled_posts(): array {
 		return get_posts(
 			array(
-				'post_type'      => array( 'post', 'page' ),
+				'post_type'      => array_values( get_post_types( array( 'public' => true ) ) ),
 				'post_status'    => 'future',
 				'posts_per_page' => 30,
 				'no_found_rows'  => true,

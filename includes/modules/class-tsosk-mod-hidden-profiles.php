@@ -426,6 +426,15 @@ class TSOSK_Mod_Hidden_Profiles {
 		}
 		// Defined but not managed in TSO JSON → external lock (wp-config / another plugin).
 		if ( ! TSOSK_Config_Storage::constant_defined_in_tsosk_config( $constant ) ) {
+			// WordPress defines these three itself after plugins load: its own default is not a wp-config lock.
+			$wp_defaults = array(
+				'WP_POST_REVISIONS' => true,
+				'AUTOSAVE_INTERVAL' => 60,
+				'EMPTY_TRASH_DAYS'  => 30,
+			);
+			if ( array_key_exists( $constant, $wp_defaults ) && constant( $constant ) === $wp_defaults[ $constant ] ) {
+				return false;
+			}
 			return true;
 		}
 		// In TSO JSON: still locked when the live value differs (wp-config won define race).
@@ -566,7 +575,7 @@ class TSOSK_Mod_Hidden_Profiles {
 				'empty_trash',
 				'EMPTY_TRASH_DAYS',
 				'trash_days',
-				__( 'Automatically empty trash after N days (0 = disable trash expiry).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				__( 'Automatically empty trash after N days. Warning: 0 disables the trash completely and deleted items are removed permanently.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				null !== $constants['EMPTY_TRASH_DAYS'],
 				$constants['EMPTY_TRASH_DAYS'] ?? 7,
 				$this->constant_locked_in_wpconfig( 'EMPTY_TRASH_DAYS' )
@@ -675,6 +684,13 @@ class TSOSK_Mod_Hidden_Profiles {
 	 */
 	private function render_numeric_toggle( string $field_id, string $constant, string $number_field, string $desc, bool $checked, int $number, bool $locked ): void {
 		$live_value = defined( $constant ) ? constant( $constant ) : null;
+		// Same ranges the server enforces on save.
+		$ranges = array(
+			'WP_POST_REVISIONS' => array( 0, 100 ),
+			'AUTOSAVE_INTERVAL' => array( 60, 3600 ),
+			'EMPTY_TRASH_DAYS'  => array( 0, 365 ),
+		);
+		$limits = $ranges[ $constant ] ?? array( 0, 9999 );
 		?>
 		<div class="tsosk-hp-field">
 			<label class="tsosk-hp-field-label">
@@ -693,8 +709,8 @@ class TSOSK_Mod_Hidden_Profiles {
 								id="tsosk-hp-<?php echo esc_attr( $number_field ); ?>"
 								data-hp-field="<?php echo esc_attr( $number_field ); ?>"
 								value="<?php echo esc_attr( (string) $number ); ?>"
-								min="0"
-								max="9999"
+								min="<?php echo esc_attr( (string) $limits[0] ); ?>"
+								max="<?php echo esc_attr( (string) $limits[1] ); ?>"
 								class="tsosk-hp-number-input"
 								<?php disabled( $locked ); ?>>
 					</span>

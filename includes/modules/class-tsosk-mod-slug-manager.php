@@ -40,6 +40,12 @@ class TSOSK_Mod_Slug_Manager {
 	/** Maximum rows shown per audit list (one more is fetched to detect truncation). */
 	private const AUDIT_LIMIT = 200;
 
+	/** Maximum posts processed by one bulk request. */
+	private const BULK_LIMIT = 200;
+
+	/** Seconds a bulk fix may run before it stops and reports what is left. */
+	private const BULK_SECONDS = 20;
+
 	/**
 	 * Instance.
 	 *
@@ -128,7 +134,7 @@ class TSOSK_Mod_Slug_Manager {
 					/* translators: 1: slug, 2: content type that already uses it (post or page) */
 					__( 'The URL /%1$s/ is already used by a %2$s, so only one of them could load. Choose a different slug.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$new_slug,
-					$clash
+					'page' === $clash ? __( 'page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 				)
 			);
 		}
@@ -199,10 +205,11 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ids         = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
+		$ids = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
 			? array_map( 'absint', map_deep( wp_unslash( $_POST['post_ids'] ), 'sanitize_text_field' ) )
 			: array();
-		$ids         = array_values( array_filter( $ids ) );
+		// Unique ids, capped: duplicates would be renamed twice and a huge list would time out.
+		$ids         = array_slice( array_values( array_unique( array_filter( $ids ) ) ), 0, self::BULK_LIMIT );
 		$threshold   = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
@@ -234,10 +241,11 @@ class TSOSK_Mod_Slug_Manager {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$ids         = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
+		$ids = isset( $_POST['post_ids'] ) && is_array( $_POST['post_ids'] )
 			? array_map( 'absint', map_deep( wp_unslash( $_POST['post_ids'] ), 'sanitize_text_field' ) )
 			: array();
-		$ids         = array_values( array_filter( $ids ) );
+		// Unique ids, capped: duplicates would be renamed twice and a huge list would time out.
+		$ids         = array_slice( array_values( array_unique( array_filter( $ids ) ) ), 0, self::BULK_LIMIT );
 		$threshold   = max( 10, min( 200, isset( $_POST['threshold'] ) ? absint( wp_unslash( $_POST['threshold'] ) ) : self::DEFAULT_THRESHOLD ) );
 		$do_redirect = ! empty( $_POST['auto_redirect'] );
 
@@ -260,7 +268,14 @@ class TSOSK_Mod_Slug_Manager {
 			'flattened' => 0,
 		);
 
+		$deadline = microtime( true ) + self::BULK_SECONDS;
+		$pending  = 0;
+
 		foreach ( $changes as $change ) {
+			if ( microtime( true ) > $deadline ) {
+				++$pending;
+				continue;
+			}
 			$post_id = (int) $change['id'];
 			$post    = get_post( $post_id );
 			if ( ! $post ) {
@@ -334,6 +349,13 @@ class TSOSK_Mod_Slug_Manager {
 				);
 			}
 		}
+		if ( $pending > 0 ) {
+			$summary .= ' ' . sprintf(
+				/* translators: %d: number of items not processed */
+				__( '%d item(s) were not processed because the time limit was reached. Run the fix again for the rest.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$pending
+			);
+		}
 		if ( ! empty( $errors ) ) {
 			$summary .= ' ' . sprintf(
 				/* translators: %d: number of errors */
@@ -347,6 +369,7 @@ class TSOSK_Mod_Slug_Manager {
 				'fixed'    => $fixed,
 				'skipped'  => $skipped,
 				'errors'   => $errors,
+				'pending'  => $pending,
 				'changes'  => $applied,
 				'message'  => $summary,
 				'redirect' => (bool) $do_redirect,
@@ -1439,6 +1462,8 @@ class TSOSK_Mod_Slug_Manager {
 				$truncated = substr( $truncated, 0, $last_hyphen );
 			}
 		}
+		// Never leave half of a percent-encoded character (%c3%a9 cut as %c).
+		$truncated = (string) preg_replace( '/%[0-9a-fA-F]?$/', '', $truncated );
 		return trim( $truncated, '-' );
 	}
 

@@ -64,7 +64,7 @@ class TSOSK_Mod_Option_Library {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT option_value, autoload FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+				"SELECT IF( LENGTH(option_value) > 102400, LEFT(option_value, 4000), option_value ) AS option_value, LENGTH(option_value) AS value_size, autoload FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
 				$name
 			),
 			ARRAY_A
@@ -74,15 +74,18 @@ class TSOSK_Mod_Option_Library {
 			wp_send_json_error( __( 'Option not found in the database.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$value   = (string) $row['option_value'];
-		$preview = $this->format_preview_value( $value );
+		$value     = (string) $row['option_value'];
+		$size      = (int) $row['value_size'];
+		$truncated = $size > strlen( $value );
+		// Values over 100 KB arrive cut: never unserialize a partial string, show it as raw text.
+		$preview = $truncated ? mb_substr( $value, 0, 4000 ) . '…' : $this->format_preview_value( $value );
 
 		wp_send_json_success(
 			array(
 				'name'      => $name,
 				'exists'    => true,
 				'autoload'  => (string) $row['autoload'],
-				'size'      => strlen( $value ),
+				'size'      => $size,
 				'preview'   => $preview,
 				'protected' => $protected,
 				'edit_url'  => TSOSK_Mod_Options_Editor::get_admin_url_with_search( $name, $protected, true ),
@@ -102,13 +105,13 @@ class TSOSK_Mod_Option_Library {
 			if ( false !== $unpacked || 'b:0;' === $value ) {
 				$json = wp_json_encode( $unpacked, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 				if ( is_string( $json ) ) {
-					return strlen( $json ) > 4000 ? substr( $json, 0, 4000 ) . '…' : $json;
+					return mb_strlen( $json ) > 4000 ? mb_substr( $json, 0, 4000 ) . '…' : $json;
 				}
 			}
 		}
 
-		if ( strlen( $value ) > 4000 ) {
-			return substr( $value, 0, 4000 ) . '…';
+		if ( mb_strlen( $value ) > 4000 ) {
+			return mb_substr( $value, 0, 4000 ) . '…';
 		}
 
 		return $value;

@@ -980,10 +980,6 @@ msgstr "Caché de objetos"
 msgid "Off"
 msgstr "Desactivado"
 
-#: includes/modules/class-tsosk-mod-content-audit.php:129
-msgid "Old Pending or Private Content"
-msgstr "Contenido antiguo pendiente o privado"
-
 #: includes/class-tsosk-admin.php:405
 msgid "Open"
 msgstr "Abrir"
@@ -1092,10 +1088,6 @@ msgstr "Sandbox de plugins"
 #: includes/modules/class-tsosk-mod-security.php:352
 msgid "Plugin updates"
 msgstr "Actualizaciones de plugins"
-
-#: includes/modules/class-tsosk-mod-content-audit.php:127
-msgid "Posts Without Title"
-msgstr "Entradas sin título"
 
 #: includes/modules/class-tsosk-mod-security.php:177
 msgid ""
@@ -3754,15 +3746,6 @@ msgstr "Función mail de PHP"
 msgid "No test email has been sent yet."
 msgstr "Aún no se ha enviado ningún email de prueba."
 
-#: includes/modules/class-tsosk-mod-content-audit.php:124
-msgid ""
-"Find hidden content problems: empty titles, missing featured images, old "
-"pending/private content, long slugs and broken shortcodes."
-msgstr ""
-"Encuentra problemas ocultos de contenido: títulos vacios, imágenes "
-"destacadas ausentes, contenido pendiente/privado antiguo, slugs largos y "
-"shortcodes rotos."
-
 #: includes/modules/class-tsosk-mod-content-audit.php:221
 msgid "No broken shortcodes detected in the sampled content."
 msgstr "No se han detectado shortcodes rotos en el contenido muestreado."
@@ -4661,10 +4644,12 @@ msgid "Active profiles config: %s"
 msgstr "Configuración de perfiles activa: %s"
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:534
-msgid "Automatically empty trash after N days (0 = disable trash expiry)."
+msgid ""
+"Automatically empty trash after N days. Warning: 0 disables the trash "
+"completely and deleted items are removed permanently."
 msgstr ""
-"Vacía automáticamente la papelera al cabo de N días (0 = desactivar "
-"caducidad de la papelera)."
+"Vacía automáticamente la papelera tras N días. Atención: 0 desactiva la "
+"papelera por completo y los elementos eliminados se borran para siempre."
 
 #: includes/modules/class-tsosk-mod-hidden-profiles.php:465
 msgid ""
@@ -18653,3 +18638,101 @@ msgstr ""
 "El archivo object-cache.php está en el disco, pero WordPress no está usando "
 "una caché persistente. El servicio de caché puede estar caído o desactivado,"
 " o el drop-in puede no ser compatible con este servidor."
+
+#: includes/modules/class-tsosk-mod-content-audit.php:175
+msgid ""
+"Find hidden content problems: empty titles, missing featured images, old "
+"pending/private/draft content, duplicate titles and broken shortcodes."
+msgstr ""
+"Encuentra problemas ocultos de contenido: títulos vacíos, imágenes "
+"destacadas ausentes, contenido pendiente, privado o en borrador antiguo, "
+"títulos duplicados y shortcodes rotos."
+
+# %s: link to the Slug Manager tab
+#: includes/modules/class-tsosk-mod-content-audit.php:182
+#, php-format
+msgid "Long slugs are reviewed — and can be fixed — in the %s."
+msgstr "Los slugs largos se revisan —y se pueden arreglar— en el %s."
+
+#: includes/modules/class-tsosk-mod-content-audit.php:190
+msgid "Published Posts and Pages Without Title"
+msgstr "Entradas y páginas publicadas sin título"
+
+#: includes/modules/class-tsosk-mod-content-audit.php:192
+msgid "Old Pending, Private or Draft Content"
+msgstr "Contenido antiguo pendiente, privado o en borrador"
+
+# %d: number of post IDs not listed
+#: includes/modules/class-tsosk-mod-content-audit.php:225
+#, php-format
+msgid "+%d more"
+msgstr "+%d más"
+
+# 1: rows shown, 2: real total
+#: includes/modules/class-tsosk-mod-content-audit.php:441
+#, php-format
+msgid "%1$s of %2$s"
+msgstr "%1$s de %2$s"
+
+#. translators: %d: number of items not processed
+msgid ""
+"%d item(s) were not processed because the time limit was reached. Run the "
+"fix again for the rest."
+msgstr ""
+"%d elemento(s) no se han procesado porque se alcanzó el límite de tiempo. "
+"Vuelve a ejecutar la corrección para el resto."
+
+msgid "page"
+msgstr "página"
+
+msgid "post"
+msgstr "entrada"
+
+msgid "The event failed: %s"
+msgstr "El evento ha fallado: %s"
+
+msgid ""
+"Event executed, but no callback is registered for this hook right now (it "
+"may belong to a deactivated plugin)."
+msgstr ""
+"Evento ejecutado, pero ahora mismo no hay ningún callback registrado para "
+"este hook (puede ser de un plugin desactivado)."
+
+#. translators: %d: interval in seconds
+msgid ""
+"Heartbeat settings saved. The interval was adjusted to %d s (allowed range: "
+"15–300 s)."
+msgstr ""
+"Configuración del Heartbeat guardada. El intervalo se ha ajustado a %d s "
+"(rango permitido: 15–300 s)."
+
+#. translators: %s: size of the option value (for example 2 MB)
+msgid "This option is too large (%s) to open in the editor."
+msgstr "Esta opción es demasiado grande (%s) para abrirla en el editor."
+
+msgid "This meta value is too large to edit here (over 1 MB)."
+msgstr ""
+"Este valor de meta es demasiado grande para editarlo aquí (más de 1 MB)."
+
+msgid "The meta key is too long (255 characters maximum)."
+msgstr "La clave de meta es demasiado larga (máximo 255 caracteres)."
+
+#, php-format
+msgid ""
+"Your own role would be locked out: your current IP (%s) is not in the "
+"allowed list for your role. Add it, or add it to the whitelist, before "
+"saving."
+msgstr ""
+"Tu propio rol quedaría bloqueado: tu IP actual (%s) no está en la lista "
+"permitida para tu rol. Añádela, o añádela a la lista blanca, antes de "
+"guardar."
+
+msgid ""
+"This site uses a custom session storage that does not allow closing a single"
+" session. Use \"Close all sessions\"."
+msgstr ""
+"Este sitio usa un almacenamiento de sesiones personalizado que no permite "
+"cerrar una sola sesión. Usa «Cerrar todas las sesiones»."
+
+msgid "A session was closed for user #%d."
+msgstr "Se ha cerrado una sesión del usuario #%d."

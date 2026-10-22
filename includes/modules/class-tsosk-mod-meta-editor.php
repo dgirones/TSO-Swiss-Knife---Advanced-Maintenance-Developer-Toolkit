@@ -221,7 +221,7 @@ class TSOSK_Mod_Meta_Editor {
 			$total = (int) $wpdb->get_var( $count_sql );
 		}
 
-		$list_sql    = "SELECT {$meta_id} AS meta_id, {$id_col} AS object_id, meta_key, meta_value
+		$list_sql    = "SELECT {$meta_id} AS meta_id, {$id_col} AS object_id, meta_key, LEFT( meta_value, 600 ) AS meta_value, LENGTH( meta_value ) AS value_size
 			FROM {$table} {$where}
 			ORDER BY {$meta_id} DESC
 			LIMIT %d OFFSET %d";
@@ -238,7 +238,7 @@ class TSOSK_Mod_Meta_Editor {
 				'meta_id'   => (int) $row['meta_id'],
 				'object_id' => (int) $row['object_id'],
 				'key'       => $key,
-				'size'      => strlen( $value ),
+				'size'      => (int) $row['value_size'],
 				'preview'   => $protected ? $this->redacted_preview() : $this->preview( $value ),
 				'protected' => $protected,
 			);
@@ -295,6 +295,9 @@ class TSOSK_Mod_Meta_Editor {
 			wp_send_json_error( __( 'Meta row not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		if ( strlen( (string) $row['meta_value'] ) > MB_IN_BYTES ) {
+			wp_send_json_error( __( 'This meta value is too large to edit here (over 1 MB).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		$key = (string) $row['meta_key'];
 		if ( self::is_protected_key( $key, $context ) ) {
 			wp_send_json_error( __( 'This meta key is protected and cannot be viewed here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -488,6 +491,9 @@ class TSOSK_Mod_Meta_Editor {
 		if ( ! $object_id || ! $key ) {
 			wp_send_json_error( __( 'Object ID and meta key are required.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+		if ( strlen( $key ) > 255 ) {
+			wp_send_json_error( __( 'The meta key is too long (255 characters maximum).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
 		if ( self::is_protected_key( $key, $context ) ) {
 			wp_send_json_error( __( 'This meta key cannot be added (protected pattern).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
@@ -602,8 +608,8 @@ class TSOSK_Mod_Meta_Editor {
 	 * @return string
 	 */
 	private function preview( string $value ): string {
-		if ( strlen( $value ) > 120 ) {
-			return substr( $value, 0, 120 ) . '…';
+		if ( mb_strlen( $value ) > 120 ) {
+			return mb_substr( $value, 0, 120 ) . '…';
 		}
 		return $value;
 	}

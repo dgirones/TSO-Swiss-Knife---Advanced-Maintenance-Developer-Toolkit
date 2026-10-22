@@ -1068,7 +1068,7 @@ class TSOSK_Mod_Dashboard {
 		);
 		$this->render_tiles( $tiles );
 
-		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) && current_user_can( 'update_plugins' ) ) {
+		if ( class_exists( 'TSOSK_Mod_Update_Manager' ) && current_user_can( 'update_plugins' ) && current_user_can( 'update_themes' ) ) {
 			$um     = TSOSK_Mod_Update_Manager::get_instance();
 			$counts = $um->get_installable_counts();
 			if ( $counts['total'] > 0 && '' === $counts['blocker'] ) {

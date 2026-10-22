@@ -429,7 +429,7 @@ class TSOSK_Mod_Slow_Queries {
 				$origin = $this->resolve_query_origin( $this->query_backtraces[ $qi ] );
 			}
 			$slow[] = array(
-				'sql'         => $this->redact_sql_for_storage( $sql ),
+				'sql'         => $this->truncate_sql_for_storage( $this->redact_sql_for_storage( $sql ) ),
 				'fingerprint' => $this->fingerprint_sql( $sql ),
 				'time'        => round( $time * 1000, 3 ), // ms.
 				'caller'      => implode( ' → ', array_slice( array_values( $frames ), -3 ) ),
@@ -474,6 +474,17 @@ class TSOSK_Mod_Slow_Queries {
 				$max   = $s['max_entries'];
 				if ( count( $log ) > $max ) {
 					$log = array_slice( $log, -$max );
+				}
+				// The whole log is one option rewritten on each capture: keep it well under max_allowed_packet.
+				$size  = strlen( (string) wp_json_encode( $log ) );
+				$limit = 2 * MB_IN_BYTES;
+				if ( $size > $limit ) {
+					$keep = count( $log );
+					while ( $size > $limit && $keep > 1 ) {
+						$dropped = array_shift( $log );
+						$size   -= strlen( (string) wp_json_encode( $dropped ) );
+						--$keep;
+					}
 				}
 				return $log;
 			}
@@ -569,6 +580,19 @@ class TSOSK_Mod_Slow_Queries {
 	}
 
 	/**
+	 * Keep stored SQL bounded (huge IN() lists would bloat the log option).
+	 *
+	 * @param string $sql SQL.
+	 * @return string
+	 */
+	private function truncate_sql_for_storage( string $sql ): string {
+		if ( mb_strlen( $sql ) <= 4000 ) {
+			return $sql;
+		}
+		return mb_substr( $sql, 0, 4000 ) . ' … [truncated]';
+	}
+
+	/**
 	 * Redact common sensitive literals before persisting SQL.
 	 *
 	 * @param string $sql Normalised SQL.
@@ -602,7 +626,7 @@ class TSOSK_Mod_Slow_Queries {
 	private function mutate_log( callable $callback ): void {
 		$lock_key = self::LOG_LOCK_TRANSIENT;
 		$wait     = 0;
-		while ( $wait < 25 && false !== get_transient( $lock_key ) ) {
+		while ( $wait < 10 && false !== get_transient( $lock_key ) ) {
 			usleep( 40000 );
 			++$wait;
 		}
@@ -946,8 +970,12 @@ class TSOSK_Mod_Slow_Queries {
 	 * @return string
 	 */
 	public function capture_query_backtrace( $query ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- opt-in diagnostic capture (admin-gated setting), not left on by default.
-		$this->query_backtraces[] = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 25 );
+		// Key = position this query will take in $wpdb->queries. Queries that ran before this hook (or never got logged)
+		// would otherwise shift every later backtrace and blame the wrong plugin.
+		global $wpdb;
+		$index = is_array( $wpdb->queries ) ? count( $wpdb->queries ) : 0;
+
+		$this->query_backtraces[ $index ] = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 25 ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- opt-in diagnostic capture (admin-gated setting), not left on by default.
 		return $query;
 	}
 
@@ -2492,6 +2520,9 @@ class TSOSK_Mod_Slow_Queries {
 		$stamp = gmdate( 'Y-m-d-His' );
 
 		if ( 'json' === $format ) {
+			while ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
 			nocache_headers();
 			header( 'Content-Type: application/json; charset=utf-8' );
 			header( 'Content-Disposition: attachment; filename="tsosk-slow-queries-' . $stamp . '.json"' );

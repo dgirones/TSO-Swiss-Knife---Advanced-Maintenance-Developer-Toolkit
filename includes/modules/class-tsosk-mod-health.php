@@ -100,14 +100,14 @@ class TSOSK_Mod_Health {
 		$map      = array(
 			'plugin_version' => array(
 				'key'     => 'inactive_plugins',
-				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Core string, matched in the site language.
+				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.TextDomainMismatch -- Core string (default domain), matched in the site language.
 				'core'    => translate( 'You should remove inactive plugins', 'default' ),
 				'english' => 'You should remove inactive plugins',
 				'new'     => __( 'Inactive plugins notice hidden by TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			),
 			'theme_version'  => array(
 				'key'     => 'inactive_themes',
-				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- Core string, matched in the site language.
+				// phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.TextDomainMismatch -- Core string (default domain), matched in the site language.
 				'core'    => translate( 'You should remove inactive themes', 'default' ),
 				'english' => 'You should remove inactive themes',
 				'new'     => __( 'Inactive themes notice hidden by TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

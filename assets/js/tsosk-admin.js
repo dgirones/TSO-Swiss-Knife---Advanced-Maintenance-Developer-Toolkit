@@ -975,7 +975,7 @@
 			data   : { nonce: nonce, mode: mode, interval: interval },
 			success: function ( r ) {
 				if ( r.success ) {
-					showMsg( $msg, tsosk.i18n.done, 'ok' );
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
@@ -6405,7 +6405,10 @@
 	// ── Content Audit: remove broken shortcodes ──
 	function tsoskCaRemoveShortcode( postId, shortcode, $btn ) {
 		var $msg = $( '#tsosk-ca-shortcodes-msg' );
-		$btn.prop( 'disabled', true );
+		// Lock every button of the table: two removals on the same post would read the same content
+		// and the second save would silently undo the first.
+		var $all = $( '#tsosk-ca-shortcodes-table button' ).add( $btn );
+		$all.prop( 'disabled', true );
 		ajaxPost( {
 			action : 'tsosk_ca_remove_shortcode',
 			data   : {
@@ -6419,12 +6422,12 @@
 					setTimeout( function () { window.location.reload(); }, 900 );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false );
+					$all.prop( 'disabled', false );
 				}
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false );
+				$all.prop( 'disabled', false );
 			}
 		} );
 	}

@@ -2657,7 +2657,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function render_daily_chart( int $days = 14 ): void {
 		global $wpdb;
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		$first = (int) floor( time() / DAY_IN_SECONDS ) - ( $days - 1 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT FLOOR(logged_at / 86400) AS d, COUNT(*) AS c FROM {$table} WHERE log_type = 'block' AND logged_at >= %d GROUP BY d", $first * DAY_IN_SECONDS ), ARRAY_A );
@@ -2811,7 +2811,7 @@ class TSOSK_Mod_Comment_Antispam {
 		global $wpdb;
 		self::create_table();
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$exists = $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
 		if ( ! $exists ) {
@@ -2900,7 +2900,7 @@ class TSOSK_Mod_Comment_Antispam {
 		global $wpdb;
 
 		$max   = max( 100, min( 10000, (int) ( $this->settings['log_max'] ?? 1000 ) ) );
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$cut = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE log_type = %s ORDER BY id DESC LIMIT 1 OFFSET %d", $type, $max ) );
@@ -2920,7 +2920,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function get_log( string $type = 'block', int $limit = 50 ): array {
 		global $wpdb;
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -2943,7 +2943,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function compute_stats( string $type ): array {
 		global $wpdb;
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE log_type = %s", $type ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -3075,7 +3075,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function get_recent_reasons(): array {
 		global $wpdb;
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT reason, COUNT(*) AS c FROM {$table} WHERE log_type = 'block' AND logged_at >= %d GROUP BY reason ORDER BY c DESC LIMIT 6", time() - HOUR_IN_SECONDS ), ARRAY_A );
 
@@ -3268,7 +3268,7 @@ class TSOSK_Mod_Comment_Antispam {
 	private function delete_log_rows( string $type, string $ip = '' ): void {
 		global $wpdb;
 
-		$table = self::log_table();
+		$table = esc_sql( self::log_table() );
 		if ( '' === $ip ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE log_type = %s", $type ) );

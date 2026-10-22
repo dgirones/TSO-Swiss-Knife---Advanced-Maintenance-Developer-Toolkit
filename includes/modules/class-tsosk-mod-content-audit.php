@@ -22,6 +22,28 @@ class TSOSK_Mod_Content_Audit {
 	private static $instance = null;
 
 	/**
+	 * Rows shown per card.
+	 */
+	private const LIST_LIMIT = 30;
+
+	/**
+	 * Duplicate-title rows list at most this many post IDs each.
+	 */
+	private const IDS_PER_TITLE = 20;
+
+	/**
+	 * Name part of a shortcode tag.
+	 */
+	private const SHORTCODE_NAME = '[a-zA-Z][a-zA-Z0-9_-]*';
+
+	/**
+	 * Real totals for cards whose list is capped (so "30" is never shown as if it were everything).
+	 *
+	 * @var array<string,int>
+	 */
+	private $issue_totals = array();
+
+	/**
 	 * Per-request cache of the posts that contain square brackets (shared by the inventory and the broken-shortcode scan).
 	 *
 	 * @var array<int, WP_Post>|null
@@ -52,7 +74,8 @@ class TSOSK_Mod_Content_Audit {
 	 */
 	public function ajax_remove_shortcode(): void {
 		check_ajax_referer( 'tsosk_ca_nonce', 'nonce' );
-		if ( ! current_user_can( 'edit_posts' ) ) {
+		// Same rule as the rest of the toolkit (administrators); the per-post check below stays as a second guard.
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -70,26 +93,35 @@ class TSOSK_Mod_Content_Audit {
 		}
 
 		$content = (string) $post->post_content;
+		$tags    = '' !== $shortcode ? array( $shortcode ) : $this->get_post_broken_shortcodes( $post );
+		$new     = $content;
 		$removed = 0;
 
-		if ( '' !== $shortcode ) {
-			$quoted = preg_quote( $shortcode, '/' );
-			// Tag boundary: removing [foo] must not match [foobar]. Only the opening/closing tags go; the text between them stays.
-			$pattern = '/\[\/?' . $quoted . '(?![a-zA-Z0-9_-])[^\]]*\]/';
-			$new     = preg_replace( $pattern, '', $content, -1, $removed );
-		} else {
-			$broken = $this->get_post_broken_shortcodes( $post );
-			$new    = $content;
-			foreach ( $broken as $tag ) {
-				$quoted   = preg_quote( $tag, '/' );
-				$pattern  = '/\[\/?' . $quoted . '(?![a-zA-Z0-9_-])[^\]]*\]/';
-				$new      = preg_replace( $pattern, '', $new, -1, $count );
-				$removed += (int) $count;
+		foreach ( $tags as $tag ) {
+			$count = 0;
+			// Same shape as the detection (never Markdown links or escaped [[tag]]). Only the tags go; the text between them stays.
+			$new = preg_replace_callback(
+				$this->build_removal_pattern( (string) $tag ),
+				static function ( array $match ) use ( &$count ): string {
+					// Count opening tags only: [tag]…[/tag] is one shortcode, not two.
+					if ( '[/' !== substr( $match[0], 0, 2 ) ) {
+						++$count;
+					}
+					return '';
+				},
+				$new
+			);
+			if ( ! is_string( $new ) ) {
+				break; // PCRE failure (backtracking limit): never save a half-processed post.
 			}
+			$removed += $count;
 		}
 
-		if ( 0 === $removed || ! is_string( $new ) ) {
+		if ( ! is_string( $new ) || $new === $content ) {
 			wp_send_json_error( __( 'No shortcode removed. It may have already been deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( 0 === $removed ) {
+			$removed = 1; // Only orphan closing tags were removed.
 		}
 
 		$result = wp_update_post(
@@ -135,22 +167,32 @@ class TSOSK_Mod_Content_Audit {
 		$empty_titles        = $this->get_posts_by_issue( 'empty_titles' );
 		$missing_featured    = $this->get_posts_by_issue( 'missing_featured' );
 		$old_pending         = $this->get_posts_by_issue( 'old_pending' );
-		$long_slugs          = $this->get_posts_by_issue( 'long_slugs' );
 		$broken_shortcodes   = $this->get_broken_shortcodes();
 		$duplicate_titles    = $this->get_duplicate_titles();
 		$shortcode_inventory = $this->get_shortcode_inventory();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Find hidden content problems: empty titles, missing featured images, old pending/private content, long slugs and broken shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Find hidden content problems: empty titles, missing featured images, old pending/private/draft content, duplicate titles and broken shortcodes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</p>
+		<p class="description">
+			<?php
+			echo wp_kses(
+				sprintf(
+					/* translators: %s: link to the Slug Manager tab */
+					__( 'Long slugs are reviewed — and can be fixed — in the %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'<a href="' . esc_url( admin_url( 'tools.php?page=tso-swiss-knife&tab=slug-manager' ) ) . '">' . esc_html__( 'Slug Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</a>'
+				),
+				array( 'a' => array( 'href' => array() ) )
+			);
+			?>
 		</p>
 
-		<?php $this->render_post_table( __( 'Posts Without Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $empty_titles ); ?>
-		<?php $this->render_post_table( __( 'Published Posts Without Featured Image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing_featured ); ?>
-		<?php $this->render_post_table( __( 'Old Pending or Private Content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $old_pending ); ?>
-		<?php $this->render_post_table( __( 'Long Slugs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $long_slugs ); ?>
+		<?php $this->render_post_table( __( 'Published Posts and Pages Without Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $empty_titles, $this->issue_totals['empty_titles'] ?? null ); ?>
+		<?php $this->render_post_table( __( 'Published Posts Without Featured Image', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $missing_featured, $this->issue_totals['missing_featured'] ?? null ); ?>
+		<?php $this->render_post_table( __( 'Old Pending, Private or Draft Content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $old_pending, $this->issue_totals['old_pending'] ?? null ); ?>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Duplicate titles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $duplicate_titles ) ) ); ?>)</h3>
+			<h3><?php esc_html_e( 'Duplicate titles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( $this->format_count_label( count( $duplicate_titles ), $this->issue_totals['duplicate_titles'] ?? null ) ); ?>)</h3>
 			<p class="description"><?php esc_html_e( 'Posts or pages that share the exact same title. Duplicate titles can confuse editors and SEO tools.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php if ( empty( $duplicate_titles ) ) : ?>
 				<p><?php esc_html_e( 'No duplicate titles found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
@@ -179,6 +221,9 @@ class TSOSK_Mod_Content_Audit {
 												: esc_html( (string) $post_id );
 										}
 										echo wp_kses_post( implode( ', ', $links ) );
+										if ( ! empty( $row['more'] ) ) {
+											echo ' ' . esc_html( sprintf( /* translators: %d: number of post IDs not listed */ __( '+%d more', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $row['more'] ) );
+										}
 										?>
 									</td>
 								</tr>
@@ -225,7 +270,7 @@ class TSOSK_Mod_Content_Audit {
 		</div>
 
 		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'Broken Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( number_format_i18n( count( $broken_shortcodes ) ) ); ?>)</h3>
+			<h3><?php esc_html_e( 'Broken Shortcodes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( $this->format_count_label( count( $broken_shortcodes ), $this->issue_totals['broken_shortcodes'] ?? null ) ); ?>)</h3>
 			<div class="tsosk-notice tsosk-notice-info">
 				<strong><?php esc_html_e( 'What are broken shortcodes?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong><br>
 				<?php esc_html_e( 'A broken shortcode is a [tag] found in post or page content whose plugin or theme is no longer active or installed. WordPress will not convert it into HTML — instead, the raw [shortcode] text appears on your page, which looks unprofessional and may confuse visitors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -286,7 +331,7 @@ class TSOSK_Mod_Content_Audit {
 	}
 
 	/**
-	 * Get posts for a content issue.
+	 * Get posts for a content issue (at most LIST_LIMIT rows; the real total goes to $issue_totals).
 	 *
 	 * @param string $issue Issue.
 	 * @return array<int,WP_Post>
@@ -297,15 +342,15 @@ class TSOSK_Mod_Content_Audit {
 		}
 
 		$args = array(
-			'post_type'      => array( 'post', 'page' ),
-			'posts_per_page' => 30,
-			'no_found_rows'  => true,
-			'post_status'    => 'publish',
+			'post_type'           => array( 'post', 'page' ),
+			'posts_per_page'      => self::LIST_LIMIT,
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => true,
 		);
 
 		if ( 'missing_featured' === $issue ) {
 			$args['post_type'] = 'post';
-			// Ask the database for posts with no thumbnail instead of filtering only the newest 100.
+			// Ask the database for posts with no thumbnail instead of filtering only the newest ones.
 			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Targeted audit query, small result.
 				'relation' => 'OR',
 				array(
@@ -326,42 +371,15 @@ class TSOSK_Mod_Content_Audit {
 					'column' => 'post_modified_gmt',
 				),
 			);
+			// Most neglected first.
+			$args['orderby'] = 'modified';
+			$args['order']   = 'ASC';
 		}
 
-		$posts = get_posts( $args );
-		if ( 'missing_featured' === $issue ) {
-			$posts = array_filter(
-				$posts,
-				static function ( WP_Post $post ): bool {
-					return ! has_post_thumbnail( $post );
-				}
-			);
-		}
-		if ( 'long_slugs' === $issue ) {
-			global $wpdb;
-			// Targeted query over every post, not just the newest 100.
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$long_ids = $wpdb->get_col(
-				"SELECT ID FROM {$wpdb->posts}
-				WHERE post_type IN ('post','page')
-				AND post_status IN ('publish','draft','private','pending')
-				AND CHAR_LENGTH(post_name) > 70
-				ORDER BY post_modified_gmt DESC
-				LIMIT 30"
-			);
-			$posts    = empty( $long_ids ) ? array() : get_posts(
-				array(
-					'post_type'      => array( 'post', 'page' ),
-					'post_status'    => array( 'publish', 'draft', 'private', 'pending' ),
-					'post__in'       => array_map( 'absint', $long_ids ),
-					'posts_per_page' => 30,
-					'no_found_rows'  => true,
-					'orderby'        => 'post__in',
-				)
-			);
-		}
+		$query                        = new WP_Query( $args );
+		$this->issue_totals[ $issue ] = (int) $query->found_posts;
 
-		return array_slice( array_values( $posts ), 0, 30 );
+		return array_values( $query->posts );
 	}
 
 	/**
@@ -374,13 +392,25 @@ class TSOSK_Mod_Content_Audit {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$ids = $wpdb->get_col(
-			"SELECT ID FROM {$wpdb->posts}
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts}
+				WHERE post_type IN ('post','page')
+				AND post_status = 'publish'
+				AND TRIM(post_title) = ''
+				ORDER BY post_modified_gmt DESC
+				LIMIT %d",
+				self::LIST_LIMIT
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$this->issue_totals['empty_titles'] = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->posts}
 			WHERE post_type IN ('post','page')
 			AND post_status = 'publish'
-			AND TRIM(post_title) = ''
-			ORDER BY post_modified_gmt DESC
-			LIMIT 50"
+			AND TRIM(post_title) = ''"
 		);
+
 		if ( ! is_array( $ids ) || array() === $ids ) {
 			return array();
 		}
@@ -395,6 +425,24 @@ class TSOSK_Mod_Content_Audit {
 			)
 		);
 		return is_array( $posts ) ? array_values( $posts ) : array();
+	}
+
+	/**
+	 * "30" or "30 of 412": a capped list must not look like the full count.
+	 *
+	 * @param int      $shown Rows listed.
+	 * @param int|null $total Real total when known.
+	 */
+	private function format_count_label( int $shown, ?int $total ): string {
+		if ( null !== $total && $total > $shown ) {
+			return sprintf(
+				/* translators: 1: rows shown, 2: real total */
+				__( '%1$s of %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				number_format_i18n( $shown ),
+				number_format_i18n( $total )
+			);
+		}
+		return number_format_i18n( $shown );
 	}
 
 	/**
@@ -416,33 +464,59 @@ class TSOSK_Mod_Content_Audit {
 				);
 			}
 		}
-		return array_slice( $out, 0, 30 );
+		$this->issue_totals['broken_shortcodes'] = count( $out );
+		return array_slice( $out, 0, self::LIST_LIMIT );
 	}
 
 	/**
 	 * Titles used by more than one post or page.
 	 *
-	 * @return array<int, array{title:string,count:int,ids:int[]}>
+	 * The match is exact (BINARY): "Café" and "Cafe" are different titles, as the screen says. The ID list is
+	 * cut with SUBSTRING_INDEX so it never depends on group_concat_max_len (1024 by default on MySQL), which
+	 * used to truncate it mid-number on titles with many duplicates.
+	 *
+	 * @return array<int, array{title:string,count:int,ids:int[],more:int}>
 	 */
 	private function get_duplicate_titles(): array {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
-			"SELECT post_title, GROUP_CONCAT(ID ORDER BY ID) AS ids, COUNT(*) AS cnt
-			FROM {$wpdb->posts}
-			WHERE post_type IN ('post','page')
-			AND post_status IN ('publish','draft','private','pending')
-			AND post_title != ''
-			GROUP BY post_title
-			HAVING cnt > 1
-			ORDER BY cnt DESC
-			LIMIT 30",
+			$wpdb->prepare(
+				"SELECT MIN(post_title) AS post_title, COUNT(*) AS cnt,
+					SUBSTRING_INDEX(GROUP_CONCAT(ID ORDER BY ID SEPARATOR ','), ',', %d) AS ids
+				FROM {$wpdb->posts}
+				WHERE post_type IN ('post','page')
+				AND post_status IN ('publish','future','draft','private','pending')
+				AND TRIM(post_title) != ''
+				GROUP BY BINARY post_title
+				HAVING cnt > 1
+				ORDER BY cnt DESC, post_title ASC
+				LIMIT %d",
+				self::IDS_PER_TITLE,
+				self::LIST_LIMIT + 1
+			),
 			ARRAY_A
 		);
 
 		if ( ! is_array( $rows ) ) {
 			return array();
+		}
+
+		if ( count( $rows ) > self::LIST_LIMIT ) {
+			// More groups than we list: count them for the "30 of N" heading.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$this->issue_totals['duplicate_titles'] = (int) $wpdb->get_var(
+				"SELECT COUNT(*) FROM (
+					SELECT 1 FROM {$wpdb->posts}
+					WHERE post_type IN ('post','page')
+					AND post_status IN ('publish','future','draft','private','pending')
+					AND TRIM(post_title) != ''
+					GROUP BY BINARY post_title
+					HAVING COUNT(*) > 1
+				) AS duplicate_groups"
+			);
+			$rows = array_slice( $rows, 0, self::LIST_LIMIT );
 		}
 
 		$out = array();
@@ -452,10 +526,12 @@ class TSOSK_Mod_Content_Audit {
 			if ( empty( $ids ) ) {
 				continue;
 			}
+			$count = absint( $row['cnt'] ?? count( $ids ) );
 			$out[] = array(
 				'title' => (string) ( $row['post_title'] ?? '' ),
-				'count' => absint( $row['cnt'] ?? count( $ids ) ),
+				'count' => $count,
 				'ids'   => $ids,
+				'more'  => max( 0, $count - count( $ids ) ),
 			);
 		}
 
@@ -472,12 +548,14 @@ class TSOSK_Mod_Content_Audit {
 		$counts = array();
 
 		foreach ( $posts as $post ) {
-			if ( ! preg_match_all( '/\[([a-zA-Z][a-zA-Z0-9_-]*)/', $post->post_content, $matches ) ) {
+			// Same shape as the broken-shortcode scan, so Markdown links, plain "[text]" and escaped [[tag]] are not listed as shortcodes.
+			if ( ! preg_match_all( $this->shortcode_detect_pattern(), $post->post_content, $matches ) ) {
 				continue;
 			}
+			// Case-sensitive, as in WordPress: sanitize_key() would lowercase [MyCode] and report it as not registered.
 			foreach ( array_unique( $matches[1] ) as $shortcode ) {
-				$shortcode = sanitize_key( (string) $shortcode );
-				if ( '' === $shortcode || ctype_digit( $shortcode ) ) {
+				$shortcode = (string) $shortcode;
+				if ( '' === $shortcode ) {
 					continue;
 				}
 				if ( ! isset( $counts[ $shortcode ] ) ) {
@@ -516,7 +594,7 @@ class TSOSK_Mod_Content_Audit {
 		$ids = $wpdb->get_col(
 			"SELECT ID FROM {$wpdb->posts}
 			WHERE post_type IN ('post','page')
-			AND post_status IN ('publish','draft','private','pending')
+			AND post_status IN ('publish','future','draft','private','pending')
 			AND post_content LIKE '%[%'
 			ORDER BY post_modified_gmt DESC
 			LIMIT 100"
@@ -529,7 +607,7 @@ class TSOSK_Mod_Content_Audit {
 		return get_posts(
 			array(
 				'post_type'      => array( 'post', 'page' ),
-				'post_status'    => array( 'publish', 'draft', 'private', 'pending' ),
+				'post_status'    => array( 'publish', 'future', 'draft', 'private', 'pending' ),
 				'post__in'       => array_map( 'absint', $ids ),
 				'posts_per_page' => 100,
 				'no_found_rows'  => true,
@@ -550,8 +628,7 @@ class TSOSK_Mod_Content_Audit {
 			global $shortcode_tags;
 			$registered = array_fill_keys( array_keys( (array) $shortcode_tags ), true );
 		}
-		// A real shortcode shape: [name], [name attr="x"] or [name /], never "[text](link)" (Markdown) or a bracket with no closing "]".
-		if ( ! preg_match_all( '/\[([a-zA-Z][a-zA-Z0-9_-]*)(?=[\s\/\]])[^\[\]]*\](?!\()/', $post->post_content, $matches ) ) {
+		if ( ! preg_match_all( $this->shortcode_detect_pattern(), $post->post_content, $matches ) ) {
 			return array();
 		}
 		$unknown = array();
@@ -568,15 +645,47 @@ class TSOSK_Mod_Content_Audit {
 	}
 
 	/**
+	 * Regex that finds the opening/self-closing tag of any shortcode (name in group 1).
+	 */
+	private function shortcode_detect_pattern(): string {
+		return '/' . $this->shortcode_open_pattern( self::SHORTCODE_NAME ) . '/';
+	}
+
+	/**
+	 * Regex that removes one shortcode's opening/self-closing and closing tags (never its content).
+	 *
+	 * @param string $tag Shortcode name (case-sensitive).
+	 */
+	private function build_removal_pattern( string $tag ): string {
+		$name = preg_quote( $tag, '/' );
+		return '/' . $this->shortcode_open_pattern( $name, false ) . '|(?<!\[)\[\/' . $name . '\s*\](?!\])/';
+	}
+
+	/**
+	 * Shape of a real shortcode tag: [name], [name attr="x"] or [name /].
+	 *
+	 * Not matched, on purpose: "[text](link)" (Markdown), a bracket with no closing "]", and the escaped
+	 * form [[tag]] (WordPress prints it literally, it is not a shortcode).
+	 *
+	 * @param string $name    Name pattern (already a valid regex fragment).
+	 * @param bool   $capture Whether the name is a capture group.
+	 */
+	private function shortcode_open_pattern( string $name, bool $capture = true ): string {
+		$group = $capture ? '(' . $name . ')' : '(?:' . $name . ')';
+		return '(?<!\[)\[' . $group . '(?=[\s\/\]])[^\[\]]*\](?![\(\]])';
+	}
+
+	/**
 	 * Render post table.
 	 *
-	 * @param string $title Title.
-	 * @param array  $posts Posts.
+	 * @param string   $title Title.
+	 * @param array    $posts Posts.
+	 * @param int|null $total Real total when the list is capped.
 	 */
-	private function render_post_table( string $title, array $posts ): void {
+	private function render_post_table( string $title, array $posts, ?int $total = null ): void {
 		?>
 		<div class="tsosk-card">
-			<h3><?php echo esc_html( $title ); ?> (<?php echo esc_html( number_format_i18n( count( $posts ) ) ); ?>)</h3>
+			<h3><?php echo esc_html( $title ); ?> (<?php echo esc_html( $this->format_count_label( count( $posts ), $total ) ); ?>)</h3>
 			<?php if ( empty( $posts ) ) : ?>
 				<p><?php esc_html_e( 'No items found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>

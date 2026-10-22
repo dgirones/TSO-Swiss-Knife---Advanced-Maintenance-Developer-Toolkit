@@ -109,7 +109,7 @@ class TSOSK_Mod_Users {
 	 * @param WP_Error $error    Error object.
 	 */
 	public function on_login_failed( string $username, WP_Error $error ): void {
-		$skip = array( 'tsosk_2fa_required', 'tsosk_2fa_invalid', 'tsosk_role_ip_denied', 'tsosk_locked_out' );
+		$skip = array( 'tsosk_2fa_required', 'tsosk_2fa_invalid', 'tsosk_2fa_max_attempts', 'tsosk_role_ip_denied', 'tsosk_locked_out' );
 		if ( in_array( $error->get_error_code(), $skip, true ) ) {
 			return;
 		}
@@ -331,11 +331,32 @@ class TSOSK_Mod_Users {
 			wp_send_json_error( __( 'You cannot close your own sessions from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$manager = WP_Session_Tokens::get_instance( $user_id );
-		if ( ! $manager->verify( $token ) ) {
+		// The table lists sessions by their stored verifier (the hash WordPress keeps), not by the raw cookie token, so
+		// WP_Session_Tokens::verify()/destroy() (which hash their input again) can never find them: remove the entry directly.
+		$manager  = WP_Session_Tokens::get_instance( $user_id );
+		$sessions = $manager->get_all();
+		if ( ! isset( $sessions[ $token ] ) ) {
 			wp_send_json_error( __( 'Session not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		$manager->destroy( $token );
+		if ( $manager instanceof WP_User_Meta_Session_Tokens ) {
+			unset( $sessions[ $token ] );
+			if ( empty( $sessions ) ) {
+				delete_user_meta( $user_id, 'session_tokens' );
+			} else {
+				update_user_meta( $user_id, 'session_tokens', $sessions );
+			}
+		} else {
+			wp_send_json_error( __( 'This site uses a custom session storage that does not allow closing a single session. Use "Close all sessions".', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		TSOSK_Activity_Log::log(
+			'users',
+			'delete',
+			sprintf(
+				/* translators: %d: user ID */
+				__( 'A session was closed for user #%d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$user_id
+			)
+		);
 		wp_send_json_success( __( 'Session closed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
