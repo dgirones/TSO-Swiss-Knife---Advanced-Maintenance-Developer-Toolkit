@@ -2372,16 +2372,19 @@ class TSOSK_Uploads_Scanner {
 	/**
 	 * Aggregate stats over all image-size quarantine entries.
 	 *
-	 * @return array{count: int, size: int}
+	 * @return array{count: int, files: int, size: int}
 	 */
 	public static function get_sizes_quarantine_summary(): array {
 		$entries = self::get_sizes_quarantine_entries();
 		$size    = 0;
+		$files   = 0;
 		foreach ( $entries as $entry ) {
-			$size += (int) ( $entry['bytes'] ?? 0 );
+			$size  += (int) ( $entry['bytes'] ?? 0 );
+			$files += (int) ( $entry['files'] ?? 0 );
 		}
 		return array(
 			'count' => count( $entries ),
+			'files' => $files,
 			'size'  => $size,
 		);
 	}

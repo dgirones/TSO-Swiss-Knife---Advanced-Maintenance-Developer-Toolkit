@@ -8586,6 +8586,24 @@ msgstr "%1$s fitxers — %2$s"
 msgid "Unmatched derivatives"
 msgstr "Derivats no coincidents"
 
+#. translators: 1: formatted size, 2: number of quarantine batches
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+#, php-format
+msgid "%1$s · %2$s batch(es)"
+msgstr "%1$s · %2$s lot(s)"
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php
+msgid ""
+"Unmatched derivatives are generated thumbnail-style files (for example "
+"photo-150x150.jpg) found under uploads that are not listed in any attachment "
+"metadata — often leftovers from deleted media, manual copies, or plugins. "
+"They are not counted in the per-size table below."
+msgstr ""
+"Són fitxers generats tipus miniatura (per exemple foto-150x150.jpg) trobats "
+"a uploads que no consten a les metadades de cap adjunt — sovint restes "
+"d'adjunts esborrats, còpies manuals o plugins. No entren al recompte per "
+"mida de la taula inferior."
+
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:439
 msgid "Last audit"
 msgstr "Darrera auditoria"

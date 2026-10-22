@@ -1144,53 +1144,51 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		$by_size    = is_array( $audit['by_size'] ?? null ) ? $audit['by_size'] : array();
 		$full       = is_array( $audit['full'] ?? null ) ? $audit['full'] : array();
 		$unmatched  = is_array( $audit['unmatched_derivatives'] ?? null ) ? $audit['unmatched_derivatives'] : array();
+		$quarantine = TSOSK_Uploads_Scanner::get_sizes_quarantine_summary();
 
 		ob_start();
 		?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Audit summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-kv-table">
-				<tbody>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td><?php echo esc_html( number_format_i18n( (int) ( $audit['attachments_scanned'] ?? 0 ) ) ); ?></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td>
-							<?php
-							printf(
-								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								esc_html( number_format_i18n( (int) ( $full['files'] ?? 0 ) ) ),
-								esc_html( size_format( (int) ( $full['bytes'] ?? 0 ), 2 ) )
-							);
-							?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Unmatched derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td>
-							<?php
-							printf(
-								/* translators: 1: file count, 2: formatted size */
-								esc_html__( '%1$s files — %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								esc_html( number_format_i18n( (int) ( $unmatched['files'] ?? 0 ) ) ),
-								esc_html( size_format( (int) ( $unmatched['bytes'] ?? 0 ), 2 ) )
-							);
-							?>
-						</td>
-					</tr>
-					<?php if ( ! empty( $audit['scanned_at'] ) ) : ?>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Last audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $audit['scanned_at'] ) ); ?></td>
-					</tr>
-					<?php endif; ?>
-				</tbody>
-			</table>
+			<div class="tsosk-stats-row tsosk-image-sizes-audit-summary">
+				<div class="tsosk-stat-box">
+					<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( (int) ( $audit['attachments_scanned'] ?? 0 ) ) ); ?></span>
+					<span class="tsosk-stat-label"><?php esc_html_e( 'Attachments with metadata', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-stat-box">
+					<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( (int) ( $full['files'] ?? 0 ) ) ); ?></span>
+					<span class="tsosk-stat-sub"><?php echo esc_html( size_format( (int) ( $full['bytes'] ?? 0 ), 2 ) ); ?></span>
+					<span class="tsosk-stat-label"><?php esc_html_e( 'Full-size files on disk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-stat-box">
+					<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( (int) ( $unmatched['files'] ?? 0 ) ) ); ?></span>
+					<span class="tsosk-stat-sub"><?php echo esc_html( size_format( (int) ( $unmatched['bytes'] ?? 0 ), 2 ) ); ?></span>
+					<span class="tsosk-stat-label"><?php esc_html_e( 'Unmatched derivatives', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<div class="tsosk-stat-box">
+					<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( (int) ( $quarantine['files'] ?? 0 ) ) ); ?></span>
+					<span class="tsosk-stat-sub">
+						<?php
+						printf(
+							/* translators: 1: formatted size, 2: number of quarantine batches */
+							esc_html__( '%1$s · %2$s batch(es)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							esc_html( size_format( (int) ( $quarantine['size'] ?? 0 ), 2 ) ),
+							esc_html( number_format_i18n( (int) ( $quarantine['count'] ?? 0 ) ) )
+						);
+						?>
+					</span>
+					<span class="tsosk-stat-label"><?php esc_html_e( 'Quarantine (still on disk)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<?php if ( ! empty( $audit['scanned_at'] ) ) : ?>
+				<div class="tsosk-stat-box">
+					<span class="tsosk-stat-num tsosk-stat-num--compact"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $audit['scanned_at'] ) ); ?></span>
+					<span class="tsosk-stat-label"><?php esc_html_e( 'Last audit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<?php endif; ?>
 			</div>
+			<p class="description tsosk-audit-unmatched-help">
+				<?php esc_html_e( 'Unmatched derivatives are generated thumbnail-style files (for example photo-150x150.jpg) found under uploads that are not listed in any attachment metadata — often leftovers from deleted media, manual copies, or plugins. They are not counted in the per-size table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
 		</div>
 		<?php
 		$usage = is_array( $audit['usage'] ?? null ) ? $audit['usage'] : array();
