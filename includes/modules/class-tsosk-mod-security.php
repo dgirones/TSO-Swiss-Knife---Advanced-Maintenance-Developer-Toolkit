@@ -970,6 +970,7 @@ class TSOSK_Mod_Security {
 					<?php esc_html_e( 'No Application Passwords are currently active on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</div>
 			<?php else : ?>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
 						<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -999,6 +1000,7 @@ class TSOSK_Mod_Security {
 					<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 				<p style="margin-top:12px;">
 					<button class="button" id="tsosk-security-revoke-all-app-passwords" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Revoke All Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1073,6 +1075,7 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 			<div class="tsosk-notice tsosk-notice-warn">
 				<?php esc_html_e( 'Some malware hides a rogue administrator account by copying another existing user\'s exact registration timestamp, so "sort users by newest" never reveals it. These administrator accounts share their creation timestamp, down to the second, with at least one other user on this site — review each one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1097,6 +1100,7 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 				<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php endif; ?>
 
@@ -1200,6 +1204,7 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 		<div class="tsosk-card" id="tsosk-security-checks">
 			<h3><?php esc_html_e( 'Security Checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Read-only overview of common security settings. This does not replace a firewall or security scanner.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1216,6 +1221,7 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 				<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php
 	}

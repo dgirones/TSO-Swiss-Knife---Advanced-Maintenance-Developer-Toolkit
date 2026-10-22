@@ -2124,6 +2124,7 @@ class TSOSK_Mod_View_Counter {
 		<div class="tsosk-vc-top-wrap">
 			<div class="tsosk-vc-col">
 				<h3><?php esc_html_e( 'Most viewed posts/pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<div class="tsosk-table-wrap">
 				<table class="widefat striped" id="tsosk-vc-top-posts-table">
 					<thead>
 						<tr>
@@ -2133,9 +2134,11 @@ class TSOSK_Mod_View_Counter {
 					</thead>
 					<tbody></tbody>
 				</table>
+				</div>
 			</div>
 			<div class="tsosk-vc-col">
 				<h3><?php esc_html_e( 'Most clicked outbound links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<div class="tsosk-table-wrap">
 				<table class="widefat striped" id="tsosk-vc-top-links-table">
 					<thead>
 						<tr>
@@ -2145,9 +2148,11 @@ class TSOSK_Mod_View_Counter {
 					</thead>
 					<tbody></tbody>
 				</table>
+				</div>
 			</div>
 			<div class="tsosk-vc-col">
 				<h3><?php esc_html_e( 'Most downloaded files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<div class="tsosk-table-wrap">
 				<table class="widefat striped" id="tsosk-vc-top-downloads-table">
 					<thead>
 						<tr>
@@ -2157,6 +2162,7 @@ class TSOSK_Mod_View_Counter {
 					</thead>
 					<tbody></tbody>
 				</table>
+				</div>
 			</div>
 		</div>
 
@@ -2308,6 +2314,7 @@ class TSOSK_Mod_View_Counter {
 		<div class="notice notice-warning inline" id="tsosk-vc-suspicious">
 			<p><strong><?php esc_html_e( 'These days have unusually high totals', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
 			<p><?php esc_html_e( 'This usually means totals imported from another plugin were saved under the import date (or imported twice), which inflates the 7/30/90-day figures. Move them to "All time" so they stop counting as recent traffic, or delete a day that was imported twice.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat striped" style="max-width:620px;">
 				<?php foreach ( $tsosk_vc_suspicious as $tsosk_vc_day ) : ?>
 				<tr>
@@ -2320,6 +2327,7 @@ class TSOSK_Mod_View_Counter {
 				</tr>
 				<?php endforeach; ?>
 			</table>
+			</div>
 			<p><span class="tsosk-ajax-msg" id="tsosk-vc-fix-msg"></span></p>
 		</div>
 		<?php endif; ?>

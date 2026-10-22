@@ -833,6 +833,7 @@ class TSOSK_Mod_Custom_404 {
 				<li><?php esc_html_e( 'Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url].', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 				<li><?php esc_html_e( 'Save the page. On a real 404, visitors see the broken URL they requested.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 			</ol>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead>
 					<tr>
@@ -859,6 +860,7 @@ class TSOSK_Mod_Custom_404 {
 					</tr>
 				</tbody>
 			</table>
+			</div>
 			<p class="description" style="margin-top:10px;">
 				<?php esc_html_e( 'Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>

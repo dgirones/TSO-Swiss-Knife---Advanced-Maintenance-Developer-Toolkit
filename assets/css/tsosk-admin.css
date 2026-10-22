@@ -1393,7 +1393,13 @@
 }
 
 /* ── Actions column ─────────────────────────────────────────────────────────── */
+/* Each button stays on one line, but several buttons may stack: a cell that never wrapped made the whole column
+   as wide as all its buttons side by side and pushed the table out of its card. */
 .tsosk-actions {
+    white-space: normal;
+}
+
+.tsosk-actions .button {
     white-space: nowrap;
 }
 
@@ -5377,7 +5383,20 @@ a.tsosk-dash-tile.is-warn:focus {
 
 .tsosk-media-paths {
 	word-break: normal;
-	min-width: 190px;
+	min-width: 150px;
+}
+
+/* Media tables: stacked buttons keep a gap; only the path may break mid-word (an ID or a title never should). */
+.tsosk-media-table td.tsosk-actions .button {
+	margin: 0 4px 4px 0;
+}
+
+.tsosk-media-table td.tsosk-actions .button + .button {
+	margin-left: 0;
+}
+
+.tsosk-media-table td:first-child {
+	white-space: nowrap;
 }
 
 .tsosk-media-paths .tsosk-path-label {
@@ -5738,4 +5757,10 @@ a.tsosk-dash-tile.is-warn:focus {
     .tsosk-um-status-table td:first-child {
         font-weight: 600;
     }
+}
+
+/* Data tables: long paths, URLs and keys in code cells wrap instead of widening the table past its card. */
+.tsosk-table td.tsosk-code,
+.tsosk-table td code {
+    overflow-wrap: anywhere;
 }

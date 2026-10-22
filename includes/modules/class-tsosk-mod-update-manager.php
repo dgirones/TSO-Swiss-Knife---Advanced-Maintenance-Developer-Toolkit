@@ -1820,6 +1820,7 @@ class TSOSK_Mod_Update_Manager {
 		<div class="tsosk-card" id="tsosk-um-status">
 			<h3><?php esc_html_e( 'Update status & troubleshooting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'If updates stay pending for days, check the blockers below. “Check for updates now” refreshes the pending list from wordpress.org. “Install pending translations” downloads language packs into wp-content/languages/ (does not update bundled .mo files inside plugins).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table tsosk-um-status-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1836,6 +1837,7 @@ class TSOSK_Mod_Update_Manager {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 			<p style="margin-top:14px;margin-bottom:0;">
 				<button type="button" class="button button-primary" id="tsosk-um-run-updates"
 						data-nonce="<?php echo esc_attr( $nonce ); ?>">

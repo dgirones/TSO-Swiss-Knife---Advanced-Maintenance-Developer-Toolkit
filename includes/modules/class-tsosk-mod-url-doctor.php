@@ -635,6 +635,7 @@ class TSOSK_Mod_Url_Doctor {
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'What we found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead>
 					<tr>
@@ -658,6 +659,7 @@ class TSOSK_Mod_Url_Doctor {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 
 		<div class="tsosk-card">

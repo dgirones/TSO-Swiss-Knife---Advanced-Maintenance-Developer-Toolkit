@@ -594,6 +594,7 @@ class TSOSK_Mod_Runtime_Stack {
 			<p class="description">
 				<?php esc_html_e( 'These special files replace or extend core behaviour (cache, database, error pages). Hosting or a cache plugin often places them. They do not appear in the normal Plugins list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead>
 					<tr>
@@ -621,6 +622,7 @@ class TSOSK_Mod_Runtime_Stack {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 
 		<div class="tsosk-card">
@@ -631,6 +633,7 @@ class TSOSK_Mod_Runtime_Stack {
 			<?php if ( empty( $mu ) ) : ?>
 				<p><?php esc_html_e( 'No must-use plugins found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
@@ -651,6 +654,7 @@ class TSOSK_Mod_Runtime_Stack {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php

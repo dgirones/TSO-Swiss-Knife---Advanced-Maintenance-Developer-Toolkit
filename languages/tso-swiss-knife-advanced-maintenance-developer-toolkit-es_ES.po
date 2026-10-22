@@ -15839,15 +15839,6 @@ msgstr "no registrado"
 msgid "%1$d × %2$d — crop: unknown"
 msgstr "%1$d × %2$d — recorte: desconocido"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:584
-msgid ""
-"Not registered by any active theme or plugin — no new files are generated "
-"for it. Existing files can be moved to quarantine below."
-msgstr ""
-"No está registrado por ningún tema o plugin activo — no se genera ningún "
-"archivo nuevo para este tamaño. Los archivos existentes se pueden mover a la"
-" cuarentena de abajo."
-
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:593
 msgid ""
 "Rows marked \"not registered\" come from an old theme or a deactivated "
@@ -15976,27 +15967,6 @@ msgstr "desactivada en Ajustes > Medios"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid ""
-"Width and height are 0 in Settings > Media, so WordPress generates no files "
-"for this size."
-msgstr ""
-"El ancho y el alto son 0 en Ajustes > Medios, así que WordPress no genera "
-"ningún archivo para este tamaño."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "hidden by a filter"
-msgstr "oculta por un filtro"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "A theme or plugin removes this size from the list of registered sizes."
-msgstr ""
-"Un tema o un plugin quita este tamaño de la lista de tamaños registrados."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (0 × 0 in Settings > Media)"
-msgstr "No se genera (0 × 0 en Ajustes > Medios)"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
 "Turned off: its existing files are listed in the quarantine section below."
 msgstr ""
 "Desactivada: sus archivos existentes aparecen en la sección de cuarentena de"
@@ -16068,25 +16038,6 @@ msgid ""
 msgstr ""
 "Se ha visto registrada en el front-end: compruebe que ningún tema la usa "
 "todavía antes de mover sus archivos."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "off (options set to 0)"
-msgstr "desactivada (opciones a 0)"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
-"WordPress has no field for this size in Settings > Media. Its options "
-"medium_large_size_w and medium_large_size_h are 0, so WordPress generates no"
-" files for it (the default is 768 × 0)."
-msgstr ""
-"WordPress no tiene ningún campo para este tamaño en Ajustes > Medios. Las "
-"opciones medium_large_size_w y medium_large_size_h valen 0, así que "
-"WordPress no genera ningún archivo para él (el valor por defecto es 768 × "
-"0)."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (options set to 0 × 0)"
-msgstr "No se genera (opciones a 0 × 0)"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "More information"
@@ -18782,3 +18733,34 @@ msgstr[0] ""
 msgstr[1] ""
 "Se han ocultado %d archivos ignorados de estos resultados (vea Archivos "
 "ignorados más abajo)."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1288
+msgid ""
+"WordPress registers this size itself (768 px wide by default) but Settings >"
+" Media has no field for it. It is only generated while its options "
+"medium_large_size_w and medium_large_size_h are not both 0."
+msgstr ""
+"WordPress registra este tamaño por sí mismo (768 px de ancho por defecto), "
+"pero Ajustes > Medios no tiene ningún campo para él. Solo se genera mientras"
+" las opciones medium_large_size_w y medium_large_size_h no sean ambas 0."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1290
+msgid ""
+"Added by WordPress itself since version 5.3 (twice medium_large and twice "
+"large) so large screens get sharper srcset images. Settings > Media has no "
+"field for it; a theme or plugin can remove it."
+msgstr ""
+"Lo añade el propio WordPress desde la versión 5.3 (el doble de medium_large "
+"y el doble de large) para que las pantallas grandes reciban imágenes srcset "
+"más nítidas. Ajustes > Medios no tiene ningún campo para él; un tema o "
+"plugin puede eliminarlo."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1391
+msgid ""
+"A WordPress core size that is currently off (0 × 0 in Settings > Media) or "
+"removed by a theme or plugin: nothing new is generated, these are leftover "
+"files from when it was on."
+msgstr ""
+"Un tamaño del núcleo de WordPress que ahora mismo está desactivado (0 × 0 en"
+" Ajustes > Medios) o eliminado por un tema o plugin: no se genera nada "
+"nuevo, estos son archivos sobrantes de cuando estaba activo."

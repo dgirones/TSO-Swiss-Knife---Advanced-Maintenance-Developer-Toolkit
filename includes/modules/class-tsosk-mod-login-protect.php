@@ -1805,6 +1805,7 @@ class TSOSK_Mod_Login_Protect {
 			<p class="description">
 				<?php esc_html_e( 'IPs that have failed login attempts within the active window but have not yet been locked out.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'IP Address', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1841,6 +1842,7 @@ class TSOSK_Mod_Login_Protect {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php endif; ?>
 

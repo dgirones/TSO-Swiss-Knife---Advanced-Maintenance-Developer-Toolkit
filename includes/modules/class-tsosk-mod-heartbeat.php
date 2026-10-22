@@ -341,6 +341,7 @@ class TSOSK_Mod_Heartbeat {
 				</div>
 			</div>
 			<?php if ( ! empty( $tsosk_hb_traffic['by_screen'] ) ) : ?>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table" style="max-width:520px;">
 				<thead><tr>
 					<th><?php esc_html_e( 'Screen', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -355,6 +356,7 @@ class TSOSK_Mod_Heartbeat {
 				<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 			<?php else : ?>
 			<p class="description"><?php esc_html_e( 'No Heartbeat requests measured yet in the last 24 hours.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php endif; ?>

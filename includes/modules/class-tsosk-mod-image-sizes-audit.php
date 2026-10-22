@@ -836,7 +836,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 			}
 		}
 
-		$requested        = array_values( array_filter( $requested, static fn( string $n ): bool => ! self::is_protected_size( $n ) ) );
+		$requested        = array_values( array_filter( $requested, static fn( string $n ): bool => ! self::is_protected_size( $n ) && ! in_array( $n, TSOSK_Uploads_Scanner::SETTINGS_SIZES, true ) ) );
 		$disabled         = $this->get_disabled_sizes();
 		$seen_sizes       = $this->get_seen_sizes();
 		$registered_names = function_exists( 'wp_get_registered_image_subsizes' )
@@ -1121,7 +1121,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	 * @param string   $nonce    AJAX nonce.
 	 */
 	private function render_sizes_table_without_audit( array $disabled, string $nonce ): void {
-		$registered = TSOSK_Uploads_Scanner::get_registered_sizes_with_core();
+		$registered = TSOSK_Uploads_Scanner::get_registered_sizes();
 		?>
 		<div class="tsosk-notice tsosk-notice-info">
 			<?php esc_html_e( 'Run the audit to see file counts and disk usage per size.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1149,6 +1149,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 		?>
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Audit summary', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-kv-table">
 				<tbody>
 					<tr>
@@ -1189,6 +1190,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 					<?php endif; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php
 		$usage = is_array( $audit['usage'] ?? null ) ? $audit['usage'] : array();
@@ -1210,10 +1212,20 @@ class TSOSK_Mod_Image_Sizes_Audit {
 	 * @param array<string, mixed> $usage    Usage signals from detect_usage(); empty when the audit has none.
 	 */
 	private function render_sizes_controls( array $registered, array $size_meta, array $by_size, array $disabled, string $nonce, array $usage = array() ): void {
-		// Every size WordPress registers itself gets the core badge; only $locked_core cannot be switched off here (Settings > Media).
-		$core_sizes   = array( 'thumbnail', 'medium', 'medium_large', 'large', '1536x1536', '2048x2048' );
-		$locked_core  = array( 'thumbnail', 'medium', 'large' );
-		$legacy_names = array_values( array_diff( array_keys( $by_size ), array_keys( $registered ) ) );
+		// Every size WordPress registers itself gets the core badge; only $locked_core (the ones with fields in
+		// Settings > Media) cannot be switched off here.
+		$core_sizes  = TSOSK_Uploads_Scanner::CORE_SIZES;
+		$locked_core = TSOSK_Uploads_Scanner::SETTINGS_SIZES;
+		// Sizes found in the files but not registered. A core size that is turned off and has no files left is not
+		// listed: WordPress does not register it, so it is not one of "the registered sizes".
+		$legacy_names = array_values(
+			array_filter(
+				array_diff( array_keys( $by_size ), array_keys( $registered ) ),
+				static function ( $name ) use ( $core_sizes, $by_size ): bool {
+					return ! in_array( $name, $core_sizes, true ) || (int) ( $by_size[ $name ]['files'] ?? 0 ) > 0;
+				}
+			)
+		);
 		$seen_front   = $this->get_seen_sizes();
 
 		// Registered sizes with no files whose old-named files still exist (a theme renamed its sizes).
@@ -1268,20 +1280,14 @@ class TSOSK_Mod_Image_Sizes_Audit {
 									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'core', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 								<?php
-								$tsosk_note  = (string) ( $size['tsosk_note'] ?? '' );
 								$tsosk_badge = '';
 								$tsosk_paras = array();
-								if ( 'disabled' === $tsosk_note ) {
-									if ( 'medium_large' === $name ) {
-										$tsosk_badge   = __( 'off (options set to 0)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-										$tsosk_paras[] = __( 'WordPress has no field for this size in Settings > Media. Its options medium_large_size_w and medium_large_size_h are 0, so WordPress generates no files for it (the default is 768 × 0).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-									} else {
-										$tsosk_badge   = __( 'off in Settings > Media', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-										$tsosk_paras[] = __( 'Width and height are 0 in Settings > Media, so WordPress generates no files for this size.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-									}
-								} elseif ( 'hidden' === $tsosk_note ) {
-									$tsosk_badge   = __( 'hidden by a filter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-									$tsosk_paras[] = __( 'A theme or plugin removes this size from the list of registered sizes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+								// Why this core size has no field in Settings > Media (only three of the six do).
+								$tsosk_info = array();
+								if ( 'medium_large' === $name ) {
+									$tsosk_info[] = __( 'WordPress registers this size itself (768 px wide by default) but Settings > Media has no field for it. It is only generated while its options medium_large_size_w and medium_large_size_h are not both 0.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+								} elseif ( $is_core && ! $is_locked ) {
+									$tsosk_info[] = __( 'Added by WordPress itself since version 5.3 (twice medium_large and twice large) so large screens get sharper srcset images. Settings > Media has no field for it; a theme or plugin can remove it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 								}
 								if ( ! empty( $old_names_for[ $name ] ) && (int) ( $stats['files'] ?? 0 ) < max( $old_names_for[ $name ] ) ) {
 									$tsosk_paras[] = sprintf(
@@ -1291,9 +1297,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 									);
 								}
 								?>
-								<?php if ( '' !== $tsosk_badge ) : ?>
-									<span class="tsosk-badge tsosk-badge-warn"><?php echo esc_html( $tsosk_badge ); ?></span>
-								<?php endif; ?>
+								<?php echo $this->render_info_popover( $tsosk_info, false ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
 								<?php echo $this->render_info_popover( $tsosk_paras, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in method. ?>
 							</td>
 							<td>
@@ -1312,15 +1316,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 							<td><?php echo esc_html( number_format_i18n( (int) ( $stats['files'] ?? 0 ) ) ); ?></td>
 							<td><?php echo esc_html( size_format( (int) ( $stats['bytes'] ?? 0 ), 2 ) ); ?></td>
 							<td>
-								<?php if ( $is_core && 'disabled' === ( $size['tsosk_note'] ?? '' ) ) : ?>
-									<?php
-									if ( 'medium_large' === $name ) {
-										esc_html_e( 'Not generated (options set to 0 × 0)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-									} else {
-										esc_html_e( 'Not generated (0 × 0 in Settings > Media)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-									}
-									?>
-								<?php elseif ( $is_locked ) : ?>
+								<?php if ( $is_locked ) : ?>
 									<?php esc_html_e( 'Always generated. Set 0 × 0 in Settings > Media to turn it off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								<?php elseif ( ! $is_enabled ) : ?>
 									<?php esc_html_e( 'Skipped on new uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1378,7 +1374,7 @@ class TSOSK_Mod_Image_Sizes_Audit {
 								<input type="checkbox" class="tsosk-img-audit-size-toggle"
 										data-name="<?php echo esc_attr( $name ); ?>"
 										<?php checked( ! in_array( $name, $disabled, true ) ); ?>
-										<?php disabled( self::is_protected_size( (string) $name ) ); ?>>
+										<?php disabled( self::is_protected_size( (string) $name ) || in_array( $name, $locked_core, true ) ); ?>>
 							</td>
 							<td>
 								<code><?php echo esc_html( $name ); ?></code>
@@ -1391,7 +1387,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 								if ( self::is_protected_size( (string) $name ) ) {
 									$tsosk_paras[] = __( 'Created by WordPress for the site icon (favicon): it cannot be turned off or moved to quarantine.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 								} else {
-									$tsosk_paras[] = __( 'Not registered by any active theme or plugin — no new files are generated for it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+									$tsosk_paras[] = in_array( $name, $core_sizes, true )
+										? __( 'A WordPress core size that is currently off (0 × 0 in Settings > Media) or removed by a theme or plugin: nothing new is generated, these are leftover files from when it was on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+										: __( 'Not registered by any active theme or plugin — no new files are generated for it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 									if ( in_array( $name, $seen_front, true ) && ! in_array( $name, $disabled, true ) ) {
 										$tsosk_paras[] = __( 'It was seen registered on the front end: check that no theme still uses it before moving its files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 									}
@@ -1506,7 +1504,9 @@ class TSOSK_Mod_Image_Sizes_Audit {
 				'files' => 0,
 				'bytes' => 0,
 			);
-			if ( self::is_protected_size( (string) $name ) ) {
+			// The site icon and the sizes with fields in Settings > Media are never eligible, even when they are off
+			// (0 × 0) and WordPress no longer registers them: that is where their leftover files end up.
+			if ( self::is_protected_size( (string) $name ) || in_array( $name, $core_sizes, true ) ) {
 				continue;
 			}
 			// A size seen registered on the front end stays hidden here unless the admin turned it off explicitly.

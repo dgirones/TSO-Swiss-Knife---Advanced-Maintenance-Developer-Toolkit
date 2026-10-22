@@ -890,6 +890,7 @@ class TSOSK_Mod_Server_Files {
 			<p>
 				<button type="button" class="button" id="tsosk-sf-sitemaps-recheck" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Check again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</p>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Sitemap', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -901,6 +902,7 @@ class TSOSK_Mod_Server_Files {
 				<?php $this->render_sitemap_rows( $sitemaps, true ); ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php
 	}

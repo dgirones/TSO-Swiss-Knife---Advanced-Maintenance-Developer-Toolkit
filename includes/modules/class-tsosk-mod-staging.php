@@ -902,6 +902,7 @@ class TSOSK_Mod_Staging {
 						<?php esc_html_e( 'Show only emails held here (not sent)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</label>
 				</p>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-staging-mail-log">
 					<thead>
 						<tr>
@@ -937,6 +938,7 @@ class TSOSK_Mod_Staging {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			<?php endif; ?>
 			<p style="margin-top:12px;">
 				<button type="button" class="button" id="tsosk-staging-clear-log" data-nonce="<?php echo esc_attr( $nonce ); ?>">

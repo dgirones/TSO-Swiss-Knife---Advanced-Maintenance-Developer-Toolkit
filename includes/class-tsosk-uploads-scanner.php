@@ -484,37 +484,42 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * Registered image sizes plus the four WordPress core sizes, even when WordPress does not list them.
+	 * The six sizes WordPress registers by itself, in the order WordPress documents them.
 	 *
-	 * A core size is missing from wp_get_registered_image_subsizes() when its width and height are both 0
-	 * in Settings > Media (WordPress then generates no file for it) or when a theme/plugin removes it with
-	 * the "intermediate_image_sizes" filter. Such sizes can still own files from older uploads, so they get a
-	 * row with a "tsosk_note" marker ("disabled" or "hidden") instead of being silently dropped.
+	 * Four come from Settings > Media options or are built in (thumbnail, medium, medium_large, large); two are
+	 * added by core since WordPress 5.3 (1536x1536 = 2x medium_large, 2048x2048 = 2x large).
+	 */
+	public const CORE_SIZES = array( 'thumbnail', 'medium', 'medium_large', 'large', '1536x1536', '2048x2048' );
+
+	/**
+	 * The only core sizes that have fields in Settings > Media.
+	 */
+	public const SETTINGS_SIZES = array( 'thumbnail', 'medium', 'large' );
+
+	/**
+	 * The image sizes WordPress registers right now, core sizes first.
+	 *
+	 * This is WordPress' own list (wp_get_registered_image_subsizes()), so a size whose width and height are both
+	 * 0 (medium turned off in Settings > Media, medium_large with its options at 0) is not in it: WordPress does
+	 * not register it and never generates a file for it. Files left over from when it was on still get a row,
+	 * flagged "not registered", because the scan adds every size name it finds in the attachment metadata.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
-	public static function get_registered_sizes_with_core(): array {
+	public static function get_registered_sizes(): array {
 		$registered = function_exists( 'wp_get_registered_image_subsizes' )
 			? wp_get_registered_image_subsizes()
 			: array();
 
-		foreach ( array( 'thumbnail', 'medium', 'medium_large', 'large' ) as $core_name ) {
+		// A plugin can register a size before core adds 1536x1536 and 2048x2048, so keep core together at the top.
+		$ordered = array();
+		foreach ( self::CORE_SIZES as $core_name ) {
 			if ( isset( $registered[ $core_name ] ) ) {
-				continue;
+				$ordered[ $core_name ] = $registered[ $core_name ];
 			}
-			$width  = (int) get_option( $core_name . '_size_w', 0 );
-			$height = (int) get_option( $core_name . '_size_h', 0 );
-			$crop   = 'thumbnail' === $core_name ? (bool) get_option( 'thumbnail_crop', 1 ) : false;
-
-			$registered[ $core_name ] = array(
-				'width'      => $width,
-				'height'     => $height,
-				'crop'       => $crop,
-				'tsosk_note' => ( 0 === $width && 0 === $height ) ? 'disabled' : 'hidden',
-			);
 		}
 
-		return $registered;
+		return $ordered + array_diff_key( $registered, $ordered );
 	}
 
 	/**
@@ -535,7 +540,7 @@ class TSOSK_Uploads_Scanner {
 			return new WP_Error( 'tsosk_uploads', __( 'Uploads directory was not found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$registered = self::get_registered_sizes_with_core();
+		$registered = self::get_registered_sizes();
 
 		// Seeded from currently-registered sizes, but every size name actually found while
 		// scanning attachment metadata gets its own row too — including sizes no theme or

@@ -285,6 +285,7 @@ class TSOSK_Mod_Content_Audit {
 			<?php if ( empty( $broken_shortcodes ) ) : ?>
 				<p><?php esc_html_e( 'No broken shortcodes detected in the sampled content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-ca-shortcodes-table">
 					<thead><tr>
 						<th><?php esc_html_e( 'Post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -324,6 +325,7 @@ class TSOSK_Mod_Content_Audit {
 					<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 				<span class="tsosk-ajax-msg" id="tsosk-ca-shortcodes-msg"></span>
 			<?php endif; ?>
 		</div>

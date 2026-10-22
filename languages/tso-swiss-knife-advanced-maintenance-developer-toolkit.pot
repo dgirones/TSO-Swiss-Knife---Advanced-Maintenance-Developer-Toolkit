@@ -13697,12 +13697,6 @@ msgid ""
 "them any more."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:584
-msgid ""
-"Not registered by any active theme or plugin — no new files are generated "
-"for it. Existing files can be moved to quarantine below."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid ""
 "Some content still links directly to files of these sizes. Those images will"
@@ -13805,24 +13799,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid ""
-"Width and height are 0 in Settings > Media, so WordPress generates no files "
-"for this size."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "hidden by a filter"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "A theme or plugin removes this size from the list of registered sizes."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (0 × 0 in Settings > Media)"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
 "Turned off: its existing files are listed in the quarantine section below."
 msgstr ""
 
@@ -13875,21 +13851,6 @@ msgstr ""
 msgid ""
 "It was seen registered on the front end: check that no theme still uses it "
 "before moving its files."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "off (options set to 0)"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
-"WordPress has no field for this size in Settings > Media. Its options "
-"medium_large_size_w and medium_large_size_h are 0, so WordPress generates no"
-" files for it (the default is 768 × 0)."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (options set to 0 × 0)"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
@@ -16243,3 +16204,24 @@ msgid_plural ""
 "%d ignored files are hidden from these results (see Ignored Files below)."
 msgstr[0] ""
 msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1288
+msgid ""
+"WordPress registers this size itself (768 px wide by default) but Settings >"
+" Media has no field for it. It is only generated while its options "
+"medium_large_size_w and medium_large_size_h are not both 0."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1290
+msgid ""
+"Added by WordPress itself since version 5.3 (twice medium_large and twice "
+"large) so large screens get sharper srcset images. Settings > Media has no "
+"field for it; a theme or plugin can remove it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1391
+msgid ""
+"A WordPress core size that is currently off (0 × 0 in Settings > Media) or "
+"removed by a theme or plugin: nothing new is generated, these are leftover "
+"files from when it was on."
+msgstr ""

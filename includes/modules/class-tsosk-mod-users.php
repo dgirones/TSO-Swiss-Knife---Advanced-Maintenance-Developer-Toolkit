@@ -630,6 +630,7 @@ class TSOSK_Mod_Users {
 						<?php if ( empty( $sessions ) ) : ?>
 							<p class="description"><?php esc_html_e( 'No active sessions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 						<?php else : ?>
+							<div class="tsosk-table-wrap">
 							<table class="widefat tsosk-table">
 								<thead><tr>
 									<th><?php esc_html_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -661,6 +662,7 @@ class TSOSK_Mod_Users {
 									<?php endforeach; ?>
 								</tbody>
 							</table>
+							</div>
 						<?php endif; ?>
 					</div>
 				<?php endforeach; ?>
@@ -693,6 +695,7 @@ class TSOSK_Mod_Users {
 					</button>
 					<span class="tsosk-ajax-msg" id="tsosk-users-bulk-msg"></span>
 				</div>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table" id="tsosk-users-inactive-table">
 					<thead><tr>
 						<th><input type="checkbox" id="tsosk-users-select-all"></th>
@@ -717,6 +720,7 @@ class TSOSK_Mod_Users {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php
@@ -741,6 +745,7 @@ class TSOSK_Mod_Users {
 			<?php if ( empty( $history ) ) : ?>
 				<p><?php esc_html_e( 'No login events recorded yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
 						<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -765,6 +770,7 @@ class TSOSK_Mod_Users {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			<?php endif; ?>
 		</div>
 		<?php

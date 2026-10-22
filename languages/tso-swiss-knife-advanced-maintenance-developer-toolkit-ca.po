@@ -15806,15 +15806,6 @@ msgstr "no registrat"
 msgid "%1$d × %2$d — crop: unknown"
 msgstr "%1$d × %2$d — retall: desconegut"
 
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php:584
-msgid ""
-"Not registered by any active theme or plugin — no new files are generated "
-"for it. Existing files can be moved to quarantine below."
-msgstr ""
-"No està registrat per cap tema o plugin actiu — no es genera cap fitxer nou "
-"per a aquesta mida. Els fitxers existents es poden moure a la quarantena a "
-"sota."
-
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php:593
 msgid ""
 "Rows marked \"not registered\" come from an old theme or a deactivated "
@@ -15943,27 +15934,6 @@ msgstr "desactivada a Configuració > Mèdia"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid ""
-"Width and height are 0 in Settings > Media, so WordPress generates no files "
-"for this size."
-msgstr ""
-"L'amplada i l'alçada són 0 a Configuració > Mèdia, de manera que WordPress "
-"no genera cap fitxer per a aquesta mida."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "hidden by a filter"
-msgstr "amagada per un filtre"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "A theme or plugin removes this size from the list of registered sizes."
-msgstr ""
-"Un tema o un plugin treu aquesta mida de la llista de mides registrades."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (0 × 0 in Settings > Media)"
-msgstr "No es genera (0 × 0 a Configuració > Mèdia)"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
 "Turned off: its existing files are listed in the quarantine section below."
 msgstr ""
 "Desactivada: els seus fitxers existents surten a la secció de quarantena de "
@@ -16035,24 +16005,6 @@ msgid ""
 msgstr ""
 "S'ha vist registrada al front-end: comproveu que cap tema encara la fa "
 "servir abans de moure'n els fitxers."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "off (options set to 0)"
-msgstr "desactivada (opcions a 0)"
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid ""
-"WordPress has no field for this size in Settings > Media. Its options "
-"medium_large_size_w and medium_large_size_h are 0, so WordPress generates no"
-" files for it (the default is 768 × 0)."
-msgstr ""
-"WordPress no té cap camp per a aquesta mida a Configuració > Mèdia. Les "
-"opcions medium_large_size_w i medium_large_size_h valen 0, així que "
-"WordPress no hi genera cap fitxer (el valor per defecte és 768 × 0)."
-
-#: includes/modules/class-tsosk-mod-image-sizes-audit.php
-msgid "Not generated (options set to 0 × 0)"
-msgstr "No es genera (opcions a 0 × 0)"
 
 #: includes/modules/class-tsosk-mod-image-sizes-audit.php
 msgid "More information"
@@ -18738,3 +18690,35 @@ msgstr[0] ""
 msgstr[1] ""
 "%d fitxers ignorats s'han amagat d'aquests resultats (vegeu Fitxers ignorats"
 " més avall)."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1288
+msgid ""
+"WordPress registers this size itself (768 px wide by default) but Settings >"
+" Media has no field for it. It is only generated while its options "
+"medium_large_size_w and medium_large_size_h are not both 0."
+msgstr ""
+"WordPress registra aquesta mida per ell mateix (768 px d'amplada per "
+"defecte), però Ajustos > Mitjans no té cap camp per a ella. Només es genera "
+"mentre les opcions medium_large_size_w i medium_large_size_h no siguin totes"
+" dues 0."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1290
+msgid ""
+"Added by WordPress itself since version 5.3 (twice medium_large and twice "
+"large) so large screens get sharper srcset images. Settings > Media has no "
+"field for it; a theme or plugin can remove it."
+msgstr ""
+"L'afegeix WordPress mateix des de la versió 5.3 (el doble de medium_large i "
+"el doble de large) perquè les pantalles grans rebin imatges srcset més "
+"nítides. Ajustos > Mitjans no té cap camp per a ella; un tema o un connector"
+" la pot eliminar."
+
+#: includes/modules/class-tsosk-mod-image-sizes-audit.php:1391
+msgid ""
+"A WordPress core size that is currently off (0 × 0 in Settings > Media) or "
+"removed by a theme or plugin: nothing new is generated, these are leftover "
+"files from when it was on."
+msgstr ""
+"Una mida del nucli de WordPress que ara mateix està desactivada (0 × 0 a "
+"Ajustos > Mitjans) o eliminada per un tema o connector: no es genera res de "
+"nou, aquests són fitxers sobrants de quan estava activa."

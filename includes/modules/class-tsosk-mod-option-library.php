@@ -185,6 +185,7 @@ class TSOSK_Mod_Option_Library {
 					<?php endif; ?>
 				</p>
 				<?php endif; ?>
+				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead>
 						<tr>
@@ -238,6 +239,7 @@ class TSOSK_Mod_Option_Library {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 			</div>
 			<?php endforeach; ?>
 		<?php endif; ?>

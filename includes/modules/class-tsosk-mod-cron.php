@@ -294,6 +294,7 @@ class TSOSK_Mod_Cron {
 
 		<div class="tsosk-card" id="tsosk-cron-health">
 			<h3><?php esc_html_e( 'WP-Cron Health', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table">
 				<thead><tr>
 					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -310,6 +311,7 @@ class TSOSK_Mod_Cron {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 		</div>
 
 		<div class="tsosk-card">
