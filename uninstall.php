@@ -35,6 +35,7 @@ $tsosk_options = array(
 	'tsosk_autoload_schema',
 	'tsosk_login_lockouts',
 	'tsosk_login_attempts',
+	'tsosk_login_user_attempts',
 	'tsosk_comment_antispam',
 	'tsosk_cas_log',
 	'tsosk_cas_rate',
@@ -127,7 +128,7 @@ $wpdb->query(
 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(
 	$wpdb->prepare(
-		"DELETE FROM {$wpdb->usermeta} WHERE meta_key IN (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+		"DELETE FROM {$wpdb->usermeta} WHERE meta_key IN (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
 		'tsosk_sandbox_plugins',
 		'tsosk_sandbox_token',
 		'tsosk_admin_language',
@@ -136,7 +137,8 @@ $wpdb->query(
 		'tsosk_sidebar_hidden',
 		'tsosk_sidebar_favorites',
 		'tsosk_force_password_change',
-		'tsosk_last_login'
+		'tsosk_last_login',
+		'tsosk_lp_trusted_ips'
 	)
 );
 

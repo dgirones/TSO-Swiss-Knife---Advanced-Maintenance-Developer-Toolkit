@@ -68,6 +68,7 @@ class TSOSK_Activity_Log {
 		return array(
 			'options-editor',
 			'meta-editor',
+			'leftovers',
 			'search-replace',
 			'admin-menu',
 			'maintenance',
@@ -255,7 +256,8 @@ class TSOSK_Activity_Log {
 			}
 		);
 
-		return $log;
+		// Show no more than the current limit, also right after the limit was lowered.
+		return array_slice( $log, 0, self::get_limit() );
 	}
 
 	/**
@@ -275,6 +277,7 @@ class TSOSK_Activity_Log {
 		$labels = array(
 			'options-editor'    => __( 'Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'meta-editor'       => __( 'Meta Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'leftovers'         => __( 'Plugin & Theme Leftovers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'search-replace'    => __( 'Search & Replace', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'admin-menu'        => __( 'Reorder & Hide Sidebar', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'maintenance'       => __( 'Maintenance Mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -474,7 +477,7 @@ class TSOSK_Activity_Log {
 			'/^Manual update run finished \(plugins pending: (\d+) → (\d+)\)\.$/' => static function ( array $m ): string {
 				return sprintf(
 					/* translators: 1: plugins before, 2: plugins after */
-					__( 'Manual update check finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Manual update run finished (plugins pending: %1$d → %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					(int) $m[1],
 					(int) $m[2]
 				);
@@ -566,6 +569,30 @@ class TSOSK_Activity_Log {
 					__( 'Cron event executed: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$m[1]
 				);
+			},
+			'/^Plugin\/theme leftovers deleted: (\d+) row\(s\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: %d: number of database rows */
+					__( 'Plugin/theme leftovers deleted: %d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1]
+				);
+			},
+			'/^Plugin\/theme leftovers restored: (\d+) row\(s\)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: %d: number of database rows */
+					__( 'Plugin/theme leftovers restored: %d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1]
+				);
+			},
+			'/^Plugin\/theme leftovers backups deleted: (\d+)\.$/' => static function ( array $m ): string {
+				return sprintf(
+					/* translators: %d: number of backups */
+					__( 'Plugin/theme leftovers backups deleted: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $m[1]
+				);
+			},
+			'/^Large option deleted and restored automatically: the site returned an error\.$/' => static function (): string {
+				return __( 'Large option deleted and restored automatically: the site returned an error.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			},
 			'/^Activity history cleared\.$/'               => static function (): string {
 				return __( 'Activity history cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );

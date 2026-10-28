@@ -47,6 +47,13 @@ class TSOSK_Mod_Comment_Antispam {
 	private bool $form_silent_block = false;
 
 	/**
+	 * Visitor-facing message of the last blocked Contact Form 7 submission.
+	 *
+	 * @var string
+	 */
+	private string $form_block_message = '';
+
+	/**
 	 * Unique honeypot field id suffix per rendered form.
 	 *
 	 * @var int
@@ -247,7 +254,9 @@ class TSOSK_Mod_Comment_Antispam {
 
 		// WPForms.
 		if ( function_exists( 'wpforms' ) ) {
-			add_action( 'wpforms_frontend_output_container_before', array( $this, 'output_trap_fields' ), 10, 0 );
+			// "wpforms_frontend_output" fires inside the <form> element (WPForms' own honeypot uses it); the
+			// "container_before" hook fires outside it, so the fields would never be submitted.
+			add_action( 'wpforms_frontend_output', array( $this, 'output_trap_fields' ), 10, 0 );
 			add_filter( 'wpforms_process_before_filter', array( $this, 'wpforms_process_before' ), 5, 3 );
 		}
 
@@ -514,14 +523,29 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @param string               $status   Result status.
 	 * @return array<string, mixed>
 	 */
-	public function cf7_feedback_response( array $response, string $status ): array {
-		if ( $this->form_silent_block && 'spam' === $status ) {
+	public function cf7_feedback_response( $response, $result = '' ) {
+		if ( ! is_array( $response ) ) {
+			return $response;
+		}
+		// Contact Form 7 passes the submission result as an array ('status' => ...); older code paths pass the status itself.
+		$status = is_array( $result ) ? (string) ( $result['status'] ?? '' ) : (string) $result;
+		if ( '' === $status ) {
+			$status = (string) ( $response['status'] ?? '' );
+		}
+		if ( 'spam' !== $status ) {
+			return $response;
+		}
+
+		if ( $this->form_silent_block ) {
 			$this->form_silent_block = false;
 			$response['status']      = 'mail_sent';
 			$response['message']     = apply_filters(
 				'tsosk_cf7_silent_block_success_message',
 				__( 'Thank you for your message. It has been sent.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 			);
+		} elseif ( '' !== $this->form_block_message ) {
+			// Show the reason (or the custom "message for blocked visitors") instead of CF7's generic spam text.
+			$response['message'] = $this->form_block_message;
 		}
 		return $response;
 	}
@@ -534,9 +558,43 @@ class TSOSK_Mod_Comment_Antispam {
 	 * @param array<string, mixed> $form_data Form configuration.
 	 * @return array<string, mixed>
 	 */
-	public function wpforms_process_before( array $fields, array $entry, array $form_data ): array {
-		unset( $entry );
-		$data = $this->extract_fields_from_array( $fields, 'wpforms' );
+	public function wpforms_process_before( $fields, $entry = array(), $form_data = null ) {
+		// WPForms passes ($entry, $form_data); accept the three-argument form too so a missing argument can never be fatal.
+		if ( ! is_array( $fields ) ) {
+			return $fields;
+		}
+		if ( null === $form_data ) {
+			$form_data = is_array( $entry ) ? $entry : array();
+		}
+		$form_data = is_array( $form_data ) ? $form_data : array();
+
+		// The raw entry keys its values by numeric field id: name them after the field definition so the
+		// email, name and message are recognised.
+		$values = isset( $fields['fields'] ) && is_array( $fields['fields'] ) ? $fields['fields'] : $fields;
+		$flat   = array();
+		foreach ( $values as $field_id => $value ) {
+			if ( ! is_scalar( $value ) && ! is_array( $value ) ) {
+				continue;
+			}
+			$def   = isset( $form_data['fields'][ $field_id ] ) && is_array( $form_data['fields'][ $field_id ] ) ? $form_data['fields'][ $field_id ] : array();
+			$type  = strtolower( (string) ( $def['type'] ?? '' ) );
+			$label = strtolower( (string) ( $def['label'] ?? '' ) );
+			if ( 'email' === $type ) {
+				$key = 'email';
+			} elseif ( 'name' === $type ) {
+				$key = 'name';
+			} elseif ( '' !== $label ) {
+				$key = $label;
+			} else {
+				$key = (string) $field_id;
+			}
+			if ( isset( $flat[ $key ] ) ) {
+				$key .= '-' . $field_id;
+			}
+			$flat[ $key ] = $value;
+		}
+
+		$data = $this->extract_fields_from_array( $flat, 'wpforms' );
 		if ( $this->should_skip_submission( $data ) ) {
 			return $fields;
 		}
@@ -546,7 +604,8 @@ class TSOSK_Mod_Comment_Antispam {
 			return $fields;
 		}
 
-		$this->handle_form_block( $data, $check, 'wpforms', (int) ( $form_data['id'] ?? 0 ) );
+		$form_id = (int) ( $form_data['id'] ?? ( $fields['id'] ?? 0 ) );
+		$this->handle_form_block( $data, $check, 'wpforms', $form_id );
 
 		return $fields;
 	}
@@ -640,6 +699,10 @@ class TSOSK_Mod_Comment_Antispam {
 			if ( '' === $key ) {
 				continue;
 			}
+			// Two fields of the same type without a title would overwrite each other and lose content.
+			if ( isset( $flat[ $key ] ) ) {
+				$key .= '-' . ( isset( $field['id'] ) ? (string) $field['id'] : (string) count( $flat ) );
+			}
 			$flat[ $key ] = $field['value'];
 		}
 
@@ -648,9 +711,9 @@ class TSOSK_Mod_Comment_Antispam {
 			return;
 		}
 
-		$check = $this->evaluate_submission( $data );
-		if ( $check['allow'] ) {
-			$this->record_successful_submission( $data );
+		// Same path as the other integrations, so blocks are logged and Learning mode / observed rules are honoured.
+		$check = $this->gate_submission( $data );
+		if ( null === $check ) {
 			return;
 		}
 
@@ -711,6 +774,8 @@ class TSOSK_Mod_Comment_Antispam {
 
 		if ( ! empty( $check['silent'] ) ) {
 			$this->form_silent_block = true;
+		} else {
+			$this->form_block_message = $this->public_message( $check );
 		}
 
 		return true;
@@ -1730,6 +1795,7 @@ class TSOSK_Mod_Comment_Antispam {
 		if ( $this->is_shared_ip( $ip ) ) {
 			return false;
 		}
+		$ip = $this->ip_bucket( $ip );
 
 		$limit  = max( 1, (int) $this->settings['rate_limit_count'] );
 		$window = max( 1, (int) $this->settings['rate_limit_window'] ) * MINUTE_IN_SECONDS;
@@ -1760,10 +1826,10 @@ class TSOSK_Mod_Comment_Antispam {
 			return;
 		}
 
-		if ( ! empty( $this->settings['rate_limit'] ) ) {
+		if ( ! empty( $this->settings['rate_limit'] ) && ! $this->is_shared_ip( $ip ) ) {
 			$window = max( 1, (int) $this->settings['rate_limit_window'] ) * MINUTE_IN_SECONDS;
 			$now    = time();
-			$key    = 'tsosk_cas_rl_' . md5( $ip );
+			$key    = 'tsosk_cas_rl_' . md5( $this->ip_bucket( $ip ) );
 			$stamps = get_transient( $key );
 			$stamps = is_array( $stamps ) ? $stamps : array();
 
@@ -1871,6 +1937,27 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	private function get_client_ip(): string {
 		return TSOSK_Support::get_client_ip();
+	}
+
+	/**
+	 * Counting key for an address: IPv4 stays as is, IPv6 collapses to its /64 network, so one IPv6
+	 * connection cannot dodge rate limits and bans by rotating addresses inside its own range.
+	 *
+	 * @param string $ip Client IP.
+	 */
+	private function ip_bucket( string $ip ): string {
+		if ( '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			return $ip;
+		}
+		$packed = inet_pton( $ip );
+		if ( false === $packed || 16 !== strlen( $packed ) ) {
+			return $ip;
+		}
+		if ( 0 === strncmp( $packed, str_repeat( "\0", 10 ) . "\xff\xff", 12 ) ) {
+			return (string) inet_ntop( substr( $packed, 12 ) );
+		}
+		$network = inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) );
+		return false !== $network ? $network : $ip;
 	}
 
 	/**
@@ -2567,7 +2654,7 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	private function is_ip_banned(): bool {
 		$ip = $this->get_client_ip();
-		return ! $this->is_shared_ip( $ip ) && false !== get_transient( 'tsosk_cas_ban_' . md5( $ip ) );
+		return ! $this->is_shared_ip( $ip ) && false !== get_transient( 'tsosk_cas_ban_' . md5( $this->ip_bucket( $ip ) ) );
 	}
 
 	/**
@@ -2585,6 +2672,7 @@ class TSOSK_Mod_Comment_Antispam {
 			return;
 		}
 
+		$ip      = $this->ip_bucket( $ip );
 		$key     = 'tsosk_cas_strikes_' . md5( $ip );
 		$strikes = (int) get_transient( $key ) + 1;
 		set_transient( $key, $strikes, DAY_IN_SECONDS );
@@ -3396,6 +3484,35 @@ class TSOSK_Mod_Comment_Antispam {
 			'block_message'             => isset( $_POST['block_message'] ) ? $this->substr_safe( sanitize_text_field( wp_unslash( $_POST['block_message'] ) ), 200 ) : '',
 			'observe_rules'             => $observe_rules,
 		);
+
+		// A whitelist line that is not an IP or a CIDR range would be ignored silently, leaving that visitor unprotected from the rules.
+		$bad_lines = array();
+		foreach ( preg_split( '/\r\n|\r|\n/', (string) $new['whitelist_ips'] ) as $line ) {
+			$line = trim( $line );
+			if ( '' === $line || str_starts_with( $line, '#' ) ) {
+				continue;
+			}
+			$addr = $line;
+			$bits = null;
+			if ( false !== strpos( $line, '/' ) ) {
+				list( $addr, $bits_raw ) = explode( '/', $line, 2 );
+				$bits                    = ctype_digit( $bits_raw ) ? (int) $bits_raw : -1;
+			}
+			$is_v6 = false !== strpos( $addr, ':' );
+			if ( false === filter_var( $addr, FILTER_VALIDATE_IP ) || ( null !== $bits && ( $bits < 0 || $bits > ( $is_v6 ? 128 : 32 ) ) ) ) {
+				$bad_lines[] = $line;
+			}
+		}
+		if ( ! empty( $bad_lines ) ) {
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: comma-separated invalid whitelist lines */
+					__( 'Settings were not saved. These whitelist lines are not a valid IP address or range (such as 203.0.113.0/24): %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', array_slice( $bad_lines, 0, 5 ) )
+				),
+				400
+			);
+		}
 
 		if ( $new['enabled'] && empty( $new['protect_comments'] ) && empty( $new['protect_contact_forms'] ) && empty( $new['protect_registration'] ) ) {
 			wp_send_json_error(

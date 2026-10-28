@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.3
+Stable tag: 1.2.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,8 +43,8 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Slug Manager** — Bulk-edit post and term slugs with conflict detection.
 * **Health Report** — Compact checks for risky settings, logs, 404 noise, and related issues; download HTML/JSON in the plugin UI language.
 * **Reorder & Hide Sidebar** — Drag to reorder WordPress admin menu items, rename labels, nest items under another section, or hide items for all admins.
-* **Users & Sessions** — Review administrators, role-less users, old accounts, and active sessions.
-* **Roles & Capabilities** — Compare roles, apply capability templates, and audit dangerous caps.
+* **Users & Sessions** — Summary cards (totals and users per role), per-account session cards with single or full session close, a searchable and sortable All users list with bulk role change (including "select all matching users" and Undo), inactive accounts, and login history.
+* **Roles & Capabilities** — Step-by-step screen: choose a role, review what each capability allows, add or remove capabilities, apply templates, clone a role or compare two roles. Dangerous capabilities are blocked or flagged.
 * **Media Cleaner** — Review unattached media, missing attachment files, and unreferenced uploads.
 * **Uploads Disk Footprint** — Scan the uploads folder for size and file-type footprint statistics.
 * **Image Sizes Audit** — Review registered image sizes and disable unused sizes where appropriate.
@@ -201,75 +201,29 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
-= 1.2.3 =
-* Fixed: Redirects — "Create redirect" in the 404 Monitor now switches to the Redirects tab, so the form is visible instead of filling it out of sight.
-* Improved: Debug Mode lists only the error logs that exist, and new ones appear automatically; it also finds custom WP_DEBUG_LOG paths and error_log files inside plugin and theme folders, works on hosts with symlinked paths and flags logs that cannot be read.
-* Fixed: Image Sizes Audit refreshes itself when images are added, deleted or regenerated from anywhere (Media Library, Image Master, other plugins), so it no longer shows outdated counts.
-* Fixed: Rewrite Rules — the route simulator now works on subdirectory installs and follows WordPress's own matching (slashes trimmed, unmatched groups left empty, values URL-encoded); a bare domain or "?p=1" is read as the home page.
-* Fixed: Rewrite Rules — a hard flush now says whether .htaccess was really updated (and warns when it is read-only, on nginx or on multisite) instead of always reporting success; plain permalinks get their own message. Soft and hard flush can no longer run at the same time.
-* Fixed: Server & Runtime — no more PHP warnings or a false "OPcache off" on hosts that restrict the OPcache API (the Reset button is hidden there); the temporary-folder check uses upload_tmp_dir; limits of 0 / -1 are shown as "no limit".
-* Improved: Server & Runtime — warns when an object-cache.php drop-in is on disk but WordPress is not using it, and the summary for hosting includes more limits.
-* Fixed: Content Audit — the duplicate-titles list no longer cuts its post IDs on MySQL servers (the last one could be wrong) and matches exactly, so "Café" and "Cafe" are no longer reported as the same title.
-* Fixed: Content Audit — card headings show the real total ("30 of 412") instead of the size of the capped list; the shortcode inventory no longer lists Markdown links or escaped [[tags]] as shortcodes and keeps their upper/lower case.
-* Fixed: Content Audit — removing a broken shortcode no longer touches Markdown links or escaped [[tags]], counts [tag]…[/tag] as one shortcode, and two removals can no longer overwrite each other; it now requires an administrator.
-* Improved: Content Audit — the "Long Slugs" card was removed (the Slug Manager already covers it with a configurable threshold, every public post type and bulk fixes) and links to it instead. Scheduled posts are now included, and old pending/private/draft content lists the most neglected items first.
-* Fixed: Overview — "Pending updates" now counts language packs too and uses the same numbers as the install button (it showed 0 while the button said 2); the install button moved into the "Needs attention" list as an "updates pending" row, and the list no longer keeps stale plugin/theme update warnings after an install.
-* Improved: Overview — visits and downloads show "—" instead of 0 when the View Counter is not counting; the updates row wraps cleanly on phones.
-* Fixed: Core File Integrity — an ignored file no longer shows up in both "Modified Files" and "Ignored Files": ignoring or removing a file now takes effect at once, without scanning again, and the lists and counters refresh on their own.
-* Improved: Core File Integrity — "Ignored Files" shows whether each file is still flagged; a failed scan keeps the last good result; ignore paths are normalised; dates follow the site time zone.
-* Fixed: Update Manager — "Install pending updates" no longer reports language packs as installed when WordPress installed none (the Overview kept showing them and a second press was needed); it now refreshes the offers and retries once, and shows an error if nothing could be installed.
-* Fixed: Overview — the progress message of the "updates pending" row sits under the button instead of beside it, so the row no longer jumps while installing; the button keeps its width while it says "Running…".
-* Fixed: Overview and Health Report — the debug.log tile and the "debug.log size" check only looked at the log WordPress is writing to, so they said "no file" while the Debug tab listed an older wp-content/debug.log; they now check the same files, name the file when there are several and say "Not readable" when one cannot be read. A memory limit of -1 now reads "-1 (no limit)".
-* Fixed: Tables — the Actions column no longer pushes tables out of their card (buttons stack when there is no room, long paths wrap, IDs never split), and 22 data tables that had no scroll container now have one, so on tablets and phones they scroll instead of being cut off.
-* Fixed: Image Sizes Audit — "Registered image sizes" now lists what WordPress really registers, with the six core sizes first: sizes turned off at 0 × 0 (medium, medium_large) no longer show up until they are enabled, the core sizes that have no field in Settings > Media (medium_large, 1536x1536, 2048x2048) now explain it, and the sizes of Settings > Media can no longer be moved to quarantine, not even by a manual request.
+= 1.2.6 =
+* Login Protection: new optional counter per username (stops attackers who change IP on every attempt), IPv6 counted per /64 network, lockout emails limited to 3 every 15 minutes, and fixes for the attempts list growing without limit, "Clear Log" lifting active lockouts, invalid IP lines, self-lockout with login maintenance, timezone and the Active/Inactive badge.
+* Security Review: one alert when a new administrator is created (it sent two), FORCE_SSL_ADMIN refused when you are not on HTTPS, wp-config.php-locked toggles no longer saved, and a more truthful uploads PHP check (commented rules, Nginx/IIS).
+* Comment Anti-Spam: WPForms trap fields now inside the form, clearer Contact Form 7 block messages, Elementor Pro blocks logged and Learning mode respected, IPv6 per /64 in rate limits and bans, and the IP whitelist validated on save.
+* Search & Replace: post GUIDs are skipped by default (new "Include post GUIDs" option) and the history tables of other TSO plugins are no longer searched or rewritten.
+* Server Files: the "Add security headers" button always shows, a virtual robots.txt is detected, informational notices are gone, and "No obvious issues were detected" only appears when it is true.
+* Redirects: the 404 Monitor has a "Select all" button and no longer logs or offers a redirect for the home page.
+* Also: Leftovers ignores WordPress's "recently_edited" option, Content Audit shows where each shortcode is used, and Media Footprint shows and links each large file's folder.
 
-= 1.2.2 =
-* Users & Sessions: the "Close" button of a single session never found the session (the table lists WordPress's stored hashes, not the cookie token); it now removes it correctly and logs it. Repeated wrong 2FA codes no longer fill the login history.
-* Update Manager: the status table now stacks on phones instead of running out of its card; the Overview and the Update Manager only show the "Install pending updates" button to users who can update both plugins and themes.
-* REST API: the "block user listing" and namespace blocks could be bypassed by changing the letter case of the URL (for example /wp-json/WP/V2/Users); routes are now compared case-insensitively.
-* Login Protection: the login page served at the custom URL is now excluded from page caches (LiteSpeed and others), which could keep serving it at that address even after the custom URL was turned off.
-* Login Protection: a locked-out IP now always gets the lockout message and cannot authenticate through other handlers (before, unknown usernames bypassed the message because core overwrote it); saving is refused when a per-role IP rule would lock out the administrator saving it; IP whitelists and role rules now match IPv6 addresses written in a different notation; more reserved login slugs (wp-json, feed, sitemap…).
-* Export/Import configuration: importing the Slow Query Monitor section no longer drops the "capture origin" and "copy to AI plugins" settings.
-* Heartbeat: "Disable everywhere" (and the other modes) no longer leave the post editor blank: the Heartbeat script is replaced by an inert stub instead of being unregistered, so the editor scripts that depend on it still load.
-* Options Library: option tables now share the same column widths (they were uneven between libraries); previews of very large options no longer load the full value into memory.
-* Meta Editor: the search toolbar fields (type, ID, filter, button) are now aligned on one line; the hint no longer shifts the inputs.
-* Meta Editor: the list no longer loads the full content of huge meta values just for the preview; values over 1 MB are not opened in the editor; meta keys over 255 characters are rejected when adding.
-* Options Editor: sorting and filtering by value type now inspects only the first characters of each value (much faster on large options tables), and options over 1 MB are no longer opened in the editor.
-* Options Editor: the list no longer loads the full content of very large options (over 100 KB) just to build a preview, which could exhaust memory or leave the page blank.
-* Slow Query Monitor: the plugin/theme origin of a slow query was shifted by the queries WordPress runs before the monitor loads (wrong culprit shown); stored SQL is capped and the log is kept under 2 MB so a single huge query can no longer bloat or break the log; the log lock waits less at the end of a request; the JSON export is no longer corrupted by stray output.
-* Heartbeat: an interval outside 15–300 s is now adjusted to the nearest allowed value and the message says so, instead of silently resetting to the WordPress default.
-* Cron Manager: the page no longer rescans every plugin's files on each load to find who owns a hook (results are cached and limited to 3 seconds), which could make it slow or blank on sites with many plugins; running an event no longer breaks if its callback prints output or throws an error; rescheduling an event close to its current time no longer fails; stuck scheduled posts of any public post type are listed.
-* Hidden WordPress Profiles: post revisions, autosave interval and trash days can be changed again (they were wrongly shown as locked by wp-config.php when WordPress only had its default value); number fields now use the allowed ranges and the trash option warns that 0 disables the trash.
-* Slug Manager: the "URL already used" message now names the content type in the site language ("page"/"post" translated).
-* Slug Manager: bulk fix now ignores duplicated ids, is capped at 200 posts per request and stops cleanly after 20 seconds (reporting what is left) instead of timing out; shortening a slug can no longer cut a percent-encoded character in half.
-* Media Cleaner: unattached media that is in use (featured image, site logo or icon) is now listed apart instead of mixed with the unused ones; the broken-files table no longer repeats the same path or breaks words, and uses red/amber badges as described; the uploads scan processes more files per request, so large libraries finish with far fewer requests.
-* Comment Antispam: fixed a bug where blocked comments were still published when the action was "Mark as spam" or "Move to trash" (WordPress overwrote the status); they now really go to spam/trash.
-* Comment Antispam: comments posted through Jetpack Comments (iframe form) are no longer rejected by the honeypot/time trap, which cannot exist inside the iframe.
-* Comment Antispam: bans and rate limits now skip private/reserved addresses (a proxy or CDN node would otherwise lock out every visitor) and the page warns when a proxy header is detected but not configured.
-* CSV exports (Slow Queries, View Counter, Staging mail log, Comment Antispam): output buffers are cleared and the CSV escape character is set explicitly, so a PHP notice or deprecation can no longer end up inside the file; the mail log CSV now includes the UTF-8 BOM for Excel.
-* Emails: login verification code, lockout and mass-lockout alerts, security alerts (new/promoted administrator) and the View Counter summary now use the same TSO branded HTML template as the other notifications.
-* Redirects: the page is now split into sub-tabs (Redirects, 404 Monitor, Email alerts, Import / Export).
-* Fixed: Learning mode was ignored by the WPForms, Gravity Forms, Elementor Pro and Fluent Forms integrations (they blocked anyway); every form integration now respects it, and the hourly spike alert no longer depends on the block log being enabled.
-* Added: Comment Anti-Spam can temporarily ban repeat offenders, accepts CIDR ranges in the IP whitelist, can skip external checks for returning commenters, shows a custom message to blocked visitors and lets you put individual rules in observe-only mode.
-* Added: Comment Anti-Spam also protects WooCommerce product reviews and the WordPress/WooCommerce registration forms (registration is off by default), shows a blocks-per-day chart, warns when the protection is disabled and ships a larger disposable-email list that also matches subdomains.
-* Improved: Comment Anti-Spam page reorganised into four tabs (Overview, Local rules, External services, Logs).
-* Improved: Comment Anti-Spam logs now live in their own database table instead of the options table, with a configurable size (up to 10,000 entries) and CSV export; rate-limit and duplicate counters use expiring transients. Existing logs are migrated automatically.
-* Added: Comment Anti-Spam email alerts (TSO format) for spam bursts and failing external services, with a test button.
-* Improved: Comment Anti-Spam — new "Provider status" card with the last real response and 24 h calls/errors of each external service, plus a Test button per provider.
-* Improved: Comment Anti-Spam — blocks-by-reason summary and an "Allow IP" button in the block and learning logs to whitelist false positives.
-* Fixed: Comment Anti-Spam — Akismet cloud mode never queried Akismet (it called a method that does not exist) and now uses Akismet's own client.
-* Improved: Comment Anti-Spam — Stop Forum Spam lookups are anonymous read-only queries (unaffected by its API-signup restriction); they now send an email hash instead of the plain email, no longer send the username, skip private IPs, and pause for a few minutes after an API error or rate limit.
-* Improved: Comment Anti-Spam — remote reputation/cloud checks now run after the cheap local rules, timeouts reduced, and the block log shows readable reasons.
-* Improved: Health Report now starts with the "Hide WordPress Site Health notices" card (moved from the Overview) and can also hide the "You should remove inactive plugins / themes" notices.
-* Improved: the 404 email alert settings moved from Health Report to a collapsible panel in Redirects, with a "Send test email" button; alerts are sent as a branded HTML email (same look as TSO Link Inspector) listing the most requested missing URLs.
-* Fixed: the hourly 404 alert counted batched hits twice, so it could fire before the configured threshold.
-* Improved: "Install pending updates" button (plugins, themes and language packs, one at a time) in Update Manager and on the Overview screen; plugins hidden by an individual rule are skipped.
-* Improved: Update Manager shows the version offered per plugin and adds an "Update now" button to force a plugin update (even if hidden or checks are blocked).
-* Fixed: Update Manager now flags an overdue update-check cron, warns when counts are incomplete because checks are blocked or updates are hidden, includes core in the manual check result and no longer queries wordpress.org twice.
-* Fixed: Update Manager "Update now" button no longer ends in a critical error after installing the plugin.
+= 1.2.5 =
+* Fix in Slow Query Monitor: duplicated queries now show which plugin, theme or WordPress core runs them even when Origin detection is off or the query ran before the monitor started (the origin and the potential troublemaker are read from the query's caller chain), and the admin bar's Duplicated link now jumps straight to the duplicates table.
+* Improved: Slow Query Monitor is now organised in three tabs (Settings, Slow queries, Database queries), like Redirects; links from the admin bar open the right tab, it always opens on Settings, saving the settings keeps you on the same tab, and the panel texts now match what each tab shows.
+* Fix in Search & Replace: when the only match is stored as PHP objects or serialized data (which cannot be edited safely) the preview no longer says "no matches"; it explains that nothing can be changed and names the table or option left untouched.
+* Fix in URL Doctor: the leftover http count no longer includes update-checker caches of other plugins (external_updates-*), which Search & Replace cannot change and are not site content.
+* Fix in Redirects: saving or importing a redirect no longer drops percent-encoded characters (such as %20) from the source or the target; sources written with %20 are stored as the real path (a space) so they match the visited address.
+* Improved: the "Show the failed URL on the page" help in Custom 404 Page now shows numbered steps and one card per shortcode, with a Copy button and a preview of what visitors will see.
+* Improved: Maintenance Mode now lets you set the logo width, the colours of the page, a subtitle, a contact link and extra CSS, announce the expected return (with an optional live countdown and a matching Retry-After header), and switch on and off automatically with a schedule. Fixed stray spaces saved around the message and the IP list, the Export/Import configuration now keeps every Maintenance setting, the Site Status badge follows the schedule, and the page is marked noindex.
 
-= 1.2.1 =
-* Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.
-* Improved: Search & Replace now warns when the replacement is empty (matches get deleted) and when all matches are in internal tables rather than post content.
-* Improved: Search & Replace result summary now reads as a proper sentence in every language.
-* Fixed: Search & Replace no longer scans or rewrites its own automatic backup, activity log and slow-query log, and the preview now shows the part of the cell where the match is instead of its first characters.
+= 1.2.4 =
+* Added: Plugin & Theme Leftovers — finds database rows that point to plugins or themes that are no longer installed (options, meta, post content), compares them with what is installed and lets you choose what to delete, with a backup to undo.
+* Fixes to Search & Replace: one single confirmation before executing, the result or error stays on screen, and a failed run (time limit, fatal error) now reports its reason.
+* Fixes to Update Manager: language packs reported as failed although WordPress installed them; the install message in the Overview lost its layout after the first click.
+* Fix in URL & HTTPS Doctor: the leftover http counter no longer counts this plugin's own options (the Search & Replace backup and the activity log keep the old text on purpose), so it reaches 0 after a replace. The count now also covers all post statuses and URLs stored with escaped slashes (the same rows Search & Replace changes), and says that Search & Replace may preview more rows because it looks in every table. The address check now recognises sites behind a proxy or CDN that ends https (with the wp-config.php fix to apply), the table is easier to read, and the server check shows when it was run.
+* Fixes to Activity History, Overview and Export/Import: entries from Plugin & Theme Leftovers now show their row count correctly and are translated, a value of "0" is no longer shown as empty, the list never exceeds the configured limit, the Overview recommendations reflect the plugins installed right now, "Undo last import" appears right after an import, and restoring previous settings keeps each option's autoload flag, and the Overview's Recent activity card no longer stretches on mobile with long entries.
+* Changed: Export/Import TSO Configuration now sits in Profiles & config (4th place), and TSO Link Inspector and TSO Options & Tables Cleaner are merged into a single "More TSO Plugins" tab, the last one of Database. Saved sidebar layouts and old links are migrated automatically.
+

@@ -670,10 +670,21 @@ class TSOSK_Mod_Media_Footprint {
 						</tr>
 					</thead>
 					<tbody>
+					<?php $tsosk_uploads = wp_upload_dir( null, false ); ?>
 					<?php foreach ( $stats['largest'] as $file ) : ?>
-						<?php $attachment_id = (int) ( $file['attachment_id'] ?? 0 ); ?>
+						<?php
+						$attachment_id = (int) ( $file['attachment_id'] ?? 0 );
+						$tsosk_rel     = ltrim( (string) ( $file['relative'] ?? '' ), '/' );
+						$tsosk_file_url = '' !== $tsosk_rel && ! empty( $tsosk_uploads['baseurl'] ) ? trailingslashit( $tsosk_uploads['baseurl'] ) . implode( '/', array_map( 'rawurlencode', explode( '/', $tsosk_rel ) ) ) : '';
+						?>
 						<tr>
-							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( (string) ( $file['relative'] ?? '' ) ); ?></td>
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								<?php if ( '' !== $tsosk_file_url ) : ?>
+									<a href="<?php echo esc_url( $tsosk_file_url ); ?>" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr( trailingslashit( (string) ( $tsosk_uploads['basedir'] ?? '' ) ) . $tsosk_rel ); ?>"><?php echo esc_html( 'uploads/' . $tsosk_rel ); ?></a>
+								<?php else : ?>
+									<?php echo esc_html( $tsosk_rel ); ?>
+								<?php endif; ?>
+							</td>
 							<td class="tsosk-num" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( (int) ( $file['size'] ?? 0 ), 2 ) ); ?></td>
 							<td data-label="<?php esc_attr_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php

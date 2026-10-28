@@ -761,6 +761,19 @@ class TSOSK_Mod_Slow_Queries {
 
 		$origins = array();
 		foreach ( $details as $sql => $row ) {
+			// No backtrace (Origin detection off, or the query ran before it started): use the SAVEQUERIES caller stack.
+			if ( array() === $row['components'] && $row['count'] > 1 ) {
+				$from_stack = $this->origin_from_stack( (string) ( $callers[ $sql ] ?? '' ) );
+				if ( '' !== $from_stack ) {
+					$row['components'][ $from_stack ] = $row['count'];
+				}
+			}
+			if ( array() === $row['troublemakers'] && $row['count'] > 1 ) {
+				$from_stack = $this->troublemaker_from_frames( $this->frames_from_stack( (string) ( $callers[ $sql ] ?? '' ) ) );
+				if ( '' !== $from_stack ) {
+					$row['troublemakers'][ $from_stack ] = $row['count'];
+				}
+			}
 			arsort( $row['callers'], SORT_NUMERIC );
 			arsort( $row['components'], SORT_NUMERIC );
 			arsort( $row['troublemakers'], SORT_NUMERIC );
@@ -941,6 +954,76 @@ class TSOSK_Mod_Slow_Queries {
 			return '';
 		}
 		return $this->resolve_query_origin( $this->query_backtraces[ $index ] );
+	}
+
+	/**
+	 * Pseudo backtrace (file, class, type, function) rebuilt from a SAVEQUERIES caller stack.
+	 *
+	 * WordPress records the function chain of every query when SAVEQUERIES is on. Each function or method is
+	 * mapped to its source file with reflection. Less precise than "Origin detection" (closures cannot be
+	 * resolved) but it also covers queries that ran very early or while the origin setting was off.
+	 *
+	 * @param string $stack Comma-separated caller list from $wpdb->queries[][2].
+	 * @return array<int,array<string,string>> Frames from the query outwards.
+	 */
+	private function frames_from_stack( string $stack ): array {
+		static $cache = array();
+		if ( '' === $stack ) {
+			return array();
+		}
+		if ( isset( $cache[ $stack ] ) ) {
+			return $cache[ $stack ];
+		}
+
+		$frames = array();
+		// The list runs from the outermost call to the query: walk it from the query outwards.
+		foreach ( array_reverse( array_map( 'trim', explode( ',', $stack ) ) ) as $part ) {
+			if ( '' === $part || preg_match( '/^(?:require|include)(?:_once)?\(/i', $part ) ) {
+				continue;
+			}
+			$name  = (string) preg_replace( '/\(.*$/', '', $part );
+			$frame = array();
+			try {
+				if ( preg_match( '/^([\\\\\w]+)(->|::)(\w+)$/', $name, $m ) ) {
+					if ( class_exists( $m[1], false ) && method_exists( $m[1], $m[3] ) ) {
+						$frame = array(
+							'file'     => (string) ( new ReflectionMethod( $m[1], $m[3] ) )->getFileName(),
+							'class'    => $m[1],
+							'type'     => $m[2],
+							'function' => $m[3],
+						);
+					}
+				} elseif ( '' !== $name && function_exists( $name ) ) {
+					$frame = array(
+						'file'     => (string) ( new ReflectionFunction( $name ) )->getFileName(),
+						'function' => $name,
+					);
+				}
+			} catch ( ReflectionException $e ) {
+				$frame = array();
+			}
+			if ( array() !== $frame && '' !== $frame['file'] ) {
+				$frames[] = $frame;
+			}
+		}
+
+		$cache[ $stack ] = $frames;
+		return $frames;
+	}
+
+	/**
+	 * Origin (plugin / theme / core) guessed from a SAVEQUERIES caller stack, or '' when unknown.
+	 *
+	 * @param string $stack Comma-separated caller list from $wpdb->queries[][2].
+	 * @return string Value from resolve_query_origin() or ''.
+	 */
+	private function origin_from_stack( string $stack ): string {
+		$frames = $this->frames_from_stack( $stack );
+		if ( array() === $frames ) {
+			return '';
+		}
+		$origin = $this->resolve_query_origin( $frames );
+		return 'unknown' === $origin ? '' : $origin;
 	}
 
 	/**
@@ -1458,7 +1541,11 @@ class TSOSK_Mod_Slow_Queries {
 			return;
 		}
 		$when = $last['ts']
-			? human_time_diff( $last['ts'], time() ) . ' ' . __( 'ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			? sprintf(
+				/* translators: %s: time span, e.g. "5 mins" */
+				__( '%s ago', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				human_time_diff( $last['ts'], time() )
+			)
 			: '—';
 
 		// Only duplicates attributed to plugins selected in Monitor Settings → Copy to AI.
@@ -1495,10 +1582,10 @@ class TSOSK_Mod_Slow_Queries {
 		<div class="tsosk-card" id="tsosk-sq-last-request">
 			<h3>
 				<span class="dashicons dashicons-warning" aria-hidden="true"></span>
-				<?php esc_html_e( 'Duplicate queries from plugins selected in settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Last page you opened', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</h3>
 			<p class="description">
-				<?php esc_html_e( 'Exact duplicates from the last page you opened, limited to plugins chosen under Monitor Settings → Copy to AI (e.g. tso-*). All duplicates on this admin page appear in the live table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Exact duplicates and slowest queries from the last page you opened. Duplicates are limited to the plugins chosen in Monitor Settings → Copy to AI (e.g. tso-*); with none chosen, all are shown. The page you are on now has its own live table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<p>
 				<?php
@@ -1516,7 +1603,7 @@ class TSOSK_Mod_Slow_Queries {
 				} else {
 					printf(
 						/* translators: 1: query count, 2: selected-plugin duplicate count, 3: slow query count, 4: URL path, 5: relative time */
-						esc_html__( '%1$d queries on last page · Selected-plugin duplicates: %2$d · %3$d slow · %4$s · %5$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						esc_html__( '%1$d queries on last page · Duplicates: %2$d · %3$d slow · %4$s · %5$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 						(int) $last['query_count'],
 						(int) $filtered_count,
 						(int) $last['slow_total'],
@@ -1528,7 +1615,7 @@ class TSOSK_Mod_Slow_Queries {
 			</p>
 			<?php if ( ! $detect && ( ! empty( $last['dupes'] ) || ! empty( $last['slow'] ) ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'To see which plugin or theme runs each query, turn on "Origin detection" in Monitor Settings below and visit the page again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'To see which plugin or theme runs each query, turn on "Origin detection" in the Settings tab and visit the page again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
 			<?php endif; ?>
 
@@ -1553,7 +1640,7 @@ class TSOSK_Mod_Slow_Queries {
 					if ( array() === $copy_plugins ) {
 						esc_html_e( 'No exact duplicate queries on that page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					} elseif ( ! $detect ) {
-						esc_html_e( 'Turn on Origin detection in Monitor Settings, save, then visit another page — otherwise this panel cannot attribute duplicates to your selected plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+						esc_html_e( 'Turn on Origin detection in the Settings tab, save, then visit another page — otherwise this panel cannot attribute duplicates to your selected plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					} elseif ( ! empty( $last['dupes'] ) ) {
 						esc_html_e( 'No duplicates from the plugins selected in Monitor Settings → Copy to AI. Other plugins’ duplicates (if any) appear in the live table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					} else {
@@ -1932,7 +2019,7 @@ class TSOSK_Mod_Slow_Queries {
 		// On the Monitor tab the bar describes the live table; elsewhere it describes the saved "last page" panel.
 		$on_tab       = $this->is_viewing_slow_queries_tab();
 		$a_queries    = $on_tab ? '#tsosk-sq-live-viewer' : '#tsosk-sq-last-request';
-		$a_dupes      = $on_tab ? '#tsosk-sq-live-viewer' : '#tsosk-sq-last-dupes';
+		$a_dupes      = $on_tab ? '#tsosk-sq-live-dupe-panel' : '#tsosk-sq-last-dupes';
 		$a_slow       = $on_tab ? '#tsosk-sq-live-viewer' : '#tsosk-sq-last-slow';
 		$zero_live    = array(
 			'load_ms'       => 0,
@@ -2731,7 +2818,7 @@ class TSOSK_Mod_Slow_Queries {
 		</div>
 		<?php elseif ( ! $s['enabled'] ) : ?>
 		<div class="tsosk-notice tsosk-notice-info">
-			<?php esc_html_e( 'The monitor is disabled. Enable it below to start capturing slow queries. SAVEQUERIES must also be active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'The monitor is disabled. Enable it in the Settings tab to start capturing slow queries. SAVEQUERIES must also be active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php else : ?>
 		<div class="tsosk-notice tsosk-notice-ok" style="border-left-color:#46b450;background:#f0fff0;">
@@ -2746,10 +2833,16 @@ class TSOSK_Mod_Slow_Queries {
 		</div>
 		<?php endif; ?>
 
-		<?php $this->render_last_dupes_panel(); ?>
+		<h2 class="nav-tab-wrapper tsosk-sq-tabs" role="tablist">
+			<a href="#tsosk-sq-panel-config" class="nav-tab tsosk-sq-tab nav-tab-active" data-tab="config" role="tab" aria-selected="true"><?php esc_html_e( 'Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sq-panel-slow" class="nav-tab tsosk-sq-tab" data-tab="slow" role="tab" aria-selected="false"><?php esc_html_e( 'Slow queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sq-panel-queries" class="nav-tab tsosk-sq-tab" data-tab="queries" role="tab" aria-selected="false"><?php esc_html_e( 'Database queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+		</h2>
+
+		<div class="tsosk-sq-panel" id="tsosk-sq-panel-config" role="tabpanel">
 
 		<?php /* ── Settings card (collapsed when the monitor is already running) ── */ ?>
-		<details class="tsosk-card tsosk-sq-settings-details" id="tsosk-sq-settings" <?php echo $this->should_open_settings_panel( (bool) $s['enabled'] ) ? 'open' : ''; ?>>
+		<details class="tsosk-card tsosk-sq-settings-details" id="tsosk-sq-settings" open>
 			<summary class="tsosk-sq-settings-summary">
 				<span class="tsosk-sq-settings-summary-title"><?php esc_html_e( 'Monitor Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<span class="tsosk-sq-settings-summary-meta">
@@ -2829,7 +2922,7 @@ class TSOSK_Mod_Slow_Queries {
 					<th><?php esc_html_e( 'Copy to AI — plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					<td>
 						<p class="description" style="margin:0 0 6px;">
-							<?php esc_html_e( 'Filters the “Duplicate queries from plugins selected in settings” panel (and its Copy to AI). The live table below still lists every duplicate on this admin page. None selected = all. Defaults to tso-* until you save. Needs Origin detection.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							<?php esc_html_e( 'Filters the duplicates in the “Last page you opened” panel (and its Copy to AI). The live table in Database queries still lists every duplicate on this admin page. None selected = all. Defaults to tso-* until you save. Needs Origin detection.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</p>
 						<p class="tsosk-sq-copy-plugins-toolbar">
 							<button type="button" class="button button-small" id="tsosk-sq-copy-plugins-tso"><?php esc_html_e( 'Select tso-*', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
@@ -2870,9 +2963,12 @@ class TSOSK_Mod_Slow_Queries {
 			</p>
 		</details>
 
+		</div>
+
+		<div class="tsosk-sq-panel" id="tsosk-sq-panel-slow" role="tabpanel" hidden>
 		<?php /* ── Stats cards ── */ ?>
 		<?php if ( ! empty( $log ) ) : ?>
-		<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+		<div class="tsosk-sq-stats">
 			<?php
 			$stat_cards = array(
 				array(
@@ -3044,7 +3140,12 @@ class TSOSK_Mod_Slow_Queries {
 
 		<?php endif; ?>
 
-		<?php $this->render_savequeries_viewer(); ?>
+		</div>
+
+		<div class="tsosk-sq-panel" id="tsosk-sq-panel-queries" role="tabpanel" hidden>
+			<?php $this->render_last_dupes_panel(); ?>
+			<?php $this->render_savequeries_viewer(); ?>
+		</div>
 
 		<?php
 	}
@@ -3193,7 +3294,7 @@ class TSOSK_Mod_Slow_Queries {
 					</p>
 					<?php elseif ( ! $sq_detect ) : ?>
 					<p class="tsosk-sq-dupe-banner-meta">
-						<?php esc_html_e( 'Turn on "Origin detection" in Monitor Settings to see which plugin or theme causes them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						<?php esc_html_e( 'Turn on "Origin detection" in the Settings tab to see which plugin or theme causes them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</p>
 					<?php endif; ?>
 					<p class="description tsosk-sq-dupe-origin-hint">

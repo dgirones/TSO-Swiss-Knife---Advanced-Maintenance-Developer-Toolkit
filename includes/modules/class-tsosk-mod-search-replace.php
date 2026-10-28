@@ -45,6 +45,20 @@ class TSOSK_Mod_Search_Replace {
 	private $skipped_cells = 0;
 
 	/**
+	 * Table and primary key of the row being processed, so a skipped cell can be reported.
+	 *
+	 * @var array{0:string,1:mixed}|null
+	 */
+	private $current_cell = null;
+
+	/**
+	 * Table + primary key of cells left untouched in this request (first few only).
+	 *
+	 * @var array<int,array{0:string,1:mixed}>
+	 */
+	private $skipped_where = array();
+
+	/**
 	 * Tables whose preview was cut short (row cap / scan cap reached), keyed by table name.
 	 *
 	 * @var array<string, bool>
@@ -269,7 +283,7 @@ class TSOSK_Mod_Search_Replace {
 			// not a preserved one, even if we never touch its properties. Treat
 			// it exactly like an opaque blob we can't safely round-trip.
 			if ( $this->contains_incomplete_class( $data ) ) {
-				++$this->skipped_cells;
+				$this->note_skipped_cell();
 				return $subject;
 			}
 			$replaced = $this->replace_in_data( $data, $search, $replace_str, $case_sensitive, $is_regex );
@@ -277,8 +291,39 @@ class TSOSK_Mod_Search_Replace {
 		}
 
 		// Do not rewrite opaque serialized blobs with string heuristics — lengths break easily.
-		++$this->skipped_cells;
+		$this->note_skipped_cell();
 		return $subject;
+	}
+
+	/**
+	 * Count a cell left unchanged and remember where it is.
+	 */
+	private function note_skipped_cell(): void {
+		++$this->skipped_cells;
+		if ( null !== $this->current_cell && count( $this->skipped_where ) < 10 && ! in_array( $this->current_cell, $this->skipped_where, true ) ) {
+			$this->skipped_where[] = $this->current_cell;
+		}
+	}
+
+	/**
+	 * Readable places of the cells left unchanged (option name for wp_options, table #id otherwise).
+	 *
+	 * @return string[]
+	 */
+	private function skipped_locations(): array {
+		global $wpdb;
+		$out = array();
+		foreach ( $this->skipped_where as $where ) {
+			$label = $where[0] . ' #' . $where[1];
+			if ( $where[0] === $wpdb->options ) {
+				$name = $wpdb->get_var( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_id = %d", (int) $where[1] ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Core table name; at most ten lookups.
+				if ( is_string( $name ) && '' !== $name ) {
+					$label = $where[0] . ' → ' . $name;
+				}
+			}
+			$out[] = $label;
+		}
+		return $out;
 	}
 
 	/**
@@ -551,6 +596,7 @@ class TSOSK_Mod_Search_Replace {
 				'truncated'      => array_keys( $this->truncated_tables ),
 				'skipped_tables' => $skipped_tables,
 				'skipped_cells'  => $this->skipped_cells,
+				'skipped_where'  => $this->skipped_locations(),
 				'has_backup'     => is_array( get_option( self::BACKUP_OPTION ) ),
 				'content_tables' => $this->get_content_tables(),
 			)
@@ -597,15 +643,19 @@ class TSOSK_Mod_Search_Replace {
 	}
 
 	/**
-	 * True for the options rows this plugin keeps for its own bookkeeping: the automatic backup of
-	 * this tool, the activity log (audit trail) and the slow-query log. They are never searched or
-	 * rewritten: the backup holds the values needed to restore and the logs only record what happened.
+	 * True for the rows this plugin keeps for its own bookkeeping: the automatic backup of this tool,
+	 * the activity log (audit trail), the slow-query log and the history tables of TSO plugins. They are
+	 * never searched or rewritten: the backup holds the values needed to restore and the logs only record
+	 * what happened.
 	 *
 	 * @param string $table  Table name.
 	 * @param mixed  $pk_val Row primary key value.
 	 */
 	private function is_own_backup_row( string $table, $pk_val ): bool {
 		global $wpdb;
+		if ( $this->is_history_table( $table ) ) {
+			return true;
+		}
 		if ( $table !== $wpdb->options ) {
 			return false;
 		}
@@ -615,6 +665,35 @@ class TSOSK_Mod_Search_Replace {
 			$this->protected_row_ids = array_map( 'intval', (array) $ids );
 		}
 		return in_array( (int) $pk_val, $this->protected_row_ids, true );
+	}
+
+	/**
+	 * Columns to search in a table. The posts GUID column is left out unless the user asks for it:
+	 * WordPress treats a GUID as the permanent identifier of a post and recommends never changing it.
+	 *
+	 * @param string   $table  Table name.
+	 * @param string[] $cols   Candidate columns.
+	 * @param array    $params Request params.
+	 * @return string[]
+	 */
+	private function filter_columns( string $table, array $cols, array $params ): array {
+		global $wpdb;
+		if ( $table !== $wpdb->posts || ! empty( $params['include_guid'] ) ) {
+			return $cols;
+		}
+		return array_values( array_diff( $cols, array( 'guid' ) ) );
+	}
+
+	/**
+	 * True for the history or log tables of TSO plugins (for example the Link Inspector change history).
+	 * They only record what was changed before (old and new values), so they are never searched or rewritten.
+	 *
+	 * @param string $table Table name.
+	 */
+	private function is_history_table( string $table ): bool {
+		global $wpdb;
+		$base = 0 === strpos( $table, $wpdb->prefix ) ? substr( $table, strlen( $wpdb->prefix ) ) : $table;
+		return (bool) preg_match( '/^tso_[a-z0-9_]*_(?:history|log|logs)$/', $base );
 	}
 
 	/**
@@ -655,6 +734,25 @@ class TSOSK_Mod_Search_Replace {
 		if ( ! $this->is_preview_approved( $params ) ) {
 			wp_send_json_error( __( 'Run Preview again before executing. The search settings changed or the preview expired.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
+
+		// If PHP dies half way (time or memory limit, fatal error) the browser only sees an empty answer: keep the reason for the notice on this tab.
+		$finished = false;
+		register_shutdown_function(
+			static function () use ( &$finished ): void {
+				if ( $finished ) {
+					return;
+				}
+				$last = error_get_last();
+				update_option(
+					'tsosk_sr_last_failure',
+					array(
+						'time'    => time(),
+						'message' => $last ? sprintf( '%1$s (%2$s:%3$d)', (string) $last['message'], basename( (string) $last['file'] ), (int) $last['line'] ) : '',
+					),
+					false
+				);
+			}
+		);
 
 		global $wpdb;
 		if ( function_exists( 'set_time_limit' ) ) {
@@ -745,6 +843,9 @@ class TSOSK_Mod_Search_Replace {
 			)
 		);
 
+		$finished = true;
+		delete_option( 'tsosk_sr_last_failure' );
+
 		wp_send_json_success(
 			array(
 				'tables'           => $stats['tables'],
@@ -752,6 +853,7 @@ class TSOSK_Mod_Search_Replace {
 				'cells'            => $stats['cells'],
 				'errors'           => $stats['errors'],
 				'skipped_cells'    => $this->skipped_cells,
+				'skipped_where'    => $this->skipped_locations(),
 				'backup'           => $backup_created,
 				'backup_truncated' => $backup_truncated,
 				'message'          => sprintf(
@@ -958,6 +1060,7 @@ class TSOSK_Mod_Search_Replace {
 		$replace  = $params['replace'];
 		$case     = $params['case_sensitive'];
 		$is_regex = $params['is_regex'];
+		$cols     = $this->filter_columns( $table, $cols, $params );
 
 		$safe_table = $this->sql_ident( $table );
 		$safe_pk    = $this->sql_ident( $pk );
@@ -1005,7 +1108,8 @@ class TSOSK_Mod_Search_Replace {
 						if ( '' === $orig || ! $this->value_contains( $search, $orig, $case, $is_regex ) ) {
 							continue;
 						}
-						$after = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
+						$this->current_cell = array( $table, $pk_val );
+						$after              = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
 						if ( $after !== $orig ) {
 							$changes[ $col ] = array(
 								'before' => $preview ? $this->preview_excerpt( $orig, $after, true, $params ) : '',
@@ -1061,7 +1165,8 @@ class TSOSK_Mod_Search_Replace {
 				if ( '' === $orig || ! $this->value_contains( $search, $orig, $case, $is_regex ) ) {
 					continue;
 				}
-				$after = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
+				$this->current_cell = array( $table, $pk_val );
+						$after      = $this->safe_replace( $search, $replace, $orig, $case, $is_regex );
 				if ( $after !== $orig ) {
 					$changes[ $col ] = array(
 						'before' => $preview ? $this->preview_excerpt( $orig, $after, true, $params ) : '',
@@ -1096,6 +1201,7 @@ class TSOSK_Mod_Search_Replace {
 		$replace  = $params['replace'];
 		$case     = $params['case_sensitive'];
 		$is_regex = $params['is_regex'];
+		$cols     = $this->filter_columns( $table, $cols, $params );
 
 		$safe_table = $this->sql_ident( $table );
 		$safe_pk    = $this->sql_ident( $pk );
@@ -1217,7 +1323,8 @@ class TSOSK_Mod_Search_Replace {
 				if ( '' === $orig || ! $this->value_contains( $search, $orig, $case_sensitive, $is_regex ) ) {
 					continue;
 				}
-				$new = $this->safe_replace( $search, $replace, $orig, $case_sensitive, $is_regex );
+				$this->current_cell = array( $table, $pk_val );
+				$new                = $this->safe_replace( $search, $replace, $orig, $case_sensitive, $is_regex );
 				if ( $new !== $orig ) {
 					$updates[ $col ] = $new;
 					$formats[]       = '%s';
@@ -1266,6 +1373,7 @@ class TSOSK_Mod_Search_Replace {
 					'replace'        => $params['replace'],
 					'case_sensitive' => (bool) $params['case_sensitive'],
 					'is_regex'       => (bool) $params['is_regex'],
+					'include_guid'   => ! empty( $params['include_guid'] ),
 					'tables'         => $tables,
 				)
 			)
@@ -1371,6 +1479,7 @@ class TSOSK_Mod_Search_Replace {
 		$replace   = isset( $_POST['replace'] ) && is_string( $_POST['replace'] ) ? wp_unslash( $_POST['replace'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- raw replace term required
 		$case      = ! empty( $_POST['case_sensitive'] );
 		$is_regex  = ! empty( $_POST['is_regex'] );
+		$guid      = ! empty( $_POST['include_guid'] );
 		$tables_in = isset( $_POST['tables'] ) ? map_deep( wp_unslash( (array) $_POST['tables'] ), 'sanitize_text_field' ) : array();
 		// phpcs:enable
 
@@ -1406,6 +1515,7 @@ class TSOSK_Mod_Search_Replace {
 			'replace'        => $replace,
 			'case_sensitive' => $case,
 			'is_regex'       => $is_regex,
+			'include_guid'   => $guid,
 			'tables'         => $valid_tables,
 		);
 	}
@@ -1556,6 +1666,23 @@ class TSOSK_Mod_Search_Replace {
 			<?php esc_html_e( 'Bulk find-and-replace inside your WordPress database — with a preview step so you see changes before they are written.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
+		<?php
+		$failure = get_option( 'tsosk_sr_last_failure' );
+		if ( is_array( $failure ) && ! empty( $failure['time'] ) ) :
+			?>
+			<div class="tsosk-notice tsosk-notice-warn" style="border-left-color:#d63638;">
+				<strong><?php esc_html_e( 'The last replace did not finish.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php
+				printf(
+					/* translators: 1: date and time, 2: error reported by PHP (may be empty) */
+					esc_html__( 'The server stopped the request at %1$s. %2$s Some tables may have been changed before it stopped: run Preview again to see what is left, or restore the automatic backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					esc_html( wp_date( 'Y-m-d H:i', (int) $failure['time'] ) ),
+					esc_html( (string) ( $failure['message'] ?? '' ) )
+				);
+				?>
+			</div>
+		<?php endif; ?>
+
 		<?php $this->render_guide(); ?>
 
 		<div class="tsosk-notice tsosk-notice-warn" style="border-left-color:#d63638;">
@@ -1606,6 +1733,13 @@ class TSOSK_Mod_Search_Replace {
 							<?php esc_html_e( 'Regular expression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							<span class="description" style="font-size:11px;">
 								(<?php esc_html_e( 'advanced — test carefully', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>)
+							</span>
+						</label>
+						<label style="display:block;margin-top:8px;">
+							<input type="checkbox" id="tsosk-sr-guid">
+							<?php esc_html_e( 'Include post GUIDs', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							<span class="description" style="font-size:11px;">
+								(<?php esc_html_e( 'not recommended: a GUID is the permanent identifier of a post', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>)
 							</span>
 						</label>
 					</td>

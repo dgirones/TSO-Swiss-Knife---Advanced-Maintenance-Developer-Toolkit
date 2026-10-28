@@ -258,13 +258,37 @@ class TSOSK_Admin {
 					'save_alerts'                          => __( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'close_sessions'                       => __( 'Close Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'close_all_sessions'                   => __( 'Close all sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'force_pwd_confirm'                    => __( 'Force this user to change their password on next login and close all sessions?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: username */
+					'close_user_sessions_confirm'          => __( 'Close every session for %s?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: username */
+					'close_one_session_confirm'            => __( 'Close this session for %s?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: username */
+					'force_pwd_confirm'                    => __( 'Force %s to change their password on next login and close all their sessions?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'users_select_one'                     => __( 'Select at least one user.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'users_pick_role'                      => __( 'Choose a role first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: role name */
+					'users_role_confirm'                   => __( 'Change the selected users to the “%s” role? This replaces their current role.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: number of selected users */
+					'users_admin_confirm'                  => __( 'Make %s selected users administrators? They will be able to manage the whole site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'users_searching'                      => __( 'Searching…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: number of users */
+					'users_select_all_results'             => __( 'Select all %s matching users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: number of users */
+					'users_all_results_selected'           => __( 'All %s matching users are selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: number of users */
+					'users_all_results_confirm'            => __( 'Apply this role to all %s matching users?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'users_clear_selection'                => __( 'Clear selection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'users_undo'                           => __( 'Undo', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'users_bulk_confirm'                   => __( 'Apply bulk action to selected inactive users?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'dangerous_cap'                        => __( 'High risk', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_only_a'                         => __( 'Only in role A', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_only_b'                         => __( 'Only in role B', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_both'                           => __( 'In both roles', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: role name */
+					'roles_only_in'                        => __( 'Only in %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'roles_remove_read_confirm'            => __( 'Removing “read” stops every user of this role from entering the dashboard. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'roles_clone_required'                 => __( 'Enter the new role slug and its display name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'roles_none'                           => __( 'none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_admin_readonly'                 => __( 'Administrator capabilities loaded (read-only).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'roles_apply_confirm'                  => __( 'Apply this template? Capabilities not in the template will be removed from the selected role.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'regenerate'                           => __( 'Regenerate Thumbnails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -367,6 +391,8 @@ class TSOSK_Admin {
 					'sq_page'                              => __( 'Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_of'                                => __( 'of', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_preview_none'                      => __( 'No matches found for the search term in the selected tables.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sr_exec_failed'                       => __( 'The replace did not finish. The server returned an error or stopped the request. Check the notice at the top of this tab for the reason.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sr_backup_overwrite_note'             => __( 'The automatic backup of the previous replace will be overwritten.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_confirm_exec'                      => __( 'This will modify the database. Have you made a backup? Click OK to proceed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_no_tables'                         => __( 'Select at least one table.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_empty_search'                      => __( 'Enter a search term.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -379,6 +405,9 @@ class TSOSK_Admin {
 					'sr_skipped_tables'                    => __( 'These tables have no single-column primary key and will be skipped: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %d: number of database cells */
 					'sr_skipped_cells'                     => __( '%d cell(s) contain PHP objects or unreadable serialized data and will be left unchanged.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: list of tables or option names */
+					'sr_skipped_where'                     => __( 'Left unchanged: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sr_none_changeable'                   => __( 'Nothing can be changed: the matching data is stored as PHP objects or serialized data that cannot be edited safely.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_replace_backup_warn'               => __( 'An automatic backup from a previous replace exists. Running this replace overwrites it, so the previous one can no longer be undone from here. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_exec_warnings'                     => __( 'Finished with warnings:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_warn_empty_replace'                => __( 'The "Replace with" field is empty: every match will be deleted, not replaced. To fix a missing image, replace it with a valid file or edit the affected post instead.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -523,6 +552,64 @@ class TSOSK_Admin {
 	// ── Sidebar order ────────────────────────────────────────────────────────
 
 	/**
+	 * One-time migration of a user's saved sidebar layout: "Export/Import TSO Configuration" moves to
+	 * Profiles & config (4th) and the two TSO promo tabs ("options", "database") become "tso-plugins".
+	 *
+	 * @param int $uid User ID.
+	 */
+	private function migrate_legacy_sidebar_layout( int $uid ): void {
+		if ( $uid < 1 || get_user_meta( $uid, 'tsosk_sidebar_layout_v3', true ) ) {
+			return;
+		}
+		$legacy = array( 'options', 'database' );
+
+		$order = get_user_meta( $uid, self::ORDER_META_KEY, true );
+		if ( is_array( $order ) && ! empty( $order ) ) {
+			$order = array_values( array_diff( array_map( 'sanitize_key', array_map( 'strval', $order ) ), $legacy, array( 'tso-plugins', 'site-snapshot' ) ) );
+			$pos   = array_search( 'internals', $order, true );
+			if ( false === $pos ) {
+				$order[] = 'site-snapshot';
+			} else {
+				array_splice( $order, $pos + 1, 0, array( 'site-snapshot' ) );
+			}
+			// Tabs added after the user's last save go before "More TSO Plugins", which stays last.
+			$order   = $this->sanitize_sidebar_order( $order, array_diff_key( $this->get_tabs(), array( 'tso-plugins' => true ) ) );
+			$order[] = 'tso-plugins';
+			update_user_meta( $uid, self::ORDER_META_KEY, $order );
+		}
+
+		$groups = get_user_meta( $uid, self::GROUPS_META_KEY, true );
+		if ( is_array( $groups ) && ! empty( $groups ) ) {
+			foreach ( $legacy as $old ) {
+				unset( $groups[ $old ] );
+			}
+			$groups['site-snapshot'] = 'profiles';
+			$groups['tso-plugins']   = 'database';
+			update_user_meta( $uid, self::GROUPS_META_KEY, $groups );
+		}
+
+		$hidden = get_user_meta( $uid, self::HIDDEN_META_KEY, true );
+		if ( is_array( $hidden ) && ! empty( $hidden ) ) {
+			$hidden = array_map( 'strval', $hidden );
+			if ( array_intersect( $legacy, $hidden ) ) {
+				$hidden[] = 'tso-plugins';
+			}
+			update_user_meta( $uid, self::HIDDEN_META_KEY, array_values( array_unique( array_diff( $hidden, $legacy ) ) ) );
+		}
+
+		$favorites = get_user_meta( $uid, self::FAVORITES_META_KEY, true );
+		if ( is_array( $favorites ) && ! empty( $favorites ) ) {
+			$favorites = array_map( 'strval', $this->normalize_favorites_list( $favorites ) );
+			if ( array_intersect( $legacy, $favorites ) ) {
+				$favorites[] = 'tso-plugins';
+			}
+			update_user_meta( $uid, self::FAVORITES_META_KEY, array_values( array_unique( array_diff( $favorites, $legacy ) ) ) );
+		}
+
+		update_user_meta( $uid, 'tsosk_sidebar_layout_v3', 1 );
+	}
+
+	/**
 	 * Return tabs sorted by the current user's saved order.
 	 * Unknown slugs (new modules added later) are appended at the end.
 	 *
@@ -530,7 +617,8 @@ class TSOSK_Admin {
 	 * @return array<string,array> Ordered tabs.
 	 */
 	private function apply_saved_order( array $tabs ): array {
-		$uid    = get_current_user_id();
+		$uid = get_current_user_id();
+		$this->migrate_legacy_sidebar_layout( $uid );
 		$order  = get_user_meta( $uid, self::ORDER_META_KEY, true );
 		$hidden = get_user_meta( $uid, self::HIDDEN_META_KEY, true );
 
@@ -899,13 +987,13 @@ class TSOSK_Admin {
 			'update-manager'    => 'site',
 			'slow-queries'      => 'performance',
 			'transients'        => 'performance',
-			'database'          => 'database',
 			'search-replace'    => 'database',
-			'options'           => 'database',
 			'options-editor'    => 'database',
 			'meta-editor'       => 'database',
+			'leftovers'         => 'database',
 			'option-library'    => 'database',
-			'site-snapshot'     => 'database',
+			'site-snapshot'     => 'profiles',
+			'tso-plugins'       => 'database',
 			'security'          => 'security',
 			'login-protect'     => 'security',
 			'comment-antispam'  => 'security',
@@ -1012,20 +1100,15 @@ class TSOSK_Admin {
 				'icon'  => 'dashicons-id',
 				'class' => 'TSOSK_Mod_Meta_Editor',
 			),
+			'leftovers'         => array(
+				'label' => __( 'Plugin & Theme Leftovers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-trash',
+				'class' => 'TSOSK_Mod_Leftovers',
+			),
 			'option-library'    => array(
 				'label' => __( 'Option Library', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-book',
 				'class' => 'TSOSK_Mod_Option_Library',
-			),
-			'site-snapshot'     => array(
-				'label' => __( 'Export/Import TSO Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'  => 'dashicons-backup',
-				'class' => 'TSOSK_Mod_Site_Snapshot',
-			),
-			'options'           => array(
-				'label' => __( 'TSO Link Inspector', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'  => 'dashicons-admin-links',
-				'class' => 'TSOSK_Mod_Options',
 			),
 			'transients'        => array(
 				'label' => __( 'Transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1047,6 +1130,11 @@ class TSOSK_Admin {
 				'icon'  => 'dashicons-admin-tools',
 				'class' => 'TSOSK_Mod_Internals',
 			),
+			'site-snapshot'     => array(
+				'label' => __( 'Export/Import TSO Configuration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-backup',
+				'class' => 'TSOSK_Mod_Site_Snapshot',
+			),
 			'rest-api'          => array(
 				'label' => __( 'REST API', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-networking',
@@ -1061,11 +1149,6 @@ class TSOSK_Admin {
 				'label' => __( 'Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'icon'  => 'dashicons-update',
 				'class' => 'TSOSK_Mod_Update_Manager',
-			),
-			'database'          => array(
-				'label' => __( 'TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'icon'  => 'dashicons-database',
-				'class' => 'TSOSK_Mod_Database',
 			),
 			'slow-queries'      => array(
 				'label' => __( 'Slow Query Monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1197,6 +1280,11 @@ class TSOSK_Admin {
 				'icon'  => 'dashicons-shield',
 				'class' => 'TSOSK_Mod_Sandbox',
 			),
+			'tso-plugins'       => array(
+				'label' => __( 'More TSO Plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'icon'  => 'dashicons-plugins-checked',
+				'class' => 'TSOSK_Mod_Tso_Plugins',
+			),
 		);
 
 		foreach ( $tabs as $slug => $tab ) {
@@ -1326,6 +1414,10 @@ class TSOSK_Admin {
 
 		// Determine active tab from query param, default to Hidden Profiles.
 		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab navigation.
+		// Legacy slugs of the two promo modules merged into "More TSO Plugins".
+		if ( in_array( $current, array( 'options', 'database' ), true ) ) {
+			$current = 'tso-plugins';
+		}
 		if ( ! array_key_exists( $current, $tabs ) ) {
 			$current = 'dashboard';
 		}

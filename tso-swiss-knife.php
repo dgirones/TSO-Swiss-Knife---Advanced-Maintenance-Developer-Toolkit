@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.2.3
+ * Version:     1.2.6
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION', '1.2.3' );
+define( 'TSOSK_VERSION', '1.2.6' );
 define( 'TSOSK_FILE', __FILE__ );
 define( 'TSOSK_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL', plugin_dir_url( __FILE__ ) );
@@ -245,14 +245,12 @@ $tsosk_includes = array(
 	'includes/class-tsosk-admin',
 	'includes/modules/class-tsosk-mod-cron',
 	'includes/modules/class-tsosk-mod-debug',
-	'includes/modules/class-tsosk-mod-options',
 	'includes/modules/class-tsosk-mod-transients',
 	'includes/modules/class-tsosk-mod-hidden-profiles',
 	'includes/modules/class-tsosk-mod-constants',
 	'includes/modules/class-tsosk-mod-internals',
 	'includes/modules/class-tsosk-mod-rest-api',
 	'includes/modules/class-tsosk-mod-heartbeat',
-	'includes/modules/class-tsosk-mod-database',
 	'includes/modules/class-tsosk-mod-hooks',
 	'includes/modules/class-tsosk-mod-rewrite',
 	'includes/modules/class-tsosk-mod-maintenance',
@@ -270,6 +268,7 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-login-protect',
 	'includes/modules/class-tsosk-mod-comment-antispam',
 	'includes/modules/class-tsosk-mod-meta-editor',
+	'includes/modules/class-tsosk-mod-leftovers',
 	'includes/modules/class-tsosk-mod-option-library',
 	'includes/modules/class-tsosk-mod-site-snapshot',
 	'includes/modules/class-tsosk-mod-action-scheduler',
@@ -280,6 +279,7 @@ $tsosk_includes = array(
 	'includes/modules/class-tsosk-mod-slug-manager',
 	'includes/modules/class-tsosk-mod-slow-queries',
 	'includes/modules/class-tsosk-mod-search-replace',
+	'includes/modules/class-tsosk-mod-tso-plugins',
 	'includes/modules/class-tsosk-mod-update-manager',
 	'includes/modules/class-tsosk-mod-admin-menu',
 	'includes/modules/class-tsosk-mod-history',
@@ -550,14 +550,12 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Cron',
 		'TSOSK_Mod_Hidden_Profiles',
 		'TSOSK_Mod_Debug',
-		'TSOSK_Mod_Options',
 		'TSOSK_Mod_Transients',
 		'TSOSK_Mod_Constants',
 		'TSOSK_Mod_Internals',
 		'TSOSK_Mod_Rest_Api',
 		'TSOSK_Mod_Heartbeat',
 		'TSOSK_Mod_Update_Manager',
-		'TSOSK_Mod_Database',
 		'TSOSK_Mod_Hooks',
 		'TSOSK_Mod_Rewrite',
 		'TSOSK_Mod_Maintenance',
@@ -577,6 +575,7 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Slow_Queries',
 		'TSOSK_Mod_Search_Replace',
 		'TSOSK_Mod_Meta_Editor',
+		'TSOSK_Mod_Leftovers',
 		'TSOSK_Mod_Option_Library',
 		'TSOSK_Mod_Site_Snapshot',
 		'TSOSK_Mod_Action_Scheduler',
@@ -585,6 +584,7 @@ function tsosk_init_admin_modules() {
 		'TSOSK_Mod_Redirects',
 		'TSOSK_Mod_Custom_404',
 		'TSOSK_Mod_Slug_Manager',
+		'TSOSK_Mod_Tso_Plugins',
 		'TSOSK_Mod_Admin_Menu',
 		'TSOSK_Mod_History',
 		'TSOSK_Mod_Staging',

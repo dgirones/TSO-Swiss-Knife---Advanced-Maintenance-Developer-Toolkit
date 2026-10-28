@@ -331,7 +331,7 @@ class TSOSK_Mod_Site_Snapshot {
 			update_option( $map[ $section ], $validated, $autoload );
 			$imported[] = $section;
 
-			if ( 'maintenance' === $section && is_array( $validated ) && ! empty( $validated['enabled'] ) ) {
+			if ( 'maintenance' === $section && is_array( $validated ) && TSOSK_Mod_Maintenance::settings_are_active( $validated ) ) {
 				$notes[] = __( 'Maintenance mode was imported as enabled: visitors now receive the maintenance page. Turn it off under Maintenance if this is not intended.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 			if ( 'rest_api' === $section && is_array( $validated ) && 'disabled' === ( $validated['mode'] ?? '' ) ) {
@@ -440,7 +440,9 @@ class TSOSK_Mod_Site_Snapshot {
 			if ( self::MISSING === $value ) {
 				delete_option( $map[ $section ] );
 			} else {
-				update_option( $map[ $section ], $value, 'staging' === $section );
+				// Keep the autoload flag of an option that still exists; only a recreated one gets the default.
+				$exists = self::MISSING !== get_option( $map[ $section ], self::MISSING );
+				update_option( $map[ $section ], $value, $exists ? null : 'staging' === $section );
 			}
 			$restored[] = $section;
 		}
@@ -714,17 +716,7 @@ class TSOSK_Mod_Site_Snapshot {
 		if ( ! is_array( $value ) ) {
 			return new WP_Error( 'invalid_maintenance', __( 'Maintenance section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		$logo_id = absint( $value['logo_id'] ?? 0 );
-		if ( $logo_id > 0 && ! wp_attachment_is_image( $logo_id ) ) {
-			$logo_id = 0;
-		}
-		return array(
-			'enabled'       => ! empty( $value['enabled'] ),
-			'message'       => wp_kses_post( (string) ( $value['message'] ?? '' ) ),
-			'page_title'    => sanitize_text_field( (string) ( $value['page_title'] ?? '' ) ),
-			'whitelist_ips' => sanitize_textarea_field( (string) ( $value['whitelist_ips'] ?? '' ) ),
-			'logo_id'       => $logo_id,
-		);
+		return TSOSK_Mod_Maintenance::sanitize_imported( $value );
 	}
 
 	/**
@@ -827,6 +819,9 @@ class TSOSK_Mod_Site_Snapshot {
 			'role_whitelist_ips'        => sanitize_textarea_field( (string) ( $value['role_whitelist_ips'] ?? '' ) ),
 			'notify_mass_threshold'     => max( 0, min( 100, absint( $value['notify_mass_threshold'] ?? 0 ) ) ),
 			'notify_mass_window'        => max( 5, min( 1440, absint( $value['notify_mass_window'] ?? 60 ) ) ),
+			'user_lockout'              => ! empty( $value['user_lockout'] ),
+			'user_max_attempts'         => max( 3, min( 100, absint( $value['user_max_attempts'] ?? 10 ) ) ),
+			'user_window'               => max( 5, min( 1440, absint( $value['user_window'] ?? 60 ) ) ),
 		);
 	}
 

@@ -269,10 +269,15 @@ class TSOSK_Mod_History {
 			$new   = (string) ( $details['new'] ?? '' );
 			$parts = array( '<code>' . esc_html( (string) $details['name'] ) . '</code>' );
 			if ( '' !== $old || '' !== $new ) {
-				$parts[] = esc_html__( 'Before:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( $old ? $old : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
-				$parts[] = esc_html__( 'After:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( $new ? $new : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
+				$parts[] = esc_html__( 'Before:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( '' !== $old ? $old : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
+				$parts[] = esc_html__( 'After:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' <code>' . esc_html( '' !== $new ? $new : __( '(empty)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ) . '</code>';
 			}
 			return implode( ' · ', $parts );
+		}
+
+		// Leftovers entries: the summary already says how many rows or backups, so there is nothing to add.
+		if ( ! isset( $details['tables'] ) && ! isset( $details['cells'] ) && ( isset( $details['rows'] ) || isset( $details['backups'] ) ) ) {
+			return '';
 		}
 
 		if ( isset( $details['rows'] ) ) {

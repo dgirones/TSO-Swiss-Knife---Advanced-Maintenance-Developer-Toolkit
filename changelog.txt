@@ -1,6 +1,27 @@
 Tu Soporte Online — Swiss Knife: Advanced Maintenance & Developer Toolkit
 Changelog (older versions). The three latest versions are in readme.txt.
 
+= 1.2.3 =
+* Improved: Users & Sessions redesigned (summary cards, session cards, searchable All users list with bulk role change and Undo); permission checks, pagination and counters fixed.
+* Improved: Roles & Capabilities reorganised into numbered steps with explanations and examples; fixes to templates, role comparison and input validation.
+* Fixed: Reorder & Hide Sidebar — dragging a top-level item (for example Settings above Tools) no longer nests it inside another section.
+* Fixed: Redirects, Debug Mode, Image Sizes Audit, Rewrite Rules, Server & Runtime and Content Audit — wrong results, false warnings and stale data corrected.
+* Fixed: Overview, Update Manager, Core File Integrity and Health Report — consistent update counts, ignored files and debug.log checks; responsive tables.
+
+= 1.2.2 =
+* Fixes to: Login Protection (login page cached at the custom URL, lockout bypass for unknown usernames, role IP rules that could lock out the admin, IPv6 matching), REST API (user-listing and namespace blocks bypassed by URL letter case), Heartbeat (blank post editor with "disable everywhere", interval clamping), Users & Sessions (closing a single session), Export/Import (Slow Query settings lost), Options Editor, Options Library, Meta Editor and Slow Query Monitor (huge values, wrong origin, memory), Cron Manager, Hidden Profiles, Slug Manager (bulk limits, encoded characters), Media Cleaner, Content Audit, Rewrite Rules, Server & Runtime, Image Sizes Audit, Debug Mode and CSV exports.
+* Fixes to Comment Anti-Spam: blocked comments published despite "spam/trash", Jetpack Comments rejected, proxy/CDN addresses banned, Akismet cloud mode never querying, Learning mode ignored by form integrations, Stop Forum Spam privacy.
+* Fixes to Update Manager: overdue cron and incomplete counts flagged, "Update now" critical error, status table on phones, install button limited to users who can update plugins and themes. Redirects: "Create redirect" from the 404 Monitor; hourly 404 alert double counting.
+* Improved: Comment Anti-Spam (temporary bans, CIDR whitelist, WooCommerce reviews and registration, four tabs, own logs table, provider status, email alerts); Update Manager ("Install pending updates" button, version offered per plugin); Health Report (hide Site Health notices); Redirects (sub-tabs, 404 alerts with test email).
+* Improved: TSO branded HTML emails (login code, lockout, security alerts, View Counter); Debug Mode finds more error logs; Server & Runtime warns about an unused object-cache drop-in; Content Audit points to the Slug Manager instead of its removed "Long Slugs" card.
+* Added: Meta Editor and Options Editor protections for very large values; Options Library tables with uniform columns; Slow Query Monitor stores capped SQL and a log under 2 MB.
+
+= 1.2.1 =
+* Improved: Search & Replace screen reorganised — the preview now appears right under the Preview button, and the table list is collapsed by default with a selected-tables summary.
+* Improved: Search & Replace now warns when the replacement is empty (matches get deleted) and when all matches are in internal tables rather than post content.
+* Improved: Search & Replace result summary now reads as a proper sentence in every language.
+* Fixed: Search & Replace no longer scans or rewrites its own automatic backup, activity log and slow-query log, and the preview now shows the part of the cell where the match is instead of its first characters.
+
 = 1.2.0 =
 * Improved: header, tool finder (more keywords, sections inside tools) and Overview tiles (all link to their tool, new design, more accurate counts).
 * Improved modules: Server Files (safer .htaccess saving, sitemap review, "Load previous version", "Discard unsaved changes", "Add security headers"), Maintenance (CIDR ranges in the IP whitelist), Redirects, Update Manager, Health, Security, Users, Roles, Transients, Cron, Custom 404, Content Audit, Media Cleaner, Uploads footprint, Activity History, REST API, Developer mode.

@@ -179,7 +179,6 @@ class TSOSK_Mod_Dashboard {
 
 		$scan = array(
 			'checks' => $checks,
-			'recs'   => $this->get_recommendations(),
 			'time'   => time(),
 		);
 		set_transient( $key, $scan, self::CACHE_TTL );
@@ -445,7 +444,7 @@ class TSOSK_Mod_Dashboard {
 			<?php endif; ?>
 		</div>
 
-		<?php $this->render_recommendations( (array) ( $scan['recs'] ?? array() ) ); ?>
+		<?php $this->render_recommendations( $this->get_recommendations() ); // Live: depends on the current user and on plugins installed a moment ago. ?>
 		<?php $this->render_usage( $base ); ?>
 		<?php $this->render_shortcuts( $base ); ?>
 		<?php $this->render_recent_activity( $base ); ?>
@@ -881,7 +880,7 @@ class TSOSK_Mod_Dashboard {
 					__( '%d tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$db['tables']
 				),
-				'url'   => $this->tile_url( 'database', 'TSOSK_Mod_Database' ),
+				'url'   => $this->tile_url( 'tso-plugins', 'TSOSK_Mod_Tso_Plugins' ),
 			);
 		}
 
@@ -1178,7 +1177,11 @@ class TSOSK_Mod_Dashboard {
 					__( 'Memory limit %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					// -1 means "no limit", not a literal value.
 					'-1' === (string) ini_get( 'memory_limit' )
-						? sprintf( __( '%s (no limit)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '-1' )
+						? sprintf(
+							/* translators: %s: the raw PHP value -1, which means no memory limit */
+							__( '%s (no limit)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'-1'
+						)
 						: (string) ini_get( 'memory_limit' )
 				),
 				'url'   => $this->tile_url( 'runtime-stack', 'TSOSK_Mod_Runtime_Stack' ),
@@ -1267,10 +1270,11 @@ class TSOSK_Mod_Dashboard {
 						$action  = sanitize_key( (string) ( $entry['action'] ?? '' ) );
 						$details = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
 						?>
+						<?php $summary = TSOSK_Activity_Log::translate_summary( $module, $action, (string) ( $entry['summary'] ?? '' ), $details ); ?>
 						<li>
 							<span class="tsosk-dash-activity-time"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) ( $entry['time'] ?? 0 ) ) ); ?></span>
 							<span class="tsosk-badge tsosk-badge-info"><?php echo esc_html( TSOSK_Activity_Log::module_label( $module ) ); ?></span>
-							<span><?php echo esc_html( TSOSK_Activity_Log::translate_summary( $module, $action, (string) ( $entry['summary'] ?? '' ), $details ) ); ?></span>
+							<span class="tsosk-dash-activity-text" title="<?php echo esc_attr( $summary ); ?>"><?php echo esc_html( $summary ); ?></span>
 						</li>
 					<?php endforeach; ?>
 				</ul>

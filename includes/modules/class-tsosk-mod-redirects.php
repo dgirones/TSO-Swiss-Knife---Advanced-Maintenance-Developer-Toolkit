@@ -122,7 +122,9 @@ class TSOSK_Mod_Redirects {
 			exit;
 		}
 
-		if ( is_404() ) {
+		// The home path (e.g. /?p=1 or /?x=y from bots) is never a missing page worth redirecting: a path rule on "/" would
+		// hijack the whole site, so these hits are not logged in the 404 list.
+		if ( is_404() && ! in_array( $request_path, array( '', '/' ), true ) ) {
 			$this->record_404( $request_uri, $request_path );
 		}
 	}
@@ -137,8 +139,8 @@ class TSOSK_Mod_Redirects {
 		}
 
 		$id         = isset( $_POST['redirect_id'] ) ? sanitize_key( wp_unslash( $_POST['redirect_id'] ) ) : '';
-		$source     = isset( $_POST['source'] ) ? sanitize_text_field( wp_unslash( $_POST['source'] ) ) : '';
-		$target     = isset( $_POST['target'] ) ? sanitize_text_field( wp_unslash( $_POST['target'] ) ) : '';
+		$source     = $this->posted_text( 'source' );
+		$target     = $this->posted_text( 'target' );
 		$status     = isset( $_POST['status'] ) ? absint( wp_unslash( $_POST['status'] ) ) : 301;
 		$enabled    = ! empty( $_POST['enabled'] );
 		$match_type = isset( $_POST['match_type'] ) ? sanitize_key( wp_unslash( $_POST['match_type'] ) ) : 'exact';
@@ -147,7 +149,7 @@ class TSOSK_Mod_Redirects {
 			$match_type = 'exact';
 		}
 
-		$source    = 'regex' === $match_type ? trim( $source ) : $this->normalize_path( $source );
+		$source    = 'regex' === $match_type ? trim( $source ) : $this->normalize_path( rawurldecode( $source ) );
 		$validated = $this->sanitize_rule_for_storage(
 			array(
 				'id'         => $id,
@@ -412,6 +414,44 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * Read one text field from the AJAX request, sanitized, keeping percent-encoded octets (%20) that sanitize_text_field() would strip.
+	 *
+	 * @param string $key       POST key.
+	 * @param bool   $multiline Keep line breaks (CSV import).
+	 * @return string
+	 */
+	private function posted_text( string $key, bool $multiline = false ): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- every caller runs check_ajax_referer() first; the value is sanitized right below.
+		$raw = isset( $_POST[ $key ] ) ? wp_unslash( $_POST[ $key ] ) : '';
+		if ( ! is_string( $raw ) ) {
+			return '';
+		}
+		$protected = $this->pct_protect( $raw );
+		$clean     = $multiline ? sanitize_textarea_field( $protected ) : sanitize_text_field( $protected );
+		return $this->pct_restore( $clean );
+	}
+
+	/**
+	 * Hide percent-encoded octets (%20, %C3%A9) from sanitize_text_field(), which would strip them.
+	 *
+	 * @param string $value Raw text.
+	 * @return string
+	 */
+	private function pct_protect( string $value ): string {
+		return (string) preg_replace( '/%([0-9a-fA-F]{2})/', '[[tsoskpct$1]]', $value );
+	}
+
+	/**
+	 * Put back the octets hidden by pct_protect().
+	 *
+	 * @param string $value Sanitized text.
+	 * @return string
+	 */
+	private function pct_restore( string $value ): string {
+		return (string) preg_replace( '/\[\[tsoskpct([0-9a-fA-F]{2})\]\]/', '%$1', $value );
+	}
+
+	/**
 	 * Build one CSV line; cells that a spreadsheet could read as a formula get a leading apostrophe.
 	 *
 	 * @param array<int,string> $cells Cell values.
@@ -472,7 +512,7 @@ class TSOSK_Mod_Redirects {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$csv = isset( $_POST['csv'] ) ? sanitize_textarea_field( wp_unslash( $_POST['csv'] ) ) : '';
+		$csv = $this->posted_text( 'csv', true );
 		$csv = substr( $csv, 0, 1000000 );
 		if ( '' === trim( $csv ) ) {
 			wp_send_json_error( __( 'Nothing to import.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
@@ -497,11 +537,15 @@ class TSOSK_Mod_Redirects {
 				continue;
 			}
 
-			$source     = sanitize_text_field( $unguard( trim( (string) ( $cells[0] ?? '' ) ) ) );
 			$match_type = sanitize_key( (string) ( $cells[1] ?? '' ) );
-			$target     = sanitize_text_field( $unguard( trim( (string) ( $cells[2] ?? '' ) ) ) );
-			$status     = ( isset( $cells[3] ) && '' !== trim( (string) $cells[3] ) ) ? absint( $cells[3] ) : 301;
-			$enabled    = ! isset( $cells[4] ) || ! in_array( strtolower( trim( (string) $cells[4] ) ), array( '0', 'no', 'false', 'off' ), true );
+			$source     = $this->pct_restore( sanitize_text_field( $this->pct_protect( $unguard( trim( (string) ( $cells[0] ?? '' ) ) ) ) ) );
+			// Plain and wildcard sources are stored decoded (the request path is matched decoded): "%20" becomes a space.
+			if ( 'regex' !== $match_type ) {
+				$source = rawurldecode( $source );
+			}
+			$target  = $this->pct_restore( sanitize_text_field( $this->pct_protect( $unguard( trim( (string) ( $cells[2] ?? '' ) ) ) ) ) );
+			$status  = ( isset( $cells[3] ) && '' !== trim( (string) $cells[3] ) ) ? absint( $cells[3] ) : 301;
+			$enabled = ! isset( $cells[4] ) || ! in_array( strtolower( trim( (string) $cells[4] ) ), array( '0', 'no', 'false', 'off' ), true );
 			if ( '' === $source ) {
 				++$failed;
 				continue;
@@ -751,7 +795,7 @@ class TSOSK_Mod_Redirects {
 			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 		$status = 'gone' === $mode ? 410 : 301;
-		$target = ( 'redirect' === $mode && isset( $_POST['target'] ) ) ? sanitize_text_field( wp_unslash( $_POST['target'] ) ) : '';
+		$target = 'redirect' === $mode ? $this->posted_text( 'target' ) : '';
 
 		$raw_paths = ( isset( $_POST['paths'] ) && is_array( $_POST['paths'] ) )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['paths'] ) )
@@ -1236,6 +1280,7 @@ class TSOSK_Mod_Redirects {
 					</p>
 				</details>
 				<div class="tsosk-404-bulk-bar">
+					<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					<button class="button button-secondary" id="tsosk-404-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1334,9 +1379,14 @@ class TSOSK_Mod_Redirects {
 									?>
 								</td>
 								<td class="tsosk-404-col-action" data-label="<?php esc_attr_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+									<?php if ( in_array( trim( (string) $item['path'] ), array( '', '/' ), true ) ) : ?>
+										<?php /* The home page itself exists: this row comes from a bad query string (e.g. /?p=1), which a path redirect cannot fix. */ ?>
+										<span aria-hidden="true">&mdash;</span>
+									<?php else : ?>
 									<button class="button button-small tsosk-404-create-redirect" data-source="<?php echo esc_attr( $item['path'] ); ?>">
 										<?php esc_html_e( 'Create Redirect', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 									</button>
+									<?php endif; ?>
 								</td>
 							</tr>
 							<?php endforeach; ?>
@@ -1416,7 +1466,7 @@ class TSOSK_Mod_Redirects {
 			$out[ $id ] = array(
 				'id'         => $id,
 				'source'     => $source,
-				'target'     => sanitize_text_field( (string) ( $rule['target'] ?? '' ) ),
+				'target'     => $this->pct_restore( sanitize_text_field( $this->pct_protect( (string) ( $rule['target'] ?? '' ) ) ) ),
 				'match_type' => $match_type,
 				'status'     => $status,
 				'enabled'    => ! empty( $rule['enabled'] ),
@@ -2318,7 +2368,7 @@ class TSOSK_Mod_Redirects {
 			return new WP_Error( 'bad_status', __( 'Invalid redirect status.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$target = sanitize_text_field( (string) ( $rule['target'] ?? '' ) );
+		$target = $this->pct_restore( sanitize_text_field( $this->pct_protect( (string) ( $rule['target'] ?? '' ) ) ) );
 		if ( preg_match( '~^https?://([^/?#]+)~i', $target, $host_m ) && preg_match( '/\$\d+/', $host_m[1] ) ) {
 			return new WP_Error( 'bad_target', __( 'Capture tokens ($1, $2, …) are not allowed in the host of an absolute URL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}

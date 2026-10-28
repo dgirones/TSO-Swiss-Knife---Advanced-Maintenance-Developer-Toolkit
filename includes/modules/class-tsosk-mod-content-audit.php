@@ -51,6 +51,13 @@ class TSOSK_Mod_Content_Audit {
 	private $bracket_posts_cache = null;
 
 	/**
+	 * Posts where each shortcode of the inventory was found (first 5 per tag): tag => [ post ID => title ].
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private $shortcode_posts = array();
+
+	/**
 	 * Get instance.
 	 *
 	 * @return self
@@ -246,6 +253,7 @@ class TSOSK_Mod_Content_Audit {
 							<tr>
 								<th><?php esc_html_e( 'Shortcode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 								<th><?php esc_html_e( 'Posts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+								<th><?php esc_html_e( 'Used in', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 								<th><?php esc_html_e( 'Registered', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 							</tr>
 						</thead>
@@ -254,6 +262,22 @@ class TSOSK_Mod_Content_Audit {
 								<tr>
 									<td class="tsosk-code">[<?php echo esc_html( $tag ); ?>]</td>
 									<td><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
+									<td>
+										<?php
+										$tsosk_used = array();
+										foreach ( (array) ( $this->shortcode_posts[ $tag ] ?? array() ) as $tsosk_pid => $tsosk_ptitle ) {
+											$tsosk_edit   = get_edit_post_link( (int) $tsosk_pid );
+											$tsosk_label  = '' !== trim( $tsosk_ptitle ) ? $tsosk_ptitle : '#' . (int) $tsosk_pid;
+											$tsosk_used[] = $tsosk_edit
+												? '<a href="' . esc_url( $tsosk_edit ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $tsosk_label ) . '</a>'
+												: esc_html( $tsosk_label );
+										}
+										echo wp_kses( implode( ', ', $tsosk_used ), array( 'a' => array( 'href' => array(), 'target' => array(), 'rel' => array() ) ) );
+										if ( $count > count( $tsosk_used ) ) {
+											echo ' ' . esc_html( sprintf( /* translators: %d: number of posts not listed */ __( '+%d more', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $count - count( $tsosk_used ) ) );
+										}
+										?>
+									</td>
 									<td>
 										<?php if ( shortcode_exists( $tag ) ) : ?>
 											<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'Yes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -549,6 +573,7 @@ class TSOSK_Mod_Content_Audit {
 		$posts  = $this->get_posts_with_bracket_content();
 		$counts = array();
 
+		$this->shortcode_posts = array();
 		foreach ( $posts as $post ) {
 			// Same shape as the broken-shortcode scan, so Markdown links, plain "[text]" and escaped [[tag]] are not listed as shortcodes.
 			if ( ! preg_match_all( $this->shortcode_detect_pattern(), $post->post_content, $matches ) ) {
@@ -564,6 +589,10 @@ class TSOSK_Mod_Content_Audit {
 					$counts[ $shortcode ] = 0;
 				}
 				++$counts[ $shortcode ];
+				// Remember where it is used (first 5 posts), so the inventory can link to them.
+				if ( ! isset( $this->shortcode_posts[ $shortcode ] ) || count( $this->shortcode_posts[ $shortcode ] ) < 5 ) {
+					$this->shortcode_posts[ $shortcode ][ (int) $post->ID ] = (string) $post->post_title;
+				}
 			}
 		}
 

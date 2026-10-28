@@ -252,23 +252,28 @@ class TSOSK_Mod_Url_Doctor {
 				: __( 'Use a certificate on the server, then update both addresses to https (or run Search & Replace on a backup first).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 
-		$ssl_match = ( $https_home === $is_ssl ) || ( $is_ssl && $https_home );
-		if ( $is_ssl && ! $https_home ) {
-			$ssl_match = false;
+		$ssl_match = ( $https_home === $is_ssl );
+		// Behind a proxy or CDN that ends HTTPS, the visitor sees https but PHP receives plain http: WordPress then thinks the page is not secure.
+		$proxy_https = ! empty( $extra['proxy_https'] );
+		if ( ! $is_ssl && $https_home && $proxy_https ) {
+			$rows[] = array(
+				'status' => 'warn',
+				'label'  => __( 'This visit vs saved address', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'detail' => __( 'You are using https, but this server only receives plain http from a proxy or CDN (for example Cloudflare), and WordPress does not know the visit is secure.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'hint'   => __( 'This can cause redirect loops or mixed content. Ask your hosting, or add to wp-config.php: if ( isset( $_SERVER[\'HTTP_X_FORWARDED_PROTO\'] ) && \'https\' === $_SERVER[\'HTTP_X_FORWARDED_PROTO\'] ) { $_SERVER[\'HTTPS\'] = \'on\'; } This plugin never edits that file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		} else {
+			$rows[] = array(
+				'status' => $ssl_match ? 'ok' : 'warn',
+				'label'  => __( 'This visit vs saved address', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'detail' => $ssl_match
+					? __( 'The way you opened this page matches the saved public address (http or https).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'You opened this page with a different padlock setting than the address WordPress has saved. Logins and cookies often break in that case.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'hint'   => $ssl_match
+					? ''
+					: __( 'Always open the admin using the same https/www form as Settings → General.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
 		}
-		if ( ! $is_ssl && $https_home ) {
-			$ssl_match = false;
-		}
-		$rows[] = array(
-			'status' => $ssl_match ? 'ok' : 'warn',
-			'label'  => __( 'This visit vs saved address', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'detail' => $ssl_match
-				? __( 'The way you opened this page matches the saved public address (http or https).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
-				: __( 'You opened this page with a different padlock setting than the address WordPress has saved. Logins and cookies often break in that case.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'hint'   => $ssl_match
-				? ''
-				: __( 'Always open the admin using the same https/www form as Settings → General.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-		);
 
 		$www_same = $home_p['is_www'] === $site_p['is_www'];
 		$rows[]   = array(
@@ -397,26 +402,35 @@ class TSOSK_Mod_Url_Doctor {
 		}
 
 		$like = '%' . $wpdb->esc_like( $needle ) . '%';
+		// Block editor and page builders store URLs as JSON with escaped slashes (http:\/\/...): Search & Replace changes those too.
+		$like_json = '%' . $wpdb->esc_like( str_replace( '/', '\/', $needle ) ) . '%';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin diagnostic COUNT, no user-built SQL identifiers.
 		$posts = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status NOT IN ('auto-draft','inherit') AND post_content LIKE %s",
-				$like
+				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE ( post_content LIKE %s OR post_content LIKE %s )",
+				$like,
+				$like_json
 			)
 		);
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$meta = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_value LIKE %s",
-				$like
+				"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE ( meta_value LIKE %s OR meta_value LIKE %s )",
+				$like,
+				$like_json
 			)
 		);
+		// This plugin's own options (backup copy, activity log) keep the old text on purpose: they are not site content.
+		// Update-checker caches of other plugins (external_updates-*) are serialized objects, not site content: skipped too.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$options  = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_value LIKE %s",
-				$like
+				"SELECT COUNT(*) FROM {$wpdb->options} WHERE ( option_value LIKE %s OR option_value LIKE %s ) AND option_name NOT LIKE %s AND option_name NOT LIKE %s",
+				$like,
+				$like_json,
+				$wpdb->esc_like( 'tsosk_' ) . '%',
+				$wpdb->esc_like( 'external_updates-' ) . '%'
 			)
 		);
 		$comments = 0;
@@ -424,8 +438,9 @@ class TSOSK_Mod_Url_Doctor {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$comments = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_content LIKE %s",
-					$like
+					"SELECT COUNT(*) FROM {$wpdb->comments} WHERE ( comment_content LIKE %s OR comment_content LIKE %s )",
+					$like,
+					$like_json
 				)
 			);
 		}
@@ -441,15 +456,30 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Human readable "checked at" line for a probe result.
+	 *
+	 * @param int $timestamp Unix time of the probe.
+	 */
+	public static function probe_time_text( int $timestamp ): string {
+		return sprintf(
+			/* translators: %s: date and time of the check */
+			__( 'Checked on %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp )
+		);
+	}
+
+	/**
 	 * AJAX: loopback GET of this site's home URL only.
 	 */
 	public function ajax_probe(): void {
 		check_ajax_referer( 'tsosk_url_doctor_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$result = $this->run_probe();
+		$result              = $this->run_probe();
+		$result['time']      = time();
+		$result['time_text'] = self::probe_time_text( (int) $result['time'] );
 		set_transient( self::TRANSIENT, $result, 15 * MINUTE_IN_SECONDS );
 		wp_send_json_success( $result );
 	}
@@ -459,7 +489,7 @@ class TSOSK_Mod_Url_Doctor {
 	 */
 	public function ajax_leftovers(): void {
 		check_ajax_referer( 'tsosk_url_doctor_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
@@ -497,6 +527,7 @@ class TSOSK_Mod_Url_Doctor {
 				'message'       => $message,
 				'counts'        => $counts,
 				'counts_label'  => $counts_label,
+				'note'          => __( 'This count only covers posts, post meta, options and comments. Search & Replace also looks in every other table (SEO index, logs, sessions...), so its preview can show more rows. Values stored by plugins as PHP objects or serialized data are counted here but Search & Replace leaves them unchanged and names them in its preview.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'search'        => $pair['search'],
 				'replace'       => $pair['replace'],
 				'replace_url'   => $url,
@@ -535,7 +566,7 @@ class TSOSK_Mod_Url_Doctor {
 				'status'      => 0,
 				'final_url'   => $home,
 				'message'     => $resp->get_error_message(),
-				'ssl_relaxed' => false,
+				'ssl_relaxed' => $ssl_relaxed,
 			);
 		}
 
@@ -594,6 +625,22 @@ class TSOSK_Mod_Url_Doctor {
 	}
 
 	/**
+	 * Whether this admin request reached PHP through a proxy or CDN that says the visitor used https.
+	 */
+	public static function request_via_https_proxy(): bool {
+		$proto = isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) ) : '';
+		if ( false !== strpos( $proto, 'https' ) ) {
+			return true;
+		}
+		$ssl = isset( $_SERVER['HTTP_X_FORWARDED_SSL'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_SSL'] ) ) ) : '';
+		if ( 'on' === $ssl ) {
+			return true;
+		}
+		$cf = isset( $_SERVER['HTTP_CF_VISITOR'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_VISITOR'] ) ) ) : '';
+		return false !== strpos( $cf, 'https' );
+	}
+
+	/**
 	 * Render.
 	 */
 	public function render(): void {
@@ -608,6 +655,7 @@ class TSOSK_Mod_Url_Doctor {
 				'force_ssl_admin'  => function_exists( 'force_ssl_admin' ) && force_ssl_admin(),
 				'wp_home_const'    => defined( 'WP_HOME' ) ? (string) constant( 'WP_HOME' ) : '',
 				'wp_siteurl_const' => defined( 'WP_SITEURL' ) ? (string) constant( 'WP_SITEURL' ) : '',
+				'proxy_https'      => self::request_via_https_proxy(),
 			)
 		);
 		$probe = get_transient( self::TRANSIENT );
@@ -636,25 +684,30 @@ class TSOSK_Mod_Url_Doctor {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'What we found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
+			<table class="widefat striped tsosk-table tsosk-ud-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-ud-c-check"><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 						<th><?php esc_html_e( 'Result', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'What it means', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php foreach ( $rows as $row ) : ?>
 						<tr>
-							<td>
-								<span class="tsosk-badge <?php echo esc_attr( $this->badge_class( $row['status'] ) ); ?>">
-									<?php echo esc_html( $this->badge_label( $row['status'] ) ); ?>
-								</span>
-								<strong style="margin-left:6px;"><?php echo esc_html( $row['label'] ); ?></strong>
+							<td class="tsosk-ud-c-check">
+								<div class="tsosk-ud-check">
+									<span class="tsosk-badge <?php echo esc_attr( $this->badge_class( $row['status'] ) ); ?>">
+										<?php echo esc_html( $this->badge_label( $row['status'] ) ); ?>
+									</span>
+									<strong><?php echo esc_html( $row['label'] ); ?></strong>
+								</div>
 							</td>
-							<td><?php echo esc_html( $row['detail'] ); ?></td>
-							<td><?php echo esc_html( $row['hint'] ); ?></td>
+							<td>
+								<?php echo esc_html( $row['detail'] ); ?>
+								<?php if ( '' !== (string) $row['hint'] ) : ?>
+									<span class="tsosk-ud-hint"><?php echo esc_html( $row['hint'] ); ?></span>
+								<?php endif; ?>
+							</td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -682,6 +735,9 @@ class TSOSK_Mod_Url_Doctor {
 						<?php echo esc_html( (string) $probe['message'] ); ?>
 						<?php if ( ! empty( $probe['final_url'] ) ) : ?>
 							<br><code><?php echo esc_html( (string) $probe['final_url'] ); ?></code>
+						<?php endif; ?>
+						<?php if ( ! empty( $probe['time'] ) ) : ?>
+							<br><span class="description"><?php echo esc_html( self::probe_time_text( (int) $probe['time'] ) ); ?></span>
 						<?php endif; ?>
 					</p>
 				<?php endif; ?>

@@ -827,43 +827,50 @@ class TSOSK_Mod_Custom_404 {
 			<p class="description">
 				<?php esc_html_e( 'Add one of these inside your 404 page content to display the URL that caused the error.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
-			<ol class="description" style="margin:0 0 12px 18px;">
+			<ol class="tsosk-404-steps">
 				<li><?php esc_html_e( 'Open Pages and edit your selected 404 page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-				<li><?php esc_html_e( 'In the block editor: click + → search “URL causing 404 error” (TSO Swiss Knife) and insert the block where you want the link shown.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
-				<li><?php esc_html_e( 'Classic editor or a text/HTML block: paste a shortcode from the table below, e.g. [tsosk_404_url].', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+				<li><?php esc_html_e( 'Block editor: click + and search “URL causing 404 error” (TSO Swiss Knife); insert the block where you want the URL shown. Classic editor or a text/HTML block: paste one of the shortcodes below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 				<li><?php esc_html_e( 'Save the page. On a real 404, visitors see the broken URL they requested.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
 			</ol>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Shortcode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Example output', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td><?php esc_html_e( 'Full URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-						<td><code>[tsosk_404_url]</code> <?php esc_html_e( 'or', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> <code>[tsosk_404_url display="full"]</code></td>
-						<td><code>https://example.com/missing?x=1</code></td>
-					</tr>
-					<tr>
-						<td><?php esc_html_e( 'Path only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-						<td><code>[tsosk_404_url display="page"]</code></td>
-						<td><code>missing/page</code></td>
-					</tr>
-					<tr>
-						<td><?php esc_html_e( 'Domain + path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-						<td><code>[tsosk_404_url display="domainpath"]</code></td>
-						<td><code>example.com/missing/page</code></td>
-					</tr>
-				</tbody>
-			</table>
+
+			<div class="tsosk-404-sc-grid">
+				<div class="tsosk-404-sc">
+					<h4><?php esc_html_e( 'Full URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<div class="tsosk-404-sc-code">
+						<code>[tsosk_404_url]</code>
+						<button type="button" class="button button-small tsosk-sc-copy" data-done="<?php echo esc_attr__( 'Copied', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" data-copy="[tsosk_404_url]"><?php esc_html_e( 'Copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					</div>
+					<p class="description"><?php esc_html_e( 'Also works as display="full". Includes the domain, the path and any query string.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<div class="tsosk-404-sc-result">
+						<span><?php esc_html_e( 'Visitors will see', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<strong>https://example.com/missing/page?x=1</strong>
+					</div>
+				</div>
+				<div class="tsosk-404-sc">
+					<h4><?php esc_html_e( 'Path only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<div class="tsosk-404-sc-code">
+						<code>[tsosk_404_url display="page"]</code>
+						<button type="button" class="button button-small tsosk-sc-copy" data-done="<?php echo esc_attr__( 'Copied', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" data-copy='[tsosk_404_url display="page"]'><?php esc_html_e( 'Copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					</div>
+					<p class="description"><?php esc_html_e( 'Only what comes after the domain, without the first slash.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<div class="tsosk-404-sc-result">
+						<span><?php esc_html_e( 'Visitors will see', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<strong>missing/page</strong>
+					</div>
+				</div>
+				<div class="tsosk-404-sc">
+					<h4><?php esc_html_e( 'Domain + path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+					<div class="tsosk-404-sc-code">
+						<code>[tsosk_404_url display="domainpath"]</code>
+						<button type="button" class="button button-small tsosk-sc-copy" data-done="<?php echo esc_attr__( 'Copied', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" data-copy='[tsosk_404_url display="domainpath"]'><?php esc_html_e( 'Copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+					</div>
+					<p class="description"><?php esc_html_e( 'The domain and the path, without https:// or the query string.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+					<div class="tsosk-404-sc-result">
+						<span><?php esc_html_e( 'Visitors will see', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<strong>example.com/missing/page</strong>
+					</div>
+				</div>
 			</div>
-			<p class="description" style="margin-top:10px;">
-				<?php esc_html_e( 'Block editor: insert the “URL causing 404 error” block (TSO Swiss Knife).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</p>
 		</div>
 
 		<div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">

@@ -1055,10 +1055,11 @@ class TSOSK_Mod_Update_Manager {
 		$installed = 0;
 		$failed    = 0;
 		foreach ( $bulk_result as $result ) {
-			if ( true === $result ) {
-				++$installed;
-			} else {
+			// WordPress returns the destination details (an array) for a pack it installed, and false or a WP_Error for one it did not.
+			if ( is_wp_error( $result ) || empty( $result ) ) {
 				++$failed;
+			} else {
+				++$installed;
 			}
 		}
 

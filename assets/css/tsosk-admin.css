@@ -1127,10 +1127,21 @@
 }
 
 /* ── TSO companion plugin promos ───────────────────────────────────────────── */
+.tsosk-promo-more {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
 .tsosk-promo-link-inspector,
 .tsosk-promo-options-cleaner {
     max-width: 820px;
     margin: 0 auto;
+}
+
+.tsosk-promo-more > div + div {
+    margin-top: 36px;
+    padding-top: 36px;
+    border-top: 1px solid #dcdcde;
 }
 
 .tsosk-promo-hero {
@@ -4970,6 +4981,26 @@ a.tsosk-dash-tile.is-warn:focus {
     white-space: nowrap;
 }
 
+.tsosk-dash-activity li {
+    flex-wrap: wrap;
+}
+
+.tsosk-dash-activity-text {
+    flex: 1 1 220px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 600px) {
+    .tsosk-dash-activity-text {
+        flex-basis: 100%;
+    }
+}
+
 .tsosk-dash-empty {
     color: #646970;
     margin: 8px 0 0;
@@ -5027,6 +5058,14 @@ a.tsosk-dash-tile.is-warn:focus {
     font-size: 12px;
     line-height: 1.3;
     text-align: right;
+}
+
+.tsosk-um-install-msg.tsosk-msg--ok {
+    color: #1a7f37;
+}
+
+.tsosk-um-install-msg.tsosk-msg--error {
+    color: #d63638;
 }
 
 .tsosk-dash-issue-action .tsosk-um-install-msg:empty {
@@ -5896,9 +5935,578 @@ a.tsosk-dash-tile.is-warn:focus {
 
 /* Comment anti-spam: sub-tabs */
 .tsosk-cas-tabs,
-.tsosk-rd-tabs { margin: 16px 0 12px; padding-bottom: 0; }
+.tsosk-rd-tabs,
+.tsosk-sq-tabs,
+.tsosk-users-tabs { margin: 16px 0 12px; padding-bottom: 0; }
+.tsosk-sq-panel[hidden],
 .tsosk-cas-panel[hidden],
-.tsosk-rd-panel[hidden] { display: none; }
+.tsosk-rd-panel[hidden],
+.tsosk-users-panel[hidden] { display: none; }
+
+/* Users & Sessions: summary cards, two rows of five. */
+#tsosk-users-summary .tsosk-media-stats {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 10px;
+}
+#tsosk-users-summary .tsosk-media-stat {
+	min-width: 0;
+}
+#tsosk-users-summary .tsosk-media-stat span {
+	overflow-wrap: anywhere;
+}
+
+/* Users & Sessions: one card per account. */
+.tsosk-us-grid {
+	display: grid;
+	gap: 12px;
+}
+.tsosk-us-card {
+	min-width: 0;
+	padding: 14px 16px;
+	border: 1px solid #dcdcde;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+.tsosk-us-card.has-sessions {
+	border-left: 4px solid #2271b1;
+}
+.tsosk-us-card.is-self {
+	background: #f6fafd;
+}
+.tsosk-us-head {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-areas:
+		"avatar id actions"
+		"avatar chips actions";
+	align-items: center;
+	gap: 4px 12px;
+}
+.tsosk-us-avatar {
+	grid-area: avatar;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: #e8f0fb;
+	color: #2271b1;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+.tsosk-us-id {
+	grid-area: id;
+	min-width: 0;
+}
+.tsosk-us-name {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+.tsosk-us-name strong {
+	font-size: 15px;
+	overflow-wrap: anywhere;
+}
+.tsosk-us-name .tsosk-badge {
+	margin: 0;
+}
+.tsosk-us-email {
+	display: block;
+	color: #646970;
+	font-size: 13px;
+	overflow-wrap: anywhere;
+}
+.tsosk-us-chips {
+	grid-area: chips;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.tsosk-us-chip {
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: #f0f0f1;
+	color: #50575e;
+	font-size: 12px;
+	line-height: 1.7;
+}
+.tsosk-us-chip.is-on {
+	background: #e7f5ea;
+	color: #1a6b2c;
+}
+.tsosk-us-actions {
+	grid-area: actions;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	min-width: 0;
+}
+.tsosk-wrap .tsosk-us-actions .button {
+	margin: 0;
+	height: 30px;
+	line-height: 28px;
+	white-space: nowrap;
+}
+.tsosk-us-note {
+	margin: 10px 0 0;
+	color: #646970;
+	font-size: 12px;
+}
+.tsosk-us-sessions {
+	display: grid;
+	gap: 6px;
+	margin: 12px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.tsosk-us-session {
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1.5fr) minmax(0, 1.3fr) auto;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 10px 12px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	background: #f6f7f7;
+}
+.tsosk-us-session.is-current {
+	border-color: #72aee6;
+	background: #f0f6fc;
+}
+.tsosk-us-session .dashicons {
+	color: #646970;
+}
+.tsosk-us-session-main {
+	min-width: 0;
+}
+.tsosk-us-session-ip {
+	display: block;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 13px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+.tsosk-us-session-ua {
+	display: block;
+	color: #646970;
+	font-size: 12px;
+	overflow-wrap: anywhere;
+}
+.tsosk-us-session-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 20px;
+	margin: 0;
+}
+.tsosk-us-session-meta dt {
+	color: #646970;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+.tsosk-us-session-meta dd {
+	margin: 0;
+	font-size: 13px;
+}
+.tsosk-us-session-action {
+	text-align: right;
+}
+.tsosk-us-session-action .tsosk-badge {
+	margin: 0;
+}
+
+/* Users & Sessions: shared toolbar pieces. */
+.tsosk-users-directory-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.tsosk-users-directory-toolbar .regular-text {
+	margin: 0;
+}
+.tsosk-users-directory-search {
+	margin: 0 0 8px;
+}
+.tsosk-users-directory-search input[type="search"] {
+	display: block;
+	width: 100%;
+	max-width: none;
+	box-sizing: border-box;
+}
+.tsosk-users-more-wrap {
+	margin: 12px 0 0;
+}
+#tsosk-users-more[hidden] {
+	display: none;
+}
+.tsosk-users-days-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+/* All users table: one bar header, columns that never overlap. */
+.tsosk-users-directory-wrap {
+	padding-top: 6px;
+}
+.tsosk-users-directory-table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0;
+}
+.tsosk-users-directory-table th,
+.tsosk-users-directory-table td {
+	box-sizing: border-box;
+	vertical-align: middle;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+.tsosk-users-directory-table tbody td {
+	padding: 10px 8px;
+	border-bottom: 1px solid #f0f0f1;
+}
+.tsosk-users-directory-table .tsosk-users-col-check { width: 44px; text-align: center; }
+.tsosk-users-directory-table .tsosk-users-col-user { width: 16%; }
+.tsosk-users-directory-table .tsosk-users-col-email { width: 20%; }
+.tsosk-users-directory-table .tsosk-users-col-role { width: 13%; }
+.tsosk-users-directory-table .tsosk-users-col-registered { width: 11%; }
+.tsosk-users-directory-table .tsosk-users-col-last { width: 11%; }
+.tsosk-users-directory-table .tsosk-users-col-actions { width: auto; }
+.tsosk-users-directory-table tbody td:last-child {
+	background: #f6f7f7;
+}
+.tsosk-users-dn {
+	display: block;
+	margin-bottom: 2px;
+	font-weight: 600;
+}
+.tsosk-users-directory-table .tsosk-users-col-user code {
+	display: inline-block;
+	max-width: 100%;
+}
+.tsosk-users-directory-table .tsosk-users-col-user .tsosk-badge {
+	display: inline-block;
+	margin: 4px 0 0;
+}
+#tsosk-users-all-table.widefat thead th,
+#tsosk-users-all-table.widefat thead td {
+	padding: 0;
+	background: #fff;
+	border-top: 1px solid #dcdcde;
+	border-bottom: 1px solid #dcdcde;
+	vertical-align: middle;
+	box-shadow: none;
+}
+#tsosk-users-all-table.widefat thead th:first-child {
+	border-left: 1px solid #dcdcde;
+	border-radius: 8px 0 0 8px;
+}
+#tsosk-users-all-table.widefat thead th:last-child {
+	border-right: 1px solid #dcdcde;
+	border-radius: 0 8px 8px 0;
+}
+.tsosk-users-col-select {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+	width: 100%;
+	min-height: 44px;
+	margin: 0;
+	padding: 6px 8px;
+	box-sizing: border-box;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	color: #1d2327;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-align: left;
+	cursor: pointer;
+	appearance: none;
+}
+.tsosk-users-col-select-static {
+	cursor: default;
+}
+.tsosk-users-col-select-check {
+	justify-content: center;
+	padding: 6px 4px;
+}
+.tsosk-users-col-label {
+	min-width: 0;
+	white-space: normal;
+}
+button.tsosk-users-col-select:hover,
+button.tsosk-users-col-select:focus {
+	background: #f0f6fc;
+	color: #135e96;
+	box-shadow: none;
+	outline: none;
+}
+button.tsosk-users-col-select.is-sorted {
+	background: #f0f6fc;
+	color: #135e96;
+	box-shadow: inset 0 -2px 0 #2271b1;
+}
+.tsosk-users-col-select .tsosk-sort-ind {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 0 0 auto;
+}
+.tsosk-users-col-select .tsosk-sort-ind::before,
+.tsosk-users-col-select .tsosk-sort-ind::after {
+	content: "";
+	display: block;
+	width: 0;
+	height: 0;
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+}
+.tsosk-users-col-select .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
+.tsosk-users-col-select .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
+button.tsosk-users-col-select.is-sorted:not(.is-desc) .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
+button.tsosk-users-col-select.is-sorted:not(.is-desc) .tsosk-sort-ind::after { border-top-color: #dcdcde; }
+button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
+button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
+.tsosk-wrap .tsosk-users-row-actions .button {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin: 0 0 4px;
+	box-sizing: border-box;
+	line-height: 1.4;
+	text-align: center;
+	white-space: normal;
+}
+
+@media (max-width: 960px) {
+	#tsosk-users-summary .tsosk-media-stats {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 782px) {
+	#tsosk-users-summary .tsosk-media-stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.tsosk-us-head {
+		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-areas:
+			"avatar id"
+			"chips chips"
+			"actions actions";
+	}
+	.tsosk-us-actions {
+		justify-content: flex-start;
+	}
+	.tsosk-wrap .tsosk-us-actions .button {
+		width: 100%;
+		height: auto;
+		line-height: 1.4;
+		padding-top: 6px;
+		padding-bottom: 6px;
+		white-space: normal;
+	}
+	.tsosk-us-session {
+		grid-template-columns: 24px minmax(0, 1fr);
+	}
+	.tsosk-us-session-meta,
+	.tsosk-us-session-action {
+		grid-column: 1 / -1;
+	}
+	.tsosk-us-session-action {
+		text-align: left;
+	}
+	.tsosk-us-session-action .button {
+		width: 100%;
+		text-align: center;
+	}
+	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-users-table {
+		min-width: 0;
+		width: 100%;
+		table-layout: auto;
+	}
+	#tsosk-users-all-table {
+		display: block;
+	}
+	.tsosk-users-stack-table thead {
+		display: none;
+	}
+	.tsosk-users-stack-table,
+	.tsosk-users-stack-table tbody,
+	.tsosk-users-stack-table tr,
+	.tsosk-users-stack-table td,
+	#tsosk-users-all-table tbody,
+	#tsosk-users-all-table tbody tr,
+	#tsosk-users-all-table tbody td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.tsosk-users-stack-table tr,
+	#tsosk-users-all-table tbody tr {
+		margin: 0 0 12px;
+		padding: 12px;
+		border: 1px solid #dcdcde;
+		border-radius: 8px;
+		background: #fff;
+		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
+	}
+	.tsosk-users-stack-table td,
+	#tsosk-users-all-table tbody td {
+		padding: 6px 0;
+		border: 0;
+		overflow-wrap: anywhere;
+	}
+	#tsosk-users-all-table tbody td:last-child {
+		background: transparent;
+	}
+	.tsosk-users-stack-table td::before,
+	#tsosk-users-all-table tbody td::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 4px;
+		color: #646970;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+	#tsosk-users-all-table thead,
+	#tsosk-users-all-table thead tr {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 0;
+		overflow-x: auto;
+	}
+	#tsosk-users-all-table thead th {
+		display: block;
+		flex: 1 0 auto;
+		width: auto !important;
+		padding: 0;
+		border-radius: 0;
+	}
+	#tsosk-users-all-table thead th:first-child {
+		border-radius: 8px 0 0 8px;
+	}
+	#tsosk-users-all-table thead th:last-child {
+		border-radius: 0 8px 8px 0;
+	}
+	#tsosk-users-all-table thead th.tsosk-users-col-check {
+		flex: 0 0 auto;
+	}
+	#tsosk-users-all-table thead th.tsosk-users-col-actions {
+		display: none;
+	}
+	.tsosk-wrap .tsosk-users-row-actions .button {
+		margin: 0 0 6px;
+	}
+}
+
+/* Roles & capabilities */
+.tsosk-roles-guide-list {
+	margin: 0 0 10px 18px;
+	list-style: disc;
+}
+
+.tsosk-roles-guide-list li {
+	margin-bottom: 4px;
+}
+
+.tsosk-roles-info {
+	margin: 0;
+	font-weight: 600;
+}
+
+.tsosk-roles-add {
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.tsosk-roles-add h4 {
+	margin: 0 0 6px;
+	font-size: 13px;
+}
+
+.tsosk-roles-adminonly {
+	margin-top: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-left: 4px solid #8c8f94;
+}
+
+.tsosk-roles-adminonly[hidden] {
+	display: none;
+}
+
+.tsosk-roles-table td:first-child {
+	white-space: nowrap;
+}
+
+.tsosk-roles-compare-out {
+	display: none;
+	margin-top: 10px;
+	white-space: pre-wrap;
+}
+
+details.tsosk-roles-blocked {
+	padding: 12px 20px;
+}
+
+details.tsosk-roles-blocked summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.tsosk-users-sess-badge {
+	display: block;
+	margin-top: 2px;
+	font-size: 11px;
+	line-height: 1.4;
+	color: #2271b1;
+}
+
+.tsosk-users-select-note {
+	margin: 6px 0;
+	padding: 8px 12px;
+	background: #f0f6fc;
+	border: 1px solid #c5d9ed;
+	border-radius: 6px;
+	text-align: center;
+}
+
+.tsosk-users-select-note[hidden] {
+	display: none;
+}
+
+.tsosk-users-undo-btn {
+	margin-left: 8px;
+}
+
+/* Users directory: scroll sideways on narrow desktop widths instead of squeezing the columns. */
+@media (min-width: 783px) {
+	#tsosk-users-all-table.tsosk-users-directory-table {
+		min-width: 760px;
+	}
+}
 
 /* Comment anti-spam: daily blocks chart */
 .tsosk-cas-chart { display: flex; align-items: flex-end; gap: 4px; height: 70px; max-width: 480px; }
@@ -5950,3 +6558,295 @@ a.tsosk-dash-tile.is-warn:focus {
 .tsosk-table td code {
     overflow-wrap: anywhere;
 }
+
+/* ── Plugin & Theme Leftovers ─────────────────────────────────────────────── */
+.tsosk-lo-card {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    margin: 12px 0;
+    background: #fff;
+}
+
+.tsosk-lo-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.tsosk-lo-slug {
+    font-size: 14px;
+}
+
+.tsosk-lo-ni {
+    color: #646970;
+    font-size: 12px;
+}
+
+.tsosk-lo-allwrap {
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.tsosk-lo-scroll {
+    overflow-x: auto;
+}
+
+.tsosk-lo-table {
+    border: 0;
+    box-shadow: none;
+    table-layout: fixed;
+    min-width: 560px;
+}
+
+.tsosk-lo-table th:nth-child(1),
+.tsosk-lo-table td:nth-child(1) { width: 92px; }
+.tsosk-lo-table th:nth-child(2),
+.tsosk-lo-table td:nth-child(2) { width: 14%; }
+.tsosk-lo-table th:nth-child(3),
+.tsosk-lo-table td:nth-child(3) { width: 24%; }
+.tsosk-lo-table th:nth-child(4),
+.tsosk-lo-table td:nth-child(4) { width: 18%; }
+
+.tsosk-lo-table td {
+    vertical-align: top;
+    word-break: break-all;
+}
+
+.tsosk-lo-note {
+    color: #646970;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.tsosk-lo-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.tsosk-lo-posts-note {
+    padding: 0 12px 10px;
+    margin: 0;
+}
+
+#tsosk-lo-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0;
+    background: #fff;
+    border-top: 1px solid #dcdcde;
+}
+
+.tsosk-lo-peek td {
+    background: #f6f7f7;
+}
+
+.tsosk-lo-peek-row {
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.tsosk-lo-excerpt {
+    display: block;
+    margin-top: 2px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 140px;
+    overflow: auto;
+}
+
+/* Leftovers: clear split between deletable and information-only items. */
+.tsosk-lo-section { margin: 22px 0 8px; }
+.tsosk-card .tsosk-lo-section-title { margin: 0 0 8px; padding: 16px 20px; font-size: 20px; line-height: 1.3; font-weight: 700; text-align: center; letter-spacing: 0.2px; color: #fff; background: #1e8c3a; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
+.tsosk-card .tsosk-lo-section--info .tsosk-lo-section-title { background: #b45309; }
+.tsosk-lo-section > .description { margin: 0 0 14px; text-align: center; font-size: 13px; }
+.tsosk-lo-section--del .tsosk-lo-card { border-color: #1e8c3a; border-left: 5px solid #1e8c3a; }
+.tsosk-lo-section--del .tsosk-lo-head { background: #eaf6ed; }
+.tsosk-lo-section--info .tsosk-lo-card, .tsosk-lo-card--info { border-color: #b45309; border-left: 5px solid #b45309; background: #fffaf2; }
+.tsosk-lo-section--info .tsosk-lo-head, .tsosk-lo-card--info .tsosk-lo-head { background: #fdf0dc; }
+.tsosk-lo-lock { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #fde3b8; color: #8a4b00; font-size: 11px; line-height: 1.3; white-space: normal; word-break: normal; }
+.tsosk-lo-row--locked td { color: #646970; }
+
+/* URL & HTTPS Doctor: two clear columns, hint under the result. */
+.tsosk-ud-table { table-layout: fixed; }
+.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 36%; }
+.tsosk-ud-table td { vertical-align: middle; line-height: 1.5; }
+.tsosk-ud-check { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.tsosk-ud-check .tsosk-badge { display: inline-block; min-width: 74px; margin: 0; text-align: center; }
+.tsosk-ud-check strong { flex: 0 1 auto; }
+.tsosk-ud-hint { display: block; margin-top: 4px; color: #646970; font-size: 12px; }
+@media (max-width: 782px) {
+	.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 42%; }
+}
+
+/* Delete bar sits at the top of the green block, so it is always where the deletable items are. */
+.tsosk-lo-section--del #tsosk-lo-actions { position: static; margin: 0 0 12px; padding: 10px 14px; border: 1px solid #1e8c3a; border-radius: 6px; background: #eaf6ed; text-align: center; }
+.tsosk-lo-section--del #tsosk-lo-actions .button { min-width: 200px; }
+
+/* Rows already deleted stay listed (greyed) until the next scan. */
+.tsosk-lo-row--done td { color: #8c8f94; text-decoration: line-through; background: #f6f7f7; }
+.tsosk-lo-row--done td:first-child { text-decoration: none; }
+.tsosk-lo-done { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #d7efdd; color: #1e6b34; font-size: 11px; line-height: 1.3; text-decoration: none; }
+
+/* "Is this key used?" check inside the peek row. */
+.tsosk-lo-usage { margin-top: 10px; }
+.tsosk-lo-usage-out { margin-top: 8px; }
+.tsosk-lo-usage-out p { margin: 6px 0; }
+.tsosk-lo-usage-ok { color: #1e6b34; }
+.tsosk-lo-usage-bad { color: #8a4b00; }
+
+/* Leftovers: backups panel. */
+.tsosk-lo-bk { border: 1px solid #dcdcde; border-radius: 4px; margin: 10px 0; background: #fff; }
+.tsosk-lo-bk > summary { cursor: pointer; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.tsosk-lo-bk[open] > summary { border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
+.tsosk-lo-bk-user { color: #646970; font-size: 12px; }
+.tsosk-lo-bk-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 12px; }
+.tsosk-lo-bk .tsosk-lo-scroll { margin: 0 12px 12px; max-height: 320px; overflow: auto; }
+.tsosk-lo-bk .description { margin: 0 12px 12px; }
+.tsosk-lo-why { margin: 6px 0; padding: 8px 10px; background: #fff7e6; border-left: 3px solid #b45309; color: #3c434a; }
+
+#tsosk-sq-live-dupe-panel,
+#tsosk-sq-live-viewer,
+#tsosk-sq-last-request,
+#tsosk-sq-last-dupes,
+#tsosk-sq-last-slow {
+    scroll-margin-top: 48px;
+}
+
+/* Slow Query Monitor: summary cards, centred and clear of the tab bar. */
+.tsosk-sq-stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 24px 0 20px;
+}
+
+/* Custom 404: "Show the failed URL on the page" steps and shortcode cards */
+.tsosk-404-steps {
+    list-style: none;
+    margin: 4px 0 18px;
+    padding: 0;
+    counter-reset: tsosk404step;
+}
+
+.tsosk-404-steps li {
+    counter-increment: tsosk404step;
+    position: relative;
+    margin: 0 0 10px;
+    padding: 2px 0 2px 38px;
+    line-height: 1.5;
+    min-height: 26px;
+}
+
+.tsosk-404-steps li::before {
+    content: counter(tsosk404step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #2271b1;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 26px;
+    text-align: center;
+}
+
+.tsosk-404-sc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.tsosk-404-sc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.tsosk-404-sc h4 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.tsosk-404-sc .description {
+    margin: 0;
+}
+
+.tsosk-404-sc-code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #f6f7f7;
+}
+
+.tsosk-404-sc-code code {
+    background: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.tsosk-404-sc-result {
+    margin-top: auto;
+    padding: 8px 10px;
+    border-left: 3px solid #2271b1;
+    background: #f0f6fc;
+    border-radius: 0 4px 4px 0;
+}
+
+.tsosk-404-sc-result span {
+    display: block;
+    margin-bottom: 2px;
+    color: #646970;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tsosk-404-sc-result strong {
+    font-size: 13px;
+    font-weight: 600;
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Maintenance mode: colour pickers */
+.tsosk-maint-colors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 22px;
+}
+
+.tsosk-maint-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsosk-maint-color input[type="color"] {
+    width: 44px;
+    height: 32px;
+    padding: 2px;
+    cursor: pointer;
+}
+

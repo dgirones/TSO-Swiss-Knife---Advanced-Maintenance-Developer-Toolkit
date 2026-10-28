@@ -844,6 +844,22 @@ class TSOSK_Mod_Server_Files {
 		$reports['robots']['is_root']   = true;
 		$reports['robots']['root_note'] = $wp_is_subdir;
 
+		// No file on disk: WordPress (or a plugin) may be serving a virtual robots.txt. Find out what crawlers really get.
+		if ( ! $reports['robots']['exists'] && ! $wp_is_subdir ) {
+			$virtual                      = $this->get_virtual_robots();
+			$reports['robots']['virtual'] = $virtual;
+			$reports['robots']['content'] = $virtual['content'];
+			$reports['robots']['notices'] = array_merge(
+				array(
+					array(
+						'type'    => 'info',
+						'message' => __( 'There is no robots.txt file on disk. What you see below is the virtual robots.txt that WordPress builds when /robots.txt is requested; it is what search engines read right now.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					),
+				),
+				'' !== trim( $virtual['content'] ) ? $this->review_robots( $virtual['content'] ) : array()
+			);
+		}
+
 		// If WordPress is in a subdirectory, also show the local robots.txt.
 		if ( $wp_is_subdir && '' !== $local_robots ) {
 			$reports['robots_local']              = $this->get_report( 'robots.txt (WordPress subdirectory)', $local_robots, 'robots_local' );
@@ -861,15 +877,15 @@ class TSOSK_Mod_Server_Files {
 			$reports['htaccess_root']['is_htaccess'] = true;
 		}
 
-		$reports['htaccess'] = $this->get_report(
+		$reports['htaccess']                = $this->get_report(
 			$same_htaccess ? __( '.htaccess', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( '.htaccess (WordPress subdirectory)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$local_htaccess,
 			'htaccess'
 		);
+		$reports['htaccess']['is_htaccess'] = true;
 		if ( ! $same_htaccess ) {
-			$reports['htaccess']['is_root']     = false;
-			$reports['htaccess']['is_htaccess'] = true;
-			$reports['htaccess']['root_note']   = true;
+			$reports['htaccess']['is_root']   = false;
+			$reports['htaccess']['root_note'] = true;
 		}
 		$sitemaps = $this->detect_sitemaps( false );
 		?>
@@ -967,14 +983,8 @@ class TSOSK_Mod_Server_Files {
 			str_starts_with( $key, 'robots' ) ? $this->review_robots( $content ) : $this->review_htaccess( $content )
 		);
 
-		if ( $report['writable'] ) {
-			$report['notices'][] = array(
-				'type'    => 'info',
-				'message' => __( 'The file is writable by WordPress. You can edit it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		}
-
-		if ( empty( array_filter( $report['notices'], fn( $n ) => in_array( $n['type'], array( 'warn', 'error' ), true ) ) ) ) {
+		// "All clear" only when the review produced no notice at all (no warning, error or pending suggestion).
+		if ( empty( $report['notices'] ) ) {
 			$report['notices'][] = array(
 				'type'    => 'ok',
 				'message' => __( 'No obvious issues were detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1076,29 +1086,6 @@ class TSOSK_Mod_Server_Files {
 					$block['ua'],
 					(int) $block['line'],
 					$block['raw']
-				),
-			);
-		}
-
-		if ( empty( $full_site_blocks ) && ! empty( $star_disallows ) ) {
-			$star_disallows = array_values( array_unique( $star_disallows ) );
-			$shown          = array_slice( $star_disallows, 0, 6 );
-			$path_list      = implode( ', ', $shown );
-			$extra          = count( $star_disallows ) - count( $shown );
-			if ( $extra > 0 ) {
-				$path_list .= sprintf(
-					/* translators: %d: additional blocked path count */
-					__( ' …and %d more', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					$extra
-				);
-			}
-			$notices[] = array(
-				'type'    => 'info',
-				'message' => sprintf(
-					/* translators: 1: number of blocked path prefixes, 2: comma-separated path list */
-					__( 'User-agent: * blocks %1$d path prefix(es), not the whole site: %2$s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					count( $star_disallows ),
-					$path_list
 				),
 			);
 		}
@@ -1256,24 +1243,11 @@ class TSOSK_Mod_Server_Files {
 		$has_rewrite_use = (bool) preg_match( '/^\s*Rewrite(?:Rule|Cond|Base)\b/im', $content );
 		$has_rewrite_on  = (bool) preg_match( '/^\s*RewriteEngine\s+On\b/im', $content );
 		$has_global_deny = $this->htaccess_has_top_level_deny( $content );
-		$has_forbid_rule = (bool) preg_match( '/^\s*RewriteRule\b.+\[(?:[^\]]*\bF\b|\bFORBIDDEN\b|\b403\b)/im', $content );
-
-		if ( ! $has_wp_block ) {
-			$notices[] = array(
-				'type'    => 'info',
-				'message' => __( 'The standard WordPress block was not found. This is normal with custom server rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		}
 
 		if ( $has_rewrite_use && ! $has_rewrite_on ) {
 			$notices[] = array(
 				'type'    => 'warn',
 				'message' => __( 'RewriteRule/RewriteCond directives were found but RewriteEngine On is missing. Pretty permalinks may not work on Apache.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		} elseif ( ! $has_rewrite_use && ! $has_wp_block ) {
-			$notices[] = array(
-				'type'    => 'info',
-				'message' => __( 'No RewriteRule directives were found. This file may only contain redirects or security headers.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -1281,13 +1255,6 @@ class TSOSK_Mod_Server_Files {
 			$notices[] = array(
 				'type'    => 'warn',
 				'message' => __( 'A top-level “deny all” rule was found. Unless it is scoped to a sensitive file, it can block public access to the site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		}
-
-		if ( $has_forbid_rule ) {
-			$notices[] = array(
-				'type'    => 'info',
-				'message' => __( 'At least one RewriteRule returns forbidden (403). Review that it targets the intended URLs only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -1302,18 +1269,6 @@ class TSOSK_Mod_Server_Files {
 			$notices[] = array(
 				'type'    => 'info',
 				'message' => __( 'No security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) are set in this file. Use "Add security headers" to insert them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		}
-
-		if ( preg_match( '/wp-config\.php/im', $content ) ) {
-			$notices[] = array(
-				'type'    => 'ok',
-				'message' => __( 'A wp-config.php protection rule was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			);
-		} else {
-			$notices[] = array(
-				'type'    => 'info',
-				'message' => __( 'No explicit wp-config.php protection rule was found in this file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			);
 		}
 
@@ -1390,6 +1345,8 @@ class TSOSK_Mod_Server_Files {
 			<h3><?php echo esc_html( $report['label'] ); ?>
 				<?php if ( $report['exists'] ) : ?>
 				<span class="tsosk-badge tsosk-badge-ok" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				<?php elseif ( ! empty( $report['virtual'] ) ) : ?>
+				<span class="tsosk-badge tsosk-badge-ok" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Virtual', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>
 				<span class="tsosk-badge tsosk-badge-info" style="font-size:12px;margin-left:8px;"><?php esc_html_e( 'Not found', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
@@ -1442,6 +1399,10 @@ class TSOSK_Mod_Server_Files {
 				</li>
 				<?php endforeach; ?>
 			</ul>
+
+			<?php if ( ! empty( $report['virtual'] ) ) : ?>
+				<?php $this->render_virtual_robots_box( (array) $report['virtual'] ); ?>
+			<?php endif; ?>
 
 			<?php if ( '' !== $report['content'] || ! $report['exists'] ) : ?>
 			<details open style="margin-top:12px;">
@@ -1510,6 +1471,38 @@ class TSOSK_Mod_Server_Files {
 	}
 
 	/**
+	 * Compact notice for a virtual robots.txt: says it is virtual and which plugin or theme builds or changes it.
+	 *
+	 * @param array $virtual Result of get_virtual_robots().
+	 */
+	private function render_virtual_robots_box( array $virtual ): void {
+		$kinds_label = array(
+			'plugin'    => __( 'Plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'mu-plugin' => __( 'Must-use plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'theme'     => __( 'Theme', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+
+		$sources = array( 'WordPress' );
+		foreach ( (array) ( $virtual['callbacks'] ?? array() ) as $cb ) {
+			if ( 'core' === $cb['kind'] ) {
+				continue;
+			}
+			$sources[] = isset( $kinds_label[ $cb['kind'] ] ) ? $kinds_label[ $cb['kind'] ] . ': ' . $cb['label'] : ( '' !== $cb['label'] ? $cb['label'] : __( 'Unknown source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$sources = array_unique( $sources );
+		?>
+		<div class="tsosk-notice tsosk-notice-info" style="margin-top:12px;padding:8px 12px;">
+			<strong><?php esc_html_e( 'Virtual', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			&middot; <?php esc_html_e( 'Generated by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>: <?php echo esc_html( implode( ' + ', $sources ) ); ?>
+			<?php if ( 1 === count( $sources ) && 200 === (int) ( $virtual['http_status'] ?? 0 ) && empty( $virtual['matches'] ) ) : ?>
+				<div class="description"><?php esc_html_e( 'The text served differs from what WordPress would build, so another layer (a server rule, a caching or security plugin that answers before WordPress, or a plugin that does not use the usual filters) is changing it. Check the plugins that manage SEO, caching or security.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></div>
+			<?php endif; ?>
+			<div class="description" style="margin-top:4px;"><?php esc_html_e( 'Saving this text creates a real robots.txt file that replaces the virtual one: the rules added by plugins will stop being applied.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * .htaccess block with the common security headers (HSTS is left commented out on purpose).
 	 */
 	private function security_headers_block(): string {
@@ -1522,6 +1515,194 @@ class TSOSK_Mod_Server_Files {
 			. "# Header always set Strict-Transport-Security \"max-age=31536000\"\n"
 			. "</IfModule>\n"
 			. '# END TSOSK Security Headers';
+	}
+
+	/**
+	 * Describe the virtual robots.txt WordPress serves when there is no file on disk.
+	 *
+	 * Two sources are combined: the real answer of https://domain/robots.txt (what crawlers read) and the callbacks hooked
+	 * to the filters WordPress runs to build it, each traced back to the plugin, theme or core file that registers it.
+	 *
+	 * @return array{content:string,content_source:string,http_url:string,http_status:int,http_error:string,callbacks:array<int,array{hook:string,priority:int,kind:string,label:string}>,matches:bool}
+	 */
+	private function get_virtual_robots(): array {
+		// Same starting text as core's do_robots() (wp-includes/functions.php).
+		$path   = (string) wp_parse_url( site_url(), PHP_URL_PATH );
+		$public = get_option( 'blog_public' );
+		$output = "User-agent: *\n";
+		if ( '0' === (string) $public ) {
+			$output .= "Disallow: /\n";
+		} else {
+			$output .= 'Disallow: ' . $path . "/wp-admin/\n";
+			$output .= 'Allow: ' . $path . "/wp-admin/admin-ajax.php\n";
+		}
+		// Filters only (never the do_robotstxt action: plugins may print headers or stop the request there).
+		$rebuilt = (string) apply_filters( 'robots_txt', $output, $public ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
+
+		$callbacks = array_merge(
+			$this->describe_hook_callbacks( 'robots_txt' ),
+			$this->describe_hook_callbacks( 'do_robotstxt' ),
+			$this->describe_hook_callbacks( 'do_robots' )
+		);
+
+		// What crawlers really get: request the domain-root address.
+		$parts  = wp_parse_url( home_url( '/' ) );
+		$origin = ( $parts['scheme'] ?? 'https' ) . '://' . ( $parts['host'] ?? '' ) . ( isset( $parts['port'] ) ? ':' . $parts['port'] : '' );
+		$url    = $origin . '/robots.txt';
+		$status = 0;
+		$error  = '';
+		$body   = '';
+		$resp   = wp_remote_get(
+			$url,
+			array(
+				'timeout'             => 6,
+				'redirection'         => 3,
+				'user-agent'          => 'TSO Swiss Knife Sitemap Checker',
+				'limit_response_size' => 512 * 1024,
+				'headers'             => array( 'Cache-Control' => 'no-cache' ),
+			)
+		);
+		if ( is_wp_error( $resp ) ) {
+			$error = $resp->get_error_message();
+		} else {
+			$status = (int) wp_remote_retrieve_response_code( $resp );
+			$body   = (string) wp_remote_retrieve_body( $resp );
+		}
+		$http_ok = 200 === $status && '' !== trim( $body ) && 0 !== strpos( ltrim( $body ), '<' );
+
+		$normalize = static function ( string $text ): string {
+			return trim( preg_replace( '/\s+/', ' ', $text ) ?? '' );
+		};
+
+		return array(
+			'content'        => $http_ok ? $body : $rebuilt,
+			'content_source' => $http_ok ? 'http' : 'hooks',
+			'http_url'       => $url,
+			'http_status'    => $status,
+			'http_error'     => $error,
+			'callbacks'      => $callbacks,
+			'matches'        => $http_ok && $normalize( $body ) === $normalize( $rebuilt ),
+		);
+	}
+
+	/**
+	 * List the callbacks attached to a hook, each traced to the file that defines it.
+	 *
+	 * @param string $hook Hook name.
+	 * @return array<int,array{hook:string,priority:int,kind:string,label:string}>
+	 */
+	private function describe_hook_callbacks( string $hook ): array {
+		global $wp_filter;
+		$out = array();
+		if ( empty( $wp_filter[ $hook ] ) || ! ( $wp_filter[ $hook ] instanceof WP_Hook ) ) {
+			return $out;
+		}
+		foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
+			foreach ( $callbacks as $callback ) {
+				$source = $this->classify_source_file( $this->callback_file( $callback['function'] ?? null ) );
+				$out[]  = array(
+					'hook'     => $hook,
+					'priority' => (int) $priority,
+					'kind'     => $source['kind'],
+					'label'    => $source['label'],
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * File where a PHP callback is defined (empty when it cannot be found).
+	 *
+	 * @param mixed $callable Callback as stored by WordPress.
+	 * @return string
+	 */
+	private function callback_file( $callable ): string {
+		try {
+			if ( is_array( $callable ) && 2 === count( $callable ) ) {
+				$ref = new ReflectionMethod( $callable[0], (string) $callable[1] );
+			} elseif ( is_string( $callable ) && false !== strpos( $callable, '::' ) ) {
+				$ref = new ReflectionMethod( $callable );
+			} elseif ( $callable instanceof Closure || is_string( $callable ) ) {
+				$ref = new ReflectionFunction( $callable );
+			} elseif ( is_object( $callable ) && method_exists( $callable, '__invoke' ) ) {
+				$ref = new ReflectionMethod( $callable, '__invoke' );
+			} else {
+				return '';
+			}
+			return (string) $ref->getFileName();
+		} catch ( \Throwable $e ) {
+			return '';
+		}
+	}
+
+	/**
+	 * Say whether a file belongs to WordPress core, a plugin, a must-use plugin or a theme, and name it.
+	 *
+	 * @param string $file Absolute file path.
+	 * @return array{kind:string,label:string}
+	 */
+	private function classify_source_file( string $file ): array {
+		$file = wp_normalize_path( $file );
+		if ( '' === $file ) {
+			return array(
+				'kind'  => 'unknown',
+				'label' => '',
+			);
+		}
+
+		$plugin_dir = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+		if ( 0 === strpos( $file, $plugin_dir ) ) {
+			$relative = substr( $file, strlen( $plugin_dir ) );
+			$folder   = (string) strtok( $relative, '/' );
+			if ( ! function_exists( 'get_plugins' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+			foreach ( get_plugins() as $plugin_file => $data ) {
+				$plugin_folder = false !== strpos( $plugin_file, '/' ) ? (string) strtok( $plugin_file, '/' ) : $plugin_file;
+				if ( $plugin_folder === $folder ) {
+					return array(
+						'kind'  => 'plugin',
+						'label' => '' !== (string) $data['Name'] ? (string) $data['Name'] : $folder,
+					);
+				}
+			}
+			return array(
+				'kind'  => 'plugin',
+				'label' => $folder,
+			);
+		}
+
+		$mu_dir = trailingslashit( wp_normalize_path( WPMU_PLUGIN_DIR ) );
+		if ( 0 === strpos( $file, $mu_dir ) ) {
+			return array(
+				'kind'  => 'mu-plugin',
+				'label' => basename( $file ),
+			);
+		}
+
+		$theme_root = trailingslashit( wp_normalize_path( get_theme_root() ) );
+		if ( 0 === strpos( $file, $theme_root ) ) {
+			$folder = (string) strtok( substr( $file, strlen( $theme_root ) ), '/' );
+			$theme  = wp_get_theme( $folder );
+			return array(
+				'kind'  => 'theme',
+				'label' => $theme->exists() ? (string) $theme->get( 'Name' ) : $folder,
+			);
+		}
+
+		$abspath = wp_normalize_path( ABSPATH );
+		if ( 0 === strpos( $file, $abspath . 'wp-includes/' ) || 0 === strpos( $file, $abspath . 'wp-admin/' ) ) {
+			return array(
+				'kind'  => 'core',
+				'label' => 'WordPress',
+			);
+		}
+
+		return array(
+			'kind'  => 'unknown',
+			'label' => basename( $file ),
+		);
 	}
 
 	/**

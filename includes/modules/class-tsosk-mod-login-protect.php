@@ -44,6 +44,15 @@ class TSOSK_Mod_Login_Protect {
 	/** Attempt counter option key (array: ip => ['count'=>N,'first'=>timestamp]). */
 	private const OPTION_ATTEMPTS = 'tsosk_login_attempts';
 
+	/** Per-username failure counters option key (array: user_login => ['count','first','until','last_ip']). */
+	private const OPTION_USER_ATTEMPTS = 'tsosk_login_user_attempts';
+
+	/** User meta that remembers the IPs an account has already signed in from (ip => timestamp). */
+	private const META_TRUSTED_IPS = 'tsosk_lp_trusted_ips';
+
+	/** IPs remembered per account. */
+	private const MAX_TRUSTED_IPS = 5;
+
 	/** Query var name used for the custom login URL detection. */
 	private const QUERY_VAR = 'tsosk_login_key';
 
@@ -84,6 +93,7 @@ class TSOSK_Mod_Login_Protect {
 		add_action( 'wp_ajax_tsosk_lp_unlock', array( $this, 'ajax_unlock' ) );
 		add_action( 'wp_ajax_tsosk_lp_unlock_all', array( $this, 'ajax_unlock_all' ) );
 		add_action( 'wp_ajax_tsosk_lp_clear_log', array( $this, 'ajax_clear_log' ) );
+		add_action( 'wp_ajax_tsosk_lp_reset_user', array( $this, 'ajax_reset_user' ) );
 		add_action( 'wp_ajax_tsosk_lp_generate_slug', array( $this, 'ajax_generate_slug' ) );
 	}
 
@@ -114,6 +124,15 @@ class TSOSK_Mod_Login_Protect {
 
 		if ( $s['block_forbidden_usernames'] ) {
 			add_filter( 'authenticate', array( $this, 'block_forbidden_username' ), 19, 3 );
+		}
+
+		// Per-username counter: stops slow attacks that change IP on every attempt.
+		if ( ! empty( $s['user_lockout'] ) ) {
+			add_filter( 'authenticate', array( $this, 'check_user_lockout' ), 1, 3 );
+			add_filter( 'authenticate', array( $this, 'enforce_user_lockout_late' ), 100, 1 );
+			add_action( 'wp_login_failed', array( $this, 'record_user_failure' ), 10, 2 );
+			add_action( 'wp_login', array( $this, 'on_login_success' ), 10, 2 );
+			add_action( 'admin_init', array( $this, 'seed_trusted_ip' ) );
 		}
 
 		// Login maintenance mode (trusted IPs only).
@@ -518,6 +537,269 @@ class TSOSK_Mod_Login_Protect {
 		);
 	}
 
+	// ── Per-username counter ─────────────────────────────────────────────────
+
+	/**
+	 * Refuse a sign-in for a locked account unless it comes from a whitelisted IP or one the account already used.
+	 *
+	 * @param WP_User|WP_Error|null $user     Result of previous handlers.
+	 * @param string                $username Submitted username or email.
+	 * @param string                $password Submitted password.
+	 * @return WP_User|WP_Error|null
+	 */
+	public function check_user_lockout( $user, string $username, string $password ) {
+		unset( $password );
+		if ( is_wp_error( $user ) || '' === trim( $username ) ) {
+			return $user;
+		}
+		$account = $this->resolve_user( $username );
+		if ( ! $account ) {
+			return $user;
+		}
+		$error = $this->get_user_lock_error( $account );
+		return $error ?? $user;
+	}
+
+	/**
+	 * Final pass: a locked account is never authenticated from an unknown IP, even with the right password
+	 * (also covers application passwords over REST and XML-RPC).
+	 *
+	 * @param WP_User|WP_Error|null $user Result of the previous handlers.
+	 * @return WP_User|WP_Error|null
+	 */
+	public function enforce_user_lockout_late( $user ) {
+		if ( ! ( $user instanceof WP_User ) ) {
+			return $user;
+		}
+		$error = $this->get_user_lock_error( $user );
+		return $error ?? $user;
+	}
+
+	/**
+	 * Fires on wp_login_failed — count the failure against the account, whatever the IP.
+	 *
+	 * @param string        $username Username or email attempted.
+	 * @param WP_Error|null $error    Error object when available.
+	 */
+	public function record_user_failure( string $username, $error = null ): void {
+		if ( $error instanceof WP_Error ) {
+			$skip = array( 'tsosk_2fa_required', 'tsosk_2fa_invalid', 'tsosk_2fa_max_attempts', 'tsosk_role_ip_denied', 'tsosk_locked_out', 'tsosk_forbidden_username', 'tsosk_user_locked' );
+			if ( in_array( $error->get_error_code(), $skip, true ) ) {
+				return;
+			}
+		}
+
+		$s = $this->get_settings();
+		// Only real accounts are tracked: bots guessing names that do not exist cannot lock anybody out.
+		$account = $this->resolve_user( $username );
+		if ( ! $account || empty( $s['user_lockout'] ) ) {
+			return;
+		}
+
+		$ip = $this->get_client_ip();
+		if ( $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) || $this->is_ip_trusted_for_user( (int) $account->ID, $ip ) ) {
+			return;
+		}
+
+		$login = (string) $account->user_login;
+		$this->with_attempts_lock(
+			function () use ( $s, $ip, $login ): void {
+				$all    = $this->get_user_attempts();
+				$key    = strtolower( $login );
+				$now    = time();
+				$window = (int) $s['user_window'] * 60;
+				$entry  = $all[ $key ] ?? array(
+					'count'   => 0,
+					'first'   => $now,
+					'until'   => 0,
+					'last_ip' => '',
+				);
+
+				if ( (int) $entry['until'] > $now ) {
+					return; // Already locked.
+				}
+				// An old lock or an old window starts a fresh count.
+				if ( (int) $entry['until'] > 0 || $now - (int) $entry['first'] > $window ) {
+					$entry = array(
+						'count'   => 0,
+						'first'   => $now,
+						'until'   => 0,
+						'last_ip' => '',
+					);
+				}
+
+				++$entry['count'];
+				$entry['last_ip'] = $ip;
+
+				if ( (int) $entry['count'] >= (int) $s['user_max_attempts'] ) {
+					$entry['until'] = $now + (int) $s['lockout_duration'] * 60;
+					TSOSK_Activity_Log::log(
+						'login-protect',
+						'lock',
+						sprintf(
+							/* translators: %s: username */
+							__( 'User "%s" locked for sign-ins from new IP addresses.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							$login
+						)
+					);
+				}
+
+				$all[ $key ] = $entry;
+				update_option( self::OPTION_USER_ATTEMPTS, $this->prune_user_attempts( $all ), false );
+			}
+		);
+	}
+
+	/**
+	 * Fires on wp_login (successful) — remember the IP as trusted for this account and clear its counter.
+	 *
+	 * @param string  $user_login Username.
+	 * @param WP_User $user       User object.
+	 */
+	public function on_login_success( string $user_login, $user = null ): void {
+		if ( $user instanceof WP_User ) {
+			$this->remember_trusted_ip( (int) $user->ID, $this->get_client_ip() );
+		}
+		$all = $this->get_user_attempts();
+		$key = strtolower( $user_login );
+		if ( isset( $all[ $key ] ) ) {
+			unset( $all[ $key ] );
+			update_option( self::OPTION_USER_ATTEMPTS, $all, false );
+		}
+	}
+
+	/**
+	 * An administrator already signed in when the option is switched on must not be locked out later:
+	 * remember the IP of every signed-in user the first time it is seen.
+	 */
+	public function seed_trusted_ip(): void {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+		$uid = get_current_user_id();
+		$ip  = $this->get_client_ip();
+		if ( '' === $ip || $this->is_ip_trusted_for_user( $uid, $ip ) ) {
+			return;
+		}
+		$this->remember_trusted_ip( $uid, $ip );
+	}
+
+	/**
+	 * Store an IP among the most recent ones an account has signed in from.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $ip      Client IP.
+	 */
+	private function remember_trusted_ip( int $user_id, string $ip ): void {
+		if ( $user_id <= 0 || '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return;
+		}
+		$known = get_user_meta( $user_id, self::META_TRUSTED_IPS, true );
+		$known = is_array( $known ) ? $known : array();
+		$known[ $ip ] = time();
+		arsort( $known, SORT_NUMERIC );
+		update_user_meta( $user_id, self::META_TRUSTED_IPS, array_slice( $known, 0, self::MAX_TRUSTED_IPS, true ) );
+	}
+
+	/**
+	 * Whether an account has already signed in from this IP.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $ip      Client IP.
+	 * @return bool
+	 */
+	private function is_ip_trusted_for_user( int $user_id, string $ip ): bool {
+		if ( $user_id <= 0 || '' === $ip ) {
+			return false;
+		}
+		$known = get_user_meta( $user_id, self::META_TRUSTED_IPS, true );
+		return is_array( $known ) && isset( $known[ $ip ] );
+	}
+
+	/**
+	 * Find the account behind a submitted username or email.
+	 *
+	 * @param string $username Username or email.
+	 * @return WP_User|null
+	 */
+	private function resolve_user( string $username ): ?WP_User {
+		$username = trim( $username );
+		if ( '' === $username ) {
+			return null;
+		}
+		$account = get_user_by( 'login', $username );
+		if ( ! $account && is_email( $username ) ) {
+			$account = get_user_by( 'email', $username );
+		}
+		return $account instanceof WP_User ? $account : null;
+	}
+
+	/**
+	 * Error to return when an account is locked and the IP is not allowed through, or null.
+	 *
+	 * @param WP_User $user Account being authenticated.
+	 * @return WP_Error|null
+	 */
+	private function get_user_lock_error( WP_User $user ): ?WP_Error {
+		$s = $this->get_settings();
+		if ( empty( $s['user_lockout'] ) ) {
+			return null;
+		}
+		$entry = $this->get_user_attempts()[ strtolower( (string) $user->user_login ) ] ?? null;
+		if ( ! is_array( $entry ) || (int) $entry['until'] <= time() ) {
+			return null;
+		}
+		$ip = $this->get_client_ip();
+		if ( $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) || $this->is_ip_trusted_for_user( (int) $user->ID, $ip ) ) {
+			return null;
+		}
+		// Same wording as other lockouts: it must not reveal that the account exists.
+		return new WP_Error(
+			'tsosk_user_locked',
+			__( 'Too many failed login attempts. Please try again later.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+		);
+	}
+
+	/**
+	 * Per-username counters.
+	 *
+	 * @return array<string,array{count:int,first:int,until:int,last_ip:string}>
+	 */
+	private function get_user_attempts(): array {
+		$v = get_option( self::OPTION_USER_ATTEMPTS, array() );
+		if ( ! is_array( $v ) ) {
+			return array();
+		}
+		$clean = array();
+		foreach ( $v as $login => $row ) {
+			if ( is_array( $row ) && is_string( $login ) && '' !== $login ) {
+				$clean[ $login ] = array(
+					'count'   => (int) ( $row['count'] ?? 0 ),
+					'first'   => (int) ( $row['first'] ?? 0 ),
+					'until'   => (int) ( $row['until'] ?? 0 ),
+					'last_ip' => (string) ( $row['last_ip'] ?? '' ),
+				);
+			}
+		}
+		return $clean;
+	}
+
+	/**
+	 * Drop old counters and cap the list so the option cannot grow without limit.
+	 *
+	 * @param array $all Counters.
+	 * @return array
+	 */
+	private function prune_user_attempts( array $all ): array {
+		$now = time();
+		foreach ( $all as $key => $row ) {
+			if ( (int) $row['until'] <= $now && $now - (int) $row['first'] > DAY_IN_SECONDS ) {
+				unset( $all[ $key ] );
+			}
+		}
+		return count( $all ) > 200 ? array_slice( $all, -200, null, true ) : $all;
+	}
+
 	/**
 	 * Block login attempts that use common bot usernames and lock the IP immediately.
 	 *
@@ -585,7 +867,8 @@ class TSOSK_Mod_Login_Protect {
 			return;
 		}
 
-		if ( $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) ) {
+		// Without a known address every visitor would share one counter and one lockout.
+		if ( '' === $ip || $this->is_ip_whitelisted( $ip, $s['whitelist_ips'] ) ) {
 			return;
 		}
 
@@ -594,6 +877,16 @@ class TSOSK_Mod_Login_Protect {
 				$attempts = $this->get_all_attempts();
 				$now      = time();
 				$window   = (int) $s['lockout_window'] * 60; // window in seconds.
+
+				// Drop counters whose window has passed (a botnet leaves one entry per IP) and cap the list.
+				foreach ( $attempts as $stale_ip => $stale ) {
+					if ( $now - (int) $stale['first'] > $window ) {
+						unset( $attempts[ $stale_ip ] );
+					}
+				}
+				if ( count( $attempts ) > 500 ) {
+					$attempts = array_slice( $attempts, -500, null, true );
+				}
 
 				if ( isset( $attempts[ $ip ] ) ) {
 					$entry = $attempts[ $ip ];
@@ -909,7 +1202,8 @@ class TSOSK_Mod_Login_Protect {
 
 		update_option( self::OPTION_LOCKOUTS, $lockouts, false );
 
-		if ( ! empty( $s['notify_email'] ) ) {
+		// Individual emails are capped; beyond the cap the mass-lockout alert below covers the flood.
+		if ( ! empty( $s['notify_email'] ) && $this->allow_lockout_email() ) {
 			$this->send_lockout_notification( $ip, $username, $count );
 		}
 
@@ -995,6 +1289,20 @@ class TSOSK_Mod_Login_Protect {
 			$email_2fa_roles = wp_unslash( $_POST['email_2fa_roles'] );
 		}
 
+		// Refuse invalid lines instead of dropping them silently (a range such as 10.0.0.0/24 is not supported here).
+		$raw_whitelist   = isset( $_POST['whitelist_ips'] ) ? sanitize_textarea_field( wp_unslash( $_POST['whitelist_ips'] ) ) : '';
+		$raw_maintenance = isset( $_POST['login_maintenance_ips'] ) ? sanitize_textarea_field( wp_unslash( $_POST['login_maintenance_ips'] ) ) : '';
+		$bad_ips         = array_unique( array_merge( $this->find_invalid_ip_lines( $raw_whitelist ), $this->find_invalid_ip_lines( $raw_maintenance ) ) );
+		if ( ! empty( $bad_ips ) ) {
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: list of invalid lines */
+					__( 'Not saved: these lines are not valid IP addresses: %s. Use one IPv4 or IPv6 address per line (ranges are not supported).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', array_slice( $bad_ips, 0, 5 ) )
+				)
+			);
+		}
+
 		$new = array(
 			'custom_url'                => ! empty( $_POST['custom_url'] ),
 			'login_slug'                => isset( $_POST['login_slug'] )
@@ -1033,7 +1341,19 @@ class TSOSK_Mod_Login_Protect {
 			'notify_mass_window'        => isset( $_POST['notify_mass_window'] )
 				? max( 5, min( 1440, absint( wp_unslash( $_POST['notify_mass_window'] ) ) ) )
 				: 60,
+			'user_lockout'              => ! empty( $_POST['user_lockout'] ),
+			'user_max_attempts'         => isset( $_POST['user_max_attempts'] )
+				? max( 3, min( 100, absint( wp_unslash( $_POST['user_max_attempts'] ) ) ) )
+				: 10,
+			'user_window'               => isset( $_POST['user_window'] )
+				? max( 5, min( 1440, absint( wp_unslash( $_POST['user_window'] ) ) ) )
+				: 60,
 		);
+
+		// A threshold of 1 would never send anything (an alert needs at least 2 lockouts).
+		if ( 1 === $new['notify_mass_threshold'] ) {
+			$new['notify_mass_threshold'] = 2;
+		}
 
 		// Require a non-empty slug when custom URL is enabled.
 		if ( $new['custom_url'] && empty( $new['login_slug'] ) ) {
@@ -1081,6 +1401,20 @@ class TSOSK_Mod_Login_Protect {
 			&& '' === trim( (string) $new['whitelist_ips'] )
 		) {
 			wp_send_json_error( __( 'Add at least one trusted IP (maintenance list or whitelist) before enabling login maintenance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Login maintenance that excludes the IP saving it would stop that administrator from signing in again.
+		if ( ! empty( $new['login_maintenance'] ) ) {
+			$maintenance_ip = $this->get_client_ip();
+			if ( ! $this->is_ip_whitelisted( $maintenance_ip, (string) $new['whitelist_ips'] ) && ! $this->is_ip_whitelisted( $maintenance_ip, (string) $new['login_maintenance_ips'] ) ) {
+				wp_send_json_error(
+					sprintf(
+						/* translators: %s: current IP address */
+						__( 'Your current IP (%s) is not in the whitelist or the maintenance list, so you could not sign in again while login maintenance is on. Add it first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$maintenance_ip
+					)
+				);
+			}
 		}
 
 		// A per-role IP rule that excludes the administrator saving it would lock that administrator out on the next login.
@@ -1206,6 +1540,7 @@ class TSOSK_Mod_Login_Protect {
 		unset( $l );
 		update_option( self::OPTION_LOCKOUTS, $lockouts, false );
 		delete_option( self::OPTION_ATTEMPTS );
+		delete_option( self::OPTION_USER_ATTEMPTS );
 
 		TSOSK_Activity_Log::log( 'login-protect', 'reset', __( 'All locked IPs unlocked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
@@ -1219,12 +1554,49 @@ class TSOSK_Mod_Login_Protect {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		delete_option( self::OPTION_LOCKOUTS );
+		// Clearing the history must not silently lift lockouts that are still running.
+		$now       = time();
+		$keep_ips  = array_values( array_filter( $this->get_lockout_log(), static fn( $l ) => ! empty( $l['active'] ) && (int) $l['until'] > $now ) );
+		$keep_user = array_filter( $this->get_user_attempts(), static fn( $r ) => (int) $r['until'] > $now );
+		if ( empty( $keep_ips ) ) {
+			delete_option( self::OPTION_LOCKOUTS );
+		} else {
+			update_option( self::OPTION_LOCKOUTS, $keep_ips, false );
+		}
 		delete_option( self::OPTION_ATTEMPTS );
+		if ( empty( $keep_user ) ) {
+			delete_option( self::OPTION_USER_ATTEMPTS );
+		} else {
+			update_option( self::OPTION_USER_ATTEMPTS, $keep_user, false );
+		}
 
 		TSOSK_Activity_Log::log( 'login-protect', 'delete', __( 'Login lockout log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 
-		wp_send_json_success( __( 'Lockout log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		wp_send_json_success(
+			empty( $keep_ips ) && empty( $keep_user )
+				? __( 'Lockout log cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Lockout log cleared. Lockouts still running were kept; use Unlock All to lift them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+		);
+	}
+
+	/** AJAX: clear the failure counter (and any lock) of one username. */
+	public function ajax_reset_user(): void {
+		check_ajax_referer( 'tsosk_lp_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$key = isset( $_POST['user'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['user'] ) ) ) : '';
+		$all = $this->get_user_attempts();
+		if ( '' === $key || ! isset( $all[ $key ] ) ) {
+			wp_send_json_error( __( 'Invalid username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		unset( $all[ $key ] );
+		update_option( self::OPTION_USER_ATTEMPTS, $all, false );
+
+		TSOSK_Activity_Log::log( 'login-protect', 'reset', __( 'Username counter cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'user' => $key ) );
+
+		wp_send_json_success( __( 'Username counter cleared.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/** AJAX: generate a random secure slug suggestion. */
@@ -1267,6 +1639,9 @@ class TSOSK_Mod_Login_Protect {
 			'role_whitelist_ips'        => (string) ( $s['role_whitelist_ips'] ?? '' ),
 			'notify_mass_threshold'     => max( 0, min( 100, (int) ( $s['notify_mass_threshold'] ?? 0 ) ) ),
 			'notify_mass_window'        => max( 5, min( 1440, (int) ( $s['notify_mass_window'] ?? 60 ) ) ),
+			'user_lockout'              => (bool) ( $s['user_lockout'] ?? false ),
+			'user_max_attempts'         => max( 3, min( 100, (int) ( $s['user_max_attempts'] ?? 10 ) ) ),
+			'user_window'               => max( 5, min( 1440, (int) ( $s['user_window'] ?? 60 ) ) ),
 		);
 	}
 
@@ -1393,11 +1768,32 @@ class TSOSK_Mod_Login_Protect {
 			if ( $item === $ip ) {
 				return true;
 			}
-			if ( false !== $packed && filter_var( $item, FILTER_VALIDATE_IP ) && inet_pton( $item ) === $packed ) {
-				return true;
+			if ( false !== $packed && filter_var( $item, FILTER_VALIDATE_IP ) ) {
+				// Same address, or (IPv6) the same /64 network the client is counted under.
+				if ( inet_pton( $item ) === $packed || $this->ip_bucket( $item ) === $this->ip_bucket( $ip ) ) {
+					return true;
+				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Lines of an IP list that are not a valid IPv4 or IPv6 address.
+	 *
+	 * @param string $raw Raw textarea value.
+	 * @return string[]
+	 */
+	private function find_invalid_ip_lines( string $raw ): array {
+		$bad   = array();
+		$lines = preg_split( '/\r\n|\r|\n/', $raw );
+		foreach ( (array) $lines as $line ) {
+			$line = trim( (string) $line );
+			if ( '' !== $line && ! filter_var( $line, FILTER_VALIDATE_IP ) ) {
+				$bad[] = $line;
+			}
+		}
+		return $bad;
 	}
 
 	/**
@@ -1432,7 +1828,50 @@ class TSOSK_Mod_Login_Protect {
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		return TSOSK_Support::get_client_ip();
+		return $this->ip_bucket( TSOSK_Support::get_client_ip() );
+	}
+
+	/**
+	 * Counting key for an address: IPv4 stays as is, IPv6 collapses to its /64 network.
+	 *
+	 * A single IPv6 connection can rotate through billions of addresses inside its /64, so
+	 * counting per full address would let it dodge every limit. Loopback is left alone.
+	 *
+	 * @param string $ip Client IP.
+	 * @return string
+	 */
+	private function ip_bucket( string $ip ): string {
+		if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			return $ip;
+		}
+		$packed = inet_pton( $ip );
+		if ( false === $packed || 16 !== strlen( $packed ) ) {
+			return $ip;
+		}
+		// IPv4-mapped (::ffff:a.b.c.d) is really an IPv4 client.
+		if ( 0 === strncmp( $packed, str_repeat( "\0", 10 ) . "\xff\xff", 12 ) ) {
+			return (string) inet_ntop( substr( $packed, 12 ) );
+		}
+		if ( $packed === str_repeat( "\0", 15 ) . "\x01" ) {
+			return $ip;
+		}
+		$network = inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) );
+		return false !== $network ? $network : $ip;
+	}
+
+	/**
+	 * Whether another individual lockout email may go out (max 3 per 15 minutes).
+	 *
+	 * @return bool
+	 */
+	private function allow_lockout_email(): bool {
+		$key  = 'tsosk_lp_mail_gate';
+		$sent = (int) get_transient( $key );
+		if ( $sent >= 3 ) {
+			return false;
+		}
+		set_transient( $key, $sent + 1, 15 * MINUTE_IN_SECONDS );
+		return true;
 	}
 
 	/**
@@ -1488,6 +1927,17 @@ class TSOSK_Mod_Login_Protect {
 		$attempts = $this->get_all_attempts();
 		$now      = time();
 
+		$user_attempts = $this->get_user_attempts();
+		uasort(
+			$user_attempts,
+			static fn( $a, $b ) => (int) $b['count'] <=> (int) $a['count']
+		);
+		$locked_users = count( array_filter( $user_attempts, static fn( $r ) => (int) $r['until'] > $now ) );
+
+		// Counters whose window has passed no longer count: do not list them as live.
+		$attempt_window = (int) $s['lockout_window'] * 60;
+		$attempts       = array_filter( $attempts, static fn( $row ) => $now - (int) $row['first'] <= $attempt_window );
+
 		// Separate active/expired lockouts for display.
 		$active_lockouts  = array_values( array_filter( $lockouts, static fn( $l ) => ! empty( $l['active'] ) && (int) $l['until'] > time() ) );
 		$expired_lockouts = array_values( array_filter( $lockouts, static fn( $l ) => empty( $l['active'] ) || (int) $l['until'] <= time() ) );
@@ -1522,6 +1972,21 @@ class TSOSK_Mod_Login_Protect {
 				?>
 			</strong>
 			<?php esc_html_e( 'See the Lockout Log section below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( $locked_users > 0 ) : ?>
+		<div class="tsosk-notice tsosk-notice-warn">
+			<strong>
+				<?php
+				printf(
+					/* translators: %d: number of locked accounts */
+					esc_html__( '⚠ %d user account(s) are locked for sign-ins from new IP addresses.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $locked_users
+				);
+				?>
+			</strong>
+			<?php esc_html_e( 'See the Usernames with failed attempts section below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 		<?php endif; ?>
 
@@ -1606,9 +2071,13 @@ class TSOSK_Mod_Login_Protect {
 			<h3>
 				<span class="dashicons dashicons-shield" aria-hidden="true"></span>
 				<?php esc_html_e( 'Brute-Force Protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<span class="tsosk-badge <?php echo $s['brute_force'] ? 'tsosk-badge-ok' : ''; ?>"
+				<?php
+				// Lockouts are enforced by the failed-attempt counter OR by the forbidden-usernames rule (independent of each other).
+				$lockout_enforced = ! empty( $s['brute_force'] ) || ! empty( $s['block_forbidden_usernames'] ) || ! empty( $s['user_lockout'] );
+				?>
+				<span class="tsosk-badge <?php echo $lockout_enforced ? 'tsosk-badge-ok' : ''; ?>"
 						style="margin-left:10px;font-size:12px;">
-					<?php echo $s['brute_force'] ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php echo $lockout_enforced ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</h3>
 
@@ -1686,6 +2155,37 @@ class TSOSK_Mod_Login_Protect {
 								value="<?php echo esc_attr( $s['notify_address'] ); ?>"
 								placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"
 								style="margin-top:6px;width:280px;">
+					</td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Counter per username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="user_lockout" id="tsosk-lp-user-lockout"
+									value="1" <?php checked( ! empty( $s['user_lockout'] ) ); ?>>
+							<?php esc_html_e( 'Also count failed attempts per username, whatever the IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e( 'Stops attackers who change IP on every attempt. When an existing account reaches the limit, sign-ins to it are refused from IPs it has not used before (and not whitelisted) until the lockout expires. The real owner keeps access from the IPs they already signed in from.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</p>
+						<p style="margin-top:8px;">
+							<label>
+								<?php esc_html_e( 'Max attempts per username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<input type="number" name="user_max_attempts" id="tsosk-lp-user-max"
+										value="<?php echo esc_attr( (string) $s['user_max_attempts'] ); ?>"
+										min="3" max="100" step="1" style="width:80px;">
+							</label>
+							&nbsp;
+							<label>
+								<?php esc_html_e( 'Window (minutes)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<input type="number" name="user_window" id="tsosk-lp-user-window"
+										value="<?php echo esc_attr( (string) $s['user_window'] ); ?>"
+										min="5" max="1440" step="1" style="width:80px;">
+							</label>
+						</p>
+						<span class="description">
+							<?php esc_html_e( 'The lockout lasts as long as the duration set above.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</span>
 					</td>
 				</tr>
 			</table>
@@ -1830,10 +2330,70 @@ class TSOSK_Mod_Login_Protect {
 								<?php echo esc_html( (string) (int) ( $entry['count'] ?? 0 ) ); ?>
 							</span> / <?php echo esc_html( (string) $s['max_attempts'] ); ?>
 						</td>
-						<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', (int) ( $entry['first'] ?? 0 ) ) ); ?> UTC</td>
+						<td><?php echo esc_html( wp_date( 'Y-m-d H:i:s', (int) ( $entry['first'] ?? 0 ) ) ); ?></td>
 						<td>
 							<button class="button button-small tsosk-lp-reset-counter"
 									data-ip="<?php echo esc_attr( (string) $ip ); ?>"
+									data-nonce="<?php echo esc_attr( $nonce ); ?>">
+								<?php esc_html_e( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</button>
+						</td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			</div>
+		</div>
+		<?php endif; ?>
+
+		<?php /* ── Per-username counters ── */ ?>
+		<?php if ( ! empty( $s['user_lockout'] ) && ! empty( $user_attempts ) ) : ?>
+		<div class="tsosk-card">
+			<h3><?php esc_html_e( 'Usernames with failed attempts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Failed attempts counted against each existing account, from any IP.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<div class="tsosk-table-wrap">
+			<table class="widefat tsosk-table">
+				<thead><tr>
+					<th><?php esc_html_e( 'Username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Failed Attempts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'First Attempt', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Last IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+				</tr></thead>
+				<tbody>
+					<?php foreach ( $user_attempts as $uname => $uentry ) : ?>
+						<?php $u_locked = (int) $uentry['until'] > time(); ?>
+					<tr class="<?php echo $u_locked ? 'tsosk-row-warn' : ''; ?>">
+						<td class="tsosk-code"><?php echo esc_html( (string) $uname ); ?></td>
+						<td>
+							<span style="font-weight:600;color:#b45309;"><?php echo esc_html( (string) (int) $uentry['count'] ); ?></span>
+							/ <?php echo esc_html( (string) $s['user_max_attempts'] ); ?>
+						</td>
+						<td><?php echo esc_html( wp_date( 'Y-m-d H:i:s', (int) $uentry['first'] ) ); ?></td>
+						<td class="tsosk-code"><?php echo esc_html( (string) $uentry['last_ip'] ); ?></td>
+						<td>
+							<?php if ( $u_locked ) : ?>
+								<span class="tsosk-badge tsosk-badge-warn">
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %s: date and time */
+											__( 'Locked until %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+											wp_date( 'Y-m-d H:i', (int) $uentry['until'] )
+										)
+									);
+									?>
+								</span>
+							<?php else : ?>
+								<?php esc_html_e( 'Counting', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							<?php endif; ?>
+						</td>
+						<td>
+							<button class="button button-small tsosk-lp-reset-user"
+									data-user="<?php echo esc_attr( (string) $uname ); ?>"
 									data-nonce="<?php echo esc_attr( $nonce ); ?>">
 								<?php esc_html_e( 'Reset', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 							</button>
@@ -1910,11 +2470,11 @@ class TSOSK_Mod_Login_Protect {
 						</td>
 						<td class="tsosk-code"><?php echo esc_html( (string) ( $l['username'] ?? '—' ) ); ?></td>
 						<td><?php echo esc_html( (string) (int) ( $l['count'] ?? 0 ) ); ?></td>
-						<td style="white-space:nowrap;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $l['locked_at'] ) ); ?> UTC</td>
+						<td style="white-space:nowrap;"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $l['locked_at'] ) ); ?></td>
 						<td style="white-space:nowrap;">
 							<?php if ( $is_active ) : ?>
 								<span style="color:#b45309;">
-									<?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $l['until'] ) ); ?> UTC
+									<?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $l['until'] ) ); ?>
 								</span>
 								<br><small style="color:#666;">
 									(
@@ -1929,7 +2489,7 @@ class TSOSK_Mod_Login_Protect {
 									)
 								</small>
 							<?php else : ?>
-								<span style="color:#646970;"><?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $l['until'] ) ); ?> UTC</span>
+								<span style="color:#646970;"><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $l['until'] ) ); ?></span>
 							<?php endif; ?>
 						</td>
 						<td class="tsosk-actions">

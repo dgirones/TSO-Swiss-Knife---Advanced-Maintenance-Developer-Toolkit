@@ -24,8 +24,10 @@
 	 * @param {number} [ttl]    Milliseconds before hiding (default 4000).
 	 */
 	function showMsg( $el, msg, type, ttl ) {
-		var cls = 'tsosk-msg tsosk-msg--' + ( type || 'ok' );
-		$el.attr( 'class', cls ).text( msg ).show();
+		// Keep layout classes the element already has (such as tsosk-um-install-msg): only swap the message type.
+		$el.removeClass( 'tsosk-ajax-msg is-error tsosk-msg tsosk-msg--ok tsosk-msg--error tsosk-msg--warn' )
+			.addClass( 'tsosk-msg tsosk-msg--' + ( type || 'ok' ) )
+			.text( msg ).show();
 		clearTimeout( $el.data( 'timer' ) );
 		$el.data( 'timer', setTimeout( function () {
 			$el.fadeOut( 300 );
@@ -423,11 +425,21 @@
 
 	// ── Users & Sessions ───────────────────────────────────────────────────
 
+	function tsoskUsersFill( template, value ) {
+		template = template || '';
+		if ( template.indexOf( '%s' ) !== -1 ) {
+			return template.replace( '%s', value );
+		}
+		return value ? template + ' (' + value + ')' : template;
+	}
+
 	$( document ).on( 'click', '.tsosk-user-close-sessions', function () {
-		if ( ! window.confirm( tsosk.i18n.confirm_delete ) ) {
+		var $btn   = $( this );
+		var login  = $btn.attr( 'data-user-login' ) || '';
+		var label  = $btn.text();
+		if ( ! window.confirm( tsoskUsersFill( tsosk.i18n.close_user_sessions_confirm, login ) ) ) {
 			return;
 		}
-		var $btn = $( this );
 		var $msg = $btn.siblings( '.tsosk-ajax-msg' );
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
@@ -437,44 +449,58 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-					setTimeout( function () { window.location.reload(); }, 600 );
+					if ( $btn.closest( '#tsosk-users-sessions-list' ).length ) {
+						// Refresh only the session cards so the selected role filter is kept.
+						setTimeout( function () { tsoskUsersReloadSessions( true ); }, 600 );
+					} else {
+						$btn.prop( 'disabled', false ).text( label );
+					}
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
-					$btn.prop( 'disabled', false ).text( tsosk.i18n.close_all_sessions );
+					$btn.prop( 'disabled', false ).text( label );
 				}
 			},
 			error: function () {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false ).text( tsosk.i18n.close_all_sessions );
+				$btn.prop( 'disabled', false ).text( label );
 			}
 		} );
 	} );
 
 	$( document ).on( 'click', '.tsosk-user-close-one-session', function () {
-		var $btn = $( this );
-		var $row = $btn.closest( 'tr' );
+		var $btn  = $( this );
+		var login = $btn.attr( 'data-user-login' ) || '';
+		if ( ! window.confirm( tsoskUsersFill( tsosk.i18n.close_one_session_confirm, login ) ) ) {
+			return;
+		}
+		var $row = $btn.closest( '.tsosk-users-session-row' );
 		$btn.prop( 'disabled', true );
 		ajaxPost( {
 			action : 'tsosk_user_destroy_one_session',
 			data   : { nonce: $btn.data( 'nonce' ), user_id: $btn.data( 'user-id' ), token: $btn.data( 'token' ) },
 			success: function ( r ) {
 				if ( r.success ) {
-					$row.fadeOut( 300, function () { $( this ).remove(); } );
+					$row.fadeOut( 300, function () {
+						$( this ).remove();
+						// Re-render so the session counters of the account stay accurate.
+						tsoskUsersReloadSessions( true );
+					} );
 				} else {
-					alert( r.data || tsosk.i18n.error );
+					window.alert( r.data || tsosk.i18n.error );
 					$btn.prop( 'disabled', false );
 				}
 			},
 			error: function () {
-				alert( tsosk.i18n.error );
+				window.alert( tsosk.i18n.error );
 				$btn.prop( 'disabled', false );
 			}
 		} );
 	} );
 
 	$( document ).on( 'click', '.tsosk-user-force-pwd', function () {
-		if ( ! window.confirm( tsosk.i18n.force_pwd_confirm ) ) { return; }
-		var $btn = $( this );
+		var $btn  = $( this );
+		var login = $btn.attr( 'data-user-login' ) || '';
+		if ( ! window.confirm( tsoskUsersFill( tsosk.i18n.force_pwd_confirm, login ) ) ) { return; }
 		var $msg = $btn.siblings( '.tsosk-ajax-msg' );
 		ajaxPost( {
 			action : 'tsosk_user_force_password',
@@ -486,33 +512,484 @@
 		} );
 	} );
 
-	function tsoskUsersBulkInactive( action ) {
-		var nonce = $( '#tsosk-users-bulk-nonce' ).val();
-		var ids   = [];
-		$( '.tsosk-users-inactive-cb:checked' ).each( function () { ids.push( $( this ).val() ); } );
+	function tsoskUsersCheckedIds( $panel ) {
+		var ids = [];
+		$panel.find( '.tsosk-users-cb:checked' ).each( function () { ids.push( $( this ).val() ); } );
+		return ids;
+	}
+
+	$( document ).on( 'click', '#tsosk-users-bulk-delete', function () {
+		var $panel = $( this ).closest( '.tsosk-users-panel' );
+		var nonce  = $( this ).data( 'nonce' ) || $( '#tsosk-users-bulk-nonce' ).val();
+		var ids    = tsoskUsersCheckedIds( $panel );
 		if ( ! ids.length ) {
 			window.alert( tsosk.i18n.users_select_one );
 			return;
 		}
-		if ( ! window.confirm( action === 'delete' ? tsosk.i18n.confirm_delete : tsosk.i18n.users_bulk_confirm ) ) {
+		if ( ! window.confirm( tsosk.i18n.confirm_delete ) ) {
 			return;
 		}
 		var $msg = $( '#tsosk-users-bulk-msg' );
 		ajaxPost( {
 			action : 'tsosk_user_bulk_inactive',
-			data   : { nonce: nonce, bulk_action: action, user_ids: ids, days: 90 },
+			data   : {
+				nonce: nonce,
+				bulk_action: 'delete',
+				user_ids: ids,
+				days: $( '#tsosk-users-inactive-days' ).val() || 90,
+				reassign_to: $( '#tsosk-users-reassign' ).val() || 0
+			},
 			success: function ( r ) {
 				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
-				if ( r.success ) { setTimeout( function () { window.location.reload(); }, 700 ); }
+				if ( r.success ) { tsoskUsersReloadKeepTab( 700 ); }
 			},
 			error: function () { showMsg( $msg, tsosk.i18n.error, 'error' ); }
 		} );
+	} );
+
+	// Reload the module but come back to the tab the admin was working in.
+	function tsoskUsersReloadKeepTab( delay ) {
+		try {
+			window.sessionStorage.setItem( 'tsosk_users_tab_reload', '1' );
+		} catch ( e ) {
+			// Without storage the module simply opens on its first tab.
+		}
+		setTimeout( function () { window.location.reload(); }, delay || 0 );
 	}
 
-	$( document ).on( 'click', '#tsosk-users-bulk-subscriber', function () { tsoskUsersBulkInactive( 'subscriber' ); } );
-	$( document ).on( 'click', '#tsosk-users-bulk-delete', function () { tsoskUsersBulkInactive( 'delete' ); } );
-	$( document ).on( 'change', '#tsosk-users-select-all', function () {
-		$( '.tsosk-users-inactive-cb' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	function tsoskUsersUpdateCounts( info ) {
+		if ( ! info || ! info.counts ) {
+			return;
+		}
+		$.each( info.counts, function ( slug, total ) {
+			var el = document.getElementById( 'tsosk-users-count-' + slug );
+			if ( el ) {
+				el.textContent = String( total );
+			}
+		} );
+	}
+
+	// "Select all matching users": the server resolves the IDs from the active search and role filter.
+	var tsoskUsersAllResults = false;
+	function tsoskUsersResetAllResults() {
+		tsoskUsersAllResults = false;
+		$( '#tsosk-users-select-note' ).prop( 'hidden', true ).empty();
+		$( '#tsosk-users-all-table .tsosk-users-select-all' ).prop( 'checked', false );
+	}
+
+	function tsoskUsersRenderSelectNote() {
+		var $note = $( '#tsosk-users-select-note' );
+		var total = parseInt( $( '#tsosk-users-search' ).attr( 'data-total' ), 10 ) || 0;
+		var rows  = $( '#tsosk-users-all-body .tsosk-users-cb' ).length;
+		if ( ! $( '#tsosk-users-all-table .tsosk-users-select-all' ).prop( 'checked' ) || total <= rows ) {
+			tsoskUsersAllResults = false;
+			$note.prop( 'hidden', true ).empty();
+			return;
+		}
+		$note.empty().prop( 'hidden', false );
+		if ( tsoskUsersAllResults ) {
+			$note.append( document.createTextNode( tsoskUsersFill( tsosk.i18n.users_all_results_selected, String( total ) ) + ' ' ) );
+			$( '<button type="button" class="button-link" id="tsosk-users-clear-matching"></button>' ).text( tsosk.i18n.users_clear_selection ).appendTo( $note );
+		} else {
+			$( '<button type="button" class="button-link" id="tsosk-users-select-matching"></button>' ).text( tsoskUsersFill( tsosk.i18n.users_select_all_results, String( total ) ) ).appendTo( $note );
+		}
+	}
+
+	$( document ).on( 'change', '#tsosk-users-all-table .tsosk-users-select-all', function () {
+		tsoskUsersAllResults = false;
+		tsoskUsersRenderSelectNote();
+	} );
+	$( document ).on( 'change', '#tsosk-users-all-body .tsosk-users-cb', function () {
+		if ( tsoskUsersAllResults || $( '#tsosk-users-all-table .tsosk-users-select-all' ).prop( 'checked' ) ) {
+			tsoskUsersResetAllResults();
+		}
+	} );
+	$( document ).on( 'click', '#tsosk-users-select-matching', function () {
+		tsoskUsersAllResults = true;
+		tsoskUsersRenderSelectNote();
+	} );
+	$( document ).on( 'click', '#tsosk-users-clear-matching', function () {
+		tsoskUsersResetAllResults();
+		$( '#tsosk-users-all-body .tsosk-users-cb' ).prop( 'checked', false );
+	} );
+
+	$( document ).on( 'click', '.tsosk-users-undo-btn', function () {
+		var $btn = $( this );
+		var $msg = $btn.siblings( '.tsosk-ajax-msg' ).first();
+		var isAll = 'all' === $btn.attr( 'data-context' );
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_user_undo_role',
+			data   : { nonce: $btn.attr( 'data-nonce' ) },
+			success: function ( r ) {
+				var info = r.success && r.data && 'object' === typeof r.data ? r.data : null;
+				showMsg( $msg, info ? ( info.message || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				if ( ! r.success ) {
+					$btn.prop( 'disabled', false );
+					return;
+				}
+				$btn.remove();
+				tsoskUsersUpdateCounts( info );
+				if ( isAll ) {
+					tsoskUsersSearch( 0 );
+				} else {
+					$( '#tsosk-users-inactive-days' ).trigger( 'change' );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-users-apply-role', function () {
+		var $btn     = $( this );
+		var $panel   = $btn.closest( '.tsosk-users-panel' );
+		var $select  = $panel.find( '.tsosk-users-role-select' );
+		var role     = $select.val();
+		var roleName = $select.find( 'option:selected' ).text();
+		var ids      = tsoskUsersCheckedIds( $panel );
+		if ( ! role ) {
+			window.alert( tsosk.i18n.users_pick_role );
+			return;
+		}
+		if ( ! ids.length ) {
+			window.alert( tsosk.i18n.users_select_one );
+			return;
+		}
+		if ( ! window.confirm( tsoskUsersFill( tsosk.i18n.users_role_confirm, roleName ) ) ) {
+			return;
+		}
+		var allResults = tsoskUsersAllResults && 'all' === $btn.data( 'context' );
+		var totalText  = String( $( '#tsosk-users-search' ).attr( 'data-total' ) || '' );
+		if ( allResults && ! window.confirm( tsoskUsersFill( tsosk.i18n.users_all_results_confirm, totalText ) ) ) {
+			return;
+		}
+		if ( 'administrator' === role ) {
+			var promote = 0;
+			$panel.find( '.tsosk-users-cb:checked' ).each( function () {
+				var roles = String( $( this ).attr( 'data-roles' ) || '' ).split( ',' );
+				if ( roles.indexOf( 'administrator' ) === -1 ) {
+					promote++;
+				}
+			} );
+			var promoteText = allResults ? totalText : String( promote );
+			if ( ( allResults || promote > 0 ) && ! window.confirm( tsoskUsersFill( tsosk.i18n.users_admin_confirm, promoteText ) ) ) {
+				return;
+			}
+		}
+		var $msg = $panel.find( '.tsosk-ajax-msg' ).first();
+		var post = {
+			nonce: $btn.data( 'nonce' ),
+			role: role,
+			context: $btn.data( 'context' ),
+			user_ids: ids,
+			days: $( '#tsosk-users-inactive-days' ).val() || 90
+		};
+		if ( allResults ) {
+			post.all_results = 1;
+			post.search      = $( '#tsosk-users-search' ).val() || '';
+			post.filter_role = $( '#tsosk-users-role-filter' ).val() || '';
+		}
+		$panel.find( '.tsosk-users-undo-btn' ).remove();
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_user_set_role',
+			data   : post,
+			success: function ( r ) {
+				var info = r.success && r.data && 'object' === typeof r.data ? r.data : null;
+				var text = info ? info.message : r.data;
+				showMsg( $msg, r.success ? ( text || tsosk.i18n.done ) : ( text || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				$btn.prop( 'disabled', false );
+				if ( ! r.success ) {
+					return;
+				}
+				tsoskUsersUpdateCounts( info );
+				var isAll = 'all' === $btn.data( 'context' );
+				if ( info && info.undo ) {
+					$( '<button type="button" class="button button-small tsosk-users-undo-btn"></button>' )
+						.text( tsosk.i18n.users_undo )
+						.attr( 'data-nonce', $btn.data( 'nonce' ) )
+						.attr( 'data-context', isAll ? 'all' : 'inactive' )
+						.insertAfter( $msg );
+				}
+				if ( isAll ) {
+					tsoskUsersResetAllResults();
+					tsoskUsersSearch( 0 );
+				} else if ( info && info.undo ) {
+					// Keep the Undo button reachable: refresh the list instead of reloading.
+					$( '#tsosk-users-inactive-days' ).trigger( 'change' );
+				} else {
+					tsoskUsersReloadKeepTab( 700 );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'change', '.tsosk-users-select-all', function () {
+		$( this ).closest( 'table' ).find( '.tsosk-users-cb:enabled' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
+
+	var tsoskUsersSortKeys = { login: true, email: true, role: true, registered: true, last: true };
+	function tsoskUsersApplySort() {
+		var $table = $( '#tsosk-users-all-table' );
+		var $btn   = $table.find( 'button.tsosk-users-col-select.is-sorted' ).first();
+		if ( ! $btn.length ) {
+			return;
+		}
+		var key = String( $btn.attr( 'data-sort' ) || '' );
+		if ( ! Object.prototype.hasOwnProperty.call( tsoskUsersSortKeys, key ) ) {
+			return;
+		}
+		var dir   = $btn.hasClass( 'is-desc' ) ? -1 : 1;
+		var $body = $( '#tsosk-users-all-body' );
+		var rows  = $body.children( 'tr' ).not( '.tsosk-users-empty' ).get();
+		rows.sort( function ( a, b ) {
+			var av = $( a ).attr( 'data-' + key ) || '';
+			var bv = $( b ).attr( 'data-' + key ) || '';
+			if ( 'registered' === key || 'last' === key ) {
+				return ( ( parseInt( av, 10 ) || 0 ) - ( parseInt( bv, 10 ) || 0 ) ) * dir;
+			}
+			av = String( av );
+			bv = String( bv );
+			if ( av.localeCompare ) {
+				return av.localeCompare( bv, undefined, { numeric: true, sensitivity: 'base' } ) * dir;
+			}
+			if ( av < bv ) {
+				return -1 * dir;
+			}
+			return av > bv ? dir : 0;
+		} );
+		$.each( rows, function ( _, row ) {
+			$body.append( row );
+		} );
+	}
+
+	$( document ).on( 'click', '#tsosk-users-all-table button.tsosk-users-col-select', function () {
+		var $btn = $( this );
+		var key  = String( $btn.attr( 'data-sort' ) || '' );
+		if ( ! Object.prototype.hasOwnProperty.call( tsoskUsersSortKeys, key ) ) {
+			return;
+		}
+		var desc = $btn.hasClass( 'is-sorted' ) && ! $btn.hasClass( 'is-desc' );
+		var $head = $btn.closest( 'thead' );
+		$head.find( 'button.tsosk-users-col-select' ).removeClass( 'is-sorted is-desc' );
+		$head.find( 'th' ).attr( 'aria-sort', 'none' );
+		$btn.addClass( 'is-sorted' );
+		if ( desc ) {
+			$btn.addClass( 'is-desc' );
+		}
+		$btn.closest( 'th' ).attr( 'aria-sort', desc ? 'descending' : 'ascending' );
+		tsoskUsersApplySort();
+	} );
+
+	var tsoskUsersSearchSeq = 0;
+	function tsoskUsersSearch( offset ) {
+		var $input = $( '#tsosk-users-search' );
+		if ( ! $input.length ) {
+			return;
+		}
+		offset = offset || 0;
+		var seq   = ++tsoskUsersSearchSeq;
+		var $more = $( '#tsosk-users-more' );
+		if ( offset > 0 ) {
+			$more.prop( 'disabled', true );
+		}
+		$( '#tsosk-users-search-status' ).text( tsosk.i18n.users_searching || '' );
+		ajaxPost( {
+			action : 'tsosk_users_search',
+			data   : {
+				nonce: $input.data( 'nonce' ),
+				search: $input.val() || '',
+				role: $( '#tsosk-users-role-filter' ).val() || '',
+				offset: offset
+			},
+			success: function ( r ) {
+				if ( seq !== tsoskUsersSearchSeq ) {
+					return;
+				}
+				if ( ! r.success || ! r.data ) {
+					$more.prop( 'disabled', false );
+					$( '#tsosk-users-search-status' ).text( ( r && r.data ) || tsosk.i18n.error );
+					return;
+				}
+				if ( offset > 0 ) {
+					if ( r.data.html ) {
+						$( '#tsosk-users-all-body' ).append( r.data.html );
+					}
+				} else {
+					$( '#tsosk-users-all-body' ).html( r.data.html || '' );
+					if ( null !== r.data.total && undefined !== r.data.total ) {
+						$input.attr( 'data-total', String( r.data.total ) );
+					}
+					tsoskUsersResetAllResults();
+				}
+				$( '#tsosk-users-search-status' ).text( r.data.message || '' );
+				$more.prop( 'disabled', false ).prop( 'hidden', ! r.data.has_more );
+				tsoskUsersApplySort();
+			},
+			error: function () {
+				if ( seq !== tsoskUsersSearchSeq ) {
+					return;
+				}
+				$more.prop( 'disabled', false );
+				$( '#tsosk-users-search-status' ).text( tsosk.i18n.error );
+			}
+		} );
+	}
+
+	var tsoskUsersSearchTimer = null;
+	$( document ).on( 'input search', '#tsosk-users-search', function () {
+		window.clearTimeout( tsoskUsersSearchTimer );
+		tsoskUsersSearchTimer = window.setTimeout( function () {
+			tsoskUsersSearch( 0 );
+		}, 250 );
+	} );
+
+	$( document ).on( 'change', '#tsosk-users-role-filter', function () {
+		tsoskUsersSearch( 0 );
+	} );
+
+	$( document ).on( 'click', '#tsosk-users-more', function () {
+		var shown = $( '#tsosk-users-all-body tr' ).not( '.tsosk-users-empty' ).length;
+		tsoskUsersSearch( shown );
+	} );
+
+	var tsoskUsersSessionsSeq = 0;
+	function tsoskUsersReloadSessions( silent ) {
+		var $select = $( '#tsosk-users-sessions-role' );
+		var $note   = $( '#tsosk-users-sessions-note' );
+		if ( ! $select.length ) {
+			return;
+		}
+		var seq = ++tsoskUsersSessionsSeq;
+		if ( ! silent ) {
+			$note.text( tsosk.i18n.users_searching || '' );
+		}
+		ajaxPost( {
+			action : 'tsosk_users_sessions',
+			data   : { nonce: $select.data( 'nonce' ), role: $select.val() || '' },
+			success: function ( r ) {
+				if ( seq !== tsoskUsersSessionsSeq ) {
+					return;
+				}
+				if ( ! r.success || ! r.data ) {
+					$note.text( ( r && r.data ) || tsosk.i18n.error );
+					return;
+				}
+				$( '#tsosk-users-sessions-list' ).html( r.data.html || '' );
+				$note.text( r.data.message || '' );
+			},
+			error: function () {
+				if ( seq === tsoskUsersSessionsSeq ) {
+					$note.text( tsosk.i18n.error );
+				}
+			}
+		} );
+	}
+
+	$( document ).on( 'change', '#tsosk-users-sessions-role', function () {
+		tsoskUsersReloadSessions( false );
+	} );
+
+	var tsoskUsersInactiveSeq = 0;
+	$( document ).on( 'change', '#tsosk-users-inactive-days', function () {
+		var $select = $( this );
+		var seq     = ++tsoskUsersInactiveSeq;
+		try {
+			window.sessionStorage.setItem( 'tsosk_users_inactive_days', $select.val() || '90' );
+		} catch ( e ) {
+			// The threshold still applies for this visit.
+		}
+		ajaxPost( {
+			action : 'tsosk_users_inactive',
+			data   : { nonce: $select.data( 'nonce' ), days: $select.val() || 90 },
+			success: function ( r ) {
+				if ( seq !== tsoskUsersInactiveSeq ) {
+					return;
+				}
+				if ( ! r.success || ! r.data ) {
+					window.alert( ( r && r.data ) || tsosk.i18n.error );
+					return;
+				}
+				$( '#tsosk-users-inactive-body' ).html( r.data.html || '' );
+				$( '#tsosk-users-inactive-count' ).text( r.data.count_label || '' );
+				$( '#tsosk-users-inactive-label' ).text( r.data.label || '' );
+			},
+			error: function () {
+				if ( seq === tsoskUsersInactiveSeq ) {
+					window.alert( tsosk.i18n.error );
+				}
+			}
+		} );
+	} );
+
+	function tsoskUsersFilterHistory() {
+		var query  = String( $( '#tsosk-users-history-search' ).val() || '' ).toLowerCase();
+		var status = $( '#tsosk-users-history-status' ).val() || '';
+		$( '#tsosk-users-history-table tbody tr' ).each( function () {
+			var $row    = $( this );
+			var matches = ( ! status || $row.attr( 'data-status' ) === status ) && ( ! query || $row.text().toLowerCase().indexOf( query ) !== -1 );
+			$row.toggle( matches );
+		} );
+	}
+
+	$( document ).on( 'input search', '#tsosk-users-history-search', tsoskUsersFilterHistory );
+	$( document ).on( 'change', '#tsosk-users-history-status', tsoskUsersFilterHistory );
+
+	function tsoskUsersShowTab( tab ) {
+		var $tab = $( '.tsosk-users-tab[data-tab="' + tab + '"]' );
+		if ( ! $tab.length ) {
+			return;
+		}
+		$( '.tsosk-users-tab' ).removeClass( 'nav-tab-active' ).attr( 'aria-selected', 'false' );
+		$tab.addClass( 'nav-tab-active' ).attr( 'aria-selected', 'true' );
+		$( '.tsosk-users-panel' ).prop( 'hidden', true );
+		$( '#tsosk-users-panel-' + tab ).prop( 'hidden', false );
+		try {
+			window.sessionStorage.setItem( 'tsosk_users_tab', tab );
+		} catch ( e ) {
+			// Storage unavailable: the tab just is not remembered.
+		}
+	}
+
+	$( document ).on( 'click', '.tsosk-users-tab', function ( e ) {
+		e.preventDefault();
+		tsoskUsersShowTab( $( this ).data( 'tab' ) );
+	} );
+
+	$( function () {
+		if ( ! $( '.tsosk-users-tabs' ).length ) {
+			return;
+		}
+		// Open on Sessions unless this load follows a reload triggered from inside the module.
+		var saved = '';
+		try {
+			if ( '1' === window.sessionStorage.getItem( 'tsosk_users_tab_reload' ) ) {
+				saved = window.sessionStorage.getItem( 'tsosk_users_tab' ) || '';
+			}
+			window.sessionStorage.removeItem( 'tsosk_users_tab_reload' );
+		} catch ( e ) {
+			saved = '';
+		}
+		if ( saved ) {
+			tsoskUsersShowTab( saved );
+		}
+		var $days = $( '#tsosk-users-inactive-days' );
+		var remembered = '';
+		try {
+			remembered = window.sessionStorage.getItem( 'tsosk_users_inactive_days' ) || '';
+		} catch ( e ) {
+			remembered = '';
+		}
+		if ( [ '30', '60', '90', '180', '365' ].indexOf( remembered ) !== -1 && remembered !== String( $days.val() ) ) {
+			$days.val( remembered ).trigger( 'change' );
+		}
 	} );
 
 	$( document ).on( 'click', '#tsosk-users-clear-history', function () {
@@ -524,7 +1001,7 @@
 			data   : { nonce: $btn.data( 'nonce' ) },
 			success: function ( r ) {
 				showMsg( $msg, r.success ? ( r.data || tsosk.i18n.done ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
-				if ( r.success ) { setTimeout( function () { window.location.reload(); }, 600 ); }
+				if ( r.success ) { tsoskUsersReloadKeepTab( 600 ); }
 			},
 			error: function () { showMsg( $msg, tsosk.i18n.error, 'error' ); }
 		} );
@@ -1069,7 +1546,7 @@
 			} else {
 				text = tsosk.i18n.um_install_all_none || 'Nothing to install.';
 			}
-			showMsg( $msg, text, type );
+			showMsg( $msg, text, type, 'error' === type ? 15000 : 4000 );
 			$btn.text( label );
 			if ( ! errorText && ! failed.length ) {
 				setTimeout( function () { window.location.reload(); }, 2000 );
@@ -1342,6 +1819,29 @@
 		tsoskMaintLogoFrame.open();
 	} );
 
+	// Visitor page fields shared by Save and Preview: the logo, the heading and every input marked data-m-field.
+	function tsoskMaintFields() {
+		var data = {
+			logo_id   : $( '#tsosk-m-logo-id' ).val() || 0,
+			page_title: $( '#tsosk-m-page-title' ).val() || ''
+		};
+		$( '[data-m-field]' ).each( function () {
+			var $el = $( this );
+			data[ $el.attr( 'data-m-field' ) ] = $el.is( ':checkbox' ) ? ( $el.prop( 'checked' ) ? '1' : '' ) : ( $el.val() || '' );
+		} );
+		return data;
+	}
+
+	$( document ).on( 'click', '#tsosk-m-colors-reset', function () {
+		$( '.tsosk-maint-color input[type="color"]' ).each( function () {
+			$( this ).val( $( this ).attr( 'data-default' ) );
+		} );
+	} );
+
+	$( document ).on( 'click', '#tsosk-m-sched-clear', function () {
+		$( '#tsosk-m-sched-start, #tsosk-m-sched-end' ).val( '' );
+	} );
+
 	$( document ).on( 'click', '#tsosk-m-logo-remove', function () {
 		$( '#tsosk-m-logo-id' ).val( '0' );
 		$( '#tsosk-m-logo-preview' ).removeClass( 'has-logo' ).empty();
@@ -1363,13 +1863,13 @@
 					showMsg( $msg, r.data.message || tsosk.i18n.done, 'ok' );
 					// Update status badge text.
 					var $badge = $( '#tsosk-maintenance-status' );
-					if ( r.data.enabled ) {
+					var isOn = ( 'undefined' !== typeof r.data.active ) ? r.data.active : r.data.enabled;
+					if ( isOn ) {
 						$badge.text( tsosk.i18n.on ).removeClass( 'tsosk-badge-ok' ).addClass( 'tsosk-badge-warn' );
-						$btn.text( tsosk.i18n.disable );
 					} else {
 						$badge.text( tsosk.i18n.off ).removeClass( 'tsosk-badge-warn' ).addClass( 'tsosk-badge-ok' );
-						$btn.text( tsosk.i18n.enable );
 					}
+					$btn.text( r.data.enabled ? tsosk.i18n.disable : tsosk.i18n.enable );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
@@ -1391,15 +1891,14 @@
 
 		$btn.prop( 'disabled', true );
 
+		var saveData = tsoskMaintFields();
+		saveData.nonce         = nonce;
+		saveData.message       = message;
+		saveData.whitelist_ips = ips;
+
 		ajaxPost( {
 			action : 'tsosk_maintenance_save',
-			data   : {
-				nonce        : nonce,
-				message      : message,
-				page_title   : $( '#tsosk-m-page-title' ).val() || '',
-				whitelist_ips: ips,
-				logo_id      : $( '#tsosk-m-logo-id' ).val() || 0
-			},
+			data   : saveData,
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, tsosk.i18n.done, 'ok' );
@@ -1426,8 +1925,9 @@
 
 		$form.append( $( '<input>', { type: 'hidden', name: 'action', value: 'tsosk_maintenance_preview' } ) );
 		$form.append( $( '<input>', { type: 'hidden', name: 'nonce', value: nonce } ) );
-		$form.append( $( '<input>', { type: 'hidden', name: 'logo_id', value: $( '#tsosk-m-logo-id' ).val() || 0 } ) );
-		$form.append( $( '<input>', { type: 'hidden', name: 'page_title', value: $( '#tsosk-m-page-title' ).val() || '' } ) );
+		$.each( tsoskMaintFields(), function ( name, value ) {
+			$form.append( $( '<textarea>', { name: name } ).css( 'display', 'none' ).val( value ) );
+		} );
 		$form.append( $( '<textarea>', { name: 'message' } ).css( 'display', 'none' ).val( message ) );
 		window.open( '', 'tsosk_maintenance_preview' );
 		$form.appendTo( 'body' ).submit().remove();
@@ -2670,7 +3170,8 @@
 		var saveLabel = $btn.data( 'save-label' ) || $btn.text();
 		var data = { nonce: $btn.data( 'nonce' ) };
 
-		$( '[id^="tsosk-sec-"]' ).each( function () {
+		// Only the constant toggles; rows locked by wp-config.php are disabled and must not be written to the TSO config.
+		$( 'input[id^="tsosk-sec-"][data-const]' ).not( ':disabled' ).each( function () {
 			var key = 'tsosk_security_' + $( this ).data( 'const' );
 			data[ key ] = $( this ).prop( 'checked' ) ? 1 : 0;
 		} );
@@ -2945,7 +3446,10 @@
 			email_2fa       : $( '#tsosk-lp-2fa' ).prop( 'checked' ) ? 1 : 0,
 			role_whitelist_ips: $( '#tsosk-lp-role-ips' ).val(),
 			notify_mass_threshold: $( '#tsosk-lp-mass-threshold' ).val(),
-			notify_mass_window: $( '#tsosk-lp-mass-window' ).val()
+			notify_mass_window: $( '#tsosk-lp-mass-window' ).val(),
+			user_lockout   : $( '#tsosk-lp-user-lockout' ).prop( 'checked' ) ? 1 : 0,
+			user_max_attempts: $( '#tsosk-lp-user-max' ).val(),
+			user_window    : $( '#tsosk-lp-user-window' ).val()
 		};
 		data.email_2fa_roles = [];
 		$( 'input[name="email_2fa_roles[]"]:checked' ).each( function () {
@@ -3209,6 +3713,83 @@
 		}
 	} );
 
+	// Slow Query Monitor: sub-tabs (Settings by default; a reload keeps the tab; links with a #anchor open the tab that holds it).
+	function sqShowTab( tab ) {
+		var $tab = $( '.tsosk-sq-tab[data-tab="' + tab + '"]' );
+		if ( ! $tab.length ) {
+			return;
+		}
+		$( '.tsosk-sq-tab' ).removeClass( 'nav-tab-active' ).attr( 'aria-selected', 'false' );
+		$tab.addClass( 'nav-tab-active' ).attr( 'aria-selected', 'true' );
+		$( '.tsosk-sq-panel' ).prop( 'hidden', true );
+		$( '#tsosk-sq-panel-' + tab ).prop( 'hidden', false );
+		try {
+			window.sessionStorage.setItem( 'tsosk_sq_tab', tab );
+		} catch ( e ) {
+			// Storage unavailable: the tab just is not remembered.
+		}
+	}
+
+	// Open the tab that contains the element named by the URL hash and scroll to it.
+	function sqShowTabForHash() {
+		var hash = window.location.hash || '';
+		if ( ! $( '.tsosk-sq-tabs' ).length || 2 > hash.length || 0 !== hash.indexOf( '#tsosk-sq-' ) ) {
+			return false;
+		}
+		var $target = $( hash );
+		var $panel = $target.closest( '.tsosk-sq-panel' );
+		if ( $target.length && $panel.length ) {
+			sqShowTab( String( $panel.attr( 'id' ) ).replace( 'tsosk-sq-panel-', '' ) );
+			if ( $target[0].scrollIntoView ) {
+				$target[0].scrollIntoView( { block: 'start' } );
+			}
+			return true;
+		}
+		// The section is not rendered (for example no previous request recorded yet): still open the tab it belongs to.
+		var owner = { '#tsosk-sq-log': 'slow', '#tsosk-sq-patterns': 'slow', '#tsosk-sq-origins': 'slow', '#tsosk-sq-settings': 'config' };
+		var fallback = owner[ hash ] || ( 0 === hash.indexOf( '#tsosk-sq-last-' ) || 0 === hash.indexOf( '#tsosk-sq-live-' ) ? 'queries' : '' );
+		if ( '' === fallback ) {
+			return false;
+		}
+		sqShowTab( fallback );
+		return true;
+	}
+
+	// Forget a #anchor so a reload opens the tab the user is on, not the one the anchor points to.
+	function sqClearHash() {
+		if ( window.location.hash && window.history && window.history.replaceState ) {
+			window.history.replaceState( null, '', window.location.pathname + window.location.search );
+		}
+	}
+
+	$( document ).on( 'click', '.tsosk-sq-tab', function ( e ) {
+		e.preventDefault();
+		sqShowTab( $( this ).data( 'tab' ) );
+		sqClearHash();
+	} );
+
+	$( window ).on( 'hashchange', sqShowTabForHash );
+
+	$( function () {
+		if ( ! $( '.tsosk-sq-tabs' ).length ) {
+			return;
+		}
+		if ( sqShowTabForHash() ) {
+			return;
+		}
+		// Opening the module from the menu always starts on Settings; only a page reload (for example after saving) keeps the tab.
+		var saved = '';
+		var isReload = false;
+		try {
+			var nav = window.performance && window.performance.getEntriesByType ? window.performance.getEntriesByType( 'navigation' ) : [];
+			isReload = nav.length > 0 && 'reload' === nav[ 0 ].type;
+			saved = isReload ? ( window.sessionStorage.getItem( 'tsosk_sq_tab' ) || '' ) : '';
+		} catch ( e ) {
+			saved = '';
+		}
+		sqShowTab( saved || 'config' );
+	} );
+
 	$( document ).on( 'click', '#tsosk-cas-test-alert', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-cas-alert-msg' );
@@ -3340,8 +3921,8 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, r.data, 'ok' );
-					$( '#tsosk-lp-log-table tbody' ).empty();
-					$btn.fadeOut( 300 );
+					// Reload: lockouts still running are kept, so the table is not simply emptied.
+					setTimeout( function () { window.location.reload(); }, 1200 );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false ).text( tsosk.i18n.lp_clear_log );
@@ -3382,6 +3963,34 @@
 		} );
 	} );
 
+
+	// Reset the failure counter of one username.
+	$( document ).on( 'click', '.tsosk-lp-reset-user', function () {
+		var $btn  = $( this );
+		var user  = $btn.data( 'user' );
+		var nonce = $btn.data( 'nonce' );
+		var $msg  = $( '#tsosk-lp-msg' );
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_lp_reset_user',
+			data   : { nonce: nonce, user: user },
+			success: function ( r ) {
+				if ( r.success ) {
+					$btn.closest( 'tr' ).fadeOut( 300, function () { $( this ).remove(); } );
+					showMsg( $msg, r.data, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false ).text( tsosk.i18n.lp_reset );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.lp_reset );
+			}
+		} );
+	} );
 
 	// ── Options Editor ─────────────────────────────────────────────────────
 
@@ -5750,6 +6359,8 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, r.data.message, r.data.warn_savequeries ? 'warn' : 'ok' );
+					sqShowTab( 'config' );
+					sqClearHash();
 					setTimeout( function () { window.location.reload(); }, 1000 );
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
@@ -6015,7 +6626,7 @@
 		$( '.tsosk-sr-execute-hint' ).hide();
 	}
 
-	$( document ).on( 'input change', '#tsosk-sr-search, #tsosk-sr-replace, #tsosk-sr-case, #tsosk-sr-regex', tsosk_sr_invalidate_preview );
+	$( document ).on( 'input change', '#tsosk-sr-search, #tsosk-sr-replace, #tsosk-sr-case, #tsosk-sr-regex, #tsosk-sr-guid', tsosk_sr_invalidate_preview );
 	$( document ).on( 'change', '.tsosk-sr-table-cb', tsosk_sr_invalidate_preview );
 
 	// Table selection helpers (act on the tables currently shown by the filter).
@@ -6079,6 +6690,7 @@
 			replace        : $( '#tsosk-sr-replace' ).val(),
 			case_sensitive : $( '#tsosk-sr-case' ).prop( 'checked' ) ? 1 : 0,
 			is_regex       : $( '#tsosk-sr-regex' ).prop( 'checked' ) ? 1 : 0,
+			include_guid   : $( '#tsosk-sr-guid' ).prop( 'checked' ) ? 1 : 0,
 			tables         : tsosk_sr_get_tables(),
 		};
 	}
@@ -6155,6 +6767,9 @@
 		}
 		if ( data.skipped_cells ) {
 			lines.push( tsosk.i18n.sr_skipped_cells.replace( '%d', String( data.skipped_cells ) ) );
+			if ( data.skipped_where && data.skipped_where.length ) {
+				lines.push( tsosk.i18n.sr_skipped_where.replace( '%s', data.skipped_where.join( ', ' ) ) );
+			}
 		}
 		if ( ! $( '#tsosk-sr-replace' ).val() ) {
 			lines.push( tsosk.i18n.sr_warn_empty_replace );
@@ -6180,7 +6795,7 @@
 		}
 
 		if ( ! data.total_rows ) {
-			$notice.html( '<strong>' + tsosk.i18n.sr_preview_none + '</strong>' );
+			$notice.html( $( '<strong></strong>' ).text( data.skipped_cells ? tsosk.i18n.sr_none_changeable : tsosk.i18n.sr_preview_none ).prop( 'outerHTML' ) );
 			tsosk_sr_append_warnings( $notice, data );
 			$notice.show();
 			return;
@@ -6252,13 +6867,25 @@
 			return;
 		}
 
-		if ( ! $( '#tsosk-sr-replace' ).val() && ! confirm( tsosk.i18n.sr_confirm_empty_replace ) ) { return; }
-		if ( ! tsosk_sr_has_content_match( tsosk_sr_preview_data ) && ! confirm( tsosk.i18n.sr_confirm_internal_only ) ) { return; }
-		if ( ! confirm( tsosk.i18n.sr_confirm_exec ) ) { return; }
-		if ( tsosk_sr_preview_data.has_backup && ! confirm( tsosk.i18n.sr_replace_backup_warn ) ) { return; }
+		// One single confirmation: every warning that applies is listed in the same dialog.
+		var confirmLines = [];
+		if ( ! $( '#tsosk-sr-replace' ).val() ) {
+			confirmLines.push( '• ' + tsosk.i18n.sr_warn_empty_replace );
+		}
+		if ( ! tsosk_sr_has_content_match( tsosk_sr_preview_data ) ) {
+			confirmLines.push( '• ' + tsosk.i18n.sr_warn_internal_only );
+		}
+		if ( tsosk_sr_preview_data.has_backup ) {
+			confirmLines.push( '• ' + tsosk.i18n.sr_backup_overwrite_note );
+		}
+		confirmLines.push( tsosk.i18n.sr_confirm_exec );
+		if ( ! window.confirm( confirmLines.join( '\n\n' ) ) ) {
+			return;
+		}
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 		$( '#tsosk-sr-preview-btn' ).prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, 'ok', 600000 );
 
 		ajaxPost( {
 			action : 'tsosk_sr_execute',
@@ -6270,6 +6897,9 @@
 					var warnings = ( r.data.errors || [] ).slice();
 					if ( r.data.skipped_cells ) {
 						warnings.push( tsosk.i18n.sr_skipped_cells.replace( '%d', String( r.data.skipped_cells ) ) );
+						if ( r.data.skipped_where && r.data.skipped_where.length ) {
+							warnings.push( tsosk.i18n.sr_skipped_where.replace( '%s', r.data.skipped_where.join( ', ' ) ) );
+						}
 					}
 					showMsg( $msg, r.data.message, 'ok' );
 					$( '#tsosk-sr-execute-btn, #tsosk-sr-cancel-btn' ).hide();
@@ -6289,12 +6919,14 @@
 						setTimeout( function () { window.location.reload(); }, 1500 );
 					}
 				} else {
-					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error', 60000 );
 				}
 			},
-			error: function () {
-				showMsg( $msg, tsosk.i18n.error, 'error' );
-				$btn.prop( 'disabled', false );
+			error: function ( xhr ) {
+				// A timeout or a PHP fatal gives no JSON: say what the server answered and keep the message on screen.
+				var status = xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : '';
+				showMsg( $msg, tsosk.i18n.sr_exec_failed + status, 'error', 120000 );
+				$btn.prop( 'disabled', false ).text( '⚡ ' + tsosk.i18n.sr_execute_btn );
 				$( '#tsosk-sr-preview-btn' ).prop( 'disabled', false );
 			}
 		} );
@@ -6826,6 +7458,17 @@
 
 	$( document ).on( 'input', '#tsosk-snapshot-json', tsoskSnapshotRefreshImportSections );
 
+	// Show the "Undo last import" card right after an import (it only exists on the page once a backup is saved).
+	function tsoskSnapshotRefreshRestoreCard() {
+		$.ajax( { url: window.location.href, cache: false, dataType: 'html' } ).done( function ( html ) {
+			var $new = $( '<div/>' ).append( $.parseHTML( html ) ).find( '.tsosk-snapshot-restore-card' ).first();
+			$( '.tsosk-snapshot-restore-card' ).remove();
+			if ( $new.length ) {
+				$( '.tsosk-snapshot-import-card' ).before( $new );
+			}
+		} );
+	}
+
 	$( document ).on( 'click', '#tsosk-snapshot-import', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-snapshot-msg' );
@@ -6862,6 +7505,7 @@
 					$( '#tsosk-snapshot-import-list' ).empty();
 					tsoskSnapshotRefreshEnvDiff( null );
 					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+					tsoskSnapshotRefreshRestoreCard();
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 				}
@@ -6885,7 +7529,7 @@
 			success: function ( r ) {
 				if ( r.success ) {
 					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
-					$btn.closest( '.tsosk-snapshot-restore-card' ).find( 'button' ).hide();
+					$btn.closest( '.tsosk-snapshot-restore-card' ).find( 'button, .description' ).hide();
 				} else {
 					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
 					$btn.prop( 'disabled', false );
@@ -7036,12 +7680,14 @@
 		return $( '<div>' ).text( value == null ? '' : String( value ) ).html();
 	}
 
+	var tsoskRolesSeq = 0;
 	function tsoskRolesLoad() {
 		var $tbody = $( '#tsosk-roles-tbody' );
 		var $msg   = $( '#tsosk-roles-msg' );
 		var nonce  = $( '#tsosk-roles-nonce' ).val();
 		var role   = $( '#tsosk-roles-select' ).val();
 		if ( ! $tbody.length || ! nonce ) { return; }
+		var seq = ++tsoskRolesSeq;
 
 		$tbody.html( '<tr><td colspan="3">' + tsoskText( tsosk.i18n.loading ) + '</td></tr>' );
 
@@ -7055,13 +7701,20 @@
 					$tbody.html( '<tr><td colspan="3">' + tsoskText( errText ) + '</td></tr>' );
 					return;
 				}
+				if ( seq !== tsoskRolesSeq ) {
+					return;
+				}
 				var caps = r.data.caps || [];
+				var isAdmin = role === 'administrator' || r.data.read_only;
 				$( '#tsosk-roles-count' ).text( caps.length );
+				$( '#tsosk-roles-info' ).text( r.data.summary || '' );
+				$( '.tsosk-roles-editonly' ).toggle( ! isAdmin );
+				$( '#tsosk-roles-admin-note' ).prop( 'hidden', ! isAdmin );
+				$( '#tsosk-roles-clone' ).prop( 'disabled', isAdmin );
 				if ( ! caps.length ) {
 					$tbody.html( '<tr><td colspan="3">' + tsoskText( tsosk.i18n.no_matches ) + '</td></tr>' );
 					return;
 				}
-				var isAdmin = role === 'administrator' || r.data.read_only;
 				var html    = '';
 				caps.forEach( function ( item ) {
 					var cap  = typeof item === 'string' ? item : ( item.cap || '' );
@@ -7076,14 +7729,11 @@
 					html += '</td></tr>';
 				} );
 				$tbody.html( html );
-				$( '#tsosk-roles-add-box' ).toggle( ! isAdmin );
-				if ( isAdmin && r.data.admin_role ) {
-					showMsg( $msg, tsosk.i18n.roles_admin_readonly || tsosk.i18n.done, 'ok' );
-				} else {
-					showMsg( $msg, tsosk.i18n.done, 'ok' );
-				}
 			},
 			error: function () {
+				if ( seq !== tsoskRolesSeq ) {
+					return;
+				}
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 				$tbody.html( '<tr><td colspan="3">' + tsoskText( tsosk.i18n.error ) + '</td></tr>' );
 			}
@@ -7142,8 +7792,9 @@
 	} );
 
 	$( document ).on( 'click', '.tsosk-roles-remove', function () {
+		var cap   = String( $( this ).attr( 'data-cap' ) || '' );
+		if ( 'read' === cap && ! window.confirm( tsosk.i18n.roles_remove_read_confirm ) ) { return; }
 		if ( ! window.confirm( tsosk.i18n.confirm_delete ) ) { return; }
-		var cap   = $( this ).data( 'cap' );
 		var role  = $( '#tsosk-roles-select' ).val();
 		var nonce = $( '#tsosk-roles-nonce' ).val();
 		var $msg  = $( '#tsosk-roles-msg' );
@@ -7159,25 +7810,38 @@
 	} );
 
 	$( document ).on( 'click', '#tsosk-roles-compare', function () {
-		var nonce = $( '#tsosk-roles-nonce' ).val();
-		var $out  = $( '#tsosk-roles-compare-out' );
+		var nonce  = $( '#tsosk-roles-nonce' ).val();
+		var $out   = $( '#tsosk-roles-compare-out' );
+		var $msg   = $( '#tsosk-roles-compare-msg' );
+		var $a     = $( '#tsosk-roles-compare-a' );
+		var $b     = $( '#tsosk-roles-compare-b' );
+		var nameA  = $a.find( 'option:selected' ).text();
+		var nameB  = $b.find( 'option:selected' ).text();
+		var none   = tsosk.i18n.roles_none || '—';
+		$msg.text( '' );
 		ajaxPost( {
 			action : 'tsosk_roles_compare',
 			data   : {
 				nonce: nonce,
-				role_a_slug: tsoskEncodeRoleSlug( $( '#tsosk-roles-compare-a' ).val() ),
-				role_b_slug: tsoskEncodeRoleSlug( $( '#tsosk-roles-compare-b' ).val() )
+				role_a_slug: tsoskEncodeRoleSlug( $a.val() ),
+				role_b_slug: tsoskEncodeRoleSlug( $b.val() )
 			},
 			success: function ( r ) {
 				if ( ! r.success ) {
 					$out.hide();
+					showMsg( $msg, ( typeof r.data === 'string' && r.data ) || tsosk.i18n.error, 'error' );
 					return;
 				}
 				var d = r.data || {};
-				var text = ( tsosk.i18n.roles_only_a || 'Only in A' ) + ':\n' + ( d.only_a || [] ).join( ', ' ) + '\n\n'
-					+ ( tsosk.i18n.roles_only_b || 'Only in B' ) + ':\n' + ( d.only_b || [] ).join( ', ' ) + '\n\n'
-					+ ( tsosk.i18n.roles_both || 'In both' ) + ':\n' + ( d.both || [] ).join( ', ' );
+				var list = function ( items ) { return ( items && items.length ) ? items.join( ', ' ) : none; };
+				var text = tsoskUsersFill( tsosk.i18n.roles_only_in, nameA ) + ':\n' + list( d.only_a ) + '\n\n'
+					+ tsoskUsersFill( tsosk.i18n.roles_only_in, nameB ) + ':\n' + list( d.only_b ) + '\n\n'
+					+ ( tsosk.i18n.roles_both || 'In both' ) + ':\n' + list( d.both );
 				$out.text( text ).show();
+			},
+			error: function () {
+				$out.hide();
+				showMsg( $msg, tsosk.i18n.error, 'error' );
 			}
 		} );
 	} );
@@ -7185,8 +7849,11 @@
 	$( document ).on( 'click', '#tsosk-roles-clone', function () {
 		var slug = $( '#tsosk-roles-clone-slug' ).val().trim();
 		var label = $( '#tsosk-roles-clone-label' ).val().trim();
-		if ( ! slug || ! label ) { return; }
-		var $msg = $( '#tsosk-roles-msg' );
+		var $msg = $( '#tsosk-roles-clone-msg' );
+		if ( ! slug || ! label ) {
+			showMsg( $msg, tsosk.i18n.roles_clone_required, 'error' );
+			return;
+		}
 		ajaxPost( {
 			action : 'tsosk_roles_clone',
 			data   : {
@@ -7196,7 +7863,15 @@
 				new_label: label
 			},
 			success: function ( r ) {
-				showMsg( $msg, r.success ? r.data : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				var info = r.success && r.data && 'object' === typeof r.data ? r.data : null;
+				showMsg( $msg, r.success ? ( info ? info.message : r.data ) : ( r.data || tsosk.i18n.error ), r.success ? 'ok' : 'error' );
+				if ( info && info.role ) {
+					// Make the new role available in every role list without reloading.
+					$( '#tsosk-roles-select, #tsosk-roles-compare-a, #tsosk-roles-compare-b' ).each( function () {
+						$( '<option></option>' ).val( info.role ).text( $( this ).is( '#tsosk-roles-select' ) ? info.label + ' (' + info.role + ')' : info.label ).appendTo( this );
+					} );
+					$( '#tsosk-roles-clone-slug, #tsosk-roles-clone-label' ).val( '' );
+				}
 			},
 			error: function () { showMsg( $msg, tsosk.i18n.error, 'error' ); }
 		} );
@@ -7206,7 +7881,7 @@
 		if ( ! confirm( tsosk.i18n.roles_apply_confirm || tsosk.i18n.confirm_delete ) ) {
 			return;
 		}
-		var $msg = $( '#tsosk-roles-msg' );
+		var $msg = $( '#tsosk-roles-template-msg' );
 		ajaxPost( {
 			action : 'tsosk_roles_apply_template',
 			data   : {
@@ -7615,52 +8290,54 @@
 		return $row.find( '.tsosk-am-parent' ).val() || $row.attr( 'data-am-parent-section' ) || '';
 	}
 
+	/**
+	 * Nearest section above a dropped row. Separators are never containers, and
+	 * hidden children of collapsed sections are skipped by looking at top rows only.
+	 */
+	function tsoskAmSectionAbove( $dragged ) {
+		return $dragged.prevAll( 'tr.tsosk-am-row-top' ).filter( function () {
+			return ! /^separator/.test( tsoskAmGetTopSlug( $( this ) ) );
+		} ).first();
+	}
+
+	/**
+	 * Update the parent of a dropped row and return the section to expand (if any).
+	 *
+	 * A plain top-level item never changes parent by dragging: it only changes position.
+	 * Moving a menu inside another section is done explicitly with the
+	 * "Top-level section" selector, so dropping next to a collapsed section's
+	 * hidden children can no longer nest it by accident.
+	 *
+	 * @param {jQuery} $dragged Dropped row.
+	 * @return {string} Section slug to keep open.
+	 */
 	function tsoskAmAssignParentFromDrag( $dragged ) {
 		if ( ! $dragged || ! $dragged.length ) {
-			return;
+			return '';
 		}
 
 		if ( $dragged.hasClass( 'tsosk-am-row-nested-top' ) ) {
-			var $prevTop = $dragged.prevAll( 'tr.tsosk-am-row-top:first' );
-			if ( $prevTop.length ) {
-				var parentSlug = tsoskAmGetTopSlug( $prevTop );
-				$dragged.find( '.tsosk-am-top-nest' ).val( parentSlug );
-				$dragged.attr( 'data-am-parent-section', parentSlug );
+			var $nestTop = tsoskAmSectionAbove( $dragged );
+			if ( $nestTop.length ) {
+				var nestSlug = tsoskAmGetTopSlug( $nestTop );
+				$dragged.find( '.tsosk-am-top-nest' ).val( nestSlug );
+				$dragged.attr( 'data-am-parent-section', nestSlug );
+				return nestSlug;
 			}
-			return;
+			return '';
 		}
 
 		if ( $dragged.hasClass( 'tsosk-am-row-sub' ) ) {
-			var $prevTop = $dragged.prevAll( 'tr.tsosk-am-row-top:first' );
-			if ( $prevTop.length ) {
-				$dragged.find( '.tsosk-am-parent' ).val( tsoskAmGetTopSlug( $prevTop ) );
+			var $subTop = tsoskAmSectionAbove( $dragged );
+			if ( $subTop.length ) {
+				var subSlug = tsoskAmGetTopSlug( $subTop );
+				$dragged.find( '.tsosk-am-parent' ).val( subSlug );
+				$dragged.attr( 'data-am-parent-section', subSlug );
+				return subSlug;
 			}
-			return;
 		}
 
-		if ( $dragged.hasClass( 'tsosk-am-row-top' ) ) {
-			var $prev = $dragged.prev( 'tr.tsosk-am-row' );
-			if ( ! $prev.length ) {
-				$dragged.find( '.tsosk-am-top-nest' ).val( '' );
-				return;
-			}
-			if ( $prev.hasClass( 'tsosk-am-row-top' ) ) {
-				$dragged.find( '.tsosk-am-top-nest' ).val( tsoskAmGetTopSlug( $prev ) );
-				$dragged.attr( 'data-am-parent-section', tsoskAmGetTopSlug( $prev ) );
-				return;
-			}
-			if ( $prev.hasClass( 'tsosk-am-row-sub' ) || $prev.hasClass( 'tsosk-am-row-nested-top' ) ) {
-				var parentSlug = $prev.find( '.tsosk-am-parent' ).val() || $prev.attr( 'data-am-parent-section' ) || '';
-				if ( ! parentSlug ) {
-					var $sectionTop = $prev.prevAll( 'tr.tsosk-am-row-top:first' );
-					if ( $sectionTop.length ) {
-						parentSlug = tsoskAmGetTopSlug( $sectionTop );
-					}
-				}
-				$dragged.find( '.tsosk-am-top-nest' ).val( parentSlug );
-				$dragged.attr( 'data-am-parent-section', parentSlug );
-			}
-		}
+		return '';
 	}
 
 	function tsoskAmNormalizeRows( expandSection ) {
@@ -7998,7 +8675,9 @@
 			stop             : function ( event, ui ) {
 				ui.item.removeClass( 'tsosk-am-dragging' );
 				tsoskAmStopAutoScroll();
-				tsoskAmAssignParentFromDrag( ui.item );
+				var openSection = tsoskAmAssignParentFromDrag( ui.item );
+				// Regroup now so sections move together with their children and the table matches what will be saved.
+				window.setTimeout( function () { tsoskAmNormalizeRows( openSection ); }, 0 );
 			}
 		} );
 	}
@@ -8326,6 +9005,10 @@
 					$p.append( document.createElement( 'br' ) );
 					$p.append( $( '<code/>' ).text( String( data.final_url ) ) );
 				}
+				if ( data.time_text ) {
+					$p.append( document.createElement( 'br' ) );
+					$p.append( $( '<span/>' ).addClass( 'description' ).text( data.time_text ) );
+				}
 				$box.empty().append( $p );
 				showMsg( $msg, tsosk.i18n.done, 'ok' );
 			},
@@ -8370,6 +9053,10 @@
 							.addClass( 'description' )
 							.text( data.counts_label )
 					);
+				}
+				if ( data.note && ! data.skip ) {
+					$p.append( document.createElement( 'br' ) );
+					$p.append( $( '<span/>' ).addClass( 'description' ).text( data.note ) );
 				}
 				$box.empty().append( $p );
 				showMsg( $msg, tsosk.i18n.done, 'ok' );
@@ -8451,6 +9138,37 @@
 			} catch ( e ) {
 				showMsg( $msg, tsosk.i18n.error, 'error' );
 			}
+		}
+	} );
+
+	// Custom 404: copy a shortcode from its card.
+	$( document ).on( 'click', '.tsosk-sc-copy', function () {
+		var $btn     = $( this );
+		var text     = String( $btn.attr( 'data-copy' ) || '' );
+		var original = $btn.data( 'label' ) || $btn.text();
+		var done     = String( $btn.attr( 'data-done' ) || 'Copied' );
+		$btn.data( 'label', original );
+		function onCopied() {
+			$btn.text( done );
+			setTimeout( function () {
+				$btn.text( original );
+			}, 1500 );
+		}
+		function fallback() {
+			var $tmp = $( '<textarea readonly></textarea>' ).val( text ).css( { position: 'fixed', opacity: 0 } ).appendTo( 'body' );
+			$tmp[ 0 ].select();
+			try {
+				document.execCommand( 'copy' );
+				onCopied();
+			} catch ( e ) {
+				$btn.text( tsosk.i18n.error );
+			}
+			$tmp.remove();
+		}
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( text ).then( onCopied ).catch( fallback );
+		} else {
+			fallback();
 		}
 	} );
 
@@ -8709,5 +9427,502 @@
 	window.addEventListener( 'scroll', tsoskCloseInfoPops, true );
 	$( window ).on( 'resize', tsoskCloseInfoPops );
 
+
+	// ── Plugin & Theme Leftovers ───────────────────────────────────────────
+	var tsoskLoSources = [ 'options', 'postmeta', 'usermeta', 'termmeta', 'commentmeta', 'posts' ];
+	var tsoskLoGroups  = {};
+
+	function tsoskLoStrings() {
+		try {
+			return JSON.parse( $( '#tsosk-lo-app' ).attr( 'data-strings' ) || '{}' );
+		} catch ( e ) {
+			return {};
+		}
+	}
+
+	function tsoskLoMerge( list ) {
+		$.each( list || [], function ( i, g ) {
+			var k   = g.source + '\u0001' + g.key + '\u0001' + g.slug_key;
+			var cur = tsoskLoGroups[ k ];
+			if ( ! cur ) {
+				tsoskLoGroups[ k ] = $.extend( {}, g, { links: ( g.links || [] ).slice( 0, 5 ) } );
+				return;
+			}
+			cur.rows      += g.rows;
+			cur.deletable += g.deletable;
+			cur.mixed     += g.mixed;
+			cur.large     = ( cur.large || 0 ) + ( g.large || 0 );
+			if ( g.links ) {
+				cur.links = cur.links.concat( g.links ).slice( 0, 5 );
+			}
+		} );
+	}
+
+	function tsoskLoUpdateSelected() {
+		var L = tsoskLoStrings(), total = 0;
+		$( '.tsosk-lo-pick:checked' ).each( function () {
+			total += parseInt( $( this ).attr( 'data-count' ), 10 ) || 0;
+		} );
+		$( '#tsosk-lo-delete' ).prop( 'disabled', 0 === total );
+		$( '#tsosk-lo-selected' ).text( total ? String( L.selected || '%d' ).replace( '%d', String( total ) ) : ( L.pick_hint || '' ) );
+		return total;
+	}
+
+	// Refresh only the "Automatic backups" box so the new backup is available right away.
+	// message: shown once the box has been replaced.
+	function tsoskLoRefreshBackupBox( message ) {
+		var openIds = [];
+		$( '#tsosk-lo-backup details[open]' ).each( function () {
+			openIds.push( $( this ).attr( 'data-id' ) );
+		} );
+		$.ajax( { url: window.location.href, cache: false, dataType: 'html' } ).done( function ( html ) {
+			var $new = $( '<div/>' ).append( $.parseHTML( html ) ).find( '#tsosk-lo-backup' ).first(),
+				$old = $( '#tsosk-lo-backup' );
+			if ( ! $new.length ) {
+				$old.remove();
+				if ( message ) {
+					showMsg( $( '#tsosk-lo-status' ), message, 'ok', 30000 );
+				}
+				return;
+			}
+			$new.find( 'details' ).each( function () {
+				if ( -1 !== $.inArray( $( this ).attr( 'data-id' ), openIds ) ) {
+					$( this ).attr( 'open', 'open' );
+				}
+			} );
+			if ( $old.length ) {
+				$old.replaceWith( $new );
+			} else {
+				$( '#tsosk-lo-app' ).after( $new );
+			}
+			if ( message ) {
+				showMsg( $( '#tsosk-lo-restore-msg' ), message, 'ok', 60000 );
+			}
+		} );
+	}
+
+	// Remove from the list the rows that were just deleted, and tidy up cards and blocks that are left empty.
+	// forceKey: an option deleted on its own (it leaves every card that listed it).
+	function tsoskLoRemoveDeleted( forceKey ) {
+		var L = tsoskLoStrings(), goneKeys = {}, $gone;
+		if ( forceKey ) {
+			goneKeys[ forceKey ] = true;
+		} else {
+			$( '.tsosk-lo-pick:checked' ).each( function () {
+				var $cb = $( this );
+				$cb.closest( 'tr' ).addClass( 'tsosk-lo-row--gone' );
+				// An option is a single row: it leaves every card that listed it.
+				if ( 'options' === $cb.attr( 'data-source' ) ) {
+					goneKeys[ $cb.attr( 'data-key' ) ] = true;
+				}
+			} );
+		}
+		$( '#tsosk-lo-results tr[data-source="options"]' ).each( function () {
+			if ( goneKeys[ $( this ).attr( 'data-key' ) ] ) {
+				$( this ).addClass( 'tsosk-lo-row--gone' );
+			}
+		} );
+		$gone = $( '.tsosk-lo-row--gone' );
+		$gone.next( '.tsosk-lo-peek' ).remove();
+		$gone.remove();
+
+		$( '#tsosk-lo-results .tsosk-lo-card' ).each( function () {
+			var $card = $( this );
+			if ( ! $card.find( 'tbody tr' ).not( '.tsosk-lo-peek' ).length ) {
+				$card.remove();
+			} else if ( ! $card.find( '.tsosk-lo-pick' ).length && ! $card.closest( '.tsosk-lo-section--info' ).length && $( '.tsosk-lo-section--info' ).length ) {
+				// Nothing deletable is left in this card: it moves to the information-only block.
+				$card.addClass( 'tsosk-lo-card--info' ).find( '.tsosk-lo-allwrap' ).remove();
+				$( '.tsosk-lo-section--info' ).append( $card );
+			}
+		} );
+		if ( ! $( '.tsosk-lo-section--del .tsosk-lo-card' ).length ) {
+			tsoskLoParkActions();
+			$( '#tsosk-lo-actions' ).hide();
+			$( '.tsosk-lo-section--del' ).remove();
+		}
+		if ( ! $( '.tsosk-lo-section--info .tsosk-lo-card' ).length ) {
+			$( '.tsosk-lo-section--info' ).remove();
+		}
+		var left = $( '#tsosk-lo-results .tsosk-lo-card' ).length;
+		if ( left ) {
+			$( '.tsosk-lo-summary' ).text( String( L.summary ).replace( '%1$d', String( left ) ) );
+		} else {
+			$( '#tsosk-lo-results' ).empty().append( $( '<p class="tsosk-lo-empty"></p>' ).text( L.nothing ) );
+		}
+		$( '.tsosk-lo-all' ).prop( 'checked', false );
+		tsoskLoUpdateSelected();
+	}
+
+	// The delete bar is shown inside the green "can be deleted" block; park it outside the results before they are cleared.
+	function tsoskLoParkActions() {
+		$( '#tsosk-lo-app' ).append( $( '#tsosk-lo-actions' ) );
+	}
+
+	function tsoskLoRender() {
+		var L = tsoskLoStrings(), $res = $( '#tsosk-lo-results' ), bySlug = {}, weight = {};
+		tsoskLoParkActions();
+		$res.empty();
+		$.each( tsoskLoGroups, function ( k, g ) {
+			( bySlug[ g.slug_key ] = bySlug[ g.slug_key ] || [] ).push( g );
+			weight[ g.slug_key ] = ( weight[ g.slug_key ] || 0 ) + g.rows;
+		} );
+		var slugs = Object.keys( bySlug ).sort( function ( a, b ) { return weight[ b ] - weight[ a ]; } );
+		if ( ! slugs.length ) {
+			$res.append( $( '<p class="tsosk-lo-empty"></p>' ).text( L.nothing ) );
+			$( '#tsosk-lo-actions' ).hide();
+			return;
+		}
+		$res.append( $( '<p class="tsosk-lo-summary"></p>' ).text( String( L.summary ).replace( '%1$d', String( slugs.length ) ) ) );
+
+		// Two clearly separated blocks: what can be deleted, and what is shown for information only.
+		var $secDel = $( '<div class="tsosk-lo-section tsosk-lo-section--del"></div>' ), $secInfo = $( '<div class="tsosk-lo-section tsosk-lo-section--info"></div>' ), nDel = 0, nInfo = 0;
+		$secDel.append( $( '<h3 class="tsosk-lo-section-title"></h3>' ).text( L.section_del ) ).append( $( '<p class="description"></p>' ).text( L.section_del_desc ) );
+		$secInfo.append( $( '<h3 class="tsosk-lo-section-title"></h3>' ).text( L.section_info ) ).append( $( '<p class="description"></p>' ).text( L.section_info_desc ) );
+
+		$.each( slugs, function ( i, slugKey ) {
+			var parts = slugKey.split( ':' ), type = parts[ 0 ], slug = parts.slice( 1 ).join( ':' );
+			var $card = $( '<div class="tsosk-lo-card"></div>' );
+			var $head = $( '<div class="tsosk-lo-head"></div>' );
+			$head.append( $( '<strong class="tsosk-lo-slug"></strong>' ).text( slug ) );
+			$head.append( $( '<span class="tsosk-badge tsosk-badge-warn"></span>' ).text( L[ type ] || type ) );
+			$head.append( $( '<span class="tsosk-lo-ni"></span>' ).text( L.not_installed ) );
+			var canPick = false;
+			$.each( bySlug[ slugKey ], function ( j, g ) {
+				if ( g.deletable > 0 && ! g.protected ) {
+					canPick = true;
+				}
+			} );
+			if ( ! canPick ) {
+				$card.addClass( 'tsosk-lo-card--info' );
+			}
+			if ( canPick ) {
+				var $all = $( '<input type="checkbox" class="tsosk-lo-all">' );
+				$head.append( $( '<label class="tsosk-lo-allwrap"></label>' ).append( $all ).append( document.createTextNode( ' ' + L.select_all ) ) );
+			}
+			$card.append( $head );
+
+			var $table = $( '<table class="widefat striped tsosk-lo-table"><thead><tr><th class="tsosk-lo-c-pick"></th><th></th><th></th><th></th><th></th></tr></thead><tbody></tbody></table>' );
+			$table.find( 'th' ).eq( 1 ).text( L.where );
+			$table.find( 'th' ).eq( 2 ).text( L.name );
+			$table.find( 'th' ).eq( 3 ).text( L.rows );
+			$table.find( 'th' ).eq( 4 ).text( L.example );
+			var $body = $table.find( 'tbody' );
+			var hasPosts = false;
+
+			$.each( bySlug[ slugKey ], function ( j, g ) {
+				var $tr = $( '<tr></tr>' ).attr( 'data-source', g.source ).attr( 'data-key', g.key );
+				var $pick = $( '<td class="tsosk-lo-c-pick"></td>' );
+				if ( g.deletable > 0 && ! g.protected ) {
+					$pick.append( $( '<input type="checkbox" class="tsosk-lo-pick">' )
+						.attr( 'data-source', g.source ).attr( 'data-key', g.key ).attr( 'data-slug', slugKey ).attr( 'data-count', g.deletable ) );
+				} else if ( 'posts' !== g.source ) {
+					$tr.addClass( 'tsosk-lo-row--locked' );
+					$pick.append( $( '<span class="tsosk-lo-lock"></span>' ).text( g.protected ? L.badge_protected : ( g.large > 0 ? L.badge_large : L.badge_installed ) ) );
+				}
+				$tr.append( $pick );
+				$tr.append( $( '<td></td>' ).text( L[ 'src_' + g.source ] || g.source ) );
+				var $keyCell = $( '<td class="tsosk-lo-key"></td>' ).append( g.key ? $( '<code></code>' ).text( g.key ) : '' );
+				if ( g.key && 'posts' !== g.source ) {
+					$keyCell.append( $( '<div></div>' ).append(
+						$( '<a href="#" class="tsosk-lo-view"></a>' )
+							.text( L.view ).attr( 'data-source', g.source ).attr( 'data-key', g.key ).attr( 'data-slug', slugKey )
+					) );
+				}
+				$tr.append( $keyCell );
+				var $rows = $( '<td></td>' ).text( String( g.rows ) );
+				if ( g.mixed > 0 && 'posts' !== g.source ) {
+					$rows.append( $( '<div class="tsosk-lo-note"></div>' ).text( g.mixed + ' ' + ( g.protected ? L.protected_note : L.mixed_note ) ) );
+				}
+				if ( g.large > 0 && 'posts' !== g.source ) {
+					$rows.append( $( '<div class="tsosk-lo-note"></div>' ).text( g.large + ' ' + L.large_note ) );
+				}
+				$tr.append( $rows );
+				var $ex = $( '<td class="tsosk-lo-example"></td>' );
+				if ( g.sample ) {
+					$ex.append( $( '<code></code>' ).text( g.sample ) );
+				}
+				if ( g.links && g.links.length ) {
+					hasPosts = true;
+					var $ul = $( '<div class="tsosk-lo-links"></div>' );
+					$.each( g.links, function ( n, l ) {
+						$ul.append( $( '<a target="_blank" rel="noopener"></a>' ).attr( 'href', l.url ).text( '#' + l.id + ( l.title ? ' ' + l.title : '' ) ) );
+					} );
+					$ex.append( $ul );
+				}
+				$tr.append( $ex );
+				$body.append( $tr );
+			} );
+			$card.append( $( '<div class="tsosk-lo-scroll"></div>' ).append( $table ) );
+			if ( hasPosts ) {
+				$card.append( $( '<p class="description tsosk-lo-posts-note"></p>' ).text( L.posts_note ) );
+			}
+			if ( canPick ) {
+				$secDel.append( $card );
+				++nDel;
+			} else {
+				$secInfo.append( $card );
+				++nInfo;
+			}
+		} );
+		if ( nDel ) {
+			$secDel.children( 'p.description' ).after( $( '#tsosk-lo-actions' ) );
+			$res.append( $secDel );
+		}
+		if ( nInfo ) {
+			$res.append( $secInfo );
+		}
+		$( '#tsosk-lo-actions' ).toggle( nDel > 0 );
+		tsoskLoUpdateSelected();
+	}
+
+	$( document ).on( 'click', '#tsosk-lo-scan', function () {
+		var $btn = $( this ), L = tsoskLoStrings(), $status = $( '#tsosk-lo-status' );
+		var nonce = $( '#tsosk-lo-app' ).attr( 'data-nonce' );
+		var si = 0, scanned = 0;
+		tsoskLoGroups = {};
+		$btn.prop( 'disabled', true );
+		tsoskLoParkActions();
+		$( '#tsosk-lo-results' ).empty();
+		$( '#tsosk-lo-actions' ).hide();
+
+		function fail( msg ) {
+			showMsg( $status, msg || L.error, 'error', 30000 );
+			$btn.prop( 'disabled', false );
+		}
+		function step( after ) {
+			if ( si >= tsoskLoSources.length ) {
+				$btn.prop( 'disabled', false );
+				tsoskLoRender();
+				showMsg( $status, L.scan_done, 'ok' );
+				return;
+			}
+			showMsg( $status, L.scanning + ' ' + ( L[ 'src_' + tsoskLoSources[ si ] ] || '' ) + ( scanned ? ' (' + scanned + ')' : '' ), 'ok', 600000 );
+			ajaxPost( {
+				action : 'tsosk_lo_scan',
+				data   : { nonce: nonce, source: tsoskLoSources[ si ], after: after },
+				success: function ( r ) {
+					if ( ! r.success ) {
+						fail( r.data );
+						return;
+					}
+					tsoskLoMerge( r.data.groups );
+					scanned += r.data.scanned || 0;
+					if ( r.data.next ) {
+						step( r.data.next );
+					} else {
+						si++;
+						step( 0 );
+					}
+				},
+				error: function () { fail(); }
+			} );
+		}
+		step( 0 );
+	} );
+
+	// "View": a few rows of the group, with the text around the stale path.
+	$( document ).on( 'click', '.tsosk-lo-view', function ( e ) {
+		e.preventDefault();
+		var $a = $( this ), L = tsoskLoStrings(), $tr = $a.closest( 'tr' ), $next = $tr.next( '.tsosk-lo-peek' );
+		if ( $next.length ) {
+			$next.remove();
+			$a.text( L.view );
+			return;
+		}
+		$a.text( L.hide );
+		var $peek = $( '<tr class="tsosk-lo-peek"><td></td><td colspan="4"></td></tr>' );
+		$tr.after( $peek );
+		ajaxPost( {
+			action : 'tsosk_lo_peek',
+			data   : { nonce: $( '#tsosk-lo-app' ).attr( 'data-nonce' ), source: $a.attr( 'data-source' ), key: $a.attr( 'data-key' ), slug_key: $a.attr( 'data-slug' ) },
+			success: function ( r ) {
+				var $cell = $peek.children().eq( 1 );
+				if ( ! r.success || ! r.data.rows.length ) {
+					$cell.text( r.success ? L.peek_none : ( r.data || L.error ) );
+					return;
+				}
+				var canForce = 'options' === $a.attr( 'data-source' ) && r.data.rows.length === 1 && 'large' === r.data.rows[ 0 ].reason;
+				$.each( r.data.rows, function ( i, row ) {
+					var $item = $( '<div class="tsosk-lo-peek-row"></div>' );
+					$item.append( $( '<strong></strong>' ).text( '#' + row.id + ' (' + row.size + ' B) — ' + ( row.deletable ? L.peek_deletable : ( 'installed' === row.reason ? L.peek_installed + ( row.installed && row.installed.length ? ' (' + row.installed.join( ', ' ) + ')' : '' ) : ( 'protected' === row.reason ? L.peek_protected : ( 'large' === row.reason ? L.peek_large : L.peek_kept ) ) ) ) ) );
+					if ( row.why ) {
+						$item.append( $( '<p class="tsosk-lo-why"></p>' ).text( row.why ) );
+					}
+					$item.append( $( '<code class="tsosk-lo-excerpt"></code>' ).text( row.excerpt ) );
+					$cell.append( $item );
+				} );
+				if ( canForce ) {
+					var $use = $( '<div class="tsosk-lo-usage"></div>' );
+					$use.append( $( '<button type="button" class="button tsosk-lo-usage-btn"></button>' ).text( L.usage_btn )
+						.attr( 'data-source', $a.attr( 'data-source' ) ).attr( 'data-key', $a.attr( 'data-key' ) ) );
+					$use.append( $( '<div class="tsosk-lo-usage-out"></div>' ) );
+					$cell.append( $use );
+				}
+			},
+			error: function () { $peek.children().eq( 1 ).text( L.error ); }
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-lo-usage-btn', function () {
+		var $btn = $( this ), L = tsoskLoStrings(), $out = $btn.siblings( '.tsosk-lo-usage-out' );
+		var source = $btn.attr( 'data-source' ), key = $btn.attr( 'data-key' );
+		$btn.prop( 'disabled', true );
+		$out.empty().text( L.usage_running );
+		ajaxPost( {
+			action : 'tsosk_lo_usage',
+			data   : { nonce: $( '#tsosk-lo-app' ).attr( 'data-nonce' ), source: source, key: key },
+			success: function ( r ) {
+				$btn.prop( 'disabled', false );
+				$out.empty();
+				if ( ! r.success ) {
+					$out.text( r.data || L.error );
+					return;
+				}
+				var d = r.data || {};
+				if ( d.exact && d.exact.length ) {
+					$out.append( $( '<p class="tsosk-lo-usage-bad"></p>' ).text( L.usage_found + d.exact.join( ', ' ) ) );
+				}
+				if ( d.prefix && d.prefix.length ) {
+					$out.append( $( '<p class="tsosk-lo-usage-bad"></p>' ).text( L.usage_prefix + d.prefix.join( ', ' ) ) );
+				}
+				if ( d.truncated ) {
+					$out.append( $( '<p class="tsosk-lo-usage-bad"></p>' ).text( L.usage_trunc ) );
+				}
+				if ( ! ( d.exact && d.exact.length ) && ! ( d.prefix && d.prefix.length ) && ! d.truncated ) {
+					$out.append( $( '<p class="tsosk-lo-usage-ok"></p>' ).text( String( L.usage_none ).replace( '%d', String( d.scanned || 0 ) ) ) );
+					$out.append( $( '<button type="button" class="button button-primary tsosk-lo-force-btn"></button>' ).text( L.force_btn )
+						.attr( 'data-source', source ).attr( 'data-key', key ) );
+				}
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+				$out.text( L.error );
+			}
+		} );
+	} );
+
+	$( document ).on( 'click', '.tsosk-lo-force-btn', function () {
+		var $btn = $( this ), L = tsoskLoStrings(), $status = $( '#tsosk-lo-status' );
+		var source = $btn.attr( 'data-source' ), key = $btn.attr( 'data-key' );
+		if ( ! window.confirm( L.confirm_force ) ) {
+			return;
+		}
+		$btn.prop( 'disabled', true );
+		showMsg( $status, L.scanning, 'ok', 600000 );
+		ajaxPost( {
+			action : 'tsosk_lo_force_delete',
+			data   : { nonce: $( '#tsosk-lo-app' ).attr( 'data-nonce' ), source: source, key: key },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $status, r.data.message, 'ok', 60000 );
+					tsoskLoRemoveDeleted( key );
+					tsoskLoRefreshBackupBox();
+				} else {
+					showMsg( $status, r.data || L.error, 'error', 30000 );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $status, L.error, 'error', 30000 );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	$( document ).on( 'change', '.tsosk-lo-pick', tsoskLoUpdateSelected );
+	$( document ).on( 'change', '.tsosk-lo-all', function () {
+		$( this ).closest( '.tsosk-lo-card' ).find( '.tsosk-lo-pick' ).prop( 'checked', $( this ).prop( 'checked' ) );
+		tsoskLoUpdateSelected();
+	} );
+
+	$( document ).on( 'click', '#tsosk-lo-delete', function () {
+		var $btn = $( this ), L = tsoskLoStrings(), $status = $( '#tsosk-lo-status' );
+		var items = [];
+		$( '.tsosk-lo-pick:checked' ).each( function () {
+			items.push( { source: $( this ).attr( 'data-source' ), key: $( this ).attr( 'data-key' ), slug_key: $( this ).attr( 'data-slug' ) } );
+		} );
+		var total = tsoskLoUpdateSelected();
+		if ( ! items.length || ! window.confirm( String( L.confirm_delete ).replace( '%d', String( total ) ) ) ) {
+			return;
+		}
+		$btn.prop( 'disabled', true );
+		showMsg( $status, L.scanning, 'ok', 600000 );
+		ajaxPost( {
+			action : 'tsosk_lo_delete',
+			data   : { nonce: $( '#tsosk-lo-app' ).attr( 'data-nonce' ), items: JSON.stringify( items ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $status, r.data.message, 'ok', 60000 );
+					// Keep the results on screen: only the rows that were deleted disappear (no page reload).
+					tsoskLoRemoveDeleted();
+					$btn.prop( 'disabled', true );
+					tsoskLoRefreshBackupBox();
+				} else {
+					showMsg( $status, r.data || L.error, 'error', 30000 );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $status, L.error, 'error', 30000 );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
+	// Backups panel: restore a batch or picked rows, delete one or all.
+	function tsoskLoBackupCall( $btn, action, data, confirmText ) {
+		var L = tsoskLoStrings(), $msg = $( '#tsosk-lo-restore-msg' ), $box = $btn.closest( '#tsosk-lo-backup' );
+		if ( confirmText && ! window.confirm( confirmText ) ) {
+			return;
+		}
+		$box.find( 'button' ).prop( 'disabled', true );
+		ajaxPost( {
+			action : action,
+			data   : $.extend( { nonce: $( '#tsosk-lo-app' ).attr( 'data-nonce' ) }, data ),
+			success: function ( r ) {
+				if ( r.success ) {
+					tsoskLoRefreshBackupBox( r.data.message );
+				} else {
+					$box.find( 'button' ).prop( 'disabled', false );
+					showMsg( $msg, r.data || L.error, 'error', 30000 );
+				}
+			},
+			error: function () {
+				$box.find( 'button' ).prop( 'disabled', false );
+				showMsg( $msg, L.error, 'error', 30000 );
+			}
+		} );
+	}
+
+	$( document ).on( 'click', '.tsosk-lo-bk-restore-all', function () {
+		var $btn = $( this );
+		tsoskLoBackupCall( $btn, 'tsosk_lo_restore', { id: $btn.closest( 'details' ).attr( 'data-id' ) }, tsoskLoStrings().confirm_restore );
+	} );
+
+	$( document ).on( 'click', '.tsosk-lo-bk-restore-sel', function () {
+		var $btn = $( this ), $d = $btn.closest( 'details' ), picked = [];
+		$d.find( '.tsosk-lo-bk-pick:checked' ).each( function () {
+			picked.push( parseInt( $( this ).val(), 10 ) );
+		} );
+		if ( ! picked.length ) {
+			showMsg( $( '#tsosk-lo-restore-msg' ), tsoskLoStrings().bk_none, 'error', 8000 );
+			return;
+		}
+		tsoskLoBackupCall( $btn, 'tsosk_lo_restore', { id: $d.attr( 'data-id' ), rows: JSON.stringify( picked ) }, tsoskLoStrings().confirm_restore_sel );
+	} );
+
+	$( document ).on( 'click', '.tsosk-lo-bk-del', function () {
+		var $btn = $( this );
+		tsoskLoBackupCall( $btn, 'tsosk_lo_backup_delete', { id: $btn.closest( 'details' ).attr( 'data-id' ) }, tsoskLoStrings().confirm_bk_del );
+	} );
+
+	$( document ).on( 'click', '#tsosk-lo-bk-delall', function () {
+		tsoskLoBackupCall( $( this ), 'tsosk_lo_backup_delete', { all: '1' }, tsoskLoStrings().confirm_bk_delall );
+	} );
+
+	$( document ).on( 'change', '.tsosk-lo-bk-pickall', function () {
+		$( this ).closest( 'table' ).find( '.tsosk-lo-bk-pick' ).prop( 'checked', $( this ).prop( 'checked' ) );
+	} );
 
 } )( jQuery );

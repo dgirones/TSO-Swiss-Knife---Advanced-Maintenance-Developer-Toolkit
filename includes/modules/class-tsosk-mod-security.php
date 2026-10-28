@@ -125,6 +125,8 @@ class TSOSK_Mod_Security {
 		if ( false !== strpos( $content, self::UPLOADS_HTACCESS_MARKER ) ) {
 			return true;
 		}
+		// Commented-out rules do nothing, so they must not count as protection.
+		$content = (string) preg_replace( '/^\s*#.*$/m', '', $content );
 		// Common third-party equivalents (Wordfence, iThemes/Solid Security, manual rules).
 		// A deny rule only counts when it is tied to PHP files (a "Require all denied" for debug.log or images does not block PHP).
 		return (bool) preg_match( '/(php_flag\s+engine\s+off|RemoveHandler\s+\.php|<Files(?:Match)?\s[^>]*php[^>]*>[^<]*?(?:Require\s+all\s+denied|Deny\s+from\s+all|SetHandler\s+none))/is', $content );
@@ -147,6 +149,13 @@ class TSOSK_Mod_Security {
 		}
 
 		if ( $this->uploads_htaccess_has_protection() ) {
+			global $is_nginx, $is_IIS, $is_iis7;
+			if ( ! empty( $is_nginx ) || ! empty( $is_IIS ) || ! empty( $is_iis7 ) ) {
+				return array(
+					'status'  => 'unknown',
+					'message' => __( 'A PHP-blocking rule exists in wp-content/uploads/.htaccess, but this server runs Nginx or IIS, which ignore .htaccess files. Add the equivalent rule to the server configuration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				);
+			}
 			return array(
 				'status'  => 'blocked',
 				'message' => __( 'A rule that blocks PHP execution inside wp-content/uploads was found in its .htaccess file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -298,43 +307,33 @@ class TSOSK_Mod_Security {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function query_admins_with_cloned_registration_date(): array {
-		$all_users = get_users( array( 'fields' => array( 'ID', 'user_login', 'user_registered', 'user_email' ) ) );
-
-		$by_timestamp = array();
-		foreach ( $all_users as $u ) {
-			$ts = (string) $u->user_registered;
-			if ( '' === $ts || '0000-00-00 00:00:00' === $ts ) {
-				continue;
-			}
-			$by_timestamp[ $ts ][] = $u;
-		}
-
-		$admin_ids = array_map(
-			'absint',
-			get_users(
-				array(
-					'role'   => 'administrator',
-					'fields' => 'ID',
-				)
+		// Only the (few) administrators are loaded; each one is compared with a COUNT, so a site with
+		// tens of thousands of members never has to load every user into memory.
+		global $wpdb;
+		$admins = get_users(
+			array(
+				'role'   => 'administrator',
+				'fields' => array( 'ID', 'user_login', 'user_registered' ),
 			)
 		);
 
 		$out = array();
-		foreach ( $by_timestamp as $ts => $users ) {
-			if ( count( $users ) < 2 ) {
+		foreach ( $admins as $u ) {
+			$ts = (string) $u->user_registered;
+			if ( '' === $ts || '0000-00-00 00:00:00' === $ts ) {
 				continue;
 			}
-			foreach ( $users as $u ) {
-				if ( ! in_array( (int) $u->ID, $admin_ids, true ) ) {
-					continue;
-				}
-				$out[] = array(
-					'user_id'         => (int) $u->ID,
-					'user_login'      => (string) $u->user_login,
-					'user_registered' => $ts,
-					'shared_with'     => count( $users ) - 1,
-				);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$others = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->users} WHERE user_registered = %s AND ID <> %d", $ts, (int) $u->ID ) );
+			if ( $others < 1 ) {
+				continue;
 			}
+			$out[] = array(
+				'user_id'         => (int) $u->ID,
+				'user_login'      => (string) $u->user_login,
+				'user_registered' => $ts,
+				'shared_with'     => $others,
+			);
 		}
 		return $out;
 	}
@@ -491,6 +490,12 @@ class TSOSK_Mod_Security {
 		}
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
+			return;
+		}
+
+		// wp_insert_user() assigns the role of a brand-new account through set_role() just before it fires
+		// user_register, which already sends its own "new administrator" alert: skip it to avoid a duplicate.
+		if ( empty( $old_roles ) && $user->user_registered && strtotime( $user->user_registered . ' UTC' ) >= time() - MINUTE_IN_SECONDS ) {
 			return;
 		}
 
@@ -737,11 +742,22 @@ class TSOSK_Mod_Security {
 		}
 
 		$flags   = array();
+		$current = $this->get_mu_settings();
 		$allowed = array( 'DISALLOW_FILE_EDIT', 'DISALLOW_FILE_MODS', 'FORCE_SSL_ADMIN' );
 		foreach ( $allowed as $c ) {
 			// JS sends the key as 'tsosk_security_' . lowercase_constant_name.
-			$post_key    = 'tsosk_security_' . strtolower( $c );
+			$post_key = 'tsosk_security_' . strtolower( $c );
+			if ( ! isset( $_POST[ $post_key ] ) ) {
+				// Not sent: the toggle is locked by wp-config.php, so keep whatever was stored.
+				$flags[ $c ] = ! empty( $current[ $c ] );
+				continue;
+			}
 			$flags[ $c ] = ! empty( $_POST[ $post_key ] );
+		}
+
+		// Forcing HTTPS on a request that is not HTTPS would lock the admin out of the site.
+		if ( ! empty( $flags['FORCE_SSL_ADMIN'] ) && empty( $current['FORCE_SSL_ADMIN'] ) && ! is_ssl() ) {
+			wp_send_json_error( __( 'FORCE_SSL_ADMIN was not enabled: you are not on HTTPS right now, so forcing it could lock you out of the admin. Open this page over https:// and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
 		$result = $this->write_mu_plugin( $flags );
@@ -1038,8 +1054,8 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 						printf(
 							/* translators: 1: date, 2: time */
 							esc_html__( 'Last tested: %1$s at %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							esc_html( gmdate( 'Y-m-d', (int) $uploads_test['checked_at'] ) ),
-							esc_html( gmdate( 'H:i', (int) $uploads_test['checked_at'] ) )
+							esc_html( wp_date( 'Y-m-d', (int) $uploads_test['checked_at'] ) ),
+							esc_html( wp_date( 'H:i', (int) $uploads_test['checked_at'] ) )
 						);
 						?>
 						</span>

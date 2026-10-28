@@ -32,10 +32,11 @@ class TSOSK_Site_Status {
 			'action-scheduler'  => 'action scheduler woocommerce queue background jobs cola tareas segundo plano cua tasques pending failed pendientes fallidas',
 			'debug'             => 'debug wp_debug debug.log log logs errors error errores depuracion depuracio developer desarrollador desenvolupador savequeries script_debug display php notices warnings deprecated fatal modo desarrollador',
 			'options-editor'    => 'options editor wp_options option opciones opcions autoload autoloaded autocarga database edit editar siteurl home blogname serialized json add delete eliminar',
+			'leftovers'         => 'leftovers plugin theme residues orphan orphaned uninstalled removed deleted old restos residuos huerfanos restes residus orfes plugins temas temes wp-content database base datos dades clean limpiar netejar',
 			'meta-editor'       => 'meta postmeta post_meta usermeta user_meta custom fields campos personalizados metadatos metadades camps',
 			'option-library'    => 'option library biblioteca opciones plugin options documented documentadas catalog catalogo cataleg opcions plugins wp_options reference referencia',
 			'site-snapshot'     => 'export import snapshot configuration config settings backup copia seguridad exportar importar configuracion configuracio migrar migrate json restore restaurar undo deshacer environment entorno',
-			'options'           => 'link inspector links enlaces rotos broken links broken 404 enllacos trencats checker revisar enlaces',
+			'tso-plugins'       => 'link inspector links enlaces rotos broken links broken 404 enllacos trencats checker revisar enlaces database db mysql tables tablas taules options opciones orphan huerfanas orfes cleaner limpiador neteja optimize optimizar optimitzar repair reparar overhead size tamano mida bloat wp_options autoload cleanup leftover residual base datos limpieza more tso plugins mas plugins tso mes plugins tso options tables cleaner',
 			'transients'        => 'transient transients transientes cache cached expired caducados purge purgar autoload cleanup limpieza neteja delete eliminar',
 			'view-counter'      => 'view counter visits visitas visites pageviews statistics estadisticas estadistiques stats analytics downloads descargas descarregues most viewed mas vistos outbound clicks enlaces salientes tracking contador de visitas',
 			'constants'         => 'constants constantes wp-config wp-config.php define defines memory limit wp_memory_limit paths urls database security autosave revisions multisite php version upload max filesize max execution time system information environment overrides sistema informacion',
@@ -43,7 +44,6 @@ class TSOSK_Site_Status {
 			'rest-api'          => 'rest api rest-api json wp-json endpoint endpoints namespace namespaces user enumeration enumeracion usuarios authors autores block bloquear disable deshabilitar anonymous anonimo',
 			'heartbeat'         => 'heartbeat latido pulse admin-ajax ajax cpu load carga autosave interval intervalo',
 			'update-manager'    => 'updates update actualizaciones actualitzacions automatic automaticas automatiques auto-update core plugin theme tema themes plugins email notifications notificaciones notificacions disable updates bloquear pause version versions',
-			'database'          => 'database db mysql tables tablas taules options opciones orphan huerfanas orfes cleaner limpiador neteja optimize optimizar optimitzar repair reparar overhead size tamano mida bloat wp_options autoload cleanup leftover residual base datos limpieza',
 			'slow-queries'      => 'slow queries slow query consultas lentas consultes lentes sql mysql savequeries performance rendimiento rendiment duplicate queries database profiling query monitor',
 			'search-replace'    => 'search replace buscar reemplazar substituir canviar domain dominio domini url migration migracion migracio migrate http https regex serialized backup preview vista previa wp_posts find',
 			'hooks'             => 'hooks hook actions action filters filter callbacks priority prioridad prioritat add_action add_filter inspector acciones filtros',
@@ -486,8 +486,7 @@ class TSOSK_Site_Status {
 			);
 		}
 
-		$maintenance = get_option( 'tsosk_maintenance', array() );
-		if ( is_array( $maintenance ) && ! empty( $maintenance['enabled'] ) ) {
+		if ( class_exists( 'TSOSK_Mod_Maintenance' ) && TSOSK_Mod_Maintenance::is_active_now() ) {
 			$badges[] = array(
 				'label' => __( 'Maintenance', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'type'  => 'warn',
