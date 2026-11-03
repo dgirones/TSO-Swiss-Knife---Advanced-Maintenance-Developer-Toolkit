@@ -15179,3 +15179,9 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-login-protect.php:0
 msgid "Swiss Knife asks for an email code and TSO Login Organizer asks for its own second factor, so the same user is asked twice. Use the two-step check of only one plugin."
 msgstr ""
+
+msgid "Log setup help (already configured)"
+msgstr ""
+
+msgid "Log configured at %s. WordPress creates the file when the first error is written, and it will then appear here."
+msgstr ""
