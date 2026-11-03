@@ -1039,6 +1039,15 @@ class TSOSK_Mod_Debug {
 			<p class="description">
 				<?php esc_html_e( 'Only the error logs that exist inside this WordPress installation are listed. When WordPress or PHP creates a new one, it appears here the next time you open this tab. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<?php
+			// Hide the setup help once wp-config.php already logs to the managed path with WP_DEBUG on.
+			$managed_path_now = $this->managed_debug_log_path();
+			$log_is_managed   = '' !== $managed_path_now
+				&& defined( 'WP_DEBUG' ) && WP_DEBUG
+				&& defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG )
+				&& wp_normalize_path( WP_DEBUG_LOG ) === wp_normalize_path( $managed_path_now );
+			?>
+			<?php if ( ! $log_is_managed ) : ?>
 			<div class="tsosk-notice tsosk-notice-info tsosk-log-help">
 				<ul class="tsosk-log-help-list">
 					<li>
@@ -1095,6 +1104,7 @@ class TSOSK_Mod_Debug {
 				</div>
 				<?php endif; ?>
 			</div>
+			<?php endif; ?>
 			<?php if ( empty( $logs ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
 				<?php esc_html_e( 'No error logs detected yet. They will appear here automatically once WordPress or PHP creates one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
