@@ -11031,11 +11031,11 @@ msgstr "Obre wp-config.php i enganxa aquesta línia just a sobre de %s:"
 msgid "Copy"
 msgstr "Copia"
 
-msgid "If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it with this one instead of adding a second one."
-msgstr "Si wp-config.php ja té una línia <code>WP_DEBUG_LOG</code>, substitueix-la per aquesta en lloc d'afegir-ne una segona."
+msgid "If wp-config.php already has a <code>WP_DEBUG_LOG</code> line (for example <code>define( 'WP_DEBUG_LOG', true );</code>), delete that old line. Keep only one <code>WP_DEBUG_LOG</code> line, otherwise WordPress shows \"Constant WP_DEBUG_LOG already defined\"."
+msgstr "Si wp-config.php ja té una línia <code>WP_DEBUG_LOG</code> (per exemple <code>define( 'WP_DEBUG_LOG', true );</code>), esborra aquella línia antiga. Deixa només una línia <code>WP_DEBUG_LOG</code>; si no, WordPress mostrarà «Constant WP_DEBUG_LOG already defined»."
 
-msgid "<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log inside this plugin's uploads folder, which can be emptied and shrunk from this screen."
-msgstr "<code>WP_DEBUG</code> també ha de ser true. Llavors els errors es guardaran en un log dins la carpeta d'uploads d'aquest plugin, que es pot buidar i reduir des d'aquesta pantalla."
+msgid "Leave the separate <code>define( 'WP_DEBUG', true );</code> line as it is: <code>WP_DEBUG</code> must be true (only that line, not <code>WP_DEBUG_LOG</code>). Errors will then be saved to a log inside this plugin's uploads folder, which can be emptied and shrunk from this screen."
+msgstr "Deixa tal com està la línia separada <code>define( 'WP_DEBUG', true );</code>: <code>WP_DEBUG</code> ha de ser true (només aquesta línia, no <code>WP_DEBUG_LOG</code>). Llavors els errors es guardaran en un log dins la carpeta d'uploads d'aquest plugin, que es pot buidar i reduir des d'aquesta pantalla."
 
 msgid "Copied to clipboard."
 msgstr "Copiat al porta-retalls."
@@ -15331,3 +15331,9 @@ msgstr "Tots dos plugins bloquegen els inicis de sessió després d'intents fall
 #: includes/modules/class-tsosk-mod-login-protect.php:0
 msgid "Swiss Knife asks for an email code and TSO Login Organizer asks for its own second factor, so the same user is asked twice. Use the two-step check of only one plugin."
 msgstr "El Swiss Knife demana un codi per correu i TSO Login Organizer demana el seu propi segon factor, de manera que el mateix usuari ho ha de fer dues vegades. Fes servir la verificació en dos passos d'un sol plugin."
+
+msgid "Log setup help (already configured)"
+msgstr "Ajuda per configurar el log (ja configurat)"
+
+msgid "Log configured at %s. WordPress creates the file when the first error is written, and it will then appear here."
+msgstr "Log configurat a %s. WordPress crea el fitxer quan s'escriu el primer error, i llavors apareixerà aquí."

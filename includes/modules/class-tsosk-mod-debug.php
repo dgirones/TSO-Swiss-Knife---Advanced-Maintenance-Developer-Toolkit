@@ -587,10 +587,11 @@ class TSOSK_Mod_Debug {
 		foreach ( $lines as $ln => $line ) {
 			foreach ( array_keys( $result ) as $c ) {
 				// Match: define( 'CONSTANT', true/false ); — allow spaces and single/double quotes.
-				if ( preg_match( '/^\s*define\s*\(\s*[\'\"]{1}' . preg_quote( $c, '/' ) . '[\'\"]{1}\s*,\s*(true|false)\s*\)/i', $line, $m ) ) {
+				if ( preg_match( '/^\s*define\s*\(\s*[\'\"]{1}' . preg_quote( $c, '/' ) . '[\'\"]{1}\s*,\s*(true|false|\'[^\']*\'|\"[^\"]*\")\s*\)/i', $line, $m ) ) {
+					$is_path      = in_array( substr( $m[1], 0, 1 ), array( "'", '"' ), true );
 					$result[ $c ] = array(
 						'defined' => true,
-						'value'   => strtolower( $m[1] ),
+						'value'   => $is_path ? 'path' : strtolower( $m[1] ),
 						'line'    => $ln + 1,
 					);
 				}
@@ -923,7 +924,7 @@ class TSOSK_Mod_Debug {
 					);
 					$in_wpconfig   = $wc_state['defined'];
 					$wc_val        = $wc_state['value'];
-					$wc_mismatch   = $in_wpconfig && ( $actual_on ? 'true' : 'false' ) !== $wc_val;
+					$wc_mismatch   = $in_wpconfig && 'path' !== $wc_val && ( $actual_on ? 'true' : 'false' ) !== $wc_val;
 					// WordPress core (wp_initial_constants) defines these before any plugin loads,
 					// so the plugin JSON preset can never set them; only wp-config.php can.
 					$core_predefined = in_array( $flag_constant, array( 'WP_DEBUG', 'WP_DEBUG_LOG', 'WP_DEBUG_DISPLAY', 'SCRIPT_DEBUG' ), true );
@@ -1039,6 +1040,22 @@ class TSOSK_Mod_Debug {
 			<p class="description">
 				<?php esc_html_e( 'Only the error logs that exist inside this WordPress installation are listed. When WordPress or PHP creates a new one, it appears here the next time you open this tab. Previews are limited to the end of each file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
+			<?php
+			// Collapse the setup help once wp-config.php already logs to the managed path with WP_DEBUG on.
+			$managed_path_now = $this->managed_debug_log_path();
+			if ( '' !== $managed_path_now && ! is_dir( dirname( $managed_path_now ) ) ) {
+				// PHP cannot create folders: the managed log is never written while its folder is missing.
+				wp_mkdir_p( dirname( $managed_path_now ) );
+			}
+			$log_is_managed   = '' !== $managed_path_now
+				&& defined( 'WP_DEBUG' ) && WP_DEBUG
+				&& defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG )
+				&& wp_normalize_path( WP_DEBUG_LOG ) === wp_normalize_path( $managed_path_now );
+			?>
+			<?php if ( $log_is_managed ) : ?>
+			<details class="tsosk-log-help-details">
+				<summary><?php esc_html_e( 'Log setup help (already configured)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
+			<?php endif; ?>
 			<div class="tsosk-notice tsosk-notice-info tsosk-log-help">
 				<ul class="tsosk-log-help-list">
 					<li>
@@ -1078,7 +1095,7 @@ class TSOSK_Mod_Debug {
 						<li>
 							<?php
 							echo wp_kses(
-								__( 'If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it with this one instead of adding a second one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								__( 'If wp-config.php already has a <code>WP_DEBUG_LOG</code> line (for example <code>define( \'WP_DEBUG_LOG\', true );</code>), delete that old line. Keep only one <code>WP_DEBUG_LOG</code> line, otherwise WordPress shows "Constant WP_DEBUG_LOG already defined".', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								array( 'code' => array() )
 							);
 							?>
@@ -1086,7 +1103,7 @@ class TSOSK_Mod_Debug {
 						<li>
 							<?php
 							echo wp_kses(
-								__( '<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log inside this plugin\'s uploads folder, which can be emptied and shrunk from this screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								__( 'Leave the separate <code>define( \'WP_DEBUG\', true );</code> line as it is: <code>WP_DEBUG</code> must be true (only that line, not <code>WP_DEBUG_LOG</code>). Errors will then be saved to a log inside this plugin\'s uploads folder, which can be emptied and shrunk from this screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								array( 'code' => array() )
 							);
 							?>
@@ -1095,6 +1112,22 @@ class TSOSK_Mod_Debug {
 				</div>
 				<?php endif; ?>
 			</div>
+			<?php if ( $log_is_managed ) : ?>
+			</details>
+			<?php endif; ?>
+			<?php
+			if ( $log_is_managed && ! file_exists( $managed_path_now ) ) :
+				?>
+			<div class="tsosk-notice tsosk-notice-info">
+				<?php
+				printf(
+					/* translators: %s: absolute path of the managed debug log */
+					esc_html__( 'Log configured at %s. WordPress creates the file when the first error is written, and it will then appear here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'<code>' . esc_html( $managed_path_now ) . '</code>'
+				);
+				?>
+			</div>
+			<?php endif; ?>
 			<?php if ( empty( $logs ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
 				<?php esc_html_e( 'No error logs detected yet. They will appear here automatically once WordPress or PHP creates one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
