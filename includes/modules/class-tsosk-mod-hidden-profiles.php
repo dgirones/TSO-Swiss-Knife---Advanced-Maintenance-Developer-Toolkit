@@ -120,6 +120,18 @@ class TSOSK_Mod_Hidden_Profiles {
 			remove_action( 'wp_head', 'feed_links_extra', 3 );
 		}
 
+		// Pingbacks/trackbacks only (XML-RPC can stay on for Jetpack / mobile apps).
+		if ( ! empty( $flags['disable_pingbacks'] ) && empty( $flags['disable_xmlrpc'] ) ) {
+			add_filter( 'xmlrpc_methods', array( __CLASS__, 'filter_remove_pingback_methods' ) );
+			add_filter( 'wp_headers', array( __CLASS__, 'filter_remove_pingback_header' ) );
+			add_filter( 'pre_option_default_ping_status', array( __CLASS__, 'filter_closed_comment_status' ) );
+		}
+
+		if ( ! empty( $flags['block_author_enum'] ) ) {
+			add_action( 'init', array( __CLASS__, 'block_author_query_scans' ), 1 );
+			add_filter( 'rest_endpoints', array( __CLASS__, 'filter_rest_hide_users' ) );
+		}
+
 		if ( ! empty( $flags['close_comments'] ) ) {
 			add_filter( 'pre_option_default_comment_status', array( __CLASS__, 'filter_closed_comment_status' ) );
 			add_filter( 'pre_option_default_ping_status', array( __CLASS__, 'filter_closed_comment_status' ) );
@@ -173,6 +185,72 @@ class TSOSK_Mod_Hidden_Profiles {
 	public static function disable_feeds_redirect(): void {
 		wp_safe_redirect( home_url( '/' ) );
 		exit;
+	}
+
+	/**
+	 * Remove pingback XML-RPC methods.
+	 *
+	 * @param array<string, mixed> $methods XML-RPC methods.
+	 * @return array<string, mixed>
+	 */
+	public static function filter_remove_pingback_methods( array $methods ): array {
+		unset( $methods['pingback.ping'], $methods['pingback.extensions.getPingbacks'] );
+		return $methods;
+	}
+
+	/**
+	 * Remove the X-Pingback response header.
+	 *
+	 * @param array<string, string> $headers Response headers.
+	 * @return array<string, string>
+	 */
+	public static function filter_remove_pingback_header( array $headers ): array {
+		unset( $headers['X-Pingback'] );
+		return $headers;
+	}
+
+	/**
+	 * Block classic ?author=N /author/name/ enumeration on the front end.
+	 */
+	public static function block_author_query_scans(): void {
+		if ( is_admin() ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public query-string probe; no form action.
+		$author_q = isset( $_GET['author'] ) ? sanitize_text_field( wp_unslash( $_GET['author'] ) ) : '';
+		if ( '' !== $author_q ) {
+			wp_safe_redirect( home_url( '/' ), 301 );
+			exit;
+		}
+		add_action( 'template_redirect', array( __CLASS__, 'block_author_archives_for_guests' ) );
+	}
+
+	/**
+	 * Redirect public author archives (common username probe).
+	 */
+	public static function block_author_archives_for_guests(): void {
+		if ( is_author() && ! is_user_logged_in() ) {
+			wp_safe_redirect( home_url( '/' ), 301 );
+			exit;
+		}
+	}
+
+	/**
+	 * Hide the public users REST collection from anonymous callers.
+	 *
+	 * @param array<string, mixed> $endpoints REST endpoints.
+	 * @return array<string, mixed>
+	 */
+	public static function filter_rest_hide_users( array $endpoints ): array {
+		if ( is_user_logged_in() ) {
+			return $endpoints;
+		}
+		foreach ( array_keys( $endpoints ) as $route ) {
+			if ( is_string( $route ) && ( 0 === strpos( $route, '/wp/v2/users' ) ) ) {
+				unset( $endpoints[ $route ] );
+			}
+		}
+		return $endpoints;
 	}
 
 	/**
@@ -398,11 +476,13 @@ class TSOSK_Mod_Hidden_Profiles {
 	 */
 	private function get_saved_runtime(): array {
 		$defaults = array(
-			'disable_emojis' => false,
-			'disable_embeds' => false,
-			'disable_xmlrpc' => false,
-			'disable_feeds'  => false,
-			'close_comments' => false,
+			'disable_emojis'    => false,
+			'disable_embeds'    => false,
+			'disable_xmlrpc'    => false,
+			'disable_feeds'     => false,
+			'disable_pingbacks' => false,
+			'block_author_enum' => false,
+			'close_comments'    => false,
 		);
 		$stored   = get_option( self::OPTION_KEY, array() );
 		if ( ! is_array( $stored ) ) {

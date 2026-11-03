@@ -125,7 +125,7 @@ class TSOSK_Mod_Tso_Plugins {
 				$org_url   = 'https://wordpress.org/plugins/' . $plugin['slug'] . '/';
 				$is_active = $this->is_active( (string) $plugin['file'] );
 				?>
-			<div class="<?php echo esc_attr( (string) $plugin['css'] ); ?>">
+			<div class="<?php echo esc_attr( (string) $plugin['css'] ); ?>" id="<?php echo esc_attr( (string) $plugin['css'] ); ?>">
 				<div class="tsosk-promo-hero">
 					<div class="tsosk-promo-hero-icon" aria-hidden="true">
 						<span class="dashicons <?php echo esc_attr( (string) $plugin['icon'] ); ?>"></span>

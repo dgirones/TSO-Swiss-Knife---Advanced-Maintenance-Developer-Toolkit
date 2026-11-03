@@ -673,8 +673,8 @@ class TSOSK_Mod_Media_Footprint {
 					<?php $tsosk_uploads = wp_upload_dir( null, false ); ?>
 					<?php foreach ( $stats['largest'] as $file ) : ?>
 						<?php
-						$attachment_id = (int) ( $file['attachment_id'] ?? 0 );
-						$tsosk_rel     = ltrim( (string) ( $file['relative'] ?? '' ), '/' );
+						$attachment_id  = (int) ( $file['attachment_id'] ?? 0 );
+						$tsosk_rel      = ltrim( (string) ( $file['relative'] ?? '' ), '/' );
 						$tsosk_file_url = '' !== $tsosk_rel && ! empty( $tsosk_uploads['baseurl'] ) ? trailingslashit( $tsosk_uploads['baseurl'] ) . implode( '/', array_map( 'rawurlencode', explode( '/', $tsosk_rel ) ) ) : '';
 						?>
 						<tr>

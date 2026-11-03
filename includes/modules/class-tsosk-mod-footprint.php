@@ -73,13 +73,23 @@ class TSOSK_Mod_Footprint {
 		'js',
 	);
 
-	/** @var TSOSK_Mod_Footprint|null */
+	/**
+	 * Singleton instance.
+	 *
+	 * @var TSOSK_Mod_Footprint|null
+	 */
 	private static $instance = null;
 
-	/** @var string[]|null */
+	/**
+	 * Cached list of every option name.
+	 *
+	 * @var string[]|null
+	 */
 	private $all_option_names = null;
 
 	/**
+	 * Get the singleton instance.
+	 *
 	 * @return TSOSK_Mod_Footprint
 	 */
 	public static function get_instance(): self {
@@ -89,6 +99,9 @@ class TSOSK_Mod_Footprint {
 		return self::$instance;
 	}
 
+	/**
+	 * Private constructor (singleton).
+	 */
 	private function __construct() {}
 
 	/**
@@ -103,8 +116,8 @@ class TSOSK_Mod_Footprint {
 
 		$candidates = array();
 		foreach ( $plugins as $file => $plugin ) {
-			$slug    = $this->plugin_slug( $file );
-			$matchers = $this->matchers_for_plugin( $file, $slug, $plugin );
+			$slug                = $this->plugin_slug( $file );
+			$matchers            = $this->matchers_for_plugin( $file, $slug, $plugin );
 			$candidates[ $file ] = array(
 				'name'     => $plugin['Name'] ?? $file,
 				'version'  => $plugin['Version'] ?? '',
@@ -153,9 +166,11 @@ class TSOSK_Mod_Footprint {
 	}
 
 	/**
-	 * @param string               $title Section title.
-	 * @param array<int,array>     $rows  Plugin rows.
-	 * @param bool                 $active Whether these are active plugins.
+	 * Render a grid of plugin cards.
+	 *
+	 * @param string           $title Section title.
+	 * @param array<int,array> $rows  Plugin rows.
+	 * @param bool             $active Whether these are active plugins.
 	 */
 	private function render_plugin_grid( string $title, array $rows, bool $active ): void {
 		?>
@@ -197,10 +212,10 @@ class TSOSK_Mod_Footprint {
 							}
 							?>
 						</span>
-						<?php if ( class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
+							<?php if ( class_exists( 'TSOSK_Mod_Options_Editor' ) ) : ?>
 						<a href="<?php echo esc_url( TSOSK_Mod_Options_Editor::get_admin_url_with_search( $this->best_search_prefix( $row['matchers'], $row['samples'] ) ) ); ?>"
-						   class="button button-small tsosk-fp-oe-link">
-							<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							class="button button-small tsosk-fp-oe-link">
+								<?php esc_html_e( 'View in Options Editor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 						</a>
 						<?php endif; ?>
 						<?php else : ?>
@@ -228,6 +243,8 @@ class TSOSK_Mod_Footprint {
 	}
 
 	/**
+	 * Get the slug of a plugin from its basename path.
+	 *
 	 * @param string $file Plugin basename path.
 	 * @return string
 	 */
@@ -265,7 +282,7 @@ class TSOSK_Mod_Footprint {
 			$this->add_prefix_candidate( $prefixes, str_replace( '-', '_', $td ) );
 		}
 
-		foreach ( $this->known_prefixes_for_folder( $folder !== '' ? $folder : $slug ) as $known ) {
+		foreach ( $this->known_prefixes_for_folder( '' !== $folder ? $folder : $slug ) as $known ) {
 			$this->add_prefix_candidate( $prefixes, $known, true );
 		}
 
@@ -390,16 +407,16 @@ class TSOSK_Mod_Footprint {
 		$dir = '' !== $main ? dirname( $main ) : '';
 		if ( '' !== $dir && is_dir( $dir ) ) {
 			$main_base = basename( $file );
-			foreach ( glob( $dir . '/*.php' ) ?: array() as $php_file ) {
+			foreach ( array_filter( (array) glob( $dir . '/*.php' ) ) as $php_file ) {
 				if ( basename( $php_file ) !== $main_base ) {
 					$paths[] = $php_file;
 				}
 			}
-			foreach ( glob( $dir . '/includes/*.php' ) ?: array() as $php_file ) {
+			foreach ( array_filter( (array) glob( $dir . '/includes/*.php' ) ) as $php_file ) {
 				$paths[] = $php_file;
 			}
 			foreach ( array( 'src', 'admin', 'classes', 'inc' ) as $sub ) {
-				foreach ( glob( $dir . '/' . $sub . '/*.php' ) ?: array() as $php_file ) {
+				foreach ( array_filter( (array) glob( $dir . '/' . $sub . '/*.php' ) ) as $php_file ) {
 					$paths[] = $php_file;
 				}
 			}
@@ -449,7 +466,7 @@ class TSOSK_Mod_Footprint {
 
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$names = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options}" );
+		$names                  = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options}" );
 		$this->all_option_names = array_map( 'strval', (array) $names );
 		return $this->all_option_names;
 	}
@@ -461,7 +478,7 @@ class TSOSK_Mod_Footprint {
 	 * @return array<string,string[]> option names per plugin file.
 	 */
 	private function assign_options_exclusively( array $candidates ): array {
-		$claims = array(); // option_name => [file, score]
+		$claims = array(); // Map of option_name => [file, score].
 
 		foreach ( $candidates as $file => $row ) {
 			$exact    = $row['matchers']['exact'] ?? array();
@@ -504,9 +521,9 @@ class TSOSK_Mod_Footprint {
 	 * Score how well an option name matches a plugin's matchers.
 	 * Higher is better. Exact name > longer prefix.
 	 *
-	 * @param string         $option_name Option name.
+	 * @param string             $option_name Option name.
 	 * @param array<string,bool> $exact_map Exact names.
-	 * @param string[]       $prefixes    Prefix cores.
+	 * @param string[]           $prefixes    Prefix cores.
 	 * @return int
 	 */
 	private function match_score( string $option_name, array $exact_map, array $prefixes ): int {
@@ -548,6 +565,8 @@ class TSOSK_Mod_Footprint {
 	}
 
 	/**
+	 * Build the short list of prefixes shown for a plugin.
+	 *
 	 * @param array{exact?:string[],prefixes?:string[]} $matchers Matchers.
 	 * @return string[]
 	 */

@@ -1614,19 +1614,19 @@ class TSOSK_Mod_Server_Files {
 	/**
 	 * File where a PHP callback is defined (empty when it cannot be found).
 	 *
-	 * @param mixed $callable Callback as stored by WordPress.
+	 * @param mixed $callback Callback as stored by WordPress.
 	 * @return string
 	 */
-	private function callback_file( $callable ): string {
+	private function callback_file( $callback ): string {
 		try {
-			if ( is_array( $callable ) && 2 === count( $callable ) ) {
-				$ref = new ReflectionMethod( $callable[0], (string) $callable[1] );
-			} elseif ( is_string( $callable ) && false !== strpos( $callable, '::' ) ) {
-				$ref = new ReflectionMethod( $callable );
-			} elseif ( $callable instanceof Closure || is_string( $callable ) ) {
-				$ref = new ReflectionFunction( $callable );
-			} elseif ( is_object( $callable ) && method_exists( $callable, '__invoke' ) ) {
-				$ref = new ReflectionMethod( $callable, '__invoke' );
+			if ( is_array( $callback ) && 2 === count( $callback ) ) {
+				$ref = new ReflectionMethod( $callback[0], (string) $callback[1] );
+			} elseif ( is_string( $callback ) && false !== strpos( $callback, '::' ) ) {
+				$ref = new ReflectionMethod( $callback );
+			} elseif ( $callback instanceof Closure || is_string( $callback ) ) {
+				$ref = new ReflectionFunction( $callback );
+			} elseif ( is_object( $callback ) && method_exists( $callback, '__invoke' ) ) {
+				$ref = new ReflectionMethod( $callback, '__invoke' );
 			} else {
 				return '';
 			}

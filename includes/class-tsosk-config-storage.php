@@ -647,7 +647,14 @@ class TSOSK_Config_Storage {
 			return;
 		}
 		foreach ( $data['constants'] as $const_name => $value ) {
-			if ( ! is_string( $const_name ) || ! $value ) {
+			if ( ! is_string( $const_name ) ) {
+				continue;
+			}
+			// CONCATENATE_SCRIPTS is managed by Hidden WordPress Profiles; ignore any copy left in an older security config.
+			if ( 'CONCATENATE_SCRIPTS' === $const_name ) {
+				continue;
+			}
+			if ( ! $value ) {
 				continue;
 			}
 			self::define_wp_constant_if_absent( $const_name, true );

@@ -35,6 +35,15 @@ class TSOSK_Mod_Security {
 	/** Marker wrapping our rule block inside wp-content/uploads/.htaccess. */
 	private const UPLOADS_HTACCESS_MARKER = 'TSO Swiss Knife — block PHP execution in uploads';
 
+	/** Option storing reversible Apache hardening toggles for the WP .htaccess. */
+	private const SERVER_RULES_OPTION = 'tsosk_security_server_rules';
+
+	/** Marker name passed to insert_with_markers() for the root .htaccess hardening block. */
+	private const HTACCESS_MARKER = 'TSO Swiss Knife Security';
+
+	/** Marker for wp-content/cache/.htaccess PHP block. */
+	private const CACHE_HTACCESS_MARKER = 'TSO Swiss Knife — block PHP execution in cache';
+
 	/**
 	 * Instance.
 	 *
@@ -74,6 +83,7 @@ class TSOSK_Mod_Security {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_security_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_security_save_alerts', array( $this, 'ajax_save_alerts' ) );
+		add_action( 'wp_ajax_tsosk_security_save_server_rules', array( $this, 'ajax_save_server_rules' ) );
 		add_action( 'wp_ajax_tsosk_security_revoke_app_password', array( $this, 'ajax_revoke_app_password' ) );
 		add_action( 'wp_ajax_tsosk_security_revoke_all_app_passwords', array( $this, 'ajax_revoke_all_app_passwords' ) );
 		add_action( 'wp_ajax_tsosk_security_test_uploads_php', array( $this, 'ajax_test_uploads_php' ) );
@@ -769,19 +779,140 @@ class TSOSK_Mod_Security {
 		if ( ! is_array( $profiles ) ) {
 			$profiles = array();
 		}
-		$profiles['disable_xmlrpc'] = ! empty( $_POST['tsosk_security_disable_xmlrpc'] );
-		$profiles['disable_feeds']  = ! empty( $_POST['tsosk_security_disable_feeds'] );
+		$profiles['disable_xmlrpc']    = ! empty( $_POST['tsosk_security_disable_xmlrpc'] );
+		$profiles['disable_feeds']     = ! empty( $_POST['tsosk_security_disable_feeds'] );
+		$profiles['disable_pingbacks'] = ! empty( $_POST['tsosk_security_disable_pingbacks'] );
+		$profiles['block_author_enum'] = ! empty( $_POST['tsosk_security_block_author_enum'] );
 		update_option( 'tsosk_hidden_profiles', $profiles, true ); // Read on every request.
 
-		TSOSK_Activity_Log::log( 'security', 'save', __( 'Security settings saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		$summary_bits = array();
+		foreach ( array(
+			'DISALLOW_FILE_EDIT' => 'DISALLOW_FILE_EDIT',
+			'DISALLOW_FILE_MODS' => 'DISALLOW_FILE_MODS',
+			'FORCE_SSL_ADMIN'    => 'FORCE_SSL_ADMIN',
+		) as $const => $label ) {
+			if ( ! empty( $flags[ $const ] ) ) {
+				$summary_bits[] = $label;
+			}
+		}
+		foreach ( array(
+			'disable_xmlrpc'    => __( 'Disable XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable_feeds'     => __( 'Disable RSS feeds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disable_pingbacks' => __( 'Turn off pingbacks / trackbacks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'block_author_enum' => __( 'Block author scans', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		) as $flag => $label ) {
+			if ( ! empty( $profiles[ $flag ] ) ) {
+				$summary_bits[] = $label;
+			}
+		}
+		TSOSK_Activity_Log::log(
+			'security',
+			'save',
+			empty( $summary_bits )
+				? __( 'Security hardening saved (all WordPress-layer toggles off).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: sprintf(
+					/* translators: %s: comma-separated list of enabled toggles */
+					__( 'Security hardening saved. On: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $summary_bits )
+				)
+		);
+
+		// Overview caches Health/Security checks for a few minutes; drop it so the next visit reflects these toggles.
+		if ( class_exists( 'TSOSK_Mod_Dashboard' ) ) {
+			TSOSK_Mod_Dashboard::bust_scan_cache();
+		}
 
 		wp_send_json_success( __( 'Security settings saved. Reload the page to see the new values.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
+	 * AJAX: save reversible Apache server-rule toggles (root .htaccess + cache PHP block).
+	 */
+	public function ajax_save_server_rules(): void {
+		check_ajax_referer( 'tsosk_security_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$force           = ! empty( $_POST['tsosk_security_force_server_rules'] );
+		$active_security = $this->get_active_security_plugins();
+		if ( ! empty( $active_security ) && ! $force ) {
+			wp_send_json_error(
+				sprintf(
+					/* translators: %s: comma-separated plugin names */
+					__( 'A security plugin is active (%s). Server rules stay read-only unless you confirm the override.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $active_security )
+				)
+			);
+		}
+
+		$rules = array(
+			'block_indexes'   => ! empty( $_POST['tsosk_security_block_indexes'] ),
+			'deny_wp_config'  => ! empty( $_POST['tsosk_security_deny_wp_config'] ),
+			'deny_htaccess'   => ! empty( $_POST['tsosk_security_deny_htaccess'] ),
+			'deny_sensitive'  => ! empty( $_POST['tsosk_security_deny_sensitive'] ),
+			'block_php_cache' => ! empty( $_POST['tsosk_security_block_php_cache'] ),
+		);
+
+		$result = $this->apply_server_rules( $rules );
+		if ( is_wp_error( $result ) ) {
+			// The cache rule is applied after the .htaccess block: when only it failed, the other rules are already on disk,
+			// so store them as they are (cache rule off) instead of leaving the panel out of sync with the files.
+			if ( in_array( $result->get_error_code(), array( 'no_cache_dir', 'cache_not_writable', 'cache_htaccess' ), true ) ) {
+				$rules['block_php_cache'] = false;
+				update_option( self::SERVER_RULES_OPTION, $rules, false );
+				if ( class_exists( 'TSOSK_Mod_Dashboard' ) ) {
+					TSOSK_Mod_Dashboard::bust_scan_cache();
+				}
+				wp_send_json_error(
+					sprintf(
+						/* translators: %s: reason the cache rule could not be written */
+						__( 'The other rules were saved, but: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$result->get_error_message()
+					)
+				);
+			}
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		update_option( self::SERVER_RULES_OPTION, $rules, false );
+
+		$rule_labels = array(
+			'block_indexes'   => __( 'Block directory browsing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'deny_wp_config'  => __( 'Block HTTP access to wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'deny_htaccess'   => __( 'Block access to .htaccess and .htpasswd', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'deny_sensitive'  => __( 'Block access to sensitive files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'block_php_cache' => __( 'Disable PHP execution in cache directories', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+		);
+		$on_rules    = array();
+		foreach ( $rule_labels as $key => $label ) {
+			if ( ! empty( $rules[ $key ] ) ) {
+				$on_rules[] = $label;
+			}
+		}
+		TSOSK_Activity_Log::log(
+			'security',
+			'server-rules',
+			empty( $on_rules )
+				? __( 'Security server rules cleared (TSO .htaccess block removed or empty).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: sprintf(
+					/* translators: %s: comma-separated list of enabled server rules */
+					__( 'Security server rules saved. On: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $on_rules )
+				)
+		);
+
+		if ( class_exists( 'TSOSK_Mod_Dashboard' ) ) {
+			TSOSK_Mod_Dashboard::bust_scan_cache();
+		}
+
+		wp_send_json_success( __( 'Server rules saved. Reload the page if the site behaves unexpectedly and use Server Files to review .htaccess.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/**
 	 * Remote-access flags stored in tsosk_hidden_profiles.
 	 *
-	 * @return array{disable_xmlrpc:bool,disable_feeds:bool}
+	 * @return array{disable_xmlrpc:bool,disable_feeds:bool,disable_pingbacks:bool,block_author_enum:bool}
 	 */
 	private function get_remote_access_flags(): array {
 		$stored = get_option( 'tsosk_hidden_profiles', array() );
@@ -789,9 +920,281 @@ class TSOSK_Mod_Security {
 			$stored = array();
 		}
 		return array(
-			'disable_xmlrpc' => ! empty( $stored['disable_xmlrpc'] ),
-			'disable_feeds'  => ! empty( $stored['disable_feeds'] ),
+			'disable_xmlrpc'    => ! empty( $stored['disable_xmlrpc'] ),
+			'disable_feeds'     => ! empty( $stored['disable_feeds'] ),
+			'disable_pingbacks' => ! empty( $stored['disable_pingbacks'] ),
+			'block_author_enum' => ! empty( $stored['block_author_enum'] ),
 		);
+	}
+
+	/**
+	 * Stored Apache hardening toggles.
+	 *
+	 * @return array{block_indexes:bool,deny_wp_config:bool,deny_htaccess:bool,deny_sensitive:bool,block_php_cache:bool}
+	 */
+	private function get_server_rules(): array {
+		$defaults = array(
+			'block_indexes'   => false,
+			'deny_wp_config'  => false,
+			'deny_htaccess'   => false,
+			'deny_sensitive'  => false,
+			'block_php_cache' => false,
+		);
+		$stored   = get_option( self::SERVER_RULES_OPTION, array() );
+		if ( ! is_array( $stored ) ) {
+			return $defaults;
+		}
+		foreach ( $defaults as $key => $val ) {
+			$defaults[ $key ] = ! empty( $stored[ $key ] );
+		}
+		return $defaults;
+	}
+
+	/**
+	 * Active security-suite plugins that commonly write overlapping .htaccess rules.
+	 *
+	 * @return string[] Display names.
+	 */
+	private function get_active_security_plugins(): array {
+		$known = array(
+			'better-wp-security/better-wp-security.php' => 'Kadence Security',
+			'wordfence/wordfence.php'                   => 'Wordfence',
+			'all-in-one-wp-security-and-firewall/wp-security.php' => 'All In One WP Security',
+			'really-simple-ssl/rlrsssl-really-simple-ssl.php' => 'Really Simple SSL',
+			'sucuri-scanner/sucuri.php'                 => 'Sucuri Security',
+			'wp-simple-firewall/icwp-wpsf.php'          => 'Shield Security',
+			'defender-security/wp-defender.php'         => 'Defender',
+			'malcare-security/malcare.php'              => 'MalCare',
+			'jetpack/jetpack.php'                       => '', // Only when Protect module is on; skip bare Jetpack.
+		);
+		$known = (array) apply_filters( 'tsosk_security_suite_plugins', $known );
+
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
+
+		$names = array();
+		foreach ( $known as $basename => $label ) {
+			if ( '' === $label ) {
+				continue;
+			}
+			if ( function_exists( 'is_plugin_active' ) && is_plugin_active( $basename ) ) {
+				$names[] = (string) $label;
+			}
+		}
+		return $names;
+	}
+
+	/**
+	 * Apply imported server-rule flags (option already saved by the caller).
+	 *
+	 * @param array<string,bool> $rules Rule flags.
+	 * @return true|WP_Error
+	 */
+	public function apply_imported_server_rules( array $rules ) {
+		return $this->apply_server_rules( $rules );
+	}
+
+	/**
+	 * Build and write the marked .htaccess blocks for the selected rules.
+	 *
+	 * @param array<string,bool> $rules Rule flags.
+	 * @return true|WP_Error
+	 */
+	private function apply_server_rules( array $rules ) {
+		$htaccess = tsosk_join_wp_root( '.htaccess' );
+		$lines    = $this->build_htaccess_rule_lines( $rules );
+
+		if ( ! function_exists( 'insert_with_markers' ) ) {
+			tsosk_require_wp_admin( 'includes/misc.php' );
+		}
+		if ( ! function_exists( 'insert_with_markers' ) ) {
+			return new WP_Error( 'no_markers', __( 'Could not load WordPress insert_with_markers().', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// Nginx/IIS ignore .htaccess: writing rules there would only look protective. Turning rules off stays allowed.
+		global $is_nginx, $is_IIS, $is_iis7;
+		if ( ( ! empty( $lines ) || ! empty( $rules['block_php_cache'] ) ) && ( ! empty( $is_nginx ) || ! empty( $is_IIS ) || ! empty( $is_iis7 ) ) ) {
+			return new WP_Error( 'not_apache', __( 'These rules only work on Apache or LiteSpeed. This server runs Nginx or IIS, which ignore .htaccess files.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		if ( ! empty( $lines ) || $this->htaccess_has_tso_marker( $htaccess ) ) {
+			// Keep the previous file: a rule the host does not allow (for example Options -Indexes) makes Apache answer 500 for the whole site.
+			$existed = file_exists( $htaccess );
+			$backup  = ( $existed && is_readable( $htaccess ) ) ? file_get_contents( $htaccess ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local config file.
+			$was_ok  = ! empty( $lines ) ? $this->site_responds_ok() : true;
+
+			if ( ! $existed && ! empty( $lines ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Creating empty .htaccess before marker write at WP root.
+				if ( false === file_put_contents( $htaccess, '', LOCK_EX ) ) {
+					return new WP_Error( 'htaccess_create', __( 'Could not create .htaccess at the WordPress root.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
+			}
+			if ( file_exists( $htaccess ) || ! empty( $lines ) ) {
+				// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Server config at WP root; same pattern as Server Files.
+				$ok = insert_with_markers( $htaccess, self::HTACCESS_MARKER, $lines );
+				if ( ! $ok ) {
+					return new WP_Error( 'htaccess_write', __( 'Could not update the TSO block in .htaccess. Check file permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				}
+			}
+
+			// If the site was fine before and answers with a server error now, put the previous file back.
+			if ( ! empty( $lines ) && $was_ok && ! $this->site_responds_ok() ) {
+				if ( false !== $backup ) {
+					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Restoring the .htaccess backed up above.
+					file_put_contents( $htaccess, $backup, LOCK_EX );
+				} elseif ( ! $existed ) {
+					wp_delete_file( $htaccess );
+				}
+				return new WP_Error( 'htaccess_500', __( 'The site returned a server error after the change, so the previous .htaccess was restored. Your host probably does not allow one of these rules (for example Options -Indexes).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+		}
+
+		$cache_result = $this->apply_cache_php_block( ! empty( $rules['block_php_cache'] ) );
+		if ( is_wp_error( $cache_result ) ) {
+			return $cache_result;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Whether the home page answers without a server error (5xx). A failed request is not proof of an error, so it counts as fine.
+	 *
+	 * @return bool
+	 */
+	private function site_responds_ok(): bool {
+		$response = wp_remote_get(
+			add_query_arg( 'tsosk_probe', (string) time(), home_url( '/' ) ),
+			array(
+				'timeout'     => 8,
+				'redirection' => 3,
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core filter for loopback requests.
+				'sslverify'   => (bool) apply_filters( 'https_local_ssl_verify', false ),
+				'headers'     => array( 'Cache-Control' => 'no-cache' ),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			return true;
+		}
+		return (int) wp_remote_retrieve_response_code( $response ) < 500;
+	}
+
+	/**
+	 * Whether the WP-root .htaccess already contains our marker block.
+	 *
+	 * @param string $path .htaccess path.
+	 * @return bool
+	 */
+	private function htaccess_has_tso_marker( string $path ): bool {
+		if ( '' === $path || ! is_readable( $path ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local config file.
+		$src = (string) file_get_contents( $path );
+		return false !== strpos( $src, '# BEGIN ' . self::HTACCESS_MARKER );
+	}
+
+	/**
+	 * Lines for the marked root .htaccess hardening block.
+	 *
+	 * @param array<string,bool> $rules Rule flags.
+	 * @return string[]
+	 */
+	private function build_htaccess_rule_lines( array $rules ): array {
+		$lines = array();
+		if ( ! empty( $rules['block_indexes'] ) ) {
+			$lines[] = 'Options -Indexes';
+		}
+		if ( ! empty( $rules['deny_wp_config'] ) ) {
+			$lines[] = '<Files wp-config.php>';
+			$lines[] = "\t<IfModule mod_authz_core.c>";
+			$lines[] = "\t\tRequire all denied";
+			$lines[] = "\t</IfModule>";
+			$lines[] = "\t<IfModule !mod_authz_core.c>";
+			$lines[] = "\t\tOrder allow,deny";
+			$lines[] = "\t\tDeny from all";
+			$lines[] = "\t</IfModule>";
+			$lines[] = '</Files>';
+		}
+		if ( ! empty( $rules['deny_htaccess'] ) ) {
+			$lines[] = '<FilesMatch "^\\.ht">';
+			$lines[] = "\t<IfModule mod_authz_core.c>";
+			$lines[] = "\t\tRequire all denied";
+			$lines[] = "\t</IfModule>";
+			$lines[] = "\t<IfModule !mod_authz_core.c>";
+			$lines[] = "\t\tOrder allow,deny";
+			$lines[] = "\t\tDeny from all";
+			$lines[] = "\t</IfModule>";
+			$lines[] = '</FilesMatch>';
+		}
+		if ( ! empty( $rules['deny_sensitive'] ) ) {
+			$lines[] = '<FilesMatch "(?i)^(.*\\.(sql|log|bak|old|orig|dist)|readme\\.html|license\\.txt|wp-config-sample\\.php)$">';
+			$lines[] = "\t<IfModule mod_authz_core.c>";
+			$lines[] = "\t\tRequire all denied";
+			$lines[] = "\t</IfModule>";
+			$lines[] = "\t<IfModule !mod_authz_core.c>";
+			$lines[] = "\t\tOrder allow,deny";
+			$lines[] = "\t\tDeny from all";
+			$lines[] = "\t</IfModule>";
+			$lines[] = '</FilesMatch>';
+		}
+		return $lines;
+	}
+
+	/**
+	 * Write or clear the PHP-deny block in wp-content/cache/.htaccess.
+	 *
+	 * @param bool $enable Whether to enable the block.
+	 * @return true|WP_Error
+	 */
+	private function apply_cache_php_block( bool $enable ) {
+		$cache_dir = trailingslashit( WP_CONTENT_DIR ) . 'cache';
+		if ( ! $enable ) {
+			$path = trailingslashit( $cache_dir ) . '.htaccess';
+			if ( is_readable( $path ) ) {
+				if ( ! function_exists( 'insert_with_markers' ) ) {
+					tsosk_require_wp_admin( 'includes/misc.php' );
+				}
+				if ( function_exists( 'insert_with_markers' ) ) {
+					// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Clearing our marker inside wp-content/cache only.
+					insert_with_markers( $path, self::CACHE_HTACCESS_MARKER, array() );
+				}
+			}
+			return true;
+		}
+
+		if ( ! is_dir( $cache_dir ) ) {
+			return new WP_Error(
+				'no_cache_dir',
+				__( 'wp-content/cache does not exist yet. Create it (or let a cache plugin create it) before enabling this rule.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+			);
+		}
+		if ( ! wp_is_writable( $cache_dir ) ) {
+			return new WP_Error( 'cache_not_writable', __( 'wp-content/cache is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$path = trailingslashit( $cache_dir ) . '.htaccess';
+		if ( ! function_exists( 'insert_with_markers' ) ) {
+			tsosk_require_wp_admin( 'includes/misc.php' );
+		}
+		$lines = array(
+			'<FilesMatch "\\.php$">',
+			"\t<IfModule mod_authz_core.c>",
+			"\t\tRequire all denied",
+			"\t</IfModule>",
+			"\t<IfModule !mod_authz_core.c>",
+			"\t\tOrder allow,deny",
+			"\t\tDeny from all",
+			"\t</IfModule>",
+			'</FilesMatch>',
+		);
+		// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- Hardening wp-content/cache only.
+		$ok = insert_with_markers( $path, self::CACHE_HTACCESS_MARKER, $lines );
+		if ( ! $ok ) {
+			return new WP_Error( 'cache_htaccess', __( 'Could not write the PHP block into wp-content/cache/.htaccess.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		return true;
 	}
 
 	/**
@@ -874,6 +1277,9 @@ class TSOSK_Mod_Security {
 		$checks            = $this->get_checks();
 		$mu                = $this->get_mu_settings();
 		$remote            = $this->get_remote_access_flags();
+		$server_rules      = $this->get_server_rules();
+		$security_plugins  = $this->get_active_security_plugins();
+		$server_locked     = ! empty( $security_plugins );
 		$alerts            = $this->get_alert_settings();
 		$app_passwords     = $this->get_all_application_passwords();
 		$uploads_test      = $this->get_uploads_test_result();
@@ -881,21 +1287,25 @@ class TSOSK_Mod_Security {
 		$cloned_admins     = $this->get_admins_with_cloned_registration_date();
 		$mu_exists         = TSOSK_Config_Storage::json_exists( TSOSK_Config_Storage::SECURITY_JSON );
 		$legacy_exists     = file_exists( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE );
+		$login_url         = $this->tab_url( 'login-protect' );
+		$users_url         = $this->tab_url( 'users' );
+		$cas_url           = $this->tab_url( 'comment-antispam' );
+		$server_files_url  = $this->tab_url( 'server-files' );
 
 		$toggles = array(
-			'DISALLOW_FILE_EDIT' => array(
+			\x27DISALLOW_FILE_EDIT\x27 => array(
 				'label' => 'DISALLOW_FILE_EDIT',
 				'desc'  => __( 'Hides the built-in plugin and theme code editors from the WordPress admin (Appearance › Editor, Plugins › Editor). Strongly recommended on production sites to prevent accidental or malicious code injection via the dashboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Recommended: ON on all production sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_edit',
 			),
-			'DISALLOW_FILE_MODS' => array(
+			\x27DISALLOW_FILE_MODS\x27 => array(
 				'label' => 'DISALLOW_FILE_MODS',
 				'desc'  => __( 'Prevents any plugin or theme from being installed, updated or deleted from the WordPress admin. Also disables the WordPress auto-updater. Use on hardened servers where all deploys are done via version control. Note: this also blocks WordPress core auto-updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if you rely on the admin for updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_mods',
 			),
-			'FORCE_SSL_ADMIN'    => array(
+			'FORCE_SSL_ADMIN'          => array(
 				'label' => 'FORCE_SSL_ADMIN',
 				'desc'  => __( 'Forces the WordPress login page and admin area to always use HTTPS, even if the front end runs on HTTP. Only enable this if you have a valid SSL certificate. If you do not have SSL, this will lock you out of the admin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Recommended: ON if you have SSL. Never enable without a working SSL certificate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -904,340 +1314,564 @@ class TSOSK_Mod_Security {
 		);
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening constants. Toggles save JSON config under the plugin uploads folder that is loaded at plugin init time. Constants already defined in wp-config.php take precedence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Read-only security review plus safe toggles for WordPress hardening. Constants save as JSON under the plugin uploads folder. Apache server rules use a reversible marked block in .htaccess. This does not replace a firewall or malware scanner.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-card" id="tsosk-security-remote-access">
-			<h3><?php esc_html_e( 'Remote access', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Reduce common attack vectors from anonymous visitors and remote clients.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<label class="tsosk-toggle-row">
-				<input type="checkbox" name="tsosk_security_disable_xmlrpc" id="tsosk-sec-disable-xmlrpc" value="1" <?php checked( $remote['disable_xmlrpc'] ); ?>>
-				<span>
-					<strong><?php esc_html_e( 'Disable XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-					<span class="tsosk-hint"><?php esc_html_e( 'Blocks pingbacks and remote publishing via xmlrpc.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-					<span class="tsosk-hint"><?php esc_html_e( 'Some plugins and apps need XML-RPC to work: Jetpack, the WordPress mobile apps, and remote-management tools such as MainWP, ManageWP or InfiniteWP. Check before disabling.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-					<?php $xmlrpc_dependents = $this->get_xmlrpc_dependent_plugins(); ?>
-					<?php if ( ! empty( $xmlrpc_dependents ) ) : ?>
-						<span class="tsosk-hint"><strong>
+		<?php if ( $server_locked ) : ?>
+		<div class="tsosk-notice tsosk-notice-warn" id="tsosk-security-suite-notice">
+			<?php
+			echo esc_html(
+				sprintf(
+					/* translators: %s: comma-separated plugin names */
+					__( 'A security plugin is active (%s). TSO keeps Apache server-rule writers soft-disabled to avoid overlapping .htaccess changes. You can still use WordPress-layer toggles below. Override only if you understand the risk.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					implode( ', ', $security_plugins )
+				)
+			);
+			?>
+		</div>
+		<?php endif; ?>
+
+		<h2 class="nav-tab-wrapper tsosk-sec-tabs" role="tablist">
+			<a href="#tsosk-sec-panel-overview" class="nav-tab tsosk-sec-tab nav-tab-active" data-tab="overview" role="tab" aria-selected="true"><?php esc_html_e( 'Overview', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sec-panel-hardening" class="nav-tab tsosk-sec-tab" data-tab="hardening" role="tab" aria-selected="false"><?php esc_html_e( 'Hardening WP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sec-panel-server" class="nav-tab tsosk-sec-tab" data-tab="server" role="tab" aria-selected="false"><?php esc_html_e( 'Server rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sec-panel-accounts" class="nav-tab tsosk-sec-tab" data-tab="accounts" role="tab" aria-selected="false"><?php esc_html_e( 'Accounts & keys', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+			<a href="#tsosk-sec-panel-alerts" class="nav-tab tsosk-sec-tab" data-tab="alerts" role="tab" aria-selected="false"><?php esc_html_e( 'Alerts & App passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+		</h2>
+
+		<div class="tsosk-sec-panel" id="tsosk-sec-panel-overview" role="tabpanel">
+			<div class="tsosk-card" id="tsosk-security-checks">
+				<h3><?php esc_html_e( 'Security Checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Read-only overview of common security settings. Use the other tabs to change toggles or server rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table">
+					<thead><tr>
+						<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Details', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $checks as $check ) : ?>
+						<tr>
+							<td><?php echo esc_html( $check['label'] ); ?></td>
+							<td><span class="tsosk-badge <?php echo esc_attr( $check['badge'] ); ?>"><?php echo esc_html( $check['status'] ); ?></span></td>
+							<td><?php echo esc_html( $check['details'] ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				</div>
+			</div>
+
+			<div class="tsosk-card">
+				<h3><?php esc_html_e( 'Related tools', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description">
+					<a href="<?php echo esc_url( $login_url ); ?>"><?php esc_html_e( 'Login protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					&nbsp;·&nbsp;
+					<a href="<?php echo esc_url( $cas_url ); ?>"><?php esc_html_e( 'Comment Anti-Spam', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					&nbsp;·&nbsp;
+					<a href="<?php echo esc_url( $server_files_url ); ?>"><?php esc_html_e( 'Server Files (.htaccess / robots)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					&nbsp;·&nbsp;
+					<a href="<?php echo esc_url( $users_url ); ?>"><?php esc_html_e( 'Users & Sessions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+				</p>
+				<p class="description"><?php esc_html_e( 'Bot / WAF-style protection belongs in a dedicated security plugin (Kadence Security, Wordfence, …). TSO links to login rate limits and comment spam tools instead of duplicating a firewall.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			</div>
+		</div>
+
+		<div class="tsosk-sec-panel" id="tsosk-sec-panel-hardening" role="tabpanel" hidden>
+			<div class="tsosk-card" id="tsosk-security-remote-access">
+				<h3><?php esc_html_e( 'Remote access', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Reduce common attack vectors from anonymous visitors and remote clients.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" name="tsosk_security_disable_xmlrpc" id="tsosk-sec-disable-xmlrpc" value="1" <?php checked( $remote['disable_xmlrpc'] ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Disable XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Blocks pingbacks and remote publishing via xmlrpc.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<span class="tsosk-hint"><?php esc_html_e( 'Some plugins and apps need XML-RPC to work: Jetpack, the WordPress mobile apps, and remote-management tools such as MainWP, ManageWP or InfiniteWP. Check before disabling.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+						<?php $xmlrpc_dependents = $this->get_xmlrpc_dependent_plugins(); ?>
+						<?php if ( ! empty( $xmlrpc_dependents ) ) : ?>
+							<span class="tsosk-hint"><strong>
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %s: comma-separated plugin names */
+										__( 'Needed by: %s. Do not disable it while these plugins are active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+										implode( ', ', $xmlrpc_dependents )
+									)
+								);
+								?>
+							</strong></span>
+						<?php endif; ?>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" name="tsosk_security_disable_pingbacks" id="tsosk-sec-disable-pingbacks" value="1" <?php checked( $remote['disable_pingbacks'] ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Turn off pingbacks / trackbacks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Removes pingback XML-RPC methods and the X-Pingback header while leaving the rest of XML-RPC available for apps that need it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" name="tsosk_security_disable_feeds" id="tsosk-sec-disable-feeds" value="1" <?php checked( $remote['disable_feeds'] ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Disable RSS feeds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'On: /feed/ and comment feeds redirect to the home page, so scrapers and feed readers cannot pull your posts that way. Off: keep normal RSS/Atom feeds (Feedly, aggregators, or email tools that subscribe to the site).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" name="tsosk_security_block_author_enum" id="tsosk-sec-block-author-enum" value="1" <?php checked( $remote['block_author_enum'] ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Block author scans', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Redirects public ?author=N probes and author archives for guests, and hides the users REST collection from anonymous callers. Disable if you rely on public author archives or membership directories that list users.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<p class="description" style="margin-top:12px;">
+					<?php esc_html_e( 'REST API access and namespace controls are configured in the REST API tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<a href="<?php echo esc_url( $this->tab_url( 'rest-api' ) ); ?>"><?php esc_html_e( 'Open REST API settings →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+					&nbsp;·&nbsp;
+					<a href="<?php echo esc_url( $login_url ); ?>"><?php esc_html_e( 'Login protection →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+				</p>
+			</div>
+
+			<div class="tsosk-card" id="tsosk-security-constants">
+				<h3><?php esc_html_e( 'Toggleable Security Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<?php if ( ! empty( $legacy_exists ) ) : ?>
+				<div class="tsosk-notice tsosk-notice-warn">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: legacy file path */
+							__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</div>
+				<?php endif; ?>
+				<?php if ( $mu_exists ) : ?>
+				<div class="tsosk-notice tsosk-notice-info">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: file path */
+							__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
+						),
+						array( 'code' => array() )
+					);
+					?>
+				</div>
+				<?php endif; ?>
+				<div class="tsosk-security-toggles">
+					<?php foreach ( $toggles as $const => $toggle ) : ?>
+						<?php
+						$wp_config_locked = $this->is_defined_in_wp_config( $const );
+						$is_on            = $this->constant_is_enabled( $const );
+						if ( 'FORCE_SSL_ADMIN' === $const && $this->is_force_ssl_overridden_off() ) {
+							$is_on = false;
+						}
+						$mu_on            = ! empty( $mu[ $const ] );
+						$checkbox_locked  = $wp_config_locked && 'FORCE_SSL_ADMIN' !== $const;
+						$checkbox_checked = $is_on;
+						?>
+					<div class="tsosk-security-toggle-row">
+						<label class="tsosk-heartbeat-option">
+							<div class="tsosk-heartbeat-option-header">
+								<input type="checkbox"
+										name="tsosk_security_<?php echo esc_attr( $toggle['key'] ); ?>"
+										id="tsosk-sec-<?php echo esc_attr( $toggle['key'] ); ?>"
+										data-const="<?php echo esc_attr( $toggle['key'] ); ?>"
+										<?php checked( $checkbox_checked ); ?>
+										<?php disabled( $checkbox_locked ); ?>>
+								<code><strong><?php echo esc_html( $toggle['label'] ); ?></strong></code>
+								<?php if ( $is_on ) : ?>
+									<span class="tsosk-badge tsosk-badge-ok" style="margin-left:6px;">
+										<?php esc_html_e( 'Currently ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</span>
+								<?php else : ?>
+									<span class="tsosk-badge" style="margin-left:6px;">
+										<?php esc_html_e( 'Currently OFF', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</span>
+								<?php endif; ?>
+								<?php if ( $wp_config_locked ) : ?>
+									<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;" title="<?php esc_attr_e( 'Defined in wp-config.php — edit that file to change or remove it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+										<?php esc_html_e( 'wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</span>
+								<?php elseif ( $mu_on ) : ?>
+									<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;">
+										<?php esc_html_e( 'TSO config', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</span>
+								<?php endif; ?>
+							</div>
+							<p class="description tsosk-security-toggle-desc"><?php echo esc_html( $toggle['desc'] ); ?></p>
+							<p class="description tsosk-security-toggle-rec"><?php echo esc_html( $toggle['rec'] ); ?></p>
+							<?php if ( $wp_config_locked && 'FORCE_SSL_ADMIN' === $const ) : ?>
+							<p class="description tsosk-security-toggle-wpconfig">
+								<?php esc_html_e( 'Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO override filter (saved on this panel). To remove the wp-config line entirely, edit that file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</p>
+							<?php elseif ( $wp_config_locked ) : ?>
+							<p class="description tsosk-security-toggle-wpconfig">
+								<?php esc_html_e( 'This constant is set in wp-config.php. Remove or change that line there to manage it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+							</p>
+							<?php endif; ?>
+						</label>
+					</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			<p style="margin-top:12px;">
+				<button class="button button-primary" id="tsosk-security-save"
+						data-nonce="<?php echo esc_attr( $nonce ); ?>"
+						data-save-label="<?php echo esc_attr__( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<?php esc_html_e( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-security-msg"></span>
+			</p>
+		</div>
+
+		<div class="tsosk-sec-panel" id="tsosk-sec-panel-server" role="tabpanel" hidden>
+			<div class="tsosk-card" id="tsosk-security-uploads-php">
+				<h3><?php esc_html_e( 'PHP Execution in Uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'The single control that most often stops an arbitrary-file-upload attack from becoming a full takeover: even if a vulnerable plugin lets an attacker write a PHP file into wp-content/uploads, the file can never run if the server refuses to execute PHP there. This check only reads the rules in uploads/.htaccess; it does not write or run any file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+
+				<?php if ( null === $uploads_test ) : ?>
+					<div class="tsosk-notice tsosk-notice-info" id="tsosk-sec-uploads-status">
+						<?php esc_html_e( 'Not tested yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</div>
+				<?php else : ?>
+					<?php
+					$status_class = 'executed' === $uploads_test['status'] ? 'tsosk-notice-warn' : ( 'blocked' === $uploads_test['status'] ? 'tsosk-notice-info' : 'tsosk-notice-info' );
+					?>
+					<div class="tsosk-notice <?php echo esc_attr( $status_class ); ?>" id="tsosk-sec-uploads-status">
+						<?php
+						if ( 'blocked' === $uploads_test['status'] ) :
+							?>
+							✓
 							<?php
-							echo esc_html(
-								sprintf(
-									/* translators: %s: comma-separated plugin names */
-									__( 'Needed by: %s. Do not disable it while these plugins are active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-									implode( ', ', $xmlrpc_dependents )
-								)
+elseif ( 'executed' === $uploads_test['status'] ) :
+	?>
+							⚠ <?php endif; ?>
+						<?php echo esc_html( $uploads_test['message'] ); ?>
+						<?php if ( ! empty( $uploads_test['checked_at'] ) ) : ?>
+							<br><span style="font-size:11px;color:#666;">
+							<?php
+							printf(
+								/* translators: 1: date, 2: time */
+								esc_html__( 'Last tested: %1$s at %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								esc_html( wp_date( 'Y-m-d', (int) $uploads_test['checked_at'] ) ),
+								esc_html( wp_date( 'H:i', (int) $uploads_test['checked_at'] ) )
 							);
 							?>
-						</strong></span>
+							</span>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( $uploads_protected ) : ?>
+					<div class="tsosk-notice tsosk-notice-info">
+						<?php esc_html_e( 'A PHP-execution block was found in wp-content/uploads/.htaccess (added by this plugin or already present).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</div>
+				<?php endif; ?>
+
+				<p style="margin-top:12px;">
+					<button class="button button-primary" id="tsosk-security-test-uploads-php" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Test Now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<?php if ( ! $uploads_protected ) : ?>
+					<button class="button" id="tsosk-security-protect-uploads" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Enable Protection (Apache/LiteSpeed)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
 					<?php endif; ?>
-				</span>
-			</label>
-			<label class="tsosk-toggle-row">
-				<input type="checkbox" name="tsosk_security_disable_feeds" id="tsosk-sec-disable-feeds" value="1" <?php checked( $remote['disable_feeds'] ); ?>>
-				<span>
-					<strong><?php esc_html_e( 'Disable RSS feeds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-					<span class="tsosk-hint"><?php esc_html_e( 'Redirects feed URLs; reduces discovery surface.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-				</span>
-			</label>
-			<p class="description" style="margin-top:12px;">
-				<?php esc_html_e( 'REST API access and namespace controls are configured in the REST API tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				<a href="<?php echo esc_url( $this->tab_url( 'rest-api' ) ); ?>"><?php esc_html_e( 'Open REST API settings →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
-				&nbsp;·&nbsp;
-				<a href="<?php echo esc_url( $this->tab_url( 'login-protect' ) ); ?>"><?php esc_html_e( 'Login protection →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
-			</p>
+					<span class="tsosk-ajax-msg" id="tsosk-security-uploads-msg"></span>
+				</p>
+				<p class="description" style="margin-top:8px;">
+					<?php esc_html_e( 'This writes a rule into wp-content/uploads/.htaccess. It only works on Apache or LiteSpeed. On Nginx, ask your host to add: location ~* /wp-content/uploads/.*\.php$ { deny all; }', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</p>
+			</div>
+
+			<div class="tsosk-card" id="tsosk-security-server-rules">
+				<h3><?php esc_html_e( 'Apache / LiteSpeed hardening', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Reversible rules written into a marked block in the WordPress-root .htaccess (and optionally wp-content/cache/.htaccess). Nginx/IIS ignore these files — use your host panel instead. Do not enable “forbid PHP in wp-includes”: WordPress must execute PHP there.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" id="tsosk-sec-block-indexes" value="1" <?php checked( $server_rules['block_indexes'] ); ?> <?php disabled( $server_locked ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Block directory browsing', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Adds Options -Indexes so visitors cannot list folder contents.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" id="tsosk-sec-deny-wp-config" value="1" <?php checked( $server_rules['deny_wp_config'] ); ?> <?php disabled( $server_locked ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Block HTTP access to wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Denies web requests to wp-config.php (PHP still reads the file normally).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" id="tsosk-sec-deny-htaccess" value="1" <?php checked( $server_rules['deny_htaccess'] ); ?> <?php disabled( $server_locked ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Block access to .htaccess and .htpasswd', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Denies HTTP download of .ht* files in this directory tree where the rule applies.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" id="tsosk-sec-deny-sensitive" value="1" <?php checked( $server_rules['deny_sensitive'] ); ?> <?php disabled( $server_locked ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Block access to sensitive files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Denies common leak targets: *.sql, *.log, *.bak, readme.html, license.txt, wp-config-sample.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" id="tsosk-sec-block-php-cache" value="1" <?php checked( $server_rules['block_php_cache'] ); ?> <?php disabled( $server_locked ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Disable PHP execution in cache directories', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Writes a PHP deny rule into wp-content/cache/.htaccess when that folder exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+
+				<?php if ( $server_locked ) : ?>
+				<label class="tsosk-toggle-row" style="margin-top:12px;">
+					<input type="checkbox" id="tsosk-sec-force-server-rules" value="1">
+					<span>
+						<strong><?php esc_html_e( 'Override: write TSO server rules anyway', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Only if you accept possible overlap with your security plugin’s .htaccess rules.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<?php endif; ?>
+
+				<p style="margin-top:12px;">
+					<button class="button button-primary" id="tsosk-security-save-server-rules"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>"
+							data-locked="<?php echo $server_locked ? '1' : '0'; ?>"
+							data-save-label="<?php echo esc_attr__( 'Save Server Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php esc_html_e( 'Save Server Rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<span class="tsosk-ajax-msg" id="tsosk-security-server-rules-msg"></span>
+				</p>
+				<p class="description">
+					<a href="<?php echo esc_url( $server_files_url ); ?>"><?php esc_html_e( 'Open Server Files to review the full .htaccess →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+				</p>
+			</div>
 		</div>
 
-		<div class="tsosk-card">
-			<h3><?php esc_html_e( 'User & Admin Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Get an email the moment a new user is created or an existing user is promoted to Administrator — the exact moment a rogue-admin attack happens. The alert also records how the request reached WordPress (normal admin form, or a silent background request), which is often the clearest sign something is wrong.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<label class="tsosk-toggle-row">
-				<input type="checkbox" name="tsosk_security_alerts_enabled" id="tsosk-sec-alerts-enabled" value="1" <?php checked( $alerts['enabled'] ); ?>>
-				<span>
-					<strong><?php esc_html_e( 'Email me on new administrators', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-					<span class="tsosk-hint"><?php esc_html_e( 'Covers both a brand-new account created as Administrator and any existing user promoted to Administrator.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
-				</span>
-			</label>
-			<div class="tsosk-field-row">
-				<label for="tsosk-sec-alerts-email"><?php esc_html_e( 'Notification email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
-				<input type="email" id="tsosk-sec-alerts-email" value="<?php echo esc_attr( $alerts['email'] ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
-			</div>
-			<p style="margin-top:12px;">
-				<button class="button button-primary" id="tsosk-security-save-alerts"
-						data-nonce="<?php echo esc_attr( $nonce ); ?>"
-						data-save-label="<?php echo esc_attr__( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-					<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<span class="tsosk-ajax-msg" id="tsosk-security-alerts-msg"></span>
-			</p>
-			<div class="tsosk-notice tsosk-notice-info">
-				<?php esc_html_e( 'A compromised browser extension can create a hidden admin user or issue other authenticated requests using your own logged-in session — without touching your server or triggering a firewall rule, because the request looks like it came from you. No WordPress plugin can inspect or block what runs inside your browser. If you ever see an account, Application Password, or Search Console user you do not recognize, the safest first steps are: remove any suspicious browser extensions, scan your computer for malware, then rotate your WordPress, hosting and email passwords from a clean device or profile.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		<div class="tsosk-sec-panel" id="tsosk-sec-panel-accounts" role="tabpanel" hidden>
+			<div class="tsosk-card" id="tsosk-security-accounts-keys">
+				<h3><?php esc_html_e( 'Accounts & keys', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'These items are audited here but never changed automatically — renaming the admin user or the database table prefix can lock you out or break the site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+
+				<?php
+				$admin_user    = get_user_by( 'login', 'admin' );
+				$table_prefix  = isset( $GLOBALS['table_prefix'] ) ? (string) $GLOBALS['table_prefix'] : 'wp_';
+				$default_salts = array( 'put your unique phrase here', 'put your unique phrase here' );
+				$salt_keys     = array( 'AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY', 'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT' );
+				$weak_salts    = 0;
+				$missing_salts = 0;
+				foreach ( $salt_keys as $sk ) {
+					if ( ! defined( $sk ) ) {
+						++$missing_salts;
+						continue;
+					}
+					$val = (string) constant( $sk );
+					if ( '' === $val || in_array( $val, $default_salts, true ) || strlen( $val ) < 32 ) {
+						++$weak_salts;
+					}
+				}
+				?>
+
+				<table class="widefat tsosk-table">
+					<tbody>
+						<tr>
+							<td><strong><?php esc_html_e( 'Default administrator username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></td>
+							<td>
+								<?php if ( $admin_user ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php esc_html_e( 'A user named “admin” exists. Create a new administrator with a unique login, then delete or demote “admin”.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									<a href="<?php echo esc_url( $users_url ); ?>"><?php esc_html_e( 'Open Users & Sessions →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+								<?php else : ?>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php esc_html_e( 'No user named admin found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<?php endif; ?>
+							</td>
+						</tr>
+						<tr>
+							<td><strong><?php esc_html_e( 'Database table prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></td>
+							<td>
+								<?php if ( 'wp_' === $table_prefix ) : ?>
+									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Info', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %s: table prefix */
+											__( 'Prefix is “%s” (WordPress default). Changing it requires a careful database migration — do it with a dedicated tool or host backup, never from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+											$table_prefix
+										)
+									);
+									?>
+								<?php else : ?>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: %s: table prefix */
+											__( 'Prefix is “%s” (not the default wp_).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+											$table_prefix
+										)
+									);
+									?>
+								<?php endif; ?>
+							</td>
+						</tr>
+						<tr>
+							<td><strong><?php esc_html_e( 'Security keys & salts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></td>
+							<td>
+								<?php if ( $missing_salts > 0 || $weak_salts > 0 ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: 1: missing count, 2: weak count */
+											__( '%1$d key(s) missing and %2$d look weak or still use the WordPress placeholder. Generate new keys and paste them into wp-config.php (TSO never writes that file).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+											$missing_salts,
+											$weak_salts
+										)
+									);
+									?>
+								<?php else : ?>
+									<span class="tsosk-badge tsosk-badge-ok"><?php esc_html_e( 'OK', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php esc_html_e( 'All eight AUTH/SECURE/LOGGED_IN/NONCE keys and salts are defined with non-placeholder values.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								<?php endif; ?>
+								<p class="description" style="margin:8px 0 4px;">
+									<?php esc_html_e( 'The generator link opens a plain-text page of PHP define() lines (AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY, NONCE_KEY and the matching *_SALT values). Copy that whole block into wp-config.php, replacing the old keys/salts (or the “put your unique phrase here” placeholders). TSO never writes wp-config.php — use FTP/SFTP or your host file manager. After you save, existing cookies become invalid and everyone (including you) must log in again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+								</p>
+								<ol class="description" style="margin:0 0 8px 1.25em;list-style:decimal;">
+									<li><?php esc_html_e( 'Open the generator and select all of the define(…) lines.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+									<li><?php esc_html_e( 'Open wp-config.php on the server and find the existing keys/salts block.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+									<li><?php esc_html_e( 'Replace that block with the new lines, save the file, then log in again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></li>
+								</ol>
+								<a href="https://api.wordpress.org/secret-key/1.1/salt/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open the official WordPress salt generator →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
 
-		<div class="tsosk-card" id="tsosk-security-app-passwords">
-			<h3><?php esc_html_e( 'Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Application Passwords let a script or app authenticate as a user via the REST API without a normal login — and, unlike a hidden user account, they survive deletion of the account that created them if not revoked directly. Review the list below and revoke anything you do not recognize.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<?php if ( ! class_exists( 'WP_Application_Passwords' ) ) : ?>
-				<div class="tsosk-notice tsosk-notice-info">
-					<?php esc_html_e( 'Application Passwords are not available on this site (requires WordPress 5.6+ and HTTPS, or the feature has been disabled).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		<div class="tsosk-sec-panel" id="tsosk-sec-panel-alerts" role="tabpanel" hidden>
+			<div class="tsosk-card">
+				<h3><?php esc_html_e( 'User & Admin Alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Get an email the moment a new user is created or an existing user is promoted to Administrator — the exact moment a rogue-admin attack happens. The alert also records how the request reached WordPress (normal admin form, or a silent background request), which is often the clearest sign something is wrong.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<label class="tsosk-toggle-row">
+					<input type="checkbox" name="tsosk_security_alerts_enabled" id="tsosk-sec-alerts-enabled" value="1" <?php checked( $alerts['enabled'] ); ?>>
+					<span>
+						<strong><?php esc_html_e( 'Email me on new administrators', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+						<span class="tsosk-hint"><?php esc_html_e( 'Covers both a brand-new account created as Administrator and any existing user promoted to Administrator.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					</span>
+				</label>
+				<div class="tsosk-field-row">
+					<label for="tsosk-sec-alerts-email"><?php esc_html_e( 'Notification email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
+					<input type="email" id="tsosk-sec-alerts-email" value="<?php echo esc_attr( $alerts['email'] ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
 				</div>
-			<?php elseif ( empty( $app_passwords ) ) : ?>
+				<p style="margin-top:12px;">
+					<button class="button button-primary" id="tsosk-security-save-alerts"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>"
+							data-save-label="<?php echo esc_attr__( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php esc_html_e( 'Save Alert Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<span class="tsosk-ajax-msg" id="tsosk-security-alerts-msg"></span>
+				</p>
 				<div class="tsosk-notice tsosk-notice-info">
-					<?php esc_html_e( 'No Application Passwords are currently active on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					<?php esc_html_e( 'A compromised browser extension can create a hidden admin user or issue other authenticated requests using your own logged-in session — without touching your server or triggering a firewall rule, because the request looks like it came from you. No WordPress plugin can inspect or block what runs inside your browser. If you ever see an account, Application Password, or Search Console user you do not recognize, the safest first steps are: remove any suspicious browser extensions, scan your computer for malware, then rotate your WordPress, hosting and email passwords from a clean device or profile.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</div>
-			<?php else : ?>
+			</div>
+
+			<div class="tsosk-card" id="tsosk-security-app-passwords">
+				<h3><?php esc_html_e( 'Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Application Passwords let a script or app authenticate as a user via the REST API without a normal login — and, unlike a hidden user account, they survive deletion of the account that created them if not revoked directly. Review the list below and revoke anything you do not recognize.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<?php if ( ! class_exists( 'WP_Application_Passwords' ) ) : ?>
+					<div class="tsosk-notice tsosk-notice-info">
+						<?php esc_html_e( 'Application Passwords are not available on this site (requires WordPress 5.6+ and HTTPS, or the feature has been disabled).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</div>
+				<?php elseif ( empty( $app_passwords ) ) : ?>
+					<div class="tsosk-notice tsosk-notice-info">
+						<?php esc_html_e( 'No Application Passwords are currently active on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</div>
+				<?php else : ?>
+					<div class="tsosk-table-wrap">
+					<table class="widefat tsosk-table">
+						<thead><tr>
+							<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Created', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Last used', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Last IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+							<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $app_passwords as $app ) : ?>
+							<tr>
+								<td><?php echo esc_html( $app['user_login'] ); ?></td>
+								<td><?php echo esc_html( '' !== $app['name'] ? $app['name'] : __( '(unnamed)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
+								<td><?php echo esc_html( $app['created'] ? date_i18n( get_option( 'date_format' ), $app['created'] ) : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
+								<td><?php echo esc_html( $app['last_used'] ? date_i18n( get_option( 'date_format' ), $app['last_used'] ) : __( 'Never', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
+								<td><?php echo esc_html( '' !== $app['last_ip'] ? $app['last_ip'] : '—' ); ?></td>
+								<td>
+									<button type="button" class="button tsosk-security-revoke-app-password"
+											data-nonce="<?php echo esc_attr( $nonce ); ?>"
+											data-user-id="<?php echo esc_attr( $app['user_id'] ); ?>"
+											data-uuid="<?php echo esc_attr( $app['uuid'] ); ?>">
+										<?php esc_html_e( 'Revoke', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+									</button>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+					</div>
+					<p style="margin-top:12px;">
+						<button class="button" id="tsosk-security-revoke-all-app-passwords" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							<?php esc_html_e( 'Revoke All Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+						</button>
+						<span class="tsosk-ajax-msg" id="tsosk-security-app-passwords-msg"></span>
+					</p>
+				<?php endif; ?>
+			</div>
+
+			<?php if ( ! empty( $cloned_admins ) ) : ?>
+			<div class="tsosk-card" id="tsosk-security-shared-admins">
+				<h3><?php esc_html_e( 'Administrators with a Shared Creation Date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<div class="tsosk-notice tsosk-notice-warn">
+					<?php esc_html_e( 'Some malware hides a rogue administrator account by copying another existing user\'s exact registration timestamp, so "sort users by newest" never reveals it. These administrator accounts share their creation timestamp, down to the second, with at least one other user on this site — review each one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</div>
 				<div class="tsosk-table-wrap">
 				<table class="widefat tsosk-table">
 					<thead><tr>
 						<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Created', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Last used', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Last IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Action', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Registration date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th><?php esc_html_e( 'Shared with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr></thead>
 					<tbody>
-					<?php foreach ( $app_passwords as $app ) : ?>
+					<?php foreach ( $cloned_admins as $ca ) : ?>
 						<tr>
-							<td><?php echo esc_html( $app['user_login'] ); ?></td>
-							<td><?php echo esc_html( '' !== $app['name'] ? $app['name'] : __( '(unnamed)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
-							<td><?php echo esc_html( $app['created'] ? date_i18n( get_option( 'date_format' ), $app['created'] ) : __( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
-							<td><?php echo esc_html( $app['last_used'] ? date_i18n( get_option( 'date_format' ), $app['last_used'] ) : __( 'Never', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?></td>
-							<td><?php echo esc_html( '' !== $app['last_ip'] ? $app['last_ip'] : '—' ); ?></td>
+							<td><?php echo esc_html( $ca['user_login'] ); ?></td>
+							<td class="tsosk-code"><?php echo esc_html( $ca['user_registered'] ); ?></td>
 							<td>
-								<button type="button" class="button tsosk-security-revoke-app-password"
-										data-nonce="<?php echo esc_attr( $nonce ); ?>"
-										data-user-id="<?php echo esc_attr( $app['user_id'] ); ?>"
-										data-uuid="<?php echo esc_attr( $app['uuid'] ); ?>">
-									<?php esc_html_e( 'Revoke', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</button>
+								<?php
+								printf(
+									/* translators: %d: number of other users sharing this timestamp */
+									esc_html__( '%d other user(s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+									(int) $ca['shared_with']
+								);
+								?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
 				</div>
-				<p style="margin-top:12px;">
-					<button class="button" id="tsosk-security-revoke-all-app-passwords" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Revoke All Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-					<span class="tsosk-ajax-msg" id="tsosk-security-app-passwords-msg"></span>
-				</p>
-			<?php endif; ?>
-		</div>
-
-		<div class="tsosk-card" id="tsosk-security-uploads-php">
-			<h3><?php esc_html_e( 'PHP Execution in Uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'The single control that most often stops an arbitrary-file-upload attack from becoming a full takeover: even if a vulnerable plugin lets an attacker write a PHP file into wp-content/uploads, the file can never run if the server refuses to execute PHP there. This check only reads the rules in uploads/.htaccess; it does not write or run any file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-
-			<?php if ( null === $uploads_test ) : ?>
-				<div class="tsosk-notice tsosk-notice-info" id="tsosk-sec-uploads-status">
-					<?php esc_html_e( 'Not tested yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</div>
-			<?php else : ?>
-				<?php
-				$status_class = 'executed' === $uploads_test['status'] ? 'tsosk-notice-warn' : ( 'blocked' === $uploads_test['status'] ? 'tsosk-notice-info' : 'tsosk-notice-info' );
-				?>
-				<div class="tsosk-notice <?php echo esc_attr( $status_class ); ?>" id="tsosk-sec-uploads-status">
-					<?php
-					if ( 'blocked' === $uploads_test['status'] ) :
-						?>
-						✓ 
-						<?php
-elseif ( 'executed' === $uploads_test['status'] ) :
-	?>
-						⚠ <?php endif; ?>
-					<?php echo esc_html( $uploads_test['message'] ); ?>
-					<?php if ( ! empty( $uploads_test['checked_at'] ) ) : ?>
-						<br><span style="font-size:11px;color:#666;">
-						<?php
-						printf(
-							/* translators: 1: date, 2: time */
-							esc_html__( 'Last tested: %1$s at %2$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-							esc_html( wp_date( 'Y-m-d', (int) $uploads_test['checked_at'] ) ),
-							esc_html( wp_date( 'H:i', (int) $uploads_test['checked_at'] ) )
-						);
-						?>
-						</span>
-					<?php endif; ?>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( $uploads_protected ) : ?>
-				<div class="tsosk-notice tsosk-notice-info">
-					<?php esc_html_e( 'A PHP-execution block was found in wp-content/uploads/.htaccess (added by this plugin or already present).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</div>
-			<?php endif; ?>
-
-			<p style="margin-top:12px;">
-				<button class="button button-primary" id="tsosk-security-test-uploads-php" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Test Now', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<?php if ( ! $uploads_protected ) : ?>
-				<button class="button" id="tsosk-security-protect-uploads" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-					<?php esc_html_e( 'Enable Protection (Apache/LiteSpeed)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</button>
-				<?php endif; ?>
-				<span class="tsosk-ajax-msg" id="tsosk-security-uploads-msg"></span>
-			</p>
-			<p class="description" style="margin-top:8px;">
-				<?php esc_html_e( 'This writes a rule into wp-content/uploads/.htaccess. It only works on Apache or LiteSpeed. On Nginx, ask your host to add: location ~* /wp-content/uploads/.*\.php$ { deny all; }', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</p>
-		</div>
-
-		<?php if ( ! empty( $cloned_admins ) ) : ?>
-		<div class="tsosk-card" id="tsosk-security-shared-admins">
-			<h3><?php esc_html_e( 'Administrators with a Shared Creation Date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<div class="tsosk-notice tsosk-notice-warn">
-				<?php esc_html_e( 'Some malware hides a rogue administrator account by copying another existing user\'s exact registration timestamp, so "sort users by newest" never reveals it. These administrator accounts share their creation timestamp, down to the second, with at least one other user on this site — review each one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</div>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
-				<thead><tr>
-					<th><?php esc_html_e( 'User', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Registration date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Shared with', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-				</tr></thead>
-				<tbody>
-				<?php foreach ( $cloned_admins as $ca ) : ?>
-					<tr>
-						<td><?php echo esc_html( $ca['user_login'] ); ?></td>
-						<td class="tsosk-code"><?php echo esc_html( $ca['user_registered'] ); ?></td>
-						<td>
-							<?php
-							printf(
-								/* translators: %d: number of other users sharing this timestamp */
-								esc_html__( '%d other user(s)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-								(int) $ca['shared_with']
-							);
-							?>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-			</div>
-		</div>
-		<?php endif; ?>
-
-		<div class="tsosk-card" id="tsosk-security-constants">
-			<h3><?php esc_html_e( 'Toggleable Security Constants', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<?php if ( ! empty( $legacy_exists ) ) : ?>
-			<div class="tsosk-notice tsosk-notice-warn">
-				<?php
-				echo wp_kses(
-					sprintf(
-						/* translators: %s: legacy file path */
-						__( 'Legacy file found in mu-plugins: %s — save settings once to migrate it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'<code>' . esc_html( trailingslashit( WPMU_PLUGIN_DIR ) . self::MU_FILE ) . '</code>'
-					),
-					array( 'code' => array() )
-				);
-				?>
-			</div>
-		<?php endif; ?>
-		<?php if ( $mu_exists ) : ?>
-			<div class="tsosk-notice tsosk-notice-info">
-				<?php
-				echo wp_kses(
-					sprintf(
-						/* translators: %s: file path */
-						__( 'Active config file: %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						'<code>' . esc_html( trailingslashit( TSOSK_CONFIG_DIR ) . TSOSK_Config_Storage::SECURITY_JSON ) . '</code>'
-					),
-					array( 'code' => array() )
-				);
-				?>
 			</div>
 			<?php endif; ?>
-			<div class="tsosk-security-toggles">
-				<?php foreach ( $toggles as $const => $toggle ) : ?>
-					<?php
-					$wp_config_locked = $this->is_defined_in_wp_config( $const );
-					$is_on            = $this->constant_is_enabled( $const );
-					if ( 'FORCE_SSL_ADMIN' === $const && $this->is_force_ssl_overridden_off() ) {
-						$is_on = false;
-					}
-					$mu_on            = ! empty( $mu[ $const ] );
-					$checkbox_locked  = $wp_config_locked && 'FORCE_SSL_ADMIN' !== $const;
-					$checkbox_checked = $is_on;
-					?>
-				<div class="tsosk-security-toggle-row">
-					<label class="tsosk-heartbeat-option">
-						<div class="tsosk-heartbeat-option-header">
-							<input type="checkbox"
-									name="tsosk_security_<?php echo esc_attr( $toggle['key'] ); ?>"
-									id="tsosk-sec-<?php echo esc_attr( $toggle['key'] ); ?>"
-									data-const="<?php echo esc_attr( $toggle['key'] ); ?>"
-									<?php checked( $checkbox_checked ); ?>
-									<?php disabled( $checkbox_locked ); ?>>
-							<code><strong><?php echo esc_html( $toggle['label'] ); ?></strong></code>
-							<?php if ( $is_on ) : ?>
-								<span class="tsosk-badge tsosk-badge-ok" style="margin-left:6px;">
-									<?php esc_html_e( 'Currently ON', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</span>
-							<?php else : ?>
-								<span class="tsosk-badge" style="margin-left:6px;">
-									<?php esc_html_e( 'Currently OFF', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</span>
-							<?php endif; ?>
-							<?php if ( $wp_config_locked ) : ?>
-								<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;" title="<?php esc_attr_e( 'Defined in wp-config.php — edit that file to change or remove it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-									<?php esc_html_e( 'wp-config.php', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</span>
-							<?php elseif ( $mu_on ) : ?>
-								<span class="tsosk-badge tsosk-badge-info" style="margin-left:4px;">
-									<?php esc_html_e( 'TSO config', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-								</span>
-							<?php endif; ?>
-						</div>
-						<p class="description tsosk-security-toggle-desc"><?php echo esc_html( $toggle['desc'] ); ?></p>
-						<p class="description tsosk-security-toggle-rec"><?php echo esc_html( $toggle['rec'] ); ?></p>
-						<?php if ( $wp_config_locked && 'FORCE_SSL_ADMIN' === $const ) : ?>
-						<p class="description tsosk-security-toggle-wpconfig">
-							<?php esc_html_e( 'Defined in wp-config.php. Uncheck here to disable SSL admin via a TSO override filter (saved on this panel). To remove the wp-config line entirely, edit that file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-						</p>
-						<?php elseif ( $wp_config_locked ) : ?>
-						<p class="description tsosk-security-toggle-wpconfig">
-							<?php esc_html_e( 'This constant is set in wp-config.php. Remove or change that line there to manage it from this panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-						</p>
-						<?php endif; ?>
-					</label>
-				</div>
-				<?php endforeach; ?>
-			</div>
-		</div>
-
-		<p style="margin-top:12px;">
-			<button class="button button-primary" id="tsosk-security-save"
-					data-nonce="<?php echo esc_attr( $nonce ); ?>"
-					data-save-label="<?php echo esc_attr__( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-				<?php esc_html_e( 'Save Security Settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-			</button>
-			<span class="tsosk-ajax-msg" id="tsosk-security-msg"></span>
-		</p>
-
-		<div class="tsosk-card" id="tsosk-security-checks">
-			<h3><?php esc_html_e( 'Security Checks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
-			<p class="description"><?php esc_html_e( 'Read-only overview of common security settings. This does not replace a firewall or security scanner.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
-			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
-				<thead><tr>
-					<th><?php esc_html_e( 'Check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<th><?php esc_html_e( 'Details', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-				</tr></thead>
-				<tbody>
-				<?php foreach ( $checks as $check ) : ?>
-					<tr>
-						<td><?php echo esc_html( $check['label'] ); ?></td>
-						<td><span class="tsosk-badge <?php echo esc_attr( $check['badge'] ); ?>"><?php echo esc_html( $check['status'] ); ?></span></td>
-						<td><?php echo esc_html( $check['details'] ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-			</div>
 		</div>
 		<?php
 	}
@@ -1280,25 +1914,29 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 	public function get_dashboard_checks(): array {
 		$checks = $this->get_checks();
 		// Each entry: check label => [ tab, anchor id in that tab (optional) ].
+		// Each entry: check label => [ tab, anchor, stable ignore id ].
 		$targets = array(
-			__( 'File editor disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-constants' ),
-			__( 'Force SSL admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => array( 'security', 'tsosk-security-constants' ),
-			__( 'XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                  => array( 'security', 'tsosk-security-remote-access' ),
-			__( 'Default admin username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => array( 'security', 'tsosk-security-checks' ),
-			__( 'Plugin updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )           => array( 'update-manager', 'tsosk-um-plugins' ),
-			__( 'Theme updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => array( 'update-manager', 'tsosk-um-status' ),
-			__( 'Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-app-passwords' ),
-			__( 'Recent administrator accounts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'users', 'tsosk-users-summary' ),
-			__( 'Administrator accounts with a shared creation date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-shared-admins' ),
-			__( 'PHP execution in uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-uploads-php' ),
-			__( '.htaccess permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-checks' ),
-			__( 'wp-config.php permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-checks' ),
+			__( 'File editor disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-constants', 'file_editor' ),
+			__( 'Force SSL admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => array( 'security', 'tsosk-security-constants', 'force_ssl_admin' ),
+			__( 'XML-RPC', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )                  => array( 'security', 'tsosk-security-remote-access', 'xmlrpc' ),
+			__( 'Author enumeration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )       => array( 'security', 'tsosk-security-remote-access', 'author_enum' ),
+			__( 'Default admin username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => array( 'security', 'tsosk-security-accounts-keys', 'default_admin_user' ),
+			__( 'Security keys & salts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-accounts-keys', 'salts' ),
+			__( 'Plugin updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )           => array( 'update-manager', 'tsosk-um-plugins', 'plugin_updates' ),
+			__( 'Theme updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => array( 'update-manager', 'tsosk-um-status', 'theme_updates' ),
+			__( 'Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-app-passwords', 'app_passwords' ),
+			__( 'Recent administrator accounts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'users', 'tsosk-users-summary', 'recent_admins' ),
+			__( 'Administrator accounts with a shared creation date', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-shared-admins', 'shared_admin_dates' ),
+			__( 'PHP execution in uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-uploads-php', 'uploads_php' ),
+			__( '.htaccess permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )    => array( 'security', 'tsosk-security-checks', 'htaccess_perms' ),
+			__( 'wp-config.php permissions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'security', 'tsosk-security-checks', 'wpconfig_perms' ),
 		);
 		foreach ( $checks as $i => $check ) {
 			$label = (string) ( $check['label'] ?? '' );
 			if ( isset( $targets[ $label ] ) ) {
 				$checks[ $i ]['tab']    = $targets[ $label ][0];
 				$checks[ $i ]['anchor'] = $targets[ $label ][1];
+				$checks[ $i ]['id']     = $targets[ $label ][2];
 			}
 		}
 		return $checks;
@@ -1384,11 +2022,37 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 			)
 			: $this->check_item( __( 'Theme updates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), empty( $theme_updates ), __( 'No theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), sprintf( /* translators: %d: number of theme updates */ __( '%d theme updates detected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $theme_updates ) ) );
 
+		// Live constant when already defined; otherwise the JSON flag (so Overview matches a save before the next full bootstrap).
+		$stored_flags = TSOSK_Config_Storage::get_security_flags()['constants'];
+		$file_edit_ok = defined( 'DISALLOW_FILE_EDIT' )
+			? (bool) DISALLOW_FILE_EDIT
+			: ! empty( $stored_flags['DISALLOW_FILE_EDIT'] );
+		$force_ssl_ok = is_ssl()
+			|| ( defined( 'FORCE_SSL_ADMIN' ) ? (bool) constant( 'FORCE_SSL_ADMIN' ) : ! empty( $stored_flags['FORCE_SSL_ADMIN'] ) );
+
+		$remote_flags   = $this->get_remote_access_flags();
+		$author_enum_ok = ! empty( $remote_flags['block_author_enum'] );
+		$salt_keys      = array( 'AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY', 'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT' );
+		$salts_ok       = true;
+		foreach ( $salt_keys as $sk ) {
+			if ( ! defined( $sk ) ) {
+				$salts_ok = false;
+				break;
+			}
+			$val = (string) constant( $sk );
+			if ( '' === $val || 'put your unique phrase here' === $val || strlen( $val ) < 32 ) {
+				$salts_ok = false;
+				break;
+			}
+		}
+
 		return array(
-			$this->check_item( __( 'File editor disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT, __( 'DISALLOW_FILE_EDIT is enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'Enable DISALLOW_FILE_EDIT to hide plugin/theme editors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
-			$this->check_item( __( 'Force SSL admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), is_ssl() || ( defined( 'FORCE_SSL_ADMIN' ) && (bool) constant( 'FORCE_SSL_ADMIN' ) ), __( 'Admin is using SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'Admin may not be forced through SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'File editor disabled', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $file_edit_ok, __( 'DISALLOW_FILE_EDIT is enabled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'Enable DISALLOW_FILE_EDIT to hide plugin/theme editors.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'Force SSL admin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $force_ssl_ok, __( 'Admin is using SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'Admin may not be forced through SSL.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 			$xmlrpc_check,
+			$this->check_item( __( 'Author enumeration', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $author_enum_ok, __( 'Public author probes and anonymous users REST listing are blocked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'Author scans are not blocked. Enable “Block author scans” under Hardening WP if you do not need public author archives.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 'info' ),
 			$this->check_item( __( 'Default admin username', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), ! $admin_user, __( 'No user named admin found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'A user named admin exists. Rename it to a non-obvious username.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+			$this->check_item( __( 'Security keys & salts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $salts_ok, __( 'Authentication keys and salts look unique.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), __( 'One or more security keys/salts are missing, short, or still use the WordPress placeholder. Update them in wp-config.php.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 			$plugin_updates_check,
 			$theme_updates_check,
 			$this->check_item( __( 'Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), empty( $app_passwords ), __( 'No Application Passwords are active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), sprintf( /* translators: %d: number of active Application Passwords */ __( '%d Application Password(s) active — review them below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), count( $app_passwords ) ), 'info' ),

@@ -102,6 +102,7 @@ class TSOSK_Activity_Log {
 			'staging',
 			'url-doctor',
 			'runtime-stack',
+			'dashboard',
 		);
 	}
 

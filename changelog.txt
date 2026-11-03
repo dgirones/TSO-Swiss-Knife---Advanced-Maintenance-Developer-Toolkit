@@ -1,6 +1,14 @@
 Tu Soporte Online — Swiss Knife: Advanced Maintenance & Developer Toolkit
 Changelog (older versions). The three latest versions are in readme.txt.
 
+= 1.2.4 =
+* Added: Plugin & Theme Leftovers — finds database rows that point to plugins or themes that are no longer installed (options, meta, post content), compares them with what is installed and lets you choose what to delete, with a backup to undo.
+* Fixes to Search & Replace: one single confirmation before executing, the result or error stays on screen, and a failed run (time limit, fatal error) now reports its reason.
+* Fixes to Update Manager: language packs reported as failed although WordPress installed them; the install message in the Overview lost its layout after the first click.
+* Fix in URL & HTTPS Doctor: the leftover http counter no longer counts this plugin's own options (the Search & Replace backup and the activity log keep the old text on purpose), so it reaches 0 after a replace. The count now also covers all post statuses and URLs stored with escaped slashes (the same rows Search & Replace changes), and says that Search & Replace may preview more rows because it looks in every table. The address check now recognises sites behind a proxy or CDN that ends https (with the wp-config.php fix to apply), the table is easier to read, and the server check shows when it was run.
+* Fixes to Activity History, Overview and Export/Import: entries from Plugin & Theme Leftovers now show their row count correctly and are translated, a value of "0" is no longer shown as empty, the list never exceeds the configured limit, the Overview recommendations reflect the plugins installed right now, "Undo last import" appears right after an import, and restoring previous settings keeps each option's autoload flag, and the Overview's Recent activity card no longer stretches on mobile with long entries.
+* Changed: Export/Import TSO Configuration now sits in Profiles & config (4th place), and TSO Link Inspector and TSO Options & Tables Cleaner are merged into a single "More TSO Plugins" tab, the last one of Database. Saved sidebar layouts and old links are migrated automatically.
+
 = 1.2.3 =
 * Improved: Users & Sessions redesigned (summary cards, session cards, searchable All users list with bulk role change and Undo); permission checks, pagination and counters fixed.
 * Improved: Roles & Capabilities reorganised into numbered steps with explanations and examples; fixes to templates, role comparison and input validation.

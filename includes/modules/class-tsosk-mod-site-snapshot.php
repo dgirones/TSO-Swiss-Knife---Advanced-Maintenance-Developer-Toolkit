@@ -15,13 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TSOSK_Mod_Site_Snapshot {
 
 	/** Current snapshot schema version. */
-	private const SCHEMA_VERSION = 3;
+	private const SCHEMA_VERSION = 4;
 
 	/** Supported schema versions for import. */
-	private const SUPPORTED_VERSIONS = array( 2, 3 );
+	private const SUPPORTED_VERSIONS = array( 2, 3, 4 );
 
 	/** Marker used when an option is missing on the source site. */
 	private const MISSING = '__tsosk_missing__';
+
+	/** Pseudo option key for Security Review JSON flags under uploads/config (not a wp_options row). */
+	private const SECURITY_FLAGS_KEY = '__tsosk_security_flags__';
 
 	/** Option that keeps the settings replaced by the last import, so it can be reverted. */
 	public const BACKUP_OPTION = 'tsosk_snapshot_backup';
@@ -45,25 +48,28 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	public static function get_export_map(): array {
 		return array(
-			'redirects'            => 'tsosk_redirect_rules',
-			'heartbeat'            => 'tsosk_heartbeat_settings',
-			'update_manager'       => 'tsosk_update_manager_settings',
-			'rest_api'             => 'tsosk_rest_settings',
-			'maintenance'          => 'tsosk_maintenance',
-			'hidden_profiles'      => 'tsosk_hidden_profiles',
-			'alert_settings'       => 'tsosk_alert_settings',
-			'health_suppress'      => 'tsosk_health_suppress',
-			'login_protect'        => 'tsosk_login_protect',
-			'login_lockouts'       => 'tsosk_login_lockouts',
-			'login_attempts'       => 'tsosk_login_attempts',
-			'slow_queries'         => 'tsosk_slow_query_settings',
-			'custom_404'           => 'tsosk_custom_404',
-			'admin_menu'           => 'tsosk_admin_menu_settings',
-			'admin_menu_manifest'  => 'tsosk_admin_menu_manifest',
-			'disabled_image_sizes' => 'tsosk_disabled_image_sizes',
-			'fi_ignored'           => 'tsosk_fi_ignored',
-			'comment_antispam'     => 'tsosk_comment_antispam',
-			'staging'              => 'tsosk_staging_settings',
+			'redirects'             => 'tsosk_redirect_rules',
+			'heartbeat'             => 'tsosk_heartbeat_settings',
+			'update_manager'        => 'tsosk_update_manager_settings',
+			'rest_api'              => 'tsosk_rest_settings',
+			'maintenance'           => 'tsosk_maintenance',
+			'hidden_profiles'       => 'tsosk_hidden_profiles',
+			'security_flags'        => self::SECURITY_FLAGS_KEY,
+			'security_alerts'       => 'tsosk_security_alerts',
+			'security_server_rules' => 'tsosk_security_server_rules',
+			'alert_settings'        => 'tsosk_alert_settings',
+			'health_suppress'       => 'tsosk_health_suppress',
+			'login_protect'         => 'tsosk_login_protect',
+			'login_lockouts'        => 'tsosk_login_lockouts',
+			'login_attempts'        => 'tsosk_login_attempts',
+			'slow_queries'          => 'tsosk_slow_query_settings',
+			'custom_404'            => 'tsosk_custom_404',
+			'admin_menu'            => 'tsosk_admin_menu_settings',
+			'admin_menu_manifest'   => 'tsosk_admin_menu_manifest',
+			'disabled_image_sizes'  => 'tsosk_disabled_image_sizes',
+			'fi_ignored'            => 'tsosk_fi_ignored',
+			'comment_antispam'      => 'tsosk_comment_antispam',
+			'staging'               => 'tsosk_staging_settings',
 		);
 	}
 
@@ -108,25 +114,28 @@ class TSOSK_Mod_Site_Snapshot {
 	 */
 	public static function get_section_labels(): array {
 		return array(
-			'redirects'            => __( 'Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'heartbeat'            => __( 'Heartbeat settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'update_manager'       => __( 'Update Manager settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'rest_api'             => __( 'REST API settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'maintenance'          => __( 'Maintenance mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'hidden_profiles'      => __( 'Hidden WordPress profiles (runtime flags)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'alert_settings'       => __( 'Health email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'health_suppress'      => __( 'Site Health notice suppression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'login_protect'        => __( 'Login protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'login_lockouts'       => __( 'Login lockout log (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'login_attempts'       => __( 'Login attempt counters (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'slow_queries'         => __( 'Slow query monitor settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'custom_404'           => __( 'Custom 404 page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'admin_menu'           => __( 'Admin menu customizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'admin_menu_manifest'  => __( 'Admin menu manifest (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'disabled_image_sizes' => __( 'Disabled image sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'fi_ignored'           => __( 'File integrity ignored files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'comment_antispam'     => __( 'Comment Anti-Spam settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'staging'              => __( 'Staging Mode settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'redirects'             => __( 'Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'heartbeat'             => __( 'Heartbeat settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'update_manager'        => __( 'Update Manager settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rest_api'              => __( 'REST API settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'maintenance'           => __( 'Maintenance mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'hidden_profiles'       => __( 'Hidden WordPress profiles (runtime flags)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'security_flags'        => __( 'Security Review constants (JSON)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'security_alerts'       => __( 'Security Review admin alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'security_server_rules' => __( 'Security Review server rules', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'alert_settings'        => __( 'Health email alerts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'health_suppress'       => __( 'Site Health notice suppression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_protect'         => __( 'Login protection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_lockouts'        => __( 'Login lockout log (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'login_attempts'        => __( 'Login attempt counters (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'slow_queries'          => __( 'Slow query monitor settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'custom_404'            => __( 'Custom 404 page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'admin_menu'            => __( 'Admin menu customizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'admin_menu_manifest'   => __( 'Admin menu manifest (operational)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'disabled_image_sizes'  => __( 'Disabled image sizes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'fi_ignored'            => __( 'File integrity ignored files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'comment_antispam'      => __( 'Comment Anti-Spam settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'staging'               => __( 'Staging Mode settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -147,7 +156,13 @@ class TSOSK_Mod_Site_Snapshot {
 				continue;
 			}
 			$option = $map[ $section ];
-			$value  = get_option( $option, self::MISSING );
+			if ( self::SECURITY_FLAGS_KEY === $option ) {
+				$payload[ $section ] = class_exists( 'TSOSK_Config_Storage' )
+					? TSOSK_Config_Storage::get_security_flags()
+					: null;
+				continue;
+			}
+			$value = get_option( $option, self::MISSING );
 			// null = option missing on source → import will reset/delete on target.
 			$payload[ $section ] = ( self::MISSING === $value ) ? null : $value;
 
@@ -310,12 +325,20 @@ class TSOSK_Mod_Site_Snapshot {
 
 			// Keep the current value so the whole import can be reverted.
 			if ( ! isset( $backup[ $section ] ) ) {
-				$backup[ $section ] = get_option( $map[ $section ], self::MISSING );
+				$backup[ $section ] = ( self::SECURITY_FLAGS_KEY === $map[ $section ] )
+					? ( class_exists( 'TSOSK_Config_Storage' ) ? TSOSK_Config_Storage::get_security_flags() : self::MISSING )
+					: get_option( $map[ $section ], self::MISSING );
 			}
 
-			// Explicit null = reset to defaults (delete stored option).
+			// Explicit null = reset to defaults (delete stored option / clear security JSON).
 			if ( null === $value ) {
-				delete_option( $map[ $section ] );
+				if ( self::SECURITY_FLAGS_KEY === $map[ $section ] ) {
+					if ( class_exists( 'TSOSK_Config_Storage' ) ) {
+						TSOSK_Config_Storage::save_security_flags( array(), false );
+					}
+				} else {
+					delete_option( $map[ $section ] );
+				}
 				$imported[] = $section;
 				continue;
 			}
@@ -323,6 +346,16 @@ class TSOSK_Mod_Site_Snapshot {
 			$validated = $this->validate_section_value( $section, $value );
 			if ( is_wp_error( $validated ) ) {
 				$skipped[] = $section . ': ' . $validated->get_error_message();
+				continue;
+			}
+
+			if ( self::SECURITY_FLAGS_KEY === $map[ $section ] ) {
+				$result = $this->apply_security_flags_import( $validated );
+				if ( is_wp_error( $result ) ) {
+					$skipped[] = $section . ': ' . $result->get_error_message();
+					continue;
+				}
+				$imported[] = $section;
 				continue;
 			}
 
@@ -350,6 +383,17 @@ class TSOSK_Mod_Site_Snapshot {
 
 			if ( 'staging' === $section && is_array( $validated ) && in_array( true, $validated, true ) ) {
 				$notes[] = __( 'Staging Mode switches were imported as enabled. Confirm this is a test site, or turn them off under Staging Mode before going live.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
+
+			if ( 'security_server_rules' === $section && is_array( $validated ) && class_exists( 'TSOSK_Mod_Security' ) ) {
+				$applied = TSOSK_Mod_Security::get_instance()->apply_imported_server_rules( $validated );
+				if ( is_wp_error( $applied ) ) {
+					$notes[] = sprintf(
+						/* translators: %s: error message */
+						__( 'Security server rules were saved in the database, but the .htaccess write failed: %s. Open Security Review › Server rules and save again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$applied->get_error_message()
+					);
+				}
 			}
 		}
 
@@ -437,6 +481,17 @@ class TSOSK_Mod_Site_Snapshot {
 			if ( ! isset( $map[ $section ] ) ) {
 				continue;
 			}
+			if ( self::SECURITY_FLAGS_KEY === $map[ $section ] ) {
+				if ( self::MISSING === $value || null === $value ) {
+					if ( class_exists( 'TSOSK_Config_Storage' ) ) {
+						TSOSK_Config_Storage::save_security_flags( array(), false );
+					}
+				} elseif ( is_array( $value ) ) {
+					$this->apply_security_flags_import( $value );
+				}
+				$restored[] = $section;
+				continue;
+			}
 			if ( self::MISSING === $value ) {
 				delete_option( $map[ $section ] );
 			} else {
@@ -519,6 +574,12 @@ class TSOSK_Mod_Site_Snapshot {
 				return $this->sanitize_maintenance_import( $value );
 			case 'hidden_profiles':
 				return $this->sanitize_hidden_profiles_import( $value );
+			case 'security_flags':
+				return $this->sanitize_security_flags_import( $value );
+			case 'security_alerts':
+				return $this->sanitize_security_alerts_import( $value );
+			case 'security_server_rules':
+				return $this->sanitize_security_server_rules_import( $value );
 			case 'alert_settings':
 				return $this->sanitize_alert_settings_import( $value );
 			case 'health_suppress':
@@ -729,7 +790,94 @@ class TSOSK_Mod_Site_Snapshot {
 		if ( ! is_array( $value ) ) {
 			return new WP_Error( 'invalid_hidden_profiles', __( 'Hidden profiles section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		$keys = array( 'disable_emojis', 'disable_embeds', 'disable_xmlrpc', 'disable_feeds', 'close_comments' );
+		$keys = array(
+			'disable_emojis',
+			'disable_embeds',
+			'disable_xmlrpc',
+			'disable_feeds',
+			'disable_pingbacks',
+			'block_author_enum',
+			'close_comments',
+		);
+		$out  = array();
+		foreach ( $keys as $key ) {
+			$out[ $key ] = ! empty( $value[ $key ] );
+		}
+		return $out;
+	}
+
+	/**
+	 * Sanitize Security Review JSON constants import.
+	 *
+	 * @param mixed $value Raw security flags payload.
+	 * @return array|WP_Error
+	 */
+	private function sanitize_security_flags_import( $value ) {
+		if ( ! is_array( $value ) ) {
+			return new WP_Error( 'invalid_security_flags', __( 'Security flags section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$allowed = array( 'DISALLOW_FILE_EDIT', 'DISALLOW_FILE_MODS', 'FORCE_SSL_ADMIN' );
+		$raw     = ( isset( $value['constants'] ) && is_array( $value['constants'] ) ) ? $value['constants'] : $value;
+		$out     = array();
+		foreach ( $allowed as $const ) {
+			$out[ $const ] = ! empty( $raw[ $const ] );
+		}
+		return array(
+			'constants'                    => $out,
+			'force_ssl_admin_override_off' => ! empty( $value['force_ssl_admin_override_off'] ),
+		);
+	}
+
+	/**
+	 * Write sanitized security flags into the uploads JSON config.
+	 *
+	 * @param array $validated Output of sanitize_security_flags_import().
+	 * @return true|WP_Error
+	 */
+	private function apply_security_flags_import( array $validated ) {
+		if ( ! class_exists( 'TSOSK_Config_Storage' ) ) {
+			return new WP_Error( 'no_config_storage', __( 'Security config storage is not available.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$constants = ( isset( $validated['constants'] ) && is_array( $validated['constants'] ) )
+			? $validated['constants']
+			: $validated;
+		return TSOSK_Config_Storage::save_security_flags(
+			$constants,
+			! empty( $validated['force_ssl_admin_override_off'] )
+		);
+	}
+
+	/**
+	 * Sanitize Security Review admin-alert settings import.
+	 *
+	 * @param mixed $value Raw alerts option.
+	 * @return array|WP_Error
+	 */
+	private function sanitize_security_alerts_import( $value ) {
+		if ( ! is_array( $value ) ) {
+			return new WP_Error( 'invalid_security_alerts', __( 'Security alerts section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$email = sanitize_email( (string) ( $value['email'] ?? get_option( 'admin_email' ) ) );
+		if ( '' === $email ) {
+			$email = (string) get_option( 'admin_email' );
+		}
+		return array(
+			'enabled' => ! empty( $value['enabled'] ),
+			'email'   => $email,
+		);
+	}
+
+	/**
+	 * Sanitize Security Review Apache server-rules import.
+	 *
+	 * @param mixed $value Raw server rules option.
+	 * @return array|WP_Error
+	 */
+	private function sanitize_security_server_rules_import( $value ) {
+		if ( ! is_array( $value ) ) {
+			return new WP_Error( 'invalid_security_server_rules', __( 'Security server rules section must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$keys = array( 'block_indexes', 'deny_wp_config', 'deny_htaccess', 'deny_sensitive', 'block_php_cache' );
 		$out  = array();
 		foreach ( $keys as $key ) {
 			$out[ $key ] = ! empty( $value[ $key ] );
@@ -1306,6 +1454,28 @@ class TSOSK_Mod_Site_Snapshot {
 		$out = array();
 
 		foreach ( $map as $section => $option ) {
+			if ( self::SECURITY_FLAGS_KEY === $option ) {
+				$flags = class_exists( 'TSOSK_Config_Storage' ) ? TSOSK_Config_Storage::get_security_flags() : array();
+				$on    = 0;
+				if ( ! empty( $flags['constants'] ) && is_array( $flags['constants'] ) ) {
+					foreach ( $flags['constants'] as $enabled ) {
+						if ( $enabled ) {
+							++$on;
+						}
+					}
+				}
+				if ( ! empty( $flags['force_ssl_admin_override_off'] ) ) {
+					++$on;
+				}
+				$out[ $section ] = $on > 0
+					? sprintf(
+						/* translators: %d: number of enabled flags */
+						__( 'array (%d items)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$on
+					)
+					: 'missing';
+				continue;
+			}
 			$value = get_option( $option, self::MISSING );
 			if ( self::MISSING === $value ) {
 				$out[ $section ] = 'missing';
@@ -1338,7 +1508,7 @@ class TSOSK_Mod_Site_Snapshot {
 		$operational  = self::get_operational_sections();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode switches, Slow Query Monitor, Comment Anti-Spam, and Login Protect. Does not include Debug/Security JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login Protect, and Security Review (constants JSON, admin alerts, server rules, plus Hidden Profiles runtime flags such as XML-RPC / author scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail log, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-warn">
@@ -1347,7 +1517,7 @@ class TSOSK_Mod_Site_Snapshot {
 		<div class="tsosk-notice">
 			<?php
 			$config_dir = function_exists( 'tsosk_get_uploads_subdir' ) ? tsosk_get_uploads_subdir( 'config' ) : '';
-			echo esc_html__( 'This snapshot does not include Debug Mode, Security, or Hidden Profiles JSON flags stored under the plugin uploads config folder. Copy that folder separately if you need the same constants on another site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			echo esc_html__( 'Debug Mode JSON under the plugin uploads config folder is still excluded. Security Review constants are exported via the Security Review constants (JSON) section. Hidden Profiles constant presets (not the runtime flags) remain in that config folder if you need to copy them separately.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			if ( '' !== $config_dir ) {
 				echo ' <code>' . esc_html( $config_dir ) . '</code>';
 			}

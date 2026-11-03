@@ -166,12 +166,12 @@ class TSOSK_Mod_Runtime_Stack {
 	 * @return array<string, string>
 	 */
 	private function get_php_limits(): array {
-		$memory     = (string) ini_get( 'memory_limit' );
-		$upload     = (string) ini_get( 'upload_max_filesize' );
-		$post       = (string) ini_get( 'post_max_size' );
-		$max_time   = (string) ini_get( 'max_execution_time' );
-		$max_input  = (string) ini_get( 'max_input_vars' );
-		$disabled   = (string) ini_get( 'disable_functions' );
+		$memory    = (string) ini_get( 'memory_limit' );
+		$upload    = (string) ini_get( 'upload_max_filesize' );
+		$post      = (string) ini_get( 'post_max_size' );
+		$max_time  = (string) ini_get( 'max_execution_time' );
+		$max_input = (string) ini_get( 'max_input_vars' );
+		$disabled  = (string) ini_get( 'disable_functions' );
 		// Uploads are written to upload_tmp_dir when it is set, not to the system temp folder.
 		$upload_tmp = trim( (string) ini_get( 'upload_tmp_dir' ) );
 		$temp       = '' !== $upload_tmp ? $upload_tmp : ( function_exists( 'sys_get_temp_dir' ) ? sys_get_temp_dir() : '' );
@@ -395,7 +395,7 @@ class TSOSK_Mod_Runtime_Stack {
 			<?php esc_html_e( 'A snapshot of what sits under WordPress on this server: extra cache files, must-use plugins that always load, and PHP limits that explain failed uploads or timeouts. The OPcache button is the only action, and only if the host allows it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-card">
+		<div class="tsosk-card" id="tsosk-runtime-php">
 			<h3><?php esc_html_e( 'PHP and hosting limits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<table class="tsosk-kv-table">
 				<tr>

@@ -967,6 +967,12 @@
 		if ( ! $( '.tsosk-users-tabs' ).length ) {
 			return;
 		}
+		// Deep-link from Overview (or bookmarks): #tsosk-users-panel-all opens All users.
+		var hash = window.location.hash || '';
+		if ( 0 === hash.indexOf( '#tsosk-users-panel-' ) ) {
+			tsoskUsersShowTab( hash.replace( '#tsosk-users-panel-', '' ) );
+			return;
+		}
 		// Open on Sessions unless this load follows a reload triggered from inside the module.
 		var saved = '';
 		try {
@@ -1004,6 +1010,50 @@
 				if ( r.success ) { tsoskUsersReloadKeepTab( 600 ); }
 			},
 			error: function () { showMsg( $msg, tsosk.i18n.error, 'error' ); }
+		} );
+	} );
+
+	// ── Overview: ignore warning ───────────────────────────────────────────
+
+	$( document ).on( 'click', '.tsosk-dash-ignore', function () {
+		var $btn  = $( this );
+		var $li   = $btn.closest( 'li' );
+		// Prefer attr(): jQuery .data('check-id') is wrong — HTML data-check-id maps to .data('checkId').
+		var nonce = $btn.attr( 'data-nonce' ) || $btn.data( 'nonce' ) || '';
+		var id    = $btn.attr( 'data-check-id' ) || $li.attr( 'data-check-id' ) || $btn.data( 'checkId' ) || '';
+		var scope = $btn.attr( 'data-scope' ) || $btn.data( 'scope' ) || '';
+		if ( ! nonce || ! id || ! scope ) {
+			window.alert( tsosk.i18n.error );
+			return;
+		}
+		$li.find( '.tsosk-dash-ignore' ).prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_dashboard_ignore',
+			data   : { nonce: nonce, check_id: id, scope: scope },
+			success: function ( r ) {
+				if ( ! r || ! r.success ) {
+					window.alert( ( r && r.data ) || tsosk.i18n.error );
+					$li.find( '.tsosk-dash-ignore' ).prop( 'disabled', false );
+					return;
+				}
+				$li.fadeOut( 250, function () {
+					$( this ).remove();
+					if ( ! $( '.tsosk-dash-issues > li' ).length ) {
+						window.location.reload();
+						return;
+					}
+					// Refresh the score ring and counts without leaving the page mid-action.
+					window.setTimeout( function () { window.location.reload(); }, 350 );
+				} );
+			},
+			error: function ( xhr ) {
+				var msg = tsosk.i18n.error;
+				if ( xhr && xhr.responseJSON && xhr.responseJSON.data ) {
+					msg = xhr.responseJSON.data;
+				}
+				window.alert( msg );
+				$li.find( '.tsosk-dash-ignore' ).prop( 'disabled', false );
+			}
 		} );
 	} );
 
@@ -3176,13 +3226,60 @@
 			data[ key ] = $( this ).prop( 'checked' ) ? 1 : 0;
 		} );
 
-		data.tsosk_security_disable_xmlrpc = $( '#tsosk-sec-disable-xmlrpc' ).prop( 'checked' ) ? 1 : 0;
-		data.tsosk_security_disable_feeds  = $( '#tsosk-sec-disable-feeds' ).prop( 'checked' ) ? 1 : 0;
+		data.tsosk_security_disable_xmlrpc    = $( '#tsosk-sec-disable-xmlrpc' ).prop( 'checked' ) ? 1 : 0;
+		data.tsosk_security_disable_feeds     = $( '#tsosk-sec-disable-feeds' ).prop( 'checked' ) ? 1 : 0;
+		data.tsosk_security_disable_pingbacks = $( '#tsosk-sec-disable-pingbacks' ).prop( 'checked' ) ? 1 : 0;
+		data.tsosk_security_block_author_enum = $( '#tsosk-sec-block-author-enum' ).prop( 'checked' ) ? 1 : 0;
 
 		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
 
 		ajaxPost( {
 			action : 'tsosk_security_save',
+			data   : data,
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.done, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false ).text( saveLabel );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false ).text( saveLabel );
+			}
+		} );
+	} );
+
+	$( document ).on( 'change', '#tsosk-sec-force-server-rules', function () {
+		var unlock = $( this ).prop( 'checked' );
+		$( '#tsosk-sec-block-indexes, #tsosk-sec-deny-wp-config, #tsosk-sec-deny-htaccess, #tsosk-sec-deny-sensitive, #tsosk-sec-block-php-cache' ).prop( 'disabled', ! unlock );
+	} );
+
+	$( document ).on( 'click', '#tsosk-security-save-server-rules', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-security-server-rules-msg' );
+		var saveLabel = $btn.data( 'save-label' ) || $btn.text();
+		var locked = '1' === String( $btn.data( 'locked' ) || '0' );
+		var force = $( '#tsosk-sec-force-server-rules' ).prop( 'checked' );
+		if ( locked && ! force ) {
+			showMsg( $msg, ( tsosk.i18n && tsosk.i18n.sec_server_locked ) || 'Confirm the override to write server rules while a security plugin is active.', 'error' );
+			return;
+		}
+		var data = {
+			nonce: $btn.data( 'nonce' ),
+			tsosk_security_block_indexes: $( '#tsosk-sec-block-indexes' ).prop( 'checked' ) ? 1 : 0,
+			tsosk_security_deny_wp_config: $( '#tsosk-sec-deny-wp-config' ).prop( 'checked' ) ? 1 : 0,
+			tsosk_security_deny_htaccess: $( '#tsosk-sec-deny-htaccess' ).prop( 'checked' ) ? 1 : 0,
+			tsosk_security_deny_sensitive: $( '#tsosk-sec-deny-sensitive' ).prop( 'checked' ) ? 1 : 0,
+			tsosk_security_block_php_cache: $( '#tsosk-sec-block-php-cache' ).prop( 'checked' ) ? 1 : 0,
+			tsosk_security_force_server_rules: force ? 1 : 0
+		};
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+
+		ajaxPost( {
+			action : 'tsosk_security_save_server_rules',
 			data   : data,
 			success: function ( r ) {
 				if ( r.success ) {
@@ -3710,6 +3807,63 @@
 		}
 		if ( saved ) {
 			rdShowTab( saved );
+		}
+	} );
+
+	// Security Review: sub-tabs (hash anchors from Overview open the panel that holds them).
+	function secShowTab( tab ) {
+		var $tab = $( '.tsosk-sec-tab[data-tab="' + tab + '"]' );
+		if ( ! $tab.length ) {
+			return;
+		}
+		$( '.tsosk-sec-tab' ).removeClass( 'nav-tab-active' ).attr( 'aria-selected', 'false' );
+		$tab.addClass( 'nav-tab-active' ).attr( 'aria-selected', 'true' );
+		$( '.tsosk-sec-panel' ).prop( 'hidden', true );
+		$( '#tsosk-sec-panel-' + tab ).prop( 'hidden', false );
+		try {
+			window.sessionStorage.setItem( 'tsosk_sec_tab', tab );
+		} catch ( e ) {
+			// Storage unavailable: the tab just is not remembered.
+		}
+	}
+
+	function secShowTabForHash() {
+		var hash = window.location.hash || '';
+		if ( ! $( '.tsosk-sec-tabs' ).length || 2 > hash.length || 0 !== hash.indexOf( '#tsosk-security-' ) ) {
+			return false;
+		}
+		var $target = $( hash );
+		var $panel = $target.closest( '.tsosk-sec-panel' );
+		if ( $target.length && $panel.length ) {
+			secShowTab( String( $panel.attr( 'id' ) ).replace( 'tsosk-sec-panel-', '' ) );
+			if ( $target[0].scrollIntoView ) {
+				$target[0].scrollIntoView( { block: 'start' } );
+			}
+			return true;
+		}
+		return false;
+	}
+
+	$( document ).on( 'click', '.tsosk-sec-tab', function ( e ) {
+		e.preventDefault();
+		secShowTab( $( this ).data( 'tab' ) );
+	} );
+
+	$( function () {
+		if ( ! $( '.tsosk-sec-tabs' ).length ) {
+			return;
+		}
+		if ( secShowTabForHash() ) {
+			return;
+		}
+		var saved = '';
+		try {
+			saved = window.sessionStorage.getItem( 'tsosk_sec_tab' ) || '';
+		} catch ( e ) {
+			saved = '';
+		}
+		if ( saved ) {
+			secShowTab( saved );
 		}
 	} );
 
@@ -9379,7 +9533,14 @@
 	} );
 
 	if ( $( '#tsosk-vc-top-posts-table' ).length ) {
-		tsooskVcLoadTopContent( $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' ) );
+		var $vcPills = $( '.tsosk-vc-period' ).first().closest( '.tsosk-filter-pills' );
+		// Overview tiles use 7-day totals: open the matching Top Content column with that period.
+		var vcHash = window.location.hash || '';
+		if ( '#tsosk-vc-top-posts' === vcHash || '#tsosk-vc-top-downloads' === vcHash ) {
+			$vcPills.find( '.tsosk-vc-period' ).removeClass( 'tsosk-filter-active' );
+			$vcPills.find( '.tsosk-vc-period[data-period="7"]' ).addClass( 'tsosk-filter-active' );
+		}
+		tsooskVcLoadTopContent( $vcPills );
 	}
 
 	/* ── Info popovers (long table notes) ─────────────────────────────────── */

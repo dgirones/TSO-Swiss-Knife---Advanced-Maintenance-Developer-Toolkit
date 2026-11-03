@@ -68,7 +68,7 @@ class TSOSK_Mod_Rewrite {
 	/**
 	 * Build an honest result message for a flush.
 	 *
-	 * flush_rewrite_rules( true ) silently skips the server file when .htaccess is not writable,
+	 * The flush_rewrite_rules( true ) call silently skips the server file when .htaccess is not writable,
 	 * on multisite, or when the server is not Apache-compatible, so "success" alone is misleading.
 	 *
 	 * @param bool $hard Whether a hard flush was requested.
@@ -307,7 +307,7 @@ class TSOSK_Mod_Rewrite {
 				'/\$matches\[([1-9][0-9]*)\]/',
 				static function ( array $ref ) use ( $matches ): string {
 					$index = (int) $ref[1];
-					return isset( $matches[ $index ] ) ? urlencode( (string) $matches[ $index ] ) : '';
+					return isset( $matches[ $index ] ) ? rawurlencode( (string) $matches[ $index ] ) : '';
 				},
 				(string) $rule_query
 			);

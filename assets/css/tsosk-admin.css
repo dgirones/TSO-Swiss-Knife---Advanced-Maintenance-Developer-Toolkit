@@ -5042,13 +5042,19 @@ a.tsosk-dash-tile.is-warn:focus {
     }
 }
 
-/* "Needs attention" row with an action button (install pending updates): same spot as "Open tool". */
+/* "Needs attention" row with action buttons (Open tool / Ignore): stacked like the install button. */
 .tsosk-dash-issue-action {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     flex: 0 0 auto;
     gap: 4px;
+}
+
+.tsosk-dash-issue-action .button {
+    min-width: 9.5em;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 /* The progress/result message sits under the button: beside it, it widened the row and pushed the rest around. */
@@ -5933,14 +5939,16 @@ a.tsosk-dash-tile.is-warn:focus {
 	.tsosk-section-flash { animation: none; box-shadow: 0 0 0 3px #2271b1; }
 }
 
-/* Comment anti-spam: sub-tabs */
+/* Comment anti-spam / Redirects / Slow Query / Users / Security: sub-tabs */
 .tsosk-cas-tabs,
 .tsosk-rd-tabs,
 .tsosk-sq-tabs,
+.tsosk-sec-tabs,
 .tsosk-users-tabs { margin: 16px 0 12px; padding-bottom: 0; }
 .tsosk-sq-panel[hidden],
 .tsosk-cas-panel[hidden],
 .tsosk-rd-panel[hidden],
+.tsosk-sec-panel[hidden],
 .tsosk-users-panel[hidden] { display: none; }
 
 /* Users & Sessions: summary cards, two rows of five. */

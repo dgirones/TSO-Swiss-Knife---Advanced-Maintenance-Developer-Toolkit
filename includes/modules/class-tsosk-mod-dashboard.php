@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TSOSK_Mod_Dashboard {
 
 	/** Transient prefix for the cached scan (suffixed with the locale). */
-	private const CACHE_PREFIX = 'tsosk_dashboard_scan2_';
+	private const CACHE_PREFIX = 'tsosk_dashboard_scan3_';
 
 	/** Cache lifetime in seconds. */
 	private const CACHE_TTL = 600;
@@ -31,6 +31,12 @@ class TSOSK_Mod_Dashboard {
 
 	/** Nonce action for the manual refresh link. */
 	private const REFRESH_NONCE = 'tsosk_dashboard_refresh';
+
+	/** Option that stores ignored Overview warnings (id => until timestamp, 0 = forever). */
+	private const IGNORE_OPTION = 'tsosk_dashboard_ignored';
+
+	/** Nonce action for ignore buttons. */
+	private const IGNORE_NONCE = 'tsosk_dashboard_ignore';
 
 	/**
 	 * Singleton instance.
@@ -61,7 +67,9 @@ class TSOSK_Mod_Dashboard {
 	/**
 	 * Private constructor (singleton).
 	 */
-	private function __construct() {}
+	private function __construct() {
+		add_action( 'wp_ajax_tsosk_dashboard_ignore', array( $this, 'ajax_ignore' ) );
+	}
 
 	/**
 	 * Drop the cached scan (every language), e.g. after updates were installed.
@@ -74,12 +82,130 @@ class TSOSK_Mod_Dashboard {
 	}
 
 	/**
+	 * Active ignore map: check id => until (0 = forever). Expired entries are pruned.
+	 *
+	 * @return array<string, int>
+	 */
+	private function get_active_ignores(): array {
+		$raw = get_option( self::IGNORE_OPTION, array() );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$now     = time();
+		$active  = array();
+		$changed = false;
+		foreach ( $raw as $id => $until ) {
+			$id    = sanitize_key( (string) $id );
+			$until = (int) $until;
+			if ( '' === $id ) {
+				$changed = true;
+				continue;
+			}
+			if ( 0 !== $until && $until < $now ) {
+				$changed = true;
+				continue;
+			}
+			$active[ $id ] = $until;
+		}
+		if ( $changed ) {
+			update_option( self::IGNORE_OPTION, $active, false );
+		}
+		return $active;
+	}
+
+	/**
+	 * Mark ignored warnings as info so they leave "Needs attention" and stop hurting the score.
+	 *
+	 * @param array<int, array<string, string>> $checks Normalised checks.
+	 * @return array<int, array<string, string>>
+	 */
+	private function apply_ignores( array $checks ): array {
+		$ignores = $this->get_active_ignores();
+		if ( ! $ignores ) {
+			return $checks;
+		}
+		foreach ( $checks as $i => $check ) {
+			$id = sanitize_key( (string) ( $check['id'] ?? '' ) );
+			if ( '' !== $id && isset( $ignores[ $id ] ) && 'warn' === ( $check['status'] ?? '' ) ) {
+				$checks[ $i ]['status'] = 'info';
+			}
+		}
+		return $checks;
+	}
+
+	/**
+	 * AJAX: ignore an Overview warning for 30 days or forever.
+	 */
+	public function ajax_ignore(): void {
+		if ( ! check_ajax_referer( self::IGNORE_NONCE, 'nonce', false ) ) {
+			wp_send_json_error( __( 'Session expired. Reload the page and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above via check_ajax_referer().
+		$id = isset( $_POST['check_id'] ) ? sanitize_key( wp_unslash( (string) $_POST['check_id'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above via check_ajax_referer().
+		$scope   = isset( $_POST['scope'] ) ? sanitize_key( wp_unslash( (string) $_POST['scope'] ) ) : '';
+		$allowed = array( '30d', 'always' );
+		if ( '' === $id || ! in_array( $scope, $allowed, true ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$map        = $this->get_active_ignores();
+		$map[ $id ] = 'always' === $scope ? 0 : ( time() + 30 * DAY_IN_SECONDS );
+		update_option( self::IGNORE_OPTION, $map, false );
+		self::bust_scan_cache();
+
+		TSOSK_Activity_Log::log(
+			'dashboard',
+			'update',
+			'always' === $scope
+				? sprintf(
+					/* translators: %s: warning id */
+					__( 'Overview warning ignored permanently: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$id
+				)
+				: sprintf(
+					/* translators: %s: warning id */
+					__( 'Overview warning ignored for 30 days: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$id
+				)
+		);
+
+		wp_send_json_success(
+			array(
+				'message' => 'always' === $scope
+					? __( 'Warning ignored permanently.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Warning ignored for 30 days.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			)
+		);
+	}
+
+	/**
 	 * Base URL of the plugin admin page.
 	 *
 	 * @return string
 	 */
 	private function base_url(): string {
 		return admin_url( 'tools.php?page=tso-swiss-knife' );
+	}
+
+	/**
+	 * "Ignore 30 days" / "Ignore always" buttons (same button style as "Open tool").
+	 *
+	 * @param string $check_id Stable check id.
+	 * @param string $nonce    Ignore nonce.
+	 */
+	private function render_ignore_buttons( string $check_id, string $nonce ): void {
+		if ( '' === $check_id ) {
+			return;
+		}
+		?>
+		<button type="button" class="button button-small tsosk-dash-ignore" data-check-id="<?php echo esc_attr( $check_id ); ?>" data-scope="30d" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Ignore 30 days', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+		<button type="button" class="button button-small tsosk-dash-ignore" data-check-id="<?php echo esc_attr( $check_id ); ?>" data-scope="always" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Ignore always', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+		<?php
 	}
 
 	/**
@@ -102,7 +228,7 @@ class TSOSK_Mod_Dashboard {
 	 *
 	 * @param array<string, mixed> $check       Raw check.
 	 * @param string               $default_tab Tab to link to when the check has none.
-	 * @return array{label: string, status: string, details: string, tab: string, anchor: string, url: string}
+	 * @return array{id: string, label: string, status: string, details: string, tab: string, anchor: string, url: string}
 	 */
 	private function normalise_check( array $check, string $default_tab ): array {
 		$status = (string) ( $check['status'] ?? 'info' );
@@ -120,12 +246,21 @@ class TSOSK_Mod_Dashboard {
 			$status = 'info';
 		}
 
+		$tab    = sanitize_key( (string) ( $check['tab'] ?? $default_tab ) );
+		$anchor = sanitize_key( (string) ( $check['anchor'] ?? '' ) );
+		$id     = sanitize_key( (string) ( $check['id'] ?? '' ) );
+		if ( '' === $id ) {
+			// Stable fallback when a check has no explicit id (locale-independent enough via tab+anchor+hash of label).
+			$id = sanitize_key( $tab . '_' . ( '' !== $anchor ? $anchor : 'x' ) . '_' . substr( md5( (string) ( $check['label'] ?? '' ) ), 0, 10 ) );
+		}
+
 		return array(
+			'id'      => $id,
 			'label'   => (string) ( $check['label'] ?? '' ),
 			'status'  => $status,
 			'details' => (string) ( $check['details'] ?? '' ),
-			'tab'     => sanitize_key( (string) ( $check['tab'] ?? $default_tab ) ),
-			'anchor'  => sanitize_key( (string) ( $check['anchor'] ?? '' ) ),
+			'tab'     => $tab,
+			'anchor'  => $anchor,
 			'url'     => '',
 		);
 	}
@@ -158,7 +293,9 @@ class TSOSK_Mod_Dashboard {
 		$key = self::CACHE_PREFIX . sanitize_key( (string) get_locale() );
 		if ( ! $force ) {
 			$cached = get_transient( $key );
-			if ( is_array( $cached ) && isset( $cached['checks'], $cached['time'] ) ) {
+			if ( is_array( $cached ) && isset( $cached['checks'], $cached['time'] ) && is_array( $cached['checks'] ) ) {
+				// Ignores change without rewriting the transient; re-apply on every read.
+				$cached['checks'] = $this->apply_ignores( $cached['checks'] );
 				return $cached;
 			}
 		}
@@ -176,6 +313,7 @@ class TSOSK_Mod_Dashboard {
 		}
 
 		$checks = array_merge( $checks, $this->get_extra_checks() );
+		$checks = $this->apply_ignores( $checks );
 
 		$scan = array(
 			'checks' => $checks,
@@ -304,6 +442,7 @@ class TSOSK_Mod_Dashboard {
 		$scan  = $this->get_scan( $force );
 		$stats = $this->compute_score( $scan['checks'] );
 		$base  = $this->base_url();
+		$nonce = wp_create_nonce( self::IGNORE_NONCE );
 
 		$band    = 'ok';
 		$verdict = __( 'Looking good', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
@@ -320,6 +459,10 @@ class TSOSK_Mod_Dashboard {
 
 		$updates    = $this->get_pending_updates();
 		$update_row = $this->get_update_attention( $updates );
+		$ignores    = $this->get_active_ignores();
+		if ( null !== $update_row && isset( $ignores['updates_pending'] ) ) {
+			$update_row = null;
+		}
 
 		$issues = array_values(
 			array_filter(
@@ -405,7 +548,7 @@ class TSOSK_Mod_Dashboard {
 			<?php else : ?>
 				<ul class="tsosk-dash-issues">
 					<?php if ( null !== $update_row ) : ?>
-						<li class="tsosk-dash-issue-updates">
+						<li class="tsosk-dash-issue-updates" data-check-id="updates_pending">
 							<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<span class="tsosk-dash-issue-body">
 								<strong>
@@ -427,17 +570,21 @@ class TSOSK_Mod_Dashboard {
 								<?php else : ?>
 									<a class="button button-small" href="<?php echo esc_url( $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ) ); ?>"><?php esc_html_e( 'Open tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 								<?php endif; ?>
+								<?php $this->render_ignore_buttons( 'updates_pending', $nonce ); ?>
 							</span>
 						</li>
 					<?php endif; ?>
 					<?php foreach ( $issues as $issue ) : ?>
-						<li>
+						<li data-check-id="<?php echo esc_attr( (string) ( $issue['id'] ?? '' ) ); ?>">
 							<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 							<span class="tsosk-dash-issue-body">
 								<strong><?php echo esc_html( $issue['label'] ); ?></strong>
 								<span class="tsosk-dash-issue-details"><?php echo esc_html( wp_strip_all_tags( $issue['details'] ) ); ?></span>
 							</span>
-							<a class="button button-small" href="<?php echo esc_url( $this->check_url( $issue, $base ) ); ?>"><?php esc_html_e( 'Open tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+							<span class="tsosk-dash-issue-action">
+								<a class="button button-small" href="<?php echo esc_url( $this->check_url( $issue, $base ) ); ?>"><?php esc_html_e( 'Open tool', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+								<?php $this->render_ignore_buttons( (string) ( $issue['id'] ?? '' ), $nonce ); ?>
+							</span>
 						</li>
 					<?php endforeach; ?>
 				</ul>
@@ -508,8 +655,9 @@ class TSOSK_Mod_Dashboard {
 		global $wpdb;
 
 		$checks = array();
-		$make   = static function ( string $label, string $status, string $details, string $tab, string $url = '' ): array {
+		$make   = static function ( string $id, string $label, string $status, string $details, string $tab, string $url = '' ): array {
 			return array(
+				'id'      => $id,
 				'label'   => $label,
 				'status'  => $status,
 				'details' => $details,
@@ -523,6 +671,7 @@ class TSOSK_Mod_Dashboard {
 		$links = $this->link_inspector_state();
 		if ( 'active' === $links['status'] && $links['has_data'] ) {
 			$checks[] = $make(
+				'broken_links',
 				__( 'Broken links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$links['broken'] > 0 ? 'warn' : 'ok',
 				$links['broken'] > 0
@@ -551,6 +700,7 @@ class TSOSK_Mod_Dashboard {
 			$end_text = wp_date( get_option( 'date_format' ), $end_ts );
 			if ( time() > $end_ts ) {
 				$checks[] = $make(
+					'php_support',
 					$label,
 					'warn',
 					sprintf(
@@ -563,6 +713,7 @@ class TSOSK_Mod_Dashboard {
 				);
 			} elseif ( ( $end_ts - time() ) < 120 * DAY_IN_SECONDS ) {
 				$checks[] = $make(
+					'php_support',
 					$label,
 					'warn',
 					sprintf(
@@ -575,6 +726,7 @@ class TSOSK_Mod_Dashboard {
 				);
 			} else {
 				$checks[] = $make(
+					'php_support',
 					$label,
 					'ok',
 					sprintf(
@@ -588,6 +740,7 @@ class TSOSK_Mod_Dashboard {
 			}
 		} elseif ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 			$checks[] = $make(
+				'php_support',
 				$label,
 				'warn',
 				sprintf(
@@ -609,6 +762,7 @@ class TSOSK_Mod_Dashboard {
 			}
 			$count    = count( $inactive );
 			$checks[] = $make(
+				'inactive_plugins',
 				__( 'Inactive plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				$count >= 3 ? 'warn' : 'ok',
 				$count >= 3
@@ -646,6 +800,7 @@ class TSOSK_Mod_Dashboard {
 			);
 		}
 		$checks[] = $make(
+			'expired_transients',
 			__( 'Expired transients', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$expired >= 100 ? 'warn' : 'ok',
 			$expired >= 100
@@ -663,6 +818,7 @@ class TSOSK_Mod_Dashboard {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- placeholders are generated from a fixed list.
 		$zips     = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_parent = 0 AND post_mime_type IN (" . implode( ',', array_fill( 0, count( $archives ), '%s' ) ) . ')', ...$archives ) );
 		$checks[] = $make(
+			'media_archives',
 			__( 'Compressed files in the Media Library', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			$zips > 0 ? 'warn' : 'ok',
 			$zips > 0
@@ -843,13 +999,13 @@ class TSOSK_Mod_Dashboard {
 				'label' => __( 'Visits (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => $counts_visits ? number_format_i18n( (int) $visits ) : '—',
 				'sub'   => $counts_visits ? __( 'Posts and pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Counting is off in the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
+				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter', 'tsosk-vc-top-posts' ),
 			);
 			$tiles[]       = array(
 				'label' => __( 'File downloads (7 days)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => $counts_downs ? number_format_i18n( (int) $downs ) : '—',
 				'sub'   => $counts_downs ? __( 'Counted by the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : __( 'Counting is off in the View Counter', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter' ),
+				'url'   => $this->tile_url( 'view-counter', 'TSOSK_Mod_View_Counter', 'tsosk-vc-top-downloads' ),
 			);
 		}
 
@@ -872,6 +1028,7 @@ class TSOSK_Mod_Dashboard {
 			set_transient( 'tsosk_dash_dbsize', $db, HOUR_IN_SECONDS );
 		}
 		if ( $db['bytes'] > 0 ) {
+			$db_url  = $this->database_tile_url();
 			$tiles[] = array(
 				'label' => __( 'Database size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => size_format( $db['bytes'], 1 ),
@@ -880,7 +1037,7 @@ class TSOSK_Mod_Dashboard {
 					__( '%d tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					$db['tables']
 				),
-				'url'   => $this->tile_url( 'tso-plugins', 'TSOSK_Mod_Tso_Plugins' ),
+				'url'   => $db_url,
 			);
 		}
 
@@ -897,7 +1054,7 @@ class TSOSK_Mod_Dashboard {
 					(int) $auto['n']
 				),
 				'warn'  => (int) $auto['bytes'] > 1000000,
-				'url'   => $this->tile_url( 'health', 'TSOSK_Mod_Health' ),
+				'url'   => $this->tile_url( 'health', 'TSOSK_Mod_Health', 'tsosk-health-autoload' ),
 			);
 		}
 
@@ -907,7 +1064,7 @@ class TSOSK_Mod_Dashboard {
 			'label' => __( 'Uploads folder', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'value' => is_array( $footprint ) && isset( $footprint['total_bytes'] ) ? size_format( (int) $footprint['total_bytes'], 1 ) : '—',
 			'sub'   => is_array( $footprint ) ? '' : __( 'Run the Media Footprint scan', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'url'   => $this->tile_url( 'media-footprint', 'TSOSK_Mod_Media_Footprint' ),
+			'url'   => $this->tile_url( 'media-footprint', 'TSOSK_Mod_Media_Footprint', 'tsosk-media-footprint-results' ),
 		);
 
 		// debug.log: same files the Debug tab lists (the active log and wp-content/debug.log), not only the active path.
@@ -941,7 +1098,7 @@ class TSOSK_Mod_Dashboard {
 			'value' => $log_value,
 			'sub'   => $log_sub,
 			'warn'  => ! empty( $largest ) && $largest['size'] > TSOSK_Support::DEBUG_LOG_WARN_BYTES,
-			'url'   => $this->tile_url( 'debug', 'TSOSK_Mod_Debug' ),
+			'url'   => $this->tile_url( 'debug', 'TSOSK_Mod_Debug', 'tsosk-debug-logs' ),
 		);
 
 		// Users.
@@ -956,7 +1113,7 @@ class TSOSK_Mod_Dashboard {
 			'label' => __( 'Users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'value' => number_format_i18n( (int) $user_query->get_total() ),
 			'sub'   => '',
-			'url'   => $this->tile_url( 'users', 'TSOSK_Mod_Users' ),
+			'url'   => $this->tile_url( 'users', 'TSOSK_Mod_Users', 'tsosk-users-panel-all' ),
 		);
 
 		// Cron events and how many hooks have no registered callback.
@@ -981,21 +1138,46 @@ class TSOSK_Mod_Dashboard {
 					count( $no_handler )
 				),
 			'warn'  => ! empty( $no_handler ),
-			'url'   => $this->tile_url( 'cron', 'TSOSK_Mod_Cron' ),
+			'url'   => $this->tile_url( 'cron', 'TSOSK_Mod_Cron', 'tsosk-cron-table' ),
 		);
 
 		return $tiles;
 	}
 
 	/**
-	 * Admin URL of a tool tab for a clickable tile (empty when that tool is not loaded).
+	 * URL for the Database size tile: OTC tool when active, else the TSO Plugins promo card.
 	 *
-	 * @param string $slug  Tab slug.
-	 * @param string $module_class Module class that must exist for the tab to be available.
 	 * @return string
 	 */
-	private function tile_url( string $slug, string $module_class ): string {
-		return class_exists( $module_class ) ? add_query_arg( 'tab', $slug, $this->base_url() ) : '';
+	private function database_tile_url(): string {
+		$otc_file = 'tso-options-tables-cleaner/tso-options-tables-cleaner.php';
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
+		if ( function_exists( 'is_plugin_active' ) && is_plugin_active( $otc_file ) ) {
+			return admin_url( 'tools.php?page=tso-options-tables-cleaner' );
+		}
+		return $this->tile_url( 'tso-plugins', 'TSOSK_Mod_Tso_Plugins', 'tsosk-promo-options-cleaner' );
+	}
+
+	/**
+	 * Admin URL of a tool tab for a clickable tile (empty when that tool is not loaded).
+	 *
+	 * @param string $slug         Tab slug.
+	 * @param string $module_class Module class that must exist for the tab to be available.
+	 * @param string $anchor       Optional fragment (without #) to open a section or sub-tab.
+	 * @return string
+	 */
+	private function tile_url( string $slug, string $module_class, string $anchor = '' ): string {
+		if ( ! class_exists( $module_class ) ) {
+			return '';
+		}
+		$url    = add_query_arg( 'tab', $slug, $this->base_url() );
+		$anchor = sanitize_html_class( $anchor );
+		if ( '' !== $anchor ) {
+			$url .= '#' . $anchor;
+		}
+		return $url;
 	}
 
 	/**
@@ -1167,7 +1349,7 @@ class TSOSK_Mod_Dashboard {
 				'label' => __( 'WordPress', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => get_bloginfo( 'version' ),
 				'sub'   => wp_get_environment_type(),
-				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ),
+				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager', 'tsosk-um-status' ),
 			),
 			array(
 				'label' => __( 'PHP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1184,7 +1366,7 @@ class TSOSK_Mod_Dashboard {
 						)
 						: (string) ini_get( 'memory_limit' )
 				),
-				'url'   => $this->tile_url( 'runtime-stack', 'TSOSK_Mod_Runtime_Stack' ),
+				'url'   => $this->tile_url( 'runtime-stack', 'TSOSK_Mod_Runtime_Stack', 'tsosk-runtime-php' ),
 			),
 			array(
 				'label' => __( 'Active plugins', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1201,7 +1383,7 @@ class TSOSK_Mod_Dashboard {
 						? __( 'Update checks are restricted in the Update Manager', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
 						: __( 'No update check has run yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
 				'warn'  => $updates['checked'] && $total > 0,
-				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager' ),
+				'url'   => $this->tile_url( 'update-manager', 'TSOSK_Mod_Update_Manager', 'tsosk-um-status' ),
 			),
 		);
 		$this->render_tiles( $tiles );
@@ -1283,4 +1465,10 @@ class TSOSK_Mod_Dashboard {
 		</div>
 		<?php
 	}
+}
+
+// Instantiate on every admin/AJAX request so wp_ajax_tsosk_dashboard_ignore is registered
+// even when the Overview tab is not rendered (admin-ajax.php never calls render()).
+if ( is_admin() ) {
+	TSOSK_Mod_Dashboard::get_instance();
 }

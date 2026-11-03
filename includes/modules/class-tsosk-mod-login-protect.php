@@ -337,6 +337,11 @@ class TSOSK_Mod_Login_Protect {
 	 * Fires on login_init (inside wp-login.php bootstrap).
 	 */
 	public function block_direct_login_access(): void {
+		// TSO Login Organizer fires login_init on its own front-end login pages: those are not wp-login.php.
+		if ( $this->login_organizer_active() && tsolo_is_action() ) {
+			return;
+		}
+
 		$s = $this->get_settings();
 
 		// Always allow whitelisted IPs.
@@ -365,6 +370,47 @@ class TSOSK_Mod_Login_Protect {
 	}
 
 	/**
+	 * Whether TSO Login Organizer is active and serves the login pages on the front end.
+	 */
+	private function login_organizer_active(): bool {
+		return defined( 'TSOLO_VERSION' ) && function_exists( 'tsolo_is_action' );
+	}
+
+	/**
+	 * Overlaps with TSO Login Organizer, each one saying who blocks whom.
+	 *
+	 * @param array<string, mixed> $s Login protection settings.
+	 * @return string[]
+	 */
+	private function get_login_organizer_notes( array $s ): array {
+		if ( ! $this->login_organizer_active() ) {
+			return array();
+		}
+
+		$modules = function_exists( 'tsolo_get_modules' ) ? (array) tsolo_get_modules() : array();
+		$other   = array();
+		if ( ! empty( $modules['security'] ) && class_exists( 'TSOLO_Mod_Security' ) ) {
+			$other = (array) TSOLO_Mod_Security::get_settings();
+		}
+
+		$notes = array();
+		if ( ! empty( $s['custom_url'] ) ) {
+			$notes[] = __( 'Swiss Knife blocks wp-login.php (404) and /wp-admin/ for visitors who are not signed in. The login pages of TSO Login Organizer are not affected and the login links on your site point to them; the secret login address keeps working as a fallback.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( ! empty( $s['custom_url'] ) && ! empty( $other['hide_wp_login'] ) ) {
+			$notes[] = __( 'Both plugins hide wp-login.php. Turn it off in one of them, otherwise it is hard to tell which one is answering with the 404.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( ! empty( $s['brute_force'] ) && ! empty( $other['brute_force'] ) ) {
+			$notes[] = __( 'Both plugins lock sign-ins after failed attempts. Whichever limit is reached first blocks the user, and unlocking in one plugin does not clear the lock of the other. Keep lockouts on in only one of them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		if ( ! empty( $s['email_2fa'] ) && ! empty( $modules['two_factor'] ) ) {
+			$notes[] = __( 'Swiss Knife asks for an email code and TSO Login Organizer asks for its own second factor, so the same user is asked twice. Use the two-step check of only one plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+
+		return $notes;
+	}
+
+	/**
 	 * Replace wp-login.php URLs with the custom login slug.
 	 *
 	 * @param string $login_url  Default login URL.
@@ -378,9 +424,15 @@ class TSOSK_Mod_Login_Protect {
 			return $login_url;
 		}
 
+		// TSO Login Organizer provides the login pages: leave its links alone (the secret address stays as a fallback).
+		if ( $this->login_organizer_active() ) {
+			return $login_url;
+		}
+
 		$url = home_url( '/' . $s['login_slug'] . '/' );
 		if ( '' !== $redirect ) {
-			$url = add_query_arg( 'redirect_to', $redirect, $url );
+			// Encoded like core does: a redirect with its own query string (post.php?post=5&action=edit) would otherwise be cut.
+			$url = add_query_arg( 'redirect_to', rawurlencode( $redirect ), $url );
 		}
 		if ( $force_reauth ) {
 			$url = add_query_arg( 'reauth', '1', $url );
@@ -398,11 +450,17 @@ class TSOSK_Mod_Login_Protect {
 	 * @param int|null    $blog_id Blog ID.
 	 * @return string
 	 */
-	public function filter_site_url_for_login( string $url, string $path, $scheme, $blog_id ): string {
+	public function filter_site_url_for_login( string $url, string $path, $scheme = null, $blog_id = null ): string {
+		// network_site_url (used by the password-reset email) passes only three arguments: $blog_id must be optional.
 		unset( $blog_id );
 
 		$s = $this->get_settings();
 		if ( ! $s['custom_url'] || ! $s['login_slug'] || false === strpos( $path, 'wp-login.php' ) ) {
+			return $url;
+		}
+
+		// TSO Login Organizer provides the login pages: leave its links alone.
+		if ( $this->login_organizer_active() ) {
 			return $url;
 		}
 
@@ -411,7 +469,9 @@ class TSOSK_Mod_Login_Protect {
 		if ( is_string( $query ) && '' !== $query ) {
 			parse_str( $query, $args );
 			if ( is_array( $args ) && ! empty( $args ) ) {
-				$custom = add_query_arg( $args, $custom );
+				// parse_str() decoded the values; add_query_arg() does not encode them, so a username with a space,
+				// "+" or "&" (or a redirect_to with its own query) would break the link.
+				$custom = add_query_arg( urlencode_deep( $args ), $custom );
 			}
 		}
 
@@ -694,8 +754,8 @@ class TSOSK_Mod_Login_Protect {
 		if ( $user_id <= 0 || '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
 			return;
 		}
-		$known = get_user_meta( $user_id, self::META_TRUSTED_IPS, true );
-		$known = is_array( $known ) ? $known : array();
+		$known        = get_user_meta( $user_id, self::META_TRUSTED_IPS, true );
+		$known        = is_array( $known ) ? $known : array();
 		$known[ $ip ] = time();
 		arsort( $known, SORT_NUMERIC );
 		update_user_meta( $user_id, self::META_TRUSTED_IPS, array_slice( $known, 0, self::MAX_TRUSTED_IPS, true ) );
@@ -1852,7 +1912,7 @@ class TSOSK_Mod_Login_Protect {
 		if ( 0 === strncmp( $packed, str_repeat( "\0", 10 ) . "\xff\xff", 12 ) ) {
 			return (string) inet_ntop( substr( $packed, 12 ) );
 		}
-		if ( $packed === str_repeat( "\0", 15 ) . "\x01" ) {
+		if ( str_repeat( "\0", 15 ) . "\x01" === $packed ) {
 			return $ip;
 		}
 		$network = inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) );
@@ -1959,6 +2019,16 @@ class TSOSK_Mod_Login_Protect {
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Protect the WordPress login page against brute-force attacks and unwanted access. Each feature can be enabled and configured independently.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
+
+		<?php $lo_notes = $this->get_login_organizer_notes( $s ); ?>
+		<?php if ( ! empty( $lo_notes ) ) : ?>
+		<div class="tsosk-notice tsosk-notice-warn">
+			<strong><?php esc_html_e( 'Compatibility with TSO Login Organizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+			<?php foreach ( $lo_notes as $lo_note ) : ?>
+			<p style="margin:6px 0 0;"><?php echo esc_html( $lo_note ); ?></p>
+			<?php endforeach; ?>
+		</div>
+		<?php endif; ?>
 
 		<?php if ( ! empty( $active_lockouts ) ) : ?>
 		<div class="tsosk-notice tsosk-notice-warn">

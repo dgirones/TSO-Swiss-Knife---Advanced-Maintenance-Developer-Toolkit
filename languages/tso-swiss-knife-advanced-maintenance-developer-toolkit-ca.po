@@ -7031,8 +7031,8 @@ msgid "Trusted visitors with an account bypass all anti-spam rules."
 msgstr "Els visitants amb compte de confiança ometen totes les regles anti-spam."
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2068
-msgid "Keeps a recent list at the bottom of this page so you can review what was blocked and why."
-msgstr "Manté una llista recent al final d'aquesta pàgina per revisar què s'ha bloquejat i per què."
+msgid "Keeps a recent list in the Logs tab so you can review what was blocked and why."
+msgstr "Guarda una llista recent a la pestanya Registres per revisar què s'ha bloquejat i per què."
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2077
 msgid "How long the visitor must wait after the form loads before submitting. Instant submissions are treated as bots. Typical value: 3–5 seconds."
@@ -7945,8 +7945,8 @@ msgid "Blocks pingbacks and remote publishing via xmlrpc.php."
 msgstr "Bloqueja pingbacks i publicació remota via xmlrpc.php."
 
 #: includes/modules/class-tsosk-mod-security.php:207
-msgid "Redirects feed URLs; reduces discovery surface."
-msgstr "Redirigeix les URL dels feeds; redueix la superfície de descobriment."
+msgid "On: /feed/ and comment feeds redirect to the home page, so scrapers and feed readers cannot pull your posts that way. Off: keep normal RSS/Atom feeds (Feedly, aggregators, or email tools that subscribe to the site)."
+msgstr "Activat: /feed/ i els feeds de comentaris redirigeixen a l’inici, així els scrapers i els lectors de feeds no poden treure les entrades per aquesta via. Desactivat: es mantenen els feeds RSS/Atom normals (Feedly, agregadors o eines de correu que s’hi subscriguin)."
 
 #. translators: %s: file key
 #: includes/modules/class-tsosk-mod-server-files.php:72
@@ -14983,3 +14983,351 @@ msgstr "Hi ha una regla que bloqueja PHP a wp-content/uploads/.htaccess, però a
 #, php-format
 msgid "Settings were not saved. These whitelist lines are not a valid IP address or range (such as 203.0.113.0/24): %s"
 msgstr "No s'ha desat res. Aquestes línies de la llista blanca no són una adreça IP ni un rang vàlid (com 203.0.113.0/24): %s"
+
+msgid "Ignore 30 days"
+msgstr "Ignorar 30 dies"
+
+msgid "Ignore always"
+msgstr "Ignorar sempre"
+
+msgid "Warning ignored permanently."
+msgstr "Avís ignorat permanentment."
+
+msgid "Warning ignored for 30 days."
+msgstr "Avís ignorat durant 30 dies."
+
+#, php-format
+msgid "Overview warning ignored permanently: %s."
+msgstr "Avís del resum ignorat permanentment: %s."
+
+#, php-format
+msgid "Overview warning ignored for 30 days: %s."
+msgstr "Avís del resum ignorat durant 30 dies: %s."
+
+msgid "Session expired. Reload the page and try again."
+msgstr "La sessió ha caducat. Recarrega la pàgina i torna-ho a provar."
+
+#: includes/modules/class-tsosk-mod-security.php:813
+msgid "A security plugin is active (%s). Server rules stay read-only unless you confirm the override."
+msgstr "Hi ha un plugin de seguretat actiu (%s). Les regles del servidor queden en només lectura si no confirmes la sobreescriptura."
+
+#: includes/modules/class-tsosk-mod-security.php:834
+msgid "Security server rules saved."
+msgstr "Regles del servidor de seguretat desades."
+
+#: includes/modules/class-tsosk-mod-security.php:840
+msgid "Server rules saved. Reload the page if the site behaves unexpectedly and use Server Files to review .htaccess."
+msgstr "Regles del servidor desades. Recarrega la pàgina si el lloc es comporta de forma inesperada i usa Fitxers del servidor per revisar el .htaccess."
+
+#: includes/modules/class-tsosk-mod-security.php:933
+msgid "Could not load WordPress insert_with_markers()."
+msgstr "No s’ha pogut carregar insert_with_markers() de WordPress."
+
+#: includes/modules/class-tsosk-mod-security.php:940
+msgid "Could not create .htaccess at the WordPress root."
+msgstr "No s’ha pogut crear el .htaccess a l’arrel de WordPress."
+
+#: includes/modules/class-tsosk-mod-security.php:947
+msgid "Could not update the TSO block in .htaccess. Check file permissions."
+msgstr "No s’ha pogut actualitzar el bloc TSO a .htaccess. Comprova els permisos del fitxer."
+
+#: includes/modules/class-tsosk-mod-security.php:1047
+msgid "wp-content/cache does not exist yet. Create it (or let a cache plugin create it) before enabling this rule."
+msgstr "wp-content/cache encara no existeix. Crea’l (o deixa que un plugin de cache el creï) abans d’activar aquesta regla."
+
+#: includes/modules/class-tsosk-mod-security.php:1051
+msgid "wp-content/cache is not writable."
+msgstr "wp-content/cache no és escrivible."
+
+#: includes/modules/class-tsosk-mod-security.php:1072
+msgid "Could not write the PHP block into wp-content/cache/.htaccess."
+msgstr "No s’ha pogut escriure el bloc PHP a wp-content/cache/.htaccess."
+
+#: includes/modules/class-tsosk-mod-security.php:1200
+msgid "Read-only security review plus safe toggles for WordPress hardening. Constants save as JSON under the plugin uploads folder. Apache server rules use a reversible marked block in .htaccess. This does not replace a firewall or malware scanner."
+msgstr "Revisió de seguretat de només lectura més commutadors segurs d’enduriment de WordPress. Les constants es desen com a JSON a la carpeta d’uploads del plugin. Les regles Apache usen un bloc reversible marcat a .htaccess. Això no substitueix un tallafoc ni un escàner de programari maliciós."
+
+#: includes/modules/class-tsosk-mod-security.php:1209
+msgid "A security plugin is active (%s). TSO keeps Apache server-rule writers soft-disabled to avoid overlapping .htaccess changes. You can still use WordPress-layer toggles below. Override only if you understand the risk."
+msgstr "Hi ha un plugin de seguretat actiu (%s). TSO deixa desactivades (soft) les escriptures de regles Apache per evitar solapaments a .htaccess. Encara pots usar els commutadors de capa WordPress. Sobreescriu només si entens el risc."
+
+#: includes/modules/class-tsosk-mod-security.php:1219
+msgid "Hardening WP"
+msgstr "Enduriment WP"
+
+#: includes/modules/class-tsosk-mod-security.php:1220
+msgid "Server rules"
+msgstr "Regles del servidor"
+
+#: includes/modules/class-tsosk-mod-security.php:1221 includes/modules/class-tsosk-mod-security.php:1552
+msgid "Accounts & keys"
+msgstr "Comptes i claus"
+
+#: includes/modules/class-tsosk-mod-security.php:1222
+msgid "Alerts & App passwords"
+msgstr "Alertes i contrasenyes d’aplicació"
+
+#: includes/modules/class-tsosk-mod-security.php:1228
+msgid "Read-only overview of common security settings. Use the other tabs to change toggles or server rules."
+msgstr "Visió de només lectura dels ajustos de seguretat habituals. Usa les altres pestanyes per canviar commutadors o regles del servidor."
+
+#: includes/modules/class-tsosk-mod-security.php:1250
+msgid "Related tools"
+msgstr "Eines relacionades"
+
+#: includes/modules/class-tsosk-mod-security.php:1256
+msgid "Server Files (.htaccess / robots)"
+msgstr "Fitxers del servidor (.htaccess / robots)"
+
+#: includes/modules/class-tsosk-mod-security.php:1260
+msgid "Bot / WAF-style protection belongs in a dedicated security plugin (Kadence Security, Wordfence, …). TSO links to login rate limits and comment spam tools instead of duplicating a firewall."
+msgstr "La protecció tipus bot / WAF correspon a un plugin de seguretat dedicat (Kadence Security, Wordfence, …). TSO enllaça als límits d’inici de sessió i a l’anti-spam de comentaris en lloc de duplicar un tallafoc."
+
+#: includes/modules/class-tsosk-mod-security.php:1293
+msgid "Turn off pingbacks / trackbacks"
+msgstr "Desactiva pingbacks / trackbacks"
+
+#: includes/modules/class-tsosk-mod-security.php:1294
+msgid "Removes pingback XML-RPC methods and the X-Pingback header while leaving the rest of XML-RPC available for apps that need it."
+msgstr "Elimina els mètodes XML-RPC de pingback i la capçalera X-Pingback, deixant la resta de l’XML-RPC disponible per a les apps que el necessitin."
+
+#: includes/modules/class-tsosk-mod-security.php:1307
+msgid "Block author scans"
+msgstr "Bloqueja l’escaneig d’autors"
+
+#: includes/modules/class-tsosk-mod-security.php:1308
+msgid "Redirects public ?author=N probes and author archives for guests, and hides the users REST collection from anonymous callers. Disable if you rely on public author archives or membership directories that list users."
+msgstr "Redirigeix les proves públiques ?author=N i els arxius d’autor per a convidats, i amaga la col·lecció REST d’usuaris als visitants anònims. Desactiva-ho si necessites arxius d’autor públics o directoris de membres."
+
+#: includes/modules/class-tsosk-mod-security.php:1486
+msgid "Apache / LiteSpeed hardening"
+msgstr "Enduriment Apache / LiteSpeed"
+
+#: includes/modules/class-tsosk-mod-security.php:1487
+msgid "Reversible rules written into a marked block in the WordPress-root .htaccess (and optionally wp-content/cache/.htaccess). Nginx/IIS ignore these files — use your host panel instead. Do not enable “forbid PHP in wp-includes”: WordPress must execute PHP there."
+msgstr "Regles reversibles en un bloc marcat del .htaccess a l’arrel de WordPress (i opcionalment wp-content/cache/.htaccess). Nginx/IIS ignoren aquests fitxers — usa el panell de l’allotjament. No activis «prohibir PHP a wp-includes»: WordPress hi ha d’executar PHP."
+
+#: includes/modules/class-tsosk-mod-security.php:1492
+msgid "Block directory browsing"
+msgstr "Bloqueja la navegació de directoris"
+
+#: includes/modules/class-tsosk-mod-security.php:1493
+msgid "Adds Options -Indexes so visitors cannot list folder contents."
+msgstr "Afegeix Options -Indexes perquè els visitants no puguin llistar el contingut de les carpetes."
+
+#: includes/modules/class-tsosk-mod-security.php:1499
+msgid "Block HTTP access to wp-config.php"
+msgstr "Bloqueja l’accés HTTP a wp-config.php"
+
+#: includes/modules/class-tsosk-mod-security.php:1500
+msgid "Denies web requests to wp-config.php (PHP still reads the file normally)."
+msgstr "Denega les peticions web a wp-config.php (PHP continua llegint el fitxer amb normalitat)."
+
+#: includes/modules/class-tsosk-mod-security.php:1506
+msgid "Block access to .htaccess and .htpasswd"
+msgstr "Bloqueja l’accés a .htaccess i .htpasswd"
+
+#: includes/modules/class-tsosk-mod-security.php:1507
+msgid "Denies HTTP download of .ht* files in this directory tree where the rule applies."
+msgstr "Denega la baixada HTTP de fitxers .ht* en aquest arbre de directoris on s’aplica la regla."
+
+#: includes/modules/class-tsosk-mod-security.php:1513
+msgid "Block access to sensitive files"
+msgstr "Bloqueja l’accés a fitxers sensibles"
+
+#: includes/modules/class-tsosk-mod-security.php:1514
+msgid "Denies common leak targets: *.sql, *.log, *.bak, readme.html, license.txt, wp-config-sample.php."
+msgstr "Denega objectius habituals de filtració: *.sql, *.log, *.bak, readme.html, license.txt, wp-config-sample.php."
+
+#: includes/modules/class-tsosk-mod-security.php:1520
+msgid "Disable PHP execution in cache directories"
+msgstr "Desactiva l’execució de PHP a les carpetes de cache"
+
+#: includes/modules/class-tsosk-mod-security.php:1521
+msgid "Writes a PHP deny rule into wp-content/cache/.htaccess when that folder exists."
+msgstr "Escriu una regla de denegació de PHP a wp-content/cache/.htaccess quan aquesta carpeta existeix."
+
+#: includes/modules/class-tsosk-mod-security.php:1529
+msgid "Override: write TSO server rules anyway"
+msgstr "Sobreescriure: escriu les regles TSO del servidor igualment"
+
+#: includes/modules/class-tsosk-mod-security.php:1530
+msgid "Only if you accept possible overlap with your security plugin’s .htaccess rules."
+msgstr "Només si acceptes un possible solapament amb les regles .htaccess del teu plugin de seguretat."
+
+#: includes/modules/class-tsosk-mod-security.php:1539 includes/modules/class-tsosk-mod-security.php:1540
+msgid "Save Server Rules"
+msgstr "Desa les regles del servidor"
+
+#: includes/modules/class-tsosk-mod-security.php:1545
+msgid "Open Server Files to review the full .htaccess →"
+msgstr "Obre Fitxers del servidor per revisar el .htaccess sencer →"
+
+#: includes/modules/class-tsosk-mod-security.php:1553
+msgid "These items are audited here but never changed automatically — renaming the admin user or the database table prefix can lock you out or break the site."
+msgstr "Aquests elements s’auditen aquí però no es canvien automàticament — canviar l’usuari admin o el prefix de taules pot bloquejar-te o trencar el lloc."
+
+#: includes/modules/class-tsosk-mod-security.php:1577
+msgid "Default administrator username"
+msgstr "Nom d’usuari d’administrador per defecte"
+
+#: includes/modules/class-tsosk-mod-security.php:1581
+msgid "A user named “admin” exists. Create a new administrator with a unique login, then delete or demote “admin”."
+msgstr "Existeix un usuari anomenat «admin». Crea un administrador nou amb un login únic i després elimina o degrada «admin»."
+
+#: includes/modules/class-tsosk-mod-security.php:1582
+msgid "Open Users & Sessions →"
+msgstr "Obre Usuaris i sessions →"
+
+#: includes/modules/class-tsosk-mod-security.php:1590
+msgid "Database table prefix"
+msgstr "Prefix de taules de la base de dades"
+
+#: includes/modules/class-tsosk-mod-security.php:1598
+msgid "Prefix is “%s” (WordPress default). Changing it requires a careful database migration — do it with a dedicated tool or host backup, never from this panel."
+msgstr "El prefix és «%s» (per defecte de WordPress). Canviar-lo exigeix una migració curosa de la base de dades — fes-ho amb una eina dedicada o una còpia de l’allotjament, mai des d’aquest panell."
+
+#: includes/modules/class-tsosk-mod-security.php:1609
+msgid "Prefix is “%s” (not the default wp_)."
+msgstr "El prefix és «%s» (no el wp_ per defecte)."
+
+#: includes/modules/class-tsosk-mod-security.php:1618 includes/modules/class-tsosk-mod-security.php:1808 includes/modules/class-tsosk-mod-security.php:1939
+msgid "Security keys & salts"
+msgstr "Claus i salts de seguretat"
+
+#: includes/modules/class-tsosk-mod-security.php:1626
+msgid "%1$d key(s) missing and %2$d look weak or still use the WordPress placeholder. Generate new keys and paste them into wp-config.php (TSO never writes that file)."
+msgstr "%1$d clau(s) falten i %2$d semblen febles o encara usen el placeholder de WordPress. Genera claus noves i enganxa-les a wp-config.php (TSO no escriu mai aquest fitxer)."
+
+#: includes/modules/class-tsosk-mod-security.php:1634
+msgid "All eight AUTH/SECURE/LOGGED_IN/NONCE keys and salts are defined with non-placeholder values."
+msgstr "Totes vuit claus i salts AUTH/SECURE/LOGGED_IN/NONCE estan definides amb valors que no són el placeholder."
+
+#: includes/modules/class-tsosk-mod-security.php:1637
+msgid "Open the official WordPress salt generator →"
+msgstr "Obre el generador oficial de salts de WordPress →"
+
+#: includes/modules/class-tsosk-mod-security.php:1806 includes/modules/class-tsosk-mod-security.php:1937
+msgid "Author enumeration"
+msgstr "Enumeració d’autors"
+
+#: includes/modules/class-tsosk-mod-security.php:1937
+msgid "Public author probes and anonymous users REST listing are blocked."
+msgstr "Les proves públiques d’autor i el llistat REST anònim d’usuaris estan bloquejats."
+
+#: includes/modules/class-tsosk-mod-security.php:1937
+msgid "Author scans are not blocked. Enable “Block author scans” under Hardening WP if you do not need public author archives."
+msgstr "L’escaneig d’autors no està bloquejat. Activa «Bloqueja l’escaneig d’autors» a Enduriment WP si no necessites arxius d’autor públics."
+
+#: includes/modules/class-tsosk-mod-security.php:1939
+msgid "Authentication keys and salts look unique."
+msgstr "Les claus d’autenticació i els salts semblen únics."
+
+#: includes/modules/class-tsosk-mod-security.php:1939
+msgid "One or more security keys/salts are missing, short, or still use the WordPress placeholder. Update them in wp-config.php."
+msgstr "Manca alguna clau/salt de seguretat, és curta o encara usa el placeholder de WordPress. Actualitza-les a wp-config.php."
+
+#: includes/modules/class-tsosk-mod-security.php:813
+msgid "Security hardening saved (all WordPress-layer toggles off)."
+msgstr "Enduriment de seguretat desat (tots els commutadors de capa WordPress desactivats)."
+
+#: includes/modules/class-tsosk-mod-security.php:816
+msgid "Security hardening saved. On: %s."
+msgstr "Enduriment de seguretat desat. Actius: %s."
+
+#: includes/modules/class-tsosk-mod-security.php:882
+msgid "Security server rules cleared (TSO .htaccess block removed or empty)."
+msgstr "Regles del servidor de seguretat esborrades (bloc TSO de .htaccess eliminat o buit)."
+
+#: includes/modules/class-tsosk-mod-security.php:885
+msgid "Security server rules saved. On: %s."
+msgstr "Regles del servidor de seguretat desades. Actives: %s."
+
+#: includes/modules/class-tsosk-mod-security.php:1701
+msgid "The generator link opens a plain-text page of PHP define() lines (AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY, NONCE_KEY and the matching *_SALT values). Copy that whole block into wp-config.php, replacing the old keys/salts (or the “put your unique phrase here” placeholders). TSO never writes wp-config.php — use FTP/SFTP or your host file manager. After you save, existing cookies become invalid and everyone (including you) must log in again."
+msgstr "L’enllaç del generador obre una pàgina de text pla amb línies PHP define() (AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY, NONCE_KEY i els *_SALT corresponents). Copia tot aquest bloc a wp-config.php, substituint les claus/salts antigues (o els placeholders «put your unique phrase here»). TSO no escriu mai wp-config.php — usa FTP/SFTP o el gestor de fitxers de l’allotjament. Després de desar, les galetes queden invalidades i tothom (també tu) ha de tornar a iniciar sessió."
+
+#: includes/modules/class-tsosk-mod-security.php:1704
+msgid "Open the generator and select all of the define(…) lines."
+msgstr "Obre el generador i selecciona totes les línies define(…)."
+
+#: includes/modules/class-tsosk-mod-security.php:1705
+msgid "Open wp-config.php on the server and find the existing keys/salts block."
+msgstr "Obre wp-config.php al servidor i localitza el bloc de claus/salts existent."
+
+#: includes/modules/class-tsosk-mod-security.php:1706
+msgid "Replace that block with the new lines, save the file, then log in again."
+msgstr "Substitueix aquest bloc amb les línies noves, desa el fitxer i torna a iniciar sessió."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:123
+msgid "Security Review constants (JSON)"
+msgstr "Constants de Revisió de seguretat (JSON)"
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:124
+msgid "Security Review admin alerts"
+msgstr "Alertes d’administrador de Revisió de seguretat"
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:125
+msgid "Security Review server rules"
+msgstr "Regles del servidor de Revisió de seguretat"
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:393
+msgid "Security server rules were saved in the database, but the .htaccess write failed: %s. Open Security Review › Server rules and save again."
+msgstr "Les regles del servidor de seguretat s’han desat a la base de dades, però l’escriptura de .htaccess ha fallat: %s. Obre Revisió de seguretat › Regles del servidor i torna a desar."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:817
+msgid "Security flags section must be an object."
+msgstr "La secció de flags de seguretat ha de ser un objecte."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:839
+msgid "Security config storage is not available."
+msgstr "L’emmagatzematge de configuració de seguretat no està disponible."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:858
+msgid "Security alerts section must be an object."
+msgstr "La secció d’alertes de seguretat ha de ser un objecte."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:878
+msgid "Security server rules section must be an object."
+msgstr "La secció de regles del servidor de seguretat ha de ser un objecte."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1511
+msgid "Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login Protect, and Security Review (constants JSON, admin alerts, server rules, plus Hidden Profiles runtime flags such as XML-RPC / author scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail log, or the Slow Query log."
+msgstr "Desa i restaura els ajustos seleccionats de TSO Swiss Knife com a JSON per a staging, còpies de seguretat o migracions. Inclou opcions com Redireccions, Mode de prova, Slow Query Monitor, Anti-spam de comentaris, Protecció d’inici de sessió i Revisió de seguretat (constants JSON, alertes d’administrador, regles del servidor i flags de runtime de Perfils ocults com XML-RPC / escaneig d’autors). No inclou el JSON del Mode de depuració, les sessions de sandbox, el registre de correu del Mode de prova ni el registre de Slow Query."
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1520
+msgid "Debug Mode JSON under the plugin uploads config folder is still excluded. Security Review constants are exported via the Security Review constants (JSON) section. Hidden Profiles constant presets (not the runtime flags) remain in that config folder if you need to copy them separately."
+msgstr "El JSON del Mode de depuració de la carpeta config d’uploads del plugin continua exclòs. Les constants de Revisió de seguretat s’exporten amb la secció «Constants de Revisió de seguretat (JSON)». Els presets de constants de Perfils ocults (no els flags de runtime) queden en aquesta carpeta si els has de copiar a part."
+
+#: includes/modules/class-tsosk-mod-security.php:0
+msgid "These rules only work on Apache or LiteSpeed. This server runs Nginx or IIS, which ignore .htaccess files."
+msgstr "Aquestes regles només funcionen amb Apache o LiteSpeed. Aquest servidor fa servir Nginx o IIS, que ignoren els fitxers .htaccess."
+
+#: includes/modules/class-tsosk-mod-security.php:0
+msgid "The site returned a server error after the change, so the previous .htaccess was restored. Your host probably does not allow one of these rules (for example Options -Indexes)."
+msgstr "El web ha respost amb un error de servidor després del canvi, així que s'ha restaurat l'.htaccess anterior. És probable que el teu hosting no permeti alguna d'aquestes regles (per exemple Options -Indexes)."
+
+#: includes/modules/class-tsosk-mod-security.php:0
+#, php-format
+msgid "The other rules were saved, but: %s"
+msgstr "Les altres regles s'han desat, però: %s"
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Compatibility with TSO Login Organizer"
+msgstr "Compatibilitat amb TSO Login Organizer"
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Swiss Knife blocks wp-login.php (404) and /wp-admin/ for visitors who are not signed in. The login pages of TSO Login Organizer are not affected and the login links on your site point to them; the secret login address keeps working as a fallback."
+msgstr "El Swiss Knife bloqueja wp-login.php (404) i /wp-admin/ per als visitants que no han iniciat sessió. Les pàgines d'inici de sessió de TSO Login Organizer no es veuen afectades i els enllaços d'inici de sessió del teu web hi apunten; l'adreça secreta d'inici de sessió continua funcionant com a via de recurs."
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Both plugins hide wp-login.php. Turn it off in one of them, otherwise it is hard to tell which one is answering with the 404."
+msgstr "Tots dos plugins amaguen wp-login.php. Desactiva-ho en un dels dos; si no, costa saber quin dels dos respon amb el 404."
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Both plugins lock sign-ins after failed attempts. Whichever limit is reached first blocks the user, and unlocking in one plugin does not clear the lock of the other. Keep lockouts on in only one of them."
+msgstr "Tots dos plugins bloquegen els inicis de sessió després d'intents fallits. El primer límit que s'assoleix bloqueja l'usuari, i desbloquejar en un plugin no elimina el bloqueig de l'altre. Deixa els bloquejos activats només en un dels dos."
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Swiss Knife asks for an email code and TSO Login Organizer asks for its own second factor, so the same user is asked twice. Use the two-step check of only one plugin."
+msgstr "El Swiss Knife demana un codi per correu i TSO Login Organizer demana el seu propi segon factor, de manera que el mateix usuari ho ha de fer dues vegades. Fes servir la verificació en dos passos d'un sol plugin."

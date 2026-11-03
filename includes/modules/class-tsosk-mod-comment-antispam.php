@@ -274,7 +274,8 @@ class TSOSK_Mod_Comment_Antispam {
 
 		// Fluent Forms.
 		if ( defined( 'FLUENTFORM_VERSION' ) ) {
-			add_action( 'fluentform/before_form_render', array( $this, 'fluentform_render_traps' ), 10, 1 );
+			// "form_element_start" fires inside the <form> tag; "before_form_render" fires outside it, so the traps would never be submitted.
+			add_action( 'fluentform/form_element_start', array( $this, 'fluentform_render_traps' ), 10, 1 );
 			add_filter( 'fluentform/validation_errors', array( $this, 'fluentform_validate_errors' ), 10, 4 );
 		}
 	}
@@ -399,19 +400,12 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
-	 * Fluent Forms: output traps once per form.
+	 * Fluent Forms: output the traps inside the form element.
 	 *
 	 * @param object $form Form object.
 	 */
 	public function fluentform_render_traps( $form ): void {
-		static $rendered = array();
-		$form_id         = is_object( $form ) && isset( $form->id ) ? (int) $form->id : 0;
-		if ( $form_id > 0 && isset( $rendered[ $form_id ] ) ) {
-			return;
-		}
-		if ( $form_id > 0 ) {
-			$rendered[ $form_id ] = true;
-		}
+		unset( $form );
 		$this->output_trap_fields();
 	}
 
@@ -520,7 +514,7 @@ class TSOSK_Mod_Comment_Antispam {
 	 * CF7: fake success response after silent honeypot block.
 	 *
 	 * @param array<string, mixed> $response Response data.
-	 * @param string               $status   Result status.
+	 * @param mixed                $result   Result.
 	 * @return array<string, mixed>
 	 */
 	public function cf7_feedback_response( $response, $result = '' ) {
@@ -737,6 +731,11 @@ class TSOSK_Mod_Comment_Antispam {
 	 */
 	public function fluentform_validate_errors( array $errors, array $form_data, $form, array $fields ): array {
 		unset( $form, $fields );
+		foreach ( array( self::HONEYPOT_FIELD, self::TIME_FIELD ) as $trap_name ) {
+			$this->trap_values[ $trap_name ] = isset( $form_data[ $trap_name ] ) && is_scalar( $form_data[ $trap_name ] )
+				? sanitize_text_field( (string) $form_data[ $trap_name ] )
+				: '';
+		}
 		$data = $this->extract_fields_from_array( $form_data, 'fluentform' );
 		if ( $this->should_skip_submission( $data ) ) {
 			return $errors;
@@ -1159,6 +1158,43 @@ class TSOSK_Mod_Comment_Antispam {
 	}
 
 	/**
+	 * Trap field values parsed by a form plugin that does not post them as plain $_POST keys (Fluent Forms
+	 * sends the whole form inside one "data" string).
+	 *
+	 * @var array<string, string>
+	 */
+	private array $trap_values = array();
+
+	/**
+	 * Read a trap field (honeypot or time token) from the request.
+	 *
+	 * @param string $name Field name.
+	 */
+	private function get_trap_value( string $name ): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public form; trap fields are only compared, never stored.
+		if ( isset( $_POST[ $name ] ) && is_scalar( $_POST[ $name ] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- See above.
+			return sanitize_text_field( wp_unslash( (string) $_POST[ $name ] ) );
+		}
+		if ( ! empty( $this->trap_values[ $name ] ) ) {
+			return $this->trap_values[ $name ];
+		}
+
+		// Fluent Forms posts the whole form as one urlencoded "data" string.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public form; only the trap fields are read from it.
+		if ( isset( $_POST['data'] ) && is_string( $_POST['data'] ) ) {
+			$parsed = array();
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Parsed only to read the trap fields, which are sanitized below.
+			parse_str( wp_unslash( $_POST['data'] ), $parsed );
+			if ( isset( $parsed[ $name ] ) && is_scalar( $parsed[ $name ] ) ) {
+				return sanitize_text_field( (string) $parsed[ $name ] );
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Run all enabled checks on a comment or form submission.
 	 *
 	 * @param array<string, mixed> $data Submission data.
@@ -1182,16 +1218,14 @@ class TSOSK_Mod_Comment_Antispam {
 		$via_jetpack = $this->is_jetpack_comment_request();
 
 		if ( ! empty( $this->settings['honeypot'] ) && ! $via_jetpack ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form; honeypot must be empty.
-			$trap = isset( $_POST[ self::HONEYPOT_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::HONEYPOT_FIELD ] ) ) : '';
+			$trap = $this->get_trap_value( self::HONEYPOT_FIELD );
 			if ( '' !== $trap ) {
 				return $fail( 'honeypot', __( 'Honeypot triggered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), true );
 			}
 		}
 
 		if ( ! empty( $this->settings['time_trap'] ) && ! $via_jetpack ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public comment form.
-			$token = isset( $_POST[ self::TIME_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::TIME_FIELD ] ) ) : '';
+			$token = $this->get_trap_value( self::TIME_FIELD );
 			if ( '' === $token || ! $this->verify_time_token( $token ) ) {
 				return $fail(
 					'time_trap',
@@ -3745,7 +3779,7 @@ class TSOSK_Mod_Comment_Antispam {
 				<input type="checkbox" id="tsosk-cas-log-blocks" <?php checked( ! empty( $s['log_blocks'] ) ); ?>>
 				<span>
 					<strong><?php esc_html_e( 'Log blocked attempts', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-					— <?php esc_html_e( 'Keeps a recent list at the bottom of this page so you can review what was blocked and why.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					— <?php esc_html_e( 'Keeps a recent list in the Logs tab so you can review what was blocked and why.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</span>
 			</label>
 

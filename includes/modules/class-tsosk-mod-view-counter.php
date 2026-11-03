@@ -2093,8 +2093,8 @@ class TSOSK_Mod_View_Counter {
 			<?php esc_html_e( 'Counts post, page and outbound-link-click visits with a small front-end beacon so counting keeps working even behind a full-page cache. No cookies are used — de-duplication happens with a short-lived, server-side fingerprint only.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
-		<div class="tsosk-stats-row">
-			<div class="tsosk-stat-box">
+		<div class="tsosk-stats-row" id="tsosk-vc-totals">
+			<div class="tsosk-stat-box" id="tsosk-vc-total-views">
 				<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( $total_views ) ); ?></span>
 				<span class="tsosk-stat-label"><?php esc_html_e( 'Total post/page views', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</div>
@@ -2102,7 +2102,7 @@ class TSOSK_Mod_View_Counter {
 				<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( $total_clicks ) ); ?></span>
 				<span class="tsosk-stat-label"><?php esc_html_e( 'Total outbound link clicks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</div>
-			<div class="tsosk-stat-box">
+			<div class="tsosk-stat-box" id="tsosk-vc-total-downloads">
 				<span class="tsosk-stat-num"><?php echo esc_html( number_format_i18n( $total_downloads ) ); ?></span>
 				<span class="tsosk-stat-label"><?php esc_html_e( 'Total file downloads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 			</div>
@@ -2121,8 +2121,8 @@ class TSOSK_Mod_View_Counter {
 				<button type="button" class="button button-small tsosk-vc-period" data-period="total"><?php esc_html_e( 'All time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 			</span>
 		</p>
-		<div class="tsosk-vc-top-wrap">
-			<div class="tsosk-vc-col">
+		<div class="tsosk-vc-top-wrap" id="tsosk-vc-top-content">
+			<div class="tsosk-vc-col" id="tsosk-vc-top-posts">
 				<h3><?php esc_html_e( 'Most viewed posts/pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-table-wrap">
 				<table class="widefat striped" id="tsosk-vc-top-posts-table">
@@ -2150,7 +2150,7 @@ class TSOSK_Mod_View_Counter {
 				</table>
 				</div>
 			</div>
-			<div class="tsosk-vc-col">
+			<div class="tsosk-vc-col" id="tsosk-vc-top-downloads">
 				<h3><?php esc_html_e( 'Most downloaded files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-table-wrap">
 				<table class="widefat striped" id="tsosk-vc-top-downloads-table">

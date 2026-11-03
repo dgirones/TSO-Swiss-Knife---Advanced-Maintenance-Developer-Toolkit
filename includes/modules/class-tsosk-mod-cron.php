@@ -253,10 +253,18 @@ class TSOSK_Mod_Cron {
 			}
 		}
 
+		// Soonest first; WordPress / read-only hooks stay at the bottom (no Run / Edit / Delete).
 		usort(
 			$events,
 			static function ( $a, $b ) {
-				return $a['timestamp'] - $b['timestamp'];
+				// phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- Internal source-type key, not visible text.
+				$a_wp = ( isset( $a['source']['type'] ) && 'wordpress' === $a['source']['type'] );
+				// phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- Internal source-type key, not visible text.
+				$b_wp = ( isset( $b['source']['type'] ) && 'wordpress' === $b['source']['type'] );
+				if ( $a_wp !== $b_wp ) {
+					return $a_wp ? 1 : -1;
+				}
+				return (int) $a['timestamp'] - (int) $b['timestamp'];
 			}
 		);
 

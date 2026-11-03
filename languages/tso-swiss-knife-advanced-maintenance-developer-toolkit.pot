@@ -1952,7 +1952,7 @@ msgid "Log blocked attempts"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2068
-msgid "Keeps a recent list at the bottom of this page so you can review what was blocked and why."
+msgid "Keeps a recent list in the Logs tab so you can review what was blocked and why."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-comment-antispam.php:2074
@@ -7367,7 +7367,7 @@ msgid "Disable RSS feeds"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:207
-msgid "Redirects feed URLs; reduces discovery surface."
+msgid "On: /feed/ and comment feeds redirect to the home page, so scrapers and feed readers cannot pull your posts that way. Off: keep normal RSS/Atom feeds (Feedly, aggregators, or email tools that subscribe to the site)."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-security.php:211
@@ -14830,4 +14830,352 @@ msgstr ""
 #: includes/modules/class-tsosk-mod-comment-antispam.php:0
 #, php-format
 msgid "Settings were not saved. These whitelist lines are not a valid IP address or range (such as 203.0.113.0/24): %s"
+msgstr ""
+
+msgid "Ignore 30 days"
+msgstr ""
+
+msgid "Ignore always"
+msgstr ""
+
+msgid "Warning ignored permanently."
+msgstr ""
+
+msgid "Warning ignored for 30 days."
+msgstr ""
+
+#, php-format
+msgid "Overview warning ignored permanently: %s."
+msgstr ""
+
+#, php-format
+msgid "Overview warning ignored for 30 days: %s."
+msgstr ""
+
+msgid "Session expired. Reload the page and try again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:813
+msgid "A security plugin is active (%s). Server rules stay read-only unless you confirm the override."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:834
+msgid "Security server rules saved."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:840
+msgid "Server rules saved. Reload the page if the site behaves unexpectedly and use Server Files to review .htaccess."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:933
+msgid "Could not load WordPress insert_with_markers()."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:940
+msgid "Could not create .htaccess at the WordPress root."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:947
+msgid "Could not update the TSO block in .htaccess. Check file permissions."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1047
+msgid "wp-content/cache does not exist yet. Create it (or let a cache plugin create it) before enabling this rule."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1051
+msgid "wp-content/cache is not writable."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1072
+msgid "Could not write the PHP block into wp-content/cache/.htaccess."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1200
+msgid "Read-only security review plus safe toggles for WordPress hardening. Constants save as JSON under the plugin uploads folder. Apache server rules use a reversible marked block in .htaccess. This does not replace a firewall or malware scanner."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1209
+msgid "A security plugin is active (%s). TSO keeps Apache server-rule writers soft-disabled to avoid overlapping .htaccess changes. You can still use WordPress-layer toggles below. Override only if you understand the risk."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1219
+msgid "Hardening WP"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1220
+msgid "Server rules"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1221 includes/modules/class-tsosk-mod-security.php:1552
+msgid "Accounts & keys"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1222
+msgid "Alerts & App passwords"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1228
+msgid "Read-only overview of common security settings. Use the other tabs to change toggles or server rules."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1250
+msgid "Related tools"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1256
+msgid "Server Files (.htaccess / robots)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1260
+msgid "Bot / WAF-style protection belongs in a dedicated security plugin (Kadence Security, Wordfence, …). TSO links to login rate limits and comment spam tools instead of duplicating a firewall."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1293
+msgid "Turn off pingbacks / trackbacks"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1294
+msgid "Removes pingback XML-RPC methods and the X-Pingback header while leaving the rest of XML-RPC available for apps that need it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1307
+msgid "Block author scans"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1308
+msgid "Redirects public ?author=N probes and author archives for guests, and hides the users REST collection from anonymous callers. Disable if you rely on public author archives or membership directories that list users."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1486
+msgid "Apache / LiteSpeed hardening"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1487
+msgid "Reversible rules written into a marked block in the WordPress-root .htaccess (and optionally wp-content/cache/.htaccess). Nginx/IIS ignore these files — use your host panel instead. Do not enable “forbid PHP in wp-includes”: WordPress must execute PHP there."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1492
+msgid "Block directory browsing"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1493
+msgid "Adds Options -Indexes so visitors cannot list folder contents."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1499
+msgid "Block HTTP access to wp-config.php"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1500
+msgid "Denies web requests to wp-config.php (PHP still reads the file normally)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1506
+msgid "Block access to .htaccess and .htpasswd"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1507
+msgid "Denies HTTP download of .ht* files in this directory tree where the rule applies."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1513
+msgid "Block access to sensitive files"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1514
+msgid "Denies common leak targets: *.sql, *.log, *.bak, readme.html, license.txt, wp-config-sample.php."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1520
+msgid "Disable PHP execution in cache directories"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1521
+msgid "Writes a PHP deny rule into wp-content/cache/.htaccess when that folder exists."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1529
+msgid "Override: write TSO server rules anyway"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1530
+msgid "Only if you accept possible overlap with your security plugin’s .htaccess rules."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1539 includes/modules/class-tsosk-mod-security.php:1540
+msgid "Save Server Rules"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1545
+msgid "Open Server Files to review the full .htaccess →"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1553
+msgid "These items are audited here but never changed automatically — renaming the admin user or the database table prefix can lock you out or break the site."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1577
+msgid "Default administrator username"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1581
+msgid "A user named “admin” exists. Create a new administrator with a unique login, then delete or demote “admin”."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1582
+msgid "Open Users & Sessions →"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1590
+msgid "Database table prefix"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1598
+msgid "Prefix is “%s” (WordPress default). Changing it requires a careful database migration — do it with a dedicated tool or host backup, never from this panel."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1609
+msgid "Prefix is “%s” (not the default wp_)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1618 includes/modules/class-tsosk-mod-security.php:1808 includes/modules/class-tsosk-mod-security.php:1939
+msgid "Security keys & salts"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1626
+msgid "%1$d key(s) missing and %2$d look weak or still use the WordPress placeholder. Generate new keys and paste them into wp-config.php (TSO never writes that file)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1634
+msgid "All eight AUTH/SECURE/LOGGED_IN/NONCE keys and salts are defined with non-placeholder values."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1637
+msgid "Open the official WordPress salt generator →"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1806 includes/modules/class-tsosk-mod-security.php:1937
+msgid "Author enumeration"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1937
+msgid "Public author probes and anonymous users REST listing are blocked."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1937
+msgid "Author scans are not blocked. Enable “Block author scans” under Hardening WP if you do not need public author archives."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1939
+msgid "Authentication keys and salts look unique."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1939
+msgid "One or more security keys/salts are missing, short, or still use the WordPress placeholder. Update them in wp-config.php."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:813
+msgid "Security hardening saved (all WordPress-layer toggles off)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:816
+msgid "Security hardening saved. On: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:882
+msgid "Security server rules cleared (TSO .htaccess block removed or empty)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:885
+msgid "Security server rules saved. On: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1701
+msgid "The generator link opens a plain-text page of PHP define() lines (AUTH_KEY, SECURE_AUTH_KEY, LOGGED_IN_KEY, NONCE_KEY and the matching *_SALT values). Copy that whole block into wp-config.php, replacing the old keys/salts (or the “put your unique phrase here” placeholders). TSO never writes wp-config.php — use FTP/SFTP or your host file manager. After you save, existing cookies become invalid and everyone (including you) must log in again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1704
+msgid "Open the generator and select all of the define(…) lines."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1705
+msgid "Open wp-config.php on the server and find the existing keys/salts block."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:1706
+msgid "Replace that block with the new lines, save the file, then log in again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:123
+msgid "Security Review constants (JSON)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:124
+msgid "Security Review admin alerts"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:125
+msgid "Security Review server rules"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:393
+msgid "Security server rules were saved in the database, but the .htaccess write failed: %s. Open Security Review › Server rules and save again."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:817
+msgid "Security flags section must be an object."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:839
+msgid "Security config storage is not available."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:858
+msgid "Security alerts section must be an object."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:878
+msgid "Security server rules section must be an object."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1511
+msgid "Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login Protect, and Security Review (constants JSON, admin alerts, server rules, plus Hidden Profiles runtime flags such as XML-RPC / author scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail log, or the Slow Query log."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-site-snapshot.php:1520
+msgid "Debug Mode JSON under the plugin uploads config folder is still excluded. Security Review constants are exported via the Security Review constants (JSON) section. Hidden Profiles constant presets (not the runtime flags) remain in that config folder if you need to copy them separately."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:0
+msgid "These rules only work on Apache or LiteSpeed. This server runs Nginx or IIS, which ignore .htaccess files."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:0
+msgid "The site returned a server error after the change, so the previous .htaccess was restored. Your host probably does not allow one of these rules (for example Options -Indexes)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-security.php:0
+#, php-format
+msgid "The other rules were saved, but: %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Compatibility with TSO Login Organizer"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Swiss Knife blocks wp-login.php (404) and /wp-admin/ for visitors who are not signed in. The login pages of TSO Login Organizer are not affected and the login links on your site point to them; the secret login address keeps working as a fallback."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Both plugins hide wp-login.php. Turn it off in one of them, otherwise it is hard to tell which one is answering with the 404."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Both plugins lock sign-ins after failed attempts. Whichever limit is reached first blocks the user, and unlocking in one plugin does not clear the lock of the other. Keep lockouts on in only one of them."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-login-protect.php:0
+msgid "Swiss Knife asks for an email code and TSO Login Organizer asks for its own second factor, so the same user is asked twice. Use the two-step check of only one plugin."
 msgstr ""

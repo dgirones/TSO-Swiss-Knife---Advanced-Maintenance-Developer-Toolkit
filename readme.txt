@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,16 +17,16 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 
 = Included modules =
 
-* **Overview** — Landing dashboard with a 0–100 site score built from the Health Report and Security Review checks, the items that need attention (each linked to the right tool), quick vitals, shortcuts and recent activity. Read-only; nothing is sent off-site.
+* **Overview** — Landing dashboard with a 0–100 site score built from the Health Report and Security Review checks, the items that need attention (each with Open tool, Ignore 30 days and Ignore always), quick vitals that deep-link into the matching tool section, shortcuts and recent activity. Nothing is sent off-site.
 * **Activity History** — Central log of changes across all plugin tools (options edited, database replacements, maintenance mode, admin menu, and more). Pinned as the default favorite for quick access.
 * **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
-* **Cron Manager** — List scheduled WP-Cron events, run or delete non-core hooks, and keep WordPress core cron events read-only (no manual Run / Edit / Delete).
+* **Cron Manager** — List scheduled WP-Cron events (WordPress core events at the bottom), run or delete non-core hooks, and keep WordPress core cron events read-only (no manual Run / Edit / Delete).
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
 * **Debug Mode** — One-click **Developer mode** for staging that turns on `SAVEQUERIES` for the Slow Query Monitor, saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` and `SCRIPT_DEBUG` are set by WordPress before plugins load, so the tab shows their current value and source (read-only) plus copy-paste `wp-config.php` snippets to change them.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
 * **Meta Editor** — Browse and edit post and user meta. Without an object ID, search matches meta keys only (not values).
 * **Option Library** — Save named option presets and re-apply them across environments.
-* **Export/Import TSO Configuration** — Back up and restore selected plugin `wp_options` settings as JSON (Redirects, Staging Mode switches, Login Protect, Slow Query settings, and more). Does not include Debug/Security JSON under uploads, the Staging mail log, sandbox sessions, or the Slow Query log.
+* **Export/Import TSO Configuration** — Back up and restore selected plugin settings as JSON (Redirects, Staging Mode, Login Protect, Slow Query, Security Review constants/alerts/server rules, Hidden Profiles runtime flags, and more). Does not include Debug Mode JSON under uploads, the Staging mail log, sandbox sessions, or the Slow Query log.
 * **Transients** — Filter by status and purge expired or all transients in bulk (site transients on multisite require a network/super admin).
 * **WP Constants** — Read-only overview of relevant constants grouped by category.
 * **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, and shortcodes.
@@ -48,7 +48,7 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Media Cleaner** — Review unattached media, missing attachment files, and unreferenced uploads.
 * **Uploads Disk Footprint** — Scan the uploads folder for size and file-type footprint statistics.
 * **Image Sizes Audit** — Review registered image sizes and disable unused sizes where appropriate.
-* **Security Review** — Highlight common hardening and update issues.
+* **Security Review** — Tabbed hardening: Overview checks, WordPress-layer toggles (XML-RPC, pingbacks, author scans, DISALLOW_FILE_EDIT and related constants), reversible Apache server rules (Indexes, deny wp-config / .ht* / sensitive files, PHP in uploads and cache), and Accounts & keys guides (salts, table prefix, admin username — never auto-changed). Soft-disables overlapping .htaccess writers when Kadence Security, Wordfence or similar is active.
 * **Core File Integrity** — Verify WordPress core files against official checksums and flag unexpected changes.
 * **Login Protection** — Custom login URL, brute-force limits, and related hardening controls.
 * **Comment Anti-Spam** — Local honeypot/rate-limit rules plus optional reputation or cloud checks (off until you enable them and add keys where required).
@@ -150,7 +150,7 @@ No. Core hooks (for example `wp_version_check` or `wp_maybe_auto_update`) are re
 
 = What does Export/Import TSO Configuration include? =
 
-Selected plugin settings stored in `wp_options` (Redirects, Staging Mode switches, Login Protect, Comment Anti-Spam, Slow Query settings, Health alerts, and similar). It does **not** include Debug/Security/Hidden Profiles JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log. Import overwrites the sections you choose; always export a backup first. Login Protect never imports an enabled custom login URL (to avoid lockouts). If Staging switches arrive enabled, confirm you are on a test site.
+Selected plugin settings (Redirects, Staging Mode switches, Login Protect, Comment Anti-Spam, Slow Query settings, Health alerts, Security Review constants JSON / admin alerts / Apache server rules, Hidden Profiles runtime flags such as XML-RPC and author scans, and similar). It does **not** include Debug Mode JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log. Import overwrites the sections you choose; always export a backup first. Login Protect never imports an enabled custom login URL (to avoid lockouts). If Staging switches arrive enabled, confirm you are on a test site. Security server rules also rewrite the marked TSO block in `.htaccess` when import succeeds.
 
 = Does the CAT / ES / ENG language switcher affect downloads and AJAX? =
 
@@ -201,9 +201,18 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.2.7 =
+* Login Protection works alongside TSO Login Organizer: its front-end login pages are no longer answered with a 404, login links point to them, and the tab explains which plugin blocks what when both have lockouts, hidden wp-login.php or two-step checks on.
+* Fix in Comment Anti-Spam: on Fluent Forms the hidden honeypot and time fields were printed outside the form and not read from the submitted data, so every message was rejected as "submitted too quickly". They are now printed inside the form and read correctly, and the logging option points to the Logs tab.
+* Fix in Login Protection: with the custom login URL on, the password-reset email could fail with a fatal error, and login or reset links were cut when the redirect or the username contained "&", "+" or a space.
+* Fix in Security Review: the Apache hardening rules restore the previous .htaccess when the site answers with a server error after saving, refuse to write on Nginx/IIS where .htaccess is ignored, and keep the panel in sync with the files when only the cache rule fails.
+* Improved: Security Review is organised in tabs (Overview, Hardening WP, Server rules, Accounts & keys, Alerts), with new toggles for pingbacks and author scans, reversible Apache rules, soft-disable when another security plugin is active, salts / table prefix / admin username audited with guides only, and clearer hints for "Disable RSS feeds" and the salt generator.
+* Fixed: Overview warnings have "Ignore 30 days" and "Ignore always" buttons that now work, tiles deep-link to the matching data, and "File editor disabled" no longer stays after enabling it in Security Review.
+* Improved: Cron Manager lists WordPress core events at the bottom of the table (read-only); Export/Import includes Security Review settings and Hidden Profiles flags, and Activity History lists which Security toggles and rules were saved.
+
 = 1.2.6 =
 * Login Protection: new optional counter per username (stops attackers who change IP on every attempt), IPv6 counted per /64 network, lockout emails limited to 3 every 15 minutes, and fixes for the attempts list growing without limit, "Clear Log" lifting active lockouts, invalid IP lines, self-lockout with login maintenance, timezone and the Active/Inactive badge.
-* Security Review: one alert when a new administrator is created (it sent two), FORCE_SSL_ADMIN refused when you are not on HTTPS, wp-config.php-locked toggles no longer saved, and a more truthful uploads PHP check (commented rules, Nginx/IIS).
+* Security Review: one alert when a new administrator is created (it sent two), FORCE_SSL_ADMIN refused when you are not on HTTPS, wp-config.php-locked toggles no longer saved and a more truthful uploads PHP check (commented rules, Nginx/IIS).
 * Comment Anti-Spam: WPForms trap fields now inside the form, clearer Contact Form 7 block messages, Elementor Pro blocks logged and Learning mode respected, IPv6 per /64 in rate limits and bans, and the IP whitelist validated on save.
 * Search & Replace: post GUIDs are skipped by default (new "Include post GUIDs" option) and the history tables of other TSO plugins are no longer searched or rewritten.
 * Server Files: the "Add security headers" button always shows, a virtual robots.txt is detected, informational notices are gone, and "No obvious issues were detected" only appears when it is true.
@@ -218,12 +227,3 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 * Fix in Redirects: saving or importing a redirect no longer drops percent-encoded characters (such as %20) from the source or the target; sources written with %20 are stored as the real path (a space) so they match the visited address.
 * Improved: the "Show the failed URL on the page" help in Custom 404 Page now shows numbered steps and one card per shortcode, with a Copy button and a preview of what visitors will see.
 * Improved: Maintenance Mode now lets you set the logo width, the colours of the page, a subtitle, a contact link and extra CSS, announce the expected return (with an optional live countdown and a matching Retry-After header), and switch on and off automatically with a schedule. Fixed stray spaces saved around the message and the IP list, the Export/Import configuration now keeps every Maintenance setting, the Site Status badge follows the schedule, and the page is marked noindex.
-
-= 1.2.4 =
-* Added: Plugin & Theme Leftovers — finds database rows that point to plugins or themes that are no longer installed (options, meta, post content), compares them with what is installed and lets you choose what to delete, with a backup to undo.
-* Fixes to Search & Replace: one single confirmation before executing, the result or error stays on screen, and a failed run (time limit, fatal error) now reports its reason.
-* Fixes to Update Manager: language packs reported as failed although WordPress installed them; the install message in the Overview lost its layout after the first click.
-* Fix in URL & HTTPS Doctor: the leftover http counter no longer counts this plugin's own options (the Search & Replace backup and the activity log keep the old text on purpose), so it reaches 0 after a replace. The count now also covers all post statuses and URLs stored with escaped slashes (the same rows Search & Replace changes), and says that Search & Replace may preview more rows because it looks in every table. The address check now recognises sites behind a proxy or CDN that ends https (with the wp-config.php fix to apply), the table is easier to read, and the server check shows when it was run.
-* Fixes to Activity History, Overview and Export/Import: entries from Plugin & Theme Leftovers now show their row count correctly and are translated, a value of "0" is no longer shown as empty, the list never exceeds the configured limit, the Overview recommendations reflect the plugins installed right now, "Undo last import" appears right after an import, and restoring previous settings keeps each option's autoload flag, and the Overview's Recent activity card no longer stretches on mobile with long entries.
-* Changed: Export/Import TSO Configuration now sits in Profiles & config (4th place), and TSO Link Inspector and TSO Options & Tables Cleaner are merged into a single "More TSO Plugins" tab, the last one of Database. Saved sidebar layouts and old links are migrated automatically.
-

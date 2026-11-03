@@ -109,9 +109,9 @@ class TSOSK_Mod_Content_Audit {
 			// Same shape as the detection (never Markdown links or escaped [[tag]]). Only the tags go; the text between them stays.
 			$new = preg_replace_callback(
 				$this->build_removal_pattern( (string) $tag ),
-				static function ( array $match ) use ( &$count ): string {
+				static function ( array $found ) use ( &$count ): string {
 					// Count opening tags only: [tag]…[/tag] is one shortcode, not two.
-					if ( '[/' !== substr( $match[0], 0, 2 ) ) {
+					if ( '[/' !== substr( $found[0], 0, 2 ) ) {
 						++$count;
 					}
 					return '';
@@ -272,7 +272,16 @@ class TSOSK_Mod_Content_Audit {
 												? '<a href="' . esc_url( $tsosk_edit ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $tsosk_label ) . '</a>'
 												: esc_html( $tsosk_label );
 										}
-										echo wp_kses( implode( ', ', $tsosk_used ), array( 'a' => array( 'href' => array(), 'target' => array(), 'rel' => array() ) ) );
+										echo wp_kses(
+											implode( ', ', $tsosk_used ),
+											array(
+												'a' => array(
+													'href' => array(),
+													'target' => array(),
+													'rel'  => array(),
+												),
+											)
+										);
 										if ( $count > count( $tsosk_used ) ) {
 											echo ' ' . esc_html( sprintf( /* translators: %d: number of posts not listed */ __( '+%d more', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $count - count( $tsosk_used ) ) );
 										}
@@ -542,7 +551,7 @@ class TSOSK_Mod_Content_Audit {
 					HAVING COUNT(*) > 1
 				) AS duplicate_groups"
 			);
-			$rows = array_slice( $rows, 0, self::LIST_LIMIT );
+			$rows                                   = array_slice( $rows, 0, self::LIST_LIMIT );
 		}
 
 		$out = array();

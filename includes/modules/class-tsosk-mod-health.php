@@ -382,14 +382,17 @@ class TSOSK_Mod_Health {
 	 */
 	public function get_dashboard_checks(): array {
 		// Each entry: check label => [ tab, anchor id in that tab (optional) ].
+		// Each entry: check label => [ tab, anchor, stable ignore id ].
 		$targets = array(
-			__( 'Site URL consistency', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => array( 'url-doctor', 'tsosk-url-doctor-addresses' ),
-			__( 'PHP errors shown to visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'debug', 'tsosk-debug-constants' ),
-			__( 'Object cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => array( 'runtime-stack', 'tsosk-runtime-object-cache' ),
-			__( 'Overdue cron events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )     => array( 'cron', 'tsosk-cron-health' ),
-			__( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => array( 'debug', 'tsosk-debug-logs' ),
-			__( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => array( 'redirects', 'tsosk-404-monitor' ),
-			__( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )      => array( 'health', 'tsosk-health-autoload' ),
+			__( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )       => array( 'update-manager', '', 'wp_version' ),
+			__( 'PHP version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => array( 'runtime-stack', '', 'php_version' ),
+			__( 'Site URL consistency', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )   => array( 'url-doctor', 'tsosk-url-doctor-addresses', 'site_url' ),
+			__( 'PHP errors shown to visitors', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) => array( 'debug', 'tsosk-debug-constants', 'debug_display' ),
+			__( 'Object cache', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )            => array( 'runtime-stack', 'tsosk-runtime-object-cache', 'object_cache' ),
+			__( 'Overdue cron events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )     => array( 'cron', 'tsosk-cron-health', 'overdue_cron' ),
+			__( 'debug.log size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )          => array( 'debug', 'tsosk-debug-logs', 'debug_log_size' ),
+			__( '404 monitor', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )             => array( 'redirects', 'tsosk-404-monitor', '404_monitor' ),
+			__( 'Autoloaded options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )      => array( 'health', 'tsosk-health-autoload', 'autoload_options' ),
 		);
 		$checks  = $this->get_checks( false );
 		foreach ( $checks as $i => $check ) {
@@ -397,6 +400,7 @@ class TSOSK_Mod_Health {
 			if ( isset( $targets[ $label ] ) ) {
 				$checks[ $i ]['tab']    = $targets[ $label ][0];
 				$checks[ $i ]['anchor'] = $targets[ $label ][1];
+				$checks[ $i ]['id']     = $targets[ $label ][2];
 			}
 		}
 		return $checks;
