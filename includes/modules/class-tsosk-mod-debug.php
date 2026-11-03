@@ -1078,7 +1078,7 @@ class TSOSK_Mod_Debug {
 						<li>
 							<?php
 							echo wp_kses(
-								__( 'If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it with this one instead of adding a second one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								__( 'If wp-config.php already has a <code>WP_DEBUG_LOG</code> line (for example <code>define( \'WP_DEBUG_LOG\', true );</code>), delete that old line. Keep only one <code>WP_DEBUG_LOG</code> line, otherwise WordPress shows "Constant WP_DEBUG_LOG already defined".', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								array( 'code' => array() )
 							);
 							?>
@@ -1086,7 +1086,7 @@ class TSOSK_Mod_Debug {
 						<li>
 							<?php
 							echo wp_kses(
-								__( '<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log inside this plugin\'s uploads folder, which can be emptied and shrunk from this screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+								__( 'Leave the separate <code>define( \'WP_DEBUG\', true );</code> line as it is: <code>WP_DEBUG</code> must be true (only that line, not <code>WP_DEBUG_LOG</code>). Errors will then be saved to a log inside this plugin\'s uploads folder, which can be emptied and shrunk from this screen.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 								array( 'code' => array() )
 							);
 							?>

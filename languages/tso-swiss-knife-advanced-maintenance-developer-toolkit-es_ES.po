@@ -11031,11 +11031,11 @@ msgstr "Abre wp-config.php y pega esta línea justo encima de %s:"
 msgid "Copy"
 msgstr "Copiar"
 
-msgid "If wp-config.php already has a <code>WP_DEBUG_LOG</code> line, replace it with this one instead of adding a second one."
-msgstr "Si wp-config.php ya tiene una línea <code>WP_DEBUG_LOG</code>, sustitúyela por esta en lugar de añadir una segunda."
+msgid "If wp-config.php already has a <code>WP_DEBUG_LOG</code> line (for example <code>define( 'WP_DEBUG_LOG', true );</code>), delete that old line. Keep only one <code>WP_DEBUG_LOG</code> line, otherwise WordPress shows \"Constant WP_DEBUG_LOG already defined\"."
+msgstr "Si wp-config.php ya tiene una línea <code>WP_DEBUG_LOG</code> (por ejemplo <code>define( 'WP_DEBUG_LOG', true );</code>), borra esa línea antigua. Deja solo una línea <code>WP_DEBUG_LOG</code>; si no, WordPress mostrará «Constant WP_DEBUG_LOG already defined»."
 
-msgid "<code>WP_DEBUG</code> must also be true. Errors will then be saved to a log inside this plugin's uploads folder, which can be emptied and shrunk from this screen."
-msgstr "<code>WP_DEBUG</code> también debe ser true. Entonces los errores se guardarán en un log dentro de la carpeta de uploads de este plugin, que se puede vaciar y reducir desde esta pantalla."
+msgid "Leave the separate <code>define( 'WP_DEBUG', true );</code> line as it is: <code>WP_DEBUG</code> must be true (only that line, not <code>WP_DEBUG_LOG</code>). Errors will then be saved to a log inside this plugin's uploads folder, which can be emptied and shrunk from this screen."
+msgstr "Deja tal cual la línea separada <code>define( 'WP_DEBUG', true );</code>: <code>WP_DEBUG</code> debe ser true (solo esa línea, no <code>WP_DEBUG_LOG</code>). Entonces los errores se guardarán en un log dentro de la carpeta de uploads de este plugin, que se puede vaciar y reducir desde esta pantalla."
 
 msgid "Copied to clipboard."
 msgstr "Copiado al portapapeles."
