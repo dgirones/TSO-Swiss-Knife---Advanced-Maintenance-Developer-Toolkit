@@ -1445,57 +1445,6 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
-	 * Whether each export section has stored data on this site.
-	 *
-	 * @return array<string, string>
-	 */
-	public static function get_section_status_summary(): array {
-		$map = self::get_export_map();
-		$out = array();
-
-		foreach ( $map as $section => $option ) {
-			if ( self::SECURITY_FLAGS_KEY === $option ) {
-				$flags = class_exists( 'TSOSK_Config_Storage' ) ? TSOSK_Config_Storage::get_security_flags() : array();
-				$on    = 0;
-				if ( ! empty( $flags['constants'] ) && is_array( $flags['constants'] ) ) {
-					foreach ( $flags['constants'] as $enabled ) {
-						if ( $enabled ) {
-							++$on;
-						}
-					}
-				}
-				if ( ! empty( $flags['force_ssl_admin_override_off'] ) ) {
-					++$on;
-				}
-				$out[ $section ] = $on > 0
-					? sprintf(
-						/* translators: %d: number of enabled flags */
-						__( 'array (%d items)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						$on
-					)
-					: 'missing';
-				continue;
-			}
-			$value = get_option( $option, self::MISSING );
-			if ( self::MISSING === $value ) {
-				$out[ $section ] = 'missing';
-			} elseif ( is_array( $value ) ) {
-				$out[ $section ] = sprintf(
-					/* translators: %d: number of array items */
-					__( 'array (%d items)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					count( $value )
-				);
-			} elseif ( is_string( $value ) ) {
-				$out[ $section ] = size_format( strlen( $value ), 1 );
-			} else {
-				$out[ $section ] = __( 'set', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-			}
-		}
-
-		return $out;
-	}
-
-	/**
 	 * Render admin UI.
 	 */
 	public function render(): void {

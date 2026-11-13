@@ -1310,26 +1310,6 @@ class TSOSK_Mod_Server_Files {
 	}
 
 	/**
-	 * Active lines.
-	 *
-	 * @param string $content Content.
-	 * @return array
-	 */
-	private function active_lines( string $content ): array {
-		$lines = preg_split( '/\R/', $content );
-		if ( ! is_array( $lines ) ) {
-			return array(); }
-		return array_values(
-			array_filter(
-				array_map( 'trim', $lines ),
-				static function ( string $line ): bool {
-					return '' !== $line && 0 !== strpos( $line, '#' );
-				}
-			)
-		);
-	}
-
-	/**
 	 * Render report.
 	 *
 	 * @param string $key Key.

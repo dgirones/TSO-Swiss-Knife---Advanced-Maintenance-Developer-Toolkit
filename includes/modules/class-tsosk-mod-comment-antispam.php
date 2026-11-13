@@ -1413,7 +1413,7 @@ class TSOSK_Mod_Comment_Antispam {
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || 1 !== (int) ( $body['success'] ?? 0 ) ) {
 			// Rate limit, banned IP or a changed API: back off instead of retrying on every comment.
-			$this->record_provider( 'stopforumspam', 'error', is_array( $body ) && ! empty( $body['error'] ) ? (string) ( is_array( $body['error'] ) ? wp_json_encode( $body['error'] ) : $body['error'] ) : 'Invalid response' );
+			$this->record_provider( 'stopforumspam', 'error', is_array( $body ) && ! empty( $body['error'] ) ? (string) ( is_array( $body['error'] ) ? wp_json_encode( $body['error'] ) : $body['error'] ) : __( 'Invalid response', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			set_site_transient( 'tsosk_cas_sfs_down', 1, 30 * MINUTE_IN_SECONDS );
 			return null;
 		}
@@ -1633,7 +1633,7 @@ class TSOSK_Mod_Comment_Antispam {
 		}
 
 		$verdict = trim( (string) $response[1] );
-		$this->record_provider( 'akismet', in_array( $verdict, array( 'true', 'false' ), true ) ? 'ok' : 'error', in_array( $verdict, array( 'true', 'false' ), true ) ? '' : 'Unexpected response' );
+		$this->record_provider( 'akismet', in_array( $verdict, array( 'true', 'false' ), true ) ? 'ok' : 'error', in_array( $verdict, array( 'true', 'false' ), true ) ? '' : __( 'Unexpected response', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		if ( 'true' === trim( (string) $response[1] ) ) {
 			return true;
 		}
@@ -1689,7 +1689,7 @@ class TSOSK_Mod_Comment_Antispam {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || ! isset( $body['allow'] ) ) {
-			$this->record_provider( 'cleantalk', 'error', is_array( $body ) && ! empty( $body['comment'] ) ? sanitize_text_field( (string) $body['comment'] ) : 'Invalid response' );
+			$this->record_provider( 'cleantalk', 'error', is_array( $body ) && ! empty( $body['comment'] ) ? sanitize_text_field( (string) $body['comment'] ) : __( 'Invalid response', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 			return null;
 		}
 
@@ -2180,7 +2180,7 @@ class TSOSK_Mod_Comment_Antispam {
 			<h3><?php esc_html_e( 'Provider status', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Last real response from each external service and its usage in the last 24 hours. The test button uses the saved settings, so save first after changing a key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<div class="tsosk-table-wrap">
-				<table class="widefat striped tsosk-table">
+				<table class="widefat striped tsosk-table tsosk-cas-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Provider', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -4002,7 +4002,7 @@ class TSOSK_Mod_Comment_Antispam {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Recent blocks', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
-				<table class="widefat striped tsosk-table">
+				<table class="widefat striped tsosk-table tsosk-cas-table tsosk-cas-log-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -4042,7 +4042,7 @@ class TSOSK_Mod_Comment_Antispam {
 			<h3><?php esc_html_e( 'Learning log (would-be blocks)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<p class="description"><?php esc_html_e( 'Submissions that were let through while Learning mode is on, but that the current rules would otherwise have blocked. Review this list before disabling Learning mode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<div class="tsosk-table-wrap">
-				<table class="widefat striped tsosk-table">
+				<table class="widefat striped tsosk-table tsosk-cas-table tsosk-cas-log-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>

@@ -119,6 +119,23 @@ class TSOSK_Mod_Debug {
 	}
 
 	/**
+	 * Whether a log is the default wp-content/debug.log while WP_DEBUG_LOG points to another file.
+	 *
+	 * @param string $path Normalised log path.
+	 * @return bool
+	 */
+	private function is_stale_default_log( string $path ): bool {
+		if ( ! $this->is_wp_content_debug_log( $path ) ) {
+			return false;
+		}
+		if ( ! defined( 'WP_DEBUG_LOG' ) || ! is_string( WP_DEBUG_LOG ) || '' === WP_DEBUG_LOG
+			|| in_array( strtolower( WP_DEBUG_LOG ), array( 'true', 'false', '1', '0' ), true ) ) {
+			return false;
+		}
+		return ! $this->is_wp_content_debug_log( $this->normalize_log_path( WP_DEBUG_LOG ) );
+	}
+
+	/**
 	 * Returns known WordPress/PHP log files that are safe to inspect from admin.
 	 *
 	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int}>
@@ -1029,7 +1046,7 @@ class TSOSK_Mod_Debug {
 				<details class="tsosk-debug-advanced"<?php echo 'developer' === $preset_key ? ' open' : ''; ?>>
 					<summary><?php echo esc_html( $preset['title'] ); ?></summary>
 					<p class="description" style="margin:0 0 8px;"><?php echo esc_html( $preset['desc'] ); ?></p>
-					<pre class="tsosk-code" style="margin:0;padding:12px;background:#fff;border:1px solid #dcdcde;border-radius:3px;overflow:auto;white-space:pre;"><?php echo esc_html( $preset['snippet'] ); ?></pre>
+					<pre class="tsosk-code"><?php echo esc_html( $preset['snippet'] ); ?></pre>
 				</details>
 				<?php endforeach; ?>
 			</details>
@@ -1047,7 +1064,7 @@ class TSOSK_Mod_Debug {
 				// PHP cannot create folders: the managed log is never written while its folder is missing.
 				wp_mkdir_p( dirname( $managed_path_now ) );
 			}
-			$log_is_managed   = '' !== $managed_path_now
+			$log_is_managed = '' !== $managed_path_now
 				&& defined( 'WP_DEBUG' ) && WP_DEBUG
 				&& defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG )
 				&& wp_normalize_path( WP_DEBUG_LOG ) === wp_normalize_path( $managed_path_now );
@@ -1147,7 +1164,12 @@ class TSOSK_Mod_Debug {
 					<tbody>
 						<?php foreach ( $logs as $log ) : ?>
 						<tr class="tsosk-log-row" data-log-path="<?php echo esc_attr( $log['path'] ); ?>" data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
-							<td><?php echo esc_html( $log['label'] ); ?></td>
+							<td>
+								<?php echo esc_html( $log['label'] ); ?>
+								<?php if ( $this->is_stale_default_log( $log['path'] ) ) : ?>
+									<br><span class="description"><?php esc_html_e( '(old, no longer used)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php endif; ?>
+							</td>
 							<td class="tsosk-code"><?php echo esc_html( $log['path'] ); ?></td>
 							<td class="tsosk-log-size-cell"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></td>
 							<td class="tsosk-log-modified-cell"><?php echo $log['modified'] ? esc_html( $this->format_log_modified( $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
@@ -1199,6 +1221,17 @@ class TSOSK_Mod_Debug {
 				data-log-path="<?php echo esc_attr( $log['path'] ); ?>"
 				data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
 				<h3><?php echo esc_html( $log['label'] ); ?></h3>
+				<?php if ( $this->is_stale_default_log( $log['path'] ) ) : ?>
+				<div class="tsosk-notice tsosk-notice-info">
+					<?php
+					printf(
+						/* translators: %s: absolute path of the old debug.log */
+						esc_html__( 'WordPress no longer writes to this file because WP_DEBUG_LOG points to another log. You can delete it from your server (File Manager or FTP): %s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'<code>' . esc_html( $log['path'] ) . '</code>'
+					);
+					?>
+				</div>
+				<?php endif; ?>
 				<p class="tsosk-log-meta">
 					<code><?php echo esc_html( $log['path'] ); ?></code>
 					-

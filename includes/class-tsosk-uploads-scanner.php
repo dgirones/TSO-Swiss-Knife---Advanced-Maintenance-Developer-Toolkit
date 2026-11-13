@@ -131,26 +131,6 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * Scan uploads for disk footprint statistics in one go (kept for callers that need a single call).
-	 *
-	 * The admin screen uses footprint_start() / footprint_step() / footprint_finish() so a large
-	 * library never depends on one request finishing in time.
-	 *
-	 * @return array<string, mixed>|WP_Error
-	 */
-	public static function scan_footprint(): array|WP_Error {
-		$state = self::footprint_start();
-		if ( is_wp_error( $state ) ) {
-			return $state;
-		}
-		$guard = 0;
-		while ( empty( $state['done'] ) && $guard++ < 10000 ) {
-			$state = self::footprint_step( $state, 5.0 );
-		}
-		return self::footprint_finish( $state );
-	}
-
-	/**
 	 * Create the state for a batched footprint scan.
 	 *
 	 * @return array<string, mixed>|WP_Error
@@ -780,19 +760,6 @@ class TSOSK_Uploads_Scanner {
 	}
 
 	/**
-	 * Extract the YYYY/MM month key from a relative uploads path, if present.
-	 *
-	 * @param string $relative Path relative to uploads root.
-	 * @return string Month key YYYY/MM or empty.
-	 */
-	private static function month_key_from_relative( string $relative ): string {
-		if ( preg_match( '#^(\d{4}/\d{2})/#', $relative, $matches ) ) {
-			return $matches[1];
-		}
-		return '';
-	}
-
-	/**
 	 * Determine whether a filename looks like a generated image-size derivative (e.g. -150x150).
 	 *
 	 * @param string $filename File basename.
@@ -977,56 +944,6 @@ class TSOSK_Uploads_Scanner {
 			'items'      => $items,
 			'scanned_at' => time(),
 		);
-	}
-
-	/**
-	 * Delete a folder previously returned by scan_hygiene() when marked deletable.
-	 *
-	 * @param string               $folder_id Folder id from scan results.
-	 * @param array<string, mixed> $scan      Cached scan payload.
-	 * @return true|WP_Error
-	 */
-	public static function delete_hygiene_folder( string $folder_id, array $scan ) {
-		delete_transient( self::TRANSIENT_FOOTPRINT ); // The disk split changes: drop the cached footprint.
-		delete_transient( 'tsosk_media_full_review_v2' ); // Media Cleaner results are now stale too.
-		$folder_id = sanitize_key( $folder_id );
-		if ( '' === $folder_id || empty( $scan['items'] ) || ! is_array( $scan['items'] ) ) {
-			return new WP_Error( 'invalid_folder', __( 'Unknown folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$target = null;
-		foreach ( $scan['items'] as $item ) {
-			if ( ! is_array( $item ) || ( $item['id'] ?? '' ) !== $folder_id ) {
-				continue;
-			}
-			$target = $item;
-			break;
-		}
-
-		if ( null === $target || empty( $target['deletable'] ) || empty( $target['path'] ) ) {
-			return new WP_Error( 'not_deletable', __( 'This folder cannot be deleted from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$path = wp_normalize_path( (string) $target['path'] );
-		$real = realpath( $path );
-		if ( false === $real ) {
-			return new WP_Error( 'missing', __( 'The folder no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-		$path = wp_normalize_path( $real );
-
-		if ( ! self::is_allowed_hygiene_delete_path( $path ) ) {
-			return new WP_Error( 'invalid_path', __( 'The folder path is outside the allowed locations.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		if ( ! is_dir( $path ) ) {
-			return new WP_Error( 'missing', __( 'The folder no longer exists.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		if ( ! self::remove_directory_tree( $path ) ) {
-			return new WP_Error( 'delete_failed', __( 'Could not delete the folder.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		return true;
 	}
 
 	/**

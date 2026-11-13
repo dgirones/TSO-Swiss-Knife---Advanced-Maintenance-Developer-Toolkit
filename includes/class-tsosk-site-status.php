@@ -676,44 +676,4 @@ class TSOSK_Site_Status {
 
 		return $index;
 	}
-
-	/**
-	 * Normalize a user search query into lowercase tokens.
-	 *
-	 * @param string $query Raw search input.
-	 * @return string[]
-	 */
-	public static function search_tokens( string $query ): array {
-		$query = self::normalize_search_text( trim( $query ) );
-		if ( '' === $query ) {
-			return array();
-		}
-		$tokens = preg_split( '/\s+/u', $query );
-		if ( false === $tokens ) {
-			$tokens = array();
-		}
-		return array_values( array_filter( array_map( 'trim', $tokens ) ) );
-	}
-
-	/**
-	 * Whether every token appears in the haystack string.
-	 *
-	 * @param string   $haystack Lowercase search blob.
-	 * @param string[] $tokens   Query tokens.
-	 * @return bool
-	 */
-	public static function matches_search_tokens( string $haystack, array $tokens ): bool {
-		if ( empty( $tokens ) ) {
-			return true;
-		}
-		foreach ( $tokens as $token ) {
-			if ( '' === $token ) {
-				continue;
-			}
-			if ( false === strpos( $haystack, $token ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
 }

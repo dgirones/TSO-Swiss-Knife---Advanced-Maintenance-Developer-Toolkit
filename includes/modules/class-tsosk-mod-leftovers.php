@@ -53,6 +53,34 @@ class TSOSK_Mod_Leftovers {
 	/** Seconds the "is this key used?" check may run. */
 	private const USAGE_TIME_CAP = 40;
 
+	/** Most different keys the prefix census reads per table. */
+	private const CENSUS_KEY_CAP = 20000;
+
+	/** A prefix mentioned by more files than this is treated as in use. */
+	private const CENSUS_FEW_MAX = 6;
+
+	/** Option holding the running read watch (autoloaded: it is read on every request while a watch runs). */
+	private const WATCH_OPTION = 'tsosk_lo_watch';
+
+	/** Option that keeps the groups and types the person marked as "not obsolete, never show again". */
+	private const IGNORE_OPTION = 'tsosk_lo_ignore';
+	private const IGNORE_MAX    = 500;
+
+	/** Days a read watch keeps recording. */
+	private const WATCH_DAYS = 30;
+
+	/** Most groups one watch follows. */
+	private const WATCH_MAX_ITEMS = 80;
+
+	/** Most option names followed per group. */
+	private const WATCH_MAX_KEYS = 300;
+
+	/** Seconds between two stored updates of the same group (a busy page would otherwise write on every visit). */
+	private const WATCH_THROTTLE = 600;
+
+	/** Most prefix groups the census lists. */
+	private const CENSUS_LIST_CAP = 300;
+
 	/**
 	 * Instance.
 	 *
@@ -93,6 +121,13 @@ class TSOSK_Mod_Leftovers {
 		add_action( 'wp_ajax_tsosk_lo_scan', array( $this, 'ajax_scan' ) );
 		add_action( 'wp_ajax_tsosk_lo_peek', array( $this, 'ajax_peek' ) );
 		add_action( 'wp_ajax_tsosk_lo_usage', array( $this, 'ajax_usage' ) );
+		add_action( 'wp_ajax_tsosk_lo_census', array( $this, 'ajax_census' ) );
+		add_action( 'wp_ajax_tsosk_lo_census_delete', array( $this, 'ajax_census_delete' ) );
+		add_action( 'wp_ajax_tsosk_lo_census_ignore', array( $this, 'ajax_census_ignore' ) );
+		add_action( 'wp_ajax_tsosk_lo_census_delete_types', array( $this, 'ajax_census_delete_types' ) );
+		add_action( 'wp_ajax_tsosk_lo_watch_start', array( $this, 'ajax_watch_start' ) );
+		add_action( 'wp_ajax_tsosk_lo_watch_status', array( $this, 'ajax_watch_status' ) );
+		add_action( 'wp_ajax_tsosk_lo_watch_stop', array( $this, 'ajax_watch_stop' ) );
 		add_action( 'wp_ajax_tsosk_lo_force_delete', array( $this, 'ajax_force_delete' ) );
 		add_action( 'wp_ajax_tsosk_lo_delete', array( $this, 'ajax_delete' ) );
 		add_action( 'wp_ajax_tsosk_lo_restore', array( $this, 'ajax_restore' ) );
@@ -592,6 +627,1372 @@ class TSOSK_Mod_Leftovers {
 			'scanned' => is_array( $rows ) ? count( $rows ) : 0,
 		);
 	}
+
+	// ── Read watch ───────────────────────────────────────────────────────────
+
+	/**
+	 * Running watch, read at start-up (null when none runs).
+	 *
+	 * @var array<string,mixed>|null
+	 */
+	private $watch = null;
+
+	/**
+	 * Group id of every watched option name.
+	 *
+	 * @var array<string,string>
+	 */
+	private $watch_keys = array();
+
+	/**
+	 * Groups read during this request: id => reader => true.
+	 *
+	 * @var array<string,array<string,bool>>
+	 */
+	private $watch_hits = array();
+
+	/**
+	 * Reads inspected per group during this request (the caller lookup is capped so a busy page stays fast).
+	 *
+	 * @var array<string,int>
+	 */
+	private $watch_calls = array();
+
+	/**
+	 * Register the read-watch hooks when a watch is running. Runs on every request, so it does nothing when there is none.
+	 */
+	public function init(): void {
+		$watch = get_option( self::WATCH_OPTION, array() );
+		if ( ! is_array( $watch ) || empty( $watch['items'] ) || ! is_array( $watch['items'] ) ) {
+			return;
+		}
+		if ( time() - (int) ( $watch['started'] ?? 0 ) > self::WATCH_DAYS * DAY_IN_SECONDS ) {
+			return;
+		}
+		$this->watch = $watch;
+		$sources     = array();
+		foreach ( $watch['items'] as $id => $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			if ( 'options' === ( $item['source'] ?? '' ) ) {
+				foreach ( (array) ( $item['keys'] ?? array() ) as $key ) {
+					$this->watch_keys[ (string) $key ] = (string) $id;
+					add_filter( 'option_' . $key, array( $this, 'on_option_read' ), 10, 2 );
+				}
+			} else {
+				$sources[ (string) ( $item['source'] ?? '' ) ] = true;
+			}
+		}
+		foreach ( array(
+			'postmeta'    => 'post',
+			'usermeta'    => 'user',
+			'termmeta'    => 'term',
+			'commentmeta' => 'comment',
+		) as $source => $type ) {
+			if ( isset( $sources[ $source ] ) ) {
+				add_filter( 'get_' . $type . '_metadata', array( $this, 'on_meta_read' ), 10, 5 );
+			}
+		}
+		add_action( 'shutdown', array( $this, 'watch_flush' ) );
+	}
+
+	/**
+	 * A watched option was read.
+	 *
+	 * @param mixed  $value  Option value (returned unchanged).
+	 * @param string $option Option name.
+	 * @return mixed
+	 */
+	public function on_option_read( $value, $option = '' ) {
+		if ( isset( $this->watch_keys[ (string) $option ] ) ) {
+			$this->watch_mark( $this->watch_keys[ (string) $option ] );
+		}
+		return $value;
+	}
+
+	/**
+	 * A meta value was read; counts when its key starts with a watched prefix.
+	 *
+	 * @param mixed  $value     Short-circuit value (returned unchanged).
+	 * @param int    $object_id Object id.
+	 * @param string $meta_key  Meta key (empty when all keys are read).
+	 * @param bool   $single    Whether a single value is read.
+	 * @param string $meta_type post|user|term|comment.
+	 * @return mixed
+	 */
+	public function on_meta_read( $value, $object_id = 0, $meta_key = '', $single = false, $meta_type = '' ) {
+		$key = strtolower( ltrim( (string) $meta_key, '_' ) );
+		if ( '' === $key || ! is_array( $this->watch ) ) {
+			return $value;
+		}
+		$source = (string) $meta_type . 'meta';
+		foreach ( (array) $this->watch['items'] as $id => $item ) {
+			if ( is_array( $item ) && ( $item['source'] ?? '' ) === $source && 0 === strpos( $key, (string) ( $item['prefix'] ?? '#' ) ) ) {
+				$this->watch_mark( (string) $id );
+				break;
+			}
+		}
+		return $value;
+	}
+
+	/**
+	 * Note that a group was read by the plugin or theme that made the call.
+	 *
+	 * @param string $id Group id.
+	 */
+	private function watch_mark( string $id ): void {
+		$this->watch_calls[ $id ] = ( $this->watch_calls[ $id ] ?? 0 ) + 1;
+		if ( $this->watch_calls[ $id ] > 20 ) {
+			return;
+		}
+		$reader = $this->watch_reader();
+		if ( null !== $reader ) {
+			$this->watch_hits[ $id ][ $reader ] = true;
+		}
+	}
+
+	/**
+	 * Plugin or theme that asked for the value: the nearest caller outside WordPress core and this plugin.
+	 * Reads made by WordPress admin screens and by other TSO tools (which scan and list keys) are ignored.
+	 *
+	 * @return string|null "plugin:slug", "theme:slug" or "mu:file"; null when the read does not count.
+	 */
+	private function watch_reader(): ?string {
+		$plugins = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+		$themes  = trailingslashit( wp_normalize_path( get_theme_root() ) );
+		$mu      = defined( 'WPMU_PLUGIN_DIR' ) ? trailingslashit( wp_normalize_path( WPMU_PLUGIN_DIR ) ) : '';
+		$skip    = array( trailingslashit( wp_normalize_path( ABSPATH . WPINC ) ), trailingslashit( wp_normalize_path( TSOSK_PATH ) ) );
+		$admin   = trailingslashit( wp_normalize_path( ABSPATH . 'wp-admin' ) );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Needed to tell which plugin made the read; runs only for the few watched keys.
+		$frames = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 20 );
+		foreach ( $frames as $frame ) {
+			$file = isset( $frame['file'] ) ? wp_normalize_path( (string) $frame['file'] ) : '';
+			if ( '' === $file ) {
+				continue;
+			}
+			foreach ( $skip as $dir ) {
+				if ( 0 === strpos( $file, $dir ) ) {
+					continue 2;
+				}
+			}
+			if ( 0 === strpos( $file, $admin ) ) {
+				return null;
+			}
+			if ( 0 === strpos( $file, $plugins ) ) {
+				$slug = (string) strtok( substr( $file, strlen( $plugins ) ), '/' );
+				return 0 === strpos( $slug, 'tso-' ) ? null : 'plugin:' . $slug;
+			}
+			if ( 0 === strpos( $file, $themes ) ) {
+				return 'theme:' . (string) strtok( substr( $file, strlen( $themes ) ), '/' );
+			}
+			if ( '' !== $mu && 0 === strpos( $file, $mu ) ) {
+				return 'mu:' . basename( $file );
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Store the reads of this request (at most one update per group every few minutes).
+	 */
+	public function watch_flush(): void {
+		if ( empty( $this->watch_hits ) ) {
+			return;
+		}
+		$watch = get_option( self::WATCH_OPTION, array() );
+		if ( ! is_array( $watch ) || empty( $watch['items'] ) ) {
+			return;
+		}
+		$changed = false;
+		foreach ( $this->watch_hits as $id => $readers ) {
+			if ( ! isset( $watch['items'][ $id ] ) || ! is_array( $watch['items'][ $id ] ) ) {
+				continue;
+			}
+			foreach ( array_keys( $readers ) as $reader ) {
+				$known = isset( $watch['items'][ $id ]['readers'][ $reader ] );
+				$last  = (int) ( $watch['items'][ $id ]['last'] ?? 0 );
+				if ( $known && time() - $last < self::WATCH_THROTTLE ) {
+					continue;
+				}
+				$watch['items'][ $id ]['readers'][ $reader ] = true;
+				$watch['items'][ $id ]['last']               = time();
+				$changed                                     = true;
+			}
+		}
+		if ( $changed ) {
+			update_option( self::WATCH_OPTION, $watch, true );
+		}
+	}
+
+	/**
+	 * State of the watch for the screen.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function watch_status(): array {
+		$watch = get_option( self::WATCH_OPTION, array() );
+		if ( ! is_array( $watch ) || empty( $watch['items'] ) || ! is_array( $watch['items'] ) ) {
+			return array(
+				'active' => false,
+				'items'  => array(),
+			);
+		}
+		$fmt     = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$started = (int) ( $watch['started'] ?? 0 );
+		$items   = array();
+		foreach ( $watch['items'] as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$last    = (int) ( $item['last'] ?? 0 );
+			$items[] = array(
+				'source'  => (string) ( $item['source'] ?? '' ),
+				'prefix'  => (string) ( $item['prefix'] ?? '' ),
+				'keys'    => count( (array) ( $item['keys'] ?? array() ) ),
+				'last'    => $last > 0 ? wp_date( $fmt, $last ) : '',
+				'readers' => array_keys( (array) ( $item['readers'] ?? array() ) ),
+			);
+		}
+		return array(
+			'active'    => true,
+			'started'   => wp_date( $fmt, $started ),
+			'days_left' => max( 0, (int) ceil( ( $started + self::WATCH_DAYS * DAY_IN_SECONDS - time() ) / DAY_IN_SECONDS ) ),
+			'items'     => $items,
+		);
+	}
+
+	/**
+	 * AJAX: start watching the selected groups. They are added to a running watch, which keeps what it already recorded.
+	 *
+	 * Request: items = JSON list of { source, prefix }.
+	 */
+	public function ajax_watch_start(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+
+		$raw   = isset( $_POST['items'] ) ? (string) wp_unslash( $_POST['items'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Decoded and validated field by field below.
+		$items = json_decode( $raw, true );
+		if ( ! is_array( $items ) || empty( $items ) ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		global $wpdb;
+		$current = get_option( self::WATCH_OPTION, array() );
+		$running = is_array( $current ) && ! empty( $current['items'] ) && is_array( $current['items'] ) && time() - (int) ( $current['started'] ?? 0 ) <= self::WATCH_DAYS * DAY_IN_SECONDS;
+		$watch   = $running ? $current : array(
+			'started' => time(),
+			'items'   => array(),
+		);
+		$added   = 0;
+		foreach ( array_slice( $items, 0, 400 ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$source = isset( $item['source'] ) ? sanitize_key( (string) $item['source'] ) : '';
+			$prefix = isset( $item['prefix'] ) ? strtolower( (string) $item['prefix'] ) : '';
+			if ( null === $this->source_def( $source ) || 1 !== preg_match( '~^[a-z0-9]{3,30}[_-]$~', $prefix ) ) {
+				continue;
+			}
+			$keys = array();
+			if ( 'options' === $source ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Names only; the pattern uses a placeholder.
+				$names = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s LIMIT 2000", '%' . $wpdb->esc_like( $prefix ) . '%' ) );
+				foreach ( (array) $names as $name ) {
+					$name = (string) $name;
+					if ( 0 === strpos( $name, '_transient' ) || 0 === strpos( $name, '_site_transient' ) || $this->census_needle( $name ) !== $prefix || $this->is_protected_key( 'options', $name ) ) {
+						continue;
+					}
+					if ( count( $keys ) < self::WATCH_MAX_KEYS ) {
+						$keys[] = $name;
+					}
+				}
+				if ( empty( $keys ) ) {
+					continue;
+				}
+			}
+			$id = $source . '|' . $prefix;
+			if ( ! isset( $watch['items'][ $id ] ) && count( $watch['items'] ) >= self::WATCH_MAX_ITEMS ) {
+				continue;
+			}
+			$prev                  = isset( $watch['items'][ $id ] ) && is_array( $watch['items'][ $id ] ) ? $watch['items'][ $id ] : array();
+			$watch['items'][ $id ] = array(
+				'source'  => $source,
+				'prefix'  => $prefix,
+				'keys'    => $keys,
+				'last'    => (int) ( $prev['last'] ?? 0 ),
+				'readers' => (array) ( $prev['readers'] ?? array() ),
+			);
+			++$added;
+		}
+		if ( 0 === $added ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		update_option( self::WATCH_OPTION, $watch, true );
+		wp_send_json_success( $this->watch_status() );
+	}
+
+	/**
+	 * AJAX: state of the watch.
+	 */
+	public function ajax_watch_status(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+		wp_send_json_success( $this->watch_status() );
+	}
+
+	/**
+	 * AJAX: stop the watch and clear what it recorded.
+	 */
+	public function ajax_watch_stop(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+		delete_option( self::WATCH_OPTION );
+		wp_send_json_success( $this->watch_status() );
+	}
+
+	// ── Prefix census (read only) ────────────────────────────────────────────
+
+	/**
+	 * Prefix that groups a key with the other keys of the same plugin ("ngg_" for "_ngg_options").
+	 *
+	 * @param string $key Option name or meta key.
+	 * @return string Empty when the key has no usable prefix.
+	 */
+	private function census_needle( string $key ): string {
+		$low = strtolower( $key );
+		// A cache entry belongs to the plugin that owns the name behind the transient prefix.
+		foreach ( array( '_site_transient_timeout_', '_site_transient_', '_transient_timeout_', '_transient_' ) as $cache ) {
+			if ( 0 === strpos( $low, $cache ) ) {
+				$low = substr( $low, strlen( $cache ) );
+				break;
+			}
+		}
+		if ( 1 !== preg_match( '~^_*([a-z0-9]{3,30})([_-])~', $low, $m ) || 'tsosk' === $m[1] ) {
+			return '';
+		}
+		return $m[1] . $m[2];
+	}
+
+	/**
+	 * Whether a file only knows other plugins by name: catalogs of plugin names and compatibility code.
+	 * Such files do not own the data of the plugins they mention.
+	 *
+	 * @param string $label Root label (plugins, themes, mu-plugins, wp-includes, wp-admin).
+	 * @param string $rel   Path inside the root.
+	 * @return bool
+	 */
+	private function census_is_weak_path( string $label, string $rel ): bool {
+		// The TSO cleaner keeps catalogs of other plugins' names, so nothing it mentions counts as in use.
+		if ( 'plugins' === $label && 0 === strpos( $rel, 'tso-options-tables-cleaner/' ) ) {
+			return true;
+		}
+		$inner = in_array( $label, array( 'plugins', 'themes', 'mu-plugins' ), true ) ? (string) preg_replace( '~^[^/]+/~', '', $rel ) : $rel;
+		return 1 === preg_match( '~(^|/)(thirdparty|third-party|third_party|compat|compatibility|cross-promotion[^/]*)/~i', $inner ) || 1 === preg_match( '~(^|[-_.])(maps|orphan|orphan-finder|detection|legacy|compat|compatibility)([-_.]|$)~i', basename( $inner ) );
+	}
+
+	/**
+	 * Count one mention of a token or word.
+	 *
+	 * @param array<string,array{n:int,w:int,files:string[]}> $used  Mentions so far.
+	 * @param string                                          $token Prefix or word.
+	 * @param string                                          $shown File shown to the user.
+	 * @param bool                                            $weak  Whether the file is a catalog or compatibility file.
+	 */
+	private function census_record( array &$used, string $token, string $shown, bool $weak ): void {
+		if ( ! isset( $used[ $token ] ) ) {
+			$used[ $token ] = array(
+				'n'     => 0,
+				'w'     => 0,
+				'files' => array(),
+			);
+		}
+		if ( $weak ) {
+			++$used[ $token ]['w'];
+			return;
+		}
+		++$used[ $token ]['n'];
+		if ( count( $used[ $token ]['files'] ) < self::CENSUS_FEW_MAX ) {
+			$used[ $token ]['files'][] = $shown;
+		}
+	}
+
+	/**
+	 * Read the PHP code of installed plugins, themes and WordPress itself once, looking for key prefixes and for exact words
+	 * (post type and taxonomy names). Installed means on disk, so a deactivated plugin still counts as the owner of its data.
+	 *
+	 * @param string[] $needles Prefixes in lowercase, each ending in "_" or "-".
+	 * @param string[] $words   Names in lowercase searched as plain text.
+	 * @return array{used:array,lit:array,scanned:int,truncated:bool}
+	 */
+	private function census_scan_code( array $needles, array $words ): array {
+		$result = array(
+			'used'      => array(),
+			'lit'       => array(),
+			'reg'       => array(),
+			'scanned'   => 0,
+			'truncated' => false,
+		);
+		if ( empty( $needles ) && empty( $words ) ) {
+			return $result;
+		}
+		$set   = array_flip( $needles );
+		$roots = array(
+			'plugins'     => dirname( rtrim( wp_normalize_path( TSOSK_PATH ), '/' ) ),
+			'themes'      => get_theme_root(),
+			'wp-includes' => ABSPATH . WPINC,
+			'wp-admin'    => ABSPATH . 'wp-admin',
+		);
+		if ( defined( 'WPMU_PLUGIN_DIR' ) ) {
+			$roots['mu-plugins'] = WPMU_PLUGIN_DIR;
+		}
+		$own     = wp_normalize_path( TSOSK_PATH );
+		$started = microtime( true );
+
+		foreach ( $roots as $label => $root ) {
+			$root = wp_normalize_path( (string) $root );
+			if ( '' === $root || ! is_dir( $root ) ) {
+				continue;
+			}
+			try {
+				$iterator = new RecursiveIteratorIterator(
+					new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS ),
+					RecursiveIteratorIterator::LEAVES_ONLY,
+					RecursiveIteratorIterator::CATCH_GET_CHILD
+				);
+			} catch ( Exception $e ) {
+				continue;
+			}
+			foreach ( $iterator as $file ) {
+				if ( microtime( true ) - $started > self::USAGE_TIME_CAP || $result['scanned'] >= self::USAGE_FILE_CAP ) {
+					$result['truncated'] = true;
+					break 2;
+				}
+				if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) {
+					continue;
+				}
+				$path = wp_normalize_path( $file->getPathname() );
+				$size = (int) $file->getSize();
+				if ( 0 === strpos( $path, $own ) || $size < 1 || $size > 3000000 ) {
+					continue;
+				}
+				++$result['scanned'];
+				$text  = strtolower( (string) $file->openFile( 'r' )->fread( $size ) );
+				$rel   = ltrim( substr( $path, strlen( $root ) ), '/' );
+				$shown = $label . '/' . $rel;
+				$weak  = $this->census_is_weak_path( $label, $rel );
+				if ( ! empty( $set ) && preg_match_all( '~[a-z0-9]{3,30}[_-]~', $text, $found ) ) {
+					foreach ( array_unique( $found[0] ) as $token ) {
+						if ( isset( $set[ $token ] ) ) {
+							$this->census_record( $result['used'], $token, $shown, $weak );
+						}
+					}
+				}
+				if ( ! empty( $words ) ) {
+					// A type registered by literal name in installed code belongs to that (maybe deactivated) plugin.
+					if ( preg_match_all( '~register_(?:post_type|taxonomy)\s*\(\s*[\'"]([a-z0-9_-]{1,32})[\'"]~', $text, $reg ) ) {
+						foreach ( array_unique( $reg[1] ) as $registered ) {
+							if ( in_array( $registered, $words, true ) && ! isset( $result['reg'][ $registered ] ) ) {
+								$result['reg'][ $registered ] = $shown;
+							}
+						}
+					}
+					// A type listed only to be left out (SQL "NOT IN ( ... )" or a "post_type__not_in" list) is not something the code uses.
+					$kept = preg_replace( array( '~not\s+in\s*\([^)]*\)~', '~__not_in[\'"]?\s*=>\s*array\s*\([^)]*\)~' ), ' ', $text );
+					$kept = is_string( $kept ) ? $kept : $text;
+					foreach ( $words as $word ) {
+						if ( false !== strpos( $kept, "'" . $word . "'" ) || false !== strpos( $kept, '"' . $word . '"' ) ) {
+							$this->census_record( $result['lit'], $word, $shown, $weak );
+						}
+					}
+				}
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * Whether the letters of one string appear in another in the same order.
+	 *
+	 * @param string $needle   Letters to find.
+	 * @param string $haystack Text to look in.
+	 * @return bool
+	 */
+	private function census_is_subsequence( string $needle, string $haystack ): bool {
+		$pos = 0;
+		$len = strlen( $haystack );
+		for ( $i = 0, $n = strlen( $needle ); $i < $n; $i++ ) {
+			$pos = strpos( $haystack, $needle[ $i ], $pos );
+			if ( false === $pos ) {
+				return false;
+			}
+			++$pos;
+			if ( $pos > $len ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Whether the few files that mention a prefix are its natural owner: WordPress core, or a plugin or theme whose
+	 * folder name contains the prefix (for example "transposh_" in plugins/transposh-translation-filter), or an installed
+	 * plugin or theme whose own code uses the prefix in two or more files.
+	 *
+	 * @param string   $needle Prefix with its separator.
+	 * @param string[] $files  Files that mention it (label/path).
+	 * @param int      $min_abbrev Shortest abbreviation of a folder name that counts as ownership.
+	 * @return bool
+	 */
+	private function census_owned_by_folder( string $needle, array $files, int $min_abbrev = 4 ): bool {
+		$word    = str_replace( array( '-', '_' ), '', strtolower( rtrim( $needle, '_-' ) ) );
+		$by_code = array();
+		foreach ( $files as $file ) {
+			if ( 0 === strpos( $file, 'wp-includes/' ) || 0 === strpos( $file, 'wp-admin/' ) ) {
+				return true;
+			}
+			if ( 1 !== preg_match( '~^(?:plugins|themes|mu-plugins)/([^/]+)/~', $file, $m ) ) {
+				continue;
+			}
+			// Several files of one installed plugin or theme (its own code or bundled libraries) use the prefix: it belongs to that code.
+			$by_code[ $m[1] ] = ( $by_code[ $m[1] ] ?? 0 ) + 1;
+			if ( $by_code[ $m[1] ] >= 2 ) {
+				return true;
+			}
+			// Folder name without hyphens: "add-to-any" owns "addtoany_".
+			$slug = str_replace( array( '-', '_' ), '', strtolower( $m[1] ) );
+			if ( '' !== $word && false !== strpos( $slug, $word ) ) {
+				return true;
+			}
+			// Abbreviation of the folder name: "cryptocurrency-price-widget" owns "crcpw_" (same first letter, letters in order).
+			if ( strlen( $word ) >= $min_abbrev && '' !== $slug && $word[0] === $slug[0] && $this->census_is_subsequence( $word, $slug ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Folders of the installed plugins, themes and mu-plugins as stub paths ("plugins/NAME/x"), for the owner-by-folder test.
+	 *
+	 * @var string[]|null
+	 */
+	private $folder_stubs = null;
+
+	/**
+	 * Whether an installed plugin or theme (active or not) owns a prefix by its folder name, so the data is not obsolete
+	 * even when its code never writes the prefix literally (for example "ccpw_" for cryptocurrency-price-widget).
+	 *
+	 * @param string $needle Prefix with its separator, or a type name followed by "_".
+	 * @return bool
+	 */
+	private function census_installed_owner( string $needle ): bool {
+		if ( null === $this->folder_stubs ) {
+			$this->folder_stubs = array();
+			$roots              = array(
+				'plugins'    => WP_PLUGIN_DIR,
+				'themes'     => get_theme_root(),
+				'mu-plugins' => defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : '',
+			);
+			foreach ( $roots as $label => $dir ) {
+				$dir = (string) $dir;
+				if ( '' === $dir || ! is_dir( $dir ) ) {
+					continue;
+				}
+				foreach ( (array) scandir( $dir ) as $name ) {
+					$name = (string) $name;
+					if ( '' !== $name && '.' !== $name[0] && is_dir( trailingslashit( $dir ) . $name ) ) {
+						$this->folder_stubs[] = $label . '/' . $name . '/x';
+					}
+				}
+			}
+		}
+		// With no code evidence at all, an abbreviation must be at least five letters long to count (shorter ones match by chance).
+		return $this->census_owned_by_folder( $needle, $this->folder_stubs, 5 );
+	}
+
+	/**
+	 * Active plugins (folders and single files) and active themes, used to tell what is running from what is only installed.
+	 *
+	 * @var array<string,array<string,bool>>|null
+	 */
+	private $active_set = null;
+
+	/**
+	 * Whether a scanned file (label/path) belongs to something that is active: WordPress itself, a must-use plugin,
+	 * an active plugin or the active theme (and its parent).
+	 *
+	 * @param string $shown File as shown in the evidence list, for example "plugins/jetpack/x.php".
+	 * @return bool
+	 */
+	private function census_is_active_path( string $shown ): bool {
+		if ( null === $this->active_set ) {
+			$active = (array) get_option( 'active_plugins', array() );
+			if ( is_multisite() ) {
+				$active = array_merge( $active, array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
+			}
+			$this->active_set = array(
+				'folders' => array(),
+				'files'   => array(),
+				'themes'  => array(),
+			);
+			foreach ( $active as $plugin ) {
+				$plugin = (string) $plugin;
+				$folder = dirname( $plugin );
+				if ( '.' === $folder || '' === $folder ) {
+					$this->active_set['files'][ $plugin ] = true;
+				} else {
+					$this->active_set['folders'][ $folder ] = true;
+				}
+			}
+			foreach ( array( get_stylesheet(), get_template() ) as $theme ) {
+				$this->active_set['themes'][ (string) $theme ] = true;
+			}
+		}
+		if ( 0 === strpos( $shown, 'wp-includes/' ) || 0 === strpos( $shown, 'wp-admin/' ) || 0 === strpos( $shown, 'mu-plugins/' ) ) {
+			return true;
+		}
+		if ( 1 === preg_match( '~^plugins/([^/]+)/~', $shown, $m ) ) {
+			return isset( $this->active_set['folders'][ $m[1] ] );
+		}
+		if ( 1 === preg_match( '~^plugins/([^/]+)$~', $shown, $m ) ) {
+			return isset( $this->active_set['files'][ $m[1] ] );
+		}
+		if ( 1 === preg_match( '~^themes/([^/]+)/~', $shown, $m ) ) {
+			return isset( $this->active_set['themes'][ $m[1] ] );
+		}
+		return false;
+	}
+
+	/**
+	 * Whether an ACTIVE plugin or theme owns a prefix or type name by its folder name. Because the code is running, an
+	 * abbreviation of four letters is enough here ("ccpw" for cryptocurrency-price-widget), unlike for installed-only code.
+	 *
+	 * @param string $needle Prefix with its separator, or a type name followed by "_".
+	 * @return bool
+	 */
+	private function census_active_owner( string $needle ): bool {
+		$this->census_is_active_path( 'x' );
+		$stubs = array();
+		foreach ( array_keys( $this->active_set['folders'] ) as $folder ) {
+			$stubs[] = 'plugins/' . $folder . '/x';
+		}
+		foreach ( array_keys( $this->active_set['themes'] ) as $theme ) {
+			$stubs[] = 'themes/' . $theme . '/x';
+		}
+		return $this->census_owned_by_folder( $needle, $stubs, 4 );
+	}
+
+	/**
+	 * Post types and taxonomies that have rows in the database but that nothing registers right now.
+	 * A deactivated plugin does not register its types either, so these are checked against the installed code later.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function census_orphan_types(): array {
+		global $wpdb;
+		$out = array();
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table names come from $wpdb; every value uses a placeholder.
+		$types = $wpdb->get_results( "SELECT post_type AS name, COUNT(*) AS n FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'auto-draft' ) GROUP BY post_type", ARRAY_A );
+		foreach ( (array) $types as $row ) {
+			$name = strtolower( (string) $row['name'] );
+			if ( '' === $name || post_type_exists( $name ) ) {
+				continue;
+			}
+			$meta   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->postmeta} pm INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE p.post_type = %s", $row['name'] ) );
+			$titles = $wpdb->get_col( $wpdb->prepare( "SELECT post_title FROM {$wpdb->posts} WHERE post_type = %s ORDER BY ID ASC LIMIT 3", $row['name'] ) );
+			$out[]  = array(
+				'kind'    => 'post_type',
+				'name'    => $name,
+				'rows'    => (int) $row['n'],
+				'meta'    => $meta,
+				'samples' => array_map(
+					static function ( $t ): string {
+						return wp_html_excerpt( wp_strip_all_tags( (string) $t ), 50, '…' );
+					},
+					(array) $titles
+				),
+			);
+		}
+		$taxes = $wpdb->get_results( "SELECT taxonomy AS name, COUNT(*) AS n FROM {$wpdb->term_taxonomy} GROUP BY taxonomy", ARRAY_A );
+		foreach ( (array) $taxes as $row ) {
+			$name = strtolower( (string) $row['name'] );
+			if ( '' === $name || taxonomy_exists( $name ) ) {
+				continue;
+			}
+			$titles = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM {$wpdb->term_taxonomy} tt INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id WHERE tt.taxonomy = %s ORDER BY t.term_id ASC LIMIT 3", $row['name'] ) );
+			$out[]  = array(
+				'kind'    => 'taxonomy',
+				'name'    => $name,
+				'rows'    => (int) $row['n'],
+				'meta'    => 0,
+				'samples' => array_map(
+					static function ( $t ): string {
+						return wp_html_excerpt( wp_strip_all_tags( (string) $t ), 50, '…' );
+					},
+					(array) $titles
+				),
+			);
+		}
+		// phpcs:enable
+		return $out;
+	}
+
+	/**
+	 * Group every option and meta key by prefix and list the groups that no installed code mentions.
+	 * Read only: nothing is changed or deleted.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function run_census(): array {
+		global $wpdb;
+		$clusters = array();
+		$cut      = false;
+		foreach ( array( 'options', 'postmeta', 'usermeta', 'termmeta', 'commentmeta' ) as $source ) {
+			$def = $this->source_def( $source );
+			if ( null === $def ) {
+				continue;
+			}
+			list( $table, , $key_col, $val_col ) = $def;
+			if ( 'options' === $source ) {
+				$sql = "SELECT {$key_col} AS k, 1 AS n, LENGTH( {$val_col} ) AS bytes FROM {$table} LIMIT %d";
+			} else {
+				$sql = "SELECT {$key_col} AS k, COUNT(*) AS n, SUM( LENGTH( {$val_col} ) ) AS bytes FROM {$table} GROUP BY {$key_col} LIMIT %d";
+			}
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column names come from source_def(); the limit uses a placeholder.
+			$rows = $wpdb->get_results( $wpdb->prepare( $sql, self::CENSUS_KEY_CAP + 1 ), ARRAY_A );
+			// phpcs:enable
+			$rows = is_array( $rows ) ? $rows : array();
+			if ( count( $rows ) > self::CENSUS_KEY_CAP ) {
+				$cut  = true;
+				$rows = array_slice( $rows, 0, self::CENSUS_KEY_CAP );
+			}
+			foreach ( $rows as $row ) {
+				$key = (string) $row['k'];
+				if ( 'recently_edited' === $key || $this->is_protected_key( $source, $key ) ) {
+					continue;
+				}
+				$needle = $this->census_needle( $key );
+				if ( '' === $needle ) {
+					continue;
+				}
+				$cid = $source . "\x01" . $needle;
+				if ( ! isset( $clusters[ $cid ] ) ) {
+					$clusters[ $cid ] = array(
+						'source'  => $source,
+						'prefix'  => $needle,
+						'keys'    => 0,
+						'rows'    => 0,
+						'bytes'   => 0,
+						'samples' => array(),
+					);
+				}
+				++$clusters[ $cid ]['keys'];
+				$clusters[ $cid ]['rows']  += (int) $row['n'];
+				$clusters[ $cid ]['bytes'] += (int) $row['bytes'];
+				if ( count( $clusters[ $cid ]['samples'] ) < 3 ) {
+					$clusters[ $cid ]['samples'][] = wp_html_excerpt( $key, 60, '…' );
+				}
+			}
+		}
+
+		$needles = array();
+		foreach ( $clusters as $cluster ) {
+			$needles[ $cluster['prefix'] ] = true;
+		}
+		$orphans = $this->census_orphan_types();
+		$words   = array();
+		foreach ( $orphans as $orphan ) {
+			$words[] = $orphan['name'];
+		}
+		$usage      = $this->census_scan_code( array_keys( $needles ), array_values( array_unique( $words ) ) );
+		$candidates = array();
+		$few        = 0;
+		$ignored    = $this->get_ignored();
+		foreach ( $clusters as $cluster ) {
+			if ( isset( $ignored[ 'g|' . $cluster['source'] . '|' . $cluster['prefix'] ] ) || $this->census_installed_owner( $cluster['prefix'] ) || $this->census_active_owner( $cluster['prefix'] ) ) {
+				continue;
+			}
+			$tier      = 'none';
+			$weak_only = false;
+			if ( isset( $usage['used'][ $cluster['prefix'] ] ) ) {
+				$hit = $usage['used'][ $cluster['prefix'] ];
+				if ( $hit['n'] > 0 ) {
+					// Used all over the site, or by its natural owner: not a candidate.
+					if ( $hit['n'] > self::CENSUS_FEW_MAX || $this->census_owned_by_folder( $cluster['prefix'], $hit['files'] ) ) {
+						continue;
+					}
+					$tier                = 'few';
+					$cluster['mentions'] = $hit['files'];
+					++$few;
+				} else {
+					$weak_only = true;
+				}
+			}
+			$len                   = strlen( $cluster['prefix'] ) - 1;
+			$cluster['tier']       = $tier;
+			$cluster['confidence'] = 'few' === $tier ? 'low' : ( ( $len >= 5 && ! $usage['truncated'] && ! $weak_only ) ? 'high' : ( $len >= 4 ? 'medium' : 'low' ) );
+			$candidates[]          = $cluster;
+		}
+		usort(
+			$candidates,
+			static function ( array $a, array $b ): int {
+				$by_tier = ( 'none' === $a['tier'] ? 0 : 1 ) <=> ( 'none' === $b['tier'] ? 0 : 1 );
+				return 0 !== $by_tier ? $by_tier : $b['rows'] <=> $a['rows'];
+			}
+		);
+
+		$types = array();
+		foreach ( $orphans as $orphan ) {
+			// Only what an active plugin or theme registers or owns is left out; a deactivated plugin's types are listed so they can be removed.
+			$reg_file = (string) ( $usage['reg'][ $orphan['name'] ] ?? '' );
+			if ( isset( $ignored[ 't||' . $orphan['name'] ] ) || ( '' !== $reg_file && $this->census_is_active_path( $reg_file ) ) || $this->census_active_owner( $orphan['name'] . '_' ) ) {
+				continue;
+			}
+			$hit       = $usage['lit'][ $orphan['name'] ] ?? array(
+				'n'     => 0,
+				'w'     => 0,
+				'files' => array(),
+			);
+			$weak_only = false;
+			$tier      = 'none';
+			if ( '' !== $reg_file ) {
+				// Registered by the code of a deactivated plugin or theme.
+				$tier               = 'few';
+				$orphan['mentions'] = array( $reg_file );
+			} elseif ( $hit['n'] > 0 ) {
+				$active_files = array_values( array_filter( $hit['files'], array( $this, 'census_is_active_path' ) ) );
+				if ( $this->census_owned_by_folder( $orphan['name'] . '_', $active_files ) ) {
+					continue;
+				}
+				$tier               = 'few';
+				$orphan['mentions'] = $hit['files'];
+			} elseif ( $hit['w'] > 0 ) {
+				$weak_only = true;
+			}
+			$orphan['tier']       = $tier;
+			$orphan['confidence'] = 'few' === $tier ? 'low' : ( ( $usage['truncated'] || $weak_only ) ? 'medium' : 'high' );
+			$types[]              = $orphan;
+		}
+		usort(
+			$types,
+			static function ( array $a, array $b ): int {
+				return $b['rows'] <=> $a['rows'];
+			}
+		);
+
+		return array(
+			'types'      => array_slice( $types, 0, self::CENSUS_LIST_CAP ),
+			'checked'    => count( $clusters ),
+			'files'      => $usage['scanned'],
+			'truncated'  => $usage['truncated'],
+			'cut'        => $cut,
+			'total'      => count( $candidates ),
+			'few'        => $few,
+			'candidates' => array_slice( $candidates, 0, self::CENSUS_LIST_CAP ),
+			'ignored'    => array_values( $ignored ),
+		);
+	}
+
+	/**
+	 * Table, id column, label column and a spare column of every source a backup can hold: the five leftover sources
+	 * plus entries, comments and term links (used only to back up and restore whole entries of an obsolete type).
+	 *
+	 * @param string $source Source slug.
+	 * @return array{0:string,1:string,2:string,3:string}|null
+	 */
+	private function backup_def( string $source ): ?array {
+		global $wpdb;
+		$def = $this->source_def( $source );
+		if ( null !== $def ) {
+			return $def;
+		}
+		$extra = array(
+			'posts'    => array( $wpdb->posts, 'ID', 'post_title', 'post_content' ),
+			'comments' => array( $wpdb->comments, 'comment_ID', 'comment_author', 'comment_content' ),
+			'termrel'  => array( $wpdb->term_relationships, 'object_id', 'term_taxonomy_id', 'term_order' ),
+		);
+		return $extra[ $source ] ?? null;
+	}
+
+	/**
+	 * Add the rows of one table that belong to the given ids to a backup. False when the backup would get too large.
+	 *
+	 * @param string           $source Backup source slug (see backup_def()).
+	 * @param string           $col    Column that holds the ids.
+	 * @param int[]            $ids    Ids to copy.
+	 * @param array<int,array> $rows   Backup rows (appended to).
+	 * @param int              $bytes  Bytes so far (updated).
+	 * @return bool
+	 */
+	private function backup_collect( string $source, string $col, array $ids, array &$rows, int &$bytes ): bool {
+		global $wpdb;
+		$def = $this->backup_def( $source );
+		if ( null === $def ) {
+			return true;
+		}
+		$table = $def[0];
+		foreach ( array_chunk( array_map( 'absint', $ids ), 200 ) as $chunk ) {
+			$in = implode( ',', $chunk );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column are fixed in this class; the list holds integers only (absint).
+			$found = $wpdb->get_results( "SELECT * FROM {$table} WHERE {$col} IN ({$in})", ARRAY_A );
+			foreach ( (array) $found as $row ) {
+				foreach ( $row as $value ) {
+					$bytes += strlen( (string) $value );
+				}
+				if ( $bytes > self::BACKUP_CAP_BYTES ) {
+					return false;
+				}
+				$rows[] = array(
+					'source' => $source,
+					'row'    => $row,
+				);
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * AJAX: delete every entry of the selected obsolete post types, with its meta, term links and comments.
+	 * Only types that no plugin registers, that no installed code names (not even as a weak mention) and that have no
+	 * child entries of another type are deleted. A backup is kept and the site is checked afterwards.
+	 *
+	 * Request: names = JSON list of post type names.
+	 */
+	public function ajax_census_delete_types(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+		$this->more_time();
+
+		$raw   = isset( $_POST['names'] ) ? (string) wp_unslash( $_POST['names'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Decoded and validated name by name below.
+		$items = json_decode( $raw, true );
+		if ( ! is_array( $items ) || empty( $items ) || count( $items ) > 10 ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$core  = array( 'post', 'page', 'attachment', 'revision', 'nav_menu_item', 'custom_css', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part', 'wp_global_styles', 'wp_navigation', 'wp_font_family', 'wp_font_face', 'auto-draft' );
+		$names = array();
+		foreach ( $items as $item ) {
+			$name = is_string( $item ) ? strtolower( $item ) : '';
+			if ( 1 === preg_match( '~^[a-z0-9_-]{1,20}$~', $name ) && ! in_array( $name, $core, true ) && ! post_type_exists( $name ) ) {
+				$names[ $name ] = true;
+			}
+		}
+		$names = array_keys( $names );
+		if ( empty( $names ) ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		// Forced: the person confirmed types that installed code only mentions; what an active plugin or theme registers or owns stays protected.
+		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
+
+		$usage = $this->census_scan_code( array(), $names );
+		if ( $usage['truncated'] ) {
+			wp_send_json_error( __( 'Refused: the check of the installed code could not finish, so there is not enough evidence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		global $wpdb;
+		$ids     = array();
+		$skipped = 0;
+		foreach ( $names as $name ) {
+			$hit        = $usage['lit'][ $name ] ?? array(
+				'n' => 0,
+				'w' => 0,
+			);
+			$reg_active = isset( $usage['reg'][ $name ] ) && $this->census_is_active_path( (string) $usage['reg'][ $name ] );
+			if ( $force ) {
+				$refuse = $reg_active || $this->census_active_owner( $name . '_' );
+			} else {
+				$refuse = isset( $usage['reg'][ $name ] ) || $hit['n'] > 0 || $hit['w'] > 0 || $this->census_installed_owner( $name . '_' ) || $this->census_active_owner( $name . '_' );
+			}
+			if ( $refuse ) {
+				++$skipped;
+				continue;
+			}
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table names come from $wpdb; every value uses a placeholder or is an integer.
+			$found = array_map( 'absint', (array) $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type = %s LIMIT %d", $name, self::DELETE_CAP + 1 ) ) );
+			if ( empty( $found ) ) {
+				continue;
+			}
+			$in       = implode( ',', $found );
+			$children = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_parent IN ({$in}) AND post_type <> %s", $name ) );
+			// phpcs:enable
+			if ( $children > 0 ) {
+				++$skipped;
+				continue;
+			}
+			$ids = array_merge( $ids, $found );
+		}
+		$total = count( $ids );
+		if ( 0 === $total ) {
+			wp_send_json_error( __( 'Nothing was deleted: the types are registered or owned by an active plugin or theme, have child entries of another type, have no entries, or installed code still names them.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( $total > self::DELETE_CAP ) {
+			wp_send_json_error( __( 'Too many entries in one go. Select fewer types and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$in = implode( ',', $ids );
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table names come from $wpdb; the list holds integers only (absint).
+		$comment_ids = array_map( 'absint', (array) $wpdb->get_col( "SELECT comment_ID FROM {$wpdb->comments} WHERE comment_post_ID IN ({$in})" ) );
+		// phpcs:enable
+
+		$rows  = array();
+		$bytes = 0;
+		$ok    = $this->backup_collect( 'posts', 'ID', $ids, $rows, $bytes )
+			&& $this->backup_collect( 'postmeta', 'post_id', $ids, $rows, $bytes )
+			&& $this->backup_collect( 'termrel', 'object_id', $ids, $rows, $bytes )
+			&& $this->backup_collect( 'comments', 'comment_post_ID', $ids, $rows, $bytes )
+			&& ( empty( $comment_ids ) || $this->backup_collect( 'commentmeta', 'comment_id', $comment_ids, $rows, $bytes ) );
+		if ( ! $ok ) {
+			wp_send_json_error( __( 'These entries are too large to keep a backup of them, so nothing was deleted. Select fewer types.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$backup    = array(
+			'time' => time(),
+			'user' => get_current_user_id(),
+			'rows' => $rows,
+		);
+		$backup_id = $this->store_backup( $backup );
+		if ( '' === $backup_id ) {
+			wp_send_json_error( __( 'The backup could not be saved, so nothing was deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$before = $this->site_health_codes();
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table names come from $wpdb; the lists hold integers only (absint).
+		$deleted = 0;
+		if ( ! empty( $comment_ids ) ) {
+			$cin      = implode( ',', $comment_ids );
+			$deleted += (int) $wpdb->query( "DELETE FROM {$wpdb->commentmeta} WHERE comment_id IN ({$cin})" );
+			$deleted += (int) $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_ID IN ({$cin})" );
+		}
+		$deleted += (int) $wpdb->query( "DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ({$in})" );
+		$deleted += (int) $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id IN ({$in})" );
+		$deleted += (int) $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID IN ({$in})" );
+		// phpcs:enable
+		foreach ( $ids as $post_id ) {
+			clean_post_cache( $post_id );
+		}
+		wp_cache_flush();
+		$after = $this->site_health_codes();
+
+		if ( ! empty( $before ) && ! $this->codes_have_error( $before ) && $this->codes_have_error( $after ) ) {
+			foreach ( $rows as $saved_row ) {
+				$def = $this->backup_def( (string) $saved_row['source'] );
+				if ( null !== $def ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Putting back the exact rows that were just deleted.
+					$wpdb->insert( $def[0], $saved_row['row'] );
+				}
+			}
+			wp_cache_flush();
+			$this->drop_backup( $backup_id );
+			TSOSK_Activity_Log::log( 'leftovers', 'delete', __( 'Obsolete data deleted and restored automatically: the site returned an error.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'entries' => $total ) );
+			wp_send_json_error( __( 'The site returned a server error after deleting, so the rows were restored automatically. Nothing was lost.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		TSOSK_Activity_Log::log(
+			'leftovers',
+			'delete',
+			sprintf(
+				/* translators: %d: number of database rows */
+				__( 'Plugin/theme leftovers deleted: %d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$deleted
+			),
+			array(
+				'rows'    => $deleted,
+				'entries' => $total,
+				'types'   => implode( ',', $names ),
+			)
+		);
+
+		$message = sprintf(
+			/* translators: 1: number of entries, 2: number of database rows */
+			__( 'Entries deleted: %1$d (%2$d database rows with their meta and comments). You can undo it from the backup panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$total,
+			$deleted
+		);
+		if ( $skipped > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of types */
+				__( '%d type(s) were skipped because they are still registered, named by installed code, or have child entries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$skipped
+			);
+		}
+		wp_send_json_success(
+			array(
+				'deleted' => $deleted,
+				'skipped' => $skipped,
+				'message' => $message,
+			)
+		);
+	}
+
+	/**
+	 * Groups and types the person marked as in use, keyed by "g|source|prefix" or "t||name".
+	 *
+	 * @return array<string,array<string,string>>
+	 */
+	private function get_ignored(): array {
+		$list = get_option( self::IGNORE_OPTION, array() );
+		$out  = array();
+		if ( ! is_array( $list ) ) {
+			return $out;
+		}
+		foreach ( $list as $id => $item ) {
+			if ( is_string( $id ) && is_array( $item ) && isset( $item['kind'], $item['name'] ) ) {
+				$out[ $id ] = array(
+					'kind'   => 't' === $item['kind'] ? 't' : 'g',
+					'source' => isset( $item['source'] ) ? (string) $item['source'] : '',
+					'name'   => (string) $item['name'],
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * AJAX: stop showing a group or type in the census (mode "add"), or show it again (mode "remove").
+	 *
+	 * Request: mode, kind (g = key prefix, t = post type or taxonomy), source (for g) and name.
+	 */
+	public function ajax_census_ignore(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+
+		$mode = isset( $_POST['mode'] ) && 'remove' === sanitize_key( wp_unslash( $_POST['mode'] ) ) ? 'remove' : 'add';
+		$kind = isset( $_POST['kind'] ) && 't' === sanitize_key( wp_unslash( $_POST['kind'] ) ) ? 't' : 'g';
+		$name = isset( $_POST['name'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['name'] ) ) ) : '';
+		$src  = '';
+		if ( 'g' === $kind ) {
+			$src = isset( $_POST['source'] ) ? sanitize_key( wp_unslash( $_POST['source'] ) ) : '';
+			if ( null === $this->source_def( $src ) || 1 !== preg_match( '~^[a-z0-9]{3,30}[_-]$~', $name ) ) {
+				wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
+		} elseif ( 1 !== preg_match( '~^[a-z0-9_-]{1,40}$~', $name ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$ignored = $this->get_ignored();
+		$id      = $kind . '|' . $src . '|' . $name;
+		if ( 'remove' === $mode ) {
+			unset( $ignored[ $id ] );
+		} elseif ( count( $ignored ) < self::IGNORE_MAX ) {
+			$ignored[ $id ] = array(
+				'kind'   => $kind,
+				'source' => $src,
+				'name'   => $name,
+			);
+		}
+		update_option( self::IGNORE_OPTION, $ignored, false );
+		wp_send_json_success( array( 'ignored' => array_values( $ignored ) ) );
+	}
+
+	/**
+	 * AJAX: prefix census (read only).
+	 */
+	public function ajax_census(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+		$this->more_time();
+		wp_send_json_success( $this->run_census() );
+	}
+
+	/**
+	 * AJAX: delete the rows of the selected prefix groups (options and meta only), with a backup and a site check.
+	 * A group is refused when installed code uses its prefix (unless the person accepted a weak mention), when the read
+	 * watch saw a plugin or theme read it, or when the check of the installed code could not finish.
+	 *
+	 * Request: items = JSON list of { source, prefix, accept_few }.
+	 */
+	public function ajax_census_delete(): void {
+		check_ajax_referer( 'tsosk_lo_nonce', 'nonce' );
+		$this->ensure_allowed();
+		$this->more_time();
+
+		$raw   = isset( $_POST['items'] ) ? (string) wp_unslash( $_POST['items'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Decoded and validated field by field below.
+		$items = json_decode( $raw, true );
+		if ( ! is_array( $items ) || empty( $items ) || count( $items ) > 40 ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$groups = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$source = isset( $item['source'] ) ? sanitize_key( (string) $item['source'] ) : '';
+			$prefix = isset( $item['prefix'] ) ? strtolower( (string) $item['prefix'] ) : '';
+			if ( null === $this->source_def( $source ) || 1 !== preg_match( '~^[a-z0-9]{3,30}[_-]$~', $prefix ) ) {
+				continue;
+			}
+			$groups[ $source . '|' . $prefix ] = array(
+				'source'     => $source,
+				'prefix'     => $prefix,
+				'accept_few' => ! empty( $item['accept_few'] ),
+			);
+		}
+		if ( empty( $groups ) ) {
+			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$needles = array();
+		foreach ( $groups as $group ) {
+			$needles[ $group['prefix'] ] = true;
+		}
+		$usage = $this->census_scan_code( array_keys( $needles ), array() );
+		if ( $usage['truncated'] ) {
+			wp_send_json_error( __( 'Refused: the check of the installed code could not finish, so there is not enough evidence.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$watch = get_option( self::WATCH_OPTION, array() );
+
+		global $wpdb;
+		$skipped   = 0;
+		$n_large   = 0;
+		$to_delete = array();
+		foreach ( $groups as $gid => $group ) {
+			$hit = $usage['used'][ $group['prefix'] ] ?? array(
+				'n'     => 0,
+				'w'     => 0,
+				'files' => array(),
+			);
+			// A prefix of fewer than four letters, or one that an installed plugin or theme folder owns, is never proposed for deletion.
+			if ( ( 0 === $hit['n'] && strlen( $group['prefix'] ) < 5 ) || $this->census_installed_owner( $group['prefix'] ) ) {
+				++$skipped;
+				continue;
+			}
+			if ( $hit['n'] > 0 && ( ! $group['accept_few'] || $hit['n'] > self::CENSUS_FEW_MAX || $this->census_owned_by_folder( $group['prefix'], $hit['files'] ) ) ) {
+				++$skipped;
+				continue;
+			}
+			if ( is_array( $watch ) && ! empty( $watch['items'][ $gid ]['readers'] ) ) {
+				++$skipped;
+				continue;
+			}
+			list( $table, $id_col, $key_col, $val_col ) = (array) $this->source_def( $group['source'] );
+			$ids                                        = array();
+			$after                                      = 0;
+			$more                                       = true;
+			$found                                      = 0;
+			while ( $more && $found <= self::DELETE_CAP ) {
+				// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column names come from source_def(); every value uses a placeholder.
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT {$id_col} AS id, {$key_col} AS k, LENGTH( {$val_col} ) AS len FROM {$table} WHERE {$id_col} > %d AND {$key_col} LIKE %s ORDER BY {$id_col} ASC LIMIT %d",
+						$after,
+						'%' . $wpdb->esc_like( $group['prefix'] ) . '%',
+						self::BATCH
+					),
+					ARRAY_A
+				);
+				// phpcs:enable
+				foreach ( (array) $rows as $row ) {
+					$after = (int) $row['id'];
+					$key   = (string) $row['k'];
+					if ( $this->census_needle( $key ) !== $group['prefix'] || 0 === strpos( $key, 'tsosk_' ) || 'recently_edited' === $key || $this->is_protected_key( $group['source'], $key ) ) {
+						continue;
+					}
+					if ( (int) $row['len'] > self::ROW_CAP ) {
+						++$n_large;
+						continue;
+					}
+					$ids[ (int) $row['id'] ] = true;
+				}
+				$found = count( $ids );
+				$more  = is_array( $rows ) && count( $rows ) >= self::BATCH;
+			}
+			if ( ! empty( $ids ) ) {
+				$to_delete[ $group['source'] ] = ( $to_delete[ $group['source'] ] ?? array() ) + $ids;
+			}
+		}
+
+		$total = 0;
+		foreach ( $to_delete as $ids ) {
+			$total += count( $ids );
+		}
+		if ( 0 === $total ) {
+			wp_send_json_error( __( 'Nothing was deleted: the groups are still in use, were read during the watch, or hold rows that are protected or too large.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( $total > self::DELETE_CAP ) {
+			wp_send_json_error( __( 'Too many rows in one go. Select fewer groups and try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$backup = $this->build_backup( $to_delete );
+		if ( null === $backup ) {
+			wp_send_json_error( __( 'These rows are too large to keep a backup of them, so nothing was deleted. Select fewer groups.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$backup_id = $this->store_backup( $backup );
+		if ( '' === $backup_id ) {
+			wp_send_json_error( __( 'The backup could not be saved, so nothing was deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$before  = $this->site_health_codes();
+		$deleted = 0;
+		foreach ( $to_delete as $source => $ids ) {
+			$def = $this->source_def( (string) $source );
+			if ( null === $def ) {
+				continue;
+			}
+			list( $table, $id_col ) = $def;
+			foreach ( array_chunk( array_map( 'absint', array_keys( $ids ) ), 500 ) as $chunk ) {
+				$in = implode( ',', $chunk );
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column come from source_def(); the list holds integers only (absint).
+				$deleted += (int) $wpdb->query( "DELETE FROM {$table} WHERE {$id_col} IN ({$in})" );
+			}
+		}
+		wp_cache_flush();
+		$after = $this->site_health_codes();
+
+		if ( ! empty( $before ) && ! $this->codes_have_error( $before ) && $this->codes_have_error( $after ) ) {
+			foreach ( $backup['rows'] as $saved_row ) {
+				$def = isset( $saved_row['source'] ) ? $this->source_def( (string) $saved_row['source'] ) : null;
+				if ( null !== $def && isset( $saved_row['row'] ) && is_array( $saved_row['row'] ) ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Putting back the exact rows that were just deleted.
+					$wpdb->insert( $def[0], $saved_row['row'] );
+				}
+			}
+			wp_cache_flush();
+			$this->drop_backup( $backup_id );
+			TSOSK_Activity_Log::log( 'leftovers', 'delete', __( 'Obsolete data deleted and restored automatically: the site returned an error.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), array( 'groups' => count( $groups ) ) );
+			wp_send_json_error( __( 'The site returned a server error after deleting, so the rows were restored automatically. Nothing was lost.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		TSOSK_Activity_Log::log(
+			'leftovers',
+			'delete',
+			sprintf(
+				/* translators: %d: number of database rows */
+				__( 'Plugin/theme leftovers deleted: %d row(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$deleted
+			),
+			array(
+				'rows'    => $deleted,
+				'groups'  => count( $groups ),
+				'skipped' => $skipped,
+			)
+		);
+
+		$message = sprintf(
+			/* translators: %d: number of database rows */
+			_n( 'Deleted %d row. You can undo it from the backup panel.', 'Deleted %d rows. You can undo it from the backup panel.', $deleted, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			$deleted
+		);
+		if ( $skipped > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of groups */
+				__( '%d group(s) were skipped: installed code or the watch shows they are in use, or the prefix is too short to be sure.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$skipped
+			);
+		}
+		if ( $n_large > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of database rows */
+				__( '%d row(s) were kept because they are too large to back up.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$n_large
+			);
+		}
+		wp_send_json_success(
+			array(
+				'deleted' => $deleted,
+				'skipped' => $skipped,
+				'message' => $message,
+			)
+		);
+	}
+
 
 	// ── Peek / delete / restore ──────────────────────────────────────────────
 
@@ -1273,7 +2674,7 @@ class TSOSK_Mod_Leftovers {
 				$left[] = $entry;
 				continue;
 			}
-			$def = $this->source_def( (string) ( $entry['source'] ?? '' ) );
+			$def = $this->backup_def( (string) ( $entry['source'] ?? '' ) );
 			if ( null === $def || ! is_array( $entry['row'] ?? null ) ) {
 				continue;
 			}
@@ -1286,6 +2687,10 @@ class TSOSK_Mod_Leftovers {
 				$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$key_col} = %s", (string) ( $row[ $key_col ] ?? '' ) ) );
 			}
 			// phpcs:enable
+			if ( 'termrel' === $entry['source'] ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table from backup_def(); values use placeholders.
+				$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE object_id = %d AND term_taxonomy_id = %d", $row_id, absint( $row['term_taxonomy_id'] ?? 0 ) ) );
+			}
 			if ( $exists ) {
 				++$skipped;
 				continue;
@@ -1409,10 +2814,10 @@ class TSOSK_Mod_Leftovers {
 	private function backup_row_info( array $entry ): array {
 		$source = (string) ( $entry['source'] ?? '' );
 		$row    = is_array( $entry['row'] ?? null ) ? $entry['row'] : array();
-		$def    = $this->source_def( $source );
+		$def    = $this->backup_def( $source );
 		$key    = null !== $def ? (string) ( $row[ $def[2] ] ?? '' ) : '';
 		$owner  = '';
-		foreach ( array( 'post_id', 'user_id', 'term_id', 'comment_id' ) as $col ) {
+		foreach ( array( 'post_id', 'user_id', 'term_id', 'comment_id', 'ID', 'comment_ID', 'object_id' ) as $col ) {
 			if ( isset( $row[ $col ] ) ) {
 				$owner = (string) $row[ $col ];
 			}
@@ -1443,6 +2848,9 @@ class TSOSK_Mod_Leftovers {
 			'usermeta'    => __( 'User meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'termmeta'    => __( 'Term meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'commentmeta' => __( 'Comment meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'posts'       => __( 'Entries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'comments'    => __( 'Comments', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'termrel'     => __( 'Term links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 		?>
 		<div class="tsosk-card" id="tsosk-lo-backup">
@@ -1499,7 +2907,7 @@ class TSOSK_Mod_Leftovers {
 						<button type="button" class="button tsosk-lo-bk-del"><?php esc_html_e( 'Delete this backup', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					</p>
 					<div class="tsosk-lo-scroll">
-						<table class="widefat striped">
+						<table class="widefat striped tsosk-lo-bk-table">
 							<thead>
 								<tr>
 									<th class="check-column"><input type="checkbox" class="tsosk-lo-bk-pickall" aria-label="<?php esc_attr_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" /></th>
@@ -1513,10 +2921,10 @@ class TSOSK_Mod_Leftovers {
 								<?php foreach ( $infos as $i => $info ) : ?>
 									<tr>
 										<th class="check-column"><input type="checkbox" class="tsosk-lo-bk-pick" value="<?php echo esc_attr( (string) $i ); ?>" /></th>
-										<td><?php echo esc_html( $labels[ $info['source'] ] ?? $info['source'] ); ?></td>
-										<td><code><?php echo esc_html( $info['key'] ); ?></code></td>
-										<td><?php echo esc_html( $info['owner'] ); ?></td>
-										<td><?php echo esc_html( size_format( $info['bytes'] ) ); ?></td>
+										<td data-label="<?php esc_attr_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $labels[ $info['source'] ] ?? $info['source'] ); ?></td>
+										<td data-label="<?php esc_attr_e( 'Key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><code><?php echo esc_html( $info['key'] ); ?></code></td>
+										<td data-label="<?php esc_attr_e( 'Owner ID', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $info['owner'] ); ?></td>
+										<td data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( $info['bytes'] ) ); ?></td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
@@ -1548,66 +2956,127 @@ class TSOSK_Mod_Leftovers {
 	 */
 	private function js_strings(): array {
 		return array(
-			'scanning'            => __( 'Scanning…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'scan_done'           => __( 'Scan finished.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'nothing'             => __( 'Nothing found: the database has no references to plugins or themes that are not installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'error'               => __( 'The request failed. Try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'plugin'              => __( 'Plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'theme'               => __( 'Theme', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'not_installed'       => __( 'not installed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'where'               => __( 'Where', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'name'                => __( 'Name / key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'rows'                => __( 'Rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'example'             => __( 'Example', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_options'         => __( 'Options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_postmeta'        => __( 'Post meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_usermeta'        => __( 'User meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_termmeta'        => __( 'Term meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_commentmeta'     => __( 'Comment meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'src_posts'           => __( 'Post content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'deleted_badge'       => __( 'Deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'usage_btn'           => __( 'Check usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'usage_running'       => __( 'Checking the installed code…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'scanning'              => __( 'Scanning…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'scan_done'             => __( 'Scan finished.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'nothing'               => __( 'Nothing found: the database has no references to plugins or themes that are not installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'error'                 => __( 'The request failed. Try again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'plugin'                => __( 'Plugin', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'theme'                 => __( 'Theme', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'not_installed'         => __( 'not installed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'where'                 => __( 'Where', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'name'                  => __( 'Name / key', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'rows'                  => __( 'Rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'example'               => __( 'Example', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_options'           => __( 'Options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_postmeta'          => __( 'Post meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_usermeta'          => __( 'User meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_termmeta'          => __( 'Term meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_commentmeta'       => __( 'Comment meta', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'src_posts'             => __( 'Post content', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'deleted_badge'         => __( 'Deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_btn'             => __( 'Check usage', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_running'         => __( 'Checking the installed code…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %d: number of PHP files checked */
-			'usage_none'          => __( 'No installed plugin, theme or WordPress file mentions this key (%d files checked). Nothing seems to read it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'usage_found'         => __( 'Installed code mentions this key, so it may still be in use: ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'usage_prefix'        => __( 'Installed code uses a similar name, so it may still be in use: ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'usage_trunc'         => __( 'The check could not finish (too many files). There is not enough evidence to delete it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'force_btn'           => __( 'Delete anyway (backup and site check)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'confirm_force'       => __( 'Delete this row? A backup is kept and the site is checked afterwards; if it returns a server error the row is restored automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'pick_hint'           => __( 'Tick the rows you want to delete to enable the button.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'section_del'         => __( 'Can be deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'section_del_desc'    => __( 'These items are not installed anymore and nothing installed refers to them. Tick what you want to delete; a backup is kept so you can undo it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'section_info'        => __( 'Information only (not deleted in bulk)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'section_info_desc'   => __( 'Protected, too large or shared with something installed. They are not deleted in bulk. Protected entries are never deleted. Large options can be deleted one by one with "Delete anyway", only if no installed code mentions them; a backup is kept and the site is checked afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'badge_protected'     => __( 'Protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'badge_large'         => __( 'Too large', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'badge_installed'     => __( 'Shared', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'large_note'          => __( 'too large to delete here (they probably hold other data too)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_installed'      => __( 'kept: it also mentions an installed item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_protected'      => __( 'kept: protected entry', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_large'          => __( 'kept: too large, it probably holds other data too', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'mixed_note'          => __( 'also mention installed items (not deletable here)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'protected_note'      => __( 'protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'posts_note'          => __( 'Posts are only listed. Edit them, or use Search & Replace.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'view'                => __( 'View', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'hide'                => __( 'Hide', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_deletable'      => __( 'can be deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_kept'           => __( 'kept: it also mentions installed items, is protected or is too large', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'peek_none'           => __( 'No rows to show.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'select_all'          => __( 'Select all deletable rows of this item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'delete_btn'          => __( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_none'            => __( 'No installed plugin, theme or WordPress file mentions this key (%d files checked). Nothing seems to read it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_found'           => __( 'Installed code mentions this key, so it may still be in use: ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_prefix'          => __( 'Installed code uses a similar name, so it may still be in use: ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'usage_trunc'           => __( 'The check could not finish (too many files). There is not enough evidence to delete it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'force_btn'             => __( 'Delete anyway (backup and site check)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_force'         => __( 'Delete this row? A backup is kept and the site is checked afterwards; if it returns a server error the row is restored automatically.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'pick_hint'             => __( 'Tick the rows you want to delete to enable the button.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'section_del'           => __( 'Can be deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'section_del_desc'      => __( 'These items are not installed anymore and nothing installed refers to them. Tick what you want to delete; a backup is kept so you can undo it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'section_info'          => __( 'Information only (not deleted in bulk)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'section_info_desc'     => __( 'Protected, too large or shared with something installed. They are not deleted in bulk. Protected entries are never deleted. Large options can be deleted one by one with "Delete anyway", only if no installed code mentions them; a backup is kept and the site is checked afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'badge_protected'       => __( 'Protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'badge_large'           => __( 'Too large', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'badge_installed'       => __( 'Shared', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'large_note'            => __( 'too large to delete here (they probably hold other data too)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_installed'        => __( 'kept: it also mentions an installed item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_protected'        => __( 'kept: protected entry', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_large'            => __( 'kept: too large, it probably holds other data too', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'mixed_note'            => __( 'also mention installed items (not deletable here)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'protected_note'        => __( 'protected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'posts_note'            => __( 'Posts are only listed. Edit them, or use Search & Replace.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'view'                  => __( 'View', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'hide'                  => __( 'Hide', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_deletable'        => __( 'can be deleted', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_kept'             => __( 'kept: it also mentions installed items, is protected or is too large', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'peek_none'             => __( 'No rows to show.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'select_all'            => __( 'Select all deletable rows of this item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'delete_btn'            => __( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %d: number of rows */
-			'selected'            => __( '%d rows selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'selected'              => __( '%d rows selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %d: number of rows */
-			'confirm_delete'      => __( 'Delete %d row(s) from the database? A backup of them is kept so you can undo it. Click OK to proceed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'confirm_restore'     => __( 'Restore all the rows of this backup? Rows that exist again are skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'confirm_restore_sel' => __( 'Restore the ticked rows? Rows that exist again are skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'confirm_bk_del'      => __( 'Delete this backup? You will not be able to restore its rows afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'confirm_bk_delall'   => __( 'Delete all backups? You will not be able to restore any of these rows afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-			'bk_none'             => __( 'Tick at least one row first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_delete'        => __( 'Delete %d row(s) from the database? A backup of them is kept so you can undo it. Click OK to proceed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_restore'       => __( 'Restore all the rows of this backup? Rows that exist again are skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_restore_sel'   => __( 'Restore the ticked rows? Rows that exist again are skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_bk_del'        => __( 'Delete this backup? You will not be able to restore its rows afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'confirm_bk_delall'     => __( 'Delete all backups? You will not be able to restore any of these rows afterwards.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'bk_none'               => __( 'Tick at least one row first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_btn'            => __( 'Find obsolete data by prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_running'        => __( 'Checking the keys against the installed code…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_none'           => __( 'Every group of keys belongs to something that is installed. Nothing obsolete was found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: 1: number of key groups checked, 2: number of PHP files read, 3: number of groups no installed code mentions */
+			'census_summary'        => __( '%1$d groups of keys were checked against %2$d PHP files; %3$d are not mentioned by any installed code.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_trunc'          => __( 'The code check could not finish (too many files), so the list may include groups that are still in use.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_cut'            => __( 'A table has too many different keys: only the first ones were checked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_prefix'         => __( 'Prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_keys'           => __( 'Keys', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_size'           => __( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_conf'           => __( 'Confidence', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_samples'        => __( 'Examples', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'conf_high'             => __( 'High', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'conf_medium'           => __( 'Medium', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'conf_low'              => __( 'Low', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_note'           => __( 'Review each group; a prefix that belongs to a plugin you plan to reinstall should be kept. Deleting keeps a backup you can restore, and a group is refused when installed code or the watch shows it is in use.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_deleting'       => __( 'Deleting and checking the site…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_tdel_btn'       => __( 'Delete the ticked entry types', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_tdel_pick'      => __( 'Tick at least one entry type to delete first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: 1: number of entry types, 2: number of entries */
+			'census_tdel_confirm'   => __( '%1$d entry type(s) will be deleted with their %2$d entries, meta, term links and comments. A backup is kept so you can undo it from the backup panel, and the site is checked afterwards. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: %s: comma-separated entry type names */
+			'census_tdel_few'       => __( 'Installed code mentions these entry types, or the check could not rule them out: %s. Nothing that an active plugin or theme registers will be deleted and a backup is kept, but check that you no longer need them. Delete them anyway?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_ignore_btn'     => __( 'Ignore', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_ignore_confirm' => __( 'Stop showing this in the report? It will not be deleted, and you can show it again from the ignored list.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: %d: number of ignored items */
+			'census_ignored_title'  => __( 'Ignored (%d)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_unignore_btn'   => __( 'Show again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_ignored_note'   => __( 'These are hidden from the report because you marked them as in use. Nothing here is ever deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_delete_col'     => __( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_delete_btn'     => __( 'Delete the ticked groups', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_delete_pick'    => __( 'Tick at least one group to delete first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: %d: number of groups */
+			'census_delete_confirm' => __( '%d group(s) will be deleted from the database. A backup is kept so you can undo it from the backup panel, and the site is checked afterwards. Continue?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: %s: list of prefixes */
+			'census_delete_few'     => __( 'Installed code still mentions these groups, so something may read them: %s. Delete them anyway?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_watch_col'      => __( 'Watch', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_btn'             => __( 'Watch the ticked groups', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_pick'            => __( 'Tick at least one group first.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_refresh'         => __( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_stop'            => __( 'Stop and clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_inactive'        => __( 'No watch is running.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: 1: number of groups watched, 2: start date, 3: days left */
+			'watch_summary'         => __( '%1$d groups watched since %2$s; %3$d day(s) left.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_last'            => __( 'Last read', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_readers'         => __( 'Read by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_never'           => __( 'Not read yet', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_confirm_stop'    => __( 'Stop watching and clear the results?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_started'         => __( 'Watching started.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'watch_stopped'         => __( 'Watch stopped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_types_title'    => __( 'Post types and taxonomies that no plugin registers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_kind_post_type' => __( 'Post type', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_kind_taxonomy'  => __( 'Taxonomy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_name'           => __( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_meta_rows'      => __( 'Meta rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_types_note'     => __( 'These entries and terms exist in the database but nothing registers their type now. Any entry type can be ticked: those that no installed code names are deleted straight away, and for the others you confirm first. Types that an active plugin or theme registers or owns are never deleted, and a backup is kept. Taxonomies are only reported.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_evidence'       => __( 'Evidence', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_ev_none'        => __( 'No installed code mentions it', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'census_ev_few'         => __( 'Only mentioned by: ', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			/* translators: %d: number of groups */
+			'census_summary_few'    => __( '%d of them are only mentioned by one to six files, usually compatibility code of other plugins, so check the files listed before deciding.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %1$d: number of plugin and theme folders */
-			'summary'             => __( '%1$d plugin/theme folder(s) found in the database that are not installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'summary'               => __( '%1$d plugin/theme folder(s) found in the database that are not installed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -1639,6 +3108,31 @@ class TSOSK_Mod_Leftovers {
 				<button type="button" class="button button-primary" id="tsosk-lo-delete" disabled><?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 				<span class="tsosk-ajax-msg" id="tsosk-lo-selected"></span>
 			</div>
+		</div>
+
+		<div class="tsosk-card" id="tsosk-lo-census-card">
+			<h3><?php esc_html_e( 'Find obsolete data by prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Groups the options and meta keys of the database by prefix and lists the groups that no installed plugin, theme or WordPress file mentions, plus the post types that no plugin registers. It finds leftovers that point to no folder, such as the data of a gallery plugin you removed years ago. You decide what to delete: groups and entry types with strong evidence are deleted with a backup you can restore, and anything you are sure is in use can be ignored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<p>
+				<button type="button" class="button" id="tsosk-lo-census"><?php esc_html_e( 'Find obsolete data by prefix', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<span class="tsosk-ajax-msg" id="tsosk-lo-census-status" role="status"></span>
+			</p>
+			<div id="tsosk-lo-census-results"></div>
+		</div>
+
+		<div class="tsosk-card" id="tsosk-lo-watch-card">
+			<h3><?php esc_html_e( 'Watch which keys are read', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'Records for up to 30 days whether a plugin or theme reads the keys of the groups you tick in the report above, and which one. A group that is read is in use; one that nobody reads after several days of normal visits is very likely obsolete. It only records: nothing is deleted. Reads made by WordPress admin screens and by TSO maintenance tools are ignored. Something that only reads on a rare event (a monthly task, a form) may need the full 30 days.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<p>
+				<button type="button" class="button" id="tsosk-lo-watch-refresh"><?php esc_html_e( 'Refresh', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button" id="tsosk-lo-watch-stop"><?php esc_html_e( 'Stop and clear', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<span class="tsosk-ajax-msg" id="tsosk-lo-watch-status" role="status"></span>
+			</p>
+			<div id="tsosk-lo-watch-results"></div>
 		</div>
 
 		<?php $this->render_backups_box(); ?>

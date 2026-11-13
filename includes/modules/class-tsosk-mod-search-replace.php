@@ -1773,16 +1773,15 @@ class TSOSK_Mod_Search_Replace {
 						<?php esc_html_e( 'Deselect all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
 				</div>
-				<div id="tsosk-sr-table-list"
-					style="max-height:200px;overflow-y:auto;border:1px solid #c3c4c7;border-radius:4px;padding:6px 10px;background:#fff;columns:2 250px;gap:16px;">
+				<div id="tsosk-sr-table-list">
 					<?php foreach ( $tables as $tbl ) : ?>
-					<label style="display:block;white-space:nowrap;font-size:13px;padding:2px 0;">
+					<label class="tsosk-sr-table-label">
 						<input type="checkbox" class="tsosk-sr-table-cb"
 								value="<?php echo esc_attr( $tbl['name'] ); ?>"
 								data-is-wp="<?php echo $tbl['is_wp'] ? '1' : '0'; ?>"
 								<?php checked( $tbl['is_wp'] ); ?>>
 						<span class="tsosk-code" style="font-size:12px;"><?php echo esc_html( $tbl['name'] ); ?></span>
-						<span style="color:#8c8f94;font-size:11px;">(<?php echo esc_html( $tbl['size'] ); ?>)</span>
+						<span class="tsosk-sr-table-size">(<?php echo esc_html( $tbl['size'] ); ?>)</span>
 					</label>
 					<?php endforeach; ?>
 				</div>

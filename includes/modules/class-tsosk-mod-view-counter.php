@@ -421,7 +421,7 @@ class TSOSK_Mod_View_Counter {
 			if ( '' !== $insert_error ) {
 				return $insert_error;
 			}
-			return 'DROP TABLE IF EXISTS reported no error but the table is still there (insufficient DB privilege on some hosts silently no-ops instead of erroring).';
+			return __( 'DROP TABLE IF EXISTS reported no error but the table is still there (insufficient DB privilege on some hosts silently no-ops instead of erroring).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		return '';
@@ -506,7 +506,7 @@ class TSOSK_Mod_View_Counter {
 			if ( '' !== $drop_error ) {
 				return $drop_error;
 			}
-			return 'DROP TABLE IF EXISTS reported no error but the table is still there (insufficient DB privilege on some hosts silently no-ops instead of erroring).';
+			return __( 'DROP TABLE IF EXISTS reported no error but the table is still there (insufficient DB privilege on some hosts silently no-ops instead of erroring).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		return '';
@@ -572,17 +572,6 @@ class TSOSK_Mod_View_Counter {
 		return $wpdb->prefix . 'tsosk_view_links';
 	}
 
-	/**
-	 * Drop both tables (called from uninstall.php only).
-	 */
-	public static function drop_tables(): void {
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_views" );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}tsosk_view_links" );
-	}
-
 	// ── Counting ──────────────────────────────────────────────────────────────
 
 	/**
@@ -616,18 +605,6 @@ class TSOSK_Mod_View_Counter {
 		);
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}tsosk_view_links WHERE url = %s", $url ) );
-	}
-
-	/**
-	 * URL for a stored link id (used to render the outbound-links report).
-	 *
-	 * @param int $id Link row id.
-	 * @return string
-	 */
-	private function get_link_url( int $id ): string {
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return (string) $wpdb->get_var( $wpdb->prepare( "SELECT url FROM {$wpdb->prefix}tsosk_view_links WHERE id = %d", $id ) );
 	}
 
 	/**

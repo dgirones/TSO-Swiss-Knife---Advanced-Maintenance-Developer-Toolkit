@@ -115,7 +115,10 @@ class TSOSK_Admin {
 		check_admin_referer( 'tsosk_language_switch' );
 
 		$lang = sanitize_key( wp_unslash( $_GET['tsosk_lang'] ) );
-		if ( isset( TSOSK_I18n::get_languages()[ $lang ] ) ) {
+		if ( 'auto' === $lang ) {
+			// Follow the WordPress language (site or profile) again.
+			delete_user_meta( get_current_user_id(), TSOSK_I18n::LANGUAGE_META_KEY );
+		} elseif ( isset( TSOSK_I18n::get_languages()[ $lang ] ) ) {
 			update_user_meta( get_current_user_id(), TSOSK_I18n::LANGUAGE_META_KEY, $lang );
 		}
 
@@ -187,6 +190,30 @@ class TSOSK_Admin {
 			array(),
 			TSOSK_VERSION . '.' . (string) filemtime( TSOSK_PATH . 'assets/css/tsosk-admin.css' )
 		);
+		// Day / night theme: loaded in the head so the saved or automatic theme is applied before first paint.
+		$theme_js_rel = 'assets/js/tsosk-theme.js';
+		wp_enqueue_script(
+			'tsosk-theme',
+			TSOSK_URL . $theme_js_rel,
+			array(),
+			TSOSK_VERSION . '.' . (string) filemtime( TSOSK_PATH . $theme_js_rel ),
+			false
+		);
+		$theme_coords = TSOSK_Support::theme_coords();
+		wp_localize_script(
+			'tsosk-theme',
+			'tsoskThemeConfig',
+			array(
+				'lat'  => (float) $theme_coords['lat'],
+				'lng'  => (float) $theme_coords['lng'],
+				'i18n' => array(
+					'auto'     => __( 'Auto mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'day'      => __( 'Day mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'night'    => __( 'Night mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'autoHint' => __( 'Follows sunrise and sunset (changes with the seasons)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				),
+			)
+		);
 		wp_enqueue_script( 'jquery-ui-sortable' );
 		wp_enqueue_media();
 		wp_enqueue_script(
@@ -198,6 +225,50 @@ class TSOSK_Admin {
 		);
 		$tabs_for_js = $this->apply_saved_order( $this->get_tabs() );
 		$base_url_js = admin_url( 'tools.php?page=tso-swiss-knife' );
+
+		// Load only the module scripts the active tab needs (after the core script).
+		$script_modules = $this->get_tab_script_modules();
+		$active_tab     = $this->resolve_current_tab( $tabs_for_js );
+		foreach ( $script_modules[ $active_tab ] ?? array() as $module ) {
+			$module_rel = 'assets/js/modules/tsosk-' . $module . '.js';
+			if ( ! is_readable( TSOSK_PATH . $module_rel ) ) {
+				continue;
+			}
+			wp_enqueue_script(
+				'tsosk-admin-' . $module,
+				TSOSK_URL . $module_rel,
+				array( 'tsosk-admin' ),
+				TSOSK_VERSION . '.' . (string) filemtime( TSOSK_PATH . $module_rel ),
+				true
+			);
+		}
+
+		// Per-tool styles: the stylesheet of every module the active tab uses (alphabetical, after the core sheet).
+		$style_modules   = $script_modules[ $active_tab ] ?? array();
+		$style_modules[] = $active_tab;
+		$style_modules   = array_unique( $style_modules );
+		sort( $style_modules );
+		foreach ( $style_modules as $module ) {
+			$style_rel = 'assets/css/modules/tsosk-' . $module . '.css';
+			if ( ! is_readable( TSOSK_PATH . $style_rel ) ) {
+				continue;
+			}
+			wp_enqueue_style(
+				'tsosk-admin-' . $module,
+				TSOSK_URL . $style_rel,
+				array( 'tsosk-admin' ),
+				TSOSK_VERSION . '.' . (string) filemtime( TSOSK_PATH . $style_rel )
+			);
+		}
+
+		// Theme sheet last, so its night rules sit after the per-tool sheets.
+		$theme_css_rel = 'assets/css/tsosk-theme.css';
+		wp_enqueue_style(
+			'tsosk-theme',
+			TSOSK_URL . $theme_css_rel,
+			array( 'tsosk-admin' ),
+			TSOSK_VERSION . '.' . (string) filemtime( TSOSK_PATH . $theme_css_rel )
+		);
 
 		wp_localize_script(
 			'tsosk-admin',
@@ -524,6 +595,7 @@ class TSOSK_Admin {
 					'vc_import_again_confirm'              => __( 'This source was already imported. Importing it again adds the same views a second time and doubles those numbers. Import anyway?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'vc_import_has_data_confirm'           => __( 'The counter already contains data. If you imported this source before, importing it again adds the same views a second time and doubles those numbers. Import anyway?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'vc_no_data'                           => __( 'No data for this period yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sec_server_locked'                    => __( 'Tick the override option to write the server rules while a security plugin is active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sec_revoke'                           => __( 'Revoke', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sec_revoke_all'                       => __( 'Revoke All Application Passwords', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sec_revoke_all_confirm'               => __( 'Revoke ALL Application Passwords for ALL users? Any app or script currently using one will stop working immediately. This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -1402,6 +1474,81 @@ class TSOSK_Admin {
 	// ── Page render ───────────────────────────────────────────────────────────
 
 	/**
+	 * Resolve the active tab slug from the query string.
+	 *
+	 * @param array<string,array<string,mixed>> $tabs Tabs of the current page, keyed by slug.
+	 * @return string Slug of an existing tab (Overview when the request names an unknown one).
+	 */
+	private function resolve_current_tab( array $tabs ): string {
+		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab navigation.
+		// Legacy slugs of the two promo modules merged into "More TSO Plugins".
+		if ( in_array( $current, array( 'options', 'database' ), true ) ) {
+			$current = 'tso-plugins';
+		}
+		if ( ! array_key_exists( $current, $tabs ) ) {
+			$current = 'dashboard';
+		}
+		return $current;
+	}
+
+	/**
+	 * Per-tab admin scripts: tab slug => module scripts (assets/js/modules/tsosk-{module}.js).
+	 *
+	 * The core script (assets/js/tsosk-admin.js) is always loaded; a tab only loads the modules whose
+	 * markup it renders (its own module, plus any module whose buttons or panels the tab also shows).
+	 *
+	 * @return array<string,string[]>
+	 */
+	private function get_tab_script_modules(): array {
+		return array(
+			'action-scheduler'  => array( 'action-scheduler' ),
+			'admin-menu'        => array( 'admin-menu' ),
+			'comment-antispam'  => array( 'comment-antispam' ),
+			'constants'         => array( 'constants' ),
+			'content-audit'     => array( 'content-audit' ),
+			'cron'              => array( 'cron' ),
+			'custom-404'        => array( 'custom-404' ),
+			'dashboard'         => array( 'dashboard', 'media-footprint', 'update-manager', 'users', 'view-counter' ),
+			'debug'             => array( 'debug' ),
+			'email'             => array( 'email' ),
+			'file-integrity'    => array( 'file-integrity' ),
+			'health'            => array( 'health' ),
+			'heartbeat'         => array( 'heartbeat' ),
+			'hidden-profiles'   => array( 'hidden-profiles' ),
+			'history'           => array( 'history' ),
+			'hooks'             => array( 'hooks' ),
+			'image-sizes-audit' => array( 'image-sizes-audit' ),
+			'internals'         => array( 'internals' ),
+			'leftovers'         => array( 'leftovers' ),
+			'login-protect'     => array( 'login-protect' ),
+			'maintenance'       => array( 'maintenance' ),
+			'media-cleaner'     => array( 'media-cleaner' ),
+			'media-footprint'   => array( 'media-footprint' ),
+			'meta-editor'       => array( 'meta-editor' ),
+			'option-library'    => array( 'option-library' ),
+			'options-editor'    => array( 'options-editor' ),
+			'redirects'         => array( 'redirects', 'slow-queries' ),
+			'rest-api'          => array( 'rest-api' ),
+			'rewrite'           => array( 'rewrite' ),
+			'roles'             => array( 'roles' ),
+			'runtime-stack'     => array( 'runtime-stack' ),
+			'sandbox'           => array( 'sandbox' ),
+			'search-replace'    => array( 'search-replace' ),
+			'security'          => array( 'security' ),
+			'server-files'      => array( 'server-files' ),
+			'site-snapshot'     => array( 'site-snapshot' ),
+			'slow-queries'      => array( 'slow-queries', 'options-editor', 'slug-manager' ),
+			'slug-manager'      => array( 'slug-manager', 'options-editor' ),
+			'staging'           => array( 'staging' ),
+			'transients'        => array( 'transients', 'view-counter' ),
+			'update-manager'    => array( 'update-manager' ),
+			'url-doctor'        => array( 'url-doctor' ),
+			'users'             => array( 'users' ),
+			'view-counter'      => array( 'view-counter', 'transients' ),
+		);
+	}
+
+	/**
 	 * Render the full admin page.
 	 */
 	public function render_page(): void {
@@ -1412,15 +1559,8 @@ class TSOSK_Admin {
 		$tabs_raw = $this->get_tabs();
 		$tabs     = $this->apply_saved_order( $tabs_raw );
 
-		// Determine active tab from query param, default to Hidden Profiles.
-		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dashboard'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab navigation.
-		// Legacy slugs of the two promo modules merged into "More TSO Plugins".
-		if ( in_array( $current, array( 'options', 'database' ), true ) ) {
-			$current = 'tso-plugins';
-		}
-		if ( ! array_key_exists( $current, $tabs ) ) {
-			$current = 'dashboard';
-		}
+		// Determine the active tab from the query param (default: Overview).
+		$current = $this->resolve_current_tab( $tabs );
 
 		$grouped_tabs      = $this->group_tabs_for_sidebar( $tabs );
 		$group_labels      = $this->get_tab_group_labels();
@@ -1429,13 +1569,14 @@ class TSOSK_Admin {
 
 		$base_url = admin_url( 'tools.php?page=tso-swiss-knife' );
 		?>
-		<div class="wrap tsosk-wrap">
+		<div class="wrap tsosk-wrap" data-theme="<?php echo esc_attr( TSOSK_Support::theme_is_daytime_now() ? 'day' : 'night' ); ?>" data-theme-pref="auto">
 			<h1 class="tsosk-page-title">
 				<span class="dashicons dashicons-hammer"></span>
 				<?php esc_html_e( 'TSO Swiss Knife', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-version">v<?php echo esc_html( TSOSK_VERSION ); ?></span>
 				<div class="tsosk-page-title-meta">
 					<?php TSOSK_Support::render_donate_button(); ?>
+					<?php TSOSK_Support::render_theme_toggle(); ?>
 					<?php $this->render_language_switcher( $base_url, $current ); ?>
 				</div>
 			</h1>
@@ -1571,7 +1712,7 @@ class TSOSK_Admin {
 	}
 
 	/**
-	 * Render CAT/ES/ENG language switcher.
+	 * Render AUTO/CAT/ES/ENG language switcher (AUTO follows the WordPress language).
 	 *
 	 * @param string $base_url Admin base URL.
 	 * @param string $current  Current tab.
@@ -1581,6 +1722,19 @@ class TSOSK_Admin {
 		$languages        = TSOSK_I18n::get_languages();
 		?>
 		<span class="tsosk-language-switcher" aria-label="<?php esc_attr_e( 'Plugin language', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			<?php
+			$auto_url = wp_nonce_url(
+				add_query_arg(
+					array(
+						'tab'        => $current,
+						'tsosk_lang' => 'auto',
+					),
+					$base_url
+				),
+				'tsosk_language_switch'
+			);
+			?>
+			<a class="<?php echo esc_attr( '' === $current_language ? 'is-active' : '' ); ?>" href="<?php echo esc_url( $auto_url ); ?>" title="<?php esc_attr_e( 'Automatic: follows the WordPress language', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">AUTO</a>
 			<?php foreach ( $languages as $key => $language ) : ?>
 				<?php
 				$url = wp_nonce_url(

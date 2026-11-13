@@ -70,7 +70,7 @@ class TSOSK_Mod_Internals {
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Roles & Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 			<div class="tsosk-table-wrap">
-			<table class="widefat tsosk-table">
+			<table class="widefat tsosk-table tsosk-internals-roles">
 				<thead><tr><th><?php esc_html_e( 'Role', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th><th><?php esc_html_e( 'Capabilities', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th></tr></thead>
 				<tbody>
 				<?php foreach ( $roles as $role_key => $role ) : ?>

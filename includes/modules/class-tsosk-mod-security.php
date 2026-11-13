@@ -1293,19 +1293,19 @@ class TSOSK_Mod_Security {
 		$server_files_url  = $this->tab_url( 'server-files' );
 
 		$toggles = array(
-			\x27DISALLOW_FILE_EDIT\x27 => array(
+			'DISALLOW_FILE_EDIT' => array(
 				'label' => 'DISALLOW_FILE_EDIT',
 				'desc'  => __( 'Hides the built-in plugin and theme code editors from the WordPress admin (Appearance › Editor, Plugins › Editor). Strongly recommended on production sites to prevent accidental or malicious code injection via the dashboard.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Recommended: ON on all production sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_edit',
 			),
-			\x27DISALLOW_FILE_MODS\x27 => array(
+			'DISALLOW_FILE_MODS' => array(
 				'label' => 'DISALLOW_FILE_MODS',
 				'desc'  => __( 'Prevents any plugin or theme from being installed, updated or deleted from the WordPress admin. Also disables the WordPress auto-updater. Use on hardened servers where all deploys are done via version control. Note: this also blocks WordPress core auto-updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Optional. Only use if you manage updates via CI/CD or WP-CLI. Do not use if you rely on the admin for updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'key'   => 'disallow_file_mods',
 			),
-			'FORCE_SSL_ADMIN'          => array(
+			'FORCE_SSL_ADMIN'    => array(
 				'label' => 'FORCE_SSL_ADMIN',
 				'desc'  => __( 'Forces the WordPress login page and admin area to always use HTTPS, even if the front end runs on HTTP. Only enable this if you have a valid SSL certificate. If you do not have SSL, this will lock you out of the admin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'rec'   => __( 'Recommended: ON if you have SSL. Never enable without a working SSL certificate.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

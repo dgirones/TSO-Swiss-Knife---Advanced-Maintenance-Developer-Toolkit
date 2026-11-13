@@ -1981,63 +1981,6 @@ class TSOSK_Mod_Admin_Menu {
 	}
 
 	/**
-	 * Remove a submenu entry from its parent.
-	 *
-	 * @param array<string, array<int, array<int, mixed>>> $submenu Global submenu.
-	 * @param string                                       $menu_parent  Parent slug.
-	 * @param string                                       $slug    Submenu slug.
-	 * @return array<int, mixed>|null
-	 */
-	private function extract_submenu_entry( array &$submenu, string $menu_parent, string $slug ): ?array {
-		if ( ! isset( $submenu[ $menu_parent ] ) || ! is_array( $submenu[ $menu_parent ] ) ) {
-			return null;
-		}
-		foreach ( $submenu[ $menu_parent ] as $key => $entry ) {
-			if ( ! is_array( $entry ) || empty( $entry[2] ) ) {
-				continue;
-			}
-			if ( (string) $entry[2] !== $slug ) {
-				continue;
-			}
-			$found = $entry;
-			unset( $submenu[ $menu_parent ][ $key ] );
-			$submenu[ $menu_parent ] = array_values( $submenu[ $menu_parent ] );
-			return $found;
-		}
-		return null;
-	}
-
-	/**
-	 * Remove a submenu entry from its preferred parent, or from any parent as fallback.
-	 *
-	 * @param array<string, array<int, array<int, mixed>>> $submenu           Global submenu.
-	 * @param string                                       $slug              Submenu slug.
-	 * @param string                                       $preferred_parent  Original parent slug.
-	 * @return array<int, mixed>|null
-	 */
-	private function extract_submenu_entry_anywhere( array &$submenu, string $slug, string $preferred_parent = '' ): ?array {
-		if ( '' !== $preferred_parent ) {
-			$entry = $this->extract_submenu_entry( $submenu, $preferred_parent, $slug );
-			if ( null !== $entry ) {
-				return $entry;
-			}
-		}
-
-		foreach ( array_keys( $submenu ) as $parent ) {
-			$parent = (string) $parent;
-			if ( $parent === $preferred_parent ) {
-				continue;
-			}
-			$entry = $this->extract_submenu_entry( $submenu, $parent, $slug );
-			if ( null !== $entry ) {
-				return $entry;
-			}
-		}
-
-		return null;
-	}
-
-	/**
 	 * Assign WordPress-style numeric positions to an ordered submenu list.
 	 *
 	 * @param array<int, array<int, mixed>> $ordered_entries Entries in display order.
@@ -2096,44 +2039,6 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		return $this->assign_submenu_positions( $ordered );
-	}
-
-	/**
-	 * Reorder submenu entries using exact live entry slugs (entry[2]).
-	 *
-	 * @param array<int, array<int, mixed>> $entries           Submenu entries.
-	 * @param array<int, string>            $exact_slug_order Live entry slugs in order.
-	 * @return array<int, array<int, mixed>>
-	 */
-	private function reorder_submenu_entries_exact( array $entries, array $exact_slug_order ): array {
-		$by_slug = array();
-		foreach ( $entries as $entry ) {
-			if ( ! is_array( $entry ) || empty( $entry[2] ) ) {
-				continue;
-			}
-			$by_slug[ (string) $entry[2] ] = $entry;
-		}
-
-		$ordered_entries = array();
-		$used            = array();
-
-		foreach ( $exact_slug_order as $slug ) {
-			$slug = (string) $slug;
-			if ( '' === $slug || ! isset( $by_slug[ $slug ] ) || ! empty( $used[ $slug ] ) ) {
-				continue;
-			}
-			$ordered_entries[] = $by_slug[ $slug ];
-			$used[ $slug ]     = true;
-		}
-
-		foreach ( $by_slug as $slug => $entry ) {
-			if ( ! empty( $used[ $slug ] ) ) {
-				continue;
-			}
-			$ordered_entries[] = $entry;
-		}
-
-		return $this->assign_submenu_positions( $ordered_entries );
 	}
 
 	/**
@@ -2248,196 +2153,6 @@ class TSOSK_Mod_Admin_Menu {
 		}
 
 		return $hints;
-	}
-
-	/**
-	 * Build an ordered list of live submenu slugs (entry[2]) for reorder_submenu_entries().
-	 *
-	 * Tries stable item ids first (with slug hints), then falls back to saved slug order.
-	 *
-	 * @param array<int, array<int, mixed>> $entries        Live submenu entries.
-	 * @param array<int, string>            $saved_slug_order Slugs saved with the settings (DOM/manifest).
-	 * @param array<int, string>            $item_ids       Ordered stable item ids.
-	 * @param array<string, string>         $slug_hints     Item id => slug hints.
-	 * @param string                        $parent_slug Parent slug.
-	 * @return array<int, string>
-	 */
-	private function resolve_live_submenu_slug_order(
-		array $entries,
-		array $saved_slug_order,
-		array $item_ids = array(),
-		array $slug_hints = array(),
-		string $parent_slug = ''
-	): array {
-		$live_order   = array();
-		$used_indexes = array();
-
-		foreach ( $item_ids as $item_id ) {
-			$item_id    = (string) $item_id;
-			$candidates = $this->get_item_id_slug_candidates( $item_id, $slug_hints );
-			if ( array() === $candidates ) {
-				continue;
-			}
-
-			foreach ( $entries as $index => $entry ) {
-				if ( isset( $used_indexes[ $index ] ) || ! is_array( $entry ) || empty( $entry[2] ) ) {
-					continue;
-				}
-				foreach ( $candidates as $candidate ) {
-					foreach ( $this->expand_slug_match_variants( $candidate ) as $variant ) {
-						if ( ! $this->submenu_entry_matches_slug( $entry, $variant, $parent_slug ) ) {
-							continue;
-						}
-						$live_order[]           = (string) $entry[2];
-						$used_indexes[ $index ] = true;
-						break 3;
-					}
-				}
-			}
-		}
-
-		if ( array() !== $live_order ) {
-			return $live_order;
-		}
-
-		foreach ( $saved_slug_order as $saved_slug ) {
-			$saved_slug = (string) $saved_slug;
-			if ( '' === $saved_slug ) {
-				continue;
-			}
-			foreach ( $this->expand_slug_match_variants( $saved_slug ) as $variant ) {
-				foreach ( $entries as $index => $entry ) {
-					if ( isset( $used_indexes[ $index ] ) || ! is_array( $entry ) || empty( $entry[2] ) ) {
-						continue;
-					}
-					if ( ! $this->submenu_entry_matches_slug( $entry, $variant, $parent_slug ) ) {
-						continue;
-					}
-					$live_order[]           = (string) $entry[2];
-					$used_indexes[ $index ] = true;
-					break 2;
-				}
-			}
-		}
-
-		return $live_order;
-	}
-
-	/**
-	 * Persist exact live entry slugs for each saved submenu order (used on apply).
-	 */
-	private function refresh_sub_order_resolved(): void {
-		global $submenu;
-
-		if ( ! is_array( $submenu ) ) {
-			return;
-		}
-
-		$settings  = self::get_settings();
-		$sub_order = is_array( $settings['sub_order'] ?? null ) ? $settings['sub_order'] : array();
-		if ( array() === $sub_order ) {
-			return;
-		}
-
-		$resolved = is_array( $settings['sub_order_resolved'] ?? null ) ? $settings['sub_order_resolved'] : array();
-		$changed  = false;
-
-		foreach ( $sub_order as $parent_slug => $slug_list ) {
-			if ( ! is_array( $slug_list ) || array() === $slug_list ) {
-				continue;
-			}
-			$parent_key = $this->resolve_submenu_parent_key( $submenu, (string) $parent_slug );
-			if ( ! isset( $submenu[ $parent_key ] ) || ! is_array( $submenu[ $parent_key ] ) ) {
-				continue;
-			}
-			$live_slugs = $this->resolve_live_submenu_slug_order(
-				$submenu[ $parent_key ],
-				$slug_list,
-				$settings['sub_order_ids'][ $parent_slug ] ?? array(),
-				$this->build_entry_slug_hints(
-					$settings['sub_order_ids'][ $parent_slug ] ?? array(),
-					$submenu[ $parent_key ],
-					$this->get_manifest_slug_map()
-				),
-				(string) $parent_key
-			);
-			if ( array() === $live_slugs ) {
-				continue;
-			}
-			if ( ( $resolved[ $parent_slug ] ?? array() ) !== $live_slugs ) {
-				$resolved[ $parent_slug ] = $live_slugs;
-				$changed                  = true;
-			}
-		}
-
-		if ( ! $changed ) {
-			return;
-		}
-
-		$stored = get_option( self::OPTION, array() );
-		if ( ! is_array( $stored ) ) {
-			$stored = array();
-		}
-		$stored['sub_order_resolved'] = $resolved;
-		update_option( self::OPTION, $stored, true ); // Read on every admin_menu/admin_init/admin_head hook — must autoload.
-	}
-
-	/**
-	 * Build parent => ordered slugs map from saved item ids and known menu rows.
-	 *
-	 * @param array<string, array<int, string>> $sub_order_ids Parent => ordered item ids.
-	 * @param array<int, array<string, mixed>>  $known         Known menu rows.
-	 * @return array<string, array<int, string>>
-	 */
-	private function build_sub_order_live( array $sub_order_ids, array $known ): array {
-		$known_by_id = array();
-		foreach ( $known as $row ) {
-			$id = (string) ( $row['id'] ?? '' );
-			if ( '' === $id ) {
-				continue;
-			}
-			$known_by_id[ $id ] = (string) ( $row['slug'] ?? '' );
-		}
-
-		$live = array();
-		foreach ( $sub_order_ids as $parent => $ids ) {
-			if ( ! is_array( $ids ) ) {
-				continue;
-			}
-			$parent = (string) $parent;
-			foreach ( $ids as $item_id ) {
-				$item_id = (string) $item_id;
-				if ( '' === $item_id || empty( $known_by_id[ $item_id ] ) ) {
-					continue;
-				}
-				if ( ! isset( $live[ $parent ] ) ) {
-					$live[ $parent ] = array();
-				}
-				$live[ $parent ][] = $known_by_id[ $item_id ];
-			}
-		}
-
-		return $live;
-	}
-
-	/**
-	 * Best-effort resolved slug map at save time (refined on next admin page load).
-	 *
-	 * @param array<string, array<int, string>> $sub_order     Parent => ordered slugs.
-	 * @param array<string, array<int, string>> $sub_order_ids Parent => ordered item ids.
-	 * @param array<int, array<string, mixed>>  $known         Known menu rows.
-	 * @return array<string, array<int, string>>
-	 */
-	private function build_sub_order_resolved_from_known( array $sub_order, array $sub_order_ids, array $known ): array {
-		unset( $known );
-		$resolved = array();
-		foreach ( $sub_order as $parent => $slugs ) {
-			if ( ! is_array( $slugs ) || array() === $slugs ) {
-				continue;
-			}
-			$resolved[ (string) $parent ] = array_values( array_map( 'strval', $slugs ) );
-		}
-		return $resolved;
 	}
 
 	/**
@@ -2861,46 +2576,6 @@ class TSOSK_Mod_Admin_Menu {
 			'ids'   => $clean_ids,
 			'slugs' => $clean_slugs,
 		);
-	}
-
-	/**
-	 * Merge primary submenu id order with fallback ids (append missing only).
-	 *
-	 * @param array<string, array<int, string>> $primary  Preferred order.
-	 * @param array<string, array<int, string>> $fallback Secondary order.
-	 * @return array<string, array<int, string>>
-	 */
-	private function merge_sub_order_id_lists( array $primary, array $fallback ): array {
-		$merged = $primary;
-		foreach ( $fallback as $parent => $ids ) {
-			if ( ! is_array( $ids ) ) {
-				continue;
-			}
-			foreach ( $ids as $item_id ) {
-				$this->append_sub_order_id( $merged, (string) $parent, (string) $item_id );
-			}
-		}
-		return $merged;
-	}
-
-	/**
-	 * Merge a primary submenu order with fallback slugs (append missing only).
-	 *
-	 * @param array<string, array<int, string>> $primary  Preferred order.
-	 * @param array<string, array<int, string>> $fallback Secondary order.
-	 * @return array<string, array<int, string>>
-	 */
-	private function merge_sub_order_lists( array $primary, array $fallback ): array {
-		$merged = $primary;
-		foreach ( $fallback as $parent => $slugs ) {
-			if ( ! is_array( $slugs ) ) {
-				continue;
-			}
-			foreach ( $slugs as $slug ) {
-				$this->append_sub_order_slug( $merged, (string) $parent, (string) $slug );
-			}
-		}
-		return $merged;
 	}
 
 	/**
@@ -3348,7 +3023,7 @@ class TSOSK_Mod_Admin_Menu {
 					<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Hidden', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php endif; ?>
 			</td>
-			<td class="tsosk-am-parent-cell">
+			<td class="tsosk-am-parent-cell" data-label="<?php echo esc_attr__( 'Under', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<?php if ( $is_top && ! $is_separator ) : ?>
 					<select class="tsosk-am-top-nest" aria-label="<?php esc_attr_e( 'Show as main section or under another menu', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 						<option value=""><?php esc_html_e( 'Standalone (top level menu)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
@@ -3385,13 +3060,13 @@ class TSOSK_Mod_Admin_Menu {
 					</select>
 				<?php endif; ?>
 			</td>
-			<td class="tsosk-am-hide-cell">
+			<td class="tsosk-am-hide-cell" data-label="<?php echo esc_attr__( 'Hide', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<input type="checkbox" class="tsosk-am-hide"
 						<?php checked( $is_hidden || $in_hidden_panel ); ?>
 						<?php disabled( ! empty( $row['protected'] ) ); ?>
 						aria-label="<?php esc_attr_e( 'Hide this menu item', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 			</td>
-			<td class="tsosk-am-label-cell">
+			<td class="tsosk-am-label-cell" data-label="<?php echo esc_attr__( 'Custom label', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				<?php if ( $is_separator ) : ?>
 					<span class="tsosk-am-separator-note description"><?php esc_html_e( 'Separators cannot be renamed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				<?php else : ?>

@@ -45,52 +45,6 @@ class TSOSK_Support {
 	}
 
 	/**
-	 * Blog / donations URL (TSO brand).
-	 *
-	 * @return string
-	 */
-	public static function get_donate_blog_url(): string {
-		$default = 'https://www.tusoporteonline.es/blog';
-
-		/**
-		 * Filter the blog / donations URL for TSO Swiss Knife.
-		 *
-		 * @param string $url Donations page URL.
-		 */
-		return (string) apply_filters( 'tsosk_donate_blog_url', $default );
-	}
-
-	/**
-	 * Donate link label for the Plugins screen row meta.
-	 *
-	 * @return string
-	 */
-	public static function get_donate_link_label(): string {
-		return __( 'Donate', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-	}
-
-	/**
-	 * Add a Donate link on the Plugins screen.
-	 *
-	 * @param string[] $links Plugin row meta links.
-	 * @param string   $file  Plugin basename.
-	 * @return string[]
-	 */
-	public static function filter_plugin_row_meta( array $links, string $file ): array {
-		if ( TSOSK_BASENAME !== $file ) {
-			return $links;
-		}
-
-		$links[] = sprintf(
-			'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
-			esc_url( self::get_kofi_donate_url() ),
-			esc_html( self::get_donate_link_label() )
-		);
-
-		return $links;
-	}
-
-	/**
 	 * Ko-fi donation URL shown in the admin header and Plugins screen.
 	 *
 	 * @return string
@@ -150,20 +104,133 @@ class TSOSK_Support {
 	}
 
 	/**
-	 * Read a plugin CSS asset for standalone HTML pages (no wp_enqueue on exit).
-	 *
-	 * @param string $relative_path Path relative to TSOSK_PATH.
-	 * @return string
+	 * Echo the Auto / Day / Night theme toggle for the admin header.
 	 */
-	public static function read_asset_css( string $relative_path ): string {
-		$path = TSOSK_PATH . ltrim( $relative_path, '/' );
-		if ( ! is_readable( $path ) ) {
-			return '';
+	public static function render_theme_toggle(): void {
+		?>
+		<button type="button" id="tsosk-theme-toggle" class="tsosk-theme-btn" aria-pressed="mixed" title="<?php echo esc_attr__( 'Auto mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			<span class="tsosk-theme-icon" aria-hidden="true">🌓</span>
+			<span class="tsosk-theme-label"><?php echo esc_html__( 'Auto mode', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+		</button>
+		<?php
+	}
+
+	/**
+	 * WordPress site timezone string (Settings → General).
+	 */
+	public static function theme_timezone_string(): string {
+		if ( function_exists( 'wp_timezone_string' ) ) {
+			return (string) wp_timezone_string();
+		}
+		return (string) get_option( 'timezone_string', '' );
+	}
+
+	/**
+	 * Approximate lat/lng for sunrise/sunset, derived from the site timezone.
+	 *
+	 * Same table as the other TSO plugins so the auto day/night switch happens at the same time everywhere.
+	 *
+	 * @return array{lat: float, lng: float}
+	 */
+	public static function theme_coords(): array {
+		$tz = self::theme_timezone_string();
+
+		$map = array(
+			'Europe/Madrid'                  => array( 40.42, -3.70 ),
+			'Europe/Andorra'                 => array( 42.51, 1.52 ),
+			'Atlantic/Canary'                => array( 28.29, -16.63 ),
+			'Europe/London'                  => array( 51.51, -0.13 ),
+			'Europe/Paris'                   => array( 48.86, 2.35 ),
+			'Europe/Berlin'                  => array( 52.52, 13.41 ),
+			'Europe/Rome'                    => array( 41.90, 12.50 ),
+			'Europe/Lisbon'                  => array( 38.72, -9.14 ),
+			'Europe/Brussels'                => array( 50.85, 4.35 ),
+			'Europe/Amsterdam'               => array( 52.37, 4.90 ),
+			'Europe/Zurich'                  => array( 47.37, 8.54 ),
+			'Europe/Vienna'                  => array( 48.21, 16.37 ),
+			'America/Mexico_City'            => array( 19.43, -99.13 ),
+			'America/New_York'               => array( 40.71, -74.01 ),
+			'America/Chicago'                => array( 41.88, -87.63 ),
+			'America/Denver'                 => array( 39.74, -104.99 ),
+			'America/Los_Angeles'            => array( 34.05, -118.24 ),
+			'America/Argentina/Buenos_Aires' => array( -34.60, -58.38 ),
+			'America/Sao_Paulo'              => array( -23.55, -46.63 ),
+			'America/Bogota'                 => array( 4.71, -74.07 ),
+			'America/Lima'                   => array( -12.05, -77.04 ),
+			'America/Santiago'               => array( -33.45, -70.67 ),
+			'America/Caracas'                => array( 10.48, -66.90 ),
+			'America/Guayaquil'              => array( -2.17, -79.92 ),
+			'America/Panama'                 => array( 8.98, -79.52 ),
+			'America/Costa_Rica'             => array( 9.93, -84.08 ),
+			'America/Guatemala'              => array( 14.63, -90.51 ),
+			'America/Havana'                 => array( 23.11, -82.37 ),
+			'America/Puerto_Rico'            => array( 18.47, -66.11 ),
+			'America/Santo_Domingo'          => array( 18.49, -69.93 ),
+			'Asia/Tokyo'                     => array( 35.68, 139.69 ),
+			'Australia/Sydney'               => array( -33.87, 151.21 ),
+			'UTC'                            => array( 0.0, 0.0 ),
+		);
+
+		if ( isset( $map[ $tz ] ) ) {
+			return array(
+				'lat' => (float) $map[ $tz ][0],
+				'lng' => (float) $map[ $tz ][1],
+			);
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$css = file_get_contents( $path );
-		return is_string( $css ) ? $css : '';
+		$regions = array(
+			'Europe/'    => array( 41.39, 2.17 ),
+			'America/'   => array( 19.43, -99.13 ),
+			'Atlantic/'  => array( 28.29, -16.63 ),
+			'Asia/'      => array( 35.68, 139.69 ),
+			'Australia/' => array( -33.87, 151.21 ),
+			'Pacific/'   => array( -33.87, 151.21 ),
+		);
+		foreach ( $regions as $prefix => $coords ) {
+			if ( 0 === strpos( $tz, $prefix ) ) {
+				return array(
+					'lat' => (float) $coords[0],
+					'lng' => (float) $coords[1],
+				);
+			}
+		}
+
+		// Default: Iberian Peninsula.
+		return array(
+			'lat' => 41.39,
+			'lng' => 2.17,
+		);
+	}
+
+	/**
+	 * Whether it is currently daytime for the site coordinates (sunrise to sunset).
+	 *
+	 * Used for the initial data-theme in the HTML, before the theme script runs.
+	 */
+	public static function theme_is_daytime_now(): bool {
+		$coords = self::theme_coords();
+		$hour   = (int) current_time( 'G' );
+		if ( ! function_exists( 'date_sun_info' ) ) {
+			return ( $hour >= 7 && $hour < 20 );
+		}
+		$info = date_sun_info( time(), (float) $coords['lat'], (float) $coords['lng'] );
+		if ( ! is_array( $info ) ) {
+			return ( $hour >= 7 && $hour < 20 );
+		}
+		$rise = $info['sunrise'] ?? false;
+		$set  = $info['sunset'] ?? false;
+		// Polar day/night: sunrise/sunset may be true/false instead of timestamps.
+		if ( true === $rise ) {
+			return true;
+		}
+		if ( false === $rise && false === $set ) {
+			return false;
+		}
+		if ( ! is_int( $rise ) || ! is_int( $set ) ) {
+			return ( $hour >= 7 && $hour < 20 );
+		}
+		$now = time();
+		return ( $now >= $rise && $now < $set );
 	}
 
 	/**
@@ -272,25 +339,6 @@ class TSOSK_Support {
 		$raw     = self::sanitize_stored_scalar( $raw );
 		$decoded = json_decode( $raw, true );
 		return is_array( $decoded ) ? $decoded : array();
-	}
-
-	/**
-	 * Recursively sanitize a string/array structure with sanitize_text_field.
-	 *
-	 * @param mixed $value Value to sanitize.
-	 * @return mixed
-	 */
-	public static function sanitize_text_deep( $value ) {
-		if ( is_array( $value ) ) {
-			return map_deep( $value, 'sanitize_text_field' );
-		}
-		if ( is_string( $value ) ) {
-			return sanitize_text_field( $value );
-		}
-		if ( is_scalar( $value ) || null === $value ) {
-			return sanitize_text_field( (string) $value );
-		}
-		return '';
 	}
 
 	/**

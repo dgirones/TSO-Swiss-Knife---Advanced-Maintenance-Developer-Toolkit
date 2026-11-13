@@ -31,18 +31,6 @@ function tsosk_mu_sandbox_secret(): string {
 }
 
 /**
- * Build a signed cookie value: token.user_id.signature
- *
- * @param string $token   Session token.
- * @param int    $user_id User ID.
- * @return string
- */
-function tsosk_mu_sandbox_sign_cookie( string $token, int $user_id ): string {
-	$sig = hash_hmac( 'sha256', $token . '|' . $user_id, tsosk_mu_sandbox_secret() );
-	return $token . '.' . $user_id . '.' . $sig;
-}
-
-/**
  * Parse and verify the sandbox cookie.
  *
  * @return array{token:string,user_id:int}|null

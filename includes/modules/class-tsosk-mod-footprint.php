@@ -383,7 +383,9 @@ class TSOSK_Mod_Footprint {
 			'classic-editor'             => array( 'classic-editor' ),
 			'tso-swiss-knife-advanced-maintenance-developer-toolkit' => array( 'tsosk_', 'tso_swiss_knife_' ),
 			'tso-options-tables-cleaner' => array( 'tsootc_', 'tso_options_tables_cleaner_' ),
-			'tso-image-master'           => array( 'tsoim_', 'tso_image_master_' ),
+			'tso-image-master'           => array( 'tsoimma_', 'tsoim_', 'tso_image_master_' ),
+			'tso-login-organizer'        => array( 'tsolo_', 'tso_login_organizer_' ),
+			'tso-stack-inspector'        => array( 'tsosi_', 'tso_stack_inspector_' ),
 			'tso-link-inspector'         => array( 'tsoliin_', 'tso_link_inspector_' ),
 		);
 

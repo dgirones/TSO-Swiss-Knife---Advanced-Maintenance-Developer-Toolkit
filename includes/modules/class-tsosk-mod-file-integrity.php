@@ -1080,7 +1080,7 @@ class TSOSK_Mod_File_Integrity {
 		<div id="tsosk-fi-progress" style="display:none;margin-bottom:16px;">
 			<div style="background:var(--wp-admin-theme-color,#2271b1);height:4px;border-radius:2px;
 						width:0;transition:width .3s;" id="tsosk-fi-bar"></div>
-			<p style="font-size:12px;color:#666;margin:4px 0 0;" id="tsosk-fi-progress-label">
+			<p class="tsosk-fi-muted" style="font-size:12px;margin:4px 0 0;" id="tsosk-fi-progress-label">
 				<?php esc_html_e( 'Connecting to WordPress.org API…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 		</div>
@@ -1202,7 +1202,7 @@ class TSOSK_Mod_File_Integrity {
 					?>
 				</span>
 				<?php if ( $scanned ) : ?>
-				<span style="color:#666;font-size:12px;">
+				<span class="tsosk-fi-muted" style="font-size:12px;">
 					<?php
 					printf(
 						/* translators: 1: date, 2: time */
@@ -1249,7 +1249,7 @@ class TSOSK_Mod_File_Integrity {
 				</span>
 				<?php endif; ?>
 				<?php if ( count( $missing ) > 0 ) : ?>
-				<span class="tsosk-badge" style="background:#fcebeb;color:#a32d2d;">
+				<span class="tsosk-badge tsosk-badge-danger">
 					<?php
 					printf(
 						/* translators: %d: count of missing core files */
@@ -1271,7 +1271,7 @@ class TSOSK_Mod_File_Integrity {
 				</span>
 				<?php endif; ?>
 				<?php if ( count( $added ) > 0 ) : ?>
-				<span class="tsosk-badge" style="background:#eeedfe;color:#3c3489;">
+				<span class="tsosk-badge tsosk-badge-purple">
 					<?php
 					printf(
 						/* translators: %d: count of files not in official release */
@@ -1282,7 +1282,7 @@ class TSOSK_Mod_File_Integrity {
 				</span>
 				<?php endif; ?>
 				<?php if ( count( $uploads_suspicious ) > 0 ) : ?>
-				<span class="tsosk-badge" style="background:#fcebeb;color:#a32d2d;">
+				<span class="tsosk-badge tsosk-badge-danger">
 					<?php
 					printf(
 						/* translators: %d: count of suspicious files found in uploads */
@@ -1322,7 +1322,7 @@ class TSOSK_Mod_File_Integrity {
 
 		<?php if ( ! empty( $uploads_suspicious ) ) : ?>
 		<div class="tsosk-card">
-			<h3 style="color:#a32d2d;">
+			<h3 class="tsosk-fi-heading-danger">
 				✕ <?php esc_html_e( 'Suspicious files in wp-content/uploads', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?> (<?php echo esc_html( (string) count( $uploads_suspicious ) ); ?>)
 			</h3>
 			<div class="tsosk-notice tsosk-notice-warn">
@@ -1496,7 +1496,7 @@ class TSOSK_Mod_File_Integrity {
 
 		<?php if ( ! empty( $added ) ) : ?>
 		<div class="tsosk-card">
-			<h3 style="color:#534ab7;">
+			<h3 class="tsosk-fi-heading-purple">
 				+ <?php esc_html_e( 'Files not in the official WordPress release', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				(<?php echo esc_html( (string) count( $added ) ); ?>)
 			</h3>

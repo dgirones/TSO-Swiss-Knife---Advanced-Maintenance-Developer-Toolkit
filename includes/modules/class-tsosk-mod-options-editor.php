@@ -1415,7 +1415,7 @@ class TSOSK_Mod_Options_Editor {
 							style="width:100%;min-height:200px;font-family:monospace;font-size:12px;line-height:1.5;resize:vertical;tab-size:2;"
 							spellcheck="false"></textarea>
 				<div id="tsosk-oe-raw-preview"
-					style="display:none;background:#f6f7f7;border:1px solid #ddd;border-radius:3px;padding:12px;font-family:monospace;font-size:11px;white-space:pre;overflow:auto;max-height:300px;margin-top:8px;color:#1d2327;"></div>
+					style="display:none;"></div>
 			</div>
 			<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
 				<button class="button button-primary" id="tsosk-oe-save-btn" data-nonce="<?php echo esc_attr( $nonce ); ?>"><?php esc_html_e( 'Save Option', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>

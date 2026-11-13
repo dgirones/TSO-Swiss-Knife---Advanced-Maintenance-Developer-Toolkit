@@ -19,13 +19,6 @@ class TSOSK_Mod_Hidden_Profiles {
 	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
 	private const CONFIG_FILE = 'tsosk-profiles-flags.json';
 
-	/**
-	 * Legacy config file.
-	 *
-	 * @deprecated Legacy PHP filename — migrated to JSON on read.
-	 */
-	private const LEGACY_CONFIG_FILE = 'tsosk-profiles-flags.php';
-
 	/** Runtime toggles stored in wp_options. */
 	private const OPTION_KEY = 'tsosk_hidden_profiles';
 

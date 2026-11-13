@@ -187,36 +187,6 @@ class TSOSK_Config_Storage {
 	}
 
 	/**
-	 * Write log json.
-	 *
-	 * @param string               $filename Allowed JSON filename.
-	 * @param array<string, mixed> $data     Payload.
-	 * @return true|WP_Error
-	 */
-	public static function write_log_json( string $filename, array $data ) {
-		$dir = self::get_logs_dir();
-		if ( ! self::ensure_dir( $dir ) ) {
-			return new WP_Error( 'not_writable', __( 'The logs directory is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$path = self::log_path_for( $filename );
-		if ( '' === $path ) {
-			return new WP_Error( 'invalid_log', __( 'Invalid log file name.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		$json = wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-		if ( ! is_string( $json ) ) {
-			return new WP_Error( 'encode_failed', __( 'Could not encode log data.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- non-executable JSON in uploads.
-		if ( false === file_put_contents( $path, $json . "\n" ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the log file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
-		}
-		return true;
-	}
-
-	/**
 	 * Delete log json.
 	 *
 	 * @param string $filename Allowed JSON filename.

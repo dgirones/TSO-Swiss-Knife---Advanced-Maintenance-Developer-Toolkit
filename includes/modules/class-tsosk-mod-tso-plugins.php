@@ -2,7 +2,7 @@
 /**
  * TSO Swiss Knife – Module: More TSO Plugins.
  *
- * Presents the standalone TSO Link Inspector and TSO Options & Tables Cleaner plugins from WordPress.org.
+ * Presents the standalone TSO plugins (Link Inspector, Options & Tables Cleaner, Image Master, Login Organizer and Stack Inspector) from WordPress.org.
  *
  * @package TSO_Swiss_Knife
  */
@@ -105,6 +105,63 @@ class TSOSK_Mod_Tso_Plugins {
 					__( 'Full database SQL backup: export, download, restore, or delete backups from uploads.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'OPTIMIZE fragmented tables to reclaim space and improve query performance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				),
+			),
+			array(
+				'css'      => 'tsosk-promo-image-master',
+				'icon'     => 'dashicons-images-alt2',
+				'slug'     => 'tso-image-master',
+				'file'     => 'tso-image-master/tso-image-master.php',
+				'tool_url' => admin_url( 'admin.php?page=tso-image-master' ),
+				'title'    => __( 'TSO Image Master', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'lead'     => __( 'Convert uploads to WebP or AVIF, compress PDFs and repair your media library. A dedicated plugin that also finds orphan images, leftover sizes and broken image URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'open'     => __( 'Open TSO Image Master', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'tip'      => __( 'Go to Plugins → Add New, search for “TSO” and TSO Image Master appears in the results — free on WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'features' => array(
+					__( 'Convert images to WebP, AVIF, JPG or PNG on upload or in bulk, with an undo backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Compress PDFs in the Media Library with GhostScript or Imagick; the file URL never changes.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Find orphan images and image sizes left behind by old plugins or themes, and delete them with a restorable backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Fix missing alt text, SEO file names and broken image URLs after a format change.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Repair broken attachments and keep a history of every optimization.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				),
+			),
+			array(
+				'css'      => 'tsosk-promo-login-organizer',
+				'icon'     => 'dashicons-admin-users',
+				'slug'     => 'tso-login-organizer',
+				'file'     => 'tso-login-organizer/tso-login-organizer.php',
+				'tool_url' => admin_url( 'tools.php?page=tso-login-organizer' ),
+				'title'    => __( 'TSO Login Organizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'lead'     => __( 'Give your site its own login, registration and password-reset pages at addresses you choose, so visitors never see wp-login.php. Optional modules add redirects by role, moderation, restrictions and two-factor authentication.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'open'     => __( 'Open TSO Login Organizer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'tip'      => __( 'Go to Plugins → Add New, search for “TSO” and TSO Login Organizer appears in the results — free on WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'features' => array(
+					__( 'Front-end login, register, lost password and reset pages with custom slugs and the [tso-login-organizer] shortcode.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Login with username, email or either, email-only registration and AJAX forms.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Optional modules, all off by default: redirects by role, moderation, content restrictions, brute-force lockouts, reCAPTCHA and TOTP two-factor authentication.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Front-end profiles with avatar editing and custom HTML notifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Import the settings of Theme My Login and keep its shortcode working.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Catalan and Spanish translations included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				),
+			),
+			array(
+				'css'      => 'tsosk-promo-stack-inspector',
+				'icon'     => 'dashicons-search',
+				'slug'     => 'tso-stack-inspector',
+				'file'     => 'tso-stack-inspector/tso-stack-inspector.php',
+				'tool_url' => admin_url( 'tools.php?page=tso-stack-inspector' ),
+				'title'    => __( 'TSO Stack Inspector', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'lead'     => __( 'Know where a plugin is still used before you remove it. A dedicated plugin that scans your content for the shortcodes, blocks and meta of any plugin and gives a safe, review or risk verdict.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'open'     => __( 'Open TSO Stack Inspector', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'tip'      => __( 'Go to Plugins → Add New, search for “TSO” and TSO Stack Inspector appears in the results — free on WordPress.org.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'features' => array(
+					__( 'Scan posts, pages, templates, widgets, menus and options for the shortcodes, blocks and meta prefixes of a plugin.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Get a safe, review or risk verdict before you uninstall.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Find orphan shortcodes and blocks that are still in content but no longer registered.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Audit inactive plugins and themes that still leave traces, and compare plugins before a migration.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Replace shortcodes or blocks with a dry-run preview, confirmation and undo backups.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					__( 'Export scan results as CSV or a printable report.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			),
 		);
