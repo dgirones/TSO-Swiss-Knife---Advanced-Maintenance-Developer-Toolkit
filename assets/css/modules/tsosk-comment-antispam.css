@@ -1,0 +1,45 @@
+/*Comment anti-spam: daily blocks chart*/
+.tsosk-cas-chart { display: flex; align-items: flex-end; gap: 4px; height: 70px; max-width: 480px; }
+
+.tsosk-cas-bar { flex: 1; min-width: 6px; background: #2271b1; border-radius: 2px 2px 0 0; }
+
+.tsosk-cas-bar-empty { background: #c3c4c7; }
+
+/*Comment Anti-Spam tables: short code values (source, IP, reason) must not collapse to one character per line.
+   "overflow-wrap: anywhere" above lets auto-layout shrink those columns to nothing, so here they wrap at spaces only.*/
+.tsosk-cas-table td code {
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: normal;
+}
+
+.tsosk-cas-table td code,
+.tsosk-cas-table th {
+    hyphens: none;
+}
+
+.tsosk-cas-table td:nth-child(2) code,
+.tsosk-cas-table td:nth-child(3) code {
+    white-space: nowrap;
+}
+
+/*Long free text (author, excerpt) wraps inside its cell so the table fits the card and the Action column stays visible.*/
+.tsosk-cas-table td:not(:has(code)):not(:has(button)):not(:first-child) {
+    overflow-wrap: anywhere;
+}
+
+.tsosk-cas-table td:last-child .button {
+    white-space: nowrap;
+}
+
+@media (max-width: 782px) {
+	/*Comment Anti-Spam logs on phones: give the excerpt column room so rows are not very tall; the table scrolls inside its card.*/
+		.tsosk-table-wrap > .widefat.tsosk-cas-log-table {
+	        min-width: 860px;
+	    }
+		.tsosk-cas-log-table td:nth-child(6),
+	    .tsosk-cas-log-table th:nth-child(6) {
+	        min-width: 280px;
+	    }
+}
+

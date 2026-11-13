@@ -1,0 +1,370 @@
+/*── Redirects ──────────────────────────────────────────────────────────────*/
+.tsosk-desc-flush {
+	margin-top: 0;
+}
+
+.tsosk-404-table-wrap-spaced {
+	margin-top: 12px;
+}
+
+.tsosk-field-desc-tight {
+	margin: 6px 0 0;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-source,
+#tsosk-redirects-table .tsosk-redirect-col-target {
+    width: 26%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-match {
+    width: 8%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-code {
+    width: 7%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-active {
+    width: 9%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-visits {
+    width: 7%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-col-actions {
+    width: 17%;
+}
+
+#tsosk-redirects-table .tsosk-redirect-url-col,
+#tsosk-404-table .tsosk-redirect-url-col {
+    min-width: 0;
+    line-height: 1.45;
+    vertical-align: top;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#tsosk-redirects-table .tsosk-redirect-url-link,
+#tsosk-redirects-table .tsosk-redirect-url-text,
+#tsosk-404-table .tsosk-redirect-url-link,
+#tsosk-404-table .tsosk-redirect-url-text {
+    display: inline;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+    max-width: 100%;
+}
+
+#tsosk-404-table .tsosk-404-col-url    { width: 20%; }
+
+#tsosk-404-table .tsosk-404-col-visits { width: 64px; white-space: nowrap; }
+
+#tsosk-404-table .tsosk-404-col-date   { width: 12%; white-space: normal; overflow-wrap: break-word; }
+
+/*table-layout: fixed does not reliably distribute leftover space to a "width: auto" column
+   once other explicit % / px columns are present, so every column here gets a fixed share
+   instead (leaving a small margin so the total stays comfortably under 100%).*/
+#tsosk-404-table .tsosk-404-col-ref    { width: 22%; word-break: break-word; overflow-wrap: anywhere; }
+
+#tsosk-404-table .tsosk-404-col-ip     { width: 12%; word-break: break-word; overflow-wrap: anywhere; }
+
+#tsosk-404-table .tsosk-404-col-action { width: 120px; }
+
+#tsosk-404-table .tsosk-404-direct {
+    display: block;
+    font-weight: 600;
+}
+
+#tsosk-404-table .tsosk-404-ua {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #646970;
+    overflow-wrap: anywhere;
+}
+
+#tsosk-404-table .tsosk-404-ip {
+    display: block;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+#tsosk-404-table .tsosk-404-col-ip .tsosk-badge {
+    display: inline-block;
+    margin-top: 4px;
+}
+
+#tsosk-404-table .tsosk-redirect-url-col .tsosk-badge {
+    display: inline-block;
+    margin-top: 4px;
+}
+
+#tsosk-404-table .tsosk-404-col-select {
+	width: 2.5rem;
+	text-align: center;
+	vertical-align: top;
+}
+
+#tsosk-404-table .tsosk-404-col-select input[type="checkbox"] {
+	margin: 0;
+	vertical-align: top;
+}
+
+#tsosk-404-table tbody td {
+	vertical-align: top;
+}
+
+#tsosk-redirects-table .tsosk-actions {
+    white-space: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+    min-width: 0;
+}
+
+@media (max-width: 782px) {
+		#tsosk-404-table thead,
+	    #tsosk-redirects-table thead {
+	        display: none;
+	    }
+		#tsosk-404-table tr,
+	    #tsosk-redirects-table tr {
+	        margin: 0 0 14px;
+	        padding: 12px;
+	        border: 1px solid #dcdcde;
+	        border-radius: 4px;
+	        background: #fff;
+	    }
+		#tsosk-404-table td,
+	    #tsosk-redirects-table td {
+	        padding: 6px 0;
+	        border: 0;
+	        max-width: none;
+	    }
+		#tsosk-404-table td::before,
+	    #tsosk-redirects-table td::before {
+	        content: attr(data-label);
+	        display: block;
+	        font-size: 11px;
+	        font-weight: 600;
+	        color: #646970;
+	        margin-bottom: 4px;
+	        text-transform: uppercase;
+	        letter-spacing: 0.02em;
+	    }
+		#tsosk-404-table .tsosk-redirect-url-col,
+	    #tsosk-redirects-table .tsosk-redirect-url-col {
+	        min-width: 0;
+	    }
+		#tsosk-404-table td[class] {
+	        width: 100%;
+	    }
+}
+
+.tsosk-redirect-url-link {
+    color: #2271b1;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.tsosk-redirect-url-text {
+    font-size: 12px;
+}
+
+/*Redirects: 404 monitor queue controls, bulk bar and suggested patterns.*/
+#tsosk-redirect-skip[hidden],
+#tsosk-redirect-cancel-queue[hidden] {
+	display: none;
+}
+
+.tsosk-404-bulk-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 8px;
+}
+
+.tsosk-404-suggestions {
+	margin: 16px 0;
+}
+
+/*Redirects: toolbars (shared by the rules list and the 404 monitor).*/
+.tsosk-redirect-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+}
+
+.tsosk-redirect-pos {
+	display: inline-block;
+	min-width: 2.2em;
+	margin-right: 4px;
+	color: #646970;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.tsosk-redirect-move {
+	display: flex;
+	gap: 4px;
+}
+
+/*Rows hidden by the filter: !important because the mobile card layout sets display:block on rows.*/
+#tsosk-redirects-table tr.tsosk-row-hidden {
+	display: none !important;
+}
+
+/*Arrows only make sense against the real order, so hide them while a filter or sort is active.*/
+#tsosk-redirects-table.tsosk-rules-view-active .tsosk-redirect-move {
+	display: none;
+}
+
+#tsosk-redirect-no-match[hidden] {
+	display: none;
+}
+
+.tsosk-redirect-io textarea {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin: 8px 0;
+}
+
+.tsosk-404-suggestions-wrap {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+@media (min-width: 783px) {
+		#tsosk-redirects-table .tsosk-redirect-col-select {
+			width: 2.5rem;
+			text-align: center;
+			vertical-align: top;
+		}
+		#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
+			margin: 0;
+		}
+}
+
+@media (max-width: 782px) {
+		.tsosk-redirect-unused {
+			flex: 1 1 100%;
+		}
+		#tsosk-redirects-table td.tsosk-redirect-col-select,
+		#tsosk-404-table td.tsosk-404-col-select {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			width: 100%;
+			text-align: left;
+		}
+		#tsosk-redirects-table td.tsosk-redirect-col-select::before,
+		#tsosk-404-table td.tsosk-404-col-select::before {
+			margin-bottom: 0;
+		}
+		#tsosk-redirects-table td.tsosk-redirect-col-select input[type="checkbox"],
+		#tsosk-404-table td.tsosk-404-col-select input[type="checkbox"] {
+			width: 22px;
+			height: 22px;
+			margin: 0;
+		}
+		#tsosk-404-suggestions-table thead {
+			display: none;
+		}
+		#tsosk-404-suggestions-table tr {
+			margin: 0 0 12px;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #fff;
+		}
+		#tsosk-404-suggestions-table td {
+			padding: 6px 0;
+			border: 0;
+			overflow-wrap: anywhere;
+		}
+		#tsosk-404-suggestions-table td::before {
+			content: attr(data-label);
+			display: block;
+			margin-bottom: 4px;
+			color: #646970;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+		}
+}
+
+#tsosk-404-monitor .tsosk-404-table-wrap-spaced {
+	margin-top: 4px;
+}
+
+#tsosk-404-table tbody tr.tsosk-404-hidden { display: none; }
+
+/*404 Monitor: sortable headers (small up/down triangles like WordPress list tables)*/
+#tsosk-404-table th.tsosk-th-sortable { cursor: pointer; user-select: none; vertical-align: middle; word-break: normal; overflow-wrap: normal; }
+
+#tsosk-404-table th.tsosk-th-sortable:hover { background: #f0f0f1; }
+
+#tsosk-404-table th.tsosk-th-sortable:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
+
+#tsosk-404-table .tsosk-th-inner { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+#tsosk-404-table .tsosk-sort-ind { display: inline-flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
+
+#tsosk-404-table .tsosk-sort-ind::before,
+#tsosk-404-table .tsosk-sort-ind::after { content: ""; display: block; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
+
+#tsosk-404-table .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
+
+#tsosk-404-table .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
+
+#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
+
+#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::after { border-top-color: #2271b1; }
+
+#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
+
+#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::after { border-top-color: #dcdcde; }
+
+#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
+
+#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
+
+@media (min-width: 783px) {
+		#tsosk-404-table th,
+		#tsosk-404-table td { box-sizing: border-box; padding-left: 8px; padding-right: 8px; }
+		#tsosk-404-table .tsosk-404-col-select { width: 40px; }
+		#tsosk-404-table .tsosk-404-col-url    { width: 22%; }
+		#tsosk-404-table .tsosk-404-col-visits { width: 80px; }
+		#tsosk-404-table .tsosk-404-col-date   { width: 128px; }
+		#tsosk-404-table .tsosk-404-col-ref    { width: auto; }
+		#tsosk-404-table .tsosk-404-col-ip     { width: 128px; }
+		#tsosk-404-table .tsosk-404-col-action { width: 100px; }
+		#tsosk-404-table .tsosk-404-col-ref    { word-break: normal; overflow-wrap: anywhere; min-width: 0; }
+		#tsosk-redirects-table { table-layout: fixed; width: 100%; min-width: 0; }
+		#tsosk-redirects-table th,
+		#tsosk-redirects-table td { box-sizing: border-box; padding-left: 6px; padding-right: 6px; }
+		#tsosk-redirects-table .tsosk-redirect-col-select  { width: 32px; }
+		#tsosk-redirects-table .tsosk-redirect-col-source,
+		#tsosk-redirects-table .tsosk-redirect-col-target  { width: auto; }
+		#tsosk-redirects-table .tsosk-redirect-col-match   { width: 104px; }
+		#tsosk-redirects-table .tsosk-redirect-col-code    { width: 60px; }
+		#tsosk-redirects-table .tsosk-redirect-col-active  { width: 76px; }
+		#tsosk-redirects-table .tsosk-redirect-col-visits  { width: 80px; }
+		#tsosk-redirects-table .tsosk-redirect-col-actions { width: 110px; }
+		#tsosk-redirects-table thead th { word-break: normal; overflow-wrap: normal; hyphens: manual; vertical-align: middle; }
+		#tsosk-404-table {
+	        min-width: 720px;
+	    }
+		#tsosk-redirects-table {
+	        min-width: 700px;
+	    }
+}
+

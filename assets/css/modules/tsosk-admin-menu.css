@@ -1,0 +1,221 @@
+#tsosk-am-table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 0;
+    box-sizing: border-box;
+    margin: 0;
+    border: 1px solid #dcdcde;
+}
+
+#tsosk-am-table thead th {
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+}
+
+#tsosk-am-table .tsosk-am-col-hide,
+#tsosk-am-table .tsosk-am-hide-cell {
+    width: 44px;
+    text-align: center;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+#tsosk-am-table .tsosk-am-col-label,
+#tsosk-am-table .tsosk-am-label-cell {
+    width: 22%;
+    padding-right: 12px;
+    overflow: visible;
+}
+
+#tsosk-am-table .tsosk-am-drag {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.tsosk-am-handle {
+    cursor: grab;
+    color: #787c82;
+}
+
+.tsosk-am-handle:active {
+    cursor: grabbing;
+}
+
+.tsosk-am-row-top:first-child td {
+    border-top-width: 0;
+}
+
+.tsosk-am-top-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1d2327;
+    letter-spacing: .01em;
+}
+
+.tsosk-am-section-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #2271b1;
+    background: #fff;
+    border: 1px solid #c3d9ed;
+    border-radius: 3px;
+    padding: 3px 8px;
+}
+
+.tsosk-am-row-sub + .tsosk-am-row-top td {
+    border-top: 2px solid #2271b1;
+}
+
+.tsosk-am-row-sub.is-am-collapsed,
+.tsosk-am-row-sub[hidden] {
+    display: none !important;
+}
+
+.tsosk-am-row-highlight td {
+    animation: tsosk-am-highlight 2s ease-out;
+}
+
+.tsosk-am-hidden-hint {
+    margin: 0 0 12px;
+}
+
+.tsosk-am-hidden-section {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid #f0b8b8;
+    border-radius: 6px;
+    background: #fcf0f1;
+}
+
+.tsosk-am-hidden-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #8a2424;
+}
+
+.tsosk-am-separator-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-style: italic;
+    color: #646970;
+}
+
+.tsosk-am-separator-note {
+    margin: 0;
+}
+
+.tsosk-am-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: #2271b1;
+    cursor: pointer;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.tsosk-am-toggle-spacer {
+    display: inline-block;
+    width: 24px;
+    flex-shrink: 0;
+}
+
+.tsosk-am-sub-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: #646970;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+
+.tsosk-am-row-top.is-am-expanded .tsosk-am-sub-count {
+    color: #2271b1;
+    border-color: #c3d9ed;
+}
+
+.tsosk-am-title-cell {
+    padding-left: 12px !important;
+    padding-right: 8px !important;
+    min-width: 0;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.tsosk-am-top-label,
+.tsosk-am-sub-label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tsosk-am-row-sub .tsosk-am-title-cell {
+    padding-left: 28px !important;
+}
+
+.tsosk-am-sub-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #50575e;
+}
+
+.tsosk-am-sub-label::before {
+    content: "›";
+    margin-right: 6px;
+    color: #a7aaad;
+}
+
+#tsosk-am-table .tsosk-am-label {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.tsosk-am-row.ui-sortable-helper td {
+    background: #fff;
+}
+
+.tsosk-am-row.ui-sortable-placeholder td {
+    background: #f0f6fc;
+    border: 1px dashed #72aee6;
+}
+
+.tsosk-am-label:disabled {
+    opacity: .5;
+}
+
+@media (max-width: 782px) {
+		#tsosk-am-table .tsosk-am-col-parent,
+	    #tsosk-am-table .tsosk-am-parent-cell {
+	        width: 22%;
+	    }
+		#tsosk-am-table .tsosk-am-col-label,
+	    #tsosk-am-table .tsosk-am-label-cell {
+	        width: 28%;
+	    }
+		.tsosk-am-top-label,
+	    .tsosk-am-sub-label {
+	        white-space: normal;
+	    }
+}
+

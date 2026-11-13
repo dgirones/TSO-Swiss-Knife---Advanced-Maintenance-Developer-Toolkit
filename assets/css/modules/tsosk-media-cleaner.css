@@ -1,0 +1,26 @@
+.tsosk-badge-err {
+    background: #fcf0f1;
+    color: #8a1f22;
+    border-color: #f1aeb5;
+}
+
+.tsosk-media-paths {
+	word-break: normal;
+	min-width: 150px;
+}
+
+.tsosk-media-pager {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+@media (max-width: 782px) {
+		#tsosk-media-full-review,
+		#tsosk-media-full-review-resume {
+			min-height: 40px;
+		}
+}
+

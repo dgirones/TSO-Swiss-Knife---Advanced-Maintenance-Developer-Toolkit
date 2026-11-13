@@ -1,0 +1,419 @@
+.tsosk-sq-section {
+    margin: 14px 0 10px;
+}
+
+.tsosk-sq-section-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0 0 4px;
+}
+
+.tsosk-sq-section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.tsosk-sq-settings-table {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 10px;
+}
+
+.tsosk-sq-settings-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsosk-sq-settings-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+}
+
+.tsosk-sq-settings-save {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 4px;
+}
+
+.tsosk-sq-ignore-patterns {
+    width: 100%;
+    max-width: 520px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+.tsosk-sq-copy-plugins-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 6px;
+}
+
+.tsosk-sq-copy-plugins {
+    max-height: 140px;
+    overflow: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 6px 8px;
+    background: #fff;
+    max-width: 640px;
+}
+
+.tsosk-sq-copy-plugin-label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0 0 4px;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+/*Collapsible long SQL / fingerprints*/
+.tsosk-sq-sql-fold {
+    margin: 0;
+    max-width: 100%;
+}
+
+.tsosk-sq-sql-fold-btn.button-link:hover,
+.tsosk-sq-sql-fold-btn.button-link:focus {
+    color: #135e96;
+}
+
+.tsosk-sq-sql-code--full {
+    display: block;
+    margin-top: 6px;
+    padding: 8px;
+    background: #f6f7f7;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.tsosk-sq-sql-code--full[hidden] {
+    display: none !important;
+}
+
+/*Live duplicate banner: button left, explanation right*/
+.tsosk-sq-dupe-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.tsosk-sq-dupe-banner-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-top: 2px;
+}
+
+.tsosk-sq-dupe-banner-body {
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.tsosk-sq-dupe-banner-lead,
+.tsosk-sq-dupe-banner-meta {
+    margin: 0 0 6px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.tsosk-sq-dupe-origin-hint {
+    margin: 2px 0 0;
+}
+
+.tsosk-sq-dupe-row:has(.tsosk-sq-dupe-pick:not(:checked)) {
+    opacity: 0.45;
+}
+
+#tsosk-sq-table,
+.tsosk-sq-dupe-table {
+    table-layout: fixed;
+    width: 100%;
+    max-width: 100%;
+}
+
+.tsosk-sq-patterns-table thead th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#tsosk-sq-table .tsosk-sq-cell-sql,
+.tsosk-sq-dupe-table .tsosk-sq-cell-sql {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    vertical-align: top;
+}
+
+.tsosk-sq-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f6f7f7;
+    border: 1px solid #e2e4e7;
+    border-radius: 8px;
+    padding: 10px 20px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.tsosk-sq-stat-val {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1d2327;
+    line-height: 1.2;
+}
+
+.tsosk-sq-stat-lbl {
+    font-size: 11px;
+    color: #646970;
+    margin-top: 3px;
+}
+
+.tsosk-sq-warn {
+    color: #d63638 !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-amber {
+    color: #d97706 !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-ok {
+    color: #16a34a !important;
+    font-weight: 600;
+}
+
+.tsosk-sq-filter-label {
+    font-size: 13px;
+}
+
+.tsosk-sq-cell-muted {
+    color: #646970;
+    font-size: 12px;
+}
+
+.tsosk-sq-cell-mono {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+.tsosk-sq-cell-sql,
+.tsosk-sq-cell-caller {
+    word-break: break-word;
+}
+
+.tsosk-sq-cell-caller {
+    font-size: 11px;
+    color: #646970;
+}
+
+.tsosk-sq-dupe-badge,
+.tsosk-sq-kw-badge {
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+.tsosk-sq-sql-code {
+    font-size: 11px;
+    color: #1d2327;
+    background: none;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.tsosk-sq-query-sql {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.tsosk-sq-batch-badge {
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-batch-meta {
+    font-size: 11px;
+    color: #646970;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-batch-meta-muted {
+    color: #8c8f94;
+}
+
+.tsosk-sq-batch-worst {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-delete-batch-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.tsosk-sq-toggle-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+    color: #646970;
+}
+
+.tsosk-sq-query-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.tsosk-sq-query-time {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tsosk-sq-query-num,
+.tsosk-sq-caller-arrow {
+    font-size: 11px;
+    color: #8c8f94;
+}
+
+.tsosk-sq-page-meta {
+    font-size: 12px;
+    color: #646970;
+}
+
+.tsosk-sq-batch {
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.tsosk-sq-batch-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    cursor: pointer;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.tsosk-sq-batch-header:hover {
+    background: #eef0f1;
+}
+
+.tsosk-sq-batch-url {
+    font-family: monospace;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    word-break: break-all;
+    color: #1d2327;
+}
+
+.tsosk-sq-batch-body {
+    display: none;
+    padding: 0;
+}
+
+.tsosk-sq-batch-body.open {
+    display: block;
+}
+
+.tsosk-sq-query-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tsosk-sq-query-row:last-child {
+    border-bottom: none;
+}
+
+.tsosk-sq-query-sql {
+    font-family: monospace;
+    font-size: 11px;
+    color: #1d2327;
+    word-break: break-all;
+    white-space: pre-wrap;
+    margin: 4px 0;
+    background: #f8f9fa;
+    padding: 6px 8px;
+    border-radius: 3px;
+}
+
+.tsosk-sq-query-caller {
+    font-size: 11px;
+    color: #646970;
+    margin-top: 3px;
+}
+
+.tsosk-sq-slow td {
+    background: #fff8f8 !important;
+}
+
+.tsosk-sq-dupe td {
+    background: #fffbeb !important;
+}
+
+.tsosk-sq-hidden {
+    display: none !important;
+}
+
+#tsosk-sq-filter {
+    font-size: 13px;
+}
+
+#tsosk-sq-live-dupe-panel,
+#tsosk-sq-live-viewer,
+#tsosk-sq-last-request,
+#tsosk-sq-last-dupes,
+#tsosk-sq-last-slow {
+    scroll-margin-top: 48px;
+}
+
+/*Slow Query Monitor: summary cards, centred and clear of the tab bar.*/
+.tsosk-sq-stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 24px 0 20px;
+}
+
+@media (max-width: 782px) {
+		.tsosk-table-wrap > .widefat.tsosk-table.tsosk-sq-patterns-table,
+	    .tsosk-table-wrap > .widefat.tsosk-table.tsosk-sq-dupe-table,
+	    .tsosk-table-wrap > #tsosk-sq-table {
+	        min-width: 640px;
+	    }
+}
+
+.tsosk-notice-ok {
+	border-left-color: #46b450;
+	background: #f0fff0;
+}

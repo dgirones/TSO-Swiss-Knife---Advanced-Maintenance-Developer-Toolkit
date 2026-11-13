@@ -1,0 +1,2152 @@
+/**
+ * TSO Swiss Knife - day / night theme.
+ *
+ * Same token system as the other TSO plugins (Link Inspector, Options & Tables Cleaner):
+ * colours live in --tsosk-* variables on .tsosk-wrap and the night palette swaps them.
+ *
+ * Scope: the plugin page (header, status bar, page background and the central pane).
+ * The two side columns and the WordPress admin menu / admin bar keep their current look.
+ *
+ * Every night rule is gated on html[data-tsosk-theme="night"] (set by tsosk-theme.js before
+ * first paint), so day mode is untouched by this file. Loaded after the per-tool stylesheets.
+ */
+
+/* ── Tokens: day (current look) ───────────────────────────────────────────── */
+.tsosk-wrap,
+.tsosk-wrap[data-theme="day"] {
+	--tsosk-bg: #f6f7f7;
+	--tsosk-surface: #ffffff;
+	--tsosk-surface-2: #f6f7f7;
+	--tsosk-surface-3: #eceef0;
+	--tsosk-border: #dcdcde;
+	--tsosk-border-soft: #f0f0f1;
+	--tsosk-text: #1d2327;
+	--tsosk-text-muted: #646970;
+	--tsosk-link: #2271b1;
+	--tsosk-input-bg: #ffffff;
+	--tsosk-stripe: #f6f7f7;
+	--tsosk-row-hover: #f0f6fc;
+	--tsosk-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	--tsosk-ok: #1a7e34;
+	--tsosk-ok-soft: #edfaef;
+	--tsosk-ok-border: #b2dfdb;
+	--tsosk-warn: #7a4100;
+	--tsosk-warn-soft: #fff8e1;
+	--tsosk-warn-border: #f6c142;
+	--tsosk-danger: #b32d2e;
+	--tsosk-danger-soft: #fcf0f1;
+	--tsosk-danger-border: #f1aeb5;
+	--tsosk-info: #145d7a;
+	--tsosk-info-soft: #e5f5fb;
+	--tsosk-info-border: #a8d8ea;
+	--tsosk-neutral: #50575e;
+	--tsosk-neutral-soft: #f0f0f1;
+}
+
+/* ── Tokens: night (blue-slate canvas, same palette as the other TSO plugins) ─ */
+.tsosk-wrap[data-theme="night"],
+html[data-tsosk-theme="night"] .tsosk-wrap {
+	--tsosk-bg: #12141c;
+	--tsosk-surface: #1a1e2b;
+	--tsosk-surface-2: #222838;
+	--tsosk-surface-3: #2c3348;
+	--tsosk-border: #3a4258;
+	--tsosk-border-soft: rgba(255, 255, 255, 0.09);
+	--tsosk-text: #e8edf5;
+	--tsosk-text-muted: #9aa3b8;
+	--tsosk-link: #8eb8f0;
+	--tsosk-input-bg: #151822;
+	--tsosk-stripe: #181c28;
+	--tsosk-row-hover: #252c40;
+	--tsosk-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 28px rgba(0, 0, 0, 0.38);
+	--tsosk-ok: #6dd9b0;
+	--tsosk-ok-soft: rgba(109, 217, 176, 0.12);
+	--tsosk-ok-border: rgba(109, 217, 176, 0.34);
+	--tsosk-warn: #e8c56a;
+	--tsosk-warn-soft: rgba(232, 197, 106, 0.12);
+	--tsosk-warn-border: rgba(232, 197, 106, 0.36);
+	--tsosk-danger: #f0a0a0;
+	--tsosk-danger-soft: rgba(240, 160, 160, 0.12);
+	--tsosk-danger-border: rgba(240, 160, 160, 0.34);
+	--tsosk-info: #8fd3ee;
+	--tsosk-info-soft: rgba(143, 211, 238, 0.12);
+	--tsosk-info-border: rgba(143, 211, 238, 0.34);
+	--tsosk-neutral: #c5cad6;
+	--tsosk-neutral-soft: rgba(163, 173, 194, 0.12);
+}
+
+/* ── Theme toggle (header) ── */
+.tsosk-theme-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 12px;
+	background: #fff;
+	color: #2271b1;
+	font-size: 12px;
+	line-height: 1.5;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.tsosk-theme-btn:hover,
+.tsosk-theme-btn:focus {
+	border-color: #2271b1;
+	color: #135e96;
+	outline: none;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.tsosk-theme-btn .tsosk-theme-icon {
+	font-size: 13px;
+	line-height: 1;
+}
+
+@media (max-width: 782px) {
+	.tsosk-theme-btn .tsosk-theme-label {
+		display: none;
+	}
+}
+
+/* ── Night: central pane ──────────────────────────────────────────────────── */
+html[data-tsosk-theme="night"] .tsosk-content {
+	background: var(--tsosk-bg);
+	color: var(--tsosk-text);
+	color-scheme: dark;
+}
+
+/* Header strip of the tool */
+html[data-tsosk-theme="night"] .tsosk-tab-header {
+	background: var(--tsosk-surface);
+	border-bottom-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-tab-header h2 {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-tab-header h2 .dashicons {
+	color: var(--tsosk-link);
+}
+
+/* Text: body text inherits the colour set on .tsosk-content; only elements WordPress colours itself are listed. */
+html[data-tsosk-theme="night"] .tsosk-content h1,
+html[data-tsosk-theme="night"] .tsosk-content h2,
+html[data-tsosk-theme="night"] .tsosk-content h3,
+html[data-tsosk-theme="night"] .tsosk-content h4,
+html[data-tsosk-theme="night"] .tsosk-content h5,
+html[data-tsosk-theme="night"] .tsosk-content h6,
+html[data-tsosk-theme="night"] .tsosk-content .form-table th,
+html[data-tsosk-theme="night"] .tsosk-content .form-table td {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .description,
+html[data-tsosk-theme="night"] .tsosk-content .subtitle,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-desc,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-th-hint,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-flag-desc,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-flag-current,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dash-empty,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dash-meta,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dash-tile-sub,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dash-issue-details,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dash-activity-time,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-desc,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-kv-table th,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cb-table th {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content p a:not(.button),
+html[data-tsosk-theme="night"] .tsosk-content li a:not(.button),
+html[data-tsosk-theme="night"] .tsosk-content td a:not(.button),
+html[data-tsosk-theme="night"] .tsosk-content .description a,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-desc a {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content hr {
+	border-color: var(--tsosk-border);
+	background: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content code,
+html[data-tsosk-theme="night"] .tsosk-content kbd {
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-file-preview,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-log-preview,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-block-404-url-preview {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content pre,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-debug-advanced pre.tsosk-code {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+/* Cards */
+html[data-tsosk-theme="night"] .tsosk-card {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+	box-shadow: var(--tsosk-shadow);
+}
+
+html[data-tsosk-theme="night"] .tsosk-card h3 {
+	color: var(--tsosk-text);
+	border-bottom-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-isa-card {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dev-mode-card,
+html[data-tsosk-theme="night"] .tsosk-ol-preview-panel {
+	border-left-color: var(--tsosk-link);
+}
+
+/* Badges */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-src {
+	background: var(--tsosk-neutral-soft);
+	color: var(--tsosk-neutral);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-ok {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+	border-color: var(--tsosk-ok-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-warn {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-warn);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-core,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-info,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-src-config {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-info);
+	border-color: var(--tsosk-info-border);
+}
+
+/* Notices */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-notice-info {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-info);
+	border-color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-notice-warn {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-warn);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .notice,
+html[data-tsosk-theme="night"] .tsosk-content div.updated,
+html[data-tsosk-theme="night"] .tsosk-content div.error {
+	background: var(--tsosk-surface);
+	color: var(--tsosk-text);
+	box-shadow: none;
+}
+
+/* Tables (WordPress .widefat / .wp-list-table and the plugin's own) */
+html[data-tsosk-theme="night"] .tsosk-content .widefat,
+html[data-tsosk-theme="night"] .tsosk-content .wp-list-table {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+	box-shadow: none;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .widefat thead th,
+html[data-tsosk-theme="night"] .tsosk-content .widefat thead td,
+html[data-tsosk-theme="night"] .tsosk-content .widefat tfoot th,
+html[data-tsosk-theme="night"] .tsosk-content .widefat tfoot td {
+	background: var(--tsosk-surface-3);
+	color: var(--tsosk-text);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .widefat td,
+html[data-tsosk-theme="night"] .tsosk-content .widefat th,
+html[data-tsosk-theme="night"] .tsosk-content .widefat td p,
+html[data-tsosk-theme="night"] .tsosk-content .widefat td ol,
+html[data-tsosk-theme="night"] .tsosk-content .widefat td ul {
+	color: var(--tsosk-text);
+	border-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .striped > tbody > :nth-child(odd),
+html[data-tsosk-theme="night"] .tsosk-content .widefat.striped > tbody > :nth-child(odd) {
+	background-color: var(--tsosk-stripe);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .widefat tbody tr:hover > td,
+html[data-tsosk-theme="night"] .tsosk-content .widefat tbody tr:hover > th {
+	background-color: var(--tsosk-row-hover);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-row-warn td,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-row-warn:hover > td {
+	background: var(--tsosk-warn-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-kv-table tr + tr th,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-kv-table tr + tr td,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cb-table th,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cb-table td,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-list li,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-flag-row,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-hooks-row-group-end td {
+	border-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-hooks-table thead th {
+	background: var(--tsosk-surface-3);
+	box-shadow: 0 1px 0 var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-time {
+	border-bottom-color: var(--tsosk-text-muted);
+}
+
+/* Form controls */
+html[data-tsosk-theme="night"] .tsosk-content input[type="text"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="search"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="number"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="email"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="url"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="password"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="date"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="time"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="datetime-local"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="color"],
+html[data-tsosk-theme="night"] .tsosk-content select,
+html[data-tsosk-theme="night"] .tsosk-content textarea {
+	background-color: var(--tsosk-input-bg);
+	color: var(--tsosk-text);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content input::placeholder,
+html[data-tsosk-theme="night"] .tsosk-content textarea::placeholder {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content input[type="text"]:focus,
+html[data-tsosk-theme="night"] .tsosk-content input[type="search"]:focus,
+html[data-tsosk-theme="night"] .tsosk-content input[type="number"]:focus,
+html[data-tsosk-theme="night"] .tsosk-content input[type="url"]:focus,
+html[data-tsosk-theme="night"] .tsosk-content select:focus,
+html[data-tsosk-theme="night"] .tsosk-content textarea:focus {
+	border-color: var(--tsosk-link);
+	box-shadow: 0 0 0 1px var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content input[type="checkbox"],
+html[data-tsosk-theme="night"] .tsosk-content input[type="radio"] {
+	background-color: var(--tsosk-input-bg);
+	border-color: var(--tsosk-text-muted);
+}
+
+/* Buttons (the blue .button-primary keeps the WordPress admin colour) */
+html[data-tsosk-theme="night"] .tsosk-content .button:not(.button-primary):not(.button-link):not(.button-link-delete) {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .button:not(.button-primary):not(.button-link):not(.button-link-delete):hover,
+html[data-tsosk-theme="night"] .tsosk-content .button:not(.button-primary):not(.button-link):not(.button-link-delete):focus {
+	background: var(--tsosk-surface-3);
+	border-color: var(--tsosk-link);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .button.disabled,
+html[data-tsosk-theme="night"] .tsosk-content .button:disabled,
+html[data-tsosk-theme="night"] .tsosk-content .button[disabled] {
+	background: var(--tsosk-surface) !important;
+	border-color: var(--tsosk-border) !important;
+	color: var(--tsosk-text-muted) !important;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-filter-pills .tsosk-filter-active {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+/* Status colours and debug flags */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ajax-msg {
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ajax-msg.is-error,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-val-false {
+	color: var(--tsosk-danger);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-val-true {
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-val-muted {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-flag-mismatch {
+	background: var(--tsosk-warn-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-name code {
+	color: var(--tsosk-text);
+	background: none;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-val-on {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+	border-color: var(--tsosk-ok-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-val-off,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-val-muted,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-val-undef {
+	background: var(--tsosk-neutral-soft);
+	color: var(--tsosk-text-muted);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-risk-critical {
+	background: var(--tsosk-danger-soft);
+	color: var(--tsosk-danger);
+	border-color: var(--tsosk-danger-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-risk-high {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-warn);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-risk-medium {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-info);
+	border-color: var(--tsosk-info-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-risk-unknown {
+	background: var(--tsosk-neutral-soft);
+	color: var(--tsosk-text-muted);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-feature-list li {
+	color: var(--tsosk-text);
+}
+
+/* Overview dashboard */
+html[data-tsosk-theme="night"] .tsosk-dash-hero,
+html[data-tsosk-theme="night"] .tsosk-dash-tile {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+	box-shadow: var(--tsosk-shadow);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-ring-bg {
+	stroke: var(--tsosk-surface-3);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-ring-num,
+html[data-tsosk-theme="night"] .tsosk-dash-tile-value {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-tile-label {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] a.tsosk-dash-tile:hover,
+html[data-tsosk-theme="night"] a.tsosk-dash-tile:focus {
+	background: var(--tsosk-row-hover);
+	border-color: var(--tsosk-link);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-tile.is-warn {
+	background: var(--tsosk-warn-soft);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-tile.is-warn .tsosk-dash-tile-label {
+	color: var(--tsosk-warn);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-issues li,
+html[data-tsosk-theme="night"] .tsosk-dash-activity li {
+	border-bottom-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-issues li:last-child,
+html[data-tsosk-theme="night"] .tsosk-dash-activity li:last-child {
+	border-bottom: 0;
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-shortcut {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-dash-trend svg polyline {
+	stroke: var(--tsosk-link);
+}
+
+/* ── Night: shared panels (phase 1.5) ─────────────────────────────────────── */
+
+/* Guides, legends, help boxes and import boxes */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-guide-card,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-hp-legend {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	border-left-color: var(--tsosk-link);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-field-help-list,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-log-help-tip,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-snapshot-import-file,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-guide-example,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-me-examples,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-copy-plugins,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-404-sc,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-404-sc-code,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-404-sc-result {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-guide-title {
+	background: transparent;
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-me-examples th,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-me-examples td {
+	border-bottom-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-me-examples th {
+	color: var(--tsosk-text-muted);
+}
+
+/* Counters (Heartbeat, View Counter) */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-tile,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-box {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-val,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-num {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-lbl,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-label {
+	color: var(--tsosk-text-muted);
+}
+
+/* Debug constants table header, Hooks name column */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-head {
+	background: var(--tsosk-surface-3);
+	border-bottom-color: var(--tsosk-border);
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-hook-name {
+	background: var(--tsosk-surface-2);
+	border-right-color: var(--tsosk-border);
+}
+
+/* Inner tabs (WordPress .nav-tab used by Slow Queries, Security, Comment Anti-Spam, Redirects, Users) */
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab-wrapper {
+	border-bottom-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab:hover,
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab:focus {
+	background: var(--tsosk-surface-3);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab-active,
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab-active:hover,
+html[data-tsosk-theme="night"] .tsosk-content .nav-tab-active:focus {
+	background: var(--tsosk-surface);
+	border-bottom-color: var(--tsosk-surface);
+	color: var(--tsosk-text);
+}
+
+/* ── Night: modules (phase 2) ─────────────────────────────────────────────── */
+
+/* Plain links: WordPress blue is too dark on the night canvas. */
+html[data-tsosk-theme="night"] .tsosk-content a:where(:not(.button, .button-link, .button-link-delete, .nav-tab, .tsosk-dash-tile, .tsosk-oe-page-btn)) {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-hint,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-rec,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-check-desc,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-lead,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-snapshot-file-name,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-ver,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-email,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-note,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-session-ua,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-session-meta dt,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-sub-count,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-sub-label,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-separator-label,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-hidden-empty td,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-handle,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-legend,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-media-stat span,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-media-stat em {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-settings-summary-title,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-name,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-top-label,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-media-stat strong,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-name strong,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-check-title,
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-oe-tbody .tsosk-code,
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-oe-tbody td,
+html[data-tsosk-theme="night"] #tsosk-am-table td {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-status-on {
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-status-off {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-status-warn {
+	color: var(--tsosk-warn);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-notice-ok {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+	border-color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-page-btn {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-page-btn.is-current {
+	background: var(--tsosk-surface-3);
+	border-color: var(--tsosk-link);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ns-list,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-list {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-history-modules {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-row {
+	border-bottom-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-row:hover {
+	background: var(--tsosk-surface-3);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-plugin-row.is-active {
+	background: var(--tsosk-ok-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cas-bar-empty {
+	background: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-vc-import-result {
+	background: var(--tsosk-info-soft);
+	border-left-color: var(--tsosk-link);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-vc-import-result.is-error {
+	background: var(--tsosk-danger-soft);
+	border-left-color: var(--tsosk-danger);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-media-stat {
+	background: var(--tsosk-surface);
+	border-top-color: var(--tsosk-border);
+	border-right-color: var(--tsosk-border);
+	border-bottom-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-card {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-card.has-sessions {
+	border-left-color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-card.is-self {
+	background: var(--tsosk-row-hover);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-avatar {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-chip {
+	background: var(--tsosk-neutral-soft);
+	color: var(--tsosk-neutral);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-chip.is-on {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-session {
+	background: var(--tsosk-surface-2);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-us-session.is-current {
+	background: var(--tsosk-row-hover);
+	border-color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-am-table {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-am-table thead th {
+	background: var(--tsosk-surface-3);
+	border-bottom-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-am-table tbody td {
+	background: var(--tsosk-surface);
+	border-top-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-am-table .tsosk-am-row-top td {
+	background: var(--tsosk-surface-3);
+	border-top-color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-am-table .tsosk-am-row-is-hidden td {
+	background: var(--tsosk-danger-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-row.ui-sortable-helper td {
+	background: var(--tsosk-surface-3);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-row.ui-sortable-placeholder td {
+	background: var(--tsosk-row-hover);
+	border-color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-section-tag {
+	background: var(--tsosk-info-soft);
+	border-color: var(--tsosk-info-border);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-sub-count {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-hidden-section {
+	background: var(--tsosk-danger-soft);
+	border-color: var(--tsosk-danger-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-am-hidden-title {
+	color: var(--tsosk-danger);
+}
+
+/* ── Night: page background and header ────────────────────────────────────── */
+
+html[data-tsosk-theme="night"],
+html[data-tsosk-theme="night"] body.tools_page_tso-swiss-knife,
+html[data-tsosk-theme="night"] body.tools_page_tso-swiss-knife #wpcontent,
+html[data-tsosk-theme="night"] body.tools_page_tso-swiss-knife #wpbody,
+html[data-tsosk-theme="night"] body.tools_page_tso-swiss-knife #wpbody-content {
+	background: #12141c;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap {
+	padding: 12px 16px 28px;
+	background: var(--tsosk-bg);
+	border-radius: 12px;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-page-title {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-page-title .dashicons {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-version {
+	background: var(--tsosk-surface-3);
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-donate-btn {
+	background: var(--tsosk-warn-soft);
+	border-color: var(--tsosk-warn-border);
+	color: var(--tsosk-warn);
+	box-shadow: none;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-donate-btn:hover,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-donate-btn:focus {
+	background: var(--tsosk-surface-3);
+	color: var(--tsosk-warn);
+	border-color: var(--tsosk-warn);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-language-switcher a:not(.is-active),
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-theme-btn {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-theme-btn:hover,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-theme-btn:focus {
+	background: var(--tsosk-surface-3);
+	border-color: var(--tsosk-link);
+	color: var(--tsosk-text);
+}
+
+/* Site status bar and global search */
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-bar {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-label {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-ok {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-warn,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-debug {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-warn);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-danger {
+	background: var(--tsosk-danger-soft);
+	color: var(--tsosk-danger);
+	border-color: var(--tsosk-danger-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-info {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-info);
+	border-color: var(--tsosk-info-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-success {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+	border-color: var(--tsosk-ok-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-site-status-actions .button:not(.button-primary) {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search {
+	background: var(--tsosk-input-bg);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search:focus-within {
+	border-color: var(--tsosk-link);
+	box-shadow: 0 0 0 1px var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search .dashicons-search {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-input {
+	background: transparent;
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+	box-shadow: var(--tsosk-shadow);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-search-no-results {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results button.tsosk-search-result {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results li.is-active button {
+	background: var(--tsosk-row-hover);
+	color: var(--tsosk-link);
+}
+
+/* File Integrity and Options Editor (colours that used to be inline) */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-fi-muted {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-danger,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-fi-heading-danger {
+	color: var(--tsosk-danger);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-danger {
+	background: var(--tsosk-danger-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-purple {
+	background: var(--tsosk-info-soft);
+	color: var(--tsosk-info);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-oe-tbody td.tsosk-oe-cell-name {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-oe-tbody td.tsosk-oe-cell-meta {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-fi-heading-purple {
+	color: var(--tsosk-info);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-badge-neutral {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-badge-warn {
+	background: rgba(232, 197, 106, 0.16);
+}
+
+
+/* Debug constants list: hover and mismatch rows */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-row + .tsosk-dflags-row {
+	border-top-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-row:hover {
+	background: var(--tsosk-row-hover);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-row.tsosk-flag-mismatch {
+	background: var(--tsosk-warn-soft);
+}
+
+/* Search & Replace preview: table cards and diff chips */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-table-section {
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-table-header {
+	background: var(--tsosk-surface-2);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-row {
+	border-top-color: var(--tsosk-border-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-diff-before {
+	background: var(--tsosk-danger-soft);
+	color: var(--tsosk-danger);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-diff-after {
+	background: var(--tsosk-ok-soft);
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-col-label {
+	color: var(--tsosk-text-muted);
+}
+
+/* Leftovers: cards, heads, delete bar, backups, hints */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-card,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-bk {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-section--del .tsosk-lo-card {
+	border-color: var(--tsosk-ok-border);
+	border-left-color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-section--info .tsosk-lo-card,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-card--info {
+	background: var(--tsosk-surface);
+	border-color: var(--tsosk-warn-border);
+	border-left-color: #b45309;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-head,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-bk[open] > summary {
+	background: var(--tsosk-surface-2);
+	color: var(--tsosk-text);
+	border-bottom-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-section--del .tsosk-lo-head {
+	background: var(--tsosk-ok-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-section--info .tsosk-lo-head,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-card--info .tsosk-lo-head {
+	background: var(--tsosk-warn-soft);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-section--del #tsosk-lo-actions {
+	background: var(--tsosk-ok-soft);
+	border-color: var(--tsosk-ok-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-lo-actions {
+	background: var(--tsosk-surface);
+	border-top-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-lock {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-warn);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-why {
+	background: var(--tsosk-warn-soft);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-usage-ok {
+	color: var(--tsosk-ok);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-usage-bad {
+	color: var(--tsosk-warn);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-bk-user {
+	color: var(--tsosk-text-muted);
+}
+
+/* More TSO Plugins: promo hero */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-hero {
+	background: linear-gradient(135deg, var(--tsosk-surface-2) 0%, var(--tsosk-surface) 100%);
+	border-color: var(--tsosk-border);
+	box-shadow: none;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-kicker {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-title {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-promo-lead {
+	color: var(--tsosk-text-muted);
+}
+
+/* Security: switchable constants rows */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-security-toggle-row {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-security-toggle-rec {
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-security-toggle-wpconfig {
+	color: var(--tsosk-text-muted);
+}
+
+/* Image sizes audit: summary cards */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-isa-card-value,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-isa-card-label {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-isa-card-help {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-isa-card-warn {
+	background: var(--tsosk-warn-soft);
+	border-color: var(--tsosk-warn-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-isa-card-info {
+	background: var(--tsosk-info-soft);
+	border-color: var(--tsosk-info-border);
+}
+
+/* Users: directory header row and actions column */
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table.widefat thead th,
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table.widefat thead td {
+	background: var(--tsosk-surface-2);
+	border-top-color: var(--tsosk-border);
+	border-bottom-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table.widefat thead th:first-child {
+	border-left-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table.widefat thead th:last-child {
+	border-right-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-users-col-select {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table td.tsosk-users-row-actions,
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-users-all-table td.tsosk-users-col-actions {
+	background: transparent;
+}
+
+/* Options Editor type / autoload badges */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-type-serialized { color: #c4a8ff; }
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-type-json { color: #7cc4f0; }
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-type-integer { color: #6dd9b0; }
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-type-text { color: var(--tsosk-text-muted); }
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-al-on { color: var(--tsosk-warn); }
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-oe-al-off { color: var(--tsosk-text-muted); }
+
+/* Slow Queries: stat tiles */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-stat {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-stat-val {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-stat-lbl {
+	color: var(--tsosk-text-muted);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-stat-val.tsosk-sq-warn,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-warn {
+	color: var(--tsosk-danger) !important;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-amber {
+	color: var(--tsosk-warn) !important;
+}
+
+/* Options Editor raw preview, Option Library preview */
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-oe-raw-preview,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ol-preview-value {
+	background: var(--tsosk-input-bg);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-ol-option-row.is-preview-active {
+	background: var(--tsosk-row-hover);
+}
+
+
+/* Native pickers (select lists, colour, date and time dialogs on mobile) follow the theme */
+html[data-tsosk-theme="night"] {
+	color-scheme: dark;
+}
+
+html[data-tsosk-theme="day"] {
+	color-scheme: light;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap select,
+html[data-tsosk-theme="night"] .tsosk-wrap input,
+html[data-tsosk-theme="night"] .tsosk-wrap textarea,
+html[data-tsosk-theme="night"] .tsosk-wrap button {
+	color-scheme: dark;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap select option {
+	background: var(--tsosk-input-bg);
+	color: var(--tsosk-text);
+}
+
+/* Global search: results are links, not buttons */
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results a.tsosk-search-result {
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results a.tsosk-search-result:hover,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results a.tsosk-search-result:focus,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-global-search-results li.is-active a {
+	background: var(--tsosk-row-hover);
+	color: var(--tsosk-link);
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-search-result-group {
+	color: var(--tsosk-text-muted);
+}
+
+/* Favourites bar on mobile (it turns into a light card with pills at <= 782px) */
+@media (max-width: 782px) {
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sidebar-favorites {
+		background: var(--tsosk-surface);
+		border: 1px solid var(--tsosk-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-title {
+		background: var(--tsosk-surface-2);
+		color: var(--tsosk-text);
+		border-bottom-color: var(--tsosk-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-hint {
+		color: var(--tsosk-text-muted);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sidebar-favorites .tsosk-nav-item {
+		background: var(--tsosk-surface-2);
+		border-color: var(--tsosk-border);
+		border-left-color: var(--tsosk-border);
+		color: var(--tsosk-text);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sidebar-favorites .tsosk-nav-item .dashicons {
+		color: var(--tsosk-text-muted);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sidebar-favorites .tsosk-nav-item.is-active {
+		background: var(--tsosk-info-soft);
+		border-color: var(--tsosk-link);
+		color: var(--tsosk-link);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sidebar-favorites .tsosk-nav-item.is-active .dashicons {
+		color: var(--tsosk-link);
+	}
+}
+
+/* Phones: less nested padding so the content gets the screen width */
+@media (max-width: 782px) {
+	body.tools_page_tso-swiss-knife #wpcontent {
+		padding-left: 0;
+	}
+
+	html[data-tsosk-theme] .tsosk-wrap {
+		padding: 8px 6px 20px;
+		border-radius: 8px;
+	}
+
+	.tsosk-wrap .tsosk-tab-body {
+		padding: 10px;
+	}
+
+	.tsosk-wrap .tsosk-card {
+		padding: 12px;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-peek td {
+		background: var(--tsosk-surface-2);
+	}
+}
+
+/* Leftovers: the "View" row */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-peek td {
+	background: var(--tsosk-surface-2);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-excerpt {
+	background: var(--tsosk-input-bg);
+	color: var(--tsosk-text);
+}
+
+@media (max-width: 782px) {
+	html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-table td[data-label]::before {
+		color: var(--tsosk-text-muted);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-content .tsosk-lo-table tr {
+		border-bottom-color: var(--tsosk-border-soft);
+	}
+}
+
+
+/* Night only: brighter, slightly larger text in the side columns (favourites and tools menu) */
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item {
+	color: #e3e8f1;
+	font-size: 13.5px;
+	font-weight: 500;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item .dashicons {
+	color: #b4c0d6;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item:hover,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item.is-active,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item:focus {
+	color: #fff;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item.is-active .dashicons,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-item:hover .dashicons {
+	color: #8eb8f0;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-nav-group-label {
+	color: #9fb0cc;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-title,
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-title .dashicons {
+	color: #ffd479;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-title {
+	font-size: 12px;
+}
+
+html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-favorites-hint {
+	color: #a3adc2;
+	font-size: 11.5px;
+}
+
+/* Phones: use less vertical space (status badges in a row, stat tiles side by side, compact table cards) */
+@media (max-width: 782px) {
+	/* Site status badges: wrap in a row instead of one per line */
+	.tsosk-wrap .tsosk-site-status-bar {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 10px;
+	}
+
+	.tsosk-wrap .tsosk-site-status-label {
+		flex: 1 0 100%;
+	}
+
+	.tsosk-wrap .tsosk-site-status-badge {
+		padding: 1px 8px;
+		line-height: 1.5;
+	}
+
+	/* Stat tiles: three (or two) in a row */
+	.tsosk-wrap .tsosk-stat-tile,
+	.tsosk-wrap .tsosk-sq-stat {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 8px 6px;
+	}
+
+	.tsosk-wrap .tsosk-stat-val,
+	.tsosk-wrap .tsosk-sq-stat-val {
+		font-size: 18px;
+	}
+
+	.tsosk-wrap .tsosk-stat-lbl,
+	.tsosk-wrap .tsosk-sq-stat-lbl {
+		font-size: 10.5px;
+		line-height: 1.25;
+	}
+
+	.tsosk-wrap .tsosk-sq-stats {
+		gap: 8px;
+	}
+
+	/* Table rows that become cards: tighter, label on the left of each value */
+	.tsosk-wrap .tsosk-sm-audit-table tr,
+	.tsosk-wrap .tsosk-media-table tr,
+	.tsosk-wrap .tsosk-users-stack-table tr {
+		margin: 0 0 8px;
+		padding: 8px 10px;
+	}
+
+	.tsosk-wrap .tsosk-sm-audit-table td,
+	.tsosk-wrap .tsosk-media-table td,
+	.tsosk-wrap .tsosk-users-stack-table td,
+	.tsosk-wrap .tsosk-lo-table td {
+		padding: 2px 0;
+	}
+
+	.tsosk-wrap .tsosk-sm-audit-table td::before,
+	.tsosk-wrap .tsosk-media-table td::before,
+	.tsosk-wrap .tsosk-users-stack-table td[data-label]::before,
+	.tsosk-wrap .tsosk-lo-table td[data-label]::before {
+		float: left;
+		width: 34%;
+		margin: 0 8px 0 0;
+		padding-top: 2px;
+		font-size: 10.5px;
+		line-height: 1.4;
+	}
+
+	.tsosk-wrap .tsosk-sm-audit-table td::after,
+	.tsosk-wrap .tsosk-media-table td::after,
+	.tsosk-wrap .tsosk-users-stack-table td::after,
+	.tsosk-wrap .tsosk-lo-table td::after {
+		content: "";
+		display: block;
+		clear: both;
+	}
+
+	.tsosk-wrap .tsosk-sm-audit-table td.tsosk-actions .button,
+	.tsosk-wrap .tsosk-media-table td.tsosk-actions .button {
+		min-height: 34px;
+	}
+
+	.tsosk-wrap .tsosk-card h3 {
+		margin-top: 0;
+	}
+
+	.tsosk-wrap .tsosk-table-wrap {
+		margin-top: 6px;
+	}
+
+	/* Night: those cards were drawn white */
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sm-audit-table tr,
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-media-table tr,
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-users-stack-table tr,
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-users-all-table tbody tr {
+		background: var(--tsosk-surface-2);
+		border-color: var(--tsosk-border);
+		box-shadow: none;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sm-audit-table td::before,
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-media-table td::before,
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-users-stack-table td::before {
+		color: var(--tsosk-text-muted);
+	}
+}
+
+/* Phones: the dev-mode badge and the search share the status bar row instead of forcing a new line */
+@media (max-width: 782px) {
+	.tsosk-wrap .tsosk-site-status-tools {
+		display: contents;
+	}
+
+	.tsosk-wrap .tsosk-site-status-tools .tsosk-global-search {
+		flex: 1 0 100%;
+		order: 10;
+	}
+
+	.tsosk-wrap .tsosk-site-status-actions {
+		margin-left: 0;
+	}
+}
+
+
+/* Phones, night: 404 monitor / redirects / suggestions cards were drawn white */
+@media (max-width: 782px) {
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-404-table tr,
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-redirects-table tr,
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-404-suggestions-table tr {
+		background: var(--tsosk-surface-2);
+		border-color: var(--tsosk-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-404-table td::before,
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-redirects-table td::before,
+	html[data-tsosk-theme="night"] .tsosk-wrap #tsosk-404-suggestions-table td::before {
+		color: var(--tsosk-text-muted);
+	}
+
+	.tsosk-wrap #tsosk-404-table tr,
+	.tsosk-wrap #tsosk-redirects-table tr,
+	.tsosk-wrap #tsosk-404-suggestions-table tr {
+		margin: 0 0 8px;
+		padding: 8px 10px;
+	}
+
+	.tsosk-wrap #tsosk-404-table td,
+	.tsosk-wrap #tsosk-redirects-table td,
+	.tsosk-wrap #tsosk-404-suggestions-table td {
+		padding: 2px 0;
+	}
+}
+
+/* Phones: data tables stack as compact cards (labels are added by tsosk-admin.js), forms and buttons fit the screen */
+@media (max-width: 782px) {
+	.tsosk-wrap .tsosk-table-wrap {
+		overflow-x: visible;
+	}
+
+	.tsosk-wrap .tsosk-table-wrap > .widefat.tsosk-table,
+	.tsosk-wrap .tsosk-table-wrap > table {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] {
+		table-layout: auto;
+		border: 0;
+		box-shadow: none;
+		background: transparent;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] > thead {
+		display: none;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"],
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody,
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr,
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > td,
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > th {
+		display: block;
+		width: 100%;
+		max-width: none;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr {
+		margin: 0 0 8px;
+		padding: 8px 10px;
+		border: 1px solid #dcdcde;
+		border-radius: 6px;
+		background: #fff;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > td,
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > th {
+		padding: 2px 0;
+		border: 0;
+		background: transparent;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > td[data-label]::before {
+		content: attr(data-label);
+		float: left;
+		width: 34%;
+		margin: 0 8px 0 0;
+		padding-top: 2px;
+		font-size: 10.5px;
+		font-weight: 600;
+		line-height: 1.4;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: #646970;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > td::after {
+		content: "";
+		display: block;
+		clear: both;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] td code,
+	.tsosk-wrap table[data-tsosk-stack="own"] td .tsosk-code {
+		white-space: normal;
+		word-break: break-all;
+	}
+
+	.tsosk-wrap table[data-tsosk-stack="own"] td .button {
+		margin: 2px 4px 2px 0;
+	}
+
+	/* Forms (WordPress form-table) use the full width and wrap their text */
+	.tsosk-wrap table.form-table,
+	.tsosk-wrap table.form-table > tbody,
+	.tsosk-wrap table.form-table > tbody > tr,
+	.tsosk-wrap table.form-table th,
+	.tsosk-wrap table.form-table td {
+		display: block;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap table.form-table th {
+		padding: 10px 0 2px;
+	}
+
+	.tsosk-wrap table.form-table td {
+		padding: 2px 0 8px;
+	}
+
+	.tsosk-wrap table.form-table label,
+	.tsosk-wrap table.form-table .description,
+	.tsosk-wrap table.form-table p {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.tsosk-wrap table.form-table input[type="text"],
+	.tsosk-wrap table.form-table input[type="number"],
+	.tsosk-wrap table.form-table input[type="email"],
+	.tsosk-wrap table.form-table input[type="url"],
+	.tsosk-wrap table.form-table textarea,
+	.tsosk-wrap table.form-table select {
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap table.form-table code,
+	.tsosk-wrap table.form-table pre {
+		white-space: pre-wrap;
+		word-break: break-all;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	/* Buttons wrap instead of forcing the page wider */
+	.tsosk-wrap .button {
+		white-space: normal;
+		height: auto;
+		min-height: 32px;
+		line-height: 1.4;
+		padding-top: 4px;
+		padding-bottom: 4px;
+	}
+
+	.tsosk-wrap .tsosk-sq-copy-plugins {
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap .tsosk-sq-copy-plugins * {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	/* Slug manager: a warning tint on the card itself, not on every cell */
+	.tsosk-wrap .tsosk-sm-audit-table tr.tsosk-row-warn td {
+		background: transparent;
+	}
+}
+
+/* Night: stacked cards, lists and warning rows */
+@media (max-width: 782px) {
+	html[data-tsosk-theme="night"] .tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr {
+		background: var(--tsosk-surface-2);
+		border-color: var(--tsosk-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table[data-tsosk-stack="own"] > tbody > tr > td[data-label]::before {
+		color: var(--tsosk-text-muted);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table[data-tsosk-stack] > tbody > tr > td {
+		background: transparent;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sm-audit-table tr.tsosk-row-warn {
+		background: var(--tsosk-warn-soft);
+		border-color: var(--tsosk-warn-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap .tsosk-sm-audit-table td {
+		background: transparent;
+	}
+}
+
+html[data-tsosk-theme="night"] .tsosk-content #tsosk-sr-table-list,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-copy-plugins {
+	background: var(--tsosk-input-bg);
+	border-color: var(--tsosk-border);
+	color: var(--tsosk-text);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sr-table-size {
+	color: var(--tsosk-text-muted);
+}
+
+/* Phones: no "Organise" bar. Reordering the menu is drag-based and made for the computer. */
+@media (max-width: 782px) {
+	.tsosk-wrap .tsosk-sidebar-actions,
+	.tsosk-wrap #tsosk-sidebar-actions {
+		display: none;
+	}
+}
+
+/* Phones: a nicer tools menu (toggle bar + grouped list). The side columns are dark in day and night alike. */
+@media (max-width: 782px) {
+	html .tsosk-wrap .tsosk-mobile-nav-toggle {
+		position: relative;
+		display: flex !important;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 12px;
+		width: 100%;
+		min-height: 52px;
+		margin: 0 0 10px;
+		padding: 8px 48px 8px 10px;
+		border: 0;
+		border-radius: 14px;
+		background: linear-gradient(135deg, #2f6db5 0%, #2271b1 55%, #1b5e96 100%);
+		box-shadow: 0 6px 16px rgba(34, 113, 177, 0.35);
+		color: #fff;
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+		text-align: left;
+	}
+
+	html .tsosk-wrap .tsosk-mobile-nav-toggle:hover,
+	html .tsosk-wrap .tsosk-mobile-nav-toggle:focus {
+		background: linear-gradient(135deg, #3a78c1 0%, #2a7bbd 55%, #1f6aa6 100%);
+		color: #fff;
+	}
+
+	.tsosk-wrap .tsosk-mobile-nav-toggle .dashicons {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 34px;
+		height: 34px;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.18);
+		font-size: 20px;
+		line-height: 1;
+	}
+
+	.tsosk-wrap .tsosk-mobile-nav-toggle::after {
+		content: "";
+		position: absolute;
+		right: 18px;
+		top: 50%;
+		width: 9px;
+		height: 9px;
+		margin-top: -6px;
+		border-right: 2.5px solid #fff;
+		border-bottom: 2.5px solid #fff;
+		transform: rotate(45deg);
+		transition: transform 0.2s ease, margin-top 0.2s ease;
+	}
+
+	.tsosk-wrap .tsosk-mobile-nav-toggle[aria-expanded="true"]::after {
+		transform: rotate(-135deg);
+		margin-top: -2px;
+	}
+
+	/* The panel */
+	.tsosk-wrap .tsosk-sidebar-tools {
+		border: 1px solid #323a4f;
+		border-radius: 14px;
+		background: linear-gradient(180deg, #1e2332 0%, #181c28 100%);
+		box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+		padding: 6px 0;
+	}
+
+	.tsosk-wrap.tsosk-mobile-nav-open .tsosk-sidebars {
+		animation: tsosk-menu-in 0.18s ease-out;
+	}
+
+	@keyframes tsosk-menu-in {
+		from {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-group-label {
+		margin: 10px 14px 2px;
+		padding: 0 0 6px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		color: #8fa3c4;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-group-label:first-child {
+		margin-top: 4px;
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item {
+		gap: 12px;
+		margin: 2px 8px;
+		padding: 10px 12px;
+		border: 0;
+		border-radius: 10px;
+		color: #e3e8f1;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item .dashicons {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 30px;
+		height: 30px;
+		border-radius: 9px;
+		background: rgba(255, 255, 255, 0.07);
+		color: #b4c0d6;
+		font-size: 17px;
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item:hover,
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item:focus {
+		background: rgba(255, 255, 255, 0.07);
+		color: #fff;
+	}
+
+	.tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item.is-active {
+		background: rgba(142, 184, 240, 0.16);
+		box-shadow: inset 3px 0 0 #8eb8f0;
+		color: #fff;
+		font-weight: 700;
+	}
+
+	html[data-tsosk-theme] .tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item.is-active .dashicons,
+	html .tsosk-wrap .tsosk-sidebar-tools .tsosk-nav-item.is-active .dashicons {
+		background: #8eb8f0;
+		color: #12203a;
+	}
+
+	.tsosk-wrap #tsosk-nav-list {
+		padding-bottom: 4px;
+	}
+}
+
+/* Phones: the menu editor ("Reorder and hide the side menu") as one card per item, no sideways scroll */
+@media (max-width: 782px) {
+	.tsosk-wrap .tsosk-am-wrap {
+		overflow-x: visible;
+	}
+
+	.tsosk-wrap table.tsosk-am-table,
+	.tsosk-wrap table#tsosk-am-table {
+		display: block;
+		min-width: 0;
+		width: 100%;
+		table-layout: auto;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > thead {
+		display: none;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody {
+		display: block;
+		width: 100%;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row {
+		display: grid;
+		grid-template-columns: 30px minmax(0, 1fr) auto;
+		grid-template-areas:
+			"drag title hide"
+			"parent parent parent"
+			"label label label";
+		align-items: center;
+		gap: 4px 8px;
+		margin: 0 0 8px;
+		padding: 8px 10px;
+		border: 1px solid #dcdcde;
+		border-radius: 10px;
+		background: #fff;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub {
+		margin-left: 18px;
+		border-left: 3px solid #2271b1;
+	}
+
+	/* The module sheet styles these cells by id (widths, borders, backgrounds), so the card layout needs !important. */
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row > td {
+		display: block;
+		width: auto !important;
+		max-width: none !important;
+		min-width: 0 !important;
+		padding: 0 !important;
+		border: 0 !important;
+		background: transparent !important;
+		box-sizing: border-box;
+		overflow: visible;
+		text-align: left;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row > td.tsosk-am-drag {
+		grid-area: drag;
+		text-align: center;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-title-cell {
+		grid-area: title;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row > td.tsosk-am-hide-cell {
+		grid-area: hide;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 6px;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-hide-cell::before {
+		content: attr(data-label);
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: #646970;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-parent-cell {
+		grid-area: parent;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-label-cell {
+		grid-area: label;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-parent-cell::before,
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-label-cell::before {
+		content: attr(data-label);
+		display: block;
+		margin: 0 0 2px;
+		font-size: 10.5px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: #646970;
+	}
+
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-parent-cell:empty,
+	.tsosk-wrap table.tsosk-am-table td.tsosk-am-label-cell:empty {
+		display: none;
+	}
+
+	.tsosk-wrap table.tsosk-am-table select,
+	.tsosk-wrap table.tsosk-am-table input[type="text"] {
+		width: 100%;
+		max-width: 100%;
+		min-height: 38px;
+		box-sizing: border-box;
+	}
+
+	.tsosk-wrap table.tsosk-am-table input[type="checkbox"] {
+		width: 22px;
+		height: 22px;
+		margin: 0;
+	}
+
+	.tsosk-wrap table.tsosk-am-table .tsosk-am-handle {
+		font-size: 22px;
+		width: 24px;
+		height: 24px;
+		touch-action: none;
+	}
+
+	.tsosk-wrap table.tsosk-am-table .tsosk-am-top-label,
+	.tsosk-wrap table.tsosk-am-table .tsosk-am-sub-label {
+		white-space: normal;
+		font-size: 14px;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	.tsosk-wrap table.tsosk-am-table .tsosk-am-row-sub .tsosk-am-title-cell {
+		padding-left: 0 !important;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row {
+		background: var(--tsosk-surface-2);
+		border-color: var(--tsosk-border);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub {
+		border-left-color: var(--tsosk-link);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table td::before {
+		color: var(--tsosk-text-muted);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row > td {
+		background: transparent;
+	}
+}
+
+/* Phones, menu editor: main entries stand out, sub-options are clearly lighter, indented and linked to their parent */
+@media (max-width: 782px) {
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top {
+		margin-top: 14px;
+		padding: 12px 12px;
+		border-left: 5px solid #2271b1;
+		background: #eaf3fb;
+		box-shadow: 0 2px 8px rgba(34, 113, 177, 0.18);
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top .tsosk-am-top-label {
+		font-size: 16px;
+		font-weight: 800;
+		letter-spacing: 0.01em;
+	}
+
+	html[data-tsosk-theme] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top .tsosk-am-top-label {
+		color: #135e96;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top .tsosk-am-top-label {
+		color: #8eb8f0;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top .tsosk-am-handle {
+		color: #2271b1;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub {
+		position: relative;
+		margin: 0 0 6px 26px;
+		padding: 8px 10px;
+		border: 1px solid #c9d6e2;
+		border-left: 3px solid #1a9a7a;
+		border-radius: 8px;
+		background: #fff;
+		box-shadow: none;
+	}
+
+	/* Connector from the parent card down to each sub-option */
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub::before {
+		content: "";
+		position: absolute;
+		left: -16px;
+		top: -8px;
+		bottom: 50%;
+		width: 12px;
+		border-left: 2px solid #9db8d0;
+		border-bottom: 2px solid #9db8d0;
+		border-bottom-left-radius: 8px;
+	}
+
+	.tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub .tsosk-am-sub-label {
+		font-size: 15px;
+		font-weight: 700;
+		color: #0f6b54;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub .tsosk-am-sub-label {
+		color: #6dd9b0;
+	}
+
+
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top {
+		background: linear-gradient(180deg, #27324d 0%, #222b43 100%);
+		border-color: #3f4f78;
+		border-left-color: #8eb8f0;
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-top .tsosk-am-handle {
+		color: #8eb8f0;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub {
+		background: var(--tsosk-surface);
+		border-color: var(--tsosk-border);
+		border-left-color: #6dd9b0;
+	}
+
+	html[data-tsosk-theme="night"] .tsosk-wrap table.tsosk-am-table > tbody > tr.tsosk-am-row-sub::before {
+		border-color: #46557a;
+	}
+
+
+}
+

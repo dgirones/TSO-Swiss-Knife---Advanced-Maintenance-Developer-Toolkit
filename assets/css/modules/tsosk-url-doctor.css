@@ -1,0 +1,15 @@
+/*URL & HTTPS Doctor: two clear columns, hint under the result.*/
+.tsosk-ud-table { table-layout: fixed; }
+
+.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 36%; }
+
+.tsosk-ud-check { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+
+.tsosk-ud-check strong { flex: 0 1 auto; }
+
+.tsosk-ud-hint { display: block; margin-top: 4px; color: #646970; font-size: 12px; }
+
+@media (max-width: 782px) {
+		.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 42%; }
+}
+

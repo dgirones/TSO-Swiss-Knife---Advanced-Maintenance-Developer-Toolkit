@@ -1,0 +1,19 @@
+#tsosk-transients-table th.tsosk-sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+#tsosk-transients-table th.tsosk-sortable:hover {
+    background: #f0f0f1;
+}
+
+#tsosk-transients-table th.tsosk-sort-asc::after {
+    content: " \2191";
+    opacity: 0.6;
+}
+
+#tsosk-transients-table th.tsosk-sort-desc::after {
+    content: " \2193";
+    opacity: 0.6;
+}
+

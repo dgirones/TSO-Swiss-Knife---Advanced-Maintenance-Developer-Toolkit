@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.7
+Stable tag: 1.3.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -201,29 +201,24 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
-= 1.2.7 =
-* Login Protection works alongside TSO Login Organizer: its front-end login pages are no longer answered with a 404, login links point to them, and the tab explains which plugin blocks what when both have lockouts, hidden wp-login.php or two-step checks on.
-* Fix in Comment Anti-Spam: on Fluent Forms the hidden honeypot and time fields were printed outside the form and not read from the submitted data, so every message was rejected as "submitted too quickly". They are now printed inside the form and read correctly, and the logging option points to the Logs tab.
-* Fix in Login Protection: with the custom login URL on, the password-reset email could fail with a fatal error, and login or reset links were cut when the redirect or the username contained "&", "+" or a space.
-* Fix in Security Review: the Apache hardening rules restore the previous .htaccess when the site answers with a server error after saving, refuse to write on Nginx/IIS where .htaccess is ignored, and keep the panel in sync with the files when only the cache rule fails.
-* Improved: Security Review is organised in tabs (Overview, Hardening WP, Server rules, Accounts & keys, Alerts), with new toggles for pingbacks and author scans, reversible Apache rules, soft-disable when another security plugin is active, salts / table prefix / admin username audited with guides only, and clearer hints for "Disable RSS feeds" and the salt generator.
-* Fixed: Overview warnings have "Ignore 30 days" and "Ignore always" buttons that now work, tiles deep-link to the matching data, and "File editor disabled" no longer stays after enabling it in Security Review.
-* Improved: Cron Manager lists WordPress core events at the bottom of the table (read-only); Export/Import includes Security Review settings and Hidden Profiles flags, and Activity History lists which Security toggles and rules were saved.
+= 1.3.1 =
+* Improved: the Leftovers report no longer lists data that an installed plugin or theme uses in several of its own files, ignores post types that code only lists to exclude them (NOT IN), and its tables wrap their text (cards on phones) instead of scrolling sideways.
 
-= 1.2.6 =
-* Login Protection: new optional counter per username (stops attackers who change IP on every attempt), IPv6 counted per /64 network, lockout emails limited to 3 every 15 minutes, and fixes for the attempts list growing without limit, "Clear Log" lifting active lockouts, invalid IP lines, self-lockout with login maintenance, timezone and the Active/Inactive badge.
-* Security Review: one alert when a new administrator is created (it sent two), FORCE_SSL_ADMIN refused when you are not on HTTPS, wp-config.php-locked toggles no longer saved and a more truthful uploads PHP check (commented rules, Nginx/IIS).
-* Comment Anti-Spam: WPForms trap fields now inside the form, clearer Contact Form 7 block messages, Elementor Pro blocks logged and Learning mode respected, IPv6 per /64 in rate limits and bans, and the IP whitelist validated on save.
-* Search & Replace: post GUIDs are skipped by default (new "Include post GUIDs" option) and the history tables of other TSO plugins are no longer searched or rewritten.
-* Server Files: the "Add security headers" button always shows, a virtual robots.txt is detected, informational notices are gone, and "No obvious issues were detected" only appears when it is true.
-* Redirects: the 404 Monitor has a "Select all" button and no longer logs or offers a redirect for the home page.
-* Also: Leftovers ignores WordPress's "recently_edited" option, Content Audit shows where each shortcode is used, and Media Footprint shows and links each large file's folder.
+= 1.3.0 =
+* New: automatic day / night theme for the plugin screen (follows sunrise and sunset, with an Auto / Day / Night button in the header; same system as the other TSO plugins). The side columns keep their dark look.
+* Fix: Slow Query Monitor could run out of memory on requests that run a huge number of queries; the origin detection and the duplicate-query analysis now stop collecting before the memory limit is reached.
 
-= 1.2.5 =
-* Fix in Slow Query Monitor: duplicated queries now show which plugin, theme or WordPress core runs them even when Origin detection is off or the query ran before the monitor started (the origin and the potential troublemaker are read from the query's caller chain), and the admin bar's Duplicated link now jumps straight to the duplicates table.
-* Improved: Slow Query Monitor is now organised in three tabs (Settings, Slow queries, Database queries), like Redirects; links from the admin bar open the right tab, it always opens on Settings, saving the settings keeps you on the same tab, and the panel texts now match what each tab shows.
-* Fix in Search & Replace: when the only match is stored as PHP objects or serialized data (which cannot be edited safely) the preview no longer says "no matches"; it explains that nothing can be changed and names the table or option left untouched.
-* Fix in URL Doctor: the leftover http count no longer includes update-checker caches of other plugins (external_updates-*), which Search & Replace cannot change and are not site content.
-* Fix in Redirects: saving or importing a redirect no longer drops percent-encoded characters (such as %20) from the source or the target; sources written with %20 are stored as the real path (a space) so they match the visited address.
-* Improved: the "Show the failed URL on the page" help in Custom 404 Page now shows numbered steps and one card per shortcode, with a Copy button and a preview of what visitors will see.
-* Improved: Maintenance Mode now lets you set the logo width, the colours of the page, a subtitle, a contact link and extra CSS, announce the expected return (with an optional live countdown and a matching Retry-After header), and switch on and off automatically with a schedule. Fixed stray spaces saved around the message and the IP list, the Export/Import configuration now keeps every Maintenance setting, the Site Status badge follows the schedule, and the page is marked noindex.
+= 1.2.9 =
+* Improved: the admin script and stylesheet are split per tool and each tab loads only the scripts and styles it needs (lighter, faster screens).
+* Improved: Debug logs now mark the old wp-content/debug.log as no longer used when WP_DEBUG_LOG points to another file, and show where to delete it.
+* Cleanup: removed unused internal code (dead helper methods, an unused constant and an unused JS helper).
+* Improved: bundled translations also ship as .l10n.php files (faster loading on WordPress 6.5+) and unused translation strings were removed from the catalogs.
+* Improved: the Slow Query Monitor toolbar menu is now a problem detector: duplicate queries, slow queries and database load are listed by the plugin responsible, and the figures that did not help (queries, memory, log summary) are gone.
+* Fix: a few messages (security override hint, spam-provider errors, view counter table error) were shown in English; they are now translated into Catalan and Spanish, and the Comment Anti-Spam logs are more compact on phones.
+
+= 1.2.8 =
+* Fix: Internals roles table, Leftovers backup rows and the Admin Menu editor no longer show squeezed or letter-by-letter text on phones and narrow screens.
+* Fix: tables on Slow Query Monitor, Redirects and 404 Monitor no longer get clipped or crushed on phones and narrow screens; they scroll inside their own card.
+* Fix in Comment Anti-Spam: the Recent blocks and Learning log tables no longer break the IP, source and reason into one character per line.
+* Fix in Security Review: the wp-config.php constants panel (DISALLOW_FILE_EDIT / DISALLOW_FILE_MODS) no longer crashes with a fatal error.
+

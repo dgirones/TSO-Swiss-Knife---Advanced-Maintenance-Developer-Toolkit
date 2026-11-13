@@ -1,0 +1,69 @@
+/*── Hooks table ──────────────────────────────────────────────────────────────*/
+.tsosk-hooks-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.tsosk-hooks-search-input {
+    width: 260px;
+    max-width: 100%;
+}
+
+.tsosk-hooks-pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.tsosk-hooks-pagination-bottom {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.tsosk-hooks-col-hook {
+    width: 26%;
+}
+
+.tsosk-hooks-col-priority {
+    width: 7%;
+    text-align: center;
+}
+
+.tsosk-hooks-col-args {
+    width: 5%;
+    text-align: center;
+}
+
+.tsosk-hook-name {
+    max-width: 280px;
+    font-size: 11px;
+    background: #fafafa;
+    border-right: 1px solid #e8e8e8;
+}
+
+.tsosk-hooks-priority,
+.tsosk-hooks-args {
+    text-align: center;
+    white-space: nowrap;
+    color: #646970;
+    font-size: 11px;
+}
+
+.tsosk-hooks-callback {
+    font-size: 11px;
+}
+
+.tsosk-hooks-empty {
+    color: #8c8f94;
+    font-size: 11px;
+}
+
+.tsosk-hooks-row-group-end .tsosk-hook-name {
+    border-bottom: 1px solid #dcdcde;
+}
+

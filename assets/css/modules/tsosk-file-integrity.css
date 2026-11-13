@@ -1,0 +1,22 @@
+/* File Integrity: colours that used to be inline styles. */
+.tsosk-fi-muted {
+	color: #666;
+}
+
+.tsosk-badge-danger {
+	background: #fcebeb;
+	color: #a32d2d;
+}
+
+.tsosk-badge-purple {
+	background: #eeedfe;
+	color: #3c3489;
+}
+
+.tsosk-fi-heading-danger {
+	color: #a32d2d;
+}
+
+.tsosk-fi-heading-purple {
+	color: #534ab7;
+}

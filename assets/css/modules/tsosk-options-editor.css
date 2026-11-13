@@ -1,0 +1,65 @@
+.tsosk-oe-protected td {
+    opacity: .6;
+}
+
+#tsosk-oe-editor {
+    border-left: 4px solid #f0b849;
+}
+
+.tsosk-oe-sortable {
+    user-select: none;
+}
+
+.tsosk-oe-sortable:hover {
+    background: #f0f0f1;
+}
+
+.tsosk-sort-icon {
+    font-size: 10px;
+    color: #999;
+}
+
+#tsosk-oe-tbody td {
+    color: #1d2327;
+}
+
+#tsosk-oe-tbody .tsosk-code {
+    color: #1d2327;
+}
+
+#tsosk-oe-tbody td.tsosk-oe-cell-name {
+	color: #1d2327;
+}
+
+#tsosk-oe-tbody td.tsosk-oe-cell-meta {
+	color: #374151;
+}
+
+.tsosk-oe-badge-neutral {
+	background: #f3f4f6;
+}
+
+.tsosk-oe-badge-warn {
+	background: #fef3c7;
+}
+
+.tsosk-oe-type-serialized { color: #7c3aed; }
+.tsosk-oe-type-json { color: #0369a1; }
+.tsosk-oe-type-integer { color: #0f766e; }
+.tsosk-oe-type-text { color: #374151; }
+.tsosk-oe-al-on { color: #d97706; }
+.tsosk-oe-al-off { color: #6b7280; }
+
+#tsosk-oe-raw-preview {
+	background: #f6f7f7;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 12px;
+	font-family: monospace;
+	font-size: 11px;
+	white-space: pre;
+	overflow: auto;
+	max-height: 300px;
+	margin-top: 8px;
+	color: #1d2327;
+}

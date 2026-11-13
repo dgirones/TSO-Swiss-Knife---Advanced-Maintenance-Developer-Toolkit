@@ -1,0 +1,38 @@
+.tsosk-um-plugin-table-wrap .tsosk-um-plugin-row td {
+    vertical-align: middle;
+}
+
+@media (max-width: 782px) {
+	/*Update Manager: status table stacks on narrow screens instead of overflowing its card.*/
+		.tsosk-um-status-table {
+	        display: block;
+	        width: 100%;
+	        min-width: 0;
+	    }
+		.tsosk-um-status-table thead {
+	        display: none;
+	    }
+		.tsosk-um-status-table tbody,
+	    .tsosk-um-status-table tr,
+	    .tsosk-um-status-table td {
+	        display: block;
+	        width: 100%;
+	        box-sizing: border-box;
+	    }
+		.tsosk-um-status-table tr {
+	        padding: 8px 0;
+	        border-bottom: 1px solid #e0e0e0;
+	    }
+		.tsosk-um-status-table tr:last-child {
+	        border-bottom: 0;
+	    }
+		.tsosk-um-status-table td {
+	        padding: 2px 10px;
+	        border: 0;
+	        overflow-wrap: anywhere;
+	    }
+		.tsosk-um-status-table td:first-child {
+	        font-weight: 600;
+	    }
+}
+

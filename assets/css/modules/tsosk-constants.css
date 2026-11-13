@@ -1,0 +1,7 @@
+/*── Constants table ──────────────────────────────────────────────────────────*/
+.tsosk-constants-table th code,
+.tsosk-constants-table td code {
+    background: transparent;
+    font-size: 12px;
+}
+

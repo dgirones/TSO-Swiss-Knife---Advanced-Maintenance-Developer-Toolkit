@@ -1,0 +1,18 @@
+.tsosk-check-desc {
+    display: block;
+    font-size: 12.5px;
+    color: #50575e;
+    font-weight: normal;
+    line-height: 1.5;
+    margin-top: 3px;
+}
+
+.tsosk-btn-mt {
+	margin-top: 10px;
+}
+
+.tsosk-health-checks-table .tsosk-health-details {
+	white-space: pre-line;
+	vertical-align: top;
+}
+

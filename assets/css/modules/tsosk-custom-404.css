@@ -1,0 +1,120 @@
+.tsosk-notice-error {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #3c434a;
+}
+
+.tsosk-check-option {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.tsosk-check-option-desc {
+    margin: 4px 0 0 26px;
+    max-width: 720px;
+    line-height: 1.5;
+}
+
+/*Custom 404: "Show the failed URL on the page" steps and shortcode cards*/
+.tsosk-404-steps {
+    list-style: none;
+    margin: 4px 0 18px;
+    padding: 0;
+    counter-reset: tsosk404step;
+}
+
+.tsosk-404-steps li {
+    counter-increment: tsosk404step;
+    position: relative;
+    margin: 0 0 10px;
+    padding: 2px 0 2px 38px;
+    line-height: 1.5;
+    min-height: 26px;
+}
+
+.tsosk-404-steps li::before {
+    content: counter(tsosk404step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #2271b1;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 26px;
+    text-align: center;
+}
+
+.tsosk-404-sc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.tsosk-404-sc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.tsosk-404-sc h4 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.tsosk-404-sc .description {
+    margin: 0;
+}
+
+.tsosk-404-sc-code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #f6f7f7;
+}
+
+.tsosk-404-sc-code code {
+    background: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.tsosk-404-sc-result {
+    margin-top: auto;
+    padding: 8px 10px;
+    border-left: 3px solid #2271b1;
+    background: #f0f6fc;
+    border-radius: 0 4px 4px 0;
+}
+
+.tsosk-404-sc-result span {
+    display: block;
+    margin-bottom: 2px;
+    color: #646970;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tsosk-404-sc-result strong {
+    font-size: 13px;
+    font-weight: 600;
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+

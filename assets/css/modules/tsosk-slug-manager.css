@@ -1,0 +1,89 @@
+.tsosk-sm-title-col {
+    min-width: 200px;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.tsosk-sm-edit-link {
+    display: inline-block;
+    margin-left: 8px;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2271b1;
+    text-decoration: none;
+}
+
+.tsosk-sm-bulk-preview-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    align-items: center;
+}
+
+#tsosk-sm-bulk-confirm {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tsosk-sm-bulk-summary-table {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 12px;
+    border-collapse: collapse;
+}
+
+.tsosk-sm-bulk-summary-table .tsosk-code {
+    word-break: break-all;
+}
+
+.tsosk-sm-rename-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/*Slug Manager: row metadata, problem badges and phone layout.*/
+.tsosk-sm-meta {
+	display: block;
+	margin-top: 2px;
+	color: #646970;
+	font-size: 11px;
+	font-weight: 400;
+	overflow-wrap: anywhere;
+}
+
+.tsosk-sm-reason {
+	display: inline-block;
+	margin: 0 4px 4px 0;
+	font-size: 11px;
+	white-space: normal;
+}
+
+.tsosk-sm-audit-table .tsosk-sm-slug-col a {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+@media (max-width: 782px) {
+		#tsosk-sm-rename-panel .tsosk-kv-table,
+		#tsosk-sm-rename-panel .tsosk-kv-table tbody,
+		#tsosk-sm-rename-panel .tsosk-kv-table tr,
+		#tsosk-sm-rename-panel .tsosk-kv-table th,
+		#tsosk-sm-rename-panel .tsosk-kv-table td {
+			display: block;
+			width: 100%;
+			max-width: none;
+			box-sizing: border-box;
+		}
+		#tsosk-sm-rename-panel input[type="text"] {
+			max-width: none;
+			width: 100%;
+			min-height: 40px;
+		}
+}
+

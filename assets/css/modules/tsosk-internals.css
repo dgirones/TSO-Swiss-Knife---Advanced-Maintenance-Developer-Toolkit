@@ -1,0 +1,20 @@
+/*Internals > Roles & Capabilities: role slug and name stay on one line; the long capability list wraps.*/
+.tsosk-internals-roles th:nth-child(1),
+.tsosk-internals-roles td:nth-child(1),
+.tsosk-internals-roles th:nth-child(2),
+.tsosk-internals-roles td:nth-child(2) {
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.tsosk-internals-roles td:nth-child(1) code {
+    overflow-wrap: normal;
+    white-space: nowrap;
+}
+
+.tsosk-internals-roles td:nth-child(3) {
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    line-height: 1.6;
+}
+

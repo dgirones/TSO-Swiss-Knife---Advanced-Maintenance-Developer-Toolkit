@@ -1,0 +1,18 @@
+/*══ Email diagnostics ═══════════════════════════════════════════════════════*/
+.tsosk-email-smtp-list {
+    margin: 8px 0 0;
+    padding-left: 1.2em;
+}
+
+.tsosk-email-headers {
+    white-space: pre-wrap;
+    display: block;
+}
+
+.tsosk-email-report {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+

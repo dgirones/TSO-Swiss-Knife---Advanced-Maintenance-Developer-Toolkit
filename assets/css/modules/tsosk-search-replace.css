@@ -1,0 +1,96 @@
+.tsosk-guide-example {
+    margin: 0;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.tsosk-sr-tables-block {
+    margin: 16px 0;
+}
+
+.tsosk-sr-tables-label {
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.tsosk-sr-tables-summary {
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.tsosk-sr-tables-desc {
+    margin: 0 0 8px;
+}
+
+.tsosk-sr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.tsosk-sr-action-hint {
+    font-size: 12px;
+    color: #646970;
+    flex: 1 1 100%;
+    max-width: 640px;
+}
+
+@media (min-width: 782px) {
+		.tsosk-sr-action-hint {
+	        flex: 0 1 auto;
+	    }
+}
+
+.tsosk-sr-diff-before { background:#fff0f0; color:#9b2c2c; text-decoration:line-through; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
+
+.tsosk-sr-diff-after  { background:#f0fff4; color:#276749; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
+
+.tsosk-sr-row           { padding:8px 12px; border-top:1px solid #f0f0f1; }
+
+.tsosk-sr-col-label     { font-size:11px; color:#646970; font-weight:600; margin-bottom:3px; }
+
+/*Search & Replace: live table filter*/
+.tsosk-sr-table-filter { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+
+#tsosk-sr-table-list label.tsosk-sr-hidden { display: none !important; }
+
+#tsosk-sr-table-list {
+	max-height: 200px;
+	overflow-y: auto;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 6px 10px;
+	background: #fff;
+	columns: 2 250px;
+	gap: 16px;
+}
+
+.tsosk-sr-table-label {
+	display: block;
+	white-space: nowrap;
+	font-size: 13px;
+	padding: 2px 0;
+}
+
+.tsosk-sr-table-size {
+	color: #8c8f94;
+	font-size: 11px;
+}
+
+@media (max-width: 782px) {
+	#tsosk-sr-table-list {
+		columns: 1;
+	}
+
+	.tsosk-sr-table-label {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+}

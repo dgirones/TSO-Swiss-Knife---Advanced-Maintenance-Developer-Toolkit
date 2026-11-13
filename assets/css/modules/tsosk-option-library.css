@@ -1,0 +1,30 @@
+/*Option Library preview*/
+.tsosk-ol-library table.tsosk-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tsosk-ol-library table.tsosk-table th:nth-child(1) { width: 28%; }
+
+.tsosk-ol-library table.tsosk-table th:nth-child(2) { width: 34%; }
+
+.tsosk-ol-library table.tsosk-table th:nth-child(3) { width: 16%; }
+
+.tsosk-ol-library table.tsosk-table th:nth-child(4) { width: 22%; }
+
+.tsosk-ol-preview-value {
+    max-height: 280px;
+    overflow: auto;
+    background: #f6f7f7;
+    padding: 12px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.tsosk-ol-option-row.is-preview-active {
+    background: #f0f6fc;
+}
+

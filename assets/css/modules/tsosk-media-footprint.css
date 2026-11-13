@@ -1,0 +1,113 @@
+/*══ Media footprint treemap (space by file type) ═════════════════════════════*/
+.tsosk-treemap {
+    display: flex;
+    width: 100%;
+    height: 44px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e4e7;
+    margin: 10px 0 4px;
+}
+
+.tsosk-treemap-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2px;
+    box-sizing: border-box;
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+    overflow: hidden;
+}
+
+.tsosk-treemap-block:last-child {
+    border-right: none;
+}
+
+.tsosk-treemap-other {
+    background: #dcdcde;
+}
+
+.tsosk-treemap-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+    white-space: nowrap;
+    padding: 0 6px;
+}
+
+/*Uploads Disk Footprint: share bars (tables and cards reuse the Media Cleaner classes).*/
+.tsosk-share-bar {
+	display: inline-block;
+	width: 90px;
+	height: 8px;
+	margin-right: 6px;
+	border-radius: 4px;
+	background: #dcdcde;
+	vertical-align: middle;
+	overflow: hidden;
+}
+
+.tsosk-share-bar i {
+	display: block;
+	height: 100%;
+	background: #2271b1;
+}
+
+@media (max-width: 782px) {
+		.tsosk-share-bar {
+			width: 60%;
+			max-width: 220px;
+		}
+		#tsosk-media-footprint-scan,
+		#tsosk-media-footprint-resume,
+		#tsosk-media-hygiene-scan {
+			min-height: 40px;
+		}
+}
+
+.tsosk-footprint-table col.tsosk-col-files { width: 78px; }
+
+.tsosk-footprint-table col.tsosk-col-bytes { width: 88px; }
+
+.tsosk-footprint-table col.tsosk-col-share { width: 118px; }
+
+.tsosk-footprint-table col.tsosk-col-type { width: 22%; }
+
+.tsosk-footprint-table col.tsosk-col-kind { width: 108px; }
+
+.tsosk-footprint-table col.tsosk-col-library { width: 22%; }
+
+.tsosk-footprint-table col.tsosk-col-confidence { width: 84px; }
+
+.tsosk-footprint-table col.tsosk-col-name { width: 22%; }
+
+.tsosk-footprint-table col.tsosk-col-reason { width: auto; }
+
+.tsosk-footprint-table col.tsosk-col-action { width: 148px; }
+
+.tsosk-footprint-table col.tsosk-col-actions { width: 196px; }
+
+.tsosk-footprint-table col.tsosk-col-when { width: 108px; }
+
+.tsosk-footprint-table col.tsosk-col-when-long { width: 132px; }
+
+.tsosk-footprint-table col.tsosk-col-ext { width: 16%; }
+
+.tsosk-footprint-pairs td.tsosk-pair-start,
+.tsosk-footprint-pairs th.tsosk-pair-start {
+	border-left: 1px solid #dcdcde;
+}
+
+@media (max-width: 782px) {
+		.tsosk-footprint-table .tsosk-pair-empty {
+			display: none;
+		}
+		.tsosk-footprint-pairs td.tsosk-pair-start {
+			margin-top: 8px;
+			padding-top: 8px;
+			border-left: 0;
+			border-top: 1px solid #f0f0f1;
+		}
+}
+

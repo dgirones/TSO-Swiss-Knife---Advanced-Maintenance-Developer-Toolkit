@@ -1,0 +1,47 @@
+/*── Maintenance logo picker ─────────────────────────────────────────*/
+.tsosk-maint-logo-picker {
+    margin-top: 6px;
+}
+
+.tsosk-maint-logo-preview {
+    min-height: 0;
+    margin-bottom: 10px;
+}
+
+.tsosk-maint-logo-preview img {
+    display: block;
+    max-width: 320px;
+    max-height: 180px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.tsosk-maint-logo-actions {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/*Maintenance mode: colour pickers*/
+.tsosk-maint-colors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 22px;
+}
+
+.tsosk-maint-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsosk-maint-color input[type="color"] {
+    width: 44px;
+    height: 32px;
+    padding: 2px;
+    cursor: pointer;
+}
+

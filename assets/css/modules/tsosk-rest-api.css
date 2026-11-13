@@ -1,0 +1,54 @@
+.tsosk-ns-legend {
+    margin: 0 0 14px;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.6;
+}
+
+.tsosk-ns-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.tsosk-ns-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.tsosk-ns-item:last-child {
+    border-bottom: none;
+}
+
+.tsosk-ns-item-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.tsosk-ns-item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    line-height: 1.5;
+}
+
+.tsosk-ns-item-desc {
+    margin: 8px 0 0 28px;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.55;
+    max-width: 720px;
+}
+
+.tsosk-ns-risk {
+    font-size: 10px;
+    font-weight: 600;
+}
+

@@ -1,0 +1,21 @@
+.tsosk-me-toolbar label {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.tsosk-me-examples {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+@media (max-width: 782px) {
+		.tsosk-me-toolbar .tsosk-me-field-hint {
+	        position: static;
+	        white-space: normal;
+	    }
+}
+

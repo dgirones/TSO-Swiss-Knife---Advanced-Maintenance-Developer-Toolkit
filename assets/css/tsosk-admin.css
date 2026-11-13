@@ -1,9 +1,6 @@
-/*
- * TSO Swiss Knife – Admin CSS
- * Version: 1.0.0
- */
-
-/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+/** TSO Swiss Knife – Admin CSS
+ * Version: 1.0.0*/
+/*── Page wrapper ────────────────────────────────────────────────────────────*/
 .tsosk-wrap {
     max-width: 1400px;
     margin-left: auto;
@@ -92,7 +89,7 @@
     color: #fff;
 }
 
-/* ── Global search ─────────────────────────────────────────────────────────── */
+/*── Global search ───────────────────────────────────────────────────────────*/
 .tsosk-global-search {
     position: relative;
     display: inline-flex;
@@ -206,7 +203,7 @@
     margin-top: 2px;
 }
 
-/* ── Site status bar ───────────────────────────────────────────────────────── */
+/*── Site status bar ─────────────────────────────────────────────────────────*/
 .tsosk-site-status-bar {
     display: flex;
     flex-wrap: wrap;
@@ -294,7 +291,7 @@
     display: none;
 }
 
-/* ── Layout: sidebar + content ─────────────────────────────────────────────── */
+/*── Layout: sidebar + content ───────────────────────────────────────────────*/
 .tsosk-chrome {
     display: flex;
     align-items: stretch;
@@ -330,7 +327,7 @@
     order: 0;
 }
 
-/* ── Sidebars: tools column (left) ─────────────────────────────────────────── */
+/*── Sidebars: tools column (left) ───────────────────────────────────────────*/
 .tsosk-sidebars {
     display: flex;
     flex-shrink: 0;
@@ -510,15 +507,6 @@
     margin-top: 4px;
 }
 
-.tsosk-check-desc {
-    display: block;
-    font-size: 12.5px;
-    color: #50575e;
-    font-weight: normal;
-    line-height: 1.5;
-    margin-top: 3px;
-}
-
 .tsosk-status-list {
     margin: 0 0 12px;
     padding-left: 0;
@@ -605,30 +593,14 @@
     margin-top: 8px;
 }
 
-/* ── Hidden profiles layout ─────────────────────────────────────────────────── */
+/*── Hidden profiles layout ───────────────────────────────────────────────────*/
 .tsosk-hp-section-desc {
     margin: 0 0 16px;
     line-height: 1.55;
 }
 
-.tsosk-hp-legend {
-    margin: 0 0 20px;
-    padding: 12px 14px;
-    background: #f6f7f7;
-    border: 1px solid #dcdcde;
-    border-left: 3px solid #2271b1;
-    border-radius: 4px;
-    font-size: 13px;
-    line-height: 1.55;
-}
-
 .tsosk-hp-legend p {
     margin: 0 0 8px;
-}
-
-.tsosk-hp-legend-list {
-    margin: 0;
-    padding-left: 20px;
 }
 
 .tsosk-hp-legend-list li {
@@ -639,7 +611,7 @@
     margin-bottom: 0;
 }
 
-/* ── Shared guide cards (Search & Replace, Meta Editor, etc.) ─────────────── */
+/*── Shared guide cards (Search & Replace, Meta Editor, etc.) ───────────────*/
 .tsosk-guide-card {
     margin: 0 0 20px;
     padding: 16px 18px;
@@ -690,15 +662,6 @@
     padding-left: 20px;
 }
 
-.tsosk-guide-example {
-    margin: 0;
-    padding: 10px 12px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    font-size: 13px;
-}
-
 .tsosk-guide-example p {
     margin: 6px 0 0;
 }
@@ -725,23 +688,9 @@
     margin-bottom: 0;
 }
 
-/* ── Search & Replace tab ───────────────────────────────────────────────────── */
+/*── Search & Replace tab ─────────────────────────────────────────────────────*/
 .tsosk-sr-form-table {
     margin-bottom: 12px;
-}
-
-.tsosk-sr-tables-block {
-    margin: 16px 0;
-}
-
-.tsosk-sr-tables-label {
-    font-weight: 600;
-    margin-right: 8px;
-}
-
-.tsosk-sr-tables-summary {
-    cursor: pointer;
-    margin-bottom: 8px;
 }
 
 .tsosk-sr-preview-inner {
@@ -754,41 +703,11 @@
     margin-top: 0;
 }
 
-.tsosk-sr-tables-desc {
-    margin: 0 0 8px;
-}
-
-.tsosk-sr-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #e8e8e8;
-}
-
-.tsosk-sr-action-hint {
-    font-size: 12px;
-    color: #646970;
-    flex: 1 1 100%;
-    max-width: 640px;
-}
-
-@media (min-width: 782px) {
-    .tsosk-sr-action-hint {
-        flex: 0 1 auto;
-    }
-}
-
-.tsosk-sr-diff-before { background:#fff0f0; color:#9b2c2c; text-decoration:line-through; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
-.tsosk-sr-diff-after  { background:#f0fff4; color:#276749; padding:1px 2px; border-radius:2px; font-family:monospace; font-size:11px; word-break:break-all; }
 .tsosk-sr-table-section { margin-bottom:12px; border:1px solid #e2e4e7; border-radius:6px; overflow:hidden; }
-.tsosk-sr-table-header  { padding:8px 12px; background:#f6f7f7; font-weight:600; font-size:13px; display:flex; align-items:center; gap:10px; }
-.tsosk-sr-row           { padding:8px 12px; border-top:1px solid #f0f0f1; }
-.tsosk-sr-col-label     { font-size:11px; color:#646970; font-weight:600; margin-bottom:3px; }
 
-/* ── Meta Editor tab ────────────────────────────────────────────────────────── */
+.tsosk-sr-table-header  { padding:8px 12px; background:#f6f7f7; font-weight:600; font-size:13px; display:flex; align-items:center; gap:10px; }
+
+/*── Meta Editor tab ──────────────────────────────────────────────────────────*/
 .tsosk-me-search-card h3 {
     margin-top: 0;
 }
@@ -799,11 +718,6 @@
     align-items: flex-end;
     gap: 10px;
     padding-bottom: 20px;
-}
-
-.tsosk-me-toolbar label {
-    font-weight: 600;
-    font-size: 13px;
 }
 
 .tsosk-me-toolbar .tsosk-me-field {
@@ -830,15 +744,6 @@
     top: 100%;
     left: 0;
     margin-top: 2px;
-}
-
-.tsosk-me-examples {
-    margin-top: 14px;
-    padding: 10px 12px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    font-size: 13px;
 }
 
 .tsosk-me-examples table {
@@ -876,23 +781,6 @@
     border-bottom: 1px solid #e8e8e8;
 }
 
-.tsosk-hp-field:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.tsosk-hp-field-label {
-    display: block;
-    cursor: pointer;
-}
-
-.tsosk-hp-field-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
-}
-
 .tsosk-hp-field-desc {
     margin: 10px 0 0 28px;
     max-width: 760px;
@@ -916,12 +804,7 @@
     color: #646970;
 }
 
-.tsosk-hp-number-input {
-    width: 72px;
-    padding: 4px 8px;
-}
-
-/* ── Content area ───────────────────────────────────────────────────────────── */
+/*── Content area ─────────────────────────────────────────────────────────────*/
 .tsosk-content {
     flex: 1;
     background: #f6f7f7;
@@ -965,7 +848,7 @@
     padding: 20px 24px 32px;
 }
 
-/* ── Cards ──────────────────────────────────────────────────────────────────── */
+/*── Cards ────────────────────────────────────────────────────────────────────*/
 .tsosk-card {
     background: #fff;
     border: 1px solid #dcdcde;
@@ -984,17 +867,12 @@
     border-bottom: 1px solid #f0f0f1;
 }
 
-/* Image sizes audit: summary cards (metrics + quarantine). */
+/*Image sizes audit: summary cards (metrics + quarantine).*/
 .tsosk-isa-summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
     margin: 0 0 12px;
-}
-
-.tsosk-isa-summary-notes {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    margin-bottom: 4px;
 }
 
 .tsosk-isa-card {
@@ -1005,45 +883,12 @@
     min-width: 0;
 }
 
-.tsosk-isa-card-warn {
-    background: #fff8e5;
-    border-color: #f6c142;
-}
-
-.tsosk-isa-card-info {
-    background: #f0f6fc;
-    border-color: #72aee6;
-}
-
-.tsosk-isa-card-value {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.3;
-    color: #1d2327;
-    overflow-wrap: anywhere;
-}
-
-.tsosk-isa-card-label {
-    margin: 6px 0 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1d2327;
-}
-
-.tsosk-isa-card-help {
-    margin: 8px 0 0;
-    font-size: 12px;
-    line-height: 1.45;
-    color: #646970;
-}
-
 .tsosk-isa-card-help a {
     display: block;
     margin-top: 6px;
 }
 
-/* ── Description paragraph ─────────────────────────────────────────────────── */
+/*── Description paragraph ───────────────────────────────────────────────────*/
 .tsosk-desc {
     color: #646970;
     font-size: 13px;
@@ -1051,7 +896,7 @@
     line-height: 1.6;
 }
 
-/* ── Badges ─────────────────────────────────────────────────────────────────── */
+/*── Badges ───────────────────────────────────────────────────────────────────*/
 .tsosk-badge {
     display: inline-block;
     padding: 2px 9px;
@@ -1075,22 +920,10 @@
     border-color: #f6c142;
 }
 
-.tsosk-badge-err {
-    background: #fcf0f1;
-    color: #8a1f22;
-    border-color: #f1aeb5;
-}
-
 .tsosk-badge-core {
     background: #e7f0fa;
     color: #1a5498;
     border-color: #b4ceed;
-}
-
-.tsosk-badge-custom {
-    background: #f3e8ff;
-    color: #6a0dad;
-    border-color: #d4aaff;
 }
 
 .tsosk-badge-info {
@@ -1099,7 +932,7 @@
     border-color: #a8d8ea;
 }
 
-/* ── Notices ────────────────────────────────────────────────────────────────── */
+/*── Notices ──────────────────────────────────────────────────────────────────*/
 .tsosk-notice {
     padding: 10px 14px;
     border-radius: 4px;
@@ -1120,86 +953,19 @@
     color: #7a4100;
 }
 
-.tsosk-notice-error {
-    background: #fcf0f1;
-    border-color: #d63638;
-    color: #3c434a;
-}
-
-/* ── TSO companion plugin promos ───────────────────────────────────────────── */
-.tsosk-promo-more {
-    max-width: 820px;
-    margin: 0 auto;
-}
-
 .tsosk-promo-link-inspector,
-.tsosk-promo-options-cleaner {
+.tsosk-promo-options-cleaner,
+.tsosk-promo-image-master,
+.tsosk-promo-login-organizer,
+.tsosk-promo-stack-inspector {
     max-width: 820px;
     margin: 0 auto;
-}
-
-.tsosk-promo-more > div + div {
-    margin-top: 36px;
-    padding-top: 36px;
-    border-top: 1px solid #dcdcde;
-}
-
-.tsosk-promo-hero {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    padding: 28px 32px;
-    margin-bottom: 20px;
-    border: 1px solid #c3c4c7;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #f0f6fc 0%, #fff 55%, #f6f7f7 100%);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.tsosk-promo-hero-icon {
-    flex-shrink: 0;
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: #2271b1;
-    color: #fff;
 }
 
 .tsosk-promo-hero-icon .dashicons {
     font-size: 32px;
     width: 32px;
     height: 32px;
-}
-
-.tsosk-promo-kicker {
-    margin: 0 0 6px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #2271b1;
-}
-
-.tsosk-promo-title {
-    margin: 0 0 10px;
-    font-size: 26px;
-    line-height: 1.2;
-    color: #1d2327;
-}
-
-.tsosk-promo-lead {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.55;
-    color: #50575e;
-}
-
-.tsosk-promo-status {
-    display: inline-block;
-    margin-top: 12px;
 }
 
 .tsosk-promo-features-card h3 {
@@ -1231,19 +997,6 @@
     color: #00a32a;
 }
 
-.tsosk-promo-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin: 24px 0 20px;
-}
-
-.tsosk-promo-tip {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
 .tsosk-promo-tip .dashicons {
     flex-shrink: 0;
     margin-top: 2px;
@@ -1255,18 +1008,13 @@
 }
 
 @media (max-width: 600px) {
-    .tsosk-promo-hero {
-        flex-direction: column;
-        padding: 20px;
-    }
-
-    .tsosk-promo-actions .button-hero {
-        width: 100%;
-        text-align: center;
-    }
+		.tsosk-promo-actions .button-hero {
+	        width: 100%;
+	        text-align: center;
+	    }
 }
 
-/* ── Tables ─────────────────────────────────────────────────────────────────── */
+/*── Tables ───────────────────────────────────────────────────────────────────*/
 .tsosk-table-wrap {
     overflow-x: auto;
     margin-bottom: 12px;
@@ -1322,13 +1070,6 @@
     border-left: 3px solid #2271b1;
 }
 
-.tsosk-dev-mode-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
 .tsosk-dev-mode-desc {
     white-space: normal;
     overflow: visible;
@@ -1337,23 +1078,10 @@
     line-height: 1.6;
 }
 
-.tsosk-debug-advanced {
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid #dcdcde;
-}
-
 .tsosk-debug-advanced summary {
     cursor: pointer;
     font-weight: 600;
     margin-bottom: 8px;
-}
-
-.tsosk-log-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
 }
 
 .tsosk-th-hint {
@@ -1362,24 +1090,6 @@
     font-size: 11px;
     color: #646970;
     margin-top: 4px;
-}
-
-.tsosk-log-line {
-    padding: 2px 0 2px 8px;
-    border-left: 3px solid transparent;
-}
-
-.tsosk-log-line[data-level="error"] {
-    border-left-color: #d63638;
-}
-
-.tsosk-log-line[data-level="warning"] {
-    border-left-color: #dba617;
-}
-
-.tsosk-log-line[data-level="deprecated"],
-.tsosk-log-line[data-level="notice"] {
-    border-left-color: #72aee6;
 }
 
 .tsosk-truncate {
@@ -1391,7 +1101,7 @@
     vertical-align: middle;
 }
 
-/* ── KV Table ───────────────────────────────────────────────────────────────── */
+/*── KV Table ─────────────────────────────────────────────────────────────────*/
 .tsosk-kv-table {
     width: 100%;
     border-collapse: collapse;
@@ -1416,7 +1126,7 @@
     border-top: 1px solid #f0f0f1;
 }
 
-/* ── Toolbar ────────────────────────────────────────────────────────────────── */
+/*── Toolbar ──────────────────────────────────────────────────────────────────*/
 .tsosk-toolbar {
     display: flex;
     align-items: center;
@@ -1437,34 +1147,15 @@
     color: #fff;
 }
 
-#tsosk-transients-table th.tsosk-sortable {
-    cursor: pointer;
-    user-select: none;
-}
-
-#tsosk-transients-table th.tsosk-sortable:hover {
-    background: #f0f0f1;
-}
-
-#tsosk-transients-table th.tsosk-sort-asc::after {
-    content: " \2191";
-    opacity: 0.6;
-}
-
-#tsosk-transients-table th.tsosk-sort-desc::after {
-    content: " \2193";
-    opacity: 0.6;
-}
-
-/* ── Time display ───────────────────────────────────────────────────────────── */
+/*── Time display ─────────────────────────────────────────────────────────────*/
 .tsosk-time {
     cursor: help;
     border-bottom: 1px dashed #ccc;
 }
 
-/* ── Actions column ─────────────────────────────────────────────────────────── */
-/* Each button stays on one line, but several buttons may stack: a cell that never wrapped made the whole column
-   as wide as all its buttons side by side and pushed the table out of its card. */
+/*── Actions column ───────────────────────────────────────────────────────────*/
+/*Each button stays on one line, but several buttons may stack: a cell that never wrapped made the whole column
+   as wide as all its buttons side by side and pushed the table out of its card.*/
 .tsosk-actions {
     white-space: normal;
 }
@@ -1477,17 +1168,6 @@
     margin-left: 4px;
 }
 
-/* Option Library preview */
-.tsosk-ol-library table.tsosk-table {
-    table-layout: fixed;
-    width: 100%;
-}
-
-.tsosk-ol-library table.tsosk-table th:nth-child(1) { width: 28%; }
-.tsosk-ol-library table.tsosk-table th:nth-child(2) { width: 34%; }
-.tsosk-ol-library table.tsosk-table th:nth-child(3) { width: 16%; }
-.tsosk-ol-library table.tsosk-table th:nth-child(4) { width: 22%; }
-
 .tsosk-ol-library table.tsosk-table td {
     overflow-wrap: anywhere;
     vertical-align: top;
@@ -1498,27 +1178,11 @@
     margin-bottom: 16px;
 }
 
-.tsosk-ol-preview-value {
-    max-height: 280px;
-    overflow: auto;
-    background: #f6f7f7;
-    padding: 12px;
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.tsosk-ol-option-row.is-preview-active {
-    background: #f0f6fc;
-}
-
 .tsosk-ol-option-row.is-preview-active td {
     box-shadow: inset 0 0 0 1px #c5d9ed;
 }
 
-/* ── AJAX message span ──────────────────────────────────────────────────────── */
+/*── AJAX message span ────────────────────────────────────────────────────────*/
 .tsosk-ajax-msg {
     font-size: 12px;
     font-style: italic;
@@ -1530,70 +1194,12 @@
     color: #d63638;
 }
 
-/* ── Activity History details ─────────────────────────────────────────────── */
-.tsosk-history-count {
-    margin-left: 8px;
-    font-size: 12px;
-}
-
-.tsosk-history-empty {
-    color: #646970;
-    margin-top: 12px;
-}
-
-.tsosk-history-actions {
-    margin: 12px 0;
-}
-
-.tsosk-history-col-date {
-    width: 130px;
-}
-
-.tsosk-history-col-tool {
-    width: 16%;
-}
-
-.tsosk-history-col-action {
-    width: 90px;
-}
-
-.tsosk-history-col-user {
-    width: 80px;
-}
-
-.tsosk-history-col-undo {
-    width: 90px;
-}
-
-.tsosk-history-undo {
-    text-align: right;
-}
-
-.tsosk-history-date,
-.tsosk-history-user {
-    white-space: nowrap;
-    font-size: 12px;
-}
-
-.tsosk-history-summary {
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-.tsosk-history-details {
-    display: block;
-    margin-top: 4px;
-    color: #646970;
-    font-size: 11px;
-    line-height: 1.45;
-}
-
 .tsosk-history-details code {
     font-size: 11px;
     word-break: break-all;
 }
 
-/* ── Debug flags ────────────────────────────────────────────────────────────── */
+/*── Debug flags ──────────────────────────────────────────────────────────────*/
 .tsosk-flag-row {
     display: flex;
     align-items: baseline;
@@ -1627,99 +1233,6 @@
     white-space: nowrap;
 }
 
-/* ── Plugin list ────────────────────────────────────────────────────────────── */
-.tsosk-bisect-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-}
-
-.tsosk-bisect-details {
-    margin: 10px 0;
-}
-
-.tsosk-bisect-testing-list {
-    margin: 6px 0 0 20px;
-    list-style: disc;
-    font-size: 13px;
-}
-
-.tsosk-plugin-list {
-    max-height: 420px;
-    overflow-y: auto;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.tsosk-plugin-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f0f1;
-    font-size: 13px;
-    transition: background .1s;
-}
-
-.tsosk-plugin-row:last-child {
-    border-bottom: none;
-}
-
-.tsosk-plugin-row:hover {
-    background: #f6f7f7;
-}
-
-.tsosk-plugin-row.is-active {
-    background: #f0f9f1;
-}
-
-.tsosk-plugin-name {
-    flex: 1;
-    font-weight: 500;
-}
-
-.tsosk-plugin-ver {
-    color: #888;
-    font-size: 11px;
-}
-
-/* ── Constants table ────────────────────────────────────────────────────────── */
-.tsosk-constants-table th code,
-.tsosk-constants-table td code {
-    background: transparent;
-    font-size: 12px;
-}
-
-/* ── Hooks table ────────────────────────────────────────────────────────────── */
-.tsosk-hooks-toolbar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
-
-.tsosk-hooks-search-input {
-    width: 260px;
-    max-width: 100%;
-}
-
-.tsosk-hooks-pagination {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
-}
-
-.tsosk-hooks-pagination-bottom {
-    margin-top: 8px;
-    margin-bottom: 0;
-}
-
 .tsosk-hooks-table-wrap {
     max-height: calc(100vh - 180px);
     overflow: auto;
@@ -1747,49 +1260,7 @@
     box-shadow: 0 1px 0 #c3c4c7;
 }
 
-.tsosk-hooks-col-hook {
-    width: 26%;
-}
-
-.tsosk-hooks-col-priority {
-    width: 7%;
-    text-align: center;
-}
-
-.tsosk-hooks-col-args {
-    width: 5%;
-    text-align: center;
-}
-
-.tsosk-hook-name {
-    max-width: 280px;
-    font-size: 11px;
-    background: #fafafa;
-    border-right: 1px solid #e8e8e8;
-}
-
-.tsosk-hooks-priority,
-.tsosk-hooks-args {
-    text-align: center;
-    white-space: nowrap;
-    color: #646970;
-    font-size: 11px;
-}
-
-.tsosk-hooks-callback {
-    font-size: 11px;
-}
-
-.tsosk-hooks-empty {
-    color: #8c8f94;
-    font-size: 11px;
-}
-
 .tsosk-hooks-row-group-end td {
-    border-bottom: 1px solid #dcdcde;
-}
-
-.tsosk-hooks-row-group-end .tsosk-hook-name {
     border-bottom: 1px solid #dcdcde;
 }
 
@@ -1811,7 +1282,7 @@
     border-bottom: 1px solid #f5f5f5;
 }
 
-/* ── Field rows ─────────────────────────────────────────────────────────────── */
+/*── Field rows ───────────────────────────────────────────────────────────────*/
 .tsosk-field-row {
     margin-bottom: 14px;
 }
@@ -1842,22 +1313,10 @@
     vertical-align: middle;
 }
 
-.tsosk-check-option {
-    margin-bottom: 16px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #e8e8e8;
-}
-
 .tsosk-check-option:last-child {
     margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: none;
-}
-
-.tsosk-check-option-desc {
-    margin: 4px 0 0 26px;
-    max-width: 720px;
-    line-height: 1.5;
 }
 
 .tsosk-block-404-url-preview {
@@ -1868,8 +1327,8 @@
     border-radius: 4px;
 }
 
-/* ── DB result panel (legacy) ───────────────────────────────────────────────── */
-/* ── NS list ────────────────────────────────────────────────────────────────── */
+/*── DB result panel (legacy) ─────────────────────────────────────────────────*/
+/*── NS list ──────────────────────────────────────────────────────────────────*/
 .tsosk-rest-ns-intro {
     margin-bottom: 12px;
 }
@@ -1878,62 +1337,8 @@
     margin-bottom: 16px;
 }
 
-.tsosk-ns-legend {
-    margin: 0 0 14px;
-    font-size: 12px;
-    color: #646970;
-    line-height: 1.6;
-}
-
-.tsosk-ns-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.tsosk-ns-item {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f0f0f1;
-}
-
-.tsosk-ns-item:last-child {
-    border-bottom: none;
-}
-
-.tsosk-ns-item-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    margin: 0;
-}
-
 .tsosk-ns-item-label input[type="checkbox"] {
     margin-top: 3px;
-}
-
-.tsosk-ns-item-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 8px;
-    line-height: 1.5;
-}
-
-.tsosk-ns-item-desc {
-    margin: 8px 0 0 28px;
-    font-size: 12px;
-    color: #646970;
-    line-height: 1.55;
-    max-width: 720px;
-}
-
-.tsosk-ns-risk {
-    font-size: 10px;
-    font-weight: 600;
 }
 
 .tsosk-ns-risk-critical {
@@ -1965,10 +1370,6 @@
     overflow-y: auto;
 }
 
-.tsosk-um-plugin-table-wrap .tsosk-um-plugin-row td {
-    vertical-align: middle;
-}
-
 .tsosk-ns-list li {
     padding: 5px 0;
     border-bottom: 1px solid #f0f0f1;
@@ -1979,7 +1380,7 @@
     border-bottom: none;
 }
 
-/* ── Args cell ──────────────────────────────────────────────────────────────── */
+/*── Args cell ────────────────────────────────────────────────────────────────*/
 .tsosk-args {
     max-width: 140px;
     display: inline-block;
@@ -1990,7 +1391,7 @@
     font-size: 11px;
 }
 
-/* ── Mobile nav toggle (hidden on desktop) ─────────────────────────────────── */
+/*── Mobile nav toggle (hidden on desktop) ───────────────────────────────────*/
 .tsosk-wrap .tsosk-mobile-nav-toggle {
     display: none !important;
     align-items: center;
@@ -2009,410 +1410,336 @@
     height: 18px;
 }
 
-/* ── Responsive (hide sidebar labels on narrow screens) ────────────────────── */
 @media (max-width: 960px) and (min-width: 783px) {
-    .tsosk-sidebar {
-        width: 220px;
-        min-width: 220px;
-    }
-
-    .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
-        width: 320px;
-        min-width: 320px;
-    }
-
-    .tsosk-nav-label {
-        font-size: 11.5px;
-    }
+	/*── Responsive (hide sidebar labels on narrow screens) ──────────────────────*/
+		.tsosk-sidebar {
+	        width: 220px;
+	        min-width: 220px;
+	    }
+		.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
+	        width: 320px;
+	        min-width: 320px;
+	    }
+		.tsosk-nav-label {
+	        font-size: 11.5px;
+	    }
 }
 
 @media (max-width: 782px) {
-    .tsosk-wrap {
-        max-width: none;
-    }
-
-    .tsosk-chrome {
-        flex-direction: column;
-        min-height: 0;
-        margin-top: 12px;
-        box-shadow: none;
-        border-radius: 0;
-        gap: 0;
-    }
-
-    .tsosk-wrap .tsosk-mobile-nav-toggle {
-        display: inline-flex !important;
-        order: 1;
-        margin-bottom: 0;
-        border-radius: 4px;
-    }
-
-    .tsosk-sidebar-favorites {
-        order: 2;
-        width: 100%;
-        min-width: 0;
-        margin: 8px 0 12px;
-        border: 1px solid #c3c4c7;
-        border-radius: 4px;
-        background: #fff;
-        box-sizing: border-box;
-    }
-
-    .tsosk-layout {
-        order: 3;
-        flex-direction: column;
-        width: 100%;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-    }
-
-    .tsosk-page-title {
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 8px;
-        font-size: 18px;
-        margin-top: 12px;
-    }
-
-    .tsosk-page-title-meta {
-        width: 100%;
-        margin-left: 0;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 8px;
-    }
-
-    .tsosk-global-search,
-    .tsosk-site-status-tools .tsosk-global-search {
-        min-width: 0;
-        max-width: none;
-        width: 100%;
-        flex: 1 1 auto;
-    }
-
-    .tsosk-donate-btn {
-        justify-content: center;
-        box-sizing: border-box;
-        text-align: center;
-    }
-
-    .tsosk-site-status-tools {
-        width: 100%;
-        margin-left: 0;
-        flex: 1 1 100%;
-        flex-wrap: wrap;
-        justify-content: stretch;
-    }
-
-    .tsosk-language-switcher {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .tsosk-site-status-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .tsosk-site-status-actions {
-        margin-left: 0;
-        width: auto;
-    }
-
-    .tsosk-site-status-actions .button {
-        width: auto;
-        text-align: center;
-        box-sizing: border-box;
-    }
-
-    .tsosk-sidebars {
-        display: none;
-        width: 100%;
-        border-radius: 6px;
-        margin-bottom: 12px;
-    }
-
-    .tsosk-wrap.tsosk-mobile-nav-open .tsosk-sidebars {
-        display: block;
-    }
-
-    .tsosk-sidebar-tools {
-        width: 100%;
-        min-width: 0;
-        max-height: min(70vh, 520px);
-        overflow: hidden;
-        border-radius: 6px;
-    }
-
-    .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
-        overflow: visible;
-        max-height: none;
-    }
-
-    #tsosk-nav-list {
-        max-height: min(70vh, 460px);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .tsosk-sidebar {
-        width: 100%;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        flex-wrap: nowrap;
-        overflow: visible;
-    }
-
-    .tsosk-nav-label {
-        display: inline;
-    }
-
-    .tsosk-nav-item {
-        justify-content: flex-start;
-        padding: 12px 16px;
-        border-left: 3px solid transparent;
-        border-bottom: none;
-        white-space: normal;
-    }
-
-    .tsosk-nav-item.is-active {
-        border-left-color: #2271b1;
-        border-bottom-color: transparent;
-    }
-
-    .tsosk-nav-group-label {
-        padding: 12px 16px 4px;
-    }
-
-    .tsosk-content {
-        border-radius: 6px;
-        width: 100%;
-    }
-
-    .tsosk-tab-header {
-        padding: 14px 16px 12px;
-    }
-
-    .tsosk-tab-header h2 {
-        font-size: 16px;
-        flex-wrap: wrap;
-    }
-
-    .tsosk-tab-body {
-        padding: 16px 14px 24px;
-    }
-
-    .tsosk-card {
-        padding: 0 14px 14px;
-        margin-bottom: 16px;
-    }
-
-    .tsosk-hp-field-desc {
-        margin-left: 0;
-    }
-
-    .tsosk-hp-preset-btns {
-        flex-direction: column;
-    }
-
-    .tsosk-hp-preset-btns .button {
-        width: 100%;
-        text-align: center;
-    }
-
-    .tsosk-kv-table th,
-    .tsosk-kv-table td {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-    }
-
-    .tsosk-kv-table th {
-        padding-bottom: 4px;
-        border-bottom: none;
-    }
-
-    .tsosk-kv-table td {
-        padding-top: 0;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #f0f0f1;
-    }
-
-    .tsosk-kv-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .tsosk-sidebar-favorites {
-        border-left: none;
-        border-top: none;
-        border-radius: 4px;
-        background: #fff;
-        margin-top: 0;
-    }
-
-    .tsosk-favorites-title {
-        color: #1d2327;
-        background: #f6f7f7;
-        border-bottom: 1px solid #dcdcde;
-        padding: 10px 14px;
-        font-size: 12px;
-    }
-
-    .tsosk-favorites-title .dashicons {
-        color: #dba617;
-    }
-
-    .tsosk-favorites-hint {
-        font-size: 11px;
-        padding: 8px 14px 0;
-        color: #646970;
-    }
-
-    #tsosk-favorites-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        overflow-x: visible;
-        overflow-y: visible;
-        padding: 10px 14px 14px;
-        min-height: 0;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    #tsosk-favorites-list.is-empty {
-        min-height: 0;
-        display: block;
-        padding: 4px 14px 12px;
-    }
-
-    .tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list.is-empty) .tsosk-favorites-hint {
-        display: block;
-    }
-
-    .tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list:not(.is-empty)) .tsosk-favorites-hint {
-        display: none;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-row {
-        flex: 0 1 auto;
-        max-width: 100%;
-        border-bottom: none;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-item {
-        flex: 0 1 auto;
-        max-width: 100%;
-        white-space: normal;
-        word-break: break-word;
-        background: #f6f7f7;
-        border: 1px solid #dcdcde;
-        border-radius: 999px;
-        padding: 8px 14px;
-        color: #1d2327;
-        border-left: 1px solid #dcdcde;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-item.is-active {
-        background: #f0f6fc;
-        border-color: #2271b1;
-        color: #135e96;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-item .dashicons {
-        color: #646970;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-item.is-active .dashicons {
-        color: #2271b1;
-    }
-
-    .tsosk-sidebar-favorites .tsosk-nav-label {
-        display: inline;
-    }
-
-    .tsosk-tab-body {
-        overflow-x: hidden;
-    }
-
-    .tsosk-card {
-        max-width: 100%;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
-
-    .tsosk-table-wrap {
-        max-width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .tsosk-table-wrap > .widefat.tsosk-table,
-    .tsosk-sm-audit-table {
-        min-width: 640px;
-        table-layout: auto;
-    }
-
-    .tsosk-redirects-table-wrap > .widefat.tsosk-table,
-    .tsosk-404-table-wrap > .widefat.tsosk-table,
-    #tsosk-redirects-table,
-    #tsosk-404-table {
-        min-width: 0;
-        width: 100%;
-        max-width: 100%;
-        table-layout: fixed;
-    }
-
-    .tsosk-sm-audit-table .tsosk-sm-title-col,
-    .tsosk-sm-audit-table td.tsosk-sm-title-col,
-    .tsosk-sm-title-col {
-        min-width: 140px;
-        width: auto;
-    }
-
-    .tsosk-sm-audit-table .tsosk-sm-slug-col,
-    .tsosk-sm-slug-col {
-        min-width: 100px;
-        width: auto;
-        max-width: none;
-    }
-
-    .tsosk-oe-tabs {
-        flex-wrap: wrap;
-    }
-
-    .tsosk-oe-tab-btn {
-        flex: 1 1 auto;
-        min-width: 0;
-        text-align: center;
-        margin-bottom: 4px !important;
-    }
-
-    .tsosk-me-toolbar,
-    .tsosk-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .tsosk-me-toolbar .tsosk-me-field-hint {
-        position: static;
-        white-space: normal;
-    }
-
-    .tsosk-me-toolbar .button,
-    .tsosk-toolbar .button {
-        width: 100%;
-        text-align: center;
-        box-sizing: border-box;
-    }
+		.tsosk-wrap {
+	        max-width: none;
+	    }
+		.tsosk-chrome {
+	        flex-direction: column;
+	        min-height: 0;
+	        margin-top: 12px;
+	        box-shadow: none;
+	        border-radius: 0;
+	        gap: 0;
+	    }
+		.tsosk-wrap .tsosk-mobile-nav-toggle {
+	        display: inline-flex !important;
+	        order: 1;
+	        margin-bottom: 0;
+	        border-radius: 4px;
+	    }
+		.tsosk-sidebar-favorites {
+	        order: 2;
+	        width: 100%;
+	        min-width: 0;
+	        margin: 8px 0 12px;
+	        border: 1px solid #c3c4c7;
+	        border-radius: 4px;
+	        background: #fff;
+	        box-sizing: border-box;
+	    }
+		.tsosk-layout {
+	        order: 3;
+	        flex-direction: column;
+	        width: 100%;
+	        border-radius: 6px;
+	        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+	    }
+		.tsosk-page-title {
+	        flex-wrap: wrap;
+	        align-items: flex-start;
+	        gap: 8px;
+	        font-size: 18px;
+	        margin-top: 12px;
+	    }
+		.tsosk-page-title-meta {
+	        width: 100%;
+	        margin-left: 0;
+	        flex-wrap: wrap;
+	        justify-content: space-between;
+	        gap: 8px;
+	    }
+		.tsosk-global-search,
+	    .tsosk-site-status-tools .tsosk-global-search {
+	        min-width: 0;
+	        max-width: none;
+	        width: 100%;
+	        flex: 1 1 auto;
+	    }
+		.tsosk-donate-btn {
+	        justify-content: center;
+	        box-sizing: border-box;
+	        text-align: center;
+	    }
+		.tsosk-site-status-tools {
+	        width: 100%;
+	        margin-left: 0;
+	        flex: 1 1 100%;
+	        flex-wrap: wrap;
+	        justify-content: stretch;
+	    }
+		.tsosk-language-switcher {
+	        justify-content: center;
+	        flex-wrap: wrap;
+	    }
+		.tsosk-site-status-bar {
+	        flex-direction: column;
+	        align-items: flex-start;
+	        gap: 10px;
+	    }
+		.tsosk-site-status-actions {
+	        margin-left: 0;
+	        width: auto;
+	    }
+		.tsosk-site-status-actions .button {
+	        width: auto;
+	        text-align: center;
+	        box-sizing: border-box;
+	    }
+		.tsosk-sidebars {
+	        display: none;
+	        width: 100%;
+	        border-radius: 6px;
+	        margin-bottom: 12px;
+	    }
+		.tsosk-wrap.tsosk-mobile-nav-open .tsosk-sidebars {
+	        display: block;
+	    }
+		.tsosk-sidebar-tools {
+	        width: 100%;
+	        min-width: 0;
+	        max-height: min(70vh, 520px);
+	        overflow: hidden;
+	        border-radius: 6px;
+	    }
+		.tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools {
+	        overflow: visible;
+	        max-height: none;
+	    }
+		#tsosk-nav-list {
+	        max-height: min(70vh, 460px);
+	        overflow-y: auto;
+	        -webkit-overflow-scrolling: touch;
+	    }
+		.tsosk-sidebar {
+	        width: 100%;
+	        min-width: 0;
+	        display: flex;
+	        flex-direction: column;
+	        flex-wrap: nowrap;
+	        overflow: visible;
+	    }
+		.tsosk-nav-label {
+	        display: inline;
+	    }
+		.tsosk-nav-item {
+	        justify-content: flex-start;
+	        padding: 12px 16px;
+	        border-left: 3px solid transparent;
+	        border-bottom: none;
+	        white-space: normal;
+	    }
+		.tsosk-nav-item.is-active {
+	        border-left-color: #2271b1;
+	        border-bottom-color: transparent;
+	    }
+		.tsosk-nav-group-label {
+	        padding: 12px 16px 4px;
+	    }
+		.tsosk-content {
+	        border-radius: 6px;
+	        width: 100%;
+	    }
+		.tsosk-tab-header {
+	        padding: 14px 16px 12px;
+	    }
+		.tsosk-tab-header h2 {
+	        font-size: 16px;
+	        flex-wrap: wrap;
+	    }
+		.tsosk-tab-body {
+	        padding: 16px 14px 24px;
+	    }
+		.tsosk-card {
+	        padding: 0 14px 14px;
+	        margin-bottom: 16px;
+	    }
+		.tsosk-hp-preset-btns .button {
+	        width: 100%;
+	        text-align: center;
+	    }
+		.tsosk-kv-table th,
+	    .tsosk-kv-table td {
+	        display: block;
+	        width: 100%;
+	        box-sizing: border-box;
+	        padding: 8px 10px;
+	    }
+		.tsosk-kv-table th {
+	        padding-bottom: 4px;
+	        border-bottom: none;
+	    }
+		.tsosk-kv-table td {
+	        padding-top: 0;
+	        padding-bottom: 12px;
+	        border-bottom: 1px solid #f0f0f1;
+	    }
+		.tsosk-kv-table tr:last-child td {
+	        border-bottom: none;
+	    }
+		.tsosk-sidebar-favorites {
+	        border-left: none;
+	        border-top: none;
+	        border-radius: 4px;
+	        background: #fff;
+	        margin-top: 0;
+	    }
+		.tsosk-favorites-title {
+	        color: #1d2327;
+	        background: #f6f7f7;
+	        border-bottom: 1px solid #dcdcde;
+	        padding: 10px 14px;
+	        font-size: 12px;
+	    }
+		.tsosk-favorites-title .dashicons {
+	        color: #dba617;
+	    }
+		.tsosk-favorites-hint {
+	        font-size: 11px;
+	        padding: 8px 14px 0;
+	        color: #646970;
+	    }
+		#tsosk-favorites-list {
+	        display: flex;
+	        flex-wrap: wrap;
+	        gap: 8px;
+	        overflow-x: visible;
+	        overflow-y: visible;
+	        padding: 10px 14px 14px;
+	        min-height: 0;
+	        -webkit-overflow-scrolling: touch;
+	    }
+		#tsosk-favorites-list.is-empty {
+	        min-height: 0;
+	        display: block;
+	        padding: 4px 14px 12px;
+	    }
+		.tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list.is-empty) .tsosk-favorites-hint {
+	        display: block;
+	    }
+		.tsosk-sidebar-favorites:not(.tsosk-editing):has(#tsosk-favorites-list:not(.is-empty)) .tsosk-favorites-hint {
+	        display: none;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-row {
+	        flex: 0 1 auto;
+	        max-width: 100%;
+	        border-bottom: none;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-item {
+	        flex: 0 1 auto;
+	        max-width: 100%;
+	        white-space: normal;
+	        word-break: break-word;
+	        background: #f6f7f7;
+	        border: 1px solid #dcdcde;
+	        border-radius: 999px;
+	        padding: 8px 14px;
+	        color: #1d2327;
+	        border-left: 1px solid #dcdcde;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-item.is-active {
+	        background: #f0f6fc;
+	        border-color: #2271b1;
+	        color: #135e96;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-item .dashicons {
+	        color: #646970;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-item.is-active .dashicons {
+	        color: #2271b1;
+	    }
+		.tsosk-sidebar-favorites .tsosk-nav-label {
+	        display: inline;
+	    }
+		.tsosk-tab-body {
+	        overflow-x: hidden;
+	    }
+		.tsosk-card {
+	        max-width: 100%;
+	        overflow: hidden;
+	        box-sizing: border-box;
+	    }
+		.tsosk-table-wrap {
+	        max-width: 100%;
+	        margin-left: 0;
+	        margin-right: 0;
+	        -webkit-overflow-scrolling: touch;
+	    }
+		.tsosk-table-wrap > .widefat.tsosk-table,
+	    .tsosk-sm-audit-table {
+	        min-width: 640px;
+	        table-layout: auto;
+	    }
+		.tsosk-redirects-table-wrap > .widefat.tsosk-table,
+	    .tsosk-404-table-wrap > .widefat.tsosk-table,
+	    #tsosk-redirects-table,
+	    #tsosk-404-table {
+	        min-width: 0;
+	        width: 100%;
+	        max-width: 100%;
+	        table-layout: fixed;
+	    }
+		.tsosk-sm-audit-table .tsosk-sm-title-col,
+	    .tsosk-sm-audit-table td.tsosk-sm-title-col,
+	    .tsosk-sm-title-col {
+	        min-width: 140px;
+	        width: auto;
+	    }
+		.tsosk-sm-audit-table .tsosk-sm-slug-col,
+	    .tsosk-sm-slug-col {
+	        min-width: 100px;
+	        width: auto;
+	        max-width: none;
+	    }
+		.tsosk-oe-tabs {
+	        flex-wrap: wrap;
+	    }
+		.tsosk-oe-tab-btn {
+	        flex: 1 1 auto;
+	        min-width: 0;
+	        text-align: center;
+	        margin-bottom: 4px !important;
+	    }
+		.tsosk-me-toolbar,
+	    .tsosk-toolbar {
+	        flex-direction: column;
+	        align-items: stretch;
+	    }
+		.tsosk-me-toolbar .button,
+	    .tsosk-toolbar .button {
+	        width: 100%;
+	        text-align: center;
+	        box-sizing: border-box;
+	    }
 }
 
-/* ══ Sidebar organiser ═══════════════════════════════════════════════════════ */
-
-/* Organise button row (always visible, top of sidebar) */
+/*══ Sidebar organiser ═══════════════════════════════════════════════════════*/
+/*Organise button row (always visible, top of sidebar)*/
 .tsosk-sidebar-actions {
     padding: 12px 12px 14px;
     border-bottom: 1px solid #3c4349;
@@ -2434,10 +1761,12 @@
     transition: color .12s, background .12s, box-shadow .12s, border-color .12s;
     font-family: inherit;
 }
+
 .tsosk-sidebar-action-btn:hover {
     color: #a0aab4;
     background: #252b30;
 }
+
 .tsosk-sidebar-action-btn .dashicons {
     font-size: 14px;
     width: 14px;
@@ -2446,7 +1775,7 @@
     flex-shrink: 0;
 }
 
-/* Organise — primary call-to-action on dark sidebar */
+/*Organise — primary call-to-action on dark sidebar*/
 .tsosk-sidebar-organise-btn {
     background: #2271b1;
     color: #fff;
@@ -2456,32 +1785,37 @@
     border-radius: 4px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
+
 .tsosk-sidebar-organise-btn .dashicons,
 .tsosk-sidebar-organise-btn .tsosk-nav-label {
     color: #fff;
 }
+
 .tsosk-sidebar-organise-btn:hover {
     background: #135e96;
     border-color: #2271b1;
     color: #fff;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
 }
+
 .tsosk-sidebar-organise-btn:hover .dashicons,
 .tsosk-sidebar-organise-btn:hover .tsosk-nav-label {
     color: #fff;
 }
+
 .tsosk-sidebar-organise-btn:focus {
     outline: 2px solid #72aee6;
     outline-offset: 2px;
     color: #fff;
 }
 
-/* Edit-mode top bar */
+/*Edit-mode top bar*/
 .tsosk-sidebar-edit-bar {
     padding: 10px 12px 8px;
     border-bottom: 1px solid #2c3338;
     background: #161b1f;
 }
+
 .tsosk-sidebar-edit-hint {
     display: block;
     font-size: 11px;
@@ -2490,11 +1824,13 @@
     line-height: 1.45;
     min-height: 2.8em;
 }
+
 .tsosk-sidebar-edit-btns {
     display: flex;
     gap: 4px;
     flex-wrap: wrap;
 }
+
 .tsosk-sidebar-save-btn,
 .tsosk-sidebar-reset-btn,
 .tsosk-sidebar-cancel-btn {
@@ -2508,45 +1844,52 @@
     white-space: nowrap;
     transition: background .12s, color .12s;
 }
+
 .tsosk-sidebar-save-btn {
     background: #2271b1;
     color: #fff;
     border-color: #2271b1;
 }
+
 .tsosk-sidebar-save-btn:hover {
     background: #135e96;
 }
+
 .tsosk-sidebar-reset-btn {
     background: transparent;
     color: #a0aab4;
     border-color: #3c4349;
 }
+
 .tsosk-sidebar-reset-btn:hover {
     background: #2c3338;
     color: #fff;
 }
+
 .tsosk-sidebar-cancel-btn {
     background: transparent;
     color: #a0aab4;
     border-color: #3c4349;
 }
+
 .tsosk-sidebar-cancel-btn:hover {
     background: #2c3338;
     color: #fff;
 }
 
-/* Nav row wrapper — wraps drag handle + link + hide button */
+/*Nav row wrapper — wraps drag handle + link + hide button*/
 .tsosk-nav-row {
     display: flex;
     align-items: flex-start;
     position: relative;
 }
+
 .tsosk-nav-row .tsosk-nav-item {
     flex: 1;
     min-width: 0;
 }
 
-/* Drag handle — hidden by default, shown in edit mode */
+/*Drag handle — hidden by default, shown in edit mode*/
 .tsosk-drag-handle {
     display: none;
     flex-shrink: 0;
@@ -2561,11 +1904,12 @@
     justify-content: center;
     transition: color .12s;
 }
+
 .tsosk-drag-handle:active {
     cursor: grabbing;
 }
 
-/* Hide button — hidden by default, shown in edit mode */
+/*Hide button — hidden by default, shown in edit mode*/
 .tsosk-hide-tab {
     display: none;
     flex-shrink: 0;
@@ -2583,12 +1927,13 @@
     transition: color .12s, background .12s;
     font-family: inherit;
 }
+
 .tsosk-hide-tab:hover {
     color: #ef4444;
     background: rgba(239,68,68,.1);
 }
 
-/* ── EDIT MODE — toggled by JS on .tsosk-sidebars ── */
+/*── EDIT MODE — toggled by JS on .tsosk-sidebars ──*/
 .tsosk-sidebars.tsosk-editing .tsosk-nav-group-label {
     display: none;
 }
@@ -2631,7 +1976,7 @@
     box-sizing: border-box;
 }
 
-/* Drag ghost follows the pointer (appendTo body, outside sidebar CSS context) */
+/*Drag ghost follows the pointer (appendTo body, outside sidebar CSS context)*/
 body > .tsosk-nav-row.tsosk-nav-drag-ghost {
     display: flex !important;
     flex-direction: row;
@@ -2693,7 +2038,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     display: block;
 }
 
-/* Edit mode: grid so title, star, and hide controls fit without clipping */
+/*Edit mode: grid so title, star, and hide controls fit without clipping*/
 .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-row {
     display: grid;
     grid-template-columns: 28px minmax(0, 1fr) 34px 34px;
@@ -2740,6 +2085,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     padding: 0;
     overflow: visible;
 }
+
 .tsosk-add-fav .dashicons {
     font-size: 18px;
     width: 18px;
@@ -2842,82 +2188,96 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     pointer-events: none;
     opacity: .92;
 }
+
 .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-row:hover .tsosk-drag-handle {
     color: #a0aab4;
 }
-/* Highlight the row being dragged */
+
+/*Highlight the row being dragged*/
 .tsosk-nav-row.tsosk-dragging {
     opacity: .4;
     background: #252b30;
 }
-/* Drop target indicator */
+
+/*Drop target indicator*/
 .tsosk-nav-row.tsosk-drop-before {
     border-top: 2px solid #2271b1;
 }
+
 .tsosk-nav-row.tsosk-drop-after {
     border-bottom: 2px solid #2271b1;
 }
 
-/* Hidden tab in normal mode: completely invisible */
+/*Hidden tab in normal mode: completely invisible*/
 .tsosk-nav-hidden {
     display: none;
 }
-/* Hidden tab in edit mode: shown as faded so user can re-show it */
+
+/*Hidden tab in edit mode: shown as faded so user can re-show it*/
 .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden {
     display: grid;
     opacity: .45;
 }
+
 .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden .tsosk-hide-tab {
     color: #22c55e;
 }
+
 .tsosk-sidebars.tsosk-editing .tsosk-sidebar-tools .tsosk-nav-hidden .tsosk-hide-tab:hover {
     color: #16a34a;
     background: rgba(34,197,94,.1);
 }
 
-/* Save confirmation flash */
+/*Save confirmation flash*/
 @keyframes tsosk-flash {
     0%   { background: #1e3a5f; }
     100% { background: #1e2327; }
 }
+
 .tsosk-sidebar.tsosk-saved {
     animation: tsosk-flash .6s ease-out;
 }
 
-/* Responsive: hide drag handles on very small screens */
 @media (max-width: 480px) {
-    .tsosk-sidebar-action-btn .tsosk-nav-label,
-    .tsosk-sidebar-edit-hint { display: none; }
-    .tsosk-sidebar-organise-btn {
-        justify-content: center;
-        padding: 12px;
-    }
-    .tsosk-sidebar-organise-btn .dashicons {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-    }
+	/*Responsive: hide drag handles on very small screens*/
+		.tsosk-sidebar-action-btn .tsosk-nav-label,
+	    .tsosk-sidebar-edit-hint { display: none; }
+		.tsosk-sidebar-organise-btn {
+	        justify-content: center;
+	        padding: 12px;
+	    }
+		.tsosk-sidebar-organise-btn .dashicons {
+	        font-size: 18px;
+	        width: 18px;
+	        height: 18px;
+	    }
 }
-/* ── Debug flag override indicator ─────────────────────────────────── */
+
+/*── Debug flag override indicator ───────────────────────────────────*/
 .tsosk-flag-mismatch {
     border-left: 3px solid #d97706;
     padding-left: 8px;
     background: #fffbeb;
     border-radius: 0 4px 4px 0;
 }
+
 .tsosk-val-true  { color: #16a34a; font-weight: 600; }
+
 .tsosk-val-false { color: #dc2626; font-weight: 600; }
+
 .tsosk-val-muted { color: #8c8f94; font-weight: 600; }
-/* ── Debug: disabled checkbox label (controlled by wp-config.php) ─── */
+
+/*── Debug: disabled checkbox label (controlled by wp-config.php) ───*/
 .tsosk-flag-label-disabled {
     opacity: .55;
     cursor: not-allowed;
 }
+
 .tsosk-flag-label-disabled input[type="checkbox"] {
     cursor: not-allowed;
 }
 
-/* ── Debug constants table ─────────────────────────────────────────── */
+/*── Debug constants table ───────────────────────────────────────────*/
 .tsosk-dflags {
     border: 1px solid #dcdcde;
     border-radius: 6px;
@@ -2925,6 +2285,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     background: #fff;
     margin-top: 6px;
 }
+
 .tsosk-dflags-head,
 .tsosk-dflags-row {
     display: grid;
@@ -2933,29 +2294,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     align-items: center;
     padding: 12px 16px;
 }
-.tsosk-dflags-head {
-    background: #f6f7f7;
-    border-bottom: 1px solid #dcdcde;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: #646970;
-    padding-top: 8px;
-    padding-bottom: 8px;
-}
-.tsosk-dflags-row + .tsosk-dflags-row {
-    border-top: 1px solid #f0f0f1;
-}
-.tsosk-dflags-row:hover {
-    background: #fbfbfc;
-}
-.tsosk-dflags-row.tsosk-flag-mismatch {
-    border-left: 3px solid #d97706;
-    padding-left: 13px;
-    background: #fffbeb;
-    border-radius: 0;
-}
+
 .tsosk-dflags-name code {
     display: block;
     background: none;
@@ -2964,6 +2303,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     font-weight: 600;
     color: #1d2327;
 }
+
 .tsosk-dflags-desc {
     display: block;
     margin-top: 3px;
@@ -2971,6 +2311,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     line-height: 1.45;
     color: #646970;
 }
+
 .tsosk-dflags-val {
     display: inline-block;
     min-width: 52px;
@@ -2982,10 +2323,15 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     text-align: center;
     border: 1px solid transparent;
 }
+
 .tsosk-dflags-val-on    { background: #edfaef; color: #1a7e34; border-color: #b8e6c1; }
+
 .tsosk-dflags-val-off   { background: #f6f7f7; color: #50575e; border-color: #dcdcde; }
+
 .tsosk-dflags-val-muted { background: #fff; color: #8c8f94; border-color: #dcdcde; border-style: dashed; text-decoration: line-through; }
+
 .tsosk-dflags-val-undef { background: #fff; color: #8c8f94; border-color: #dcdcde; border-style: dashed; font-family: inherit; font-weight: 400; font-style: italic; }
+
 .tsosk-dflags-src {
     display: inline-block;
     padding: 2px 9px;
@@ -2997,10 +2343,13 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     border: 1px solid #dcdcde;
     white-space: nowrap;
 }
+
 .tsosk-dflags-src-config { background: #e5f5fb; color: #145d7a; border-color: #a8d8ea; }
+
 .tsosk-dflags-src-plugin { background: #f3e8ff; color: #6a0dad; border-color: #d4aaff; }
+
 .tsosk-dflags-src-warn   { background: #fff3cd; color: #7a4100; border-color: #f6c142; }
-.tsosk-dflags-src-none   { background: none; border: none; color: #a7aaad; }
+
 .tsosk-dflags-status {
     display: inline-flex;
     align-items: center;
@@ -3010,6 +2359,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     color: #50575e;
     white-space: nowrap;
 }
+
 .tsosk-dflags-status::before {
     content: "";
     width: 8px;
@@ -3018,78 +2368,37 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     background: #c3c4c7;
     flex: none;
 }
+
 .tsosk-dflags-status-on         { color: #1a7e34; }
+
 .tsosk-dflags-status-on::before { background: #16a34a; box-shadow: 0 0 0 3px #dcfce7; }
+
 .tsosk-dflags-status-off        { color: #8c8f94; font-weight: 400; }
+
 .tsosk-dflags-status-warn       { color: #92400e; cursor: help; }
+
 .tsosk-dflags-status-warn::before { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
 
-@media (max-width: 782px) {
-    .tsosk-dflags-head { display: none; }
-    .tsosk-dflags-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 10px;
-    }
-    .tsosk-dflags-name { flex: 1 0 100%; }
-}
-
-/* ── Debug: log help notice ───────────────────────────────────────── */
-.tsosk-log-help-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
 .tsosk-log-help-list li {
     margin: 0 0 6px;
     line-height: 1.5;
 }
-.tsosk-log-help-tip {
-    margin-top: 12px;
-    padding: 12px 14px;
-    background: #fff;
-    border: 1px solid #c5e3ef;
-    border-radius: 4px;
-}
-.tsosk-log-help-tip-title {
-    margin: 0 0 8px;
-}
-.tsosk-log-help-steps {
-    margin: 0 0 0 18px;
-    padding: 0;
-}
+
 .tsosk-log-help-steps li {
     margin: 0 0 8px;
     line-height: 1.5;
 }
+
 .tsosk-log-help-steps li:last-child {
     margin-bottom: 0;
 }
-.tsosk-log-snippet {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin: 6px 0 2px;
-}
-.tsosk-log-snippet pre {
-    flex: 1 1 320px;
-    min-width: 0;
-    margin: 0;
-    padding: 8px 10px;
-    background: #f6f7f7;
-    border: 1px solid #dcdcde;
-    border-radius: 3px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    user-select: all;
-}
 
-/* ── Collapsible guide cards (shared) ───────────────────────────── */
+/*── Collapsible guide cards (shared) ─────────────────────────────*/
 .tsosk-guide-collapse {
     margin: 16px 0 0;
     padding: 0;
 }
+
 .tsosk-guide-collapse > summary {
     display: flex;
     align-items: center;
@@ -3104,38 +2413,46 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     cursor: pointer;
     list-style: none;
 }
+
 .tsosk-guide-collapse > summary:hover {
     color: #0a4b78;
     background: #e5effa;
 }
+
 .tsosk-guide-collapse > summary .dashicons {
     color: #2271b1;
 }
+
 .tsosk-guide-collapse > summary::-webkit-details-marker {
     display: none;
 }
+
 .tsosk-guide-collapse > summary::before {
     content: "\25B8";
     display: inline-block;
     transition: transform .15s ease;
     color: #2271b1;
 }
+
 .tsosk-guide-collapse[open] > summary::before {
     transform: rotate(90deg);
 }
+
 .tsosk-guide-collapse[open] > summary {
     border-bottom: 1px solid #dcdcde;
     margin-bottom: 12px;
 }
+
 .tsosk-guide-collapse > :not(summary) {
     margin-left: 16px !important;
     margin-right: 16px !important;
 }
+
 .tsosk-guide-collapse[open] {
     padding-bottom: 14px;
 }
 
-/* ── Admin Menu Editor ─────────────────────────────────────────────── */
+/*── Admin Menu Editor ───────────────────────────────────────────────*/
 .tsosk-card .tsosk-am-wrap {
     width: 100%;
     max-width: 100%;
@@ -3144,61 +2461,28 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
-#tsosk-am-table {
-    width: 100%;
-    max-width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    border-spacing: 0;
-    box-sizing: border-box;
-    margin: 0;
-    border: 1px solid #dcdcde;
-}
+
 #tsosk-am-table th,
 #tsosk-am-table td {
     box-sizing: border-box;
 }
-#tsosk-am-table thead th {
-    background: #f6f7f7;
-    border-bottom: 1px solid #dcdcde;
-}
+
 #tsosk-am-table tbody td {
     border-top: 1px solid #f0f0f1;
 }
+
 #tsosk-am-table .tsosk-am-col-drag,
 #tsosk-am-table .tsosk-am-drag {
     width: 36px;
     padding-left: 8px;
     padding-right: 8px;
 }
+
 #tsosk-am-table .tsosk-am-col-parent,
 #tsosk-am-table .tsosk-am-parent-cell {
     width: 17%;
 }
-#tsosk-am-table .tsosk-am-col-hide,
-#tsosk-am-table .tsosk-am-hide-cell {
-    width: 44px;
-    text-align: center;
-    padding-left: 6px;
-    padding-right: 6px;
-}
-#tsosk-am-table .tsosk-am-col-label,
-#tsosk-am-table .tsosk-am-label-cell {
-    width: 22%;
-    padding-right: 12px;
-    overflow: visible;
-}
-#tsosk-am-table .tsosk-am-drag {
-    vertical-align: middle;
-    text-align: center;
-}
-.tsosk-am-handle {
-    cursor: grab;
-    color: #787c82;
-}
-.tsosk-am-handle:active {
-    cursor: grabbing;
-}
+
 .tsosk-am-row-top td {
     background: #eef3f8;
     border-top: 2px solid #2271b1;
@@ -3206,176 +2490,67 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     padding-bottom: 12px !important;
     vertical-align: middle;
 }
-.tsosk-am-row-top:first-child td {
-    border-top-width: 0;
-}
-.tsosk-am-top-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1d2327;
-    letter-spacing: .01em;
-}
-.tsosk-am-section-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: #2271b1;
-    background: #fff;
-    border: 1px solid #c3d9ed;
-    border-radius: 3px;
-    padding: 3px 8px;
-}
+
 .tsosk-am-row-sub td {
     background: #fff;
     vertical-align: middle;
 }
-.tsosk-am-row-sub + .tsosk-am-row-top td {
-    border-top: 2px solid #2271b1;
-}
-.tsosk-am-row-sub.is-am-collapsed,
-.tsosk-am-row-sub[hidden] {
-    display: none !important;
-}
+
 .tsosk-am-row-is-hidden td {
     background: #fcf0f1;
 }
+
 .tsosk-am-row-is-hidden .tsosk-am-top-label,
 .tsosk-am-row-is-hidden .tsosk-am-sub-label {
     opacity: .75;
     text-decoration: line-through;
 }
-.tsosk-am-row-highlight td {
-    animation: tsosk-am-highlight 2s ease-out;
-}
+
 @keyframes tsosk-am-highlight {
     0%   { background: #fff3cd; }
     100% { background: transparent; }
 }
-.tsosk-am-hidden-hint {
-    margin: 0 0 12px;
-}
-.tsosk-am-hidden-section {
-    margin-top: 20px;
-    padding: 16px;
-    border: 1px solid #f0b8b8;
-    border-radius: 6px;
-    background: #fcf0f1;
-}
+
 .tsosk-am-hidden-section.is-highlighted {
     box-shadow: 0 0 0 2px #d63638;
 }
-.tsosk-am-hidden-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0 0 12px;
-    font-size: 14px;
-    color: #8a2424;
-}
+
 .tsosk-am-hidden-title .dashicons {
     color: #d63638;
 }
-.tsosk-am-separator-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-style: italic;
-    color: #646970;
-}
+
 .tsosk-am-separator-label .dashicons {
     font-size: 16px;
     width: 16px;
     height: 16px;
 }
-.tsosk-am-separator-note {
-    margin: 0;
-}
+
 .tsosk-am-hidden-empty td {
     padding: 16px !important;
     color: #646970;
     font-style: italic;
     text-align: center;
 }
-.tsosk-am-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    margin: 0;
-    padding: 0;
-    border: none;
-    border-radius: 3px;
-    background: transparent;
-    color: #2271b1;
-    cursor: pointer;
-    vertical-align: middle;
-    flex-shrink: 0;
-}
+
 .tsosk-am-toggle:hover,
 .tsosk-am-toggle:focus {
     background: rgba(34, 113, 177, .12);
     outline: none;
     box-shadow: 0 0 0 1px #2271b1;
 }
+
 .tsosk-am-toggle .dashicons {
     font-size: 18px;
     width: 18px;
     height: 18px;
 }
-.tsosk-am-toggle-spacer {
-    display: inline-block;
-    width: 24px;
-    flex-shrink: 0;
-}
-.tsosk-am-sub-count {
-    font-size: 11px;
-    font-weight: 500;
-    color: #646970;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 10px;
-    padding: 1px 7px;
-    white-space: nowrap;
-}
-.tsosk-am-row-top.is-am-expanded .tsosk-am-sub-count {
-    color: #2271b1;
-    border-color: #c3d9ed;
-}
-.tsosk-am-title-cell {
-    padding-left: 12px !important;
-    padding-right: 8px !important;
-    min-width: 0;
-    overflow: hidden;
-    vertical-align: middle;
-}
-.tsosk-am-top-label,
-.tsosk-am-sub-label {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+
 .tsosk-am-row-top .tsosk-am-top-label {
     display: inline;
     flex: 1 1 auto;
     min-width: 0;
 }
-.tsosk-am-row-sub .tsosk-am-title-cell {
-    padding-left: 28px !important;
-}
-.tsosk-am-sub-label {
-    font-size: 13px;
-    font-weight: 400;
-    color: #50575e;
-}
-.tsosk-am-sub-label::before {
-    content: "›";
-    margin-right: 6px;
-    color: #a7aaad;
-}
+
 .tsosk-am-parent-cell select,
 #tsosk-am-table .tsosk-am-parent {
     width: 100%;
@@ -3383,7 +2558,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     box-sizing: border-box;
 }
 
-/* ── Slug Manager ─────────────────────────────────────────────────────────── */
+/*── Slug Manager ───────────────────────────────────────────────────────────*/
 .tsosk-sm-audit-table {
     table-layout: fixed;
     width: 100%;
@@ -3417,47 +2592,10 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     font-size: 11px;
 }
 
-.tsosk-sm-title-col {
-    min-width: 200px;
-    word-break: normal;
-    overflow-wrap: break-word;
-}
-
-.tsosk-sm-edit-link {
-    display: inline-block;
-    margin-left: 8px;
-    margin-top: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #2271b1;
-    text-decoration: none;
-}
-
 .tsosk-sm-edit-link:hover,
 .tsosk-sm-edit-link:focus {
     color: #135e96;
     text-decoration: underline;
-}
-
-.tsosk-sm-bulk-preview-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-    align-items: center;
-}
-
-#tsosk-sm-bulk-confirm {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-}
-
-.tsosk-sm-bulk-summary-table {
-    width: 100%;
-    margin-top: 8px;
-    font-size: 12px;
-    border-collapse: collapse;
 }
 
 .tsosk-sm-bulk-summary-table th,
@@ -3468,42 +2606,8 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     vertical-align: top;
 }
 
-.tsosk-sm-bulk-summary-table .tsosk-code {
-    word-break: break-all;
-}
-
-.tsosk-sm-rename-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1d2327;
-    line-height: 1.4;
-    word-break: break-word;
-}
-
-/* ── Redirects ────────────────────────────────────────────────────────────── */
-.tsosk-desc-flush {
-	margin-top: 0;
-}
-
 .tsosk-desc-spaced {
 	margin-top: 10px;
-}
-
-.tsosk-404-table-wrap-spaced {
-	margin-top: 12px;
-}
-
-.tsosk-field-desc-tight {
-	margin: 6px 0 0;
-}
-
-.tsosk-btn-mt {
-	margin-top: 10px;
-}
-
-#tsosk-cron-edit-panel {
-	display: none;
-	margin-top: 16px;
 }
 
 .tsosk-redirects-table-wrap,
@@ -3519,60 +2623,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     max-width: 100%;
 }
 
-#tsosk-redirects-table .tsosk-redirect-col-source,
-#tsosk-redirects-table .tsosk-redirect-col-target {
-    width: 26%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-col-match {
-    width: 8%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-col-code {
-    width: 7%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-col-active {
-    width: 9%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-col-visits {
-    width: 7%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-col-actions {
-    width: 17%;
-}
-
-#tsosk-redirects-table .tsosk-redirect-url-col,
-#tsosk-404-table .tsosk-redirect-url-col {
-    min-width: 0;
-    line-height: 1.45;
-    vertical-align: top;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-}
-
-#tsosk-redirects-table .tsosk-redirect-url-link,
-#tsosk-redirects-table .tsosk-redirect-url-text,
-#tsosk-404-table .tsosk-redirect-url-link,
-#tsosk-404-table .tsosk-redirect-url-text {
-    display: inline;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    white-space: normal;
-    max-width: 100%;
-}
-
-#tsosk-404-table .tsosk-404-col-url    { width: 20%; }
-#tsosk-404-table .tsosk-404-col-visits { width: 64px; white-space: nowrap; }
-#tsosk-404-table .tsosk-404-col-date   { width: 12%; white-space: normal; overflow-wrap: break-word; }
-/* table-layout: fixed does not reliably distribute leftover space to a "width: auto" column
-   once other explicit % / px columns are present, so every column here gets a fixed share
-   instead (leaving a small margin so the total stays comfortably under 100%). */
-#tsosk-404-table .tsosk-404-col-ref    { width: 22%; word-break: break-word; overflow-wrap: anywhere; }
-#tsosk-404-table .tsosk-404-col-ip     { width: 12%; word-break: break-word; overflow-wrap: anywhere; }
-#tsosk-404-table .tsosk-404-col-action { width: 120px; }
 #tsosk-404-table .tsosk-404-col-action .button {
     white-space: normal;
     max-width: 100%;
@@ -3580,60 +2630,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     line-height: 1.4;
     padding-top: 3px;
     padding-bottom: 3px;
-}
-#tsosk-404-table .tsosk-404-direct {
-    display: block;
-    font-weight: 600;
-}
-#tsosk-404-table .tsosk-404-ua {
-    display: block;
-    margin-top: 2px;
-    font-size: 12px;
-    line-height: 1.4;
-    color: #646970;
-    overflow-wrap: anywhere;
-}
-#tsosk-404-table .tsosk-404-ip {
-    display: block;
-    font-family: Consolas, Monaco, monospace;
-    font-size: 12px;
-}
-#tsosk-404-table .tsosk-404-col-ip .tsosk-badge {
-    display: inline-block;
-    margin-top: 4px;
-}
-#tsosk-404-table .tsosk-redirect-url-col .tsosk-badge {
-    display: inline-block;
-    margin-top: 4px;
-}
-
-#tsosk-404-table .tsosk-404-col-select {
-	width: 2.5rem;
-	text-align: center;
-	vertical-align: top;
-}
-
-#tsosk-404-table .tsosk-404-col-select input[type="checkbox"] {
-	margin: 0;
-	vertical-align: top;
-}
-
-#tsosk-404-table tbody td {
-	vertical-align: top;
-}
-
-.tsosk-health-checks-table .tsosk-health-details {
-	white-space: pre-line;
-	vertical-align: top;
-}
-
-#tsosk-redirects-table .tsosk-actions {
-    white-space: normal;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: stretch;
-    min-width: 0;
 }
 
 #tsosk-redirects-table .tsosk-actions .button {
@@ -3645,66 +2641,18 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 }
 
 @media (max-width: 782px) {
-    #tsosk-404-table thead,
-    #tsosk-redirects-table thead {
-        display: none;
-    }
-
-    #tsosk-404-table,
-    #tsosk-404-table tbody,
-    #tsosk-404-table tr,
-    #tsosk-404-table td,
-    #tsosk-redirects-table,
-    #tsosk-redirects-table tbody,
-    #tsosk-redirects-table tr,
-    #tsosk-redirects-table td {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    #tsosk-404-table tr,
-    #tsosk-redirects-table tr {
-        margin: 0 0 14px;
-        padding: 12px;
-        border: 1px solid #dcdcde;
-        border-radius: 4px;
-        background: #fff;
-    }
-
-    #tsosk-404-table td,
-    #tsosk-redirects-table td {
-        padding: 6px 0;
-        border: 0;
-        max-width: none;
-    }
-
-    #tsosk-404-table td::before,
-    #tsosk-redirects-table td::before {
-        content: attr(data-label);
-        display: block;
-        font-size: 11px;
-        font-weight: 600;
-        color: #646970;
-        margin-bottom: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-    }
-
-    #tsosk-404-table .tsosk-redirect-url-col,
-    #tsosk-redirects-table .tsosk-redirect-url-col {
-        min-width: 0;
-    }
-
-    #tsosk-404-table td[class] {
-        width: 100%;
-    }
-}
-
-.tsosk-redirect-url-link {
-    color: #2271b1;
-    text-decoration: none;
-    font-size: 12px;
+		#tsosk-404-table,
+	    #tsosk-404-table tbody,
+	    #tsosk-404-table tr,
+	    #tsosk-404-table td,
+	    #tsosk-redirects-table,
+	    #tsosk-redirects-table tbody,
+	    #tsosk-redirects-table tr,
+	    #tsosk-redirects-table td {
+	        display: block;
+	        width: 100%;
+	        box-sizing: border-box;
+	    }
 }
 
 .tsosk-redirect-url-link:hover,
@@ -3713,52 +2661,12 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     text-decoration: underline;
 }
 
-.tsosk-redirect-url-text {
-    font-size: 12px;
-}
-
 .tsosk-sm-audit-table td,
 .tsosk-sm-audit-table th {
     vertical-align: top;
     padding: 6px 8px;
 }
 
-/* ── Security toggles spacing ─────────────────────────────────────────────── */
-.tsosk-security-toggles {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    margin-top: 8px;
-}
-
-.tsosk-security-toggle-row {
-    padding: 12px 14px;
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-    background: #fafafa;
-}
-
-.tsosk-security-toggle-desc {
-    margin: 8px 0 4px 20px;
-}
-
-.tsosk-security-toggle-rec {
-    margin: 0 0 0 20px;
-    color: #2271b1;
-    font-style: italic;
-}
-
-.tsosk-security-toggle-wpconfig {
-    margin: 6px 0 0 20px;
-    color: #646970;
-}
-
-#tsosk-am-table .tsosk-am-label {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-}
 .tsosk-am-row.ui-sortable-helper {
     display: table;
     background: #fff;
@@ -3766,30 +2674,13 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     z-index: 100100;
     pointer-events: none;
 }
-.tsosk-am-row.ui-sortable-helper td {
-    background: #fff;
-}
+
 .tsosk-am-row.ui-sortable-placeholder {
     visibility: visible !important;
     background: #f0f6fc;
     height: 44px;
 }
-.tsosk-am-row.ui-sortable-placeholder td {
-    background: #f0f6fc;
-    border: 1px dashed #72aee6;
-}
-.tsosk-am-label:disabled {
-    opacity: .5;
-}
 
-/* ── Maintenance logo picker ───────────────────────────────────────── */
-.tsosk-maint-logo-picker {
-    margin-top: 6px;
-}
-.tsosk-maint-logo-preview {
-    min-height: 0;
-    margin-bottom: 10px;
-}
 .tsosk-maint-logo-preview.has-logo {
     padding: 12px;
     background: #f6f7f7;
@@ -3798,121 +2689,14 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     display: inline-block;
     max-width: 100%;
 }
-.tsosk-maint-logo-preview img {
-    display: block;
-    max-width: 320px;
-    max-height: 180px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-.tsosk-maint-logo-actions {
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-@media (max-width: 782px) {
-    #tsosk-am-table .tsosk-am-col-parent,
-    #tsosk-am-table .tsosk-am-parent-cell {
-        width: 22%;
-    }
-    #tsosk-am-table .tsosk-am-col-label,
-    #tsosk-am-table .tsosk-am-label-cell {
-        width: 28%;
-    }
-    .tsosk-am-top-label,
-    .tsosk-am-sub-label {
-        white-space: normal;
-    }
-}
 
-/* ══ Generic stat tile (reused by Heartbeat traffic, etc.) ═══════════════════ */
-
-.tsosk-stat-tile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #f6f7f7;
-    border: 1px solid #e2e4e7;
-    border-radius: 8px;
-    padding: 10px 20px;
-    min-width: 120px;
-    text-align: center;
-}
-
-.tsosk-stat-val {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1d2327;
-    line-height: 1.2;
-}
-
-.tsosk-stat-lbl {
-    font-size: 11px;
-    color: #646970;
-    margin-top: 3px;
-}
-
-/* ══ Media footprint treemap (space by file type) ═════════════════════════════ */
-
-.tsosk-treemap {
-    display: flex;
-    width: 100%;
-    height: 44px;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid #e2e4e7;
-    margin: 10px 0 4px;
-}
-
-.tsosk-treemap-block {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2px;
-    box-sizing: border-box;
-    border-right: 1px solid rgba(255, 255, 255, 0.6);
-    overflow: hidden;
-}
-
-.tsosk-treemap-block:last-child {
-    border-right: none;
-}
-
-.tsosk-treemap-other {
-    background: #dcdcde;
-}
-
-.tsosk-treemap-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
-    white-space: nowrap;
-    padding: 0 6px;
-}
-
-/* ══ Slow Query Monitor ══════════════════════════════════════════════════════ */
-
-/* Anchors opened from the admin bar must not hide under the fixed toolbar. */
+/*══ Slow Query Monitor ══════════════════════════════════════════════════════*/
+/*Anchors opened from the admin bar must not hide under the fixed toolbar.*/
 .tsosk-card[id^="tsosk-sq-"],
 #tsosk-sq-last-dupes,
 #tsosk-sq-last-slow,
 #tsosk-sq-settings {
     scroll-margin-top: 48px;
-}
-
-.tsosk-sq-section {
-    margin: 14px 0 10px;
-}
-
-.tsosk-sq-section-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-    margin: 0 0 4px;
 }
 
 .tsosk-sq-section-bar h4 {
@@ -3921,14 +2705,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     min-width: 0;
     font-size: 13px;
     font-weight: 600;
-}
-
-.tsosk-sq-section-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
 }
 
 .tsosk-sq-section .description {
@@ -3946,7 +2722,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     font-weight: 600;
 }
 
-/* Monitor settings: compact collapsible card */
+/*Monitor settings: compact collapsible card*/
 .tsosk-sq-settings-details {
     padding-top: 0;
     padding-bottom: 8px;
@@ -3997,12 +2773,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     color: #646970;
 }
 
-.tsosk-sq-settings-table {
-    width: 100%;
-    max-width: 720px;
-    margin-top: 10px;
-}
-
 .tsosk-sq-settings-table th {
     width: 150px;
     padding: 6px 10px 6px 0;
@@ -4013,62 +2783,8 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     padding: 6px 0;
 }
 
-.tsosk-sq-settings-inline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-}
-
 .tsosk-sq-settings-inline input[type="number"] {
     width: 90px;
-}
-
-.tsosk-sq-settings-checks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 18px;
-}
-
-.tsosk-sq-settings-save {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0 4px;
-}
-
-.tsosk-sq-ignore-patterns {
-    width: 100%;
-    max-width: 520px;
-    font-family: Consolas, Monaco, monospace;
-    font-size: 12px;
-}
-
-.tsosk-sq-copy-plugins-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 6px;
-}
-
-.tsosk-sq-copy-plugins {
-    max-height: 140px;
-    overflow: auto;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    padding: 6px 8px;
-    background: #fff;
-    max-width: 640px;
-}
-
-.tsosk-sq-copy-plugin-label {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin: 0 0 4px;
-    font-size: 12px;
-    line-height: 1.3;
 }
 
 .tsosk-sq-copy-plugin-label code {
@@ -4080,7 +2796,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     color: #50575e;
 }
 
-/* Top patterns: fill width, wrap — no horizontal scroll */
+/*Top patterns: fill width, wrap — no horizontal scroll*/
 .tsosk-table-wrap:has(> .tsosk-sq-patterns-table) {
     overflow-x: hidden;
     max-width: 100%;
@@ -4100,9 +2816,13 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 }
 
 .tsosk-sq-patterns-table .tsosk-sq-col-count { width: 48px; }
+
 .tsosk-sq-patterns-table .tsosk-sq-col-ms { width: 72px; font-family: Consolas, Monaco, monospace; font-size: 12px; }
+
 .tsosk-sq-patterns-table .tsosk-sq-col-hint { width: 110px; font-size: 11px; color: #6b7280; white-space: normal; overflow-wrap: break-word; }
+
 .tsosk-sq-patterns-table .tsosk-sq-col-action { width: 80px; white-space: nowrap; }
+
 .tsosk-sq-patterns-table .tsosk-sq-col-fp {
     width: auto;
     min-width: 0;
@@ -4111,14 +2831,9 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     overflow-wrap: anywhere;
     word-break: break-word;
 }
+
 .tsosk-sq-patterns-table .tsosk-sq-col-fp .tsosk-sq-sql-fold,
 .tsosk-sq-patterns-table .tsosk-sq-col-fp .tsosk-sq-sql-code {
-    max-width: 100%;
-}
-
-/* Collapsible long SQL / fingerprints */
-.tsosk-sq-sql-fold {
-    margin: 0;
     max-width: 100%;
 }
 
@@ -4144,63 +2859,8 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     cursor: pointer;
 }
 
-.tsosk-sq-sql-fold-btn.button-link:hover,
-.tsosk-sq-sql-fold-btn.button-link:focus {
-    color: #135e96;
-}
-
-.tsosk-sq-sql-code--full {
-    display: block;
-    margin-top: 6px;
-    padding: 8px;
-    background: #f6f7f7;
-    border-radius: 4px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    max-width: 100%;
-}
-
-.tsosk-sq-sql-code--full[hidden] {
-    display: none !important;
-}
-
-/* Live duplicate banner: button left, explanation right */
-.tsosk-sq-dupe-banner {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 12px 16px;
-    margin-bottom: 12px;
-}
-
-.tsosk-sq-dupe-banner-actions {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding-top: 2px;
-}
-
-.tsosk-sq-dupe-banner-body {
-    flex: 1 1 16rem;
-    min-width: 0;
-}
-
-.tsosk-sq-dupe-banner-lead,
-.tsosk-sq-dupe-banner-meta {
-    margin: 0 0 6px;
-    font-size: 13px;
-    line-height: 1.45;
-}
-
 .tsosk-sq-dupe-banner-meta:last-child {
     margin-bottom: 0;
-}
-
-.tsosk-sq-dupe-origin-hint {
-    margin: 2px 0 0;
 }
 
 .tsosk-sq-dupe-table .tsosk-sq-col-pick {
@@ -4209,18 +2869,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     vertical-align: middle;
 }
 
-.tsosk-sq-dupe-row:has(.tsosk-sq-dupe-pick:not(:checked)) {
-    opacity: 0.45;
-}
-
-#tsosk-sq-table,
-.tsosk-sq-dupe-table {
-    table-layout: fixed;
-    width: 100%;
-    max-width: 100%;
-}
-
-/* Duplicate tables: headers stay on one line; SQL keeps most width */
+/*Duplicate tables: headers stay on one line; SQL keeps most width*/
 .tsosk-sq-dupe-table thead th {
     white-space: nowrap;
     vertical-align: middle;
@@ -4229,10 +2878,14 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
 }
 
 .tsosk-sq-dupe-table .tsosk-sq-col-pick { width: 36px; text-align: center; }
+
 .tsosk-sq-dupe-table .tsosk-sq-col-times { width: 72px; }
+
 .tsosk-sq-dupe-table .tsosk-sq-col-time { width: 72px; }
+
 .tsosk-sq-dupe-table .tsosk-sq-col-sql,
 .tsosk-sq-dupe-table td.tsosk-sq-cell-sql { width: 38%; }
+
 .tsosk-sq-dupe-table thead th.tsosk-sq-col-side {
     width: 13%;
     font-size: 11px;
@@ -4245,18 +2898,6 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     width: 13%;
     font-size: 11px;
     white-space: normal;
-}
-
-.tsosk-sq-patterns-table thead th {
-    white-space: nowrap;
-    vertical-align: middle;
-}
-
-#tsosk-sq-table .tsosk-sq-cell-sql,
-.tsosk-sq-dupe-table .tsosk-sq-cell-sql {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    vertical-align: top;
 }
 
 .tsosk-sq-dupe-table .tsosk-sq-cell-sql .tsosk-sq-sql-code,
@@ -4274,235 +2915,7 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     max-width: 100%;
 }
 
-
-.tsosk-sq-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #f6f7f7;
-    border: 1px solid #e2e4e7;
-    border-radius: 8px;
-    padding: 10px 20px;
-    min-width: 120px;
-    text-align: center;
-}
-
-.tsosk-sq-stat-val {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1d2327;
-    line-height: 1.2;
-}
-
-.tsosk-sq-stat-lbl {
-    font-size: 11px;
-    color: #646970;
-    margin-top: 3px;
-}
-
-.tsosk-sq-warn {
-    color: #d63638 !important;
-    font-weight: 600;
-}
-
-.tsosk-sq-amber {
-    color: #d97706 !important;
-    font-weight: 600;
-}
-
-.tsosk-sq-ok {
-    color: #16a34a !important;
-    font-weight: 600;
-}
-
-.tsosk-sq-filter-label {
-    font-size: 13px;
-}
-
-.tsosk-sq-cell-muted {
-    color: #646970;
-    font-size: 12px;
-}
-
-.tsosk-sq-cell-mono {
-    font-family: Consolas, Monaco, monospace;
-    font-size: 12px;
-}
-
-.tsosk-sq-cell-sql,
-.tsosk-sq-cell-caller {
-    word-break: break-word;
-}
-
-.tsosk-sq-cell-caller {
-    font-size: 11px;
-    color: #646970;
-}
-
-.tsosk-sq-dupe-badge,
-.tsosk-sq-kw-badge {
-    font-size: 10px;
-    margin-right: 4px;
-}
-
-.tsosk-sq-sql-code {
-    font-size: 11px;
-    color: #1d2327;
-    background: none;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    white-space: normal;
-}
-
-.tsosk-sq-query-sql {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.tsosk-sq-batch-badge {
-    font-size: 11px;
-    flex-shrink: 0;
-}
-
-.tsosk-sq-batch-meta {
-    font-size: 11px;
-    color: #646970;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.tsosk-sq-batch-meta-muted {
-    color: #8c8f94;
-}
-
-.tsosk-sq-batch-worst {
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.tsosk-sq-delete-batch-btn {
-    margin-left: auto;
-    flex-shrink: 0;
-}
-
-.tsosk-sq-toggle-icon {
-    font-size: 12px;
-    flex-shrink: 0;
-    color: #646970;
-}
-
-.tsosk-sq-query-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
-}
-
-.tsosk-sq-query-time {
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.tsosk-sq-query-num,
-.tsosk-sq-caller-arrow {
-    font-size: 11px;
-    color: #8c8f94;
-}
-
-.tsosk-sq-page-meta {
-    font-size: 12px;
-    color: #646970;
-}
-
-.tsosk-sq-batch {
-    border: 1px solid #e2e4e7;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    overflow: hidden;
-}
-
-.tsosk-sq-batch-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 8px 12px;
-    background: #f6f7f7;
-    cursor: pointer;
-    border-bottom: 1px solid #e2e4e7;
-}
-
-.tsosk-sq-batch-header:hover {
-    background: #eef0f1;
-}
-
-.tsosk-sq-batch-url {
-    font-family: monospace;
-    font-size: 12px;
-    flex: 1;
-    min-width: 0;
-    word-break: break-all;
-    color: #1d2327;
-}
-
-.tsosk-sq-batch-body {
-    display: none;
-    padding: 0;
-}
-
-.tsosk-sq-batch-body.open {
-    display: block;
-}
-
-.tsosk-sq-query-row {
-    padding: 8px 12px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.tsosk-sq-query-row:last-child {
-    border-bottom: none;
-}
-
-.tsosk-sq-query-sql {
-    font-family: monospace;
-    font-size: 11px;
-    color: #1d2327;
-    word-break: break-all;
-    white-space: pre-wrap;
-    margin: 4px 0;
-    background: #f8f9fa;
-    padding: 6px 8px;
-    border-radius: 3px;
-}
-
-.tsosk-sq-query-caller {
-    font-size: 11px;
-    color: #646970;
-    margin-top: 3px;
-}
-
-.tsosk-sq-slow td {
-    background: #fff8f8 !important;
-}
-
-.tsosk-sq-dupe td {
-    background: #fffbeb !important;
-}
-
-.tsosk-sq-hidden {
-    display: none !important;
-}
-
-#tsosk-sq-filter {
-    font-size: 13px;
-}
-
-/* ══ Options Editor ══════════════════════════════════════════════════════════ */
-
+/*══ Options Editor ══════════════════════════════════════════════════════════*/
 .tsosk-oe-tabs {
     display: flex;
     gap: 4px;
@@ -4550,151 +2963,12 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     border-color: #666;
 }
 
-.tsosk-oe-protected td {
-    opacity: .6;
-}
-
-#tsosk-oe-editor {
-    border-left: 4px solid #f0b849;
-}
-
-.tsosk-oe-sortable {
-    user-select: none;
-}
-
-.tsosk-oe-sortable:hover {
-    background: #f0f0f1;
-}
-
-.tsosk-sort-icon {
-    font-size: 10px;
-    color: #999;
-}
-
-#tsosk-oe-tbody td {
-    color: #1d2327;
-}
-
-#tsosk-oe-tbody .tsosk-code {
-    color: #1d2327;
-}
-
-/* ══ Activity History — module checklist ═════════════════════════════════════ */
-
-.tsosk-history-modules {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 8px 16px;
-    margin: 12px 0 16px;
-    padding: 14px 16px;
-    background: #f6f7f7;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    max-height: 420px;
-    overflow-y: auto;
-}
-
-.tsosk-history-module-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.35;
-}
-
-.tsosk-history-module-row input {
-    margin: 2px 0 0;
-    flex-shrink: 0;
-}
-
-/* ══ Site snapshot import ════════════════════════════════════════════════════ */
-
-.tsosk-snapshot-section-list {
-    list-style: none;
-    margin: 12px 0;
-    padding: 0;
-}
-
 .tsosk-snapshot-section-list li {
     margin-bottom: 6px;
 }
 
-.tsosk-snapshot-import-card {
-    margin-top: 16px;
-    max-width: 720px;
-}
-
-.tsosk-snapshot-import-file {
-    margin: 10px 0 14px;
-    padding: 12px 14px;
-    background: #f6f7f7;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-}
-
-.tsosk-snapshot-file-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-.tsosk-snapshot-file-name {
-    color: #646970;
-    font-size: 13px;
-    word-break: break-all;
-}
-
-.tsosk-snapshot-json-label {
-    display: block;
-    margin: 8px 0 6px;
-}
-
-.tsosk-snapshot-json {
-    width: 100%;
-    min-height: 180px;
-    font-family: Consolas, Monaco, monospace;
-    box-sizing: border-box;
-}
-
-.tsosk-snapshot-import-sections {
-    margin-top: 12px;
-    display: none;
-    padding: 12px;
-}
-
-.tsosk-snapshot-import-sections-desc {
-    margin-top: 0;
-}
-
-.tsosk-snapshot-import-actions {
-    margin-top: 10px;
-}
-
-.tsosk-snapshot-env-diff {
-    margin-top: 12px;
-}
-
 .tsosk-snapshot-env-diff-warn td {
     background: #fff8e5;
-}
-
-/* ══ Email diagnostics ═══════════════════════════════════════════════════════ */
-
-.tsosk-email-smtp-list {
-    margin: 8px 0 0;
-    padding-left: 1.2em;
 }
 
 .tsosk-email-smtp-list li {
@@ -4705,59 +2979,12 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     margin-bottom: 10px;
 }
 
-.tsosk-email-headers {
-    white-space: pre-wrap;
-    display: block;
-}
-
-.tsosk-email-report {
-    font-family: Consolas, Monaco, monospace;
-    font-size: 12px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
 .tsosk-email-history-table code {
     font-size: 11px;
     word-break: break-all;
 }
 
-
-/* ══ View Counter ════════════════════════════════════════════════════════════ */
-
-.tsosk-stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin: 10px 0 20px;
-}
-
-.tsosk-stat-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #f6f7f7;
-    border: 1px solid #e2e4e7;
-    border-radius: 8px;
-    padding: 10px 20px;
-    min-width: 160px;
-    text-align: center;
-}
-
-.tsosk-stat-num {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1d2327;
-    line-height: 1.2;
-}
-
-.tsosk-stat-label {
-    font-size: 11px;
-    color: #646970;
-    margin-top: 3px;
-}
-
-/* View Counter: Top Content tables — never overflow the panel, long URLs wrap (also on mobile). */
+/*View Counter: Top Content tables — never overflow the panel, long URLs wrap (also on mobile).*/
 .tsosk-vc-top-wrap {
     display: flex;
     flex-wrap: wrap;
@@ -4785,126 +3012,25 @@ body > .tsosk-nav-row.tsosk-nav-drag-ghost .tsosk-remove-fav {
     width: 72px;
 }
 
-.tsosk-vc-import-result {
-    max-width: 780px;
-    padding: 8px 12px;
-    background: #f0f6fc;
-    border-left: 4px solid #2271b1;
-}
-
-.tsosk-vc-import-result.is-error {
-    background: #fcf0f1;
-    border-left-color: #d63638;
-}
-
-.tsosk-vc-import-result[hidden] {
-    display: none;
-}
-
-
-/* ── Overview dashboard ─────────────────────────────────────────────────────── */
-.tsosk-dash-hero {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-left-width: 4px;
-    border-radius: 4px;
-    padding: 18px 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
-}
-
 .tsosk-dash-hero.tsosk-dash-ok   { border-left-color: #1a7e34; }
+
 .tsosk-dash-hero.tsosk-dash-warn { border-left-color: #dba617; }
+
 .tsosk-dash-hero.tsosk-dash-crit { border-left-color: #d63638; }
 
-.tsosk-dash-ring {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    flex: 0 0 120px;
-}
-
-.tsosk-dash-ring-bg { stroke: #f0f0f1; }
 .tsosk-dash-ok   .tsosk-dash-ring-fg { stroke: #1a7e34; }
+
 .tsosk-dash-warn .tsosk-dash-ring-fg { stroke: #dba617; }
+
 .tsosk-dash-crit .tsosk-dash-ring-fg { stroke: #d63638; }
-
-.tsosk-dash-ring-num {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    font-weight: 700;
-    color: #1d2327;
-}
-
-.tsosk-dash-hero-text h3 {
-    margin: 0 0 6px;
-    font-size: 20px;
-}
 
 .tsosk-dash-hero-text p {
     margin: 0 0 6px;
     color: #50575e;
 }
 
-.tsosk-dash-meta {
-    font-size: 12px;
-    color: #787c82;
-}
-
 .tsosk-dash-meta .button {
     margin-left: 8px;
-}
-
-.tsosk-dash-tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.tsosk-dash-tile {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    min-height: 112px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 14px;
-    padding: 14px 18px;
-    box-sizing: border-box;
-    transition: background .15s, border-color .15s, box-shadow .15s;
-}
-
-a.tsosk-dash-tile {
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-a.tsosk-dash-tile:hover,
-a.tsosk-dash-tile:focus {
-    background: #eaf3fb;
-    border-color: #2271b1;
-    box-shadow: 0 2px 8px rgba(34, 113, 177, .22);
-    color: inherit;
-    outline: none;
-}
-
-a.tsosk-dash-tile:focus-visible {
-    box-shadow: 0 0 0 2px #2271b1;
-}
-
-.tsosk-dash-tile.is-warn {
-    border-color: #f6c142;
-    background: #fffaf0;
 }
 
 a.tsosk-dash-tile.is-warn:hover,
@@ -4912,41 +3038,6 @@ a.tsosk-dash-tile.is-warn:focus {
     background: #fff1cf;
     border-color: #dba617;
     box-shadow: 0 2px 8px rgba(219, 166, 23, .3);
-}
-
-.tsosk-dash-tile-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #2271b1;
-}
-
-.tsosk-dash-tile.is-warn .tsosk-dash-tile-label {
-    color: #996800;
-}
-
-.tsosk-dash-tile-value {
-    flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 1.2;
-    color: #1d2327;
-}
-
-.tsosk-dash-tile-sub {
-    margin-top: auto;
-    font-size: 12px;
-    color: #646970;
-}
-
-.tsosk-dash-issues,
-.tsosk-dash-activity {
-    list-style: none;
-    margin: 0 0 8px;
-    padding: 0;
 }
 
 .tsosk-dash-issues li,
@@ -4958,97 +3049,11 @@ a.tsosk-dash-tile.is-warn:focus {
     border-bottom: 1px solid #f0f0f1;
 }
 
-.tsosk-dash-issues li:last-child,
-.tsosk-dash-activity li:last-child {
-    border-bottom: 0;
-}
-
-.tsosk-dash-issue-body {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.tsosk-dash-issue-details {
-    display: block;
-    font-size: 12px;
-    color: #646970;
-    white-space: pre-line;
-}
-
-.tsosk-dash-activity-time {
-    font-size: 12px;
-    color: #787c82;
-    white-space: nowrap;
-}
-
-.tsosk-dash-activity li {
-    flex-wrap: wrap;
-}
-
-.tsosk-dash-activity-text {
-    flex: 1 1 220px;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-@media (max-width: 600px) {
-    .tsosk-dash-activity-text {
-        flex-basis: 100%;
-    }
-}
-
-.tsosk-dash-empty {
-    color: #646970;
-    margin: 8px 0 0;
-}
-
-.tsosk-dash-shortcuts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.tsosk-dash-shortcut {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    background: #f6f7f7;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    color: #2271b1;
-    text-decoration: none;
-    font-weight: 500;
-}
-
 .tsosk-dash-shortcut:hover,
 .tsosk-dash-shortcut:focus {
     background: #f0f6fc;
     border-color: #2271b1;
     color: #135e96;
-}
-
-@media (max-width: 600px) {
-    .tsosk-dash-hero {
-        flex-direction: column;
-        text-align: center;
-    }
-    .tsosk-dash-issues li {
-        flex-wrap: wrap;
-    }
-}
-
-/* "Needs attention" row with action buttons (Open tool / Ignore): stacked like the install button. */
-.tsosk-dash-issue-action {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    flex: 0 0 auto;
-    gap: 4px;
 }
 
 .tsosk-dash-issue-action .button {
@@ -5057,7 +3062,7 @@ a.tsosk-dash-tile.is-warn:focus {
     box-sizing: border-box;
 }
 
-/* The progress/result message sits under the button: beside it, it widened the row and pushed the rest around. */
+/*The progress/result message sits under the button: beside it, it widened the row and pushed the rest around.*/
 .tsosk-dash-issue-action .tsosk-um-install-msg {
     max-width: 280px;
     margin: 0;
@@ -5079,23 +3084,16 @@ a.tsosk-dash-tile.is-warn:focus {
 }
 
 @media (max-width: 782px) {
-    .tsosk-dash-issues li.tsosk-dash-issue-updates {
-        flex-wrap: wrap;
-    }
-    .tsosk-dash-issue-action {
-        flex: 1 0 100%;
-        align-items: stretch;
-    }
-    .tsosk-dash-issue-action .button {
-        text-align: center;
-    }
-    .tsosk-dash-issue-action .tsosk-um-install-msg {
-        max-width: none;
-        text-align: left;
-    }
+		.tsosk-dash-issue-action .button {
+	        text-align: center;
+	    }
+		.tsosk-dash-issue-action .tsosk-um-install-msg {
+	        max-width: none;
+	        text-align: left;
+	    }
 }
 
-/* Overview pinned above the favorites list (not draggable, not removable). */
+/*Overview pinned above the favorites list (not draggable, not removable).*/
 .tsosk-sidebar-favorites .tsosk-fav-fixed {
     padding: 0 8px;
     border-bottom: 1px solid #2c3338;
@@ -5106,39 +3104,12 @@ a.tsosk-dash-tile.is-warn:focus {
     pointer-events: auto;
 }
 
-/* Redirects: 404 monitor queue controls, bulk bar and suggested patterns. */
-#tsosk-redirect-skip[hidden],
-#tsosk-redirect-cancel-queue[hidden] {
-	display: none;
-}
-
-.tsosk-404-bulk-bar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-	margin: 0 0 8px;
-}
-
 .tsosk-404-bulk-bar input[type="text"] {
 	max-width: 260px;
 }
 
-.tsosk-404-suggestions {
-	margin: 16px 0;
-}
-
 .tsosk-404-suggestions h4 {
 	margin: 0 0 4px;
-}
-
-/* Redirects: toolbars (shared by the rules list and the 404 monitor). */
-.tsosk-redirect-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-	margin: 0 0 12px;
 }
 
 .tsosk-redirect-filter-bar input[type="search"] {
@@ -5150,50 +3121,10 @@ a.tsosk-dash-tile.is-warn:focus {
 	width: 4.5rem;
 }
 
-.tsosk-redirect-pos {
-	display: inline-block;
-	min-width: 2.2em;
-	margin-right: 4px;
-	color: #646970;
-	font-size: 11px;
-	font-weight: 600;
-}
-
-.tsosk-redirect-move {
-	display: flex;
-	gap: 4px;
-}
-
 #tsosk-redirects-table .tsosk-redirect-move .button {
 	flex: 1 1 0;
 	width: auto;
 	min-width: 0;
-}
-
-/* Rows hidden by the filter: !important because the mobile card layout sets display:block on rows. */
-#tsosk-redirects-table tr.tsosk-row-hidden {
-	display: none !important;
-}
-
-/* Arrows only make sense against the real order, so hide them while a filter or sort is active. */
-#tsosk-redirects-table.tsosk-rules-view-active .tsosk-redirect-move {
-	display: none;
-}
-
-#tsosk-redirect-no-match[hidden] {
-	display: none;
-}
-
-.tsosk-redirect-io textarea {
-	width: 100%;
-	max-width: 100%;
-	box-sizing: border-box;
-	margin: 8px 0;
-}
-
-.tsosk-404-suggestions-wrap {
-	max-width: 100%;
-	overflow-x: auto;
 }
 
 .tsosk-404-suggestions-wrap .tsosk-table {
@@ -5205,227 +3136,100 @@ a.tsosk-dash-tile.is-warn:focus {
 	margin: 0 4px 4px 0;
 }
 
-@media (min-width: 783px) {
-	#tsosk-redirects-table .tsosk-redirect-col-select {
-		width: 2.5rem;
-		text-align: center;
-		vertical-align: top;
-	}
-
-	#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
-		margin: 0;
-	}
-}
-
 @media (max-width: 782px) {
-	/* The table header (with its select-all box) is hidden on phones, so the toolbars carry the controls. */
-	.tsosk-redirect-toolbar .button,
-	.tsosk-404-bulk-bar .button,
-	#tsosk-redirect-skip,
-	#tsosk-redirect-cancel-queue {
-		min-height: 40px;
-		flex: 1 1 calc(50% - 8px);
-		text-align: center;
-	}
-
-	.tsosk-redirect-filter-bar input[type="search"],
-	.tsosk-redirect-filter-bar select,
-	.tsosk-404-bulk-bar input[type="text"] {
-		flex: 1 1 100%;
-		max-width: none;
-		width: 100%;
-		min-height: 40px;
-		box-sizing: border-box;
-	}
-
-	.tsosk-redirect-unused {
-		flex: 1 1 100%;
-	}
-
-	.tsosk-redirect-unused input[type="number"] {
-		min-height: 40px;
-	}
-
-	.tsosk-redirect-io input[type="file"] {
-		flex: 1 1 100%;
-		max-width: 100%;
-	}
-
-	/* Keep the checkbox and its "Select" caption on one line instead of a stretched 2.5rem column. */
-	#tsosk-redirects-table td.tsosk-redirect-col-select,
-	#tsosk-404-table td.tsosk-404-col-select {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 100%;
-		text-align: left;
-	}
-
-	#tsosk-redirects-table td.tsosk-redirect-col-select::before,
-	#tsosk-404-table td.tsosk-404-col-select::before {
-		margin-bottom: 0;
-	}
-
-	#tsosk-redirects-table td.tsosk-redirect-col-select input[type="checkbox"],
-	#tsosk-404-table td.tsosk-404-col-select input[type="checkbox"] {
-		width: 22px;
-		height: 22px;
-		margin: 0;
-	}
-
-	#tsosk-redirects-table .tsosk-redirect-move .button {
-		min-height: 40px;
-	}
-
-	/* Suggested patterns: same card layout as the two main tables. */
-	#tsosk-404-suggestions-table thead {
-		display: none;
-	}
-
-	#tsosk-404-suggestions-table,
-	#tsosk-404-suggestions-table tbody,
-	#tsosk-404-suggestions-table tr,
-	#tsosk-404-suggestions-table td {
-		display: block;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	#tsosk-404-suggestions-table tr {
-		margin: 0 0 12px;
-		padding: 12px;
-		border: 1px solid #dcdcde;
-		border-radius: 4px;
-		background: #fff;
-	}
-
-	#tsosk-404-suggestions-table td {
-		padding: 6px 0;
-		border: 0;
-		overflow-wrap: anywhere;
-	}
-
-	#tsosk-404-suggestions-table td::before {
-		content: attr(data-label);
-		display: block;
-		margin-bottom: 4px;
-		color: #646970;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-	}
-
-	.tsosk-suggestion-actions .button {
-		min-height: 40px;
-	}
+		.tsosk-redirect-toolbar .button,
+		.tsosk-404-bulk-bar .button,
+		#tsosk-redirect-skip,
+		#tsosk-redirect-cancel-queue {
+			min-height: 40px;
+			flex: 1 1 calc(50% - 8px);
+			text-align: center;
+		}
+		.tsosk-redirect-filter-bar input[type="search"],
+		.tsosk-redirect-filter-bar select,
+		.tsosk-404-bulk-bar input[type="text"] {
+			flex: 1 1 100%;
+			max-width: none;
+			width: 100%;
+			min-height: 40px;
+			box-sizing: border-box;
+		}
+		.tsosk-redirect-unused input[type="number"] {
+			min-height: 40px;
+		}
+		.tsosk-redirect-io input[type="file"] {
+			flex: 1 1 100%;
+			max-width: 100%;
+		}
+		#tsosk-redirects-table .tsosk-redirect-move .button {
+			min-height: 40px;
+		}
+		#tsosk-404-suggestions-table,
+		#tsosk-404-suggestions-table tbody,
+		#tsosk-404-suggestions-table tr,
+		#tsosk-404-suggestions-table td {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.tsosk-suggestion-actions .button {
+			min-height: 40px;
+		}
 }
 
-/* 404 monitor: the toolbar sits right above the table it acts on. */
+/*404 monitor: the toolbar sits right above the table it acts on.*/
 .tsosk-404-bulk-bar .tsosk-404-clear-log {
 	margin-left: auto;
 }
 
-#tsosk-404-monitor .tsosk-404-table-wrap-spaced {
-	margin-top: 4px;
-}
-
 @media (max-width: 782px) {
-	.tsosk-404-bulk-bar .tsosk-404-clear-log {
-		margin-left: 0;
-	}
+		.tsosk-404-bulk-bar .tsosk-404-clear-log {
+			margin-left: 0;
+		}
+		.tsosk-table-wrap > .widefat.tsosk-table.tsosk-sm-audit-table {
+			min-width: 0;
+			width: 100%;
+			table-layout: auto;
+		}
+		.tsosk-sm-audit-table thead {
+			display: none;
+		}
+		.tsosk-sm-audit-table,
+		.tsosk-sm-audit-table tbody,
+		.tsosk-sm-audit-table tr,
+		.tsosk-sm-audit-table td {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.tsosk-sm-audit-table tr {
+			margin: 0 0 12px;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #fff;
+		}
+		.tsosk-sm-audit-table td {
+			padding: 6px 0;
+			border: 0;
+		}
+		.tsosk-sm-audit-table td::before {
+			content: attr(data-label);
+			display: block;
+			margin-bottom: 4px;
+			color: #646970;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+		}
+		.tsosk-sm-audit-table td.tsosk-actions .button {
+			min-height: 40px;
+			width: 100%;
+		}
 }
 
-/* Slug Manager: row metadata, problem badges and phone layout. */
-.tsosk-sm-meta {
-	display: block;
-	margin-top: 2px;
-	color: #646970;
-	font-size: 11px;
-	font-weight: 400;
-	overflow-wrap: anywhere;
-}
-
-.tsosk-sm-reason {
-	display: inline-block;
-	margin: 0 4px 4px 0;
-	font-size: 11px;
-	white-space: normal;
-}
-
-.tsosk-sm-audit-table .tsosk-sm-slug-col a {
-	overflow-wrap: anywhere;
-	word-break: break-word;
-}
-
-@media (max-width: 782px) {
-	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-sm-audit-table {
-		min-width: 0;
-		width: 100%;
-		table-layout: auto;
-	}
-
-	.tsosk-sm-audit-table thead {
-		display: none;
-	}
-
-	.tsosk-sm-audit-table,
-	.tsosk-sm-audit-table tbody,
-	.tsosk-sm-audit-table tr,
-	.tsosk-sm-audit-table td {
-		display: block;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	.tsosk-sm-audit-table tr {
-		margin: 0 0 12px;
-		padding: 12px;
-		border: 1px solid #dcdcde;
-		border-radius: 4px;
-		background: #fff;
-	}
-
-	.tsosk-sm-audit-table td {
-		padding: 6px 0;
-		border: 0;
-	}
-
-	.tsosk-sm-audit-table td::before {
-		content: attr(data-label);
-		display: block;
-		margin-bottom: 4px;
-		color: #646970;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-	}
-
-	.tsosk-sm-audit-table td.tsosk-actions .button {
-		min-height: 40px;
-		width: 100%;
-	}
-
-	#tsosk-sm-rename-panel .tsosk-kv-table,
-	#tsosk-sm-rename-panel .tsosk-kv-table tbody,
-	#tsosk-sm-rename-panel .tsosk-kv-table tr,
-	#tsosk-sm-rename-panel .tsosk-kv-table th,
-	#tsosk-sm-rename-panel .tsosk-kv-table td {
-		display: block;
-		width: 100%;
-		max-width: none;
-		box-sizing: border-box;
-	}
-
-	#tsosk-sm-rename-panel input[type="text"] {
-		max-width: none;
-		width: 100%;
-		min-height: 40px;
-	}
-}
-
-/* Media Cleaner: summary cards, pager and phone layout. */
+/*Media Cleaner: summary cards, pager and phone layout.*/
 .tsosk-media-stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -5468,10 +3272,6 @@ a.tsosk-dash-tile.is-warn:focus {
 	border-left-color: #dba617;
 }
 
-.tsosk-media-stat-info {
-	border-left-color: #72aee6;
-}
-
 .tsosk-media-paths code {
 	display: block;
 	background: none;
@@ -5485,12 +3285,7 @@ a.tsosk-dash-tile.is-warn:focus {
 	margin: 0 0 8px;
 }
 
-.tsosk-media-paths {
-	word-break: normal;
-	min-width: 150px;
-}
-
-/* Media tables: stacked buttons keep a gap; only the path may break mid-word (an ID or a title never should). */
+/*Media tables: stacked buttons keep a gap; only the path may break mid-word (an ID or a title never should).*/
 .tsosk-media-table td.tsosk-actions .button {
 	margin: 0 4px 4px 0;
 }
@@ -5519,111 +3314,59 @@ a.tsosk-dash-tile.is-warn:focus {
 	white-space: normal;
 }
 
-.tsosk-media-pager {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-	margin: 12px 0 0;
-}
-
 @media (max-width: 782px) {
-	.tsosk-media-stats {
-		grid-template-columns: repeat(2, 1fr);
-	}
-
-	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-media-table {
-		min-width: 0;
-		width: 100%;
-		table-layout: auto;
-	}
-
-	.tsosk-media-table thead {
-		display: none;
-	}
-
-	.tsosk-media-table,
-	.tsosk-media-table tbody,
-	.tsosk-media-table tr,
-	.tsosk-media-table td {
-		display: block;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	.tsosk-media-table tr {
-		margin: 0 0 12px;
-		padding: 12px;
-		border: 1px solid #dcdcde;
-		border-radius: 4px;
-		background: #fff;
-	}
-
-	.tsosk-media-table td {
-		padding: 6px 0;
-		border: 0;
-		overflow-wrap: anywhere;
-	}
-
-	.tsosk-media-table td::before {
-		content: attr(data-label);
-		display: block;
-		margin-bottom: 4px;
-		color: #646970;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-	}
-
-	.tsosk-media-table td.tsosk-actions .button {
-		min-height: 40px;
-		width: 100%;
-		margin: 0 0 6px;
-	}
-
-	#tsosk-media-full-review,
-	#tsosk-media-full-review-resume {
-		min-height: 40px;
-	}
-
-	.tsosk-media-pager .button {
-		min-height: 40px;
-	}
+		.tsosk-media-stats {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.tsosk-table-wrap > .widefat.tsosk-table.tsosk-media-table {
+			min-width: 0;
+			width: 100%;
+			table-layout: auto;
+		}
+		.tsosk-media-table thead {
+			display: none;
+		}
+		.tsosk-media-table,
+		.tsosk-media-table tbody,
+		.tsosk-media-table tr,
+		.tsosk-media-table td {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.tsosk-media-table tr {
+			margin: 0 0 12px;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #fff;
+		}
+		.tsosk-media-table td {
+			padding: 6px 0;
+			border: 0;
+			overflow-wrap: anywhere;
+		}
+		.tsosk-media-table td::before {
+			content: attr(data-label);
+			display: block;
+			margin-bottom: 4px;
+			color: #646970;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+		}
+		.tsosk-media-table td.tsosk-actions .button {
+			min-height: 40px;
+			width: 100%;
+			margin: 0 0 6px;
+		}
+		.tsosk-media-pager .button {
+			min-height: 40px;
+		}
 }
 
-/* Uploads Disk Footprint: share bars (tables and cards reuse the Media Cleaner classes). */
-.tsosk-share-bar {
-	display: inline-block;
-	width: 90px;
-	height: 8px;
-	margin-right: 6px;
-	border-radius: 4px;
-	background: #dcdcde;
-	vertical-align: middle;
-	overflow: hidden;
-}
-
-.tsosk-share-bar i {
-	display: block;
-	height: 100%;
-	background: #2271b1;
-}
-
-@media (max-width: 782px) {
-	.tsosk-share-bar {
-		width: 60%;
-		max-width: 220px;
-	}
-
-	#tsosk-media-footprint-scan,
-	#tsosk-media-footprint-resume,
-	#tsosk-media-hygiene-scan {
-		min-height: 40px;
-	}
-}
-
-/* Uploads Disk Footprint tables: one width, tight rows, no sideways scroll. */
+/*Uploads Disk Footprint tables: one width, tight rows, no sideways scroll.*/
 .tsosk-table-wrap.tsosk-footprint-wrap {
 	overflow-x: hidden;
 	max-width: 100%;
@@ -5637,21 +3380,6 @@ a.tsosk-dash-tile.is-warn:focus {
 	font-size: 12px;
 	line-height: 1.3;
 }
-
-.tsosk-footprint-table col.tsosk-col-files { width: 78px; }
-.tsosk-footprint-table col.tsosk-col-bytes { width: 88px; }
-.tsosk-footprint-table col.tsosk-col-share { width: 118px; }
-.tsosk-footprint-table col.tsosk-col-type { width: 22%; }
-.tsosk-footprint-table col.tsosk-col-kind { width: 108px; }
-.tsosk-footprint-table col.tsosk-col-library { width: 22%; }
-.tsosk-footprint-table col.tsosk-col-confidence { width: 84px; }
-.tsosk-footprint-table col.tsosk-col-name { width: 22%; }
-.tsosk-footprint-table col.tsosk-col-reason { width: auto; }
-.tsosk-footprint-table col.tsosk-col-action { width: 148px; }
-.tsosk-footprint-table col.tsosk-col-actions { width: 196px; }
-.tsosk-footprint-table col.tsosk-col-when { width: 108px; }
-.tsosk-footprint-table col.tsosk-col-when-long { width: 132px; }
-.tsosk-footprint-table col.tsosk-col-ext { width: 16%; }
 
 .tsosk-footprint-table th,
 .tsosk-footprint-table td {
@@ -5717,41 +3445,22 @@ a.tsosk-dash-tile.is-warn:focus {
 	margin: 1px 4px 1px 0;
 }
 
-.tsosk-footprint-pairs td.tsosk-pair-start,
-.tsosk-footprint-pairs th.tsosk-pair-start {
-	border-left: 1px solid #dcdcde;
-}
-
 @media (max-width: 782px) {
-	.tsosk-table-wrap.tsosk-footprint-wrap > .widefat.tsosk-table.tsosk-footprint-table {
-		min-width: 0;
-		table-layout: auto;
-	}
-
-	.tsosk-footprint-table col {
-		width: auto !important;
-	}
-
-	.tsosk-footprint-table td.tsosk-num,
-	.tsosk-footprint-table td.tsosk-col-share {
-		white-space: normal;
-		text-align: left;
-	}
-
-	.tsosk-footprint-table .tsosk-pair-empty {
-		display: none;
-	}
-
-	.tsosk-footprint-pairs td.tsosk-pair-start {
-		margin-top: 8px;
-		padding-top: 8px;
-		border-left: 0;
-		border-top: 1px solid #f0f0f1;
-	}
+		.tsosk-table-wrap.tsosk-footprint-wrap > .widefat.tsosk-table.tsosk-footprint-table {
+			min-width: 0;
+			table-layout: auto;
+		}
+		.tsosk-footprint-table col {
+			width: auto !important;
+		}
+		.tsosk-footprint-table td.tsosk-num,
+		.tsosk-footprint-table td.tsosk-col-share {
+			white-space: normal;
+			text-align: left;
+		}
 }
 
-
-/* ── Info popover (long explanations out of table cells) ───────────────────── */
+/*── Info popover (long explanations out of table cells) ─────────────────────*/
 .tsosk-info {
     display: inline-block;
     vertical-align: middle;
@@ -5834,346 +3543,86 @@ a.tsosk-dash-tile.is-warn:focus {
     word-break: break-word;
 }
 
-.tsosk-vc-roles {
-	display: grid;
-	grid-template-columns: repeat( auto-fill, minmax( 180px, 1fr ) );
-	gap: 8px 16px;
-	max-width: 720px;
-}
-
-.tsosk-vc-roles label {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin: 0;
-}
-
-.tsosk-dash-trend {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.tsosk-dash-trend svg polyline {
-	fill: none;
-	stroke: #2271b1;
-	stroke-width: 2;
-	stroke-linejoin: round;
-	stroke-linecap: round;
-}
-
-.tsosk-vc-col .tsosk-dash-activity li {
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-}
-
-/* Search & Replace: live table filter */
-.tsosk-sr-table-filter { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .tsosk-sr-table-filter input[type="search"] { min-width: 320px; max-width: 100%; }
-#tsosk-sr-table-list label.tsosk-sr-hidden { display: none !important; }
 
-/* 404 Monitor: live search */
+/*404 Monitor: live search*/
 .tsosk-404-filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 8px; }
+
 .tsosk-404-filter-bar input[type="search"] { min-width: 320px; max-width: 100%; }
-#tsosk-404-table tbody tr.tsosk-404-hidden { display: none; }
 
-/* 404 Monitor: sortable headers (small up/down triangles like WordPress list tables) */
-#tsosk-404-table th.tsosk-th-sortable { cursor: pointer; user-select: none; vertical-align: middle; word-break: normal; overflow-wrap: normal; }
-#tsosk-404-table th.tsosk-th-sortable:hover { background: #f0f0f1; }
-#tsosk-404-table th.tsosk-th-sortable:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
-#tsosk-404-table .tsosk-th-inner { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-#tsosk-404-table .tsosk-sort-ind { display: inline-flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
-#tsosk-404-table .tsosk-sort-ind::before,
-#tsosk-404-table .tsosk-sort-ind::after { content: ""; display: block; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
-#tsosk-404-table .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
-#tsosk-404-table .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
-#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
-#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::after { border-top-color: #2271b1; }
-#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
-#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::after { border-top-color: #dcdcde; }
-#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
-#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
 @media (min-width: 783px) {
-	/* border-box so the widths below are the real column widths (WP adds 10px padding each side). */
-	#tsosk-404-table th,
-	#tsosk-404-table td { box-sizing: border-box; padding-left: 8px; padding-right: 8px; }
-	#tsosk-404-table .tsosk-404-col-select { width: 40px; }
-	#tsosk-404-table .tsosk-404-col-url    { width: 22%; }
-	#tsosk-404-table .tsosk-404-col-visits { width: 80px; }
-	#tsosk-404-table .tsosk-404-col-date   { width: 128px; }
-	#tsosk-404-table .tsosk-404-col-ref    { width: auto; }
-	#tsosk-404-table .tsosk-404-col-ip     { width: 128px; }
-	#tsosk-404-table .tsosk-404-col-action { width: 100px; }
-	/* Long User-Agent strings wrap between words instead of letter by letter. */
-	#tsosk-404-table .tsosk-404-col-ref    { word-break: normal; overflow-wrap: anywhere; min-width: 0; }
+	/*Redirect rules table: fits the page width, small columns keep whole words (no horizontal overflow).*/
+		.tsosk-redirects-table-wrap { overflow-x: auto; }
 }
 
-/* Redirect rules table: fits the page width, small columns keep whole words (no horizontal overflow). */
-@media (min-width: 783px) {
-	.tsosk-redirects-table-wrap { overflow-x: auto; }
-	#tsosk-redirects-table { table-layout: fixed; width: 100%; min-width: 0; }
-	#tsosk-redirects-table th,
-	#tsosk-redirects-table td { box-sizing: border-box; padding-left: 6px; padding-right: 6px; }
-	#tsosk-redirects-table .tsosk-redirect-col-select  { width: 32px; }
-	#tsosk-redirects-table .tsosk-redirect-col-source,
-	#tsosk-redirects-table .tsosk-redirect-col-target  { width: auto; }
-	#tsosk-redirects-table .tsosk-redirect-col-match   { width: 104px; }
-	#tsosk-redirects-table .tsosk-redirect-col-code    { width: 60px; }
-	#tsosk-redirects-table .tsosk-redirect-col-active  { width: 76px; }
-	#tsosk-redirects-table .tsosk-redirect-col-visits  { width: 80px; }
-	#tsosk-redirects-table .tsosk-redirect-col-actions { width: 110px; }
-	#tsosk-redirects-table thead th { word-break: normal; overflow-wrap: normal; hyphens: manual; vertical-align: middle; }
-}
-
-/* Section reached from the finder: brief highlight so it is clear where the jump landed. */
+/*Section reached from the finder: brief highlight so it is clear where the jump landed.*/
 .tsosk-section-flash {
 	animation: tsosk-section-flash 2.8s ease-out 1;
 	border-radius: 8px;
 }
+
 @keyframes tsosk-section-flash {
 	0%, 35% { box-shadow: 0 0 0 3px #2271b1; background-color: #eaf3fb; }
 	100%    { box-shadow: 0 0 0 3px transparent; background-color: transparent; }
 }
+
 @media (prefers-reduced-motion: reduce) {
-	.tsosk-section-flash { animation: none; box-shadow: 0 0 0 3px #2271b1; }
+		.tsosk-section-flash { animation: none; box-shadow: 0 0 0 3px #2271b1; }
 }
 
-/* Comment anti-spam / Redirects / Slow Query / Users / Security: sub-tabs */
+/*Comment anti-spam / Redirects / Slow Query / Users / Security: sub-tabs*/
 .tsosk-cas-tabs,
 .tsosk-rd-tabs,
 .tsosk-sq-tabs,
 .tsosk-sec-tabs,
 .tsosk-users-tabs { margin: 16px 0 12px; padding-bottom: 0; }
+
 .tsosk-sq-panel[hidden],
 .tsosk-cas-panel[hidden],
 .tsosk-rd-panel[hidden],
 .tsosk-sec-panel[hidden],
 .tsosk-users-panel[hidden] { display: none; }
 
-/* Users & Sessions: summary cards, two rows of five. */
-#tsosk-users-summary .tsosk-media-stats {
-	display: grid;
-	grid-template-columns: repeat(5, minmax(0, 1fr));
-	gap: 10px;
-}
-#tsosk-users-summary .tsosk-media-stat {
-	min-width: 0;
-}
-#tsosk-users-summary .tsosk-media-stat span {
-	overflow-wrap: anywhere;
-}
-
-/* Users & Sessions: one card per account. */
-.tsosk-us-grid {
-	display: grid;
-	gap: 12px;
-}
-.tsosk-us-card {
-	min-width: 0;
-	padding: 14px 16px;
-	border: 1px solid #dcdcde;
-	border-radius: 12px;
-	background: #fff;
-	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.05);
-}
-.tsosk-us-card.has-sessions {
-	border-left: 4px solid #2271b1;
-}
-.tsosk-us-card.is-self {
-	background: #f6fafd;
-}
-.tsosk-us-head {
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr) auto;
-	grid-template-areas:
-		"avatar id actions"
-		"avatar chips actions";
-	align-items: center;
-	gap: 4px 12px;
-}
-.tsosk-us-avatar {
-	grid-area: avatar;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: #e8f0fb;
-	color: #2271b1;
-	font-size: 14px;
-	font-weight: 700;
-	letter-spacing: 0.02em;
-}
-.tsosk-us-id {
-	grid-area: id;
-	min-width: 0;
-}
-.tsosk-us-name {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 6px;
-}
 .tsosk-us-name strong {
 	font-size: 15px;
 	overflow-wrap: anywhere;
 }
+
 .tsosk-us-name .tsosk-badge {
 	margin: 0;
 }
-.tsosk-us-email {
-	display: block;
-	color: #646970;
-	font-size: 13px;
-	overflow-wrap: anywhere;
-}
-.tsosk-us-chips {
-	grid-area: chips;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-}
-.tsosk-us-chip {
-	padding: 2px 10px;
-	border-radius: 999px;
-	background: #f0f0f1;
-	color: #50575e;
-	font-size: 12px;
-	line-height: 1.7;
-}
+
 .tsosk-us-chip.is-on {
 	background: #e7f5ea;
 	color: #1a6b2c;
 }
-.tsosk-us-actions {
-	grid-area: actions;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 6px;
-	min-width: 0;
-}
+
 .tsosk-wrap .tsosk-us-actions .button {
 	margin: 0;
 	height: 30px;
 	line-height: 28px;
 	white-space: nowrap;
 }
-.tsosk-us-note {
-	margin: 10px 0 0;
-	color: #646970;
-	font-size: 12px;
-}
-.tsosk-us-sessions {
-	display: grid;
-	gap: 6px;
-	margin: 12px 0 0;
-	padding: 0;
-	list-style: none;
-}
-.tsosk-us-session {
-	display: grid;
-	grid-template-columns: 24px minmax(0, 1.5fr) minmax(0, 1.3fr) auto;
-	align-items: center;
-	gap: 12px;
-	margin: 0;
-	padding: 10px 12px;
-	border: 1px solid transparent;
-	border-radius: 8px;
-	background: #f6f7f7;
-}
-.tsosk-us-session.is-current {
-	border-color: #72aee6;
-	background: #f0f6fc;
-}
+
 .tsosk-us-session .dashicons {
 	color: #646970;
 }
-.tsosk-us-session-main {
-	min-width: 0;
-}
-.tsosk-us-session-ip {
-	display: block;
-	font-family: Consolas, Monaco, monospace;
-	font-size: 13px;
-	font-weight: 600;
-	overflow-wrap: anywhere;
-}
-.tsosk-us-session-ua {
-	display: block;
-	color: #646970;
-	font-size: 12px;
-	overflow-wrap: anywhere;
-}
-.tsosk-us-session-meta {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px 20px;
-	margin: 0;
-}
-.tsosk-us-session-meta dt {
-	color: #646970;
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
-}
-.tsosk-us-session-meta dd {
-	margin: 0;
-	font-size: 13px;
-}
-.tsosk-us-session-action {
-	text-align: right;
-}
+
 .tsosk-us-session-action .tsosk-badge {
 	margin: 0;
 }
 
-/* Users & Sessions: shared toolbar pieces. */
-.tsosk-users-directory-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-}
 .tsosk-users-directory-toolbar .regular-text {
 	margin: 0;
 }
-.tsosk-users-directory-search {
-	margin: 0 0 8px;
-}
+
 .tsosk-users-directory-search input[type="search"] {
 	display: block;
 	width: 100%;
 	max-width: none;
 	box-sizing: border-box;
 }
-.tsosk-users-more-wrap {
-	margin: 12px 0 0;
-}
-#tsosk-users-more[hidden] {
-	display: none;
-}
-.tsosk-users-days-row {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 8px;
-}
 
-/* All users table: one bar header, columns that never overlap. */
-.tsosk-users-directory-wrap {
-	padding-top: 6px;
-}
-.tsosk-users-directory-table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: separate;
-	border-spacing: 0;
-}
 .tsosk-users-directory-table th,
 .tsosk-users-directory-table td {
 	box-sizing: border-box;
@@ -6182,117 +3631,26 @@ a.tsosk-dash-tile.is-warn:focus {
 	overflow-wrap: anywhere;
 	word-break: normal;
 }
-.tsosk-users-directory-table tbody td {
-	padding: 10px 8px;
-	border-bottom: 1px solid #f0f0f1;
-}
+
 .tsosk-users-directory-table .tsosk-users-col-check { width: 44px; text-align: center; }
+
 .tsosk-users-directory-table .tsosk-users-col-user { width: 16%; }
+
 .tsosk-users-directory-table .tsosk-users-col-email { width: 20%; }
+
 .tsosk-users-directory-table .tsosk-users-col-role { width: 13%; }
+
 .tsosk-users-directory-table .tsosk-users-col-registered { width: 11%; }
+
 .tsosk-users-directory-table .tsosk-users-col-last { width: 11%; }
+
 .tsosk-users-directory-table .tsosk-users-col-actions { width: auto; }
-.tsosk-users-directory-table tbody td:last-child {
-	background: #f6f7f7;
-}
-.tsosk-users-dn {
-	display: block;
-	margin-bottom: 2px;
-	font-weight: 600;
-}
-.tsosk-users-directory-table .tsosk-users-col-user code {
-	display: inline-block;
-	max-width: 100%;
-}
+
 .tsosk-users-directory-table .tsosk-users-col-user .tsosk-badge {
 	display: inline-block;
 	margin: 4px 0 0;
 }
-#tsosk-users-all-table.widefat thead th,
-#tsosk-users-all-table.widefat thead td {
-	padding: 0;
-	background: #fff;
-	border-top: 1px solid #dcdcde;
-	border-bottom: 1px solid #dcdcde;
-	vertical-align: middle;
-	box-shadow: none;
-}
-#tsosk-users-all-table.widefat thead th:first-child {
-	border-left: 1px solid #dcdcde;
-	border-radius: 8px 0 0 8px;
-}
-#tsosk-users-all-table.widefat thead th:last-child {
-	border-right: 1px solid #dcdcde;
-	border-radius: 0 8px 8px 0;
-}
-.tsosk-users-col-select {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 6px;
-	width: 100%;
-	min-height: 44px;
-	margin: 0;
-	padding: 6px 8px;
-	box-sizing: border-box;
-	border: 0;
-	border-radius: 0;
-	background: transparent;
-	box-shadow: none;
-	color: #1d2327;
-	font-family: inherit;
-	font-size: 12px;
-	font-weight: 600;
-	line-height: 1.2;
-	text-align: left;
-	cursor: pointer;
-	appearance: none;
-}
-.tsosk-users-col-select-static {
-	cursor: default;
-}
-.tsosk-users-col-select-check {
-	justify-content: center;
-	padding: 6px 4px;
-}
-.tsosk-users-col-label {
-	min-width: 0;
-	white-space: normal;
-}
-button.tsosk-users-col-select:hover,
-button.tsosk-users-col-select:focus {
-	background: #f0f6fc;
-	color: #135e96;
-	box-shadow: none;
-	outline: none;
-}
-button.tsosk-users-col-select.is-sorted {
-	background: #f0f6fc;
-	color: #135e96;
-	box-shadow: inset 0 -2px 0 #2271b1;
-}
-.tsosk-users-col-select .tsosk-sort-ind {
-	display: inline-flex;
-	flex-direction: column;
-	gap: 2px;
-	flex: 0 0 auto;
-}
-.tsosk-users-col-select .tsosk-sort-ind::before,
-.tsosk-users-col-select .tsosk-sort-ind::after {
-	content: "";
-	display: block;
-	width: 0;
-	height: 0;
-	border-left: 4px solid transparent;
-	border-right: 4px solid transparent;
-}
-.tsosk-users-col-select .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
-.tsosk-users-col-select .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
-button.tsosk-users-col-select.is-sorted:not(.is-desc) .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
-button.tsosk-users-col-select.is-sorted:not(.is-desc) .tsosk-sort-ind::after { border-top-color: #dcdcde; }
-button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
-button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
+
 .tsosk-wrap .tsosk-users-row-actions .button {
 	display: block;
 	width: 100%;
@@ -6304,149 +3662,60 @@ button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::before { border
 	white-space: normal;
 }
 
-@media (max-width: 960px) {
-	#tsosk-users-summary .tsosk-media-stats {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-	}
-}
-
 @media (max-width: 782px) {
-	#tsosk-users-summary .tsosk-media-stats {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-	.tsosk-us-head {
-		grid-template-columns: auto minmax(0, 1fr);
-		grid-template-areas:
-			"avatar id"
-			"chips chips"
-			"actions actions";
-	}
-	.tsosk-us-actions {
-		justify-content: flex-start;
-	}
-	.tsosk-wrap .tsosk-us-actions .button {
-		width: 100%;
-		height: auto;
-		line-height: 1.4;
-		padding-top: 6px;
-		padding-bottom: 6px;
-		white-space: normal;
-	}
-	.tsosk-us-session {
-		grid-template-columns: 24px minmax(0, 1fr);
-	}
-	.tsosk-us-session-meta,
-	.tsosk-us-session-action {
-		grid-column: 1 / -1;
-	}
-	.tsosk-us-session-action {
-		text-align: left;
-	}
-	.tsosk-us-session-action .button {
-		width: 100%;
-		text-align: center;
-	}
-	.tsosk-table-wrap > .widefat.tsosk-table.tsosk-users-table {
-		min-width: 0;
-		width: 100%;
-		table-layout: auto;
-	}
-	#tsosk-users-all-table {
-		display: block;
-	}
-	.tsosk-users-stack-table thead {
-		display: none;
-	}
-	.tsosk-users-stack-table,
-	.tsosk-users-stack-table tbody,
-	.tsosk-users-stack-table tr,
-	.tsosk-users-stack-table td,
-	#tsosk-users-all-table tbody,
-	#tsosk-users-all-table tbody tr,
-	#tsosk-users-all-table tbody td {
-		display: block;
-		width: 100%;
-		box-sizing: border-box;
-	}
-	.tsosk-users-stack-table tr,
-	#tsosk-users-all-table tbody tr {
-		margin: 0 0 12px;
-		padding: 12px;
-		border: 1px solid #dcdcde;
-		border-radius: 8px;
-		background: #fff;
-		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
-	}
-	.tsosk-users-stack-table td,
-	#tsosk-users-all-table tbody td {
-		padding: 6px 0;
-		border: 0;
-		overflow-wrap: anywhere;
-	}
-	#tsosk-users-all-table tbody td:last-child {
-		background: transparent;
-	}
-	.tsosk-users-stack-table td::before,
-	#tsosk-users-all-table tbody td::before {
-		content: attr(data-label);
-		display: block;
-		margin-bottom: 4px;
-		color: #646970;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-	}
-	#tsosk-users-all-table thead,
-	#tsosk-users-all-table thead tr {
-		display: flex;
-		flex-wrap: nowrap;
-		gap: 0;
-		overflow-x: auto;
-	}
-	#tsosk-users-all-table thead th {
-		display: block;
-		flex: 1 0 auto;
-		width: auto !important;
-		padding: 0;
-		border-radius: 0;
-	}
-	#tsosk-users-all-table thead th:first-child {
-		border-radius: 8px 0 0 8px;
-	}
-	#tsosk-users-all-table thead th:last-child {
-		border-radius: 0 8px 8px 0;
-	}
-	#tsosk-users-all-table thead th.tsosk-users-col-check {
-		flex: 0 0 auto;
-	}
-	#tsosk-users-all-table thead th.tsosk-users-col-actions {
-		display: none;
-	}
-	.tsosk-wrap .tsosk-users-row-actions .button {
-		margin: 0 0 6px;
-	}
-}
-
-/* Roles & capabilities */
-.tsosk-roles-guide-list {
-	margin: 0 0 10px 18px;
-	list-style: disc;
+		.tsosk-wrap .tsosk-us-actions .button {
+			width: 100%;
+			height: auto;
+			line-height: 1.4;
+			padding-top: 6px;
+			padding-bottom: 6px;
+			white-space: normal;
+		}
+		.tsosk-us-session-action .button {
+			width: 100%;
+			text-align: center;
+		}
+		.tsosk-table-wrap > .widefat.tsosk-table.tsosk-users-table {
+			min-width: 0;
+			width: 100%;
+			table-layout: auto;
+		}
+		.tsosk-users-stack-table thead {
+			display: none;
+		}
+		.tsosk-users-stack-table,
+		.tsosk-users-stack-table tbody,
+		.tsosk-users-stack-table tr,
+		.tsosk-users-stack-table td,
+		#tsosk-users-all-table tbody,
+		#tsosk-users-all-table tbody tr,
+		#tsosk-users-all-table tbody td {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.tsosk-users-stack-table tr,
+		#tsosk-users-all-table tbody tr {
+			margin: 0 0 12px;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 8px;
+			background: #fff;
+			box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
+		}
+		.tsosk-users-stack-table td,
+		#tsosk-users-all-table tbody td {
+			padding: 6px 0;
+			border: 0;
+			overflow-wrap: anywhere;
+		}
+		.tsosk-wrap .tsosk-users-row-actions .button {
+			margin: 0 0 6px;
+		}
 }
 
 .tsosk-roles-guide-list li {
 	margin-bottom: 4px;
-}
-
-.tsosk-roles-info {
-	margin: 0;
-	font-weight: 600;
-}
-
-.tsosk-roles-add {
-	margin-top: 16px;
-	padding-top: 12px;
-	border-top: 1px solid #f0f0f1;
 }
 
 .tsosk-roles-add h4 {
@@ -6454,407 +3723,59 @@ button.tsosk-users-col-select.is-sorted.is-desc .tsosk-sort-ind::before { border
 	font-size: 13px;
 }
 
-.tsosk-roles-adminonly {
-	margin-top: 12px;
-	padding: 8px 12px;
-	background: #f6f7f7;
-	border-left: 4px solid #8c8f94;
-}
-
-.tsosk-roles-adminonly[hidden] {
-	display: none;
-}
-
-.tsosk-roles-table td:first-child {
-	white-space: nowrap;
-}
-
-.tsosk-roles-compare-out {
-	display: none;
-	margin-top: 10px;
-	white-space: pre-wrap;
-}
-
-details.tsosk-roles-blocked {
-	padding: 12px 20px;
-}
-
-details.tsosk-roles-blocked summary {
-	cursor: pointer;
-	font-weight: 600;
-}
-
-.tsosk-users-sess-badge {
-	display: block;
-	margin-top: 2px;
-	font-size: 11px;
-	line-height: 1.4;
-	color: #2271b1;
-}
-
-.tsosk-users-select-note {
-	margin: 6px 0;
-	padding: 8px 12px;
-	background: #f0f6fc;
-	border: 1px solid #c5d9ed;
-	border-radius: 6px;
-	text-align: center;
-}
-
-.tsosk-users-select-note[hidden] {
-	display: none;
-}
-
-.tsosk-users-undo-btn {
-	margin-left: 8px;
-}
-
-/* Users directory: scroll sideways on narrow desktop widths instead of squeezing the columns. */
-@media (min-width: 783px) {
-	#tsosk-users-all-table.tsosk-users-directory-table {
-		min-width: 760px;
-	}
-}
-
-/* Comment anti-spam: daily blocks chart */
-.tsosk-cas-chart { display: flex; align-items: flex-end; gap: 4px; height: 70px; max-width: 480px; }
-.tsosk-cas-bar { flex: 1; min-width: 6px; background: #2271b1; border-radius: 2px 2px 0 0; }
-.tsosk-cas-bar-empty { background: #c3c4c7; }
-
-/* Update Manager: status table stacks on narrow screens instead of overflowing its card. */
-@media (max-width: 782px) {
-    .tsosk-um-status-table {
-        display: block;
-        width: 100%;
-        min-width: 0;
-    }
-
-    .tsosk-um-status-table thead {
-        display: none;
-    }
-
-    .tsosk-um-status-table tbody,
-    .tsosk-um-status-table tr,
-    .tsosk-um-status-table td {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .tsosk-um-status-table tr {
-        padding: 8px 0;
-        border-bottom: 1px solid #e0e0e0;
-    }
-
-    .tsosk-um-status-table tr:last-child {
-        border-bottom: 0;
-    }
-
-    .tsosk-um-status-table td {
-        padding: 2px 10px;
-        border: 0;
-        overflow-wrap: anywhere;
-    }
-
-    .tsosk-um-status-table td:first-child {
-        font-weight: 600;
-    }
-}
-
-/* Data tables: long paths, URLs and keys in code cells wrap instead of widening the table past its card. */
+/*Data tables: long paths, URLs and keys in code cells wrap instead of widening the table past its card.*/
 .tsosk-table td.tsosk-code,
 .tsosk-table td code {
     overflow-wrap: anywhere;
 }
 
-/* ── Plugin & Theme Leftovers ─────────────────────────────────────────────── */
-.tsosk-lo-card {
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    margin: 12px 0;
-    background: #fff;
+.tsosk-cas-table th:nth-child(4),
+.tsosk-cas-table td:nth-child(4) {
+    min-width: 110px;
 }
-
-.tsosk-lo-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-    padding: 10px 12px;
-    border-bottom: 1px solid #dcdcde;
-}
-
-.tsosk-lo-slug {
-    font-size: 14px;
-}
-
-.tsosk-lo-ni {
-    color: #646970;
-    font-size: 12px;
-}
-
-.tsosk-lo-allwrap {
-    margin-left: auto;
-    font-size: 12px;
-}
-
-.tsosk-lo-scroll {
-    overflow-x: auto;
-}
-
-.tsosk-lo-table {
-    border: 0;
-    box-shadow: none;
-    table-layout: fixed;
-    min-width: 560px;
-}
-
-.tsosk-lo-table th:nth-child(1),
-.tsosk-lo-table td:nth-child(1) { width: 92px; }
-.tsosk-lo-table th:nth-child(2),
-.tsosk-lo-table td:nth-child(2) { width: 14%; }
-.tsosk-lo-table th:nth-child(3),
-.tsosk-lo-table td:nth-child(3) { width: 24%; }
-.tsosk-lo-table th:nth-child(4),
-.tsosk-lo-table td:nth-child(4) { width: 18%; }
 
 .tsosk-lo-table td {
     vertical-align: top;
     word-break: break-all;
 }
 
-.tsosk-lo-note {
-    color: #646970;
-    font-size: 12px;
-    line-height: 1.3;
-}
-
-.tsosk-lo-links {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-top: 4px;
-    font-size: 12px;
-}
-
-.tsosk-lo-posts-note {
-    padding: 0 12px 10px;
-    margin: 0;
-}
-
-#tsosk-lo-actions {
-    position: sticky;
-    bottom: 0;
-    padding: 10px 0;
-    background: #fff;
-    border-top: 1px solid #dcdcde;
-}
-
 .tsosk-lo-peek td {
     background: #f6f7f7;
 }
 
-.tsosk-lo-peek-row {
-    margin-bottom: 8px;
-    font-size: 12px;
-}
-
-.tsosk-lo-excerpt {
-    display: block;
-    margin-top: 2px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 140px;
-    overflow: auto;
-}
-
-/* Leftovers: clear split between deletable and information-only items. */
-.tsosk-lo-section { margin: 22px 0 8px; }
 .tsosk-card .tsosk-lo-section-title { margin: 0 0 8px; padding: 16px 20px; font-size: 20px; line-height: 1.3; font-weight: 700; text-align: center; letter-spacing: 0.2px; color: #fff; background: #1e8c3a; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
-.tsosk-card .tsosk-lo-section--info .tsosk-lo-section-title { background: #b45309; }
+
 .tsosk-lo-section > .description { margin: 0 0 14px; text-align: center; font-size: 13px; }
-.tsosk-lo-section--del .tsosk-lo-card { border-color: #1e8c3a; border-left: 5px solid #1e8c3a; }
-.tsosk-lo-section--del .tsosk-lo-head { background: #eaf6ed; }
-.tsosk-lo-section--info .tsosk-lo-card, .tsosk-lo-card--info { border-color: #b45309; border-left: 5px solid #b45309; background: #fffaf2; }
-.tsosk-lo-section--info .tsosk-lo-head, .tsosk-lo-card--info .tsosk-lo-head { background: #fdf0dc; }
-.tsosk-lo-lock { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #fde3b8; color: #8a4b00; font-size: 11px; line-height: 1.3; white-space: normal; word-break: normal; }
+
 .tsosk-lo-row--locked td { color: #646970; }
 
-/* URL & HTTPS Doctor: two clear columns, hint under the result. */
-.tsosk-ud-table { table-layout: fixed; }
-.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 36%; }
 .tsosk-ud-table td { vertical-align: middle; line-height: 1.5; }
-.tsosk-ud-check { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+
 .tsosk-ud-check .tsosk-badge { display: inline-block; min-width: 74px; margin: 0; text-align: center; }
-.tsosk-ud-check strong { flex: 0 1 auto; }
-.tsosk-ud-hint { display: block; margin-top: 4px; color: #646970; font-size: 12px; }
-@media (max-width: 782px) {
-	.tsosk-ud-table th.tsosk-ud-c-check, .tsosk-ud-table td.tsosk-ud-c-check { width: 42%; }
-}
 
-/* Delete bar sits at the top of the green block, so it is always where the deletable items are. */
-.tsosk-lo-section--del #tsosk-lo-actions { position: static; margin: 0 0 12px; padding: 10px 14px; border: 1px solid #1e8c3a; border-radius: 6px; background: #eaf6ed; text-align: center; }
-.tsosk-lo-section--del #tsosk-lo-actions .button { min-width: 200px; }
-
-/* Rows already deleted stay listed (greyed) until the next scan. */
+/*Rows already deleted stay listed (greyed) until the next scan.*/
 .tsosk-lo-row--done td { color: #8c8f94; text-decoration: line-through; background: #f6f7f7; }
+
 .tsosk-lo-row--done td:first-child { text-decoration: none; }
+
 .tsosk-lo-done { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #d7efdd; color: #1e6b34; font-size: 11px; line-height: 1.3; text-decoration: none; }
 
-/* "Is this key used?" check inside the peek row. */
-.tsosk-lo-usage { margin-top: 10px; }
-.tsosk-lo-usage-out { margin-top: 8px; }
-.tsosk-lo-usage-out p { margin: 6px 0; }
-.tsosk-lo-usage-ok { color: #1e6b34; }
-.tsosk-lo-usage-bad { color: #8a4b00; }
-
-/* Leftovers: backups panel. */
-.tsosk-lo-bk { border: 1px solid #dcdcde; border-radius: 4px; margin: 10px 0; background: #fff; }
-.tsosk-lo-bk > summary { cursor: pointer; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
-.tsosk-lo-bk[open] > summary { border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
-.tsosk-lo-bk-user { color: #646970; font-size: 12px; }
-.tsosk-lo-bk-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 12px; }
 .tsosk-lo-bk .tsosk-lo-scroll { margin: 0 12px 12px; max-height: 320px; overflow: auto; }
+
 .tsosk-lo-bk .description { margin: 0 12px 12px; }
-.tsosk-lo-why { margin: 6px 0; padding: 8px 10px; background: #fff7e6; border-left: 3px solid #b45309; color: #3c434a; }
 
-#tsosk-sq-live-dupe-panel,
-#tsosk-sq-live-viewer,
-#tsosk-sq-last-request,
-#tsosk-sq-last-dupes,
-#tsosk-sq-last-slow {
-    scroll-margin-top: 48px;
+/*── Table fit fixes (desktop + mobile) ───────────────────────────────────────
+   Wide tables scroll horizontally inside their own wrapper instead of being clipped or crushed.*/
+.tsosk-table-wrap:has(> .tsosk-sq-patterns-table),
+.tsosk-table-wrap:has(> .tsosk-sq-dupe-table),
+.tsosk-table-wrap:has(> #tsosk-sq-table),
+.tsosk-redirects-table-wrap,
+.tsosk-404-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Slow Query Monitor: summary cards, centred and clear of the tab bar. */
-.tsosk-sq-stats {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 24px 0 20px;
-}
-
-/* Custom 404: "Show the failed URL on the page" steps and shortcode cards */
-.tsosk-404-steps {
-    list-style: none;
-    margin: 4px 0 18px;
-    padding: 0;
-    counter-reset: tsosk404step;
-}
-
-.tsosk-404-steps li {
-    counter-increment: tsosk404step;
-    position: relative;
-    margin: 0 0 10px;
-    padding: 2px 0 2px 38px;
-    line-height: 1.5;
-    min-height: 26px;
-}
-
-.tsosk-404-steps li::before {
-    content: counter(tsosk404step);
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #2271b1;
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 26px;
-    text-align: center;
-}
-
-.tsosk-404-sc-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 14px;
-}
-
-.tsosk-404-sc {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 14px;
-    border: 1px solid #dcdcde;
-    border-radius: 6px;
-    background: #fff;
-}
-
-.tsosk-404-sc h4 {
-    margin: 0;
-    font-size: 14px;
-}
-
-.tsosk-404-sc .description {
-    margin: 0;
-}
-
-.tsosk-404-sc-code {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px 8px;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    background: #f6f7f7;
-}
-
-.tsosk-404-sc-code code {
-    background: none;
-    padding: 0;
-    margin: 0;
-    font-size: 12px;
-    word-break: normal;
-    overflow-wrap: break-word;
-}
-
-.tsosk-404-sc-result {
-    margin-top: auto;
-    padding: 8px 10px;
-    border-left: 3px solid #2271b1;
-    background: #f0f6fc;
-    border-radius: 0 4px 4px 0;
-}
-
-.tsosk-404-sc-result span {
-    display: block;
-    margin-bottom: 2px;
-    color: #646970;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.tsosk-404-sc-result strong {
-    font-size: 13px;
-    font-weight: 600;
-    word-break: normal;
-    overflow-wrap: anywhere;
-}
-
-/* Maintenance mode: colour pickers */
-.tsosk-maint-colors {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 22px;
-}
-
-.tsosk-maint-color {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.tsosk-maint-color input[type="color"] {
-    width: 44px;
-    height: 32px;
-    padding: 2px;
-    cursor: pointer;
+.tsosk-lo-bk-table td:nth-child(3) {
+    min-width: 200px;
 }
 

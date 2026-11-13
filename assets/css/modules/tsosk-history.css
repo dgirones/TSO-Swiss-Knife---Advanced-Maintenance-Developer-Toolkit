@@ -1,0 +1,86 @@
+/*── Activity History details ───────────────────────────────────────────────*/
+.tsosk-history-count {
+    margin-left: 8px;
+    font-size: 12px;
+}
+
+.tsosk-history-empty {
+    color: #646970;
+    margin-top: 12px;
+}
+
+.tsosk-history-actions {
+    margin: 12px 0;
+}
+
+.tsosk-history-col-date {
+    width: 130px;
+}
+
+.tsosk-history-col-tool {
+    width: 16%;
+}
+
+.tsosk-history-col-action {
+    width: 90px;
+}
+
+.tsosk-history-col-user {
+    width: 80px;
+}
+
+.tsosk-history-col-undo {
+    width: 90px;
+}
+
+.tsosk-history-undo {
+    text-align: right;
+}
+
+.tsosk-history-date,
+.tsosk-history-user {
+    white-space: nowrap;
+    font-size: 12px;
+}
+
+.tsosk-history-summary {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.tsosk-history-details {
+    display: block;
+    margin-top: 4px;
+    color: #646970;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+/*══ Activity History — module checklist ═════════════════════════════════════*/
+.tsosk-history-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px 16px;
+    margin: 12px 0 16px;
+    padding: 14px 16px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.tsosk-history-module-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.tsosk-history-module-row input {
+    margin: 2px 0 0;
+    flex-shrink: 0;
+}
+

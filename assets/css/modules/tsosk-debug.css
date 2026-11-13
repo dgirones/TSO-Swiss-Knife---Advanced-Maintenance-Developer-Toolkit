@@ -1,0 +1,133 @@
+.tsosk-dev-mode-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tsosk-debug-advanced {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #dcdcde;
+}
+
+.tsosk-log-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.tsosk-log-line {
+    padding: 2px 0 2px 8px;
+    border-left: 3px solid transparent;
+}
+
+.tsosk-log-line[data-level="error"] {
+    border-left-color: #d63638;
+}
+
+.tsosk-log-line[data-level="warning"] {
+    border-left-color: #dba617;
+}
+
+.tsosk-log-line[data-level="deprecated"],
+.tsosk-log-line[data-level="notice"] {
+    border-left-color: #72aee6;
+}
+
+.tsosk-dflags-head {
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #646970;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.tsosk-dflags-row + .tsosk-dflags-row {
+    border-top: 1px solid #f0f0f1;
+}
+
+.tsosk-dflags-row:hover {
+    background: #fbfbfc;
+}
+
+.tsosk-dflags-row.tsosk-flag-mismatch {
+    border-left: 3px solid #d97706;
+    padding-left: 13px;
+    background: #fffbeb;
+    border-radius: 0;
+}
+
+.tsosk-dflags-src-none   { background: none; border: none; color: #a7aaad; }
+
+@media (max-width: 782px) {
+		.tsosk-dflags-head { display: none; }
+		.tsosk-dflags-row {
+	        display: flex;
+	        flex-wrap: wrap;
+	        gap: 8px 10px;
+	    }
+		.tsosk-dflags-name { flex: 1 0 100%; }
+}
+
+/*── Debug: log help notice ─────────────────────────────────────────*/
+.tsosk-log-help-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tsosk-log-help-tip {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #c5e3ef;
+    border-radius: 4px;
+}
+
+.tsosk-log-help-tip-title {
+    margin: 0 0 8px;
+}
+
+.tsosk-log-help-steps {
+    margin: 0 0 0 18px;
+    padding: 0;
+}
+
+.tsosk-log-snippet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 2px;
+}
+
+.tsosk-log-snippet pre {
+    flex: 1 1 320px;
+    min-width: 0;
+    margin: 0;
+    padding: 8px 10px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: all;
+}
+
+
+/* Preset snippet block (was an inline style) */
+.tsosk-debug-advanced pre.tsosk-code {
+	margin: 0;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	overflow: auto;
+	white-space: pre;
+}

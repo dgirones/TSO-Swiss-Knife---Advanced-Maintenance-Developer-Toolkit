@@ -1,0 +1,384 @@
+/*── Plugin & Theme Leftovers ───────────────────────────────────────────────*/
+.tsosk-lo-card {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    margin: 12px 0;
+    background: #fff;
+}
+
+.tsosk-lo-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.tsosk-lo-slug {
+    font-size: 14px;
+}
+
+.tsosk-lo-ni {
+    color: #646970;
+    font-size: 12px;
+}
+
+.tsosk-lo-allwrap {
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.tsosk-lo-scroll {
+    overflow-x: auto;
+}
+
+.tsosk-lo-table {
+    border: 0;
+    box-shadow: none;
+    table-layout: fixed;
+    min-width: 0;
+}
+
+.tsosk-lo-table th,
+.tsosk-lo-table td {
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.tsosk-lo-table th:nth-child(1),
+.tsosk-lo-table td:nth-child(1) { width: 92px; }
+
+.tsosk-lo-table th:nth-child(2),
+.tsosk-lo-table td:nth-child(2) { width: 14%; }
+
+.tsosk-lo-table th:nth-child(3),
+.tsosk-lo-table td:nth-child(3) { width: 24%; }
+
+.tsosk-lo-table th:nth-child(4),
+.tsosk-lo-table td:nth-child(4) { width: 18%; }
+
+.tsosk-lo-note {
+    color: #646970;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.tsosk-lo-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.tsosk-lo-posts-note {
+    padding: 0 12px 10px;
+    margin: 0;
+}
+
+#tsosk-lo-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0;
+    background: #fff;
+    border-top: 1px solid #dcdcde;
+}
+
+.tsosk-lo-peek-row {
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.tsosk-lo-excerpt {
+    display: block;
+    margin-top: 2px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 140px;
+    overflow: auto;
+}
+
+/*Leftovers: clear split between deletable and information-only items.*/
+.tsosk-lo-section { margin: 22px 0 8px; }
+
+.tsosk-card .tsosk-lo-section--info .tsosk-lo-section-title { background: #b45309; }
+
+.tsosk-lo-section--del .tsosk-lo-card { border-color: #1e8c3a; border-left: 5px solid #1e8c3a; }
+
+.tsosk-lo-section--del .tsosk-lo-head { background: #eaf6ed; }
+
+.tsosk-lo-section--info .tsosk-lo-card, .tsosk-lo-card--info { border-color: #b45309; border-left: 5px solid #b45309; background: #fffaf2; }
+
+.tsosk-lo-section--info .tsosk-lo-head, .tsosk-lo-card--info .tsosk-lo-head { background: #fdf0dc; }
+
+.tsosk-lo-lock { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #fde3b8; color: #8a4b00; font-size: 11px; line-height: 1.3; white-space: normal; word-break: normal; }
+
+/*Delete bar sits at the top of the green block, so it is always where the deletable items are.*/
+.tsosk-lo-section--del #tsosk-lo-actions { position: static; margin: 0 0 12px; padding: 10px 14px; border: 1px solid #1e8c3a; border-radius: 6px; background: #eaf6ed; text-align: center; }
+
+.tsosk-lo-section--del #tsosk-lo-actions .button { min-width: 200px; }
+
+/*"Is this key used?" check inside the peek row.*/
+.tsosk-lo-usage { margin-top: 10px; }
+
+.tsosk-lo-usage-out { margin-top: 8px; }
+
+.tsosk-lo-usage-out p { margin: 6px 0; }
+
+.tsosk-lo-usage-ok { color: #1e6b34; }
+
+.tsosk-lo-usage-bad { color: #8a4b00; }
+
+/*Leftovers: backups panel.*/
+.tsosk-lo-bk { border: 1px solid #dcdcde; border-radius: 4px; margin: 10px 0; background: #fff; }
+
+.tsosk-lo-bk > summary { cursor: pointer; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+
+.tsosk-lo-bk[open] > summary { border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
+
+.tsosk-lo-bk-user { color: #646970; font-size: 12px; }
+
+.tsosk-lo-bk-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 12px; }
+
+.tsosk-lo-why { margin: 6px 0; padding: 8px 10px; background: #fff7e6; border-left: 3px solid #b45309; color: #3c434a; }
+
+/*Leftovers backup rows: the key column keeps a readable width (long keys wrap at "-", "_" or anywhere) and the table scrolls inside its box.*/
+.tsosk-lo-bk-table {
+    min-width: 0;
+    table-layout: auto;
+}
+
+.tsosk-lo-bk-table td code {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.tsosk-lo-bk-table th,
+.tsosk-lo-bk-table td {
+    vertical-align: top;
+}
+
+/* Phones: the scan results stack as cards instead of a wide table that scrolls sideways. */
+@media (max-width: 782px) {
+    .tsosk-lo-table {
+        min-width: 0;
+        table-layout: auto;
+    }
+
+    .tsosk-lo-table thead {
+        display: none;
+    }
+
+    .tsosk-lo-table,
+    .tsosk-lo-table tbody,
+    .tsosk-lo-table tr,
+    .tsosk-lo-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tsosk-lo-table th:nth-child(n),
+    .tsosk-lo-table td:nth-child(n) {
+        width: 100%;
+    }
+
+    .tsosk-lo-table tr {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .tsosk-lo-table td {
+        padding: 3px 0;
+        border: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .tsosk-lo-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #646970;
+    }
+
+    .tsosk-lo-table td.tsosk-lo-c-pick:empty {
+        display: none;
+    }
+
+    .tsosk-lo-table .tsosk-lo-peek td:first-child {
+        display: none;
+    }
+
+    .tsosk-lo-excerpt {
+        max-height: 200px;
+    }
+
+}
+
+/* Census, type and watch tables: wrap their text instead of scrolling, aligned to the top-left of each cell. */
+.tsosk-lo-census-wrap,
+.tsosk-lo-scroll { overflow: visible; }
+
+/* The report switches to cards by the width of its own box, so a narrow admin column never cuts the table. */
+.tsosk-lo-census-wrap {
+    container-type: inline-size;
+    container-name: tsoskcensus;
+}
+
+.tsosk-lo-sub {
+    display: block;
+    font-size: 12px;
+    color: #646970;
+    margin-top: 2px;
+}
+
+.tsosk-lo-census-table,
+.tsosk-lo-bk-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.tsosk-lo-census-table th,
+.tsosk-lo-census-table td,
+.tsosk-lo-bk-table th,
+.tsosk-lo-bk-table td {
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Only the long free-text cells (evidence, examples, key names) may break inside a word. */
+.tsosk-lo-census-table td.tsosk-lo-wrapcell,
+.tsosk-lo-bk-table td code {
+    overflow-wrap: anywhere;
+}
+
+.tsosk-lo-census-table td.tsosk-lo-wrapcell {
+    min-width: 110px;
+}
+
+.tsosk-lo-census-table th,
+.tsosk-lo-census-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.tsosk-lo-census-table td input[type="checkbox"],
+.tsosk-lo-bk-table td input[type="checkbox"],
+.tsosk-lo-bk-table th input[type="checkbox"] {
+    margin: 2px 0 0;
+}
+
+.tsosk-lo-census-table code {
+    white-space: nowrap;
+}
+
+.tsosk-lo-bk-table code {
+    overflow-wrap: anywhere;
+}
+
+/* Phones: these tables also become labelled cards. */
+@media (max-width: 782px) {
+    .tsosk-lo-census-table,
+    .tsosk-lo-census-table tbody,
+    .tsosk-lo-census-table tr,
+    .tsosk-lo-census-table td,
+    .tsosk-lo-bk-table,
+    .tsosk-lo-bk-table tbody,
+    .tsosk-lo-bk-table tr,
+    .tsosk-lo-bk-table td,
+    .tsosk-lo-bk-table tbody th {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tsosk-lo-census-table thead,
+    .tsosk-lo-bk-table thead {
+        display: none;
+    }
+
+    .tsosk-lo-census-table tr,
+    .tsosk-lo-bk-table tr {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .tsosk-lo-census-table td,
+    .tsosk-lo-bk-table td,
+    .tsosk-lo-bk-table tbody th {
+        padding: 3px 0;
+        border: 0;
+    }
+
+    .tsosk-lo-census-table td:empty {
+        display: none;
+    }
+
+    .tsosk-lo-census-table td[data-label]::before,
+    .tsosk-lo-bk-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #646970;
+    }
+}
+
+.tsosk-lo-ignore,
+.tsosk-lo-unignore { font-size: 12px; }
+
+#tsosk-lo-ignored ul { margin: 4px 0 0 18px; list-style: disc; }
+
+/* Narrow report box (any screen): the same labelled cards as on phones. */
+@container tsoskcensus (max-width: 700px) {
+    .tsosk-lo-census-table,
+    .tsosk-lo-census-table tbody,
+    .tsosk-lo-census-table tr,
+    .tsosk-lo-census-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tsosk-lo-census-table thead {
+        display: none;
+    }
+
+    .tsosk-lo-census-table tr {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .tsosk-lo-census-table td {
+        padding: 3px 0;
+        border: 0;
+    }
+
+    .tsosk-lo-census-table td:empty {
+        display: none;
+    }
+
+    .tsosk-lo-census-table td.tsosk-lo-wrapcell {
+        min-width: 0;
+    }
+
+    .tsosk-lo-census-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #646970;
+    }
+}

@@ -1,0 +1,11 @@
+.tsosk-badge-custom {
+    background: #f3e8ff;
+    color: #6a0dad;
+    border-color: #d4aaff;
+}
+
+#tsosk-cron-edit-panel {
+	display: none;
+	margin-top: 16px;
+}
+

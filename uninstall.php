@@ -19,6 +19,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 $tsosk_options = array(
 	'tsosk_activated',
 	'tsosk_version',
+	'tsosk_lo_watch',
+	'tsosk_lo_ignore',
 	'tsosk_maintenance',
 	'tsosk_heartbeat_settings',
 	'tsosk_update_manager_settings',

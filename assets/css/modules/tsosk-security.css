@@ -1,0 +1,30 @@
+/*── Security toggles spacing ───────────────────────────────────────────────*/
+.tsosk-security-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 8px;
+}
+
+.tsosk-security-toggle-row {
+    padding: 12px 14px;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.tsosk-security-toggle-desc {
+    margin: 8px 0 4px 20px;
+}
+
+.tsosk-security-toggle-rec {
+    margin: 0 0 0 20px;
+    color: #2271b1;
+    font-style: italic;
+}
+
+.tsosk-security-toggle-wpconfig {
+    margin: 6px 0 0 20px;
+    color: #646970;
+}
+

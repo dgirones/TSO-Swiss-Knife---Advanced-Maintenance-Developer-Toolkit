@@ -1,0 +1,240 @@
+/*── Overview dashboard ───────────────────────────────────────────────────────*/
+.tsosk-dash-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-left-width: 4px;
+    border-radius: 4px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.tsosk-dash-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex: 0 0 120px;
+}
+
+.tsosk-dash-ring-bg { stroke: #f0f0f1; }
+
+.tsosk-dash-ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1d2327;
+}
+
+.tsosk-dash-hero-text h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+}
+
+.tsosk-dash-meta {
+    font-size: 12px;
+    color: #787c82;
+}
+
+.tsosk-dash-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.tsosk-dash-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 112px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+}
+
+a.tsosk-dash-tile {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.tsosk-dash-tile:hover,
+a.tsosk-dash-tile:focus {
+    background: #eaf3fb;
+    border-color: #2271b1;
+    box-shadow: 0 2px 8px rgba(34, 113, 177, .22);
+    color: inherit;
+    outline: none;
+}
+
+a.tsosk-dash-tile:focus-visible {
+    box-shadow: 0 0 0 2px #2271b1;
+}
+
+.tsosk-dash-tile.is-warn {
+    border-color: #f6c142;
+    background: #fffaf0;
+}
+
+.tsosk-dash-tile-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #2271b1;
+}
+
+.tsosk-dash-tile.is-warn .tsosk-dash-tile-label {
+    color: #996800;
+}
+
+.tsosk-dash-tile-value {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1d2327;
+}
+
+.tsosk-dash-tile-sub {
+    margin-top: auto;
+    font-size: 12px;
+    color: #646970;
+}
+
+.tsosk-dash-issues,
+.tsosk-dash-activity {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+}
+
+.tsosk-dash-issues li:last-child,
+.tsosk-dash-activity li:last-child {
+    border-bottom: 0;
+}
+
+.tsosk-dash-issue-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.tsosk-dash-issue-details {
+    display: block;
+    font-size: 12px;
+    color: #646970;
+    white-space: pre-line;
+}
+
+.tsosk-dash-activity-time {
+    font-size: 12px;
+    color: #787c82;
+    white-space: nowrap;
+}
+
+.tsosk-dash-activity li {
+    flex-wrap: wrap;
+}
+
+.tsosk-dash-activity-text {
+    flex: 1 1 220px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 600px) {
+		.tsosk-dash-activity-text {
+	        flex-basis: 100%;
+	    }
+}
+
+.tsosk-dash-empty {
+    color: #646970;
+    margin: 8px 0 0;
+}
+
+.tsosk-dash-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tsosk-dash-shortcut {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    color: #2271b1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+		.tsosk-dash-hero {
+	        flex-direction: column;
+	        text-align: center;
+	    }
+		.tsosk-dash-issues li {
+	        flex-wrap: wrap;
+	    }
+}
+
+/*"Needs attention" row with action buttons (Open tool / Ignore): stacked like the install button.*/
+.tsosk-dash-issue-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+@media (max-width: 782px) {
+		.tsosk-dash-issues li.tsosk-dash-issue-updates {
+	        flex-wrap: wrap;
+	    }
+		.tsosk-dash-issue-action {
+	        flex: 1 0 100%;
+	        align-items: stretch;
+	    }
+}
+
+.tsosk-dash-trend {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.tsosk-dash-trend svg polyline {
+	fill: none;
+	stroke: #2271b1;
+	stroke-width: 2;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.tsosk-vc-col .tsosk-dash-activity li {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+

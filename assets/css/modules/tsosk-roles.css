@@ -1,0 +1,47 @@
+/*Roles & capabilities*/
+.tsosk-roles-guide-list {
+	margin: 0 0 10px 18px;
+	list-style: disc;
+}
+
+.tsosk-roles-info {
+	margin: 0;
+	font-weight: 600;
+}
+
+.tsosk-roles-add {
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.tsosk-roles-adminonly {
+	margin-top: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-left: 4px solid #8c8f94;
+}
+
+.tsosk-roles-adminonly[hidden] {
+	display: none;
+}
+
+.tsosk-roles-table td:first-child {
+	white-space: nowrap;
+}
+
+.tsosk-roles-compare-out {
+	display: none;
+	margin-top: 10px;
+	white-space: pre-wrap;
+}
+
+details.tsosk-roles-blocked {
+	padding: 12px 20px;
+}
+
+details.tsosk-roles-blocked summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
