@@ -87,6 +87,7 @@ class TSOSK_Mod_Security {
 		add_action( 'wp_ajax_tsosk_security_revoke_app_password', array( $this, 'ajax_revoke_app_password' ) );
 		add_action( 'wp_ajax_tsosk_security_revoke_all_app_passwords', array( $this, 'ajax_revoke_all_app_passwords' ) );
 		add_action( 'wp_ajax_tsosk_security_test_uploads_php', array( $this, 'ajax_test_uploads_php' ) );
+		add_action( 'wp_ajax_tsosk_security_check_headers', array( $this, 'ajax_check_headers' ) );
 		add_action( 'wp_ajax_tsosk_security_protect_uploads', array( $this, 'ajax_protect_uploads' ) );
 		add_action( 'user_register', array( $this, 'on_user_register' ) );
 		add_action( 'set_user_role', array( $this, 'on_set_user_role' ), 10, 3 );
@@ -362,6 +363,214 @@ class TSOSK_Mod_Security {
 		);
 		$stored   = get_option( self::ALERTS_OPTION, array() );
 		return wp_parse_args( is_array( $stored ) ? $stored : array(), $defaults );
+	}
+
+	// ── HTTP headers check (read-only) ────────────────────────────────────────
+
+	/**
+	 * All values a response sent for one header (repeated headers give several).
+	 *
+	 * @param array|WP_Error $response HTTP API response.
+	 * @param string         $name     Header name.
+	 * @return array<int,string>
+	 */
+	private function response_header_values( $response, string $name ): array {
+		$http = is_array( $response ) && isset( $response['http_response'] ) ? $response['http_response'] : null;
+		if ( is_object( $http ) && method_exists( $http, 'get_response_object' ) ) {
+			$object = $http->get_response_object();
+			if ( is_object( $object ) && isset( $object->headers ) && is_object( $object->headers ) && method_exists( $object->headers, 'getValues' ) ) {
+				$values = $object->headers->getValues( $name );
+				return is_array( $values ) ? array_map( 'strval', array_values( $values ) ) : array();
+			}
+		}
+
+		$value = wp_remote_retrieve_header( $response, $name );
+		if ( is_array( $value ) ) {
+			return array_map( 'strval', array_values( $value ) );
+		}
+		return '' === (string) $value ? array() : array( (string) $value );
+	}
+
+	/**
+	 * Obsolete, duplicated or conflicting headers (and a few useful ones that are missing).
+	 *
+	 * @param array $response HTTP API response of the home page.
+	 * @return array<int,array{level:string,message:string}>
+	 */
+	private function analyse_response_headers( array $response ): array {
+		$findings = array();
+
+		$xss      = $this->response_header_values( $response, 'x-xss-protection' );
+		$p3p      = $this->response_header_values( $response, 'p3p' );
+		$xfo      = $this->response_header_values( $response, 'x-frame-options' );
+		$nosniff  = $this->response_header_values( $response, 'x-content-type-options' );
+		$referrer = $this->response_header_values( $response, 'referrer-policy' );
+		$csp      = $this->response_header_values( $response, 'content-security-policy' );
+		$acao     = $this->response_header_values( $response, 'access-control-allow-origin' );
+		$acac     = $this->response_header_values( $response, 'access-control-allow-credentials' );
+		$hsts     = $this->response_header_values( $response, 'strict-transport-security' );
+
+		if ( ! empty( $xss ) && '0' !== trim( $xss[0] ) ) {
+			$findings[] = array(
+				'level'   => 'warn',
+				'message' => __( 'X-XSS-Protection is obsolete: browsers no longer use it and it can cause problems in old ones. Remove it, or set it to 0.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( ! empty( $p3p ) ) {
+			$findings[] = array(
+				'level'   => 'warn',
+				'message' => __( 'P3P is obsolete: no current browser reads it. Remove this header.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		$single = array(
+			'X-Frame-Options'             => $xfo,
+			'X-Content-Type-Options'      => $nosniff,
+			'Referrer-Policy'             => $referrer,
+			'Access-Control-Allow-Origin' => $acao,
+			'Strict-Transport-Security'   => $hsts,
+		);
+		foreach ( $single as $header => $values ) {
+			if ( count( $values ) > 1 ) {
+				$findings[] = array(
+					'level'   => 'warn',
+					'message' => sprintf(
+						/* translators: 1: header name, 2: number of times it is sent */
+						__( 'The header %1$s is sent %2$d times. Keep only one, as duplicates can conflict.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$header,
+						count( $values )
+					),
+				);
+			}
+		}
+
+		$wildcard = false;
+		foreach ( $acao as $origin ) {
+			if ( '*' === trim( $origin ) ) {
+				$wildcard = true;
+			}
+		}
+		if ( $wildcard && ! empty( $acac ) && 'true' === strtolower( trim( $acac[0] ) ) ) {
+			$findings[] = array(
+				'level'   => 'warn',
+				'message' => __( 'Access-Control-Allow-Origin is "*" together with Access-Control-Allow-Credentials: true. Browsers reject this combination, and a wildcard origin lets any site read the responses. Restrict the origin or remove both.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		$frame_ancestors = false;
+		foreach ( $csp as $policy ) {
+			if ( preg_match( "/default-src\s+'none'/i", $policy ) ) {
+				$findings[] = array(
+					'level'   => 'warn',
+					'message' => __( "The Content-Security-Policy uses default-src 'none', which blocks everything that is not listed explicitly and can break the site or the admin. Test it in report-only mode first.", 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				);
+				break;
+			}
+		}
+		foreach ( $csp as $policy ) {
+			if ( false !== stripos( $policy, 'frame-ancestors' ) ) {
+				$frame_ancestors = true;
+			}
+		}
+
+		if ( ! empty( $referrer ) ) {
+			$policy = strtolower( trim( (string) end( $referrer ) ) );
+			if ( in_array( $policy, array( 'no-referrer-when-downgrade', 'unsafe-url' ), true ) ) {
+				$findings[] = array(
+					'level'   => 'info',
+					'message' => sprintf(
+						/* translators: %s: Referrer-Policy value */
+						__( 'Referrer-Policy %s sends the full address to other sites. strict-origin-when-cross-origin is safer.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$policy
+					),
+				);
+			}
+		} else {
+			$findings[] = array(
+				'level'   => 'info',
+				'message' => __( 'Referrer-Policy is not set. Add it with "Add security headers" in Server Files Review.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( empty( $nosniff ) ) {
+			$findings[] = array(
+				'level'   => 'info',
+				'message' => __( 'X-Content-Type-Options: nosniff is missing. Add it with "Add security headers" in Server Files Review.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+		if ( empty( $xfo ) && ! $frame_ancestors ) {
+			$findings[] = array(
+				'level'   => 'info',
+				'message' => __( 'Neither X-Frame-Options nor a CSP frame-ancestors rule is set, so other sites can show your pages in a frame. Add it with "Add security headers" in Server Files Review.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			);
+		}
+
+		return $findings;
+	}
+
+	/** AJAX: read the headers the home page sends and report problems. Changes nothing. */
+	public function ajax_check_headers(): void {
+		check_ajax_referer( 'tsosk_security_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$url      = home_url( '/' );
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'             => 10,
+				'redirection'         => 3,
+				'limit_response_size' => 2048,
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core filter for loopback requests.
+				'sslverify'           => (bool) apply_filters( 'https_local_ssl_verify', false ),
+				'headers'             => array( 'Cache-Control' => 'no-cache' ),
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( __( 'The site did not respond, so its headers could not be checked.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$code     = (int) wp_remote_retrieve_response_code( $response );
+		$findings = $this->analyse_response_headers( $response );
+		if ( $code >= 400 ) {
+			array_unshift(
+				$findings,
+				array(
+					'level'   => 'info',
+					'message' => sprintf(
+						/* translators: %d: HTTP status code */
+						__( 'The home page answered HTTP %d, so these headers may not be the ones visitors get.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$code
+					),
+				)
+			);
+		}
+
+		$has_warning = false;
+		foreach ( $findings as $finding ) {
+			if ( 'warn' === $finding['level'] ) {
+				$has_warning = true;
+			}
+		}
+
+		if ( empty( $findings ) ) {
+			$message = __( 'No problems found in the headers your home page sends.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$message = sprintf(
+				/* translators: 1: address checked, 2: HTTP status code */
+				__( 'Checked %1$s (HTTP %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$url,
+				$code
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'status'   => $has_warning ? 'warn' : 'ok',
+				'message'  => $message,
+				'findings' => $findings,
+			)
+		);
 	}
 
 	/** AJAX: save the new-admin/role-escalation alert settings. */
@@ -1653,6 +1862,22 @@ elseif ( 'executed' === $uploads_test['status'] ) :
 				<p class="description">
 					<a href="<?php echo esc_url( $server_files_url ); ?>"><?php esc_html_e( 'Open Server Files to review the full .htaccess →', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
 				</p>
+			</div>
+
+			<div class="tsosk-card" id="tsosk-security-headers-check">
+				<h3><?php esc_html_e( 'HTTP headers check', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Reads the headers your home page sends and flags obsolete, duplicated or conflicting ones. Nothing is changed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<p>
+					<button class="button" id="tsosk-sec-headers-check"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>"
+							data-label="<?php echo esc_attr__( 'Check headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							data-lbl-warn="<?php echo esc_attr__( 'Review', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+							data-lbl-info="<?php echo esc_attr__( 'Tip', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<?php esc_html_e( 'Check headers', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+					<span class="tsosk-ajax-msg" id="tsosk-sec-headers-msg"></span>
+				</p>
+				<div id="tsosk-sec-headers-result" style="display:none;"></div>
 			</div>
 		</div>
 

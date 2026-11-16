@@ -844,6 +844,20 @@ class TSOSK_Mod_Dashboard {
 		$state = $this->link_inspector_state();
 		$org   = 'https://wordpress.org/plugins/tso-link-inspector/';
 
+		if ( class_exists( 'TSOSK_Mod_Redirects' ) && ! TSOSK_Mod_Redirects::is_enabled() ) {
+			$recs[] = array(
+				'title'   => __( 'Redirects are turned off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'details' => __( 'Saved redirect rules are not applied and 404 visits are not recorded. This is fine if another plugin handles redirects; turn them on if you want this toolkit to do it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				'buttons' => array(
+					array(
+						'label'    => __( 'Open Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						'url'      => add_query_arg( 'tab', 'redirects', $this->base_url() ),
+						'external' => false,
+					),
+				),
+			);
+		}
+
 		if ( 'missing' === $state['status'] ) {
 			$buttons = array();
 			if ( current_user_can( 'install_plugins' ) ) {
@@ -1028,15 +1042,19 @@ class TSOSK_Mod_Dashboard {
 			set_transient( 'tsosk_dash_dbsize', $db, HOUR_IN_SECONDS );
 		}
 		if ( $db['bytes'] > 0 ) {
-			$db_url  = $this->database_tile_url();
+			$db_url = $this->database_tile_url();
+			$db_sub = sprintf(
+				/* translators: %d: number of tables */
+				__( '%d tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$db['tables']
+			);
+			if ( ! $this->is_cleaner_active() ) {
+				$db_sub .= ' · ' . __( 'Clean it with TSO Options & Tables Cleaner', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			}
 			$tiles[] = array(
 				'label' => __( 'Database size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				'value' => size_format( $db['bytes'], 1 ),
-				'sub'   => sprintf(
-					/* translators: %d: number of tables */
-					__( '%d tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					$db['tables']
-				),
+				'sub'   => $db_sub,
 				'url'   => $db_url,
 			);
 		}
@@ -1138,10 +1156,22 @@ class TSOSK_Mod_Dashboard {
 					count( $no_handler )
 				),
 			'warn'  => ! empty( $no_handler ),
-			'url'   => $this->tile_url( 'cron', 'TSOSK_Mod_Cron', 'tsosk-cron-table' ),
+			'url'   => $this->tile_url( 'cron', 'TSOSK_Mod_Cron', empty( $no_handler ) ? 'tsosk-cron-table' : 'tsosk-cron-nocb' ),
 		);
 
 		return $tiles;
+	}
+
+	/**
+	 * Whether TSO Options & Tables Cleaner is active.
+	 *
+	 * @return bool
+	 */
+	private function is_cleaner_active(): bool {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			tsosk_require_wp_admin( 'includes/plugin.php' );
+		}
+		return function_exists( 'is_plugin_active' ) && is_plugin_active( 'tso-options-tables-cleaner/tso-options-tables-cleaner.php' );
 	}
 
 	/**
@@ -1150,11 +1180,7 @@ class TSOSK_Mod_Dashboard {
 	 * @return string
 	 */
 	private function database_tile_url(): string {
-		$otc_file = 'tso-options-tables-cleaner/tso-options-tables-cleaner.php';
-		if ( ! function_exists( 'is_plugin_active' ) ) {
-			tsosk_require_wp_admin( 'includes/plugin.php' );
-		}
-		if ( function_exists( 'is_plugin_active' ) && is_plugin_active( $otc_file ) ) {
+		if ( $this->is_cleaner_active() ) {
 			return admin_url( 'tools.php?page=tso-options-tables-cleaner' );
 		}
 		return $this->tile_url( 'tso-plugins', 'TSOSK_Mod_Tso_Plugins', 'tsosk-promo-options-cleaner' );
@@ -1302,7 +1328,10 @@ class TSOSK_Mod_Dashboard {
 				</div>
 				<div class="tsosk-vc-col">
 					<h4><?php esc_html_e( 'Most frequent 404s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
-					<?php if ( empty( $not_found ) ) : ?>
+					<?php if ( class_exists( 'TSOSK_Mod_Redirects' ) && ! TSOSK_Mod_Redirects::is_enabled() ) : ?>
+						<p class="tsosk-dash-empty"><?php esc_html_e( 'Redirects are turned off, so 404 visits are not being recorded.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+						<p><a href="<?php echo esc_url( add_query_arg( 'tab', 'redirects', $base ) ); ?>"><?php esc_html_e( 'Turn on redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a></p>
+					<?php elseif ( empty( $not_found ) ) : ?>
 						<p class="tsosk-dash-empty"><?php esc_html_e( 'No data yet.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					<?php else : ?>
 						<ul class="tsosk-dash-activity">

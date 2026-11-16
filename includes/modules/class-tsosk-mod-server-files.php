@@ -45,7 +45,116 @@ class TSOSK_Mod_Server_Files {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_sf_save', array( $this, 'ajax_save' ) );
 		add_action( 'wp_ajax_tsosk_sf_previous', array( $this, 'ajax_previous' ) );
+		add_action( 'wp_ajax_tsosk_sf_diff', array( $this, 'ajax_diff' ) );
 		add_action( 'wp_ajax_tsosk_sf_sitemap_check', array( $this, 'ajax_sitemap_check' ) );
+	}
+
+	/**
+	 * Absolute path of an editable file.
+	 *
+	 * @param string $key File key (already validated).
+	 */
+	private function path_for_key( string $key ): string {
+		// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- robots.txt and .htaccess are server-root files that must be written at ABSPATH; wp_upload_dir() is not appropriate for these.
+		// robots → domain root; robots_local → WP subdirectory; htaccess → ABSPATH; htaccess_root → document root.
+		if ( 'robots' === $key ) {
+			return $this->root_robots_path();
+		}
+		if ( 'robots_local' === $key ) {
+			return tsosk_join_wp_root( 'robots.txt' );
+		}
+		if ( 'htaccess_root' === $key ) {
+			return $this->root_htaccess_path();
+		}
+		return tsosk_join_wp_root( '.htaccess' );
+	}
+
+	/**
+	 * Basic .htaccess sanity check: container directives must be opened and closed in order.
+	 *
+	 * @param string $content Proposed file content.
+	 * @return string Error message, or an empty string when nothing is wrong.
+	 */
+	private function validate_htaccess( string $content ): string {
+		if ( false !== strpos( $content, "\0" ) ) {
+			return __( 'The content contains invalid characters (NUL byte).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		$containers = array( 'ifmodule', 'ifdefine', 'ifversion', 'files', 'filesmatch', 'directory', 'directorymatch', 'location', 'locationmatch', 'limit', 'limitexcept', 'requireall', 'requireany', 'requirenone', 'if', 'elseif', 'else', 'virtualhost' );
+		$stack      = array();
+		$lines      = preg_split( '/\R/', $content );
+		foreach ( (array) $lines as $number => $line ) {
+			$line = trim( (string) $line );
+			if ( '' === $line || '#' === $line[0] ) {
+				continue;
+			}
+			if ( ! preg_match( '/^<(\/?)([A-Za-z]+)(?:\s[^>]*)?>$/', $line, $m ) ) {
+				continue;
+			}
+			$name = strtolower( $m[2] );
+			if ( ! in_array( $name, $containers, true ) ) {
+				continue;
+			}
+			if ( 'elseif' === $name || 'else' === $name ) {
+				continue;
+			}
+			if ( '' === $m[1] ) {
+				$stack[] = array( $name, $number + 1 );
+				continue;
+			}
+			$open = array_pop( $stack );
+			if ( null === $open || $open[0] !== $name ) {
+				return sprintf(
+					/* translators: 1: line number, 2: closing tag name */
+					__( 'Line %1$d: the closing tag </%2$s> does not match an open block. The file was not saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$number + 1,
+					$m[2]
+				);
+			}
+		}
+		if ( ! empty( $stack ) ) {
+			$open = array_pop( $stack );
+			return sprintf(
+				/* translators: 1: line number where the block was opened, 2: tag name */
+				__( 'Line %1$d: the block <%2$s> is never closed. The file was not saved.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				(int) $open[1],
+				$open[0]
+			);
+		}
+		return '';
+	}
+
+	/** AJAX: show the changes between the file on disk and the editor content (nothing is written). */
+	public function ajax_diff(): void {
+		check_ajax_referer( 'tsosk_sf_nonce', 'nonce' );
+		if ( ! TSOSK_Support::can_manage_sensitive() ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$key     = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+		$content = TSOSK_Support::get_post_scalar( 'content' );
+		if ( ! in_array( $key, array( 'robots', 'robots_local', 'htaccess', 'htaccess_root' ), true ) ) {
+			wp_send_json_error( __( 'Invalid file key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$path    = $this->path_for_key( $key );
+		$current = '';
+		if ( file_exists( $path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local server-root file, not a remote URL.
+			$current = (string) file_get_contents( $path );
+		}
+		$diff = wp_text_diff( $current, $content );
+		if ( '' === $diff ) {
+			wp_send_json_success(
+				array(
+					'html'    => '',
+					'message' => __( 'No changes compared with the saved file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				)
+			);
+		}
+		wp_send_json_success(
+			array(
+				'html'    => wp_kses_post( $diff ),
+				'message' => __( 'Changes compared with the saved file (left: saved, right: editor).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			)
+		);
 	}
 
 	/** AJAX: save an editable file. */
@@ -63,16 +172,13 @@ class TSOSK_Mod_Server_Files {
 			wp_send_json_error( __( 'Invalid file key.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		// phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- robots.txt and .htaccess are server-root files that must be written at ABSPATH; wp_upload_dir() is not appropriate for these.
-		// robots → domain root; robots_local → WP subdirectory; htaccess → ABSPATH; htaccess_root → document root.
-		if ( 'robots' === $key ) {
-			$path = $this->root_robots_path();
-		} elseif ( 'robots_local' === $key ) {
-			$path = tsosk_join_wp_root( 'robots.txt' );
-		} elseif ( 'htaccess_root' === $key ) {
-			$path = $this->root_htaccess_path();
-		} else {
-			$path = tsosk_join_wp_root( '.htaccess' );
+		$path = $this->path_for_key( $key );
+
+		if ( in_array( $key, array( 'htaccess', 'htaccess_root' ), true ) ) {
+			$syntax_error = $this->validate_htaccess( $content );
+			if ( '' !== $syntax_error ) {
+				wp_send_json_error( $syntax_error );
+			}
 		}
 
 		if ( ! wp_is_writable( $path ) && ! wp_is_writable( dirname( $path ) ) ) {
@@ -840,7 +946,7 @@ class TSOSK_Mod_Server_Files {
 		$reports = array();
 
 		// Always show the domain-root robots.txt first.
-		$reports['robots']              = $this->get_report( 'robots.txt (domain root)', $root_robots, 'robots' );
+		$reports['robots']              = $this->get_report( __( 'robots.txt (domain root)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $root_robots, 'robots' );
 		$reports['robots']['is_root']   = true;
 		$reports['robots']['root_note'] = $wp_is_subdir;
 
@@ -862,7 +968,7 @@ class TSOSK_Mod_Server_Files {
 
 		// If WordPress is in a subdirectory, also show the local robots.txt.
 		if ( $wp_is_subdir && '' !== $local_robots ) {
-			$reports['robots_local']              = $this->get_report( 'robots.txt (WordPress subdirectory)', $local_robots, 'robots_local' );
+			$reports['robots_local']              = $this->get_report( __( 'robots.txt (WordPress subdirectory)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $local_robots, 'robots_local' );
 			$reports['robots_local']['is_root']   = false;
 			$reports['robots_local']['root_note'] = true;
 		}
@@ -1432,6 +1538,11 @@ class TSOSK_Mod_Server_Files {
 						</span>
 					</span>
 					<?php endif; ?>
+					<button type="button" class="button tsosk-sf-diff-btn"
+							data-key="<?php echo esc_attr( $key ); ?>"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Show changes', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
 					<?php if ( null !== $this->get_previous( $key ) ) : ?>
 					<button type="button" class="button tsosk-sf-previous"
 							data-key="<?php echo esc_attr( $key ); ?>"
@@ -1441,6 +1552,7 @@ class TSOSK_Mod_Server_Files {
 					<?php endif; ?>
 					<span class="tsosk-ajax-msg tsosk-sf-msg-<?php echo esc_attr( $key ); ?>"></span>
 				</div>
+				<div class="tsosk-sf-diff" id="tsosk-sf-diff-<?php echo esc_attr( $key ); ?>" hidden></div>
 				<?php else : ?>
 				<p class="description"><?php esc_html_e( 'File is read-only. To edit it, make it writable via FTP or your hosting control panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 				<?php endif; ?>

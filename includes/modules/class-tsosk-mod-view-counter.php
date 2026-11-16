@@ -2102,7 +2102,7 @@ class TSOSK_Mod_View_Counter {
 			<div class="tsosk-vc-col" id="tsosk-vc-top-posts">
 				<h3><?php esc_html_e( 'Most viewed posts/pages', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-table-wrap">
-				<table class="widefat striped" id="tsosk-vc-top-posts-table">
+				<table class="widefat striped tsosk-table" id="tsosk-vc-top-posts-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Title', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -2116,7 +2116,7 @@ class TSOSK_Mod_View_Counter {
 			<div class="tsosk-vc-col">
 				<h3><?php esc_html_e( 'Most clicked outbound links', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-table-wrap">
-				<table class="widefat striped" id="tsosk-vc-top-links-table">
+				<table class="widefat striped tsosk-table" id="tsosk-vc-top-links-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -2130,7 +2130,7 @@ class TSOSK_Mod_View_Counter {
 			<div class="tsosk-vc-col" id="tsosk-vc-top-downloads">
 				<h3><?php esc_html_e( 'Most downloaded files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
 				<div class="tsosk-table-wrap">
-				<table class="widefat striped" id="tsosk-vc-top-downloads-table">
+				<table class="widefat striped tsosk-table" id="tsosk-vc-top-downloads-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'File', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -2292,7 +2292,7 @@ class TSOSK_Mod_View_Counter {
 			<p><strong><?php esc_html_e( 'These days have unusually high totals', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></p>
 			<p><?php esc_html_e( 'This usually means totals imported from another plugin were saved under the import date (or imported twice), which inflates the 7/30/90-day figures. Move them to "All time" so they stop counting as recent traffic, or delete a day that was imported twice.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<div class="tsosk-table-wrap">
-			<table class="widefat striped" style="max-width:620px;">
+			<table class="widefat striped tsosk-table" style="max-width:620px;">
 				<?php foreach ( $tsosk_vc_suspicious as $tsosk_vc_day ) : ?>
 				<tr>
 					<td><code><?php echo esc_html( $tsosk_vc_day['date'] ); ?></code></td>

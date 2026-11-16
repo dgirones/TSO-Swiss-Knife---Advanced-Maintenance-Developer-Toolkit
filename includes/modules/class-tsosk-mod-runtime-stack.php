@@ -239,6 +239,32 @@ class TSOSK_Mod_Runtime_Stack {
 	}
 
 	/**
+	 * Print a "below recommended" badge when a limit is set and lower than the suggested minimum.
+	 *
+	 * @param int    $bytes_or_value Current value (bytes for sizes, seconds or count otherwise). 0 and -1 mean unlimited/unset.
+	 * @param int    $minimum        Suggested minimum, same unit.
+	 * @param string $label          Suggested minimum as shown to the user (e.g. 256M).
+	 */
+	private static function render_recommended_badge( int $bytes_or_value, int $minimum, string $label ): void {
+		if ( $bytes_or_value <= 0 || $bytes_or_value >= $minimum ) {
+			return;
+		}
+		?>
+		<br><span class="tsosk-badge tsosk-badge-warn">
+			<?php
+			echo esc_html(
+				sprintf(
+					/* translators: %s: recommended minimum value, e.g. 256M */
+					__( 'Below the usual recommendation (%s). Heavy plugins, imports or backups may fail.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$label
+				)
+			);
+			?>
+		</span>
+		<?php
+	}
+
+	/**
 	 * Identify the persistent object-cache backend from the drop-in's own
 	 * header and the loaded driver class, and whether the PHP extension it
 	 * needs is actually present (a drop-in can be left behind after a host
@@ -419,6 +445,7 @@ class TSOSK_Mod_Runtime_Stack {
 								?>
 							</span>
 						<?php endif; ?>
+						<?php self::render_recommended_badge( self::parse_ini_bytes( $limits['memory'] ), 256 * MB_IN_BYTES, '256M' ); ?>
 					</td>
 				</tr>
 				<tr>
@@ -436,11 +463,17 @@ class TSOSK_Mod_Runtime_Stack {
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Seconds a request may run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td><code><?php echo esc_html( self::display_limit( $limits['max_time'], array( '0' ) ) ); ?></code></td>
+					<td>
+						<code><?php echo esc_html( self::display_limit( $limits['max_time'], array( '0' ) ) ); ?></code>
+						<?php self::render_recommended_badge( (int) $limits['max_time'], 30, '30' ); ?>
+					</td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Form fields allowed in one request', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-					<td><code><?php echo esc_html( $limits['max_input'] ); ?></code></td>
+					<td>
+						<code><?php echo esc_html( $limits['max_input'] ); ?></code>
+						<?php self::render_recommended_badge( (int) $limits['max_input'], 1000, '1000' ); ?>
+					</td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'PHP accelerator (OPcache)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>

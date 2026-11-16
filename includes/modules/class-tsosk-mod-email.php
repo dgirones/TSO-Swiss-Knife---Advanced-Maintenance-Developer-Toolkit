@@ -245,6 +245,11 @@ class TSOSK_Mod_Email {
 		if ( ! empty( $history[0]['phpmailer'] ) && is_array( $history[0]['phpmailer'] ) ) {
 			$last_pm = $history[0]['phpmailer'];
 		}
+		// Pre-fill the test form with the values of the last test so it can be repeated in one click.
+		$last_test = isset( $history[0] ) && is_array( $history[0] ) ? $history[0] : array();
+		$test_to   = ! empty( $last_test['email'] ) && is_email( (string) $last_test['email'] ) ? (string) $last_test['email'] : (string) get_option( 'admin_email' );
+		$test_cc   = ! empty( $last_test['cc'] ) && is_email( (string) $last_test['cc'] ) ? (string) $last_test['cc'] : '';
+		$test_html = isset( $last_test['format'] ) && 'html' === $last_test['format'];
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Inspect and test hidden WordPress email behavior: wp_mail sender, SMTP plugins, PHPMailer transport and delivery result.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -308,20 +313,20 @@ class TSOSK_Mod_Email {
 			<div class="tsosk-email-test-fields">
 				<div class="tsosk-field-row">
 					<label for="tsosk-email-test-address"><strong><?php esc_html_e( 'Recipient (To)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-					<input type="email" id="tsosk-email-test-address" class="regular-text" value="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
+					<input type="email" id="tsosk-email-test-address" class="regular-text" value="<?php echo esc_attr( $test_to ); ?>">
 				</div>
 				<div class="tsosk-field-row">
 					<label for="tsosk-email-test-cc"><strong><?php esc_html_e( 'CC (optional)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
-					<input type="email" id="tsosk-email-test-cc" class="regular-text" value="" placeholder="<?php esc_attr_e( 'optional@example.com', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<input type="email" id="tsosk-email-test-cc" class="regular-text" value="<?php echo esc_attr( $test_cc ); ?>" placeholder="<?php esc_attr_e( 'optional@example.com', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 				</div>
 				<div class="tsosk-field-row">
 					<strong><?php esc_html_e( 'Format', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
 					<label class="tsosk-radio-row" style="display:inline-flex;margin-right:16px;">
-						<input type="radio" name="tsosk_email_format" id="tsosk-email-format-plain" value="plain" checked>
+						<input type="radio" name="tsosk_email_format" id="tsosk-email-format-plain" value="plain" <?php checked( ! $test_html ); ?>>
 						<?php esc_html_e( 'Plain text', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</label>
 					<label class="tsosk-radio-row" style="display:inline-flex;">
-						<input type="radio" name="tsosk_email_format" id="tsosk-email-format-html" value="html">
+						<input type="radio" name="tsosk_email_format" id="tsosk-email-format-html" value="html" <?php checked( $test_html ); ?>>
 						<?php esc_html_e( 'HTML + plain alternative', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</label>
 				</div>

@@ -789,6 +789,19 @@ class TSOSK_Mod_Staging {
 	}
 
 	/**
+	 * Small badge showing whether a saved option is currently active.
+	 *
+	 * @param bool $on Saved state.
+	 */
+	private function render_option_status( bool $on ): void {
+		?>
+		<span class="tsosk-badge <?php echo $on ? 'tsosk-badge-ok' : 'tsosk-badge-info'; ?>" style="margin-left:8px;">
+			<?php echo $on ? esc_html__( 'Active', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Inactive', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+		</span>
+		<?php
+	}
+
+	/**
 	 * Render.
 	 */
 	public function render(): void {
@@ -829,9 +842,21 @@ class TSOSK_Mod_Staging {
 
 		<div class="tsosk-card">
 			<h3><?php esc_html_e( 'Test-site options', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php
+				$active_count = count( array_filter( array( $settings['show_badge'], $settings['hide_from_search'], $settings['block_mail'], $settings['log_mail'], $settings['pause_cron'] ) ) );
+				printf(
+					/* translators: 1: number of active options, 2: total number of options */
+					esc_html__( '%1$d of %2$d options are active (saved state).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $active_count,
+					5
+				);
+				?>
+			</p>
 			<label class="tsosk-heartbeat-option">
 				<input type="checkbox" id="tsosk-staging-show-badge" value="1" <?php checked( $settings['show_badge'] ); ?>>
 				<strong><?php esc_html_e( 'Show a red STAGING label in the admin bar', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php $this->render_option_status( ! empty( $settings['show_badge'] ) ); ?>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'Visible to administrators so nobody confuses this copy with the live site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -839,6 +864,7 @@ class TSOSK_Mod_Staging {
 			<label class="tsosk-heartbeat-option">
 				<input type="checkbox" id="tsosk-staging-hide-search" value="1" <?php checked( $settings['hide_from_search'] ); ?>>
 				<strong><?php esc_html_e( 'Ask search engines not to list this copy', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php $this->render_option_status( ! empty( $settings['hide_from_search'] ) ); ?>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'Adds noindex headers, pauses XML sitemaps, and disallows crawling in robots.txt while this option is on. It does not change Settings → Reading.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -846,6 +872,7 @@ class TSOSK_Mod_Staging {
 			<label class="tsosk-heartbeat-option">
 				<input type="checkbox" id="tsosk-staging-block-mail" value="1" <?php checked( $settings['block_mail'] ); ?>>
 				<strong><?php esc_html_e( 'Do not send real emails', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php $this->render_option_status( ! empty( $settings['block_mail'] ) ); ?>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'WordPress will think the email was sent, but nothing leaves the server. A short copy is kept in the log below. Use this so a test shop does not email real customers.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -856,6 +883,7 @@ class TSOSK_Mod_Staging {
 			<label class="tsosk-heartbeat-option">
 				<input type="checkbox" id="tsosk-staging-log-mail" value="1" <?php checked( $settings['log_mail'] ); ?>>
 				<strong><?php esc_html_e( 'Keep a copy of emails even when they are sent', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php $this->render_option_status( ! empty( $settings['log_mail'] ) ); ?>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'Useful on the live site when you need to see whether WordPress tried to send a message. Only administrators can read the log. Message bodies are shortened.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>
@@ -863,6 +891,7 @@ class TSOSK_Mod_Staging {
 			<label class="tsosk-heartbeat-option">
 				<input type="checkbox" id="tsosk-staging-pause-cron" value="1" <?php checked( $settings['pause_cron'] ); ?>>
 				<strong><?php esc_html_e( 'Pause scheduled tasks (WP-Cron)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
+				<?php $this->render_option_status( ! empty( $settings['pause_cron'] ) ); ?>
 				<p class="description" style="margin:4px 0 0 24px;">
 					<?php esc_html_e( 'Due events stay in the list but are not run. Turn this on so a test copy does not send reminders, process queues, or fire WooCommerce scheduled actions. Turn it off on the live site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				</p>

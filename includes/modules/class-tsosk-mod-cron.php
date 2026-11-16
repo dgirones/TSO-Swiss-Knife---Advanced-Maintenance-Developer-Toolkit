@@ -43,6 +43,7 @@ class TSOSK_Mod_Cron {
 		add_action( 'wp_ajax_tsosk_cron_run', array( $this, 'ajax_run' ) );
 		add_action( 'wp_ajax_tsosk_cron_delete', array( $this, 'ajax_delete' ) );
 		add_action( 'wp_ajax_tsosk_cron_reschedule', array( $this, 'ajax_reschedule' ) );
+		add_action( 'wp_ajax_tsosk_cron_bulk', array( $this, 'ajax_bulk' ) );
 	}
 
 	// ── AJAX handlers ─────────────────────────────────────────────────────────
@@ -155,6 +156,89 @@ class TSOSK_Mod_Cron {
 			array( 'hook' => $hook )
 		);
 		wp_send_json_success( __( 'Event deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+	}
+
+	/**
+	 * AJAX: run or delete several cron events at once. Core events are always skipped.
+	 */
+	public function ajax_bulk(): void {
+		check_ajax_referer( 'tsosk_cron_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		$raw  = isset( $_POST['items'] ) ? sanitize_text_field( wp_unslash( $_POST['items'] ) ) : '';
+		if ( ! in_array( $mode, array( 'run', 'delete' ), true ) || '' === $raw ) {
+			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$decoded = json_decode( $raw, true );
+		if ( ! is_array( $decoded ) ) {
+			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$done    = 0;
+		$skipped = 0;
+		$failed  = 0;
+		foreach ( array_slice( $decoded, 0, 200 ) as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			$hook = isset( $item['hook'] ) ? sanitize_text_field( (string) $item['hook'] ) : '';
+			$ts   = isset( $item['timestamp'] ) ? absint( $item['timestamp'] ) : 0;
+			$sig  = isset( $item['sig'] ) ? sanitize_text_field( (string) $item['sig'] ) : '';
+			if ( '' === $hook || ! $ts || $this->is_core_hook( $hook ) ) {
+				++$skipped;
+				continue;
+			}
+			// Re-read the cron array each time: running an event can reschedule others.
+			$crons = _get_cron_array();
+			if ( ! $crons || ! isset( $crons[ $ts ][ $hook ][ $sig ] ) ) {
+				++$skipped;
+				continue;
+			}
+			$event = $crons[ $ts ][ $hook ][ $sig ];
+			$args  = isset( $event['args'] ) && is_array( $event['args'] ) ? $event['args'] : array();
+
+			if ( 'delete' === $mode ) {
+				wp_unschedule_event( $ts, $hook, $args );
+				++$done;
+				continue;
+			}
+
+			ob_start();
+			try {
+				do_action_ref_array( $hook, $args ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores, WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+			} catch ( \Throwable $e ) {
+				ob_end_clean();
+				++$failed;
+				continue;
+			}
+			ob_end_clean();
+			if ( ! empty( $event['schedule'] ) ) {
+				wp_reschedule_event( $ts, $event['schedule'], $hook, $args );
+			}
+			wp_unschedule_event( $ts, $hook, $args );
+			++$done;
+		}
+
+		if ( 'delete' === $mode ) {
+			/* translators: %d: number of cron events */
+			$log_text = __( 'Bulk cron delete: %d event(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			/* translators: %d: number of cron events */
+			$log_text = __( 'Bulk cron run: %d event(s).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		TSOSK_Activity_Log::log( 'cron', 'delete' === $mode ? 'delete' : 'run', sprintf( $log_text, $done ), array( 'count' => $done ) );
+
+		wp_send_json_success(
+			sprintf(
+				/* translators: 1: events processed, 2: events skipped, 3: events that failed */
+				__( '%1$d done, %2$d skipped, %3$d failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$done,
+				$skipped,
+				$failed
+			)
+		);
 	}
 
 	/** AJAX: reschedule a cron event (next run time and/or interval). */
@@ -367,22 +451,63 @@ class TSOSK_Mod_Cron {
 			<?php endif; ?>
 		</div>
 
+		<?php
+		$nocb_count = 0;
+		foreach ( $events as $nocb_event ) {
+			if ( ! has_action( (string) $nocb_event['hook'] ) ) {
+				++$nocb_count;
+			}
+		}
+		?>
 		<?php if ( empty( $events ) ) : ?>
 			<p><?php esc_html_e( 'No cron events found.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 		<?php else : ?>
+		<div class="tsosk-cron-bulk" id="tsosk-cron-bulk" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+			<label class="tsosk-cron-bulk-all">
+				<input type="checkbox" id="tsosk-cron-select-all">
+				<?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</label>
+			<button type="button" class="button button-small" id="tsosk-cron-select-none"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+			<label class="tsosk-cron-sort-mobile">
+				<span class="screen-reader-text"><?php esc_html_e( 'Sort by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				<select id="tsosk-cron-sort-select">
+					<option value=""><?php esc_html_e( 'Sort by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="hook"><?php esc_html_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="time"><?php esc_html_e( 'Next Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="interval"><?php esc_html_e( 'Interval', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<option value="source"><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+				</select>
+			</label>
+			<span class="tsosk-cron-bulk-count" id="tsosk-cron-bulk-count" aria-live="polite"></span>
+			<span class="tsosk-cron-bulk-actions">
+				<button type="button" class="button button-small" id="tsosk-cron-bulk-run" disabled><?php esc_html_e( 'Run selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+				<button type="button" class="button button-small button-link-delete" id="tsosk-cron-bulk-delete" disabled><?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+			</span>
+			<span class="tsosk-ajax-msg" id="tsosk-cron-bulk-msg"></span>
+			<?php if ( $nocb_count > 0 ) : ?>
+				<button type="button" class="button button-small tsosk-cron-nocb" id="tsosk-cron-nocb" aria-pressed="false"
+					data-label-off="<?php echo esc_attr( sprintf( /* translators: %d: number of events whose hook has no callback */ _n( 'Only hooks without callback (%d event)', 'Only hooks without callback (%d events)', $nocb_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $nocb_count ) ); ?>"
+					data-label-on="<?php esc_attr_e( 'Show all events', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+					<?php
+					echo esc_html( sprintf( /* translators: %d: number of events whose hook has no callback */ _n( 'Only hooks without callback (%d event)', 'Only hooks without callback (%d events)', $nocb_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $nocb_count ) );
+					?>
+				</button>
+			<?php endif; ?>
+		</div>
 		<div class="tsosk-table-wrap">
 			<table class="widefat tsosk-table" id="tsosk-cron-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Next Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Interval', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
-						<th><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-cron-check"><span class="screen-reader-text"><?php esc_html_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span></th>
+						<th class="tsosk-th-sortable" data-sort-key="hook" tabindex="0" aria-sort="none"><span class="tsosk-th-inner"><span class="tsosk-th-label"><?php esc_html_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><span class="tsosk-sort-ind" aria-hidden="true"></span></span></th>
+						<th class="tsosk-th-sortable" data-sort-key="time" tabindex="0" aria-sort="none"><span class="tsosk-th-inner"><span class="tsosk-th-label"><?php esc_html_e( 'Next Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><span class="tsosk-sort-ind" aria-hidden="true"></span></span></th>
+						<th class="tsosk-th-sortable" data-sort-key="interval" tabindex="0" aria-sort="none"><span class="tsosk-th-inner"><span class="tsosk-th-label"><?php esc_html_e( 'Interval', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><span class="tsosk-sort-ind" aria-hidden="true"></span></span></th>
+						<th class="tsosk-th-sortable" data-sort-key="source" tabindex="0" aria-sort="none"><span class="tsosk-th-inner"><span class="tsosk-th-label"><?php esc_html_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span><span class="tsosk-sort-ind" aria-hidden="true"></span></span></th>
 						<th><?php esc_html_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ( $events as $event ) : ?>
+					<?php foreach ( $events as $row_index => $event ) : ?>
 						<?php
 						$is_core    = $this->is_core_hook( (string) $event['hook'] );
 						$diff       = $event['timestamp'] - $now;
@@ -395,17 +520,32 @@ class TSOSK_Mod_Cron {
 							? ( $schedules[ $event['schedule'] ]['display'] ?? $event['schedule'] )
 							: __( 'Single event', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 
-						$source = $event['source'];
+						$source       = $event['source'];
+						$source_label = ( 'wordpress' === $source['type'] ) ? 'WordPress' : ( isset( $source['name'] ) ? (string) $source['name'] : '' ); // phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- Internal source-type key.
 						?>
-						<tr class="<?php echo $overdue ? 'tsosk-row-warn' : ''; ?>">
-							<td class="tsosk-code"><?php echo esc_html( $event['hook'] ); ?></td>
-							<td>
+						<?php $no_callback = ! has_action( (string) $event['hook'] ); ?>
+						<tr class="<?php echo $overdue ? 'tsosk-row-warn' : ''; ?>" data-default="<?php echo esc_attr( (string) $row_index ); ?>"<?php echo $no_callback ? ' data-nocb="1"' : ''; ?>>
+							<td class="tsosk-cron-check">
+								<?php if ( ! $is_core ) : ?>
+									<input type="checkbox" class="tsosk-cron-select"
+										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
+										data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
+										data-sig="<?php echo esc_attr( $event['sig'] ); ?>"
+										aria-label="<?php echo esc_attr( $event['hook'] ); ?>">
+								<?php endif; ?>
+							</td>
+							<td class="tsosk-code" data-sort="<?php echo esc_attr( strtolower( (string) $event['hook'] ) ); ?>" data-label="<?php esc_attr_e( 'Hook', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $event['hook'] ); ?>
+								<?php if ( $no_callback ) : ?>
+									<span class="tsosk-badge tsosk-badge-warn tsosk-cron-nocb-badge" title="<?php esc_attr_e( 'Hook not registered on this request — often a deactivated plugin or a callback loaded only during cron.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'No callback', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td data-sort="<?php echo esc_attr( (string) $event['timestamp'] ); ?>" data-label="<?php esc_attr_e( 'Next Run', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<span title="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s', $event['timestamp'] ) ) . ' UTC'; ?>">
 									<?php echo esc_html( $time_label ); ?>
 								</span>
 							</td>
-							<td><?php echo esc_html( $interval_label ); ?></td>
-							<td>
+							<td data-sort="<?php echo esc_attr( (string) ( $event['schedule'] ? (int) $event['interval'] : 0 ) ); ?>" data-label="<?php esc_attr_e( 'Interval', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $interval_label ); ?></td>
+							<td data-sort="<?php echo esc_attr( strtolower( $source_label ) ); ?>" data-label="<?php esc_attr_e( 'Source', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php if ( 'wordpress' === $source['type'] ) : // phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText -- Internal source-type key, not visible text. ?>
 									<span class="tsosk-badge tsosk-badge-core">WordPress</span>
 								<?php elseif ( 'plugin' === $source['type'] ) : ?>
@@ -428,8 +568,9 @@ class TSOSK_Mod_Cron {
 									</span>
 								<?php endif; ?>
 							</td>
-							<td class="tsosk-actions">
+							<td class="tsosk-actions tsosk-cron-actions" data-label="<?php esc_attr_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php if ( ! $is_core ) : ?>
+								<span class="tsosk-cron-btns">
 								<button class="button button-small tsosk-cron-run"
 										data-hook="<?php echo esc_attr( $event['hook'] ); ?>"
 										data-timestamp="<?php echo esc_attr( (string) $event['timestamp'] ); ?>"
@@ -452,6 +593,7 @@ class TSOSK_Mod_Cron {
 										data-nonce="<?php echo esc_attr( $nonce ); ?>">
 									<?php esc_html_e( 'Delete', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 								</button>
+								</span>
 								<?php endif; ?>
 								<span class="tsosk-ajax-msg"></span>
 							</td>

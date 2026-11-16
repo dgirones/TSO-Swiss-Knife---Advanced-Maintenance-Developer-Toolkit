@@ -1689,7 +1689,7 @@ class TSOSK_Mod_Users {
 				<label class="screen-reader-text" for="tsosk-users-search"><?php esc_html_e( 'Search by name, username or email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></label>
 				<input type="search" id="tsosk-users-search" class="regular-text" autocomplete="off"
 					placeholder="<?php esc_attr_e( 'Search by name, username or email', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
-					data-nonce="<?php echo esc_attr( $nonce ); ?>" data-total="<?php echo esc_attr( (string) $total ); ?>">
+					data-nonce="<?php echo esc_attr( $nonce ); ?>" data-total="<?php echo esc_attr( (string) $total ); ?>" data-limit="<?php echo esc_attr( (string) self::BULK_RESULT_LIMIT ); ?>">
 			</div>
 			<p class="tsosk-users-select-note" id="tsosk-users-select-note" hidden></p>
 			<p class="description" id="tsosk-users-search-status" aria-live="polite"><?php echo esc_html( $this->directory_status_message( '', '', count( $users ), $has_more, $total ) ); ?></p>

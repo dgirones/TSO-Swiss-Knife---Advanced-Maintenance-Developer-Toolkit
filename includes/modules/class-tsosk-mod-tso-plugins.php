@@ -85,7 +85,6 @@ class TSOSK_Mod_Tso_Plugins {
 					__( 'Fix links inline from the dashboard — edit URL, smart suggestion, unlink or mark as OK.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Bulk actions, CSV export, daily scan and hourly background checks via WP-Cron.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Email alerts for hard-broken links and optional nofollow on broken links for SEO.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					__( 'Catalan and Spanish translations included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			),
 			array(
@@ -104,7 +103,6 @@ class TSOSK_Mod_Tso_Plugins {
 					__( 'Detect and remove tables left behind by uninstalled plugins — with review-only mode when confidence is low.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Full database SQL backup: export, download, restore, or delete backups from uploads.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'OPTIMIZE fragmented tables to reclaim space and improve query performance.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			),
 			array(
@@ -123,7 +121,6 @@ class TSOSK_Mod_Tso_Plugins {
 					__( 'Find orphan images and image sizes left behind by old plugins or themes, and delete them with a restorable backup.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Fix missing alt text, SEO file names and broken image URLs after a format change.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Repair broken attachments and keep a history of every optimization.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					__( 'Catalan, Spanish, and English interface included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			),
 			array(
@@ -142,7 +139,6 @@ class TSOSK_Mod_Tso_Plugins {
 					__( 'Optional modules, all off by default: redirects by role, moderation, content restrictions, brute-force lockouts, reCAPTCHA and TOTP two-factor authentication.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Front-end profiles with avatar editing and custom HTML notifications.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					__( 'Import the settings of Theme My Login and keep its shortcode working.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					__( 'Catalan and Spanish translations included.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 				),
 			),
 			array(

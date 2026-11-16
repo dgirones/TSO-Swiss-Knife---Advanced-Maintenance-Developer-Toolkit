@@ -313,6 +313,12 @@ class TSOSK_Admin {
 					'edit'                                 => __( 'Edit', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'save_schedule'                        => __( 'Save schedule', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'cron_rescheduled'                     => __( 'Event rescheduled.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %d: number of selected cron events */
+					'cron_bulk_selected'                   => __( '%d selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %d: number of selected cron events */
+					'cron_bulk_confirm_run'                => __( 'Run the %d selected event(s) now?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %d: number of selected cron events */
+					'cron_bulk_confirm_delete'             => __( 'Delete the %d selected event(s)? This cannot be undone.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'purge_expired'                        => __( 'Purge Expired', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'purge_all'                            => __( 'Purge All', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'soft_flush'                           => __( 'Soft Flush', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -346,6 +352,10 @@ class TSOSK_Admin {
 					'users_select_all_results'             => __( 'Select all %s matching users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %s: number of users */
 					'users_all_results_selected'           => __( 'All %s matching users are selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: 1: entries shown, 2: total entries */
+					'history_filter_count'                 => __( 'Showing %1$d of %2$d entries.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: maximum number of users one action can change */
+					'users_all_results_capped'             => __( 'One action changes at most %s users. Repeat it to reach the rest.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					/* translators: %s: number of users */
 					'users_all_results_confirm'            => __( 'Apply this role to all %s matching users?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'users_clear_selection'                => __( 'Clear selection', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -458,6 +468,12 @@ class TSOSK_Admin {
 					'sq_delete_confirm'                    => __( 'Delete this entry?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_ignore_confirm'                    => __( 'Ignore this SQL pattern? Matching queries will stop being logged.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_no_results'                        => __( 'No slow queries match your search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: milliseconds. */
+					'sq_page_ms'                           => __( 'Page: %s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					/* translators: %s: milliseconds. */
+					'sq_worst_ms'                          => __( 'Worst: %s ms', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sq_explaining'                        => __( 'Running EXPLAIN…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'sq_explain_ok'                        => __( 'EXPLAIN found no index problems for this query.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_slow'                              => __( 'slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_page'                              => __( 'Page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sq_of'                                => __( 'of', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -539,6 +555,7 @@ class TSOSK_Admin {
 					'snapshot_env_site_url'                => __( 'Site URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_wp_version'              => __( 'WordPress version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_plugin'                  => __( 'Snapshot schema', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					'snapshot_env_plugin_version'          => __( 'Plugin version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_php'                     => __( 'PHP version', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'snapshot_env_locale'                  => __( 'Locale', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 					'sr_more'                              => __( 'more rows', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),

@@ -46,6 +46,12 @@ class TSOSK_Mod_Slug_Manager {
 	/** Seconds a bulk fix may run before it stops and reports what is left. */
 	private const BULK_SECONDS = 20;
 
+	/** Maximum old-slug records read when checking category URL redirects. */
+	private const CAT_SCAN_LIMIT = 5000;
+
+	/** Maximum rows listed by the category URL redirects check. */
+	private const CAT_ROWS = 50;
+
 	/**
 	 * Instance.
 	 *
@@ -73,6 +79,7 @@ class TSOSK_Mod_Slug_Manager {
 		add_action( 'wp_ajax_tsosk_sm_bulk_preview', array( $this, 'ajax_bulk_preview' ) );
 		add_action( 'wp_ajax_tsosk_sm_bulk_fix', array( $this, 'ajax_bulk_fix' ) );
 		add_action( 'wp_ajax_tsosk_sm_search', array( $this, 'ajax_search' ) );
+		add_action( 'wp_ajax_tsosk_sm_cat_redirects', array( $this, 'ajax_category_redirects' ) );
 	}
 
 	// ── AJAX: rename a single slug ────────────────────────────────────────────
@@ -141,7 +148,7 @@ class TSOSK_Mod_Slug_Manager {
 
 		// Redirects only make sense for published content; child pages change URL too.
 		$was_public    = 'publish' === $post->post_status;
-		$want_redirect = $do_redirect && $was_public && class_exists( 'TSOSK_Mod_Redirects' );
+		$want_redirect = $do_redirect && $was_public && $this->redirects_available();
 		$old_permalink = (string) get_permalink( $post_id );
 		$old_urls      = $want_redirect ? $this->collect_old_urls( $post ) : array();
 
@@ -224,7 +231,7 @@ class TSOSK_Mod_Slug_Manager {
 				'changes'   => $preview['changes'],
 				'skipped'   => $preview['skipped'],
 				'threshold' => $threshold,
-				'redirect'  => $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ),
+				'redirect'  => $do_redirect && $this->redirects_available(),
 				'message'   => $this->build_bulk_preview_message( $preview, $threshold, $do_redirect ),
 			)
 		);
@@ -288,7 +295,7 @@ class TSOSK_Mod_Slug_Manager {
 			}
 
 			$was_public    = 'publish' === $post->post_status;
-			$want_redirect = $do_redirect && $was_public && class_exists( 'TSOSK_Mod_Redirects' );
+			$want_redirect = $do_redirect && $was_public && $this->redirects_available();
 			$old_urls      = $want_redirect ? $this->collect_old_urls( $post ) : array();
 
 			$result = wp_update_post(
@@ -334,7 +341,7 @@ class TSOSK_Mod_Slug_Manager {
 			$skipped,
 			$threshold
 		);
-		if ( $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ) ) {
+		if ( $do_redirect && $this->redirects_available() ) {
 			$summary .= ' ' . sprintf(
 				/* translators: 1: redirects created or updated, 2: redirects that already existed */
 				__( '301 redirects: %1$d created or updated, %2$d already existed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -538,7 +545,7 @@ class TSOSK_Mod_Slug_Manager {
 			);
 		}
 
-		if ( $do_redirect && class_exists( 'TSOSK_Mod_Redirects' ) ) {
+		if ( $do_redirect && $this->redirects_available() ) {
 			$message .= ' ' . __( '301 redirects will be created from the old URLs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
@@ -714,6 +721,73 @@ class TSOSK_Mod_Slug_Manager {
 		);
 	}
 
+	/**
+	 * Whether redirect rules can be created and will actually be applied (module present and switched on).
+	 */
+	private function redirects_available(): bool {
+		return class_exists( 'TSOSK_Mod_Redirects' ) && TSOSK_Mod_Redirects::is_enabled();
+	}
+
+	// ── AJAX: redirects for every category URL of renamed posts ───────────────
+
+	/**
+	 * Check, or create, the missing redirects for the other category URLs of renamed posts.
+	 */
+	public function ajax_category_redirects(): void {
+		check_ajax_referer( 'tsosk_sm_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		if ( ! $this->redirects_available() ) {
+			wp_send_json_error( __( 'The Redirects module is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$apply = ! empty( $_POST['apply'] );
+		$plan  = $this->plan_category_redirects();
+
+		if ( $apply && $plan['missing'] > 0 ) {
+			$stats   = $this->apply_url_moves( $plan['posts'] );
+			$created = (int) $stats['created'] + (int) $stats['updated'];
+			TSOSK_Activity_Log::log(
+				'slug-manager',
+				'update',
+				sprintf(
+					/* translators: %d: number of redirects created */
+					__( 'Category URL redirects created: %d.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$created
+				)
+			);
+			wp_send_json_success(
+				array(
+					'message' => sprintf(
+						/* translators: %d: number of redirects created */
+						_n( '%d redirect created.', '%d redirects created.', $created, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						$created
+					),
+					'missing' => 0,
+					'rows'    => array(),
+				)
+			);
+		}
+
+		if ( 0 === $plan['missing'] ) {
+			$message = __( 'All old URLs of the renamed posts already have a redirect.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		} else {
+			$message = sprintf(
+				/* translators: %d: number of redirects that are missing */
+				_n( '%d redirect is missing for another category URL of a renamed post.', '%d redirects are missing for other category URLs of renamed posts.', $plan['missing'], 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$plan['missing']
+			);
+		}
+		wp_send_json_success(
+			array(
+				'message' => $message,
+				'missing' => $plan['missing'],
+				'rows'    => $plan['rows'],
+			)
+		);
+	}
+
 	// ── Render ────────────────────────────────────────────────────────────────
 
 	/**
@@ -722,7 +796,7 @@ class TSOSK_Mod_Slug_Manager {
 	public function render(): void {
 		$nonce         = wp_create_nonce( 'tsosk_sm_nonce' );
 		$all_types     = $this->get_public_post_types();
-		$has_redirects = class_exists( 'TSOSK_Mod_Redirects' );
+		$has_redirects = $this->redirects_available();
 
 		// Filters live in the URL so the audit tabs, badges and Bulk Fix always agree.
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filters
@@ -987,6 +1061,28 @@ class TSOSK_Mod_Slug_Manager {
 			<div id="tsosk-sm-search-placeholder" style="color:#646970;">
 				<?php esc_html_e( 'Type a slug fragment or click Load All.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</div>
+		</div>
+		<?php endif; ?>
+
+		<?php if ( $has_redirects && $this->uses_category_permalinks() ) : ?>
+		<div class="tsosk-card" id="tsosk-sm-cat-card"
+				data-nonce="<?php echo esc_attr( $nonce ); ?>"
+				data-col-old="<?php echo esc_attr__( 'Old URL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
+				data-col-new="<?php echo esc_attr__( 'Redirects to', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+			<h3><?php esc_html_e( 'Category URL redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'A post in several categories can be opened under several URLs. This checks that every old URL of the posts you renamed has its 301 redirect, and creates the missing ones.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</p>
+			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+				<button class="button" id="tsosk-sm-cat-scan">
+					<?php esc_html_e( 'Check redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<button class="button button-primary" id="tsosk-sm-cat-apply" style="display:none;">
+					<?php esc_html_e( 'Create missing redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				</button>
+				<span class="tsosk-ajax-msg" id="tsosk-sm-cat-msg"></span>
+			</div>
+			<div id="tsosk-sm-cat-list" style="display:none;margin-top:10px;"></div>
 		</div>
 		<?php endif; ?>
 
@@ -1561,15 +1657,16 @@ class TSOSK_Mod_Slug_Manager {
 	}
 
 	/**
-	 * Permalinks of a post and, for hierarchical types, of all its published descendants.
+	 * URLs the post (and, for hierarchical types, its children) answers on before a rename.
 	 *
-	 * Renaming a parent page changes every child URL, so they all need a redirect.
+	 * Renaming a parent page changes every child URL, so they all need a redirect. A post in
+	 * several categories can be opened under one URL per category, so each of those needs one too.
 	 *
 	 * @param WP_Post $post Post about to be renamed.
-	 * @return array<int,string> Post ID => current permalink.
+	 * @return array<int,array<int,string>> Post ID => URLs before the change.
 	 */
 	private function collect_old_urls( $post ): array {
-		$urls = array( (int) $post->ID => (string) get_permalink( (int) $post->ID ) );
+		$urls = array( (int) $post->ID => $this->permalink_variants( $post ) );
 		if ( ! is_post_type_hierarchical( (string) $post->post_type ) ) {
 			return $urls;
 		}
@@ -1592,7 +1689,7 @@ class TSOSK_Mod_Slug_Manager {
 				)
 			);
 			foreach ( $children as $child_id ) {
-				$urls[ (int) $child_id ] = (string) get_permalink( (int) $child_id );
+				$urls[ (int) $child_id ] = array( (string) get_permalink( (int) $child_id ) );
 				$queue[]                 = (int) $child_id;
 				++$seen;
 			}
@@ -1607,7 +1704,7 @@ class TSOSK_Mod_Slug_Manager {
 	 *  2. Rules that pointed at the old URL are repointed to the new one (no redirect chains).
 	 *  3. The old URL gets a 301 to the new one (an existing rule for it is updated, never duplicated).
 	 *
-	 * @param array<int,string> $old_urls Post ID => permalink before the change.
+	 * @param array<int,array<int,string>> $old_urls Post ID => URLs before the change (one per category URL).
 	 * @return array{created:int,updated:int,exists:int,skipped:int,removed:int,flattened:int}
 	 */
 	private function apply_url_moves( array $old_urls ): array {
@@ -1619,7 +1716,7 @@ class TSOSK_Mod_Slug_Manager {
 			'removed'   => 0,
 			'flattened' => 0,
 		);
-		if ( ! class_exists( 'TSOSK_Mod_Redirects' ) || empty( $old_urls ) ) {
+		if ( ! $this->redirects_available() || empty( $old_urls ) ) {
 			return $stats;
 		}
 
@@ -1629,73 +1726,76 @@ class TSOSK_Mod_Slug_Manager {
 		}
 		$changed = false;
 
-		foreach ( $old_urls as $post_id => $old_url ) {
+		foreach ( $old_urls as $post_id => $post_old_urls ) {
 			$new_url  = (string) get_permalink( (int) $post_id );
-			$old_path = $this->normalize_redirect_path( (string) wp_parse_url( (string) $old_url, PHP_URL_PATH ) );
 			$new_path = $this->normalize_redirect_path( (string) wp_parse_url( $new_url, PHP_URL_PATH ) );
-			if ( '' === $new_url || '/' === $old_path || '/' === $new_path || $old_path === $new_path ) {
-				++$stats['skipped'];
-				continue;
-			}
 
-			// 1. Rules that would hijack the new URL.
-			foreach ( $rules as $rule_id => $rule ) {
-				if ( 'exact' === ( $rule['match_type'] ?? 'exact' ) && $this->normalize_redirect_path( (string) ( $rule['source'] ?? '' ) ) === $new_path ) {
-					unset( $rules[ $rule_id ] );
-					++$stats['removed'];
-					$changed = true;
-				}
-			}
-
-			// 2. Flatten chains: anything that redirected to the old URL now goes straight to the new one.
-			foreach ( $rules as $rule_id => $rule ) {
-				$status = (int) ( $rule['status'] ?? 301 );
-				$target = (string) ( $rule['target'] ?? '' );
-				if ( $status < 300 || $status > 399 || '' === $target || false !== strpos( $target, '?' ) ) {
+			foreach ( array_unique( (array) $post_old_urls ) as $old_url ) {
+				$old_path = $this->normalize_redirect_path( (string) wp_parse_url( (string) $old_url, PHP_URL_PATH ) );
+				if ( '' === $new_url || '/' === $old_path || '/' === $new_path || $old_path === $new_path ) {
+					++$stats['skipped'];
 					continue;
 				}
-				if ( $this->target_path( $target ) === $old_path ) {
-					$rules[ $rule_id ]['target'] = $new_url;
-					++$stats['flattened'];
+
+				// 1. Rules that would hijack the new URL.
+				foreach ( $rules as $rule_id => $rule ) {
+					if ( 'exact' === ( $rule['match_type'] ?? 'exact' ) && $this->normalize_redirect_path( (string) ( $rule['source'] ?? '' ) ) === $new_path ) {
+						unset( $rules[ $rule_id ] );
+						++$stats['removed'];
+						$changed = true;
+					}
+				}
+
+				// 2. Flatten chains: anything that redirected to the old URL now goes straight to the new one.
+				foreach ( $rules as $rule_id => $rule ) {
+					$status = (int) ( $rule['status'] ?? 301 );
+					$target = (string) ( $rule['target'] ?? '' );
+					if ( $status < 300 || $status > 399 || '' === $target || false !== strpos( $target, '?' ) ) {
+						continue;
+					}
+					if ( $this->target_path( $target ) === $old_path ) {
+						$rules[ $rule_id ]['target'] = $new_url;
+						++$stats['flattened'];
+						$changed = true;
+					}
+				}
+
+				// 3. The rule for the old URL itself.
+				$found = false;
+				foreach ( $rules as $rule_id => $rule ) {
+					if ( 'exact' !== ( $rule['match_type'] ?? 'exact' ) || $this->normalize_redirect_path( (string) ( $rule['source'] ?? '' ) ) !== $old_path ) {
+						continue;
+					}
+					$found  = true;
+					$status = (int) ( $rule['status'] ?? 301 );
+					if ( ! empty( $rule['enabled'] ) && $status >= 300 && $status <= 399 && $this->target_path( (string) ( $rule['target'] ?? '' ) ) === $new_path ) {
+						++$stats['exists'];
+					} else {
+						$rules[ $rule_id ]['target']  = $new_url;
+						$rules[ $rule_id ]['status']  = 301;
+						$rules[ $rule_id ]['enabled'] = true;
+						++$stats['updated'];
+						$changed = true;
+					}
+					break;
+				}
+
+				if ( ! $found ) {
+					$id           = 'tsosk_' . substr( md5( uniqid( 'sm_', true ) ), 0, 12 );
+					$rules[ $id ] = array(
+						'id'         => $id,
+						'source'     => $old_path,
+						'target'     => $new_url,
+						'match_type' => 'exact',
+						'status'     => 301,
+						'enabled'    => true,
+						'hits'       => 0,
+						'last_hit'   => 0,
+						'created'    => time(),
+					);
+					++$stats['created'];
 					$changed = true;
 				}
-			}
-
-			// 3. The rule for the old URL itself.
-			$found = false;
-			foreach ( $rules as $rule_id => $rule ) {
-				if ( 'exact' !== ( $rule['match_type'] ?? 'exact' ) || $this->normalize_redirect_path( (string) ( $rule['source'] ?? '' ) ) !== $old_path ) {
-					continue;
-				}
-				$found  = true;
-				$status = (int) ( $rule['status'] ?? 301 );
-				if ( ! empty( $rule['enabled'] ) && $status >= 300 && $status <= 399 && $this->target_path( (string) ( $rule['target'] ?? '' ) ) === $new_path ) {
-					++$stats['exists'];
-				} else {
-					$rules[ $rule_id ]['target']  = $new_url;
-					$rules[ $rule_id ]['status']  = 301;
-					$rules[ $rule_id ]['enabled'] = true;
-					++$stats['updated'];
-					$changed = true;
-				}
-				break;
-			}
-
-			if ( ! $found ) {
-				$id           = 'tsosk_' . substr( md5( uniqid( 'sm_', true ) ), 0, 12 );
-				$rules[ $id ] = array(
-					'id'         => $id,
-					'source'     => $old_path,
-					'target'     => $new_url,
-					'match_type' => 'exact',
-					'status'     => 301,
-					'enabled'    => true,
-					'hits'       => 0,
-					'last_hit'   => 0,
-					'created'    => time(),
-				);
-				++$stats['created'];
-				$changed = true;
 			}
 		}
 
@@ -1703,6 +1803,145 @@ class TSOSK_Mod_Slug_Manager {
 			update_option( 'tsosk_redirect_rules', $rules, true ); // Read on every request.
 		}
 		return $stats;
+	}
+
+	/**
+	 * Whether the permalink structure puts the category in the URL.
+	 *
+	 * @return bool
+	 */
+	private function uses_category_permalinks(): bool {
+		return false !== strpos( (string) get_option( 'permalink_structure' ), '%category%' );
+	}
+
+	/**
+	 * Every URL a post can be opened under, the live permalink first.
+	 *
+	 * With %category% in the permalink structure a post in several categories has one URL per
+	 * category and WordPress serves all of them, so a renamed post needs a redirect for each.
+	 * $slug builds the URLs for another (old) slug.
+	 *
+	 * @param WP_Post $post Post.
+	 * @param string  $slug Slug to build the URLs for (empty: the current one).
+	 * @return array<int,string>
+	 */
+	private function permalink_variants( $post, string $slug = '' ): array {
+		if ( '' !== $slug ) {
+			$post            = clone $post;
+			$post->post_name = $slug;
+		}
+
+		$urls = array( (string) get_permalink( $post ) );
+		if ( 'post' !== $post->post_type || ! $this->uses_category_permalinks() ) {
+			return $urls;
+		}
+
+		$categories = get_the_category( (int) $post->ID );
+		if ( count( $categories ) < 2 ) {
+			return $urls;
+		}
+		foreach ( $categories as $category ) {
+			$force = static function () use ( $category ) {
+				return $category;
+			};
+			add_filter( 'post_link_category', $force, 99 );
+			$urls[] = (string) get_permalink( $post );
+			remove_filter( 'post_link_category', $force, 99 );
+		}
+		return array_values( array_unique( array_filter( $urls ) ) );
+	}
+
+	/**
+	 * Old URLs of renamed multi-category posts that have no redirect yet.
+	 *
+	 * Only posts that already have a redirect for one of their category URLs are completed (the
+	 * single rule a rename used to create). The rest are served by WordPress' own old-slug redirect.
+	 *
+	 * @return array{posts:array<int,array<int,string>>,missing:int,rows:array<int,array{old:string,new:string}>}
+	 */
+	private function plan_category_redirects(): array {
+		global $wpdb;
+
+		$plan = array(
+			'posts'   => array(),
+			'missing' => 0,
+			'rows'    => array(),
+		);
+		if ( ! $this->redirects_available() || ! $this->uses_category_permalinks() ) {
+			return $plan;
+		}
+
+		$rules = get_option( 'tsosk_redirect_rules', array() );
+		$known = array();
+		foreach ( is_array( $rules ) ? $rules : array() as $rule ) {
+			if ( 'exact' === ( $rule['match_type'] ?? 'exact' ) ) {
+				$known[ $this->normalize_redirect_path( (string) ( $rule['source'] ?? '' ) ) ] = true;
+			}
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only lookup of the old slugs WordPress keeps.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT m.post_id, m.meta_value
+				   FROM {$wpdb->postmeta} m
+				  INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id
+				  WHERE m.meta_key = %s AND p.post_type = %s AND p.post_status = %s
+				  ORDER BY m.post_id ASC
+				  LIMIT %d",
+				'_wp_old_slug',
+				'post',
+				'publish',
+				self::CAT_SCAN_LIMIT
+			)
+		);
+
+		$old_slugs = array();
+		foreach ( (array) $rows as $row ) {
+			$old_slugs[ (int) $row->post_id ][] = (string) $row->meta_value;
+		}
+
+		foreach ( $old_slugs as $post_id => $slugs ) {
+			$post = get_post( $post_id );
+			if ( ! $post || count( get_the_category( $post_id ) ) < 2 ) {
+				continue;
+			}
+
+			$new_path = $this->normalize_redirect_path( (string) wp_parse_url( (string) get_permalink( $post ), PHP_URL_PATH ) );
+			$covered  = false;
+			$missing  = array();
+			foreach ( array_unique( $slugs ) as $slug ) {
+				if ( $slug === $post->post_name ) {
+					continue;
+				}
+				foreach ( $this->permalink_variants( $post, $slug ) as $url ) {
+					$path = $this->normalize_redirect_path( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+					if ( $path === $new_path ) {
+						continue;
+					}
+					if ( isset( $known[ $path ] ) ) {
+						$covered = true;
+					} else {
+						$missing[ $path ] = $url;
+					}
+				}
+			}
+			if ( ! $covered || empty( $missing ) ) {
+				continue;
+			}
+
+			$plan['posts'][ $post_id ] = array_values( $missing );
+			foreach ( array_keys( $missing ) as $path ) {
+				++$plan['missing'];
+				if ( count( $plan['rows'] ) < self::CAT_ROWS ) {
+					$plan['rows'][] = array(
+						'old' => $path,
+						'new' => $new_path,
+					);
+				}
+			}
+		}
+
+		return $plan;
 	}
 
 	/**
@@ -1742,13 +1981,19 @@ class TSOSK_Mod_Slug_Manager {
 		if ( ! $was_public ) {
 			return __( 'Slug updated. No redirect was needed because the post is not published.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
-		if ( ! class_exists( 'TSOSK_Mod_Redirects' ) ) {
+		if ( ! $this->redirects_available() ) {
 			return __( 'Slug updated, but no redirect was created because the Redirects module is not active.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		}
 
 		$written = (int) ( $stats['created'] ?? 0 ) + (int) ( $stats['updated'] ?? 0 );
 		$exists  = (int) ( $stats['exists'] ?? 0 );
-		if ( $written > 0 ) {
+		if ( $written > 1 && 1 === $moved_count ) {
+			$message = sprintf(
+				/* translators: %d: number of redirects created, one for each category URL of the post */
+				__( 'Slug updated and %d 301 redirects created (one for each category URL).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+				$written
+			);
+		} elseif ( $written > 0 ) {
 			$message = __( 'Slug updated and 301 redirect created.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 		} elseif ( $exists > 0 ) {
 			$message = __( 'Slug updated. A 301 redirect for the old URL already existed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );

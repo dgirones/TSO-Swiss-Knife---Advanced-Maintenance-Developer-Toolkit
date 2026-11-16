@@ -80,6 +80,13 @@ class TSOSK_Mod_Slow_Queries {
 	private $query_backtraces = array();
 
 	/**
+	 * Per-request cache of collected issues.
+	 *
+	 * @var array|null
+	 */
+	private $issues_memo = null;
+
+	/**
 	 * Get instance.
 	 *
 	 * @return TSOSK_Mod_Slow_Queries
@@ -115,6 +122,7 @@ class TSOSK_Mod_Slow_Queries {
 		add_action( 'wp_ajax_tsosk_sq_delete_entry', array( $this, 'ajax_delete_entry' ) );
 		add_action( 'wp_ajax_tsosk_sq_get_log', array( $this, 'ajax_get_log' ) );
 		add_action( 'wp_ajax_tsosk_sq_ignore_pattern', array( $this, 'ajax_ignore_pattern' ) );
+		add_action( 'wp_ajax_tsosk_sq_explain', array( $this, 'ajax_explain' ) );
 		add_action( 'admin_post_tsosk_sq_export', array( $this, 'handle_export' ) );
 
 		$settings = $this->get_settings();
@@ -317,6 +325,28 @@ class TSOSK_Mod_Slow_Queries {
 	}
 
 	/**
+	 * EXPLAIN button for a stored SELECT (the result is filled in by JavaScript).
+	 *
+	 * @param string $sql   Stored SQL (same string the snapshot holds).
+	 * @param string $nonce Nonce for tsosk_sq_nonce.
+	 */
+	private function render_explain_button( string $sql, string $nonce ): void {
+		if ( 1 !== preg_match( '/^\s*\(?\s*SELECT\b/i', $sql ) ) {
+			return;
+		}
+		?>
+		<div class="tsosk-sq-explain">
+			<button type="button" class="button button-small tsosk-sq-explain-btn"
+					data-hash="<?php echo esc_attr( sha1( $sql ) ); ?>"
+					data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				<?php esc_html_e( 'EXPLAIN', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</button>
+			<div class="tsosk-sq-explain-out" hidden></div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Echo SQL (or fingerprint) collapsed; expand/collapse via button (reliable inside tables).
 	 *
 	 * @param string $sql     SQL or fingerprint text.
@@ -382,20 +412,14 @@ class TSOSK_Mod_Slow_Queries {
 		$slow     = array();
 		$patterns = $s['ignore_patterns'];
 		foreach ( $wpdb->queries as $qi => $q ) {
-			$time = (float) ( $q[1] ?? 0 );
-			if ( $time < $threshold_sec ) {
+			// Same definition of "slow" as the admin bar, the last-page snapshot and the live list.
+			if ( ! $this->is_slow_query_row( $q, $threshold_sec, $patterns ) ) {
 				continue;
 			}
+			$time   = (float) ( $q[1] ?? 0 );
 			$caller = (string) ( $q[2] ?? '' );
-			// Queries fired while rendering the admin bar are not the site's own load.
-			if ( $this->caller_is_admin_bar( $caller ) ) {
-				continue;
-			}
-			$sql = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
+			$sql    = preg_replace( '/\s+/', ' ', trim( (string) $q[0] ) );
 			if ( ! is_string( $sql ) || '' === $sql ) {
-				continue;
-			}
-			if ( $this->is_ignored_sql( $sql, $patterns ) ) {
 				continue;
 			}
 			// Strip internal wpdb frames from caller.
@@ -1279,6 +1303,226 @@ class TSOSK_Mod_Slow_Queries {
 	}
 
 	/**
+	 * Human label for a query-problem type.
+	 *
+	 * @param string $type Problem type key.
+	 * @return string
+	 */
+	private function issue_label( string $type ): string {
+		switch ( $type ) {
+			case 'error':
+				return __( 'Query failed', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'rand':
+				return __( 'ORDER BY RAND(): sorts every matching row, very slow on large tables', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'like_wild':
+				return __( 'LIKE with a leading wildcard: it cannot use an index', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			case 'no_where':
+				return __( 'Reads a whole table: no WHERE and no LIMIT', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		return $type;
+	}
+
+	/**
+	 * Find failed queries and common bad practices in the queries of this request.
+	 *
+	 * Failed queries come from wpdb itself ($EZSQL_ERROR); the rest are cheap pattern checks.
+	 *
+	 * @param array<int, mixed> $queries $wpdb->queries.
+	 * @return array<int, array{type:string,sql:string,count:int,ms:float,caller:string,origin:string,error:string}>
+	 */
+	private function collect_query_issues( array $queries ): array {
+		$memo_key = count( $queries );
+		if ( null !== $this->issues_memo && $this->issues_memo[0] === $memo_key ) {
+			return $this->issues_memo[1];
+		}
+		$result            = $this->collect_query_issues_uncached( $queries );
+		$this->issues_memo = array( $memo_key, $result );
+		return $result;
+	}
+
+	/**
+	 * Builds the issue list (failed queries and bad-practice warnings).
+	 *
+	 * @param array $queries Rows of $wpdb->queries.
+	 * @return array
+	 */
+	private function collect_query_issues_uncached( array $queries ): array {
+		global $EZSQL_ERROR; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Core wpdb global.
+
+		$found = array();
+		$add   = function ( string $type, string $sql, float $ms, int $qi, string $error = '' ) use ( &$found, $queries ): void {
+			$key = $type . '|' . md5( $this->fingerprint_sql( $sql ) . $error );
+			if ( isset( $found[ $key ] ) ) {
+				++$found[ $key ]['count'];
+				$found[ $key ]['ms'] += $ms;
+				return;
+			}
+			$stack         = isset( $queries[ $qi ][2] ) ? (string) $queries[ $qi ][2] : '';
+			$found[ $key ] = array(
+				'type'   => $type,
+				'sql'    => mb_substr( $this->redact_sql_for_storage( $sql ), 0, 2000 ),
+				'count'  => 1,
+				'ms'     => $ms,
+				'caller' => mb_substr( $stack, 0, 500 ),
+				'origin' => $this->origin_for_query_index( $qi ),
+				'error'  => mb_substr( $error, 0, 300 ),
+			);
+		};
+
+		// Failed queries: match each wpdb error back to the query that caused it.
+		if ( is_array( $EZSQL_ERROR ) && array() !== $EZSQL_ERROR ) {
+			$by_sql = array();
+			foreach ( $queries as $qi => $q ) {
+				if ( is_array( $q ) && isset( $q[0] ) ) {
+					$by_sql[ $this->normalize_sql_dupe_key( (string) $q[0] ) ] = (int) $qi;
+				}
+			}
+			foreach ( array_slice( $EZSQL_ERROR, 0, 30 ) as $err ) {
+				if ( ! is_array( $err ) || empty( $err['query'] ) ) {
+					continue;
+				}
+				$sql = $this->normalize_sql_dupe_key( (string) $err['query'] );
+				$qi  = $by_sql[ $sql ] ?? -1;
+				$add( 'error', $sql, isset( $queries[ $qi ][1] ) ? (float) $queries[ $qi ][1] * 1000 : 0.0, $qi, (string) ( $err['error_str'] ?? '' ) );
+			}
+		}
+
+		foreach ( $queries as $qi => $q ) {
+			if ( ! is_array( $q ) || ! isset( $q[0] ) ) {
+				continue;
+			}
+			$raw = (string) $q[0];
+			if ( ! preg_match( '/^\s*\(?\s*SELECT\b/i', $raw ) || $this->caller_is_admin_bar( (string) ( $q[2] ?? '' ) ) ) {
+				continue;
+			}
+			$sql = $this->normalize_sql_dupe_key( $raw );
+			$ms  = (float) ( $q[1] ?? 0 ) * 1000;
+			if ( false !== stripos( $sql, 'RAND()' ) && preg_match( '/\bORDER\s+BY\s+RAND\s*\(\s*\)/i', $sql ) ) {
+				$add( 'rand', $sql, $ms, (int) $qi );
+			}
+			if ( false !== stripos( $sql, 'LIKE' ) && preg_match( "/\bLIKE\s+'%/i", $sql ) ) {
+				$add( 'like_wild', $sql, $ms, (int) $qi );
+			}
+			if (
+				preg_match( '/\bFROM\b/i', $sql )
+				&& ! preg_match( '/\b(WHERE|LIMIT|GROUP\s+BY)\b/i', $sql )
+				&& ! preg_match( '/\b(COUNT|SUM|MAX|MIN|AVG|FOUND_ROWS)\s*\(/i', $sql )
+				&& ! preg_match( '/\binformation_schema\b/i', $sql )
+			) {
+				$add( 'no_where', $sql, $ms, (int) $qi );
+			}
+		}
+
+		$list = array_values( $found );
+		usort(
+			$list,
+			static function ( array $a, array $b ): int {
+				$ea = 'error' === $a['type'] ? 1 : 0;
+				$eb = 'error' === $b['type'] ? 1 : 0;
+				if ( $ea !== $eb ) {
+					return $eb <=> $ea;
+				}
+				return $b['ms'] <=> $a['ms'];
+			}
+		);
+		return array_slice( $list, 0, 25 );
+	}
+
+	/**
+	 * AJAX: EXPLAIN one of the queries of the last page snapshot (read-only; EXPLAIN does not run the query).
+	 */
+	public function ajax_explain(): void {
+		check_ajax_referer( 'tsosk_sq_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$hash = isset( $_POST['hash'] ) ? sanitize_key( wp_unslash( $_POST['hash'] ) ) : '';
+		if ( 1 !== preg_match( '/^[a-f0-9]{40}$/', $hash ) ) {
+			wp_send_json_error( __( 'Invalid parameters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		// The SQL is looked up server-side in the stored snapshot: it is never taken from the request.
+		$snap = $this->get_last_dupes_snapshot();
+		$sql  = '';
+		if ( $snap ) {
+			foreach ( array( 'dupes', 'slow', 'issues' ) as $list ) {
+				foreach ( (array) $snap[ $list ] as $row ) {
+					if ( isset( $row['sql'] ) && sha1( (string) $row['sql'] ) === $hash ) {
+						$sql = (string) $row['sql'];
+						break 2;
+					}
+				}
+			}
+		}
+		if ( '' === $sql ) {
+			wp_send_json_error( __( 'That query is no longer in the last page snapshot. Open the page again and retry.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		if ( 1 !== preg_match( '/^\s*\(?\s*SELECT\b/i', $sql ) || false !== strpos( $sql, ';' ) || false !== strpos( $sql, '[redacted' ) || false !== strpos( $sql, '…' ) ) {
+			wp_send_json_error( __( 'This query cannot be explained: it is not a plain SELECT or its text was shortened when stored.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		global $wpdb;
+		$wpdb->suppress_errors( true );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Read-only EXPLAIN of a SELECT taken from the server-side snapshot (single statement, no user input).
+		$rows = $wpdb->get_results( 'EXPLAIN ' . $sql, ARRAY_A );
+		$err  = (string) $wpdb->last_error;
+		$wpdb->suppress_errors( false );
+		if ( ! is_array( $rows ) || '' !== $err ) {
+			wp_send_json_error( '' !== $err ? $err : __( 'EXPLAIN returned no result.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$warnings = array();
+		$out      = array();
+		foreach ( $rows as $r ) {
+			$row   = array();
+			$table = (string) ( $r['table'] ?? '' );
+			foreach ( array( 'id', 'select_type', 'table', 'type', 'possible_keys', 'key', 'rows', 'Extra' ) as $col ) {
+				$row[ $col ] = isset( $r[ $col ] ) ? (string) $r[ $col ] : '';
+			}
+			$out[] = $row;
+			// Tiny tables are always scanned and sorted in memory: not worth a warning.
+			if ( (int) ( $r['rows'] ?? 0 ) < 200 ) {
+				continue;
+			}
+			if ( 'ALL' === ( $r['type'] ?? '' ) ) {
+				$warnings[] = sprintf(
+					/* translators: 1: table name, 2: estimated rows */
+					__( 'Full table scan on %1$s (about %2$s rows examined).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$table,
+					number_format_i18n( (int) ( $r['rows'] ?? 0 ) )
+				);
+			} elseif ( empty( $r['key'] ) && ! empty( $r['possible_keys'] ) ) {
+				$warnings[] = sprintf(
+					/* translators: %s: table name */
+					__( 'Table %s has candidate indexes but none is used.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$table
+				);
+			}
+			$extra = (string) ( $r['Extra'] ?? '' );
+			if ( false !== stripos( $extra, 'Using filesort' ) ) {
+				$warnings[] = sprintf(
+					/* translators: %s: table name */
+					__( 'Table %s: results are sorted without an index (filesort).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$table
+				);
+			}
+			if ( false !== stripos( $extra, 'Using temporary' ) ) {
+				$warnings[] = sprintf(
+					/* translators: %s: table name */
+					__( 'Table %s: a temporary table is created.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$table
+				);
+			}
+		}
+		wp_send_json_success(
+			array(
+				'rows'     => $out,
+				'warnings' => array_values( array_unique( $warnings ) ),
+			)
+		);
+	}
+
+	/**
 	 * Persist a duplicate-query snapshot for the Slow Query Monitor tab.
 	 *
 	 * @param array<int, mixed> $queries Raw $wpdb->queries.
@@ -1319,17 +1563,15 @@ class TSOSK_Mod_Slow_Queries {
 		}
 
 		// Slowest queries of the same request (the bar's "Slow" and "Slowest" rows link here).
-		$threshold_sec = $this->get_settings()['threshold_ms'] / 1000.0;
+		$sq_settings   = $this->get_settings();
+		$threshold_sec = $sq_settings['threshold_ms'] / 1000.0;
 		$slow_all      = array();
 		foreach ( $queries as $qi => $q ) {
-			if ( ! is_array( $q ) ) {
+			if ( ! $this->is_slow_query_row( $q, $threshold_sec, $sq_settings['ignore_patterns'] ) ) {
 				continue;
 			}
-			$time   = (float) ( $q[1] ?? 0 );
-			$caller = (string) ( $q[2] ?? '' );
-			if ( $time < $threshold_sec || $this->caller_is_admin_bar( $caller ) ) {
-				continue;
-			}
+			$time       = (float) ( $q[1] ?? 0 );
+			$caller     = (string) ( $q[2] ?? '' );
 			$slow_all[] = array(
 				'sql'    => mb_substr( $this->redact_sql_for_storage( $this->normalize_sql_dupe_key( (string) ( $q[0] ?? '' ) ) ), 0, 2000 ),
 				'ms'     => round( $time * 1000, 3 ),
@@ -1354,6 +1596,7 @@ class TSOSK_Mod_Slow_Queries {
 				'slow_total'  => count( $slow_all ),
 				'dupes'       => $list,
 				'slow'        => $slow,
+				'issues'      => $this->collect_query_issues( $queries ),
 			),
 			12 * HOUR_IN_SECONDS
 		);
@@ -1406,7 +1649,7 @@ class TSOSK_Mod_Slow_Queries {
 	/**
 	 * Read the last duplicate snapshot for the current admin (if any).
 	 *
-	 * @return array{ts:int,url:string,query_count:int,slow_total:int,dupes:array<int,array{sql:string,count:int,time_ms:float,caller:string,origin:string,callers:array<string,int>,components:array<string,int>,troublemakers:array<string,int>}>,slow:array<int,array{sql:string,ms:float,caller:string,origin:string}>}|null
+	 * @return array{ts:int,url:string,query_count:int,slow_total:int,issues:array<int,array<string,mixed>>,dupes:array<int,array{sql:string,count:int,time_ms:float,caller:string,origin:string,callers:array<string,int>,components:array<string,int>,troublemakers:array<string,int>}>,slow:array<int,array{sql:string,ms:float,caller:string,origin:string}>}|null
 	 */
 	private function get_last_dupes_snapshot(): ?array {
 		if ( ! is_user_logged_in() ) {
@@ -1452,6 +1695,21 @@ class TSOSK_Mod_Slow_Queries {
 				'origin' => isset( $row['origin'] ) ? (string) $row['origin'] : '',
 			);
 		}
+		$issues = array();
+		foreach ( (array) ( $raw['issues'] ?? array() ) as $row ) {
+			if ( ! is_array( $row ) || empty( $row['sql'] ) || empty( $row['type'] ) ) {
+				continue;
+			}
+			$issues[] = array(
+				'type'   => sanitize_key( (string) $row['type'] ),
+				'sql'    => (string) $row['sql'],
+				'count'  => max( 1, absint( $row['count'] ?? 1 ) ),
+				'ms'     => (float) ( $row['ms'] ?? 0 ),
+				'caller' => isset( $row['caller'] ) ? (string) $row['caller'] : '',
+				'origin' => isset( $row['origin'] ) ? (string) $row['origin'] : '',
+				'error'  => isset( $row['error'] ) ? (string) $row['error'] : '',
+			);
+		}
 		return array(
 			'ts'          => absint( $raw['ts'] ?? 0 ),
 			'url'         => isset( $raw['url'] ) ? (string) $raw['url'] : '',
@@ -1459,6 +1717,7 @@ class TSOSK_Mod_Slow_Queries {
 			'slow_total'  => absint( $raw['slow_total'] ?? count( $slow ) ),
 			'dupes'       => $dupes,
 			'slow'        => $slow,
+			'issues'      => $issues,
 		);
 	}
 
@@ -1588,6 +1847,7 @@ class TSOSK_Mod_Slow_Queries {
 		);
 		$filtered_count = count( $last_payload['rows'] );
 		$raw_dupe_count = count( (array) $last['dupes'] );
+		$explain_nonce  = wp_create_nonce( 'tsosk_sq_nonce' );
 		?>
 		<div class="tsosk-card" id="tsosk-sq-last-request">
 			<h3>
@@ -1595,34 +1855,39 @@ class TSOSK_Mod_Slow_Queries {
 				<?php esc_html_e( 'Last page you opened', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</h3>
 			<p class="description">
-				<?php esc_html_e( 'Exact duplicates and slowest queries from the last page you opened. Duplicates are limited to the plugins chosen in Monitor Settings → Copy to AI (e.g. tso-*); with none chosen, all are shown. The page you are on now has its own live table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'What the last page you opened did. The page you are on now has its own live table further down.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
-			<p>
-				<?php
-				if ( array() !== $copy_plugins && $raw_dupe_count > $filtered_count ) {
-					printf(
-						/* translators: 1: query count, 2: duplicates matching selected plugins, 3: total duplicate patterns on that page, 4: slow query count, 5: URL path, 6: relative time */
-						esc_html__( '%1$d queries on last page · Selected-plugin duplicates: %2$d (of %3$d on that page) · %4$d slow · %5$s · %6$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						(int) $last['query_count'],
-						(int) $filtered_count,
-						(int) $raw_dupe_count,
-						(int) $last['slow_total'],
-						esc_html( $last['url'] ? $last['url'] : '—' ),
-						esc_html( $when )
-					);
-				} else {
-					printf(
-						/* translators: 1: query count, 2: selected-plugin duplicate count, 3: slow query count, 4: URL path, 5: relative time */
-						esc_html__( '%1$d queries on last page · Duplicates: %2$d · %3$d slow · %4$s · %5$s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						(int) $last['query_count'],
-						(int) $filtered_count,
-						(int) $last['slow_total'],
-						esc_html( $last['url'] ? $last['url'] : '—' ),
-						esc_html( $when )
-					);
+			<p class="tsosk-sq-last-meta">
+				<code class="tsosk-sq-last-url"><?php echo esc_html( $last['url'] ? $last['url'] : '—' ); ?></code>
+				<span class="tsosk-sq-last-when"><?php echo esc_html( $when ); ?></span>
+			</p>
+			<?php
+			$issue_total = count( (array) $last['issues'] );
+			$error_total = 0;
+			foreach ( (array) $last['issues'] as $iss ) {
+				if ( 'error' === $iss['type'] ) {
+					++$error_total;
 				}
-				?>
-			</p>
+			}
+			?>
+			<div class="tsosk-sq-stats-row">
+				<div class="tsosk-sq-stat">
+					<span class="tsosk-sq-stat-val"><?php echo esc_html( number_format_i18n( (int) $last['query_count'] ) ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</div>
+				<a class="tsosk-sq-stat tsosk-sq-stat-link" href="#tsosk-sq-last-dupes">
+					<span class="tsosk-sq-stat-val <?php echo $raw_dupe_count > 0 ? 'tsosk-sq-warn' : ''; ?>"><?php echo esc_html( number_format_i18n( $raw_dupe_count ) ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Duplicates', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</a>
+				<a class="tsosk-sq-stat tsosk-sq-stat-link" href="#tsosk-sq-last-slow">
+					<span class="tsosk-sq-stat-val <?php echo (int) $last['slow_total'] > 0 ? 'tsosk-sq-warn' : ''; ?>"><?php echo esc_html( number_format_i18n( (int) $last['slow_total'] ) ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</a>
+				<a class="tsosk-sq-stat tsosk-sq-stat-link" href="#tsosk-sq-last-issues">
+					<span class="tsosk-sq-stat-val <?php echo $error_total > 0 ? 'tsosk-sq-warn' : ( $issue_total > 0 ? 'tsosk-sq-amber' : '' ); ?>"><?php echo esc_html( number_format_i18n( $issue_total ) ); ?></span>
+					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Problems', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+				</a>
+			</div>
 			<?php if ( ! $detect && ( ! empty( $last['dupes'] ) || ! empty( $last['slow'] ) ) ) : ?>
 			<div class="tsosk-notice tsosk-notice-info">
 				<?php esc_html_e( 'To see which plugin or theme runs each query, turn on "Origin detection" in the Settings tab and visit the page again.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -1647,12 +1912,14 @@ class TSOSK_Mod_Slow_Queries {
 			<?php if ( 0 === $filtered_count ) : ?>
 				<p class="description">
 					<?php
-					if ( array() === $copy_plugins ) {
-						esc_html_e( 'No exact duplicate queries on that page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-					} elseif ( ! $detect ) {
+					if ( array() !== $copy_plugins && $detect && $raw_dupe_count > 0 ) {
+						printf(
+							/* translators: %d: duplicate queries hidden by the plugin filter */
+							esc_html__( 'No duplicates from the plugins you selected. %d from other plugins are hidden by the plugin filter (Monitor Settings).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+							(int) $raw_dupe_count
+						);
+					} elseif ( array() !== $copy_plugins && ! $detect ) {
 						esc_html_e( 'Turn on Origin detection in the Settings tab, save, then visit another page — otherwise this panel cannot attribute duplicates to your selected plugins.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-					} elseif ( ! empty( $last['dupes'] ) ) {
-						esc_html_e( 'No duplicates from the plugins selected in Monitor Settings → Copy to AI. Other plugins’ duplicates (if any) appear in the live table below.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					} else {
 						esc_html_e( 'No exact duplicate queries on that page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 					}
@@ -1700,6 +1967,7 @@ class TSOSK_Mod_Slow_Queries {
 							</td>
 							<td class="tsosk-sq-cell-sql">
 								<?php $this->render_collapsible_sql( (string) $prow['sql'] ); ?>
+								<?php $this->render_explain_button( (string) $prow['sql'], $explain_nonce ); ?>
 							</td>
 							<td class="tsosk-sq-cell-caller">
 								<?php $this->render_count_map( (array) $prow['callers'] ); ?>
@@ -1716,6 +1984,50 @@ class TSOSK_Mod_Slow_Queries {
 				</table>
 				</div>
 			<?php endif; ?>
+			</div>
+
+			<div class="tsosk-sq-section" id="tsosk-sq-last-issues">
+				<h4><?php esc_html_e( 'Query problems', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+				<?php if ( empty( $last['issues'] ) ) : ?>
+				<p class="description"><?php esc_html_e( 'No failed queries or common bad practices found on that page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<?php else : ?>
+				<p class="description"><?php esc_html_e( 'Failed queries (reported by the database) and patterns that usually hurt performance. Use EXPLAIN to see whether MySQL uses an index; it does not run the query.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<div class="tsosk-table-wrap">
+				<table class="widefat tsosk-table tsosk-sq-issue-table">
+					<thead><tr>
+						<th class="tsosk-sq-col-issue"><?php esc_html_e( 'Problem', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sq-col-times"><?php esc_html_e( 'Times', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sq-col-time"><?php esc_html_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sq-col-sql"><?php esc_html_e( 'SQL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+						<th class="tsosk-sq-col-side"><?php esc_html_e( 'Called by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
+					</tr></thead>
+					<tbody>
+					<?php foreach ( $last['issues'] as $row ) : ?>
+						<tr>
+							<td data-label="<?php esc_attr_e( 'Problem', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								<span class="tsosk-badge <?php echo 'error' === $row['type'] ? 'tsosk-badge-error' : 'tsosk-badge-warn'; ?>"><?php echo esc_html( $this->issue_label( (string) $row['type'] ) ); ?></span>
+								<?php if ( '' !== $row['error'] ) : ?>
+									<code class="tsosk-sq-issue-error"><?php echo esc_html( $row['error'] ); ?></code>
+								<?php endif; ?>
+							</td>
+							<td class="tsosk-sq-cell-mono" data-label="<?php esc_attr_e( 'Times', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">×<?php echo esc_html( (string) (int) $row['count'] ); ?></td>
+							<td class="tsosk-sq-cell-mono" data-label="<?php esc_attr_e( 'Time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( (float) $row['ms'], 2 ) ); ?> ms</td>
+							<td class="tsosk-sq-cell-sql" data-label="<?php esc_attr_e( 'SQL', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								<?php $this->render_collapsible_sql( (string) $row['sql'] ); ?>
+								<?php if ( 'error' !== $row['type'] ) : ?>
+									<?php $this->render_explain_button( (string) $row['sql'], $explain_nonce ); ?>
+								<?php endif; ?>
+							</td>
+							<td class="tsosk-sq-cell-caller" data-label="<?php esc_attr_e( 'Called by', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+								<?php $this->render_origin_badge( (string) $row['origin'], $detect ); ?>
+								<?php echo esc_html( $this->format_caller_frames( (string) $row['caller'] ) ); ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				</div>
+				<?php endif; ?>
 			</div>
 
 			<h4 id="tsosk-sq-last-slow"><?php esc_html_e( 'Slowest queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
@@ -1741,10 +2053,11 @@ class TSOSK_Mod_Slow_Queries {
 				<?php foreach ( $last['slow'] as $row ) : ?>
 					<tr>
 						<td class="tsosk-sq-cell-mono">
-							<span class="tsosk-sq-warn"><?php echo esc_html( number_format_i18n( (float) $row['ms'], 2 ) ); ?> ms</span>
+							<span class="<?php echo esc_attr( $this->slow_class( (float) $row['ms'], (int) $this->get_settings()['threshold_ms'] ) ); ?>"><?php echo esc_html( number_format_i18n( (float) $row['ms'], 2 ) ); ?> ms</span>
 						</td>
 						<td class="tsosk-sq-cell-sql">
 							<?php $this->render_collapsible_sql( (string) $row['sql'] ); ?>
+							<?php $this->render_explain_button( (string) $row['sql'], $explain_nonce ); ?>
 						</td>
 						<td class="tsosk-sq-cell-caller">
 							<?php $this->render_origin_badge( (string) $row['origin'], $detect ); ?>
@@ -1785,6 +2098,42 @@ class TSOSK_Mod_Slow_Queries {
 		// Collapse long IN (?, ?, ?) lists.
 		$sql = preg_replace( '/\(\s*\?(?:\s*,\s*\?)+\s*\)/', '(?)', $sql );
 		return is_string( $sql ) ? $sql : '';
+	}
+
+	/**
+	 * CSS class for a query time, relative to the configured slow threshold (one rule for the whole module).
+	 *
+	 * Below the threshold: none (such queries are not listed). At or above it: amber; five times the threshold or more: red.
+	 *
+	 * @param float $ms           Query time in milliseconds.
+	 * @param int   $threshold_ms Configured slow threshold in milliseconds.
+	 * @return string
+	 */
+	private function slow_class( float $ms, int $threshold_ms ): string {
+		if ( $ms >= $threshold_ms * 5 ) {
+			return 'tsosk-sq-warn';
+		}
+		return $ms >= $threshold_ms ? 'tsosk-sq-amber' : '';
+	}
+
+	/**
+	 * Whether one SAVEQUERIES row counts as a slow query. The single definition used by the log, the admin bar,
+	 * the last-page snapshot and the live list: at or above the threshold, not triggered by the admin bar,
+	 * and not matching an ignore pattern.
+	 *
+	 * @param mixed              $q             One $wpdb->queries row.
+	 * @param float              $threshold_sec Threshold in seconds.
+	 * @param array<int, string> $patterns      Ignore patterns.
+	 * @return bool
+	 */
+	private function is_slow_query_row( $q, float $threshold_sec, array $patterns ): bool {
+		if ( ! is_array( $q ) || ! isset( $q[0] ) || (float) ( $q[1] ?? 0 ) < $threshold_sec ) {
+			return false;
+		}
+		if ( $this->caller_is_admin_bar( (string) ( $q[2] ?? '' ) ) ) {
+			return false;
+		}
+		return ! $this->is_ignored_sql( $this->normalize_sql_dupe_key( (string) $q[0] ), $patterns );
 	}
 
 	/**
@@ -1952,9 +2301,11 @@ class TSOSK_Mod_Slow_Queries {
 		$q_count = (int) $live['query_count'];
 		$d_count = (int) $live['dupe_patterns'];
 		$s_count = (int) $live['slow_count'];
+		$e_count = (int) ( $live['error_count'] ?? 0 );
+		$p_count = (int) ( $live['issue_count'] ?? 0 );
 
 		$severity = 'ok';
-		if ( $d_count > 0 && $s_count > 0 ) {
+		if ( $e_count > 0 || ( $d_count > 0 && $s_count > 0 ) ) {
 			$severity = 'alert';
 		} elseif ( $d_count > 0 || $s_count > 0 ) {
 			$severity = 'warn';
@@ -1979,6 +2330,9 @@ class TSOSK_Mod_Slow_Queries {
 				'dups_pill'    => $d_count > 0 ? sprintf( _n( '%d dup', '%d dups', $d_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $d_count ) : '',
 				/* translators: %d: number of slow queries */
 				'slow_pill'    => $s_count > 0 ? sprintf( __( '%d slow', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $s_count ) : '',
+				/* translators: %d: number of failed database queries */
+				'err_pill'     => $e_count > 0 ? sprintf( _n( '%d error', '%d errors', $e_count, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $e_count ) : '',
+				'problems'     => number_format_i18n( $p_count ),
 				'page_ms'      => number_format_i18n( (float) $live['load_ms'], 0 ) . ' ms',
 				'db_ms'        => number_format_i18n( (float) $live['query_time_ms'], 0 ) . ' ms',
 				'memory'       => number_format_i18n( (float) $live['memory_mb'], 1 ) . ' MB',
@@ -1987,8 +2341,9 @@ class TSOSK_Mod_Slow_Queries {
 				'dups'         => number_format_i18n( $d_count ),
 			),
 			'tone'     => array(
-				'slow' => $s_count > 0 ? 'warn' : '',
-				'dups' => $d_count > 0 ? 'bad' : '',
+				'slow'     => $s_count > 0 ? 'warn' : '',
+				'dups'     => $d_count > 0 ? 'bad' : '',
+				'problems' => $e_count > 0 ? 'bad' : ( $p_count > 0 ? 'warn' : '' ),
 			),
 		);
 	}
@@ -2029,7 +2384,7 @@ class TSOSK_Mod_Slow_Queries {
 		$on_tab       = $this->is_viewing_slow_queries_tab();
 		$a_queries    = $on_tab ? '#tsosk-sq-live-viewer' : '#tsosk-sq-last-request';
 		$a_dupes      = $on_tab ? '#tsosk-sq-live-dupe-panel' : '#tsosk-sq-last-dupes';
-		$a_slow       = $on_tab ? '#tsosk-sq-live-viewer' : '#tsosk-sq-last-slow';
+		$a_slow       = $on_tab ? '#tsosk-sq-live-slow' : '#tsosk-sq-last-slow';
 		$zero_live    = array(
 			'load_ms'       => 0,
 			'memory_mb'     => 0,
@@ -2054,7 +2409,8 @@ class TSOSK_Mod_Slow_Queries {
 				. '<span class="tsosk-sq-load" data-tsosk-sq="load">' . esc_html( $tx['load'] ) . '</span>'
 				. '<span class="tsosk-sq-pill" data-tsosk-sq="queries_pill">' . esc_html( $tx['queries_pill'] ) . '</span>'
 				. '<span class="tsosk-sq-pill tsosk-sq-pill--bad" data-tsosk-sq="dups_pill"' . ( '' === $tx['dups_pill'] ? ' hidden' : '' ) . '>' . esc_html( $tx['dups_pill'] ) . '</span>'
-				. '<span class="tsosk-sq-pill tsosk-sq-pill--warn" data-tsosk-sq="slow_pill"' . ( '' === $tx['slow_pill'] ? ' hidden' : '' ) . '>' . esc_html( $tx['slow_pill'] ) . '</span>';
+				. '<span class="tsosk-sq-pill tsosk-sq-pill--warn" data-tsosk-sq="slow_pill"' . ( '' === $tx['slow_pill'] ? ' hidden' : '' ) . '>' . esc_html( $tx['slow_pill'] ) . '</span>'
+				. '<span class="tsosk-sq-pill tsosk-sq-pill--bad" data-tsosk-sq="err_pill"' . ( '' === $tx['err_pill'] ? ' hidden' : '' ) . '>' . esc_html( $tx['err_pill'] ) . '</span>';
 			$tooltip = $texts['tooltip'];
 		} else {
 			$title   = '<span class="tsosk-sq-dot tsosk-sq-dot--off" aria-hidden="true"></span>'
@@ -2086,9 +2442,10 @@ class TSOSK_Mod_Slow_Queries {
 			);
 
 			$rows = array(
-				'tsosk-sq-ab-load'   => array( __( 'Page time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $tx['page_ms'], '', 'page_ms' ),
-				'tsosk-sq-ab-dbtime' => array( __( 'Database time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $tx['db_ms'], '', 'db_ms' ),
-				'tsosk-sq-ab-slow'   => array(
+				'tsosk-sq-ab-load'     => array( __( 'Page time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $tx['page_ms'], '', 'page_ms' ),
+				'tsosk-sq-ab-dbtime'   => array( __( 'Database time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $tx['db_ms'], '', 'db_ms' ),
+				'tsosk-sq-ab-problems' => array( __( 'Query problems', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), $tx['problems'], $texts['tone']['problems'], 'problems' ),
+				'tsosk-sq-ab-slow'     => array(
 					/* translators: %d: slow threshold in milliseconds */
 					sprintf( __( 'Slow (≥ %d ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), (int) $settings['threshold_ms'] ),
 					$tx['slow'],
@@ -2105,6 +2462,12 @@ class TSOSK_Mod_Slow_Queries {
 				);
 				if ( 'tsosk-sq-ab-slow' === $row_id ) {
 					$node['href'] = $tab_url . $a_slow;
+				}
+				if ( 'tsosk-sq-ab-problems' === $row_id ) {
+					if ( (int) ( $live['issue_count'] ?? 0 ) < 1 ) {
+						continue;
+					}
+					$node['href'] = $tab_url . ( $on_tab ? '#tsosk-sq-last-request' : '#tsosk-sq-last-issues' );
 				}
 				$wp_admin_bar->add_node( $node );
 			}
@@ -2356,7 +2719,8 @@ class TSOSK_Mod_Slow_Queries {
 			return null;
 		}
 
-		$threshold_sec = $this->get_settings()['threshold_ms'] / 1000.0;
+		$sq_settings   = $this->get_settings();
+		$threshold_sec = $sq_settings['threshold_ms'] / 1000.0;
 		$query_time_ms = 0.0;
 		$slow_count    = 0;
 		$slowest_ms    = 0.0;
@@ -2394,7 +2758,7 @@ class TSOSK_Mod_Slow_Queries {
 				$db_origins[ $origin ]['time_ms'] += $time * 1000;
 			}
 
-			if ( $time >= $threshold_sec ) {
+			if ( $this->is_slow_query_row( $q, $threshold_sec, $sq_settings['ignore_patterns'] ) ) {
 				++$slow_count;
 				$t_ms = $time * 1000;
 				if ( $t_ms > $slowest_ms ) {
@@ -2452,7 +2816,17 @@ class TSOSK_Mod_Slow_Queries {
 		}
 		arsort( $dupe_origins, SORT_NUMERIC );
 
-		$load_ms = defined( 'WP_START_TIMESTAMP' ) ? ( microtime( true ) - WP_START_TIMESTAMP ) * 1000 : 0;
+		$load_ms     = defined( 'WP_START_TIMESTAMP' ) ? ( microtime( true ) - WP_START_TIMESTAMP ) * 1000 : 0;
+		$issues      = $this->collect_query_issues( $wpdb->queries );
+		$issue_count = count( $issues );
+		$error_count = count(
+			array_filter(
+				$issues,
+				static function ( array $i ): bool {
+					return 'error' === $i['type'];
+				}
+			)
+		);
 
 		return array(
 			'load_ms'         => round( $load_ms, 1 ),
@@ -2470,6 +2844,8 @@ class TSOSK_Mod_Slow_Queries {
 			'dupe_origins'    => $dupe_origins,
 			'slow_origins'    => $slow_origins,
 			'db_origins'      => $db_origins,
+			'error_count'     => $error_count,
+			'issue_count'     => $issue_count,
 		);
 	}
 
@@ -2974,6 +3350,7 @@ class TSOSK_Mod_Slow_Queries {
 					<td>
 						<textarea id="tsosk-sq-ignore-patterns" rows="3" class="tsosk-sq-ignore-patterns"
 									placeholder="<?php esc_attr_e( 'One pattern per line. Example: action_scheduler', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_textarea( implode( "\n", $s['ignore_patterns'] ) ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Queries containing any of these texts are left out of the log, the admin bar, the live list and the “last page” panel.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -3006,7 +3383,7 @@ class TSOSK_Mod_Slow_Queries {
 				array(
 					'val'  => number_format( $stats['slowest_ms'], 2 ) . ' ms',
 					'lbl'  => __( 'Slowest query', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					'warn' => $stats['slowest_ms'] > 500,
+					'warn' => $stats['slowest_ms'] >= (int) $s['threshold_ms'] * 5,
 				),
 			);
 			foreach ( $stat_cards as $card ) :
@@ -3052,7 +3429,7 @@ class TSOSK_Mod_Slow_Queries {
 								×<?php echo esc_html( (string) $entry['count'] ); ?>
 							</span>
 						</td>
-						<td class="tsosk-sq-col-ms <?php echo $entry['max'] > 500 ? 'tsosk-sq-warn' : ( $entry['max'] > 200 ? 'tsosk-sq-amber' : '' ); ?>">
+						<td class="tsosk-sq-col-ms <?php echo esc_attr( $this->slow_class( (float) $entry['max'], (int) $s['threshold_ms'] ) ); ?>">
 							<?php echo esc_html( number_format( (float) $entry['max'], 2 ) ); ?> ms
 						</td>
 						<td class="tsosk-sq-col-ms">
@@ -3107,7 +3484,7 @@ class TSOSK_Mod_Slow_Queries {
 		<?php endif; ?>
 
 			<?php /* ── Log table ── */ ?>
-		<div class="tsosk-card" id="tsosk-sq-log">
+		<div class="tsosk-card" id="tsosk-sq-log" data-threshold="<?php echo esc_attr( (string) $s['threshold_ms'] ); ?>">
 			<h3>
 				<?php esc_html_e( 'Slow Query Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 				<span class="tsosk-badge tsosk-badge-info" style="margin-left:8px;font-size:12px;">
@@ -3183,7 +3560,9 @@ class TSOSK_Mod_Slow_Queries {
 		$sq_count     = count( $sq_queries );
 		$sq_total     = $sq_enabled ? array_sum( array_column( $sq_queries, 1 ) ) : 0;
 		$sq_max       = $sq_count ? max( array_column( $sq_queries, 1 ) ) : 0;
-		$threshold_ms = (int) $this->get_settings()['threshold_ms'];
+		$sq_settings  = $this->get_settings();
+		$threshold_ms = (int) $sq_settings['threshold_ms'];
+		$sq_patterns  = $sq_settings['ignore_patterns'];
 		$built        = $this->build_exact_dupe_map( $sq_queries );
 		$sq_sql_map   = $built['map'];
 		// Exact SQL duplicates (same idea as Query Monitor) — not fingerprints.
@@ -3218,7 +3597,7 @@ class TSOSK_Mod_Slow_Queries {
 				<?php endif; ?>
 			</h3>
 			<p class="description">
-				<?php esc_html_e( 'Live list of database queries executed while loading this Slow Query Monitor page only. Duplicate detection ignores queries triggered by the admin bar (same approach as Query Monitor). For duplicates from another page, see the panel at the top of this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+				<?php esc_html_e( 'Database queries executed while loading this Slow Query Monitor page only. Duplicate detection ignores queries triggered by the admin bar (same approach as Query Monitor). For duplicates from another page, see the panel at the top of this tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 
 			<?php if ( ! $sq_enabled ) : ?>
@@ -3240,13 +3619,13 @@ class TSOSK_Mod_Slow_Queries {
 					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total queries', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-sq-stat">
-					<span class="tsosk-sq-stat-val <?php echo $sq_total > 0.5 ? 'tsosk-sq-warn' : ''; ?>">
+					<span class="tsosk-sq-stat-val">
 						<?php echo esc_html( number_format( $sq_total * 1000, 2 ) ); ?> ms
 					</span>
 					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Total time', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 				</div>
 				<div class="tsosk-sq-stat">
-					<span class="tsosk-sq-stat-val <?php echo $sq_max > 0.1 ? 'tsosk-sq-warn' : ''; ?>">
+					<span class="tsosk-sq-stat-val <?php echo esc_attr( $this->slow_class( (float) $sq_max * 1000, $threshold_ms ) ); ?>">
 						<?php echo esc_html( number_format( $sq_max * 1000, 2 ) ); ?> ms
 					</span>
 					<span class="tsosk-sq-stat-lbl"><?php esc_html_e( 'Slowest query', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
@@ -3381,24 +3760,33 @@ class TSOSK_Mod_Slow_Queries {
 			</div>
 			<?php endif; ?>
 
+				<?php
+				$slow_on_page = 0;
+				foreach ( $sq_queries as $q_row ) {
+					if ( $this->is_slow_query_row( $q_row, $threshold_ms / 1000.0, $sq_patterns ) ) {
+						++$slow_on_page;
+					}
+				}
+				?>
+			<h4 id="tsosk-sq-live-slow"><?php esc_html_e( 'Slow queries on this page', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></h4>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: 1: slow threshold in milliseconds, 2: number of slow queries, 3: total queries on the page */
+					esc_html__( 'Only queries at or above the slow threshold (%1$d ms, change it in Monitor Settings) are listed: %2$d of %3$d on this page. Faster queries are never shown here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					(int) $threshold_ms,
+					(int) $slow_on_page,
+					(int) $sq_count
+				);
+				?>
+			</p>
+				<?php if ( 0 === $slow_on_page ) : ?>
+			<p class="tsosk-sq-all-fast"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span> <?php esc_html_e( 'No query reached the slow threshold on this page.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+			<?php else : ?>
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
 				<input type="text" id="tsosk-sq-filter"
 						placeholder="<?php esc_attr_e( 'Filter queries…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 						style="min-width:220px;" autocomplete="off">
-				<label class="tsosk-sq-filter-label">
-					<input type="checkbox" id="tsosk-sq-dupes-only">
-					<?php esc_html_e( 'Show duplicates only', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-				</label>
-				<label class="tsosk-sq-filter-label">
-					<input type="checkbox" id="tsosk-sq-slow-only" data-threshold="<?php echo esc_attr( (string) $threshold_ms ); ?>">
-					<?php
-					printf(
-						/* translators: %d: threshold in milliseconds */
-						esc_html__( 'Show slow only (≥ %d ms)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-						(int) $threshold_ms
-					);
-					?>
-				</label>
 				<span id="tsosk-sq-count-shown" style="font-size:12px;color:#646970;"></span>
 			</div>
 
@@ -3414,9 +3802,15 @@ class TSOSK_Mod_Slow_Queries {
 				<?php
 				$sorted = $sq_queries;
 				uasort( $sorted, static fn( $a, $b ) => $b[1] <=> $a[1] ); // Keep keys: they match the recorded backtraces.
-				$i = -1;
+				$i           = -1;
+				$slow_listed = 0;
 				foreach ( $sorted as $qi => $q ) :
+					// Only genuinely slow queries are listed; fast ones never are (duplicates have their own table above).
+					if ( ! $this->is_slow_query_row( $q, $threshold_ms / 1000.0, $sq_patterns ) ) {
+						continue;
+					}
 					++$i;
+					++$slow_listed;
 					$origin    = $this->origin_for_query_index( (int) $qi );
 					$sql_raw   = (string) $q[0];
 					$time_ms   = (float) $q[1] * 1000;
@@ -3443,7 +3837,7 @@ class TSOSK_Mod_Slow_Queries {
 					data-slow="<?php echo $is_slow ? '1' : '0'; ?>">
 					<td class="tsosk-sq-cell-muted"><?php echo esc_html( (string) ( $i + 1 ) ); ?></td>
 					<td class="tsosk-sq-cell-mono">
-						<span class="<?php echo esc_attr( $is_slow ? 'tsosk-sq-warn' : ( $time_ms > 2 ? 'tsosk-sq-amber' : 'tsosk-sq-ok' ) ); ?>">
+						<span class="<?php echo esc_attr( $this->slow_class( $time_ms, $threshold_ms ) ); ?>">
 							<?php echo esc_html( number_format( $time_ms, 3 ) ); ?> ms
 						</span>
 					</td>
@@ -3478,6 +3872,7 @@ class TSOSK_Mod_Slow_Queries {
 				</tbody>
 			</table>
 			</div>
+			<?php endif; ?>
 
 			<?php endif; ?>
 		</div>
@@ -3561,7 +3956,7 @@ class TSOSK_Mod_Slow_Queries {
 	 * @param string $nonce         WP nonce.
 	 * @param int    $threshold_ms  Threshold.
 	 */
-	private function render_single_batch( array $batch, string $nonce, int $threshold_ms ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Kept for callers that pass the active threshold.
+	private function render_single_batch( array $batch, string $nonce, int $threshold_ms ): void {
 		$batch_id   = (string) ( $batch['id'] ?? '' );
 		$ts         = (int) ( $batch['ts'] ?? 0 );
 		$url        = (string) ( $batch['url'] ?? '' );
@@ -3603,7 +3998,7 @@ class TSOSK_Mod_Slow_Queries {
 					?>
 				</span>
 				<?php endif; ?>
-				<span class="tsosk-sq-batch-worst <?php echo esc_attr( $max_time > 500 ? 'tsosk-sq-warn' : ( $max_time > 200 ? 'tsosk-sq-amber' : '' ) ); ?>">
+				<span class="tsosk-sq-batch-worst <?php echo esc_attr( $this->slow_class( (float) $max_time, $threshold_ms ) ); ?>">
 					<?php
 					printf(
 						/* translators: %s: milliseconds */
@@ -3658,7 +4053,7 @@ class TSOSK_Mod_Slow_Queries {
 					?>
 				<div class="tsosk-sq-query-row">
 					<div class="tsosk-sq-query-meta">
-						<span class="tsosk-sq-query-time <?php echo esc_attr( $t > 500 ? 'tsosk-sq-warn' : ( $t > 200 ? 'tsosk-sq-amber' : '' ) ); ?>">
+						<span class="tsosk-sq-query-time <?php echo esc_attr( $this->slow_class( $t, $threshold_ms ) ); ?>">
 							<?php echo esc_html( number_format( $t, 3 ) ); ?> ms
 						</span>
 						<span class="tsosk-badge tsosk-sq-kw-badge" style="background:<?php echo esc_attr( $kw_c ); ?>20;color:<?php echo esc_attr( $kw_c ); ?>;">

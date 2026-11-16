@@ -41,6 +41,66 @@ class TSOSK_Mod_History {
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_history_clear', array( $this, 'ajax_clear' ) );
 		add_action( 'wp_ajax_tsosk_history_save', array( $this, 'ajax_save_settings' ) );
+		add_action( 'admin_post_tsosk_history_export', array( $this, 'download_history' ) );
+	}
+
+	/**
+	 * Neutralise spreadsheet formulas in a CSV cell.
+	 *
+	 * @param mixed $value Cell value.
+	 */
+	private function csv_safe_cell( $value ): string {
+		$text = (string) $value;
+		if ( '' !== $text && in_array( $text[0], array( '=', '+', '-', '@', "\t", "\r" ), true ) ) {
+			return "'" . $text;
+		}
+		return $text;
+	}
+
+	/**
+	 * CSV download of the activity history.
+	 */
+	public function download_history(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		check_admin_referer( 'tsosk_history_export' );
+
+		$entries = TSOSK_Activity_Log::get_entries();
+		while ( ob_get_level() > 0 ) {
+			ob_end_clean();
+		}
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="tsosk-activity-history.csv"' );
+
+		$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- CSV stream to the browser, not a plugin file write.
+		if ( false === $out ) {
+			exit;
+		}
+		echo "\xEF\xBB\xBF"; // UTF-8 BOM for Excel (a fixed literal, nothing to escape).
+		fputcsv( $out, array( 'when_gmt', 'tool', 'action', 'summary', 'user' ), ',', '"', '' );
+		foreach ( $entries as $entry ) {
+			$module  = sanitize_key( (string) ( $entry['module'] ?? '' ) );
+			$action  = sanitize_key( (string) ( $entry['action'] ?? '' ) );
+			$details = is_array( $entry['details'] ?? null ) ? $entry['details'] : array();
+			$time    = (int) ( $entry['time'] ?? 0 );
+			fputcsv(
+				$out,
+				array(
+					$time > 0 ? gmdate( 'Y-m-d H:i:s', $time ) : '',
+					$this->csv_safe_cell( TSOSK_Activity_Log::module_label( $module ) ),
+					$this->csv_safe_cell( $action ),
+					$this->csv_safe_cell( TSOSK_Activity_Log::translate_summary( $module, $action, (string) ( $entry['summary'] ?? '' ), $details ) ),
+					$this->csv_safe_cell( sanitize_user( (string) ( $entry['user'] ?? '' ), true ) ),
+				),
+				',',
+				'"',
+				''
+			);
+		}
+		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closes php://output CSV stream opened above; not a disk write.
+		exit;
 	}
 
 	/**
@@ -133,6 +193,40 @@ class TSOSK_Mod_History {
 				<?php esc_html_e( 'No changes recorded yet. When you save settings or edit data in any TSO Swiss Knife tool, it will appear here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 			</p>
 			<?php else : ?>
+				<?php
+				$filter_tools = array();
+				$filter_users = array();
+				foreach ( $entries as $filter_entry ) {
+					$filter_module = sanitize_key( (string) ( $filter_entry['module'] ?? '' ) );
+					$filter_user   = sanitize_user( (string) ( $filter_entry['user'] ?? '' ), true );
+					if ( '' !== $filter_module ) {
+						$filter_tools[ $filter_module ] = TSOSK_Activity_Log::module_label( $filter_module );
+					}
+					if ( '' !== $filter_user ) {
+						$filter_users[ $filter_user ] = $filter_user;
+					}
+				}
+				asort( $filter_tools );
+				ksort( $filter_users );
+				$export_url = wp_nonce_url( add_query_arg( 'action', 'tsosk_history_export', admin_url( 'admin-post.php' ) ), 'tsosk_history_export' );
+				?>
+			<p class="tsosk-history-filters">
+				<input type="search" id="tsosk-history-filter-text" class="regular-text" placeholder="<?php esc_attr_e( 'Search the history…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+				<select id="tsosk-history-filter-tool">
+					<option value=""><?php esc_html_e( 'All tools', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<?php foreach ( $filter_tools as $filter_slug => $filter_label ) : ?>
+						<option value="<?php echo esc_attr( $filter_slug ); ?>"><?php echo esc_html( $filter_label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<select id="tsosk-history-filter-user">
+					<option value=""><?php esc_html_e( 'All users', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					<?php foreach ( $filter_users as $filter_login ) : ?>
+						<option value="<?php echo esc_attr( $filter_login ); ?>"><?php echo esc_html( $filter_login ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'Export CSV', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></a>
+				<span class="description" id="tsosk-history-filter-count" data-total="<?php echo esc_attr( (string) count( $entries ) ); ?>"></span>
+			</p>
 			<p class="tsosk-history-actions">
 				<button type="button" class="button button-link-delete" id="tsosk-history-clear"
 						data-nonce="<?php echo esc_attr( $nonce ); ?>">
@@ -159,6 +253,7 @@ class TSOSK_Mod_History {
 					</tbody>
 				</table>
 			</div>
+			<p class="tsosk-history-empty" id="tsosk-history-filter-empty" hidden><?php esc_html_e( 'No entries match these filters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php endif; ?>
 		</div>
 
@@ -230,7 +325,7 @@ class TSOSK_Mod_History {
 
 		ob_start();
 		?>
-		<tr>
+		<tr data-module="<?php echo esc_attr( $module ); ?>" data-user="<?php echo esc_attr( $user ); ?>">
 			<td class="tsosk-history-date"><?php echo esc_html( wp_date( 'Y-m-d H:i', $time ) ); ?></td>
 			<td><?php echo esc_html( TSOSK_Activity_Log::module_label( $module ) ); ?></td>
 			<td><span class="tsosk-badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( TSOSK_Activity_Log::action_label( $action ) ); ?></span></td>

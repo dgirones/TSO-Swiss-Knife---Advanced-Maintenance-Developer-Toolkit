@@ -451,6 +451,41 @@ class TSOSK_Support {
 	}
 
 	/**
+	 * Whether the current request is a self-check made by TSO Link Inspector against this site's own URLs.
+	 *
+	 * Link Inspector sends a time-limited HMAC (keyed with this site's salt) in the X-TSO-Internal-Check header,
+	 * and only to its own host. Such requests are forced by the link scan, not by visitors, so the 404 Monitor and
+	 * the redirect hit counters ignore them. The header is validated, never trusted as a bare flag, and a forged
+	 * or expired value is ignored. The current and the previous hour are accepted so a request that crosses the
+	 * hour boundary still matches. The same formula lives in Link Inspector (tsoliin internal check token).
+	 *
+	 * @return bool
+	 */
+	public static function is_internal_check_request(): bool {
+		static $result = null;
+		if ( null !== $result ) {
+			return $result;
+		}
+		$result = false;
+		if ( empty( $_SERVER['HTTP_X_TSO_INTERNAL_CHECK'] ) || ! is_string( $_SERVER['HTTP_X_TSO_INTERNAL_CHECK'] ) ) {
+			return $result;
+		}
+		$received = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_TSO_INTERNAL_CHECK'] ) );
+		if ( 64 !== strlen( $received ) ) {
+			return $result;
+		}
+		$window = (int) floor( time() / HOUR_IN_SECONDS );
+		foreach ( array( $window, $window - 1 ) as $slot ) {
+			$expected = hash_hmac( 'sha256', 'tso-internal-check|' . $slot, wp_salt( 'auth' ) );
+			if ( hash_equals( $expected, $received ) ) {
+				$result = true;
+				break;
+			}
+		}
+		return $result;
+	}
+
+	/**
 	 * Best-effort visitor IP, shared by every module.
 	 *
 	 * Uses REMOTE_ADDR by default. Behind a CDN or reverse proxy REMOTE_ADDR is the proxy's address, so

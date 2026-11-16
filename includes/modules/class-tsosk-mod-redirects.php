@@ -22,6 +22,9 @@ class TSOSK_Mod_Redirects {
 	/** Plugin option storing recent 404 hits. */
 	private const LOG_OPTION = 'tsosk_404_log';
 
+	/** Option holding the on/off switch of the whole module ('1' = on, '0' = off). */
+	public const ENABLED_OPTION = 'tsosk_redirects_enabled';
+
 	/**
 	 * Instance.
 	 *
@@ -53,10 +56,12 @@ class TSOSK_Mod_Redirects {
 		add_action( 'wp_ajax_tsosk_redirect_export', array( $this, 'ajax_export' ) );
 		add_action( 'wp_ajax_tsosk_redirect_import', array( $this, 'ajax_import' ) );
 		add_action( 'wp_ajax_tsosk_redirect_toggle', array( $this, 'ajax_toggle' ) );
+		add_action( 'wp_ajax_tsosk_redirects_module_toggle', array( $this, 'ajax_toggle_module' ) );
 		add_action( 'wp_ajax_tsosk_404_clear', array( $this, 'ajax_clear_404_log' ) );
 		add_action( 'wp_ajax_tsosk_404_delete_selected', array( $this, 'ajax_delete_selected_404' ) );
 		add_action( 'wp_ajax_tsosk_404_bulk_rules', array( $this, 'ajax_bulk_rules' ) );
 		add_action( 'wp_ajax_tsosk_404_prefix_gone', array( $this, 'ajax_prefix_gone' ) );
+		add_action( 'wp_ajax_tsosk_404_lookup_host', array( $this, 'ajax_lookup_host' ) );
 		add_action( 'wp_ajax_tsosk_404_save_alerts', array( $this, 'ajax_save_alerts' ) );
 		add_action( 'wp_ajax_tsosk_404_test_alert', array( $this, 'ajax_test_alert' ) );
 	}
@@ -65,7 +70,49 @@ class TSOSK_Mod_Redirects {
 	 * Register frontend redirect handling.
 	 */
 	public function init(): void {
+		// Off: no hook on the front end, no rule lookup and no 404 logging (rules and log are kept untouched).
+		if ( ! self::is_enabled() ) {
+			return;
+		}
 		add_action( 'template_redirect', array( $this, 'maybe_redirect' ), 1 );
+	}
+
+	/**
+	 * Whether the Redirects module is switched on (the default).
+	 */
+	public static function is_enabled(): bool {
+		static $enabled = null;
+		if ( null === $enabled ) {
+			$enabled = '0' !== (string) get_option( self::ENABLED_OPTION, '1' );
+		}
+		return $enabled;
+	}
+
+	/**
+	 * AJAX: switch the Redirects module on or off.
+	 */
+	public function ajax_toggle_module(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$enable = ! empty( $_POST['enable'] );
+		update_option( self::ENABLED_OPTION, $enable ? '1' : '0', true ); // Read on every request — must autoload.
+		TSOSK_Activity_Log::log(
+			'redirects',
+			'toggle',
+			$enable
+				? __( 'Redirects module turned on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+				: __( 'Redirects module turned off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+		);
+		wp_send_json_success(
+			array(
+				'message' => $enable
+					? __( 'Redirects turned on.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: __( 'Redirects turned off.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			)
+		);
 	}
 
 	/**
@@ -432,6 +479,27 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * Read the selected 404 paths from the AJAX request, sanitized without losing percent-encoded octets.
+	 *
+	 * @return array<int,string>
+	 */
+	private function posted_paths(): array {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- every caller runs check_ajax_referer() first; each value is sanitized below.
+		$raw = ( isset( $_POST['paths'] ) && is_array( $_POST['paths'] ) ) ? wp_unslash( $_POST['paths'] ) : array();
+		$out = array();
+		foreach ( $raw as $value ) {
+			if ( ! is_string( $value ) ) {
+				continue;
+			}
+			$path = $this->pct_restore( sanitize_text_field( $this->pct_protect( $value ) ) );
+			if ( '' !== $path ) {
+				$out[] = $path;
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * Hide percent-encoded octets (%20, %C3%A9) from sanitize_text_field(), which would strip them.
 	 *
 	 * @param string $value Raw text.
@@ -654,16 +722,7 @@ class TSOSK_Mod_Redirects {
 			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
 		}
 
-		$raw_paths = ( isset( $_POST['paths'] ) && is_array( $_POST['paths'] ) )
-			? array_map( 'sanitize_text_field', wp_unslash( $_POST['paths'] ) )
-			: array();
-		$paths     = array();
-		foreach ( $raw_paths as $raw_path ) {
-			$path = (string) $raw_path;
-			if ( '' !== $path ) {
-				$paths[] = $path;
-			}
-		}
+		$paths = $this->posted_paths();
 		// The log itself never holds more than 200 rows (see record_404()), so no
 		// legitimate selection from the table can exceed that.
 		$paths = array_slice( array_unique( $paths ), 0, 200 );
@@ -797,16 +856,7 @@ class TSOSK_Mod_Redirects {
 		$status = 'gone' === $mode ? 410 : 301;
 		$target = 'redirect' === $mode ? $this->posted_text( 'target' ) : '';
 
-		$raw_paths = ( isset( $_POST['paths'] ) && is_array( $_POST['paths'] ) )
-			? array_map( 'sanitize_text_field', wp_unslash( $_POST['paths'] ) )
-			: array();
-		$paths     = array();
-		foreach ( $raw_paths as $raw_path ) {
-			$path = (string) $raw_path;
-			if ( '' !== $path ) {
-				$paths[] = $path;
-			}
-		}
+		$paths = $this->posted_paths();
 		// The 404 log never holds more than 200 rows, so no legitimate selection exceeds that.
 		$paths = array_slice( array_unique( $paths ), 0, 200 );
 		if ( empty( $paths ) ) {
@@ -821,6 +871,13 @@ class TSOSK_Mod_Redirects {
 		foreach ( $paths as $path ) {
 			if ( $this->is_path_covered( $rules, $path ) ) {
 				++$skipped;
+				continue;
+			}
+			if ( 410 === $status && $this->path_resolves_now( $path ) ) {
+				++$failed;
+				if ( '' === $first_error ) {
+					$first_error = __( 'This URL now resolves to published content, so no 410 was created for it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				}
 				continue;
 			}
 			$result = $this->append_rule( $rules, $path, $target, 'exact', $status );
@@ -891,6 +948,10 @@ class TSOSK_Mod_Redirects {
 			wp_send_json_error( __( 'A page with this slug exists, so a 410 for the whole prefix could hide real content.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
+		if ( $this->prefix_has_live_content( $prefix ) ) {
+			wp_send_json_error( __( 'Published content still lives under this prefix (a category, tag or post type with posts), so a 410 would hide it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
 		$rules  = $this->get_rules();
 		$source = '^/' . preg_quote( $prefix, '#' ) . '(/|$)';
 		$result = $this->append_rule( $rules, $source, '', 'regex', 410 );
@@ -921,6 +982,78 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * AJAX: look up the host name of a 404 row IP (reverse + forward DNS) and store the result in the row.
+	 */
+	public function ajax_lookup_host(): void {
+		check_ajax_referer( 'tsosk_redirects_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+
+		$key = isset( $_POST['key'] ) ? sanitize_key( wp_unslash( $_POST['key'] ) ) : '';
+		if ( 32 !== strlen( $key ) ) {
+			wp_send_json_error( __( 'Invalid request.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$logs = $this->get_404_log();
+		if ( ! isset( $logs[ $key ] ) ) {
+			wp_send_json_error( __( 'This row is no longer in the log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$ip = (string) ( $logs[ $key ]['ip'] ?? '' );
+		if ( false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			wp_send_json_error( __( 'This row has no valid IP address.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+
+		$lookup                       = TSOSK_Agent_Classifier::lookup_host( $ip );
+		$logs[ $key ]['host']         = $lookup['host'];
+		$logs[ $key ]['host_ok']      = $lookup['confirmed'];
+		$logs[ $key ]['host_checked'] = time();
+		update_option( self::LOG_OPTION, $logs, false );
+		TSOSK_Agent_Classifier::learn_own_ip( $ip, (string) $lookup['host'] );
+
+		wp_send_json_success(
+			array(
+				'html' => $this->render_404_ip_cell( $logs[ $key ] ),
+			)
+		);
+	}
+
+	/**
+	 * Whether a logged 404 path now resolves to published content (the log keeps old visits).
+	 *
+	 * @param string $path Request path as logged.
+	 */
+	private function path_resolves_now( string $path ): bool {
+		static $cache = array();
+		if ( ! isset( $cache[ $path ] ) ) {
+			$cache[ $path ] = url_to_postid( home_url( user_trailingslashit( $path ) ) ) > 0;
+		}
+		return $cache[ $path ];
+	}
+
+	/**
+	 * Whether a first path segment still has live content (a term with posts, or a post type using it as rewrite slug).
+	 *
+	 * @param string $prefix First path segment, without slashes.
+	 */
+	private function prefix_has_live_content( string $prefix ): bool {
+		$taxonomies = get_taxonomies( array( 'public' => true ), 'names' );
+		foreach ( $taxonomies as $taxonomy ) {
+			$term = get_term_by( 'slug', $prefix, $taxonomy );
+			if ( $term instanceof WP_Term && (int) $term->count > 0 ) {
+				return true;
+			}
+		}
+		foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $type ) {
+			$slug = is_array( $type->rewrite ) && ! empty( $type->rewrite['slug'] ) ? trim( (string) $type->rewrite['slug'], '/' ) : '';
+			if ( $slug === $prefix && (int) ( wp_count_posts( $type->name )->publish ?? 0 ) > 0 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Group uncovered 404 paths by first path segment (needs 2+ URLs under it).
 	 *
 	 * @param array<string,array> $log   404 log rows.
@@ -931,7 +1064,7 @@ class TSOSK_Mod_Redirects {
 		$groups = array();
 		foreach ( $log as $item ) {
 			$path = (string) ( $item['path'] ?? '' );
-			if ( '' === $path || $this->is_path_covered( $rules, $path ) ) {
+			if ( '' === $path || $this->is_path_covered( $rules, $path ) || $this->path_resolves_now( $path ) ) {
 				continue;
 			}
 			$trimmed = trim( $path, '/' );
@@ -959,8 +1092,8 @@ class TSOSK_Mod_Redirects {
 
 		$groups = array_filter(
 			$groups,
-			static function ( array $group ): bool {
-				return $group['urls'] >= 2;
+			function ( array $group ): bool {
+				return $group['urls'] >= 2 && ! $this->prefix_has_live_content( $group['prefix'] );
 			}
 		);
 		usort(
@@ -981,10 +1114,34 @@ class TSOSK_Mod_Redirects {
 		$reviews       = $this->review_rules( $rules );
 		$not_found_log = $this->get_404_log();
 		$suggestions   = $this->get_prefix_suggestions( $not_found_log, $rules );
+		$module_on     = self::is_enabled();
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Create and review safe WordPress-level redirects. Rules are stored in a prefixed option and are applied before the theme renders.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
+
+		<div class="tsosk-rd-modulebar <?php echo $module_on ? 'is-on' : 'is-off'; ?>">
+			<span class="tsosk-badge <?php echo $module_on ? 'tsosk-badge-ok' : 'tsosk-badge-warn'; ?>">
+				<?php echo $module_on ? esc_html__( 'On', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Off', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</span>
+			<span class="tsosk-rd-modulebar-text">
+				<?php
+				if ( $module_on ) {
+					esc_html_e( 'Rules are applied on every visit and 404 visits are recorded. Turn it off if you use another redirect plugin: this tool then does no work on the front end.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				} else {
+					printf(
+						/* translators: %d: number of saved redirect rules */
+						esc_html( _n( 'Redirects are off: nothing is applied or recorded on the front end. Your %d saved rule and the 404 log are kept.', 'Redirects are off: nothing is applied or recorded on the front end. Your %d saved rules and the 404 log are kept.', count( $rules ), 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+						(int) count( $rules )
+					);
+				}
+				?>
+			</span>
+			<button type="button" class="button <?php echo $module_on ? 'button-secondary' : 'button-primary'; ?> tsosk-rd-module-toggle" data-enable="<?php echo $module_on ? '0' : '1'; ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				<?php echo $module_on ? esc_html__( 'Turn off redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) : esc_html__( 'Turn on redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			</button>
+			<span class="tsosk-ajax-msg" id="tsosk-rd-module-msg"></span>
+		</div>
 
 		<details class="tsosk-guide-card tsosk-guide-collapse">
 			<summary class="tsosk-guide-title"><?php esc_html_e( 'Why use redirects?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></summary>
@@ -1017,6 +1174,7 @@ class TSOSK_Mod_Redirects {
 					<option value="regex"><?php esc_html_e( 'Regular expression', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 				</select>
 				<p class="description"><?php esc_html_e( 'Wildcard captures can be used in the target as $1, $2, etc. Regex rules should not include delimiters.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
+				<p class="description"><?php esc_html_e( 'In a wildcard, * matches one path segment and ** matches any depth (e.g. /old/** → /new/$1).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			</div>
 			<div class="tsosk-field-row">
 				<label for="tsosk-redirect-target"><strong><?php esc_html_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong></label>
@@ -1278,34 +1436,53 @@ class TSOSK_Mod_Redirects {
 					<p class="description tsosk-desc-flush">
 						<?php esc_html_e( 'Visits counts how many times each missing URL was requested. Referrer keeps the last known previous page (HTTP Referer). If none was ever sent, Direct / unknown is shown, plus the last User-Agent when available (direct visits, bots and bookmarks often send none). IP shows the last known requester address; Possible bot is flagged when the same IP requested several different missing URLs within about a minute (User-Agent strings are easily faked, so this is based on request behavior instead).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</p>
+					<p class="description">
+						<?php esc_html_e( 'The IP cell also tells who is asking: a search engine, SEO or AI crawler, a script or scanner, or a browser (a very old browser version is a common sign of a fake User-Agent). "Look up host" runs a DNS check on the IP: a real Googlebot or Bingbot resolves to its own domain, while a "Fake crawler" only copies the name. The Referrer cell says whether the request came from this site, a search engine or another website, and flags files that another site loads from yours. Use the filter next to the search box to show only bots, only probable people or only files loaded by other sites.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</p>
 				</details>
-				<div class="tsosk-404-bulk-bar">
-					<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
-					<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
-					<button class="button button-secondary" id="tsosk-404-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-					<button class="button button-secondary" id="tsosk-404-prefill-selected" type="button">
-						<?php esc_html_e( 'Prefill redirect form (selected)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-					<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-				</div>
-				<div class="tsosk-404-bulk-bar">
-					<input type="text" id="tsosk-404-bulk-target" class="regular-text" placeholder="/new-page/" aria-label="<?php esc_attr_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-					<button class="button button-secondary" id="tsosk-404-bulk-redirect" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-						<?php esc_html_e( 'Redirect selected to this target (301)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
-					</button>
-				</div>
-				<div class="tsosk-404-bulk-bar">
-					<input type="search" id="tsosk-404-search" class="regular-text" autocomplete="off" placeholder="<?php esc_attr_e( 'Search missing URLs, referrers or IPs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" aria-label="<?php esc_attr_e( 'Search the 404 log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
-					<span class="description" id="tsosk-404-count" data-template="<?php echo esc_attr( __( '{shown} of {total} missing URLs shown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>" data-empty="<?php echo esc_attr( __( 'No missing URL matches your search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>"></span>
-					<button class="button button-secondary tsosk-404-clear-log" id="tsosk-404-clear" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+				<div class="tsosk-404-controls">
+					<div class="tsosk-404-filters">
+						<input type="search" id="tsosk-404-search" class="regular-text" autocomplete="off" placeholder="<?php esc_attr_e( 'Search missing URLs, referrers or IPs.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" aria-label="<?php esc_attr_e( 'Search the 404 log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<select id="tsosk-404-type" aria-label="<?php esc_attr_e( 'Filter by who requests it', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+						<option value="all"><?php esc_html_e( 'All traffic', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="bots"><?php esc_html_e( 'Bots and tools', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="people"><?php esc_html_e( 'Probably people', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="self"><?php esc_html_e( 'From this server', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="hotlink"><?php esc_html_e( 'Files loaded by other sites', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="internal"><?php esc_html_e( 'Links on this site', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+						<option value="none"><?php esc_html_e( 'No referrer', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
+					</select>
+						<span class="description" id="tsosk-404-count" data-template="<?php echo esc_attr( __( '{shown} of {total} missing URLs shown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>" data-empty="<?php echo esc_attr( __( 'No missing URL matches your search.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ); ?>"></span>
+					</div>
+					<div class="tsosk-404-selection">
+						<div class="tsosk-404-group">
+							<button class="button button-secondary" id="tsosk-404-select-all-btn" type="button"><?php esc_html_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+							<button class="button button-secondary" id="tsosk-404-select-none-btn" type="button"><?php esc_html_e( 'Select none', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
+							<button class="button button-secondary tsosk-404-clear-log" id="tsosk-404-clear" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Clear 404 Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
+						</div>
+						<div class="tsosk-404-group">
+							<button class="button button-secondary" id="tsosk-404-prefill-selected" type="button">
+						<?php esc_html_e( 'Prefill redirect form (selected)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+							<button class="button button-secondary" id="tsosk-404-bulk-gone" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Mark selected as 410 (Gone)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+							<button class="button button-secondary" id="tsosk-404-delete-selected" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+						</div>
+						<div class="tsosk-404-group tsosk-404-group-target">
+							<input type="text" id="tsosk-404-bulk-target" class="regular-text" placeholder="/new-page/" aria-label="<?php esc_attr_e( 'Target URL or Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
+							<button class="button button-secondary" id="tsosk-404-bulk-redirect" type="button" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Redirect selected to this target (301)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+						</div>
+					</div>
 					<span class="tsosk-ajax-msg" id="tsosk-404-msg"></span>
-				</div>				<div class="tsosk-table-wrap tsosk-404-table-wrap tsosk-404-table-wrap-spaced">
+				</div>
+				<div class="tsosk-table-wrap tsosk-404-table-wrap tsosk-404-table-wrap-spaced">
 					<table class="widefat tsosk-table" id="tsosk-404-table">
 						<thead>
 							<tr>
@@ -1327,8 +1504,13 @@ class TSOSK_Mod_Redirects {
 								<?php
 								$path_url        = $this->rule_value_to_url( (string) $item['path'], 'exact', true );
 								$already_covered = $this->is_path_covered( $rules, (string) $item['path'] );
+								$resolves_now    = ! $already_covered && $this->path_resolves_now( (string) $item['path'] );
 								?>
-							<tr data-index="<?php echo esc_attr( (string) $row_index++ ); ?>" data-hits="<?php echo esc_attr( (string) absint( $item['hits'] ) ); ?>" data-last="<?php echo esc_attr( (string) absint( $item['last_hit'] ) ); ?>" data-covered="<?php echo $already_covered ? '1' : '0'; ?>">
+								<?php
+								$agent_info = TSOSK_Agent_Classifier::classify( (string) ( $item['user_agent'] ?? '' ) );
+								$row_origin = TSOSK_Agent_Classifier::origin( (string) ( $item['referrer'] ?? '' ), (string) $item['path'] );
+								?>
+							<tr data-index="<?php echo esc_attr( (string) $row_index++ ); ?>" data-hits="<?php echo esc_attr( (string) absint( $item['hits'] ) ); ?>" data-last="<?php echo esc_attr( (string) absint( $item['last_hit'] ) ); ?>" data-covered="<?php echo $already_covered ? '1' : '0'; ?>" data-bot="<?php echo TSOSK_Agent_Classifier::row_is_bot( $item ) ? '1' : '0'; ?>" data-kind="<?php echo esc_attr( $agent_info['kind'] ); ?>" data-origin="<?php echo esc_attr( $row_origin ); ?>" data-self="<?php echo TSOSK_Agent_Classifier::row_is_own_server( $item ) ? '1' : '0'; ?>">
 								<td class="tsosk-404-col-select" data-label="<?php esc_attr_e( 'Select', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<input type="checkbox" class="tsosk-404-select" value="1" data-source="<?php echo esc_attr( $item['path'] ); ?>"
 									<?php
@@ -1340,6 +1522,9 @@ class TSOSK_Mod_Redirects {
 									<?php echo wp_kses_post( $this->render_rule_url_cell( (string) $item['path'], $path_url ) ); ?>
 									<?php if ( $already_covered ) : ?>
 										<span class="tsosk-badge tsosk-badge-ok" title="<?php esc_attr_e( 'An active redirect rule already matches this exact path. If it still shows up here, the rule is not actually catching this request — check its match type and target.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'Already covered', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+									<?php endif; ?>
+									<?php if ( $resolves_now ) : ?>
+										<span class="tsosk-badge tsosk-badge-info" title="<?php esc_attr_e( 'This URL answered 404 when it was logged, but it now resolves to published content. Do not create a 410 for it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php esc_html_e( 'Now exists', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 									<?php endif; ?>
 								</td>
 								<td class="tsosk-404-col-visits" data-label="<?php esc_attr_e( 'Visits', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( number_format_i18n( absint( $item['hits'] ) ) ); ?></td>
@@ -1368,11 +1553,17 @@ class TSOSK_Mod_Redirects {
 								<td class="tsosk-404-col-ip" data-label="<?php esc_attr_e( 'IP', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 									<?php
 									echo wp_kses(
-										$this->render_404_ip_cell( $item ),
+										$this->render_404_ip_cell( $item, $nonce ),
 										array(
-											'span' => array(
+											'span'   => array(
 												'class' => true,
 												'title' => true,
+											),
+											'button' => array(
+												'type'     => true,
+												'class'    => true,
+												'data-key' => true,
+												'data-nonce' => true,
 											),
 										)
 									);
@@ -1454,7 +1645,7 @@ class TSOSK_Mod_Redirects {
 			$match_type     = in_array( $raw_match_type, array( 'exact', 'wildcard', 'regex' ), true ) ? $raw_match_type : 'exact';
 
 			$source = 'regex' === $match_type
-				? sanitize_text_field( (string) ( $rule['source'] ?? '' ) )
+				? $this->pct_restore( sanitize_text_field( $this->pct_protect( (string) ( $rule['source'] ?? '' ) ) ) )
 				: $this->normalize_path( (string) ( $rule['source'] ?? '' ) );
 			if ( '' === $source ) {
 				continue;
@@ -1617,7 +1808,7 @@ class TSOSK_Mod_Redirects {
 		}
 
 		if ( 'wildcard' === $match_type ) {
-			$pattern = '#^' . str_replace( '\*', '([^/]+)', preg_quote( $this->path_key( $source ), '#' ) ) . '$#';
+			$pattern = $this->wildcard_pattern( $source );
 			return 1 === preg_match( $pattern, $this->path_key( $path ) );
 		}
 
@@ -1657,7 +1848,7 @@ class TSOSK_Mod_Redirects {
 		}
 
 		if ( 'wildcard' === $match_type ) {
-			$pattern = '#^' . str_replace( '\*', '([^/]+)', preg_quote( $this->path_key( $rule['source'] ), '#' ) ) . '$#';
+			$pattern = $this->wildcard_pattern( (string) $rule['source'] );
 			if ( ! preg_match( $pattern, $this->path_key( $request_path ), $matches ) ) {
 				return false;
 			}
@@ -1717,6 +1908,10 @@ class TSOSK_Mod_Redirects {
 		if ( ! isset( $rules[ $id ] ) ) {
 			return;
 		}
+		// Link Inspector probing a redirected URL is not a visit: do not count it in the rule hits.
+		if ( TSOSK_Support::is_internal_check_request() ) {
+			return;
+		}
 
 		$now                      = time();
 		$rules[ $id ]['hits']     = absint( $rules[ $id ]['hits'] ) + 1;
@@ -1742,6 +1937,43 @@ class TSOSK_Mod_Redirects {
 		$fresh[ $id ]['last_hit'] = $now;
 		$rules                    = $fresh;
 		update_option( self::OPTION, $fresh, true ); // Read on every request — must autoload.
+	}
+
+	/**
+	 * Count who asks for a missing URL: which crawler or browser, which site sends them and which IPs.
+	 * Each map keeps the six most frequent entries, so one row shows at a glance whether it is one bot or many visitors.
+	 *
+	 * @param array<string,mixed> $row        Log row (by reference).
+	 * @param string              $referrer   Referer header.
+	 * @param string              $user_agent User-Agent header.
+	 * @param string              $ip         Client IP.
+	 * @param int                 $by         Hits to add.
+	 */
+	private function track_sources( array &$row, string $referrer, string $user_agent, string $ip, int $by ): void {
+		$this->bump_source_map( $row, 'agents', TSOSK_Agent_Classifier::agent_key( $user_agent ), $by );
+		$this->bump_source_map( $row, 'ref_hosts', '' !== $referrer ? TSOSK_Agent_Classifier::host_of( $referrer ) : '', $by );
+		$this->bump_source_map( $row, 'ips', $ip, $by );
+		// Minute of the hour of each hit: a request that always arrives at the same minute is a scheduled task.
+		$this->bump_source_map( $row, 'minutes', gmdate( 'i' ), $by );
+	}
+
+	/**
+	 * Add hits to one entry of a bounded counter map stored in a log row.
+	 *
+	 * @param array<string,mixed> $row   Log row (by reference).
+	 * @param string              $field Map field name.
+	 * @param string              $key   Entry key.
+	 * @param int                 $by    Hits to add.
+	 */
+	private function bump_source_map( array &$row, string $field, string $key, int $by ): void {
+		$key = substr( sanitize_text_field( $key ), 0, 100 );
+		if ( '' === $key ) {
+			return;
+		}
+		$map         = ( isset( $row[ $field ] ) && is_array( $row[ $field ] ) ) ? $row[ $field ] : array();
+		$map[ $key ] = ( isset( $map[ $key ] ) ? absint( $map[ $key ] ) : 0 ) + max( 1, $by );
+		arsort( $map );
+		$row[ $field ] = array_slice( $map, 0, 6, true );
 	}
 
 	/**
@@ -1796,6 +2028,10 @@ class TSOSK_Mod_Redirects {
 	 * @param string $request_path Normalized path.
 	 */
 	private function record_404( string $request_uri, string $request_path ): void {
+		// Link Inspector checks this site's own links and images one by one: those 404s are forced by the scan, not visits.
+		if ( TSOSK_Support::is_internal_check_request() ) {
+			return;
+		}
 		$referrer   = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		$ip         = $this->get_client_ip();
@@ -1827,6 +2063,8 @@ class TSOSK_Mod_Redirects {
 						$logs[ $key ]['ip'] = $ip;
 						$changed            = true;
 					}
+					$this->track_sources( $logs[ $key ], $referrer, $user_agent, $ip, 1 );
+					$changed = true;
 					// Once flagged, keep flagged; never unflag a row that already looked like a bot.
 					if ( $bot_suspect && empty( $logs[ $key ]['bot_suspect'] ) ) {
 						$logs[ $key ]['bot_suspect'] = true;
@@ -1866,6 +2104,7 @@ class TSOSK_Mod_Redirects {
 			if ( '' !== $ip ) {
 				$logs[ $key ]['ip'] = $ip;
 			}
+			$this->track_sources( $logs[ $key ], $referrer, $user_agent, $ip, $hit_increment );
 			// Once flagged, keep flagged; never unflag a row that already looked like a bot.
 			if ( $bot_suspect ) {
 				$logs[ $key ]['bot_suspect'] = true;
@@ -1882,6 +2121,7 @@ class TSOSK_Mod_Redirects {
 				'ip'          => $ip,
 				'bot_suspect' => $bot_suspect,
 			);
+			$this->track_sources( $logs[ $key ], $referrer, $user_agent, $ip, $hit_increment );
 		}
 
 		uasort(
@@ -1966,7 +2206,7 @@ class TSOSK_Mod_Redirects {
 		$log = array_filter(
 			$this->get_404_log(),
 			static function ( array $row ): bool {
-				return empty( $row['bot_suspect'] );
+				return ! TSOSK_Agent_Classifier::row_is_bot( $row );
 			}
 		);
 		uasort(
@@ -2202,7 +2442,38 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
-	 * Render the 404 monitor Referrer cell (last known URL, or Direct / unknown + UA hint).
+	 * Render the "Name x12, Name x3" line of a counter map (top entries only).
+	 *
+	 * @param mixed  $map     Stored map.
+	 * @param string $prefix  Text before the list.
+	 * @param string $skip    Entry to leave out (the one already shown).
+	 * @param bool   $is_agent Translate generic agent names.
+	 * @return string
+	 */
+	private function render_404_mix_line( $map, string $prefix, string $skip = '', bool $is_agent = false ): string {
+		if ( ! is_array( $map ) ) {
+			return '';
+		}
+		$parts = array();
+		foreach ( $map as $name => $count ) {
+			$name = (string) $name;
+			if ( '' !== $skip && $name === $skip ) {
+				continue;
+			}
+			$text    = $is_agent ? TSOSK_Agent_Classifier::agent_text( $name ) : $name;
+			$parts[] = esc_html( $text ) . ' &times;' . esc_html( number_format_i18n( absint( $count ) ) );
+			if ( count( $parts ) >= 3 ) {
+				break;
+			}
+		}
+		if ( ! $parts ) {
+			return '';
+		}
+		return '<span class="tsosk-404-mix">' . esc_html( $prefix ) . ' ' . implode( ', ', $parts ) . '</span>';
+	}
+
+	/**
+	 * Render the 404 monitor Referrer cell: last known URL with where it came from, or Direct / unknown + UA hint.
 	 *
 	 * @param array<string, mixed> $item Log row.
 	 * @return string
@@ -2212,7 +2483,19 @@ class TSOSK_Mod_Redirects {
 		$user_agent = isset( $item['user_agent'] ) ? (string) $item['user_agent'] : '';
 
 		if ( '' !== $referrer ) {
-			return $this->render_rule_url_cell( $referrer, $referrer );
+			$html   = $this->render_rule_url_cell( $referrer, $referrer );
+			$origin = TSOSK_Agent_Classifier::origin( $referrer, (string) ( $item['path'] ?? '' ) );
+			if ( '' !== TSOSK_Agent_Classifier::origin_label( $origin ) ) {
+				$tip   = 'hotlink' === $origin
+					? __( 'Another website embeds this missing file. Its owner has to change the link; a 410 rule only stops it being logged here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+					: ( 'internal' === $origin
+						? __( 'The link is on a page of this site: edit that page to fix it.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' )
+						: __( 'The request came from a page that is not on this site.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+				$class = in_array( $origin, array( 'hotlink', 'external' ), true ) ? 'tsosk-badge tsosk-badge-warn' : 'tsosk-badge';
+				$html .= '<span class="' . esc_attr( $class ) . '" title="' . esc_attr( $tip ) . '">' . esc_html( TSOSK_Agent_Classifier::origin_label( $origin ) ) . '</span>';
+			}
+			$html .= $this->render_404_mix_line( $item['ref_hosts'] ?? null, __( 'Sources:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), TSOSK_Agent_Classifier::host_of( $referrer ) );
+			return $html;
 		}
 
 		$html = '<span class="tsosk-redirect-url-text tsosk-404-direct">' . esc_html__( 'Direct / unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
@@ -2228,22 +2511,80 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
-	 * Render the 404 monitor IP cell: the last known IP, plus a "possible bot" badge
-	 * when the same IP recently hit several distinct missing URLs in a short window.
+	 * Render the 404 monitor IP cell: IP, who it claims to be (crawler, tool or browser), whether DNS confirms it,
+	 * the mix of agents and IPs seen on this URL, and the behaviour flag.
 	 *
-	 * @param array<string, mixed> $item Log row.
+	 * @param array<string, mixed> $item  Log row.
+	 * @param string               $nonce Redirects nonce for the host lookup button.
 	 * @return string
 	 */
-	private function render_404_ip_cell( array $item ): string {
+	private function render_404_ip_cell( array $item, string $nonce = '' ): string {
 		$ip          = isset( $item['ip'] ) ? (string) $item['ip'] : '';
+		$user_agent  = isset( $item['user_agent'] ) ? (string) $item['user_agent'] : '';
 		$bot_suspect = ! empty( $item['bot_suspect'] );
+		$info        = TSOSK_Agent_Classifier::classify( $user_agent );
 
 		$html = '' !== $ip
 			? '<span class="tsosk-redirect-url-text tsosk-404-ip">' . esc_html( $ip ) . '</span>'
 			: '<span class="tsosk-redirect-url-text tsosk-404-direct">' . esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
 
+		// Who the request says it is.
+		$kind_text = TSOSK_Agent_Classifier::kind_label( $info['kind'] );
+		$text      = '' !== $info['label'] ? $kind_text . ': ' . TSOSK_Agent_Classifier::agent_text( $info['label'] ) : $kind_text;
+		$is_loud   = in_array( $info['kind'], array( 'tool', 'headless', 'none', 'unknown' ), true ) || $info['suspect'];
+		$tip       = '' !== $user_agent ? $user_agent : __( 'The request sent no User-Agent header.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		if ( 'browser' === $info['kind'] && $info['suspect'] ) {
+			$tip = __( 'Very old browser version: automated traffic often fakes one.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . ' ' . $user_agent;
+		}
+		$html .= '<span class="' . esc_attr( 'tsosk-badge tsosk-404-agent' . ( $is_loud ? ' tsosk-badge-warn' : '' ) ) . '" title="' . esc_attr( $tip ) . '">' . esc_html( $text ) . '</span>';
+
+		if ( TSOSK_Agent_Classifier::row_is_own_server( $item ) ) {
+			$html .= '<span class="tsosk-badge tsosk-badge-warn" title="' . esc_attr__( 'The request comes from this server itself (or another site on the same server): a scheduled task, a plugin that checks links or a crawler, not a visitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html__( 'This server', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+		}
+
+		$schedule = TSOSK_Agent_Classifier::schedule_minute( $item );
+		if ( '' !== $schedule ) {
+			$html .= '<span class="tsosk-badge tsosk-badge-warn" title="' . esc_attr__( 'Most requests arrive at the same minute of the hour: a scheduled task (WordPress cron, a link checker or a monitor), not a visitor.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html(
+				sprintf(
+					/* translators: %s: minute of the hour, two digits */
+					__( 'Scheduled · :%s', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					$schedule
+				)
+			) . '</span>';
+		}
+
+		// DNS check result, when the administrator ran it.
+		$host = isset( $item['host'] ) ? (string) $item['host'] : '';
+		if ( ! empty( $item['host_checked'] ) ) {
+			$verdict = TSOSK_Agent_Classifier::verdict( $host, ! empty( $item['host_ok'] ), $info['domains'] );
+			if ( 'verified' === $verdict ) {
+				$html .= '<span class="tsosk-badge tsosk-badge-ok" title="' . esc_attr__( 'Reverse and forward DNS confirm this IP belongs to the crawler it claims to be.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html__( 'Verified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+			} elseif ( 'spoofed' === $verdict ) {
+				$html .= '<span class="tsosk-badge tsosk-badge-warn" title="' . esc_attr__( 'The User-Agent claims to be a known crawler, but the IP does not belong to it. It is a fake: safe to block.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html__( 'Fake crawler', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+			}
+			if ( '' !== $host ) {
+				$html .= '<span class="tsosk-404-host">' . esc_html( $host ) . '</span>';
+			} else {
+				$html .= '<span class="tsosk-404-host">' . esc_html__( 'No host name', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+			}
+		} elseif ( '' !== $ip && '' !== $nonce ) {
+			$html .= '<button type="button" class="button-link tsosk-404-lookup" data-key="' . esc_attr( md5( (string) ( $item['path'] ?? '' ) ) ) . '" data-nonce="' . esc_attr( $nonce ) . '">' . esc_html__( 'Look up host', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</button>';
+		}
+
 		if ( $bot_suspect ) {
-			$html .= ' <span class="tsosk-badge tsosk-badge-warn" title="' . esc_attr__( 'Same IP requested several different missing URLs within a short window.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html__( 'Possible bot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+			$html .= '<span class="tsosk-badge tsosk-badge-warn" title="' . esc_attr__( 'Same IP requested several different missing URLs within a short window.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '">' . esc_html__( 'Possible bot', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) . '</span>';
+		}
+
+		// The mix on this URL: one crawler or many visitors?
+		$html .= $this->render_404_mix_line( $item['agents'] ?? null, __( 'Agents:', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), '', true );
+		if ( isset( $item['ips'] ) && is_array( $item['ips'] ) && count( $item['ips'] ) > 1 ) {
+			$html .= '<span class="tsosk-404-mix">' . esc_html(
+				sprintf(
+					/* translators: %d: number of distinct IPs seen for this URL */
+					_n( '%d IP seen', '%d IPs seen', count( $item['ips'] ), 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+					count( $item['ips'] )
+				)
+			) . '</span>';
 		}
 
 		return $html;
@@ -2320,6 +2661,19 @@ class TSOSK_Mod_Redirects {
 	}
 
 	/**
+	 * Build the PCRE for a wildcard source: "*" matches one path segment, "**" matches any depth (slashes included).
+	 *
+	 * @param string $source Wildcard source path.
+	 * @return string Delimited pattern.
+	 */
+	private function wildcard_pattern( string $source ): string {
+		$quoted = preg_quote( $this->path_key( $source ), '#' );
+		$quoted = str_replace( '\*\*', '(.+)', $quoted );
+		$quoted = str_replace( '\*', '([^/]+)', $quoted );
+		return '#^' . $quoted . '$#';
+	}
+
+	/**
 	 * Normalize a site-relative path.
 	 *
 	 * @param string $path Raw path.
@@ -2337,7 +2691,7 @@ class TSOSK_Mod_Redirects {
 		}
 
 		$path = isset( $parts['path'] ) ? '/' . ltrim( $parts['path'], '/' ) : '/';
-		return sanitize_text_field( $path );
+		return $this->pct_restore( sanitize_text_field( $this->pct_protect( $path ) ) );
 	}
 
 	/**
@@ -2355,7 +2709,7 @@ class TSOSK_Mod_Redirects {
 		$source = isset( $rule['source'] ) ? (string) $rule['source'] : '';
 		$source = 'regex' === $match_type
 			? trim( $source )
-			: $this->strip_home_subdirectory( $this->normalize_path( sanitize_text_field( $source ) ) );
+			: $this->strip_home_subdirectory( $this->normalize_path( $source ) );
 		if ( '' === $source ) {
 			return new WP_Error( 'empty_source', __( 'Enter a valid source path such as /old-page/.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}

@@ -3649,10 +3649,6 @@ msgid ""
 "OPTIMIZE fragmented tables to reclaim space and improve query performance."
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-database.php:78
-msgid "Catalan, Spanish, and English interface included."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-database.php:87
 #: includes/modules/class-tsosk-mod-options.php:87
 msgid "From Tu Soporte Online"
@@ -5260,10 +5256,6 @@ msgstr ""
 msgid ""
 "%d hooks are currently registered. This view is a snapshot at page load. "
 "Results are paginated to prevent server timeouts."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-hooks.php:76
-msgid "Filter hook name…"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-hooks.php:78
@@ -6912,10 +6904,6 @@ msgstr ""
 msgid ""
 "Email alerts for hard-broken links and optional nofollow on broken links for"
 " SEO."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-options.php:78
-msgid "Catalan and Spanish translations included."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-options.php:90
@@ -9443,14 +9431,6 @@ msgstr ""
 msgid "%d queries"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-slow-queries.php:1804
-msgid ""
-"Live list of database queries executed while loading this Slow Query Monitor"
-" page only. Duplicate detection ignores queries triggered by the admin bar "
-"(same approach as Query Monitor). For duplicates from another page, see the "
-"panel at the top of this tab."
-msgstr ""
-
 #: includes/modules/class-tsosk-mod-slow-queries.php:1809
 msgid "SAVEQUERIES is not active."
 msgstr ""
@@ -9495,16 +9475,6 @@ msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1861
 msgid "Filter queries…"
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-slow-queries.php:1865
-msgid "Show duplicates only"
-msgstr ""
-
-#. translators: %d: threshold in milliseconds
-#: includes/modules/class-tsosk-mod-slow-queries.php:1872
-#, php-format
-msgid "Show slow only (≥ %d ms)"
 msgstr ""
 
 #. translators: %d: number of slow queries
@@ -13858,9 +13828,6 @@ msgstr ""
 msgid "No missing URL matches your search."
 msgstr ""
 
-msgid "%1$d queries on last page · Duplicates: %2$d · %3$d slow · %4$s · %5$s"
-msgstr ""
-
 msgid "%d Q"
 msgstr ""
 
@@ -13886,22 +13853,10 @@ msgid "Last page you opened"
 msgstr ""
 
 msgid ""
-"Exact duplicates and slowest queries from the last page you opened. "
-"Duplicates are limited to the plugins chosen in Monitor Settings → Copy to "
-"AI (e.g. tso-*); with none chosen, all are shown. The page you are on now "
-"has its own live table below."
-msgstr ""
-
-msgid ""
 "Filters the duplicates in the “Last page you opened” panel (and its Copy to "
 "AI). The live table in Database queries still lists every duplicate on this "
 "admin page. None selected = all. Defaults to tso-* until you save. Needs "
 "Origin detection."
-msgstr ""
-
-msgid ""
-"%1$d queries on last page · Selected-plugin duplicates: %2$d (of %3$d on "
-"that page) · %4$d slow · %5$s · %6$s"
 msgstr ""
 
 msgid "MU-plugin: %s"
@@ -14301,12 +14256,6 @@ msgstr ""
 msgid ""
 "Turn on Origin detection in the Settings tab, save, then visit another page "
 "— otherwise this panel cannot attribute duplicates to your selected plugins."
-msgstr ""
-
-#: includes/modules/class-tsosk-mod-slow-queries.php:1530
-msgid ""
-"No duplicates from the plugins selected in Monitor Settings → Copy to AI. "
-"Other plugins’ duplicates (if any) appear in the live table below."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-slow-queries.php:1538
@@ -17481,9 +17430,11 @@ msgstr[1] ""
 msgid "(old, no longer used)"
 msgstr ""
 
-#: includes/modules/class-tsosk-mod-debug.php
 #. translators: %s: absolute path of the old debug.log
-msgid "WordPress no longer writes to this file because WP_DEBUG_LOG points to another log. You can delete it from your server (File Manager or FTP): %s"
+#: includes/modules/class-tsosk-mod-debug.php
+msgid ""
+"WordPress no longer writes to this file because WP_DEBUG_LOG points to "
+"another log. You can delete it from your server (File Manager or FTP): %s"
 msgstr ""
 
 #: includes/class-tsosk-support.php
@@ -17511,17 +17462,24 @@ msgid "Checking the keys against the installed code…"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Every group of keys belongs to something that is installed. Nothing obsolete was found."
+msgid ""
+"Every group of keys belongs to something that is installed. Nothing obsolete"
+" was found."
 msgstr ""
 
-#. translators: 1: number of key groups checked, 2: number of PHP files read, 3: number of groups no installed code mentions
+#. translators: 1: number of key groups checked, 2: number of PHP files read,
+#. 3: number of groups no installed code mentions
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%1$d groups of keys were checked against %2$d PHP files; %3$d are not mentioned by any installed code."
+msgid ""
+"%1$d groups of keys were checked against %2$d PHP files; %3$d are not "
+"mentioned by any installed code."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "The code check could not finish (too many files), so the list may include groups that are still in use."
+msgid ""
+"The code check could not finish (too many files), so the list may include "
+"groups that are still in use."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17545,11 +17503,21 @@ msgid "Low"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Review each group; a prefix that belongs to a plugin you plan to reinstall should be kept. Deleting keeps a backup you can restore, and a group is refused when installed code or the watch shows it is in use."
+msgid ""
+"Review each group; a prefix that belongs to a plugin you plan to reinstall "
+"should be kept. Deleting keeps a backup you can restore, and a group is "
+"refused when installed code or the watch shows it is in use."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Groups the options and meta keys of the database by prefix and lists the groups that no installed plugin, theme or WordPress file mentions, plus the post types that no plugin registers. It finds leftovers that point to no folder, such as the data of a gallery plugin you removed years ago. You decide what to delete: groups and entry types with strong evidence are deleted with a backup you can restore, and anything you are sure is in use can be ignored."
+msgid ""
+"Groups the options and meta keys of the database by prefix and lists the "
+"groups that no installed plugin, theme or WordPress file mentions, plus the "
+"post types that no plugin registers. It finds leftovers that point to no "
+"folder, such as the data of a gallery plugin you removed years ago. You "
+"decide what to delete: groups and entry types with strong evidence are "
+"deleted with a backup you can restore, and anything you are sure is in use "
+"can be ignored."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17567,7 +17535,9 @@ msgstr ""
 #. translators: %d: number of groups
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%d of them are only mentioned by one to six files, usually compatibility code of other plugins, so check the files listed before deciding."
+msgid ""
+"%d of them are only mentioned by one to six files, usually compatibility "
+"code of other plugins, so check the files listed before deciding."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17587,7 +17557,12 @@ msgid "Meta rows"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "These entries and terms exist in the database but nothing registers their type now. Any entry type can be ticked: those that no installed code names are deleted straight away, and for the others you confirm first. Types that an active plugin or theme registers or owns are never deleted, and a backup is kept. Taxonomies are only reported."
+msgid ""
+"These entries and terms exist in the database but nothing registers their "
+"type now. Any entry type can be ticked: those that no installed code names "
+"are deleted straight away, and for the others you confirm first. Types that "
+"an active plugin or theme registers or owns are never deleted, and a backup "
+"is kept. Taxonomies are only reported."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17645,7 +17620,14 @@ msgid "Watch which keys are read"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Records for up to 30 days whether a plugin or theme reads the keys of the groups you tick in the report above, and which one. A group that is read is in use; one that nobody reads after several days of normal visits is very likely obsolete. It only records: nothing is deleted. Reads made by WordPress admin screens and by TSO maintenance tools are ignored. Something that only reads on a rare event (a monthly task, a form) may need the full 30 days."
+msgid ""
+"Records for up to 30 days whether a plugin or theme reads the keys of the "
+"groups you tick in the report above, and which one. A group that is read is "
+"in use; one that nobody reads after several days of normal visits is very "
+"likely obsolete. It only records: nothing is deleted. Reads made by "
+"WordPress admin screens and by TSO maintenance tools are ignored. Something "
+"that only reads on a rare event (a monthly task, a form) may need the full "
+"30 days."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17659,35 +17641,49 @@ msgstr ""
 #. translators: %d: number of groups
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%d group(s) will be deleted from the database. A backup is kept so you can undo it from the backup panel, and the site is checked afterwards. Continue?"
+msgid ""
+"%d group(s) will be deleted from the database. A backup is kept so you can "
+"undo it from the backup panel, and the site is checked afterwards. Continue?"
 msgstr ""
 
 #. translators: %s: list of prefixes
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "Installed code still mentions these groups, so something may read them: %s. Delete them anyway?"
+msgid ""
+"Installed code still mentions these groups, so something may read them: %s. "
+"Delete them anyway?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Nothing was deleted: the groups are still in use, were read during the watch, or hold rows that are protected or too large."
+msgid ""
+"Nothing was deleted: the groups are still in use, were read during the "
+"watch, or hold rows that are protected or too large."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Obsolete data deleted and restored automatically: the site returned an error."
+msgid ""
+"Obsolete data deleted and restored automatically: the site returned an "
+"error."
 msgstr ""
 
 #. translators: %d: number of groups
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%d group(s) were skipped: installed code or the watch shows they are in use, or the prefix is too short to be sure."
+msgid ""
+"%d group(s) were skipped: installed code or the watch shows they are in use,"
+" or the prefix is too short to be sure."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "The site returned a server error after deleting, so the rows were restored automatically. Nothing was lost."
+msgid ""
+"The site returned a server error after deleting, so the rows were restored "
+"automatically. Nothing was lost."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Stop showing this in the report? It will not be deleted, and you can show it again from the ignored list."
+msgid ""
+"Stop showing this in the report? It will not be deleted, and you can show it"
+" again from the ignored list."
 msgstr ""
 
 #. translators: %d: number of ignored items
@@ -17701,7 +17697,9 @@ msgid "Show again"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "These are hidden from the report because you marked them as in use. Nothing here is ever deleted."
+msgid ""
+"These are hidden from the report because you marked them as in use. Nothing "
+"here is ever deleted."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17715,11 +17713,17 @@ msgstr ""
 #. translators: 1: number of entry types, 2: number of entries
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%1$d entry type(s) will be deleted with their %2$d entries, meta, term links and comments. A backup is kept so you can undo it from the backup panel, and the site is checked afterwards. Continue?"
+msgid ""
+"%1$d entry type(s) will be deleted with their %2$d entries, meta, term links"
+" and comments. A backup is kept so you can undo it from the backup panel, "
+"and the site is checked afterwards. Continue?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Nothing was deleted: the types are registered or owned by an active plugin or theme, have child entries of another type, have no entries, or installed code still names them."
+msgid ""
+"Nothing was deleted: the types are registered or owned by an active plugin "
+"or theme, have child entries of another type, have no entries, or installed "
+"code still names them."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17727,19 +17731,25 @@ msgid "Too many entries in one go. Select fewer types and try again."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "These entries are too large to keep a backup of them, so nothing was deleted. Select fewer types."
+msgid ""
+"These entries are too large to keep a backup of them, so nothing was "
+"deleted. Select fewer types."
 msgstr ""
 
 #. translators: 1: number of entries, 2: number of database rows
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "Entries deleted: %1$d (%2$d database rows with their meta and comments). You can undo it from the backup panel."
+msgid ""
+"Entries deleted: %1$d (%2$d database rows with their meta and comments). You"
+" can undo it from the backup panel."
 msgstr ""
 
 #. translators: %d: number of types
 #: includes/modules/class-tsosk-mod-leftovers.php
 #, php-format
-msgid "%d type(s) were skipped because they are still registered, named by installed code, or have child entries."
+msgid ""
+"%d type(s) were skipped because they are still registered, named by "
+"installed code, or have child entries."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-leftovers.php
@@ -17766,27 +17776,42 @@ msgstr ""
 
 #. translators: %s: comma-separated entry type names
 #: includes/modules/class-tsosk-mod-leftovers.php
-msgid "Installed code mentions these entry types, or the check could not rule them out: %s. Nothing that an active plugin or theme registers will be deleted and a backup is kept, but check that you no longer need them. Delete them anyway?"
+msgid ""
+"Installed code mentions these entry types, or the check could not rule them "
+"out: %s. Nothing that an active plugin or theme registers will be deleted "
+"and a backup is kept, but check that you no longer need them. Delete them "
+"anyway?"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Convert uploads to WebP or AVIF, compress PDFs and repair your media library. A dedicated plugin that also finds orphan images, leftover sizes and broken image URLs."
+msgid ""
+"Convert uploads to WebP or AVIF, compress PDFs and repair your media "
+"library. A dedicated plugin that also finds orphan images, leftover sizes "
+"and broken image URLs."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Convert images to WebP, AVIF, JPG or PNG on upload or in bulk, with an undo backup."
+msgid ""
+"Convert images to WebP, AVIF, JPG or PNG on upload or in bulk, with an undo "
+"backup."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Compress PDFs in the Media Library with GhostScript or Imagick; the file URL never changes."
+msgid ""
+"Compress PDFs in the Media Library with GhostScript or Imagick; the file URL"
+" never changes."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Find orphan images and image sizes left behind by old plugins or themes, and delete them with a restorable backup."
+msgid ""
+"Find orphan images and image sizes left behind by old plugins or themes, and"
+" delete them with a restorable backup."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Fix missing alt text, SEO file names and broken image URLs after a format change."
+msgid ""
+"Fix missing alt text, SEO file names and broken image URLs after a format "
+"change."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17794,19 +17819,30 @@ msgid "Repair broken attachments and keep a history of every optimization."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Give your site its own login, registration and password-reset pages at addresses you choose, so visitors never see wp-login.php. Optional modules add redirects by role, moderation, restrictions and two-factor authentication."
+msgid ""
+"Give your site its own login, registration and password-reset pages at "
+"addresses you choose, so visitors never see wp-login.php. Optional modules "
+"add redirects by role, moderation, restrictions and two-factor "
+"authentication."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Front-end login, register, lost password and reset pages with custom slugs and the [tso-login-organizer] shortcode."
+msgid ""
+"Front-end login, register, lost password and reset pages with custom slugs "
+"and the [tso-login-organizer] shortcode."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Login with username, email or either, email-only registration and AJAX forms."
+msgid ""
+"Login with username, email or either, email-only registration and AJAX "
+"forms."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Optional modules, all off by default: redirects by role, moderation, content restrictions, brute-force lockouts, reCAPTCHA and TOTP two-factor authentication."
+msgid ""
+"Optional modules, all off by default: redirects by role, moderation, content"
+" restrictions, brute-force lockouts, reCAPTCHA and TOTP two-factor "
+"authentication."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17818,11 +17854,16 @@ msgid "Import the settings of Theme My Login and keep its shortcode working."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Know where a plugin is still used before you remove it. A dedicated plugin that scans your content for the shortcodes, blocks and meta of any plugin and gives a safe, review or risk verdict."
+msgid ""
+"Know where a plugin is still used before you remove it. A dedicated plugin "
+"that scans your content for the shortcodes, blocks and meta of any plugin "
+"and gives a safe, review or risk verdict."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Scan posts, pages, templates, widgets, menus and options for the shortcodes, blocks and meta prefixes of a plugin."
+msgid ""
+"Scan posts, pages, templates, widgets, menus and options for the shortcodes,"
+" blocks and meta prefixes of a plugin."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17830,15 +17871,21 @@ msgid "Get a safe, review or risk verdict before you uninstall."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Find orphan shortcodes and blocks that are still in content but no longer registered."
+msgid ""
+"Find orphan shortcodes and blocks that are still in content but no longer "
+"registered."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Audit inactive plugins and themes that still leave traces, and compare plugins before a migration."
+msgid ""
+"Audit inactive plugins and themes that still leave traces, and compare "
+"plugins before a migration."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Replace shortcodes or blocks with a dry-run preview, confirmation and undo backups."
+msgid ""
+"Replace shortcodes or blocks with a dry-run preview, confirmation and undo "
+"backups."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17850,7 +17897,9 @@ msgid "Open TSO Image Master"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Go to Plugins → Add New, search for “TSO” and TSO Image Master appears in the results — free on WordPress.org."
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Image Master appears in "
+"the results — free on WordPress.org."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17862,7 +17911,9 @@ msgid "Open TSO Login Organizer"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Go to Plugins → Add New, search for “TSO” and TSO Login Organizer appears in the results — free on WordPress.org."
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Login Organizer appears in"
+" the results — free on WordPress.org."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
@@ -17874,9 +17925,753 @@ msgid "Open TSO Stack Inspector"
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
-msgid "Go to Plugins → Add New, search for “TSO” and TSO Stack Inspector appears in the results — free on WordPress.org."
+msgid ""
+"Go to Plugins → Add New, search for “TSO” and TSO Stack Inspector appears in"
+" the results — free on WordPress.org."
 msgstr ""
 
 #: includes/modules/class-tsosk-mod-tso-plugins.php
 msgid "TSO Stack Inspector"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Search engine"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "SEO crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "AI / data crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Link preview"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Script or scanner"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Headless browser"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Bot"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Browser"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "No User-Agent"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Unrecognised agent"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Search crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "OpenAI crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Anthropic crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Link preview bot"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Script / HTTP library"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Security scanner"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Uptime / speed monitor"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "From this site"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "From a search engine"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Loaded by another site"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "From another site"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "This row is no longer in the log."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "This row has no valid IP address."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid ""
+"The IP cell also tells who is asking: a search engine, SEO or AI crawler, a "
+"script or scanner, or a browser (a very old browser version is a common sign"
+" of a fake User-Agent). \"Look up host\" runs a DNS check on the IP: a real "
+"Googlebot or Bingbot resolves to its own domain, while a \"Fake crawler\" "
+"only copies the name. The Referrer cell says whether the request came from "
+"this site, a search engine or another website, and flags files that another "
+"site loads from yours. Use the filter next to the search box to show only "
+"bots, only probable people or only files loaded by other sites."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Filter by who requests it"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "All traffic"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Bots and tools"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Probably people"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Files loaded by other sites"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Links on this site"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "No referrer"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid ""
+"Another website embeds this missing file. Its owner has to change the link; "
+"a 410 rule only stops it being logged here."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "The link is on a page of this site: edit that page to fix it."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "The request came from a page that is not on this site."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Sources:"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "The request sent no User-Agent header."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Very old browser version: automated traffic often fakes one."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid ""
+"Reverse and forward DNS confirm this IP belongs to the crawler it claims to "
+"be."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Verified"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid ""
+"The User-Agent claims to be a known crawler, but the IP does not belong to "
+"it. It is a fake: safe to block."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Fake crawler"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "No host name"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Look up host"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "Agents:"
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:0
+msgid "%d IP seen"
+msgid_plural "%d IPs seen"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "This server"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid ""
+"The request comes from this server itself (or another site on the same "
+"server): a scheduled task, a plugin that checks links or a crawler, not a "
+"visitor."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid "From this server"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:0
+msgid ""
+"In a wildcard, * matches one path segment and ** matches any depth (e.g. "
+"/old/** → /new/$1)."
+msgstr ""
+
+#: includes/class-tsosk-agent-classifier.php:218
+msgid "WordPress request"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:2420
+msgid ""
+"Most requests arrive at the same minute of the hour: a scheduled task "
+"(WordPress cron, a link checker or a monitor), not a visitor."
+msgstr ""
+
+#. translators: %s: minute of the hour, two digits
+#: includes/modules/class-tsosk-mod-redirects.php:2423
+msgid "Scheduled · :%s"
+msgstr ""
+
+#. translators: number of redirects created, one for each category URL of the
+#. post
+#, php-format
+msgid "Slug updated and %d 301 redirects created (one for each category URL)."
+msgstr ""
+
+msgid "Category URL redirects"
+msgstr ""
+
+msgid ""
+"A post in several categories can be opened under several URLs. This checks "
+"that every old URL of the posts you renamed has its 301 redirect, and "
+"creates the missing ones."
+msgstr ""
+
+msgid "Check redirects"
+msgstr ""
+
+msgid "Create missing redirects"
+msgstr ""
+
+msgid "Old URL"
+msgstr ""
+
+msgid "Redirects to"
+msgstr ""
+
+msgid "The Redirects module is not active."
+msgstr ""
+
+#. translators: number of redirects created
+#, php-format
+msgid "Category URL redirects created: %d."
+msgstr ""
+
+#. translators: number of redirects created
+#, php-format
+msgid "%d redirect created."
+msgid_plural "%d redirects created."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "All old URLs of the renamed posts already have a redirect."
+msgstr ""
+
+#. translators: number of redirects that are missing
+#, php-format
+msgid "%d redirect is missing for another category URL of a renamed post."
+msgid_plural ""
+"%d redirects are missing for other category URLs of renamed posts."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "HTTP headers check"
+msgstr ""
+
+msgid ""
+"Reads the headers your home page sends and flags obsolete, duplicated or "
+"conflicting ones. Nothing is changed."
+msgstr ""
+
+msgid "Check headers"
+msgstr ""
+
+msgid "The site did not respond, so its headers could not be checked."
+msgstr ""
+
+msgid "No problems found in the headers your home page sends."
+msgstr ""
+
+#. translators: 1: address checked, 2: HTTP status code
+#, php-format
+msgid "Checked %1$s (HTTP %2$d)."
+msgstr ""
+
+#. translators: %d: HTTP status code
+#, php-format
+msgid ""
+"The home page answered HTTP %d, so these headers may not be the ones "
+"visitors get."
+msgstr ""
+
+msgid ""
+"X-XSS-Protection is obsolete: browsers no longer use it and it can cause "
+"problems in old ones. Remove it, or set it to 0."
+msgstr ""
+
+msgid "P3P is obsolete: no current browser reads it. Remove this header."
+msgstr ""
+
+#. translators: 1: header name, 2: number of times it is sent
+#, php-format
+msgid ""
+"The header %1$s is sent %2$d times. Keep only one, as duplicates can "
+"conflict."
+msgstr ""
+
+msgid ""
+"Access-Control-Allow-Origin is \"*\" together with Access-Control-Allow-"
+"Credentials: true. Browsers reject this combination, and a wildcard origin "
+"lets any site read the responses. Restrict the origin or remove both."
+msgstr ""
+
+msgid ""
+"The Content-Security-Policy uses default-src 'none', which blocks everything"
+" that is not listed explicitly and can break the site or the admin. Test it "
+"in report-only mode first."
+msgstr ""
+
+#. translators: %s: Referrer-Policy value
+#, php-format
+msgid ""
+"Referrer-Policy %s sends the full address to other sites. strict-origin-"
+"when-cross-origin is safer."
+msgstr ""
+
+msgid ""
+"Referrer-Policy is not set. Add it with \"Add security headers\" in Server "
+"Files Review."
+msgstr ""
+
+msgid ""
+"X-Content-Type-Options: nosniff is missing. Add it with \"Add security "
+"headers\" in Server Files Review."
+msgstr ""
+
+msgid ""
+"Neither X-Frame-Options nor a CSP frame-ancestors rule is set, so other "
+"sites can show your pages in a frame. Add it with \"Add security headers\" "
+"in Server Files Review."
+msgstr ""
+
+#. translators: 1: number of active options, 2: total number of options
+#: includes/modules/class-tsosk-mod-staging.php:850
+#, php-format
+msgid "%1$d of %2$d options are active (saved state)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:843
+msgid "robots.txt (domain root)"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:865
+msgid "robots.txt (WordPress subdirectory)"
+msgstr ""
+
+#: includes/class-tsosk-admin.php:350
+#, php-format
+msgid "Showing %1$d of %2$d entries."
+msgstr ""
+
+#: includes/class-tsosk-admin.php:352
+#, php-format
+msgid "One action changes at most %s users. Repeat it to reach the rest."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1285
+msgid "Large file"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-debug.php:1304
+msgid "Auto-refresh every 10 seconds"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-health.php:334
+#, php-format
+msgid "The security headers check is cached for 15 minutes. Last checked: %s."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-history.php:214
+msgid "Search the history…"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-history.php:216
+msgid "All tools"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-history.php:256
+msgid "No entries match these filters."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-hooks.php:194
+msgid "Filter hook or callback name…"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-hooks.php:361
+msgid "PHP / internal"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-hooks.php:383
+#, php-format
+msgid "MU plugin: %s"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:238
+#, php-format
+msgid ""
+"%d query target is used by more than one rule (marked \"Shared target\"). It"
+" is usually normal (feeds, pagination, embeds), but it can reveal "
+"overlapping rules registered by plugins."
+msgid_plural ""
+"%d query targets are used by more than one rule (marked \"Shared target\"). "
+"It is usually normal (feeds, pagination, embeds), but it can reveal "
+"overlapping rules registered by plugins."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-rewrite.php:262
+msgid "Shared target"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-runtime-stack.php:258
+#, php-format
+msgid ""
+"Below the usual recommendation (%s). Heavy plugins, imports or backups may "
+"fail."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:80
+msgid "The content contains invalid characters (NUL byte)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:108
+#, php-format
+msgid ""
+"Line %1$d: the closing tag </%2$s> does not match an open block. The file "
+"was not saved."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:118
+#, php-format
+msgid "Line %1$d: the block <%2$s> is never closed. The file was not saved."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:145
+msgid "No changes compared with the saved file."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:150
+msgid "Changes compared with the saved file (left: saved, right: editor)."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-server-files.php:1539
+msgid "Show changes"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1
+msgid ""
+"This URL now resolves to published content, so no 410 was created for it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1
+msgid ""
+"Published content still lives under this prefix (a category, tag or post "
+"type with posts), so a 410 would hide it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1
+msgid ""
+"This URL answered 404 when it was logged, but it now resolves to published "
+"content. Do not create a 410 for it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1
+msgid "Now exists"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:849
+msgid "Redirects are turned off"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:850
+msgid ""
+"Saved redirect rules are not applied and 404 visits are not recorded. This "
+"is fine if another plugin handles redirects; turn them on if you want this "
+"toolkit to do it."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:853
+msgid "Open Redirects"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:1320
+msgid "Redirects are turned off, so 404 visits are not being recorded."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-dashboard.php:1321
+msgid "Turn on redirects"
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:106
+msgid "Redirects module turned on."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:107
+msgid "Redirects module turned off."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:112
+msgid "Redirects turned on."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:113
+msgid "Redirects turned off."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1130
+msgid ""
+"Rules are applied on every visit and 404 visits are recorded. Turn it off if"
+" you use another redirect plugin: this tool then does no work on the front "
+"end."
+msgstr ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1134
+#, php-format
+msgid ""
+"Redirects are off: nothing is applied or recorded on the front end. Your %d "
+"saved rule and the 404 log are kept."
+msgid_plural ""
+"Redirects are off: nothing is applied or recorded on the front end. Your %d "
+"saved rules and the 404 log are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/modules/class-tsosk-mod-redirects.php:1141
+msgid "Turn off redirects"
+msgstr ""
+
+msgid "%d selected"
+msgstr ""
+
+msgid "Run the %d selected event(s) now?"
+msgstr ""
+
+msgid "Delete the %d selected event(s)? This cannot be undone."
+msgstr ""
+
+msgid "Bulk cron delete: %d event(s)."
+msgstr ""
+
+msgid "Bulk cron run: %d event(s)."
+msgstr ""
+
+msgid "%1$d done, %2$d skipped, %3$d failed."
+msgstr ""
+
+msgid "Run selected"
+msgstr ""
+
+msgid "Sort by"
+msgstr ""
+
+msgid "Query failed"
+msgstr ""
+
+msgid "ORDER BY RAND(): sorts every matching row, very slow on large tables"
+msgstr ""
+
+msgid "LIKE with a leading wildcard: it cannot use an index"
+msgstr ""
+
+msgid "Reads a whole table: no WHERE and no LIMIT"
+msgstr ""
+
+msgid ""
+"That query is no longer in the last page snapshot. Open the page again and "
+"retry."
+msgstr ""
+
+msgid ""
+"This query cannot be explained: it is not a plain SELECT or its text was "
+"shortened when stored."
+msgstr ""
+
+msgid "EXPLAIN returned no result."
+msgstr ""
+
+msgid "Full table scan on %1$s (about %2$s rows examined)."
+msgstr ""
+
+msgid "Table %s has candidate indexes but none is used."
+msgstr ""
+
+msgid "Table %s: results are sorted without an index (filesort)."
+msgstr ""
+
+msgid "Table %s: a temporary table is created."
+msgstr ""
+
+msgid "EXPLAIN"
+msgstr ""
+
+msgid "Query problems"
+msgstr ""
+
+msgid "No failed queries or common bad practices found on that page."
+msgstr ""
+
+msgid ""
+"Failed queries (reported by the database) and patterns that usually hurt "
+"performance. Use EXPLAIN to see whether MySQL uses an index; it does not run"
+" the query."
+msgstr ""
+
+msgid "Running EXPLAIN…"
+msgstr ""
+
+msgid "EXPLAIN found no index problems for this query."
+msgstr ""
+
+msgid "%d error"
+msgid_plural "%d errors"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Slow queries on this page"
+msgstr ""
+
+msgid ""
+"Only queries at or above the slow threshold (%1$d ms, change it in Monitor "
+"Settings) are listed: %2$d of %3$d on this page. Faster queries are never "
+"shown here."
+msgstr ""
+
+msgid "No query reached the slow threshold on this page."
+msgstr ""
+
+msgid ""
+"Database queries executed while loading this Slow Query Monitor page only. "
+"Duplicate detection ignores queries triggered by the admin bar (same "
+"approach as Query Monitor). For duplicates from another page, see the panel "
+"at the top of this tab."
+msgstr ""
+
+msgid ""
+"What the last page you opened did. The page you are on now has its own live "
+"table further down."
+msgstr ""
+
+msgid "Slow"
+msgstr ""
+
+msgid "Problems"
+msgstr ""
+
+msgid ""
+"No duplicates from the plugins you selected. %d from other plugins are "
+"hidden by the plugin filter (Monitor Settings)."
+msgstr ""
+
+msgid ""
+"Queries containing any of these texts are left out of the log, the admin "
+"bar, the live list and the “last page” panel."
+msgstr ""
+
+msgid ""
+"WordPress core setting that holds the uninstall routines of every plugin "
+"that registered one. It is never deleted as a whole; only the entries of "
+"plugins that are no longer installed can be removed from the Leftovers tab."
+msgstr ""
+
+msgid "1 row selected"
+msgstr ""
+
+msgid ""
+"The scan looks for paths such as wp-content/plugins/NAME/ or wp-"
+"content/themes/NAME/ in options, post meta, user meta, term meta, comment "
+"meta and post content, and compares NAME with the plugins and themes "
+"installed now. Only rows that mention nothing but missing items can be "
+"deleted; in the core list of uninstall routines only the entries of missing "
+"plugins are removed. Posts are only listed. Review each group before "
+"deleting: a plugin you reinstall later will start from scratch."
+msgstr ""
+
+msgid ""
+"Save and restore selected TSO Swiss Knife settings as JSON for staging, "
+"backups, or migrations. Includes plugin options such as Redirects (rules and"
+" on/off switch), Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login "
+"Protect, Activity History and Security Review (constants JSON, admin alerts,"
+" server rules, plus Hidden Profiles runtime flags such as XML-RPC / author "
+"scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail"
+" log, or the Slow Query log."
+msgstr ""
+
+msgid "Redirects on/off switch"
+msgstr ""
+
+msgid "Activity History settings"
+msgstr ""
+
+msgid "Plugin version"
+msgstr ""
+
+msgid "Activity History settings must be an object."
+msgstr ""
+
+msgid "Show all events"
+msgstr ""
+
+msgid "No callback"
+msgstr ""
+
+msgid "Only hooks without callback (%d event)"
+msgid_plural "Only hooks without callback (%d events)"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Clean it with TSO Options & Tables Cleaner"
 msgstr ""

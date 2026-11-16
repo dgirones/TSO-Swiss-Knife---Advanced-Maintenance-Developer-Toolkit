@@ -25,15 +25,15 @@ class TSOSK_Mod_Debug {
 	 */
 	private static $instance = null;
 
-	/** JSON config filename (stored under uploads/{plugin-slug}/config). */
-	private const CONFIG_FILE = 'tsosk-debug-flags.json';
-
 	/**
 	 * Mu file.
 	 *
 	 * @deprecated Legacy PHP filename — migrated to JSON on read.
 	 */
 	private const MU_FILE = 'tsosk-debug-flags.php';
+
+	/** Log size (bytes) above which a log is flagged as large. */
+	private const LOG_WARN_BYTES = 10485760;
 
 	/**
 	 * Get instance.
@@ -138,7 +138,7 @@ class TSOSK_Mod_Debug {
 	/**
 	 * Returns known WordPress/PHP log files that are safe to inspect from admin.
 	 *
-	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,writable:bool,size:int,modified:int}>
+	 * @return array<int, array{label:string,path:string,exists:bool,readable:bool,modifiable:bool,writable:bool,size:int,modified:int}>
 	 */
 	private function get_log_files(): array {
 		$wp_root     = tsosk_get_wp_root_dir();
@@ -722,6 +722,51 @@ class TSOSK_Mod_Debug {
 	}
 
 	/**
+	 * Find the last N lines of a log reading only the end of the file.
+	 *
+	 * @param string $path       Log file path.
+	 * @param int    $size       File size in bytes.
+	 * @param int    $keep_lines Lines to keep.
+	 * @return array{cut:int,lines:int,data:string} cut = bytes before the kept part (0 when nothing to remove).
+	 */
+	private function read_log_tail( string $path, int $size, int $keep_lines ): array {
+		$max_window = 64 * 1024 * 1024;
+		$window     = 2 * 1024 * 1024;
+		$offset     = 0;
+		$chunk      = '';
+		do {
+			$offset  = max( 0, $size - $window );
+			$chunk   = file_get_contents( $path, false, null, $offset, $size - $offset ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local log tail.
+			$chunk   = false === $chunk ? '' : $chunk;
+			$more    = $offset > 0 && substr_count( $chunk, "\n" ) <= $keep_lines && $window < $max_window;
+			$window *= 4;
+		} while ( $more );
+
+		$trim     = rtrim( $chunk, "\r\n" );
+		$trailing = substr( $chunk, strlen( $trim ) );
+		$lines    = explode( "\n", $trim );
+		if ( $offset > 0 ) {
+			array_shift( $lines ); // First line of the window is usually cut in half.
+		}
+		if ( 0 === $offset && count( $lines ) <= $keep_lines ) {
+			return array(
+				'cut'   => 0,
+				'lines' => count( $lines ),
+				'data'  => '',
+			);
+		}
+
+		$kept = array_slice( $lines, -$keep_lines );
+		$raw  = implode( "\n", $kept ) . $trailing;
+		$data = '' !== $trailing ? $raw : $raw . "\n";
+		return array(
+			'cut'   => max( 1, $size - strlen( $raw ) ),
+			'lines' => count( $kept ),
+			'data'  => $data,
+		);
+	}
+
+	/**
 	 * AJAX: keep only the last N lines of a log file (archive older content).
 	 */
 	public function ajax_shrink_log(): void {
@@ -740,40 +785,40 @@ class TSOSK_Mod_Debug {
 			wp_send_json_error( __( 'Log file is not writable.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$content = (string) file_get_contents( $log );
-		if ( '' === $content ) {
+		// Work on the end of the file only: a runaway log can be hundreds of MB and must never be loaded whole.
+		$size = (int) filesize( $log );
+		if ( $size <= 0 ) {
 			wp_send_json_success( __( 'Log file is already empty.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$lines = preg_split( '/\R/', $content );
-		if ( ! is_array( $lines ) ) {
-			$lines = array( $content );
-		}
-		$total = count( $lines );
-		if ( $total <= $keep_lines ) {
+		$tail = $this->read_log_tail( $log, $size, $keep_lines );
+		if ( 0 === $tail['cut'] ) {
 			wp_send_json_success(
 				sprintf(
 					/* translators: 1: line count, 2: max lines */
 					__( 'No shrink needed — file has %1$d lines (limit %2$d).', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
-					$total,
+					$tail['lines'],
 					$keep_lines
 				)
 			);
 		}
+		$keep_lines = $tail['lines'];
 
 		$archive_dir  = TSOSK_Config_Storage::get_log_archive_dir();
 		$archive_name = basename( $log ) . '.' . gmdate( 'Y-m-d-His' ) . '.bak';
 		$archive_path = $archive_dir . '/' . $archive_name;
-		$removed      = array_slice( $lines, 0, $total - $keep_lines );
-		$kept         = array_slice( $lines, -$keep_lines );
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		if ( false === file_put_contents( $archive_path, implode( "\n", $removed ) . "\n" ) ) {
-			wp_send_json_error( __( 'Could not write archive file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		// Archive the removed part in chunks so memory use stays flat.
+		$chunk_size = 4 * 1024 * 1024;
+		for ( $pos = 0; $pos < $tail['cut']; $pos += $chunk_size ) {
+			$part = file_get_contents( $log, false, null, $pos, min( $chunk_size, $tail['cut'] - $pos ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local log, read in chunks.
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			if ( false === $part || false === file_put_contents( $archive_path, $part, 0 === $pos ? 0 : FILE_APPEND ) ) {
+				wp_send_json_error( __( 'Could not write archive file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+			}
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-		if ( false === file_put_contents( $log, implode( "\n", $kept ) . "\n" ) ) {
+		if ( false === file_put_contents( $log, $tail['data'] ) ) {
 			wp_send_json_error( __( 'Could not rewrite log file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
@@ -1151,7 +1196,7 @@ class TSOSK_Mod_Debug {
 			</div>
 			<?php else : ?>
 			<div class="tsosk-table-wrap">
-				<table class="widefat tsosk-table">
+				<table class="widefat tsosk-table tsosk-log-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></th>
@@ -1164,16 +1209,16 @@ class TSOSK_Mod_Debug {
 					<tbody>
 						<?php foreach ( $logs as $log ) : ?>
 						<tr class="tsosk-log-row" data-log-path="<?php echo esc_attr( $log['path'] ); ?>" data-log-modified="<?php echo esc_attr( (string) $log['modified'] ); ?>">
-							<td>
+							<td data-label="<?php esc_attr_e( 'Log', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<?php echo esc_html( $log['label'] ); ?>
 								<?php if ( $this->is_stale_default_log( $log['path'] ) ) : ?>
 									<br><span class="description"><?php esc_html_e( '(old, no longer used)', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
 								<?php endif; ?>
 							</td>
-							<td class="tsosk-code"><?php echo esc_html( $log['path'] ); ?></td>
-							<td class="tsosk-log-size-cell"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></td>
-							<td class="tsosk-log-modified-cell"><?php echo $log['modified'] ? esc_html( $this->format_log_modified( $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
-							<td class="tsosk-log-actions-cell">
+							<td class="tsosk-code" data-label="<?php esc_attr_e( 'Path', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( $log['path'] ); ?></td>
+							<td class="tsosk-log-size-cell" data-label="<?php esc_attr_e( 'Size', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></td>
+							<td class="tsosk-log-modified-cell" data-label="<?php esc_attr_e( 'Modified', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"><?php echo $log['modified'] ? esc_html( $this->format_log_modified( $log['modified'] ) ) : esc_html__( 'Unknown', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></td>
+							<td class="tsosk-log-actions-cell" data-label="<?php esc_attr_e( 'Actions', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 								<div class="tsosk-log-actions">
 									<?php if ( $log['exists'] && $log['readable'] ) : ?>
 										<a href="#tsosk-log-<?php echo esc_attr( md5( $log['path'] ) ); ?>" class="button button-small">
@@ -1236,8 +1281,12 @@ class TSOSK_Mod_Debug {
 					<code><?php echo esc_html( $log['path'] ); ?></code>
 					-
 					<strong class="tsosk-log-size"><?php echo esc_html( size_format( $log['size'], 2 ) ); ?></strong>
+					<?php if ( $log['size'] > self::LOG_WARN_BYTES ) : ?>
+						<span class="tsosk-badge tsosk-badge-warn"><?php esc_html_e( 'Large file', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+					<?php endif; ?>
 				</p>
-				<div class="tsosk-toolbar">
+				<div class="tsosk-log-bar">
+					<div class="tsosk-log-bar-filters">
 					<input type="text" class="tsosk-log-search" placeholder="<?php esc_attr_e( 'Search this log...', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>">
 					<select class="tsosk-log-level">
 						<option value="all"><?php esc_html_e( 'All levels', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
@@ -1246,6 +1295,8 @@ class TSOSK_Mod_Debug {
 						<option value="notice"><?php esc_html_e( 'Notices', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 						<option value="deprecated"><?php esc_html_e( 'Deprecated', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></option>
 					</select>
+					</div>
+					<div class="tsosk-log-bar-actions">
 					<button type="button" class="button button-secondary tsosk-refresh-log"
 							data-nonce="<?php echo esc_attr( $nonce ); ?>"
 							data-log-path="<?php echo esc_attr( $log['path'] ); ?>">
@@ -1272,6 +1323,11 @@ class TSOSK_Mod_Debug {
 					<button type="button" class="button button-secondary tsosk-log-scroll-end">
 						<?php esc_html_e( 'Scroll to end', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 					</button>
+					<label class="tsosk-log-auto-label">
+						<input type="checkbox" class="tsosk-log-auto">
+						<?php esc_html_e( 'Auto-refresh every 10 seconds', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</label>
+					</div>
 				</div>
 				<?php if ( $this->is_wp_content_debug_log( $log['path'] ) && ! $log['modifiable'] ) : ?>
 				<p class="description tsosk-log-policy-note">

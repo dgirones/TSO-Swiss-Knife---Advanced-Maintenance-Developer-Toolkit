@@ -1294,6 +1294,36 @@ class TSOSK_Mod_Update_Manager {
 	}
 
 	/**
+	 * Message shown when WordPress cannot write files without FTP credentials.
+	 */
+	private function filesystem_error_message(): string {
+		return __( 'WordPress cannot write files directly on this server (filesystem credentials required). Update it from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+	}
+
+	/**
+	 * Run one upgrade (plugin or theme) and return its error message, or '' on success.
+	 *
+	 * @param \WP_Upgrader $upgrader Plugin_Upgrader or Theme_Upgrader built with an Automatic_Upgrader_Skin.
+	 * @param string       $item     Plugin basename or theme stylesheet.
+	 */
+	private function run_upgrader( $upgrader, string $item ): string {
+		try {
+			$result = $upgrader->upgrade( $item );
+		} catch ( \Throwable $e ) {
+			$result = new WP_Error( 'tsosk_um_update_exception', $e->getMessage() );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			return $result->get_error_message();
+		}
+		if ( false === $result || null === $result ) {
+			$messages = isset( $upgrader->skin ) && method_exists( $upgrader->skin, 'get_upgrade_messages' ) ? $upgrader->skin->get_upgrade_messages() : array();
+			return ! empty( $messages ) ? wp_strip_all_tags( (string) end( $messages ) ) : __( 'The update failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+		}
+		return '';
+	}
+
+	/**
 	 * Upgrade one plugin from wordpress.org (call inside run_with_blocks_lifted()).
 	 *
 	 * @param string $plugin Plugin basename.
@@ -1319,24 +1349,11 @@ class TSOSK_Mod_Update_Manager {
 			return $out;
 		}
 		if ( ! $this->init_upgrade_filesystem() ) {
-			$out['error'] = __( 'WordPress cannot write files directly on this server (filesystem credentials required). Update it from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$out['error'] = $this->filesystem_error_message();
 			return $out;
 		}
 
-		$skin     = new Automatic_Upgrader_Skin();
-		$upgrader = new Plugin_Upgrader( $skin );
-		try {
-			$result = $upgrader->upgrade( $plugin );
-		} catch ( \Throwable $e ) {
-			$result = new WP_Error( 'tsosk_um_update_exception', $e->getMessage() );
-		}
-
-		if ( is_wp_error( $result ) ) {
-			$out['error'] = $result->get_error_message();
-		} elseif ( false === $result || null === $result ) {
-			$messages     = $skin->get_upgrade_messages();
-			$out['error'] = ! empty( $messages ) ? wp_strip_all_tags( (string) end( $messages ) ) : __( 'The update failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-		}
+		$out['error'] = $this->run_upgrader( new Plugin_Upgrader( new Automatic_Upgrader_Skin() ), $plugin );
 
 		if ( '' === $out['error'] ) {
 			wp_clean_plugins_cache( true );
@@ -1369,24 +1386,11 @@ class TSOSK_Mod_Update_Manager {
 			return $out;
 		}
 		if ( ! $this->init_upgrade_filesystem() ) {
-			$out['error'] = __( 'WordPress cannot write files directly on this server (filesystem credentials required). Update it from Dashboard → Updates.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+			$out['error'] = $this->filesystem_error_message();
 			return $out;
 		}
 
-		$skin     = new Automatic_Upgrader_Skin();
-		$upgrader = new Theme_Upgrader( $skin );
-		try {
-			$result = $upgrader->upgrade( $stylesheet );
-		} catch ( \Throwable $e ) {
-			$result = new WP_Error( 'tsosk_um_update_exception', $e->getMessage() );
-		}
-
-		if ( is_wp_error( $result ) ) {
-			$out['error'] = $result->get_error_message();
-		} elseif ( false === $result || null === $result ) {
-			$messages     = $skin->get_upgrade_messages();
-			$out['error'] = ! empty( $messages ) ? wp_strip_all_tags( (string) end( $messages ) ) : __( 'The update failed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
-		}
+		$out['error'] = $this->run_upgrader( new Theme_Upgrader( new Automatic_Upgrader_Skin() ), $stylesheet );
 
 		if ( '' === $out['error'] ) {
 			wp_clean_themes_cache( true );

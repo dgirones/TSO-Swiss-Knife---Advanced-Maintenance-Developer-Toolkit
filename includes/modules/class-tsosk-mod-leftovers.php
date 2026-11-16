@@ -4,6 +4,7 @@
  *
  * Finds rows in the database that point to plugin or theme folders (wp-content/plugins/NAME/, wp-content/themes/NAME/)
  * that are no longer installed, and lets the administrator decide, group by group, what to delete.
+ * Also: a prefix census of obsolete keys and entry types, a read watch, and backups with undo for everything it deletes.
  *
  * @package TSO_Swiss_Knife
  */
@@ -299,6 +300,57 @@ class TSOSK_Mod_Leftovers {
 	}
 
 	/**
+	 * The core option that lists the uninstall routine of every plugin. It is never deleted as a whole: only the
+	 * entries of plugins that are no longer installed are taken out of it.
+	 *
+	 * @param string $source Source slug.
+	 * @param string $key    Option name or meta key.
+	 * @return bool
+	 */
+	private function is_trim_key( string $source, string $key ): bool {
+		return 'options' === $source && 'uninstall_plugins' === strtolower( $key );
+	}
+
+	/**
+	 * Entries of the uninstall_plugins option that belong to the given plugins and can be removed safely.
+	 *
+	 * An entry is removable only when every plugin its key points at is gone from disk.
+	 *
+	 * @param string[] $slug_keys Keys such as "plugin:folder".
+	 * @return string[] Keys of the option array to remove.
+	 */
+	private function uninstall_trim_plan( array $slug_keys ): array {
+		$current = get_option( 'uninstall_plugins' );
+		if ( ! is_array( $current ) || empty( $slug_keys ) ) {
+			return array();
+		}
+		$wanted = array_flip( $slug_keys );
+		$remove = array();
+		foreach ( array_keys( $current ) as $entry_key ) {
+			$entry_key = (string) $entry_key;
+			$refs      = $this->find_refs( $entry_key );
+			if ( empty( $refs ) || file_exists( WP_PLUGIN_DIR . '/' . $entry_key ) ) {
+				continue;
+			}
+			$ok  = true;
+			$hit = false;
+			foreach ( array_keys( $refs ) as $ref ) {
+				if ( $this->is_installed_key( (string) $ref ) ) {
+					$ok = false;
+					break;
+				}
+				if ( isset( $wanted[ $ref ] ) ) {
+					$hit = true;
+				}
+			}
+			if ( $ok && $hit ) {
+				$remove[] = $entry_key;
+			}
+		}
+		return $remove;
+	}
+
+	/**
 	 * Keys that are never offered for deletion.
 	 *
 	 * @param string $source Source slug.
@@ -337,7 +389,7 @@ class TSOSK_Mod_Leftovers {
 		$low = strtolower( $key );
 		if ( 'options' === $source ) {
 			if ( 'uninstall_plugins' === $low ) {
-				return __( 'WordPress core setting that holds the uninstall routines of every plugin that registered one, not only this one. Deleting the whole row would lose the others, and this tool cannot remove just this plugin\'s entry, so it is kept. It is small and harmless to leave; the Options editor protects it too.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
+				return __( 'WordPress core setting that holds the uninstall routines of every plugin that registered one. It is never deleted as a whole; only the entries of plugins that are no longer installed can be removed from the Leftovers tab.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
 			}
 			if ( 0 === strpos( $low, 'tsosk_' ) ) {
 				return __( 'Setting of this tool itself, so it is never deleted from here.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' );
@@ -403,7 +455,7 @@ class TSOSK_Mod_Leftovers {
 	 */
 	private function more_time(): void {
 		if ( function_exists( 'set_time_limit' ) ) {
-			@set_time_limit( 120 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, Squiz.PHP.DiscouragedFunctions.Discouraged -- Scanning a large table may need more than the default limit.
+			set_time_limit( 120 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Scanning a large table may need more than the default limit.
 		}
 	}
 
@@ -489,9 +541,10 @@ class TSOSK_Mod_Leftovers {
 			if ( empty( $missing ) ) {
 				continue;
 			}
-			$mixed     = (bool) $has_known && ! $this->is_cache_key( $source, $key );
-			$large     = (int) $row['len'] > self::ROW_CAP && ! $this->is_cache_key( $source, $key );
-			$protected = $this->is_protected_key( $source, $key );
+			$is_trim   = $this->is_trim_key( $source, $key );
+			$mixed     = (bool) $has_known && ! $this->is_cache_key( $source, $key ) && ! $is_trim;
+			$large     = (int) $row['len'] > self::ROW_CAP && ! $this->is_cache_key( $source, $key ) && ! $is_trim;
+			$protected = $is_trim ? false : $this->is_protected_key( $source, $key );
 			foreach ( $missing as $slug_key => $sample ) {
 				$gk = $source . "\x01" . $key . "\x01" . $slug_key;
 				if ( ! isset( $groups[ $gk ] ) ) {
@@ -2042,7 +2095,12 @@ class TSOSK_Mod_Leftovers {
 				}
 			}
 			$is_prot = $this->is_protected_key( $source, $key );
-			$reason  = '';
+			if ( $this->is_trim_key( $source, $key ) ) {
+				$is_prot = false;
+				$mixed   = false;
+				$large   = false;
+			}
+			$reason = '';
 			if ( $is_prot ) {
 				$reason = 'protected';
 			} elseif ( $mixed ) {
@@ -2087,11 +2145,12 @@ class TSOSK_Mod_Leftovers {
 			wp_send_json_error( __( 'Nothing selected.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
-		$to_delete = array(); // source => id => true.
-		$skipped   = 0;
-		$n_prot    = 0;
-		$n_inst    = 0;
-		$n_large   = 0;
+		$to_delete  = array(); // source => id => true.
+		$trim_slugs = array();
+		$skipped    = 0;
+		$n_prot     = 0;
+		$n_inst     = 0;
+		$n_large    = 0;
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
@@ -2106,6 +2165,10 @@ class TSOSK_Mod_Leftovers {
 			if ( $this->is_installed_key( $slug_key ) ) {
 				++$skipped;
 				++$n_inst;
+				continue;
+			}
+			if ( $this->is_trim_key( $source, $key ) ) {
+				$trim_slugs[] = $slug_key;
 				continue;
 			}
 			if ( $this->is_protected_key( $source, $key ) ) {
@@ -2125,6 +2188,8 @@ class TSOSK_Mod_Leftovers {
 		foreach ( $to_delete as $ids ) {
 			$total += count( $ids );
 		}
+		$trim_remove = $this->uninstall_trim_plan( $trim_slugs );
+		$total      += count( $trim_remove );
 		if ( 0 === $total ) {
 			$why = array();
 			if ( $n_inst > 0 ) {
@@ -2149,7 +2214,22 @@ class TSOSK_Mod_Leftovers {
 		if ( null === $backup ) {
 			wp_send_json_error( __( 'These rows are too large to keep a backup of them, so nothing was deleted. Select fewer groups.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
-		if ( ! $this->store_backup( $backup ) ) {
+		if ( ! empty( $trim_remove ) ) {
+			$opt_def = $this->source_def( 'options' );
+			if ( null !== $opt_def ) {
+				list( $opt_table, , $opt_key_col ) = $opt_def;
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column come from source_def(); the value uses a placeholder.
+				$trim_row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$opt_table} WHERE {$opt_key_col} = %s", 'uninstall_plugins' ), ARRAY_A );
+				if ( is_array( $trim_row ) ) {
+					$backup['rows'][] = array(
+						'source' => 'options',
+						'row'    => $trim_row,
+					);
+				}
+			}
+		}
+		if ( empty( $backup['rows'] ) || ! $this->store_backup( $backup ) ) {
 			wp_send_json_error( __( 'The backup could not be saved, so nothing was deleted.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 		}
 
@@ -2165,6 +2245,18 @@ class TSOSK_Mod_Leftovers {
 				$in = implode( ',', $chunk );
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table and column come from source_def(); the list holds integers only (absint).
 				$deleted += (int) $wpdb->query( "DELETE FROM {$table} WHERE {$id_col} IN ({$in})" );
+			}
+		}
+		if ( ! empty( $trim_remove ) ) {
+			$current = get_option( 'uninstall_plugins' );
+			if ( is_array( $current ) ) {
+				foreach ( $trim_remove as $entry_key ) {
+					if ( isset( $current[ $entry_key ] ) ) {
+						unset( $current[ $entry_key ] );
+						++$deleted;
+					}
+				}
+				update_option( 'uninstall_plugins', $current );
 			}
 		}
 		wp_cache_flush();
@@ -2691,6 +2783,19 @@ class TSOSK_Mod_Leftovers {
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table from backup_def(); values use placeholders.
 				$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE object_id = %d AND term_taxonomy_id = %d", $row_id, absint( $row['term_taxonomy_id'] ?? 0 ) ) );
 			}
+			if ( $exists && 'options' === $entry['source'] && 'uninstall_plugins' === (string) ( $row[ $key_col ] ?? '' ) ) {
+				// The option is still there with other plugins' entries: put back only the entries that are missing.
+				$now = get_option( 'uninstall_plugins' );
+				$old = maybe_unserialize( (string) ( $row['option_value'] ?? '' ) );
+				$add = ( is_array( $now ) && is_array( $old ) ) ? array_diff_key( $old, $now ) : array();
+				if ( ! empty( $add ) ) {
+					update_option( 'uninstall_plugins', $now + $add );
+					++$restored;
+				} else {
+					++$skipped;
+				}
+				continue;
+			}
 			if ( $exists ) {
 				++$skipped;
 				continue;
@@ -2907,7 +3012,7 @@ class TSOSK_Mod_Leftovers {
 						<button type="button" class="button tsosk-lo-bk-del"><?php esc_html_e( 'Delete this backup', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></button>
 					</p>
 					<div class="tsosk-lo-scroll">
-						<table class="widefat striped tsosk-lo-bk-table">
+						<table class="widefat striped tsosk-table tsosk-lo-bk-table">
 							<thead>
 								<tr>
 									<th class="check-column"><input type="checkbox" class="tsosk-lo-bk-pickall" aria-label="<?php esc_attr_e( 'Select all', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>" /></th>
@@ -3007,6 +3112,7 @@ class TSOSK_Mod_Leftovers {
 			'delete_btn'            => __( 'Delete selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %d: number of rows */
 			'selected'              => __( '%d rows selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'selected_one'          => __( '1 row selected', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			/* translators: %d: number of rows */
 			'confirm_delete'        => __( 'Delete %d row(s) from the database? A backup of them is kept so you can undo it. Click OK to proceed.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'confirm_restore'       => __( 'Restore all the rows of this backup? Rows that exist again are skipped.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -3092,7 +3198,7 @@ class TSOSK_Mod_Leftovers {
 
 		<div class="tsosk-notice tsosk-notice-warn" style="border-left-color:#d63638;">
 			<strong><?php esc_html_e( 'How it works', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></strong>
-			<?php esc_html_e( 'The scan looks for paths such as wp-content/plugins/NAME/ or wp-content/themes/NAME/ in options, post meta, user meta, term meta, comment meta and post content, and compares NAME with the plugins and themes installed now. Only rows that mention nothing but missing items can be deleted. Posts are only listed. Review each group before deleting: a plugin you reinstall later will start from scratch.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'The scan looks for paths such as wp-content/plugins/NAME/ or wp-content/themes/NAME/ in options, post meta, user meta, term meta, comment meta and post content, and compares NAME with the plugins and themes installed now. Only rows that mention nothing but missing items can be deleted; in the core list of uninstall routines only the entries of missing plugins are removed. Posts are only listed. Review each group before deleting: a plugin you reinstall later will start from scratch.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</div>
 
 		<div class="tsosk-card" id="tsosk-lo-app"

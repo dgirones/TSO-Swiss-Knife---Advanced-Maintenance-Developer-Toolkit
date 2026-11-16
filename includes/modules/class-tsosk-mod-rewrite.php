@@ -149,6 +149,8 @@ class TSOSK_Mod_Rewrite {
 		}
 		$route_url = isset( $_GET['tsosk_route_url'] ) ? sanitize_text_field( wp_unslash( $_GET['tsosk_route_url'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostic form.
 		$route     = '' !== $route_url ? $this->get_route_diagnostics( $route_url, $rules ) : array();
+		$targets   = array_count_values( array_map( 'strval', array_values( $rules ) ) );
+		$shared    = count( array_filter( $targets, static fn( $n ) => $n > 1 ) );
 		?>
 		<p class="tsosk-desc">
 			<?php esc_html_e( 'Flush and inspect WordPress rewrite rules. A "hard flush" also regenerates the .htaccess / web.config file.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
@@ -228,6 +230,17 @@ class TSOSK_Mod_Rewrite {
 			<?php elseif ( empty( $rules ) ) : ?>
 				<p><?php esc_html_e( 'No rewrite rules stored. Have you flushed permalinks?', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></p>
 			<?php else : ?>
+				<?php if ( $shared > 0 ) : ?>
+				<p class="description">
+					<?php
+					printf(
+						/* translators: %d: number of query targets used by more than one rule */
+						esc_html( _n( '%d query target is used by more than one rule (marked "Shared target"). It is usually normal (feeds, pagination, embeds), but it can reveal overlapping rules registered by plugins.', '%d query targets are used by more than one rule (marked "Shared target"). It is usually normal (feeds, pagination, embeds), but it can reveal overlapping rules registered by plugins.', $shared, 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) ),
+						(int) $shared
+					);
+					?>
+				</p>
+			<?php endif; ?>
 			<input type="text" id="tsosk-rewrite-search"
 					placeholder="<?php esc_attr_e( 'Filter rules…', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>"
 					style="width:280px;margin-bottom:10px;">
@@ -243,7 +256,12 @@ class TSOSK_Mod_Rewrite {
 						<?php foreach ( $rules as $regex => $redirect ) : ?>
 						<tr>
 							<td class="tsosk-code"><?php echo esc_html( $regex ); ?></td>
-							<td class="tsosk-code"><?php echo esc_html( $redirect ); ?></td>
+							<td class="tsosk-code">
+								<?php echo esc_html( $redirect ); ?>
+								<?php if ( ( $targets[ (string) $redirect ] ?? 0 ) > 1 ) : ?>
+									<span class="tsosk-badge tsosk-badge-info"><?php esc_html_e( 'Shared target', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?></span>
+								<?php endif; ?>
+							</td>
 						</tr>
 						<?php endforeach; ?>
 					</tbody>

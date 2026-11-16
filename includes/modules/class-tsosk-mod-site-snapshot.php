@@ -49,6 +49,7 @@ class TSOSK_Mod_Site_Snapshot {
 	public static function get_export_map(): array {
 		return array(
 			'redirects'             => 'tsosk_redirect_rules',
+			'redirects_enabled'     => 'tsosk_redirects_enabled',
 			'heartbeat'             => 'tsosk_heartbeat_settings',
 			'update_manager'        => 'tsosk_update_manager_settings',
 			'rest_api'              => 'tsosk_rest_settings',
@@ -70,7 +71,18 @@ class TSOSK_Mod_Site_Snapshot {
 			'fi_ignored'            => 'tsosk_fi_ignored',
 			'comment_antispam'      => 'tsosk_comment_antispam',
 			'staging'               => 'tsosk_staging_settings',
+			'activity_log'          => 'tsosk_activity_log_settings',
 		);
+	}
+
+	/**
+	 * Sections whose option is read on (almost) every request, so a newly created one must autoload.
+	 *
+	 * @param string $section Section id.
+	 * @return bool
+	 */
+	private static function section_autoloads( string $section ): bool {
+		return in_array( $section, array( 'staging', 'redirects_enabled' ), true );
 	}
 
 	/**
@@ -115,6 +127,7 @@ class TSOSK_Mod_Site_Snapshot {
 	public static function get_section_labels(): array {
 		return array(
 			'redirects'             => __( 'Redirects', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'redirects_enabled'     => __( 'Redirects on/off switch', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'heartbeat'             => __( 'Heartbeat settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'update_manager'        => __( 'Update Manager settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'rest_api'              => __( 'REST API settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
@@ -136,6 +149,7 @@ class TSOSK_Mod_Site_Snapshot {
 			'fi_ignored'            => __( 'File integrity ignored files', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'comment_antispam'      => __( 'Comment Anti-Spam settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 			'staging'               => __( 'Staging Mode settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+			'activity_log'          => __( 'Activity History settings', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
 		);
 	}
 
@@ -174,15 +188,16 @@ class TSOSK_Mod_Site_Snapshot {
 		}
 
 		return array(
-			'format'      => 'tsosk-site-snapshot',
-			'version'     => self::SCHEMA_VERSION,
-			'plugin'      => 'tso-swiss-knife',
-			'exported_at' => gmdate( 'c' ),
-			'site_url'    => home_url(),
-			'wp_version'  => get_bloginfo( 'version' ),
-			'php_version' => PHP_VERSION,
-			'locale'      => get_locale(),
-			'sections'    => $payload,
+			'format'         => 'tsosk-site-snapshot',
+			'version'        => self::SCHEMA_VERSION,
+			'plugin'         => 'tso-swiss-knife',
+			'plugin_version' => defined( 'TSOSK_VERSION' ) ? TSOSK_VERSION : '',
+			'exported_at'    => gmdate( 'c' ),
+			'site_url'       => home_url(),
+			'wp_version'     => get_bloginfo( 'version' ),
+			'php_version'    => PHP_VERSION,
+			'locale'         => get_locale(),
+			'sections'       => $payload,
 		);
 	}
 
@@ -360,7 +375,7 @@ class TSOSK_Mod_Site_Snapshot {
 			}
 
 			// Existing options keep their autoload flag (null); new ones autoload only for Staging Mode.
-			$autoload = ( self::MISSING === $backup[ $section ] ) ? ( 'staging' === $section ) : null;
+			$autoload = ( self::MISSING === $backup[ $section ] ) ? self::section_autoloads( $section ) : null;
 			update_option( $map[ $section ], $validated, $autoload );
 			$imported[] = $section;
 
@@ -497,7 +512,7 @@ class TSOSK_Mod_Site_Snapshot {
 			} else {
 				// Keep the autoload flag of an option that still exists; only a recreated one gets the default.
 				$exists = self::MISSING !== get_option( $map[ $section ], self::MISSING );
-				update_option( $map[ $section ], $value, $exists ? null : 'staging' === $section );
+				update_option( $map[ $section ], $value, $exists ? null : self::section_autoloads( $section ) );
 			}
 			$restored[] = $section;
 		}
@@ -564,6 +579,10 @@ class TSOSK_Mod_Site_Snapshot {
 		switch ( $section ) {
 			case 'redirects':
 				return $this->sanitize_redirects_import( $value );
+			case 'redirects_enabled':
+				return in_array( $value, array( false, 0, '0', 'off' ), true ) ? '0' : '1';
+			case 'activity_log':
+				return $this->sanitize_activity_log_import( $value );
 			case 'heartbeat':
 				return $this->sanitize_heartbeat_import( $value );
 			case 'update_manager':
@@ -1315,6 +1334,30 @@ class TSOSK_Mod_Site_Snapshot {
 	}
 
 	/**
+	 * Sanitize Activity History settings import.
+	 *
+	 * @param mixed $value Raw settings.
+	 * @return array|WP_Error
+	 */
+	private function sanitize_activity_log_import( $value ) {
+		if ( ! is_array( $value ) ) {
+			return new WP_Error( 'invalid_activity_log', __( 'Activity History settings must be an object.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
+		}
+		$allowed = TSOSK_Activity_Log::get_configurable_modules();
+		$modules = array();
+		foreach ( (array) ( $value['modules'] ?? array() ) as $module ) {
+			$module = sanitize_key( (string) $module );
+			if ( in_array( $module, $allowed, true ) ) {
+				$modules[] = $module;
+			}
+		}
+		return array(
+			'modules' => array_values( array_unique( $modules ) ),
+			'limit'   => max( 25, min( 500, absint( $value['limit'] ?? 100 ) ) ),
+		);
+	}
+
+	/**
 	 * Sanitize comment antispam import.
 	 *
 	 * @param mixed $value Raw comment antispam settings.
@@ -1457,7 +1500,7 @@ class TSOSK_Mod_Site_Snapshot {
 		$operational  = self::get_operational_sections();
 		?>
 		<p class="tsosk-desc">
-			<?php esc_html_e( 'Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects, Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login Protect, and Security Review (constants JSON, admin alerts, server rules, plus Hidden Profiles runtime flags such as XML-RPC / author scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail log, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+			<?php esc_html_e( 'Save and restore selected TSO Swiss Knife settings as JSON for staging, backups, or migrations. Includes plugin options such as Redirects (rules and on/off switch), Staging Mode, Slow Query Monitor, Comment Anti-Spam, Login Protect, Activity History and Security Review (constants JSON, admin alerts, server rules, plus Hidden Profiles runtime flags such as XML-RPC / author scans). Does not include Debug Mode JSON, sandbox sessions, the Staging mail log, or the Slow Query log.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
 		</p>
 
 		<div class="tsosk-notice tsosk-notice-warn">

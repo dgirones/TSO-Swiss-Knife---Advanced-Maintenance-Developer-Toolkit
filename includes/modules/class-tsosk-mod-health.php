@@ -22,6 +22,13 @@ class TSOSK_Mod_Health {
 	private static $instance = null;
 
 	/**
+	 * When the cached security-headers probe was taken (0 when unknown).
+	 *
+	 * @var int
+	 */
+	private $headers_probe_time = 0;
+
+	/**
 	 * Returns the singleton instance.
 	 *
 	 * @return TSOSK_Mod_Health
@@ -38,9 +45,23 @@ class TSOSK_Mod_Health {
 	 */
 	private function __construct() {
 		add_action( 'wp_ajax_tsosk_health_save_suppress', array( $this, 'ajax_save_suppress' ) );
+		add_action( 'wp_ajax_tsosk_health_recheck_headers', array( $this, 'ajax_recheck_headers' ) );
 		add_action( 'admin_post_tsosk_health_download_report', array( $this, 'download_report' ) );
 		add_filter( 'site_status_tests', array( $this, 'filter_site_health_tests' ) );
 		add_filter( 'site_status_test_result', array( $this, 'filter_site_health_result' ) );
+	}
+
+	/**
+	 * AJAX: drop the cached security-headers probe so the next load checks the home page again.
+	 */
+	public function ajax_recheck_headers(): void {
+		check_ajax_referer( 'tsosk_health_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ), 403 );
+		}
+		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+		delete_transient( 'tsosk_health_security_headers_v2_' . sanitize_key( (string) $locale ) );
+		wp_send_json_success( __( 'Done.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ) );
 	}
 
 	/**
@@ -305,6 +326,20 @@ class TSOSK_Mod_Health {
 					</tbody>
 				</table>
 			</div>
+			<?php if ( $this->headers_probe_time > 0 ) : ?>
+				<p class="description">
+					<?php
+					printf(
+						/* translators: %s: date and time of the last security-headers check */
+						esc_html__( 'The security headers check is cached for 15 minutes. Last checked: %s.', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ),
+						esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $this->headers_probe_time ) )
+					);
+					?>
+					<button type="button" class="button button-small" id="tsosk-health-recheck-headers" data-nonce="<?php echo esc_attr( wp_create_nonce( 'tsosk_health_nonce' ) ); ?>">
+						<?php esc_html_e( 'Check again', 'tso-swiss-knife-advanced-maintenance-developer-toolkit' ); ?>
+					</button>
+				</p>
+			<?php endif; ?>
 		</div>
 
 		<div class="tsosk-card" id="tsosk-health-autoload">
@@ -518,7 +553,8 @@ class TSOSK_Mod_Health {
 		$cache_key = 'tsosk_health_security_headers_v2_' . sanitize_key( (string) $locale );
 		$cached    = get_transient( $cache_key );
 		if ( is_array( $cached ) && array_key_exists( 'present', $cached ) ) {
-			$error = '';
+			$this->headers_probe_time = isset( $cached['time'] ) ? (int) $cached['time'] : 0;
+			$error                    = '';
 			if ( ! empty( $cached['error_code'] ) && is_string( $cached['error_code'] ) ) {
 				$error = sprintf(
 					/* translators: %s: WP_Error code from the HTTP API */
@@ -543,11 +579,13 @@ class TSOSK_Mod_Health {
 		);
 
 		if ( is_wp_error( $resp ) ) {
-			$code    = $resp->get_error_code();
-			$payload = array(
+			$code                     = $resp->get_error_code();
+			$payload                  = array(
 				'present'    => array(),
 				'error_code' => is_string( $code ) ? $code : 'http_request_failed',
+				'time'       => time(),
 			);
+			$this->headers_probe_time = $payload['time'];
 			set_transient( $cache_key, $payload, 15 * MINUTE_IN_SECONDS );
 			return $this->format_security_headers_result(
 				array(),
@@ -574,10 +612,12 @@ class TSOSK_Mod_Health {
 			}
 		}
 
-		$payload = array(
+		$payload                  = array(
 			'present'    => $present,
 			'error_code' => '',
+			'time'       => time(),
 		);
+		$this->headers_probe_time = $payload['time'];
 		set_transient( $cache_key, $payload, 15 * MINUTE_IN_SECONDS );
 
 		return $this->format_security_headers_result( $present, '' );
