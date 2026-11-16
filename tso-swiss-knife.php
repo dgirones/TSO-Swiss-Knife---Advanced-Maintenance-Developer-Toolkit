@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TSO Swiss Knife – Advanced Maintenance & Developer Toolkit
  * Description: Complete maintenance and developer toolkit: cron manager, debug mode, transients, database tools, hooks inspector, maintenance mode, plugin sandbox and more.
- * Version:     1.3.1
+ * Version:     1.3.3
  * Author:      Tu Soporte Online
  * Author URI:  https://www.tusoporteonline.es/
  * Text Domain: tso-swiss-knife-advanced-maintenance-developer-toolkit
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ──────────────────────────────────────────────────────────
-define( 'TSOSK_VERSION', '1.3.1' );
+define( 'TSOSK_VERSION', '1.3.3' );
 define( 'TSOSK_FILE', __FILE__ );
 define( 'TSOSK_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TSOSK_URL', plugin_dir_url( __FILE__ ) );
@@ -236,6 +236,7 @@ $tsosk_includes = array(
 	'includes/class-tsosk-config-storage',
 	'includes/class-tsosk-i18n',
 	'includes/class-tsosk-support',
+	'includes/class-tsosk-agent-classifier',
 	'includes/class-tsosk-email-template',
 	'includes/class-tsosk-sandbox-mu',
 	'includes/class-tsosk-option-library',
@@ -489,6 +490,9 @@ function tsosk_maybe_upgrade(): void {
 		add_option( 'tsosk_admin_menu_settings', $tsosk_admin_menu_settings, '', 'yes' );
 	}
 
+	// 1.3.3: Redirects on/off switch, read on every request. Created once so a missing option does not cost a query per page load.
+	add_option( 'tsosk_redirects_enabled', '1', '', 'yes' );
+
 	update_option( 'tsosk_version', TSOSK_VERSION, false );
 }
 
@@ -610,6 +614,7 @@ register_activation_hook( __FILE__, 'tsosk_activate' );
  */
 function tsosk_activate() {
 	update_option( 'tsosk_activated', time(), false );
+	add_option( 'tsosk_redirects_enabled', '1', '', 'yes' );
 	update_option( 'tsosk_version', TSOSK_VERSION, false );
 
 	$login_protect = get_option( 'tsosk_login_protect', array() );

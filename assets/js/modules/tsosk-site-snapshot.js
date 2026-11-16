@@ -33,6 +33,7 @@
 			{ label: i18n.snapshot_env_site_url || 'Site URL', file: data.site_url || '', current: cur.site_url || '', kind: 'url' },
 			{ label: i18n.snapshot_env_wp_version || 'WordPress version', file: data.wp_version || '', current: cur.wp_version || '', kind: 'text' },
 			{ label: i18n.snapshot_env_plugin || 'Snapshot schema', file: String( data.version || '' ), current: String( cur.schema_version || '' ), kind: 'text' },
+			{ label: i18n.snapshot_env_plugin_version || 'Plugin version', file: data.plugin_version || '', current: cur.plugin || '', kind: 'text' },
 			{ label: i18n.snapshot_env_php || 'PHP version', file: data.php_version || '', current: cur.php_version || '', kind: 'text' },
 			{ label: i18n.snapshot_env_locale || 'Locale', file: data.locale || '', current: cur.locale || '', kind: 'locale' }
 		];
@@ -103,7 +104,7 @@
 
 		keys.forEach( function ( id ) {
 			var label = labels[ id ] || id;
-			var $li = $( '<li style="margin-bottom:6px;"></li>' );
+			var $li = $( '<li class="tsosk-snapshot-import-item"></li>' );
 			var $label = $( '<label></label>' );
 			var operational = ( typeof tsosk !== 'undefined' && tsosk.snapshot_operational ) ? tsosk.snapshot_operational : [];
 			var $cb = $( '<input type="checkbox" class="tsosk-snapshot-import-section">' ).val( id );

@@ -13,9 +13,9 @@
 
 .tsosk-log-actions {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 6px;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .tsosk-log-line {
@@ -130,4 +130,111 @@
 	border-radius: 3px;
 	overflow: auto;
 	white-space: pre;
+}
+
+.tsosk-log-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+.tsosk-log-bar-filters,
+.tsosk-log-bar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.tsosk-log-bar-filters {
+    flex: 1 1 320px;
+}
+
+.tsosk-log-bar-filters .tsosk-log-search {
+    flex: 1 1 200px;
+    min-width: 0;
+    max-width: 320px;
+}
+
+.tsosk-log-auto-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 0 6px;
+    white-space: nowrap;
+}
+
+@media (max-width: 782px) {
+    .tsosk-log-bar-filters,
+    .tsosk-log-bar-actions {
+        flex: 1 1 100%;
+    }
+
+    .tsosk-log-bar-filters .tsosk-log-search {
+        max-width: none;
+        flex: 1 1 100%;
+    }
+
+    .tsosk-log-bar-filters .tsosk-log-level {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .tsosk-log-bar-actions .button {
+        flex: 1 1 calc(50% - 8px);
+        text-align: center;
+        margin: 0;
+    }
+
+    .tsosk-log-auto-label {
+        flex: 1 1 100%;
+        margin: 4px 0 0;
+        white-space: normal;
+    }
+
+    .tsosk-log-table thead {
+        display: none;
+    }
+
+    .tsosk-log-table,
+    .tsosk-log-table tbody,
+    .tsosk-log-table tr,
+    .tsosk-log-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tsosk-log-table tr {
+        padding: 8px 0;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .tsosk-log-table td {
+        padding: 4px 12px;
+        border: 0;
+        word-break: break-all;
+    }
+
+    .tsosk-log-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #646970;
+    }
+
+    .tsosk-log-actions .button {
+        flex: 1 1 calc(50% - 6px);
+        text-align: center;
+    }
 }

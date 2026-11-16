@@ -164,6 +164,7 @@
 	function tsoskUsersRenderSelectNote() {
 		var $note = $( '#tsosk-users-select-note' );
 		var total = parseInt( $( '#tsosk-users-search' ).attr( 'data-total' ), 10 ) || 0;
+		var limit = parseInt( $( '#tsosk-users-search' ).attr( 'data-limit' ), 10 ) || 0;
 		var rows  = $( '#tsosk-users-all-body .tsosk-users-cb' ).length;
 		if ( ! $( '#tsosk-users-all-table .tsosk-users-select-all' ).prop( 'checked' ) || total <= rows ) {
 			tsoskUsersAllResults = false;
@@ -174,6 +175,9 @@
 		if ( tsoskUsersAllResults ) {
 			$note.append( document.createTextNode( tsoskUsersFill( tsosk.i18n.users_all_results_selected, String( total ) ) + ' ' ) );
 			$( '<button type="button" class="button-link" id="tsosk-users-clear-matching"></button>' ).text( tsosk.i18n.users_clear_selection ).appendTo( $note );
+			if ( limit > 0 && total > limit ) {
+				$note.append( document.createTextNode( ' ' + tsoskUsersFill( tsosk.i18n.users_all_results_capped, String( limit ) ) ) );
+			}
 		} else {
 			$( '<button type="button" class="button-link" id="tsosk-users-select-matching"></button>' ).text( tsoskUsersFill( tsosk.i18n.users_select_all_results, String( total ) ) ).appendTo( $note );
 		}
@@ -246,7 +250,9 @@
 			return;
 		}
 		var allResults = tsoskUsersAllResults && 'all' === $btn.data( 'context' );
-		var totalText  = String( $( '#tsosk-users-search' ).attr( 'data-total' ) || '' );
+		var totalNum   = parseInt( $( '#tsosk-users-search' ).attr( 'data-total' ), 10 ) || 0;
+		var limitNum   = parseInt( $( '#tsosk-users-search' ).attr( 'data-limit' ), 10 ) || 0;
+		var totalText  = String( limitNum > 0 && totalNum > limitNum ? limitNum : totalNum );
 		if ( allResults && ! window.confirm( tsoskUsersFill( tsosk.i18n.users_all_results_confirm, totalText ) ) ) {
 			return;
 		}

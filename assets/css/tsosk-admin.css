@@ -1034,6 +1034,79 @@
     vertical-align: middle;
 }
 
+/*Unified header row: every plugin table (static or JS-built) shares one header look. Headers sit in the vertical middle with left-aligned text, never broken mid-word; body cells keep their own vertical alignment.*/
+.tsosk-wrap .widefat.tsosk-table > thead > tr > th {
+    text-align: left;
+    vertical-align: middle;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+}
+
+.tsosk-wrap .widefat.tsosk-table > thead > tr > th.check-column,
+.tsosk-wrap .widefat.tsosk-table > thead > tr > th[class*="col-select"],
+.tsosk-wrap .widefat.tsosk-table > thead > tr > th[class*="col-check"],
+.tsosk-wrap .widefat.tsosk-table > thead > tr > th[class*="col-pick"] {
+    text-align: center;
+}
+
+/*Sortable headers (click or Enter/Space): small up/down triangles like WordPress list tables. Used by the 404 monitor and the redirect rules.*/
+.tsosk-table th.tsosk-th-sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.tsosk-table th.tsosk-th-sortable:hover {
+    background: #f0f0f1;
+}
+
+.tsosk-table th.tsosk-th-sortable:focus-visible {
+    outline: 2px solid #2271b1;
+    outline-offset: -2px;
+}
+
+.tsosk-table .tsosk-th-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.tsosk-table .tsosk-sort-ind {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+
+.tsosk-table .tsosk-sort-ind::before,
+.tsosk-table .tsosk-sort-ind::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+
+.tsosk-table .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
+
+.tsosk-table .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
+
+.tsosk-table th.tsosk-th-sortable:hover .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
+
+.tsosk-table th.tsosk-th-sortable:hover .tsosk-sort-ind::after { border-top-color: #2271b1; }
+
+.tsosk-table th.tsosk-sort-asc .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
+
+.tsosk-table th.tsosk-sort-asc .tsosk-sort-ind::after { border-top-color: #dcdcde; }
+
+.tsosk-table th.tsosk-sort-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
+
+.tsosk-table th.tsosk-sort-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
+
 .tsosk-row-warn td {
     background: #fff8e1;
 }

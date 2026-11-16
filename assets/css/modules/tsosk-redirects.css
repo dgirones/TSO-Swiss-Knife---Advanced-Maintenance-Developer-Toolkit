@@ -13,15 +13,15 @@
 
 #tsosk-redirects-table .tsosk-redirect-col-source,
 #tsosk-redirects-table .tsosk-redirect-col-target {
-    width: 26%;
+    width: 24%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-match {
-    width: 8%;
+    width: 11%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-code {
-    width: 7%;
+    width: 8%;
 }
 
 #tsosk-redirects-table .tsosk-redirect-col-active {
@@ -36,8 +36,8 @@
     width: 17%;
 }
 
-#tsosk-redirects-table .tsosk-redirect-url-col,
-#tsosk-404-table .tsosk-redirect-url-col {
+#tsosk-redirects-table td.tsosk-redirect-url-col,
+#tsosk-404-table td.tsosk-redirect-url-col {
     min-width: 0;
     line-height: 1.45;
     vertical-align: top;
@@ -91,6 +91,35 @@
     font-size: 12px;
 }
 
+/*404 Monitor: who is asking (agent badge, DNS host, mix of agents and IPs).*/
+#tsosk-404-table .tsosk-404-col-ip .tsosk-404-agent {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 4px;
+    white-space: normal;
+}
+
+#tsosk-404-table .tsosk-404-host,
+#tsosk-404-table .tsosk-404-mix {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #646970;
+    overflow-wrap: anywhere;
+}
+
+#tsosk-404-table .tsosk-404-lookup {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+#tsosk-404-type {
+    max-width: 100%;
+}
+
 #tsosk-404-table .tsosk-404-col-ip .tsosk-badge {
     display: inline-block;
     margin-top: 4px;
@@ -104,6 +133,9 @@
 #tsosk-404-table .tsosk-404-col-select {
 	width: 2.5rem;
 	text-align: center;
+}
+
+#tsosk-404-table td.tsosk-404-col-select {
 	vertical-align: top;
 }
 
@@ -188,6 +220,106 @@
 	margin: 0 0 8px;
 }
 
+.tsosk-rd-modulebar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+	margin: 0 0 14px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #00a32a;
+	border-radius: 4px;
+}
+
+.tsosk-rd-modulebar.is-off {
+	border-left-color: #dba617;
+	background: #fcf9e8;
+}
+
+.tsosk-rd-modulebar-text {
+	flex: 1 1 280px;
+	min-width: 0;
+}
+
+@media (max-width: 782px) {
+	.tsosk-rd-modulebar .button {
+		flex: 1 1 100%;
+		text-align: center;
+	}
+}
+
+.tsosk-404-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 0 0 12px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.tsosk-404-filters,
+.tsosk-404-selection,
+.tsosk-404-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.tsosk-404-selection {
+	gap: 8px 18px;
+	padding-top: 10px;
+	border-top: 1px solid #dcdcde;
+}
+
+.tsosk-404-group-target {
+	flex: 1 1 320px;
+	min-width: 0;
+}
+
+.tsosk-404-group-target input {
+	flex: 1 1 160px;
+	width: auto;
+	min-width: 0;
+}
+
+.tsosk-404-filters #tsosk-404-search {
+	flex: 1 1 220px;
+	max-width: 340px;
+	min-width: 0;
+}
+
+@media (max-width: 782px) {
+	.tsosk-404-filters #tsosk-404-search,
+	.tsosk-404-filters select {
+		flex: 1 1 100%;
+		max-width: none;
+	}
+
+	.tsosk-404-group {
+		flex: 1 1 100%;
+	}
+
+	.tsosk-404-group .button {
+		flex: 1 1 calc(50% - 8px);
+		text-align: center;
+		margin: 0;
+	}
+
+	.tsosk-404-group-target input {
+		flex: 1 1 100%;
+		max-width: none;
+	}
+
+	.tsosk-404-group-target .button {
+		flex: 1 1 100%;
+	}
+}
+
 .tsosk-404-suggestions {
 	margin: 16px 0;
 }
@@ -245,6 +377,8 @@
 		#tsosk-redirects-table .tsosk-redirect-col-select {
 			width: 2.5rem;
 			text-align: center;
+		}
+		#tsosk-redirects-table td.tsosk-redirect-col-select {
 			vertical-align: top;
 		}
 		#tsosk-redirects-table .tsosk-redirect-col-select input[type="checkbox"] {
@@ -307,45 +441,15 @@
 
 #tsosk-404-table tbody tr.tsosk-404-hidden { display: none; }
 
-/*404 Monitor: sortable headers (small up/down triangles like WordPress list tables)*/
-#tsosk-404-table th.tsosk-th-sortable { cursor: pointer; user-select: none; vertical-align: middle; word-break: normal; overflow-wrap: normal; }
-
-#tsosk-404-table th.tsosk-th-sortable:hover { background: #f0f0f1; }
-
-#tsosk-404-table th.tsosk-th-sortable:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
-
-#tsosk-404-table .tsosk-th-inner { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-
-#tsosk-404-table .tsosk-sort-ind { display: inline-flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
-
-#tsosk-404-table .tsosk-sort-ind::before,
-#tsosk-404-table .tsosk-sort-ind::after { content: ""; display: block; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
-
-#tsosk-404-table .tsosk-sort-ind::before { border-bottom: 5px solid #a7aaad; }
-
-#tsosk-404-table .tsosk-sort-ind::after { border-top: 5px solid #a7aaad; }
-
-#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
-
-#tsosk-404-table th.tsosk-th-sortable:hover .tsosk-sort-ind::after { border-top-color: #2271b1; }
-
-#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::before { border-bottom-color: #2271b1; }
-
-#tsosk-404-table th.tsosk-sort-asc .tsosk-sort-ind::after { border-top-color: #dcdcde; }
-
-#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::after { border-top-color: #2271b1; }
-
-#tsosk-404-table th.tsosk-sort-desc .tsosk-sort-ind::before { border-bottom-color: #dcdcde; }
-
 @media (min-width: 783px) {
 		#tsosk-404-table th,
 		#tsosk-404-table td { box-sizing: border-box; padding-left: 8px; padding-right: 8px; }
 		#tsosk-404-table .tsosk-404-col-select { width: 40px; }
 		#tsosk-404-table .tsosk-404-col-url    { width: 22%; }
 		#tsosk-404-table .tsosk-404-col-visits { width: 80px; }
-		#tsosk-404-table .tsosk-404-col-date   { width: 128px; }
+		#tsosk-404-table .tsosk-404-col-date   { width: 120px; }
 		#tsosk-404-table .tsosk-404-col-ref    { width: auto; }
-		#tsosk-404-table .tsosk-404-col-ip     { width: 128px; }
+		#tsosk-404-table .tsosk-404-col-ip     { width: 190px; }
 		#tsosk-404-table .tsosk-404-col-action { width: 100px; }
 		#tsosk-404-table .tsosk-404-col-ref    { word-break: normal; overflow-wrap: anywhere; min-width: 0; }
 		#tsosk-redirects-table { table-layout: fixed; width: 100%; min-width: 0; }
@@ -354,11 +458,11 @@
 		#tsosk-redirects-table .tsosk-redirect-col-select  { width: 32px; }
 		#tsosk-redirects-table .tsosk-redirect-col-source,
 		#tsosk-redirects-table .tsosk-redirect-col-target  { width: auto; }
-		#tsosk-redirects-table .tsosk-redirect-col-match   { width: 104px; }
-		#tsosk-redirects-table .tsosk-redirect-col-code    { width: 60px; }
-		#tsosk-redirects-table .tsosk-redirect-col-active  { width: 76px; }
-		#tsosk-redirects-table .tsosk-redirect-col-visits  { width: 80px; }
-		#tsosk-redirects-table .tsosk-redirect-col-actions { width: 110px; }
+		#tsosk-redirects-table .tsosk-redirect-col-match   { width: 124px; }
+		#tsosk-redirects-table .tsosk-redirect-col-code    { width: 104px; }
+		#tsosk-redirects-table .tsosk-redirect-col-active  { width: 92px; }
+		#tsosk-redirects-table .tsosk-redirect-col-visits  { width: 92px; }
+		#tsosk-redirects-table .tsosk-redirect-col-actions { width: 120px; }
 		#tsosk-redirects-table thead th { word-break: normal; overflow-wrap: normal; hyphens: manual; vertical-align: middle; }
 		#tsosk-404-table {
 	        min-width: 720px;

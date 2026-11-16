@@ -41,4 +41,23 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-health-recheck-headers', function () {
+		var $btn = $( this );
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_health_recheck_headers',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					window.location.reload();
+					return;
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
 } )( jQuery );

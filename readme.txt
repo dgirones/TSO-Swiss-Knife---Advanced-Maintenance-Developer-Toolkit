@@ -5,7 +5,7 @@ Tags: maintenance, developer tools, cron, debug, database
 Requires at least: 6.1
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.3.1
+Stable tag: 1.3.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,25 +20,27 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Overview** — Landing dashboard with a 0–100 site score built from the Health Report and Security Review checks, the items that need attention (each with Open tool, Ignore 30 days and Ignore always), quick vitals that deep-link into the matching tool section, shortcuts and recent activity. Nothing is sent off-site.
 * **Activity History** — Central log of changes across all plugin tools (options edited, database replacements, maintenance mode, admin menu, and more). Pinned as the default favorite for quick access.
 * **Hidden WordPress Profiles** — Apply quick presets and toggle safe performance, content, and privacy constants via JSON under the plugin uploads folder (no wp-config.php editing). Runtime filters apply on the next request.
-* **Cron Manager** — List scheduled WP-Cron events (WordPress core events at the bottom), run or delete non-core hooks, and keep WordPress core cron events read-only (no manual Run / Edit / Delete).
+* **Cron Manager** — List scheduled WP-Cron events (WordPress core events at the bottom), sort them, run or delete non-core hooks one by one or in bulk, and filter the events whose hook has no callback. WordPress core cron events stay read-only (no manual Run / Edit / Delete).
 * **Action Scheduler** — Inspect WooCommerce Action Scheduler tables, pending actions, and queue health when the library is present.
 * **Debug Mode** — One-click **Developer mode** for staging that turns on `SAVEQUERIES` for the Slow Query Monitor, saved as JSON under `wp-content/uploads/tso-swiss-knife-advanced-maintenance-developer-toolkit/config/`. `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` and `SCRIPT_DEBUG` are set by WordPress before plugins load, so the tab shows their current value and source (read-only) plus copy-paste `wp-config.php` snippets to change them.
 * **Options Editor** — Search, inspect, edit, and safely delete `wp_options` rows with core options protected.
 * **Meta Editor** — Browse and edit post and user meta. Without an object ID, search matches meta keys only (not values).
 * **Option Library** — Save named option presets and re-apply them across environments.
-* **Export/Import TSO Configuration** — Back up and restore selected plugin settings as JSON (Redirects, Staging Mode, Login Protect, Slow Query, Security Review constants/alerts/server rules, Hidden Profiles runtime flags, and more). Does not include Debug Mode JSON under uploads, the Staging mail log, sandbox sessions, or the Slow Query log.
+* **Plugin & Theme Leftovers** — Find database rows that point to plugins or themes that are no longer installed, delete them group by group, and undo any deletion from a backup.
+* **View Counter** — Cache-safe visit counter for posts, pages and outbound link clicks. It uses no cookies.
+* **Export/Import TSO Configuration** — Back up and restore selected plugin settings as JSON (Redirects and their on/off switch, Staging Mode, Login Protect, Slow Query, Security Review constants/alerts/server rules, Hidden Profiles runtime flags, Activity History settings, and more). Does not include Debug Mode JSON under uploads, the Staging mail log, sandbox sessions, or the Slow Query log.
 * **Transients** — Filter by status and purge expired or all transients in bulk (site transients on multisite require a network/super admin).
 * **WP Constants** — Read-only overview of relevant constants grouped by category.
 * **WP Internals** — Inspect post types, taxonomies, roles, query vars, rewrite tags, and shortcodes.
 * **REST API Controls** — Disable anonymous REST API access or block individual namespaces.
 * **Heartbeat Controls** — Set Heartbeat mode (default / disable frontend / disable editor / disable all) and interval.
 * **Update Manager** — Review pending core, plugin, and theme updates, optionally block update checks (staging), and control update email notifications.
-* **Slow Query Monitor** — Log slow database queries when SAVEQUERIES is enabled, inspect live queries for the current request, export CSV/JSON, and open a summary from the admin bar.
+* **Slow Query Monitor** — Log slow database queries when SAVEQUERIES is enabled, flag failed queries and bad practices, run EXPLAIN on stored SELECT queries, inspect live queries for the current request, export CSV/JSON, and open a summary from the admin bar.
 * **Search & Replace** — Run dry-run or live serialized-safe search and replace across database tables.
 * **Hooks Inspector** — Browse the live `$wp_filter` global, with callback details and a real-time search filter.
 * **Rewrite Rules Flush** — Soft or hard flush with a single click; search within the current rules table.
 * **Server Files Review** — Scan for unexpected PHP files in uploads and other writable directories; optionally save `robots.txt` / `.htaccess` when you confirm.
-* **Redirects** — Manage safe redirect rules stored in the database with import and export support.
+* **Redirects** — Manage safe redirect rules stored in the database with import and export support, switch them all off without deleting them, and review the 404 Monitor to see who is behind each missing URL.
 * **Custom 404 Page** — Assign a WordPress page as the site 404 response while keeping the original URL and a real HTTP 404 status (no redirect).
 * **Slug Manager** — Bulk-edit post and term slugs with conflict detection.
 * **Health Report** — Compact checks for risky settings, logs, 404 noise, and related issues; download HTML/JSON in the plugin UI language.
@@ -59,12 +61,13 @@ TSO Swiss Knife gives WordPress developers and site administrators a single, wel
 * **Content Audit** — Find hidden content issues such as empty titles, missing thumbnails, duplicate titles, and broken shortcodes. Long slugs are reviewed and fixed in the Slug Manager.
 * **Maintenance Mode** — Toggle a 503 maintenance page with a custom message and IP whitelist.
 * **Plugin Sandbox** — Isolate plugin conflicts via a must-use loader: only your selected plugins load for your admin session.
+* **More TSO Plugins** — Other free TSO plugins, with a shortcut to open each one that is already installed.
 
 = Translations =
 
-* On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI to Catalan (CAT), Spanish (ES), or English (ENG) without changing the site-wide language.
+* The plugin is translated into Catalan, Spanish and English. On **Tools › TSO Swiss Knife**, administrators can switch the plugin UI between Auto (follows the WordPress language), Catalan, Spanish and English without changing the site-wide language.
 * The same choice applies to this plugin’s AJAX responses and admin downloads (for example Health Report HTML/JSON and URL Doctor messages). It does not change the rest of wp-admin.
-* Further locales can be contributed via [Translate WordPress](https://translate.wordpress.org/) once the plugin is published.
+* Other languages can be contributed via [Translate WordPress](https://translate.wordpress.org/).
 
 == External services ==
 
@@ -87,6 +90,10 @@ When you run a core integrity scan, the plugin requests official WordPress core 
 = Update Manager language packs (optional) =
 
 When an administrator clicks **Install pending translations** on the Update Manager tab, WordPress downloads language packs from `https://api.wordpress.org/translations/` (via core `Language_Pack_Upgrader`). Locale and package metadata for pending translations are sent; no personal visitor data. This does not run automatically. Service: [WordPress.org](https://wordpress.org/). [Privacy policy](https://wordpress.org/about/privacy/).
+
+= 404 Monitor host lookup (optional) =
+
+When an administrator clicks **Look up host** on a row of the 404 Monitor, the server asks its DNS resolver for the host name of that row's visitor IP (reverse lookup) and for the address of that host name (forward lookup), to confirm that a crawler such as Googlebot is genuine. Only the IP address already shown in the table is sent, to the DNS resolver your server is configured to use; no other third-party service is contacted. It never runs automatically.
 
 = URL & HTTPS Doctor (optional) =
 
@@ -150,11 +157,7 @@ No. Core hooks (for example `wp_version_check` or `wp_maybe_auto_update`) are re
 
 = What does Export/Import TSO Configuration include? =
 
-Selected plugin settings (Redirects, Staging Mode switches, Login Protect, Comment Anti-Spam, Slow Query settings, Health alerts, Security Review constants JSON / admin alerts / Apache server rules, Hidden Profiles runtime flags such as XML-RPC and author scans, and similar). It does **not** include Debug Mode JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log. Import overwrites the sections you choose; always export a backup first. Login Protect never imports an enabled custom login URL (to avoid lockouts). If Staging switches arrive enabled, confirm you are on a test site. Security server rules also rewrite the marked TSO block in `.htaccess` when import succeeds.
-
-= Does the CAT / ES / ENG language switcher affect downloads and AJAX? =
-
-Yes for this plugin. Health Report HTML/JSON, URL Doctor messages, and other TSO AJAX/admin-post responses follow the language selected on **Tools › TSO Swiss Knife**. The rest of WordPress admin keeps the site language.
+Selected plugin settings (Redirects and their on/off switch, Staging Mode switches, Login Protect, Comment Anti-Spam, Slow Query settings, Activity History settings, Health alerts, Security Review constants JSON / admin alerts / Apache server rules, Hidden Profiles runtime flags such as XML-RPC and author scans, and similar). It does **not** include Debug Mode JSON under uploads, sandbox sessions, the Staging mail log, or the Slow Query log. Import overwrites the sections you choose; always export a backup first. Login Protect never imports an enabled custom login URL (to avoid lockouts). If Staging switches arrive enabled, confirm you are on a test site. Security server rules also rewrite the marked TSO block in `.htaccess` when import succeeds.
 
 = Where does the plugin write files? =
 
@@ -201,24 +204,21 @@ That usually means the ZIP folder name was wrong (for example `…-main` from a 
 
 == Changelog ==
 
+= 1.3.3 =
+* New: Slow Query Monitor shows failed queries, bad practices and EXPLAIN, and lists only truly slow queries.
+* New: Cron Manager bulk actions, sorting and hooks-without-callback filter; Leftovers removes missing plugins from the uninstall list; Redirects can be turned off.
+* New: Security headers review, Staging status, Email Diagnostics memory, Hooks, Rewrite Rules, Activity History, Export/Import and Debug log improvements.
+* Fix: Debug log shrinking, Server Files labels and .htaccess check, Slug Manager redirects, 404 Monitor, Users bulk actions.
+* Tweak: Update Manager shared routine; Debug and 404 Monitor toolbars adapt to mobile.
+
+= 1.3.2 =
+* New: 404 Monitor shows who is behind each missing URL and flags scheduled tasks.
+* New: Redirect rules table sortable by column headers; tables share one style.
+* Fix: 404 Monitor and redirect hits ignore Link Inspector's own link checks.
+* Fix: 404 Monitor recognises this server's requests; %20 kept in 404 deletes and redirect sources.
+* Improved: wildcard redirects share one matcher; ** matches any depth.
+
 = 1.3.1 =
-* Improved: the Leftovers report no longer lists data that an installed plugin or theme uses in several of its own files, ignores post types that code only lists to exclude them (NOT IN), and its tables wrap their text (cards on phones) instead of scrolling sideways.
+* Improved: Leftovers report skips data used by installed plugins or themes; its tables wrap text on phones.
 
-= 1.3.0 =
-* New: automatic day / night theme for the plugin screen (follows sunrise and sunset, with an Auto / Day / Night button in the header; same system as the other TSO plugins). The side columns keep their dark look.
-* Fix: Slow Query Monitor could run out of memory on requests that run a huge number of queries; the origin detection and the duplicate-query analysis now stop collecting before the memory limit is reached.
-
-= 1.2.9 =
-* Improved: the admin script and stylesheet are split per tool and each tab loads only the scripts and styles it needs (lighter, faster screens).
-* Improved: Debug logs now mark the old wp-content/debug.log as no longer used when WP_DEBUG_LOG points to another file, and show where to delete it.
-* Cleanup: removed unused internal code (dead helper methods, an unused constant and an unused JS helper).
-* Improved: bundled translations also ship as .l10n.php files (faster loading on WordPress 6.5+) and unused translation strings were removed from the catalogs.
-* Improved: the Slow Query Monitor toolbar menu is now a problem detector: duplicate queries, slow queries and database load are listed by the plugin responsible, and the figures that did not help (queries, memory, log summary) are gone.
-* Fix: a few messages (security override hint, spam-provider errors, view counter table error) were shown in English; they are now translated into Catalan and Spanish, and the Comment Anti-Spam logs are more compact on phones.
-
-= 1.2.8 =
-* Fix: Internals roles table, Leftovers backup rows and the Admin Menu editor no longer show squeezed or letter-by-letter text on phones and narrow screens.
-* Fix: tables on Slow Query Monitor, Redirects and 404 Monitor no longer get clipped or crushed on phones and narrow screens; they scroll inside their own card.
-* Fix in Comment Anti-Spam: the Recent blocks and Learning log tables no longer break the IP, source and reason into one character per line.
-* Fix in Security Review: the wp-config.php constants panel (DISALLOW_FILE_EDIT / DISALLOW_FILE_MODS) no longer crashes with a fatal error.
-
+See changelog.txt in the plugin folder for older versions.

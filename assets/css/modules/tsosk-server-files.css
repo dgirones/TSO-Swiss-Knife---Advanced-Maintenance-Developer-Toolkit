@@ -1,0 +1,36 @@
+/*── Server files: change preview ────────────────────────────────────────────*/
+.tsosk-sf-diff {
+    margin-top: 12px;
+    overflow: auto;
+    max-height: 360px;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.tsosk-sf-diff table.diff {
+    width: 100%;
+    table-layout: fixed;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+.tsosk-sf-diff table.diff td {
+    padding: 2px 6px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.tsosk-sf-diff .diff-addedline {
+    background: #e6ffed;
+}
+
+.tsosk-sf-diff .diff-deletedline {
+    background: #ffeef0;
+}
+
+.tsosk-sf-diff .diff-addedline ins,
+.tsosk-sf-diff .diff-deletedline del {
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.08);
+}

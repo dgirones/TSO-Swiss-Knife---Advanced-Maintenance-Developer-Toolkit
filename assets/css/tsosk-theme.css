@@ -580,6 +580,31 @@ html[data-tsosk-theme="night"] .tsosk-content .tsosk-stat-label {
 	color: var(--tsosk-text-muted);
 }
 
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-404-controls {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-404-selection {
+	border-top-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-rd-modulebar {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+/* Debug log toolbar and change preview */
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-log-bar {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sf-diff {
+	background: var(--tsosk-surface-2);
+	border-color: var(--tsosk-border);
+}
+
 /* Debug constants table header, Hooks name column */
 html[data-tsosk-theme="night"] .tsosk-content .tsosk-dflags-head {
 	background: var(--tsosk-surface-3);

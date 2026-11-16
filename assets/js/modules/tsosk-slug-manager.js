@@ -240,6 +240,58 @@
 		} );
 	} );
 
+	// ── Category URL redirects ────────────────────────────────────────────
+
+	function tsoskSmCatRun( apply ) {
+		var $card  = $( '#tsosk-sm-cat-card' );
+		var $msg   = $( '#tsosk-sm-cat-msg' );
+		var $scan  = $( '#tsosk-sm-cat-scan' );
+		var $apply = $( '#tsosk-sm-cat-apply' );
+		var $list  = $( '#tsosk-sm-cat-list' );
+
+		$scan.prop( 'disabled', true );
+		$apply.prop( 'disabled', true );
+		showMsg( $msg, tsosk.i18n.running, 'ok', 60000 );
+
+		ajaxPost( {
+			action : 'tsosk_sm_cat_redirects',
+			data   : { nonce: $card.data( 'nonce' ), apply: apply ? 1 : 0 },
+			success: function ( r ) {
+				$list.empty().hide();
+				if ( ! r.success ) {
+					showMsg( $msg, r.data, 'error', 60000 );
+					$apply.hide();
+					return;
+				}
+				var data   = r.data || {};
+				var $table = tsoskSmBuildBulkTable( data.rows, [
+					{ label: $card.data( 'col-old' ), key: 'old', code: true },
+					{ label: $card.data( 'col-new' ), key: 'new', code: true }
+				] );
+				showMsg( $msg, data.message || tsosk.i18n.done, 'ok', 60000 );
+				if ( $table ) {
+					$list.append( $table ).show();
+				}
+				$apply.toggle( ! apply && ( data.missing || 0 ) > 0 );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error', 60000 );
+			},
+			complete: function () {
+				$scan.prop( 'disabled', false );
+				$apply.prop( 'disabled', false );
+			}
+		} );
+	}
+
+	$( document ).on( 'click', '#tsosk-sm-cat-scan', function () {
+		tsoskSmCatRun( false );
+	} );
+
+	$( document ).on( 'click', '#tsosk-sm-cat-apply', function () {
+		tsoskSmCatRun( true );
+	} );
+
 	// ── Bulk Fix ──────────────────────────────────────────────────────────
 
 	$( document ).on( 'click', '#tsosk-sm-bulk-fix', function () {

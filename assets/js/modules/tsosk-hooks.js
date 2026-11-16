@@ -18,8 +18,8 @@
 	$( document ).on( 'input', '#tsosk-hooks-search', function () {
 		var q = $( this ).val().toLowerCase();
 		$( '#tsosk-hooks-table tbody tr' ).each( function () {
-			var hook = $( this ).find( 'td:first' ).text().toLowerCase();
-			$( this ).toggle( hook.indexOf( q ) !== -1 );
+			var hook = ( $( this ).attr( 'data-hook' ) || '' );
+			$( this ).toggle( hook.indexOf( q ) !== -1 || $( this ).text().toLowerCase().indexOf( q ) !== -1 );
 		} );
 	} );
 

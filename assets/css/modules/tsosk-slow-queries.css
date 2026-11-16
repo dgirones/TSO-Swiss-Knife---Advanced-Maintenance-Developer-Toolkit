@@ -417,3 +417,220 @@
 	border-left-color: #46b450;
 	background: #f0fff0;
 }
+
+/* Query problems + EXPLAIN */
+.tsosk-badge-error {
+	background: #fcf0f1;
+	color: #b32d2e;
+	border-color: #f1b8b9;
+}
+
+.tsosk-sq-issue-error {
+	display: block;
+	margin-top: 6px;
+	color: #b32d2e;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.tsosk-sq-explain {
+	margin-top: 6px;
+}
+
+.tsosk-sq-explain-out {
+	margin-top: 8px;
+}
+
+.tsosk-sq-explain-warn {
+	margin: 0 0 8px 18px;
+	list-style: disc;
+	color: #b32d2e;
+}
+
+.tsosk-sq-explain-warn.is-ok {
+	color: #00a32a;
+}
+
+.tsosk-sq-explain-err {
+	margin: 0;
+	color: #b32d2e;
+	overflow-wrap: anywhere;
+}
+
+.tsosk-sq-explain-table td,
+.tsosk-sq-explain-table th {
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.tsosk-sq-explain-bad td {
+	background: #fcf0f1;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-badge-error {
+	background: #3a1f20;
+	color: #f1a3a4;
+	border-color: #6b2c2e;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-explain-bad td {
+	background: #3a1f20;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-issue-error,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-explain-err,
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-sq-explain-warn {
+	color: #f1a3a4;
+}
+
+@media (max-width: 782px) {
+	.tsosk-sq-explain-table thead {
+		display: none;
+	}
+
+	.tsosk-sq-explain-table,
+	.tsosk-sq-explain-table tbody,
+	.tsosk-sq-explain-table tr,
+	.tsosk-sq-explain-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-sq-explain-table td {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.tsosk-sq-explain-table td::before {
+		content: attr(data-label) ": ";
+		font-weight: 600;
+	}
+}
+
+.tsosk-sq-issue-table th.tsosk-sq-col-issue {
+	width: 150px;
+	min-width: 150px;
+}
+
+.tsosk-sq-issue-table td .tsosk-badge {
+	display: inline-block;
+	white-space: normal;
+	line-height: 1.35;
+	text-align: left;
+}
+
+.tsosk-sq-issue-table th.tsosk-sq-col-side {
+	width: 27%;
+}
+
+.tsosk-sq-issue-table td.tsosk-sq-cell-caller {
+	overflow-wrap: break-word;
+	word-break: normal;
+	line-height: 1.5;
+}
+
+.tsosk-sq-issue-table th.tsosk-sq-col-times,
+.tsosk-sq-issue-table th.tsosk-sq-col-time {
+	width: 52px;
+	min-width: 52px;
+}
+
+@media (max-width: 782px) {
+	.tsosk-sq-issue-table thead {
+		display: none;
+	}
+
+	.tsosk-sq-issue-table,
+	.tsosk-sq-issue-table tbody,
+	.tsosk-sq-issue-table tr,
+	.tsosk-sq-issue-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.tsosk-sq-issue-table tr {
+		padding: 6px 0;
+		border-bottom: 1px solid #dcdcde;
+	}
+
+	.tsosk-sq-issue-table td {
+		border: 0;
+		padding: 4px 12px;
+		overflow-wrap: anywhere;
+	}
+
+	.tsosk-sq-issue-table td[data-label]::before {
+		content: attr(data-label) ": ";
+		font-weight: 600;
+	}
+}
+
+.tsosk-sq-all-fast {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 8px 0 0;
+	color: #00a32a;
+	font-weight: 600;
+}
+
+.tsosk-sq-issue-table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.tsosk-sq-issue-table td {
+	overflow-wrap: anywhere;
+}
+
+.tsosk-sq-issue-table td.tsosk-sq-cell-sql code,
+.tsosk-sq-issue-table td.tsosk-sq-cell-sql .tsosk-sq-sql-code {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 782px) {
+	.tsosk-sq-issue-table {
+		table-layout: auto;
+	}
+}
+
+/* Last page summary */
+.tsosk-sq-last-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+	margin: 6px 0 10px;
+}
+
+.tsosk-sq-last-url {
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-all;
+	font-size: 12px;
+}
+
+.tsosk-sq-last-when {
+	color: #646970;
+	font-size: 12px;
+}
+
+.tsosk-sq-stats-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 14px;
+}
+
+a.tsosk-sq-stat-link {
+	text-decoration: none;
+	color: inherit;
+}
+
+a.tsosk-sq-stat-link:hover .tsosk-sq-stat-lbl,
+a.tsosk-sq-stat-link:focus .tsosk-sq-stat-lbl {
+	color: #2271b1;
+}

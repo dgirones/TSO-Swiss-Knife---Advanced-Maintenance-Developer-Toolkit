@@ -100,4 +100,28 @@
 		} );
 	} );
 
+	// ── Activity History: live filters ──
+	function tsoskHistoryFilter() {
+		var text  = String( $( '#tsosk-history-filter-text' ).val() || '' ).toLowerCase();
+		var tool  = String( $( '#tsosk-history-filter-tool' ).val() || '' );
+		var user  = String( $( '#tsosk-history-filter-user' ).val() || '' );
+		var shown = 0;
+		var $rows = $( '#tsosk-history-table tbody tr' );
+		$rows.each( function () {
+			var $row = $( this );
+			var ok   = ( ! tool || $row.attr( 'data-module' ) === tool )
+				&& ( ! user || $row.attr( 'data-user' ) === user )
+				&& ( ! text || $row.text().toLowerCase().indexOf( text ) !== -1 );
+			$row.toggle( ok );
+			if ( ok ) {
+				shown++;
+			}
+		} );
+		var $count = $( '#tsosk-history-filter-count' );
+		var filtered = text || tool || user;
+		$count.text( filtered ? ( tsosk.i18n.history_filter_count || '' ).replace( '%1$d', shown ).replace( '%2$d', $rows.length ) : '' );
+		$( '#tsosk-history-filter-empty' ).prop( 'hidden', 0 !== shown );
+	}
+	$( document ).on( 'input change', '#tsosk-history-filter-text, #tsosk-history-filter-tool, #tsosk-history-filter-user', tsoskHistoryFilter );
+
 } )( jQuery );

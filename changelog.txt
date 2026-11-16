@@ -1,6 +1,24 @@
 Tu Soporte Online — Swiss Knife: Advanced Maintenance & Developer Toolkit
 Changelog (older versions). The three latest versions are in readme.txt.
 
+= 1.3.0 =
+* New: automatic day / night theme for the plugin screen, with an Auto / Day / Night button.
+* Fix: Slow Query Monitor no longer runs out of memory on requests with huge numbers of queries.
+
+= 1.2.9 =
+* Improved: the admin script and stylesheet are split per tool and each tab loads only the scripts and styles it needs (lighter, faster screens).
+* Improved: Debug logs now mark the old wp-content/debug.log as no longer used when WP_DEBUG_LOG points to another file, and show where to delete it.
+* Cleanup: removed unused internal code (dead helper methods, an unused constant and an unused JS helper).
+* Improved: bundled translations also ship as .l10n.php files (faster loading on WordPress 6.5+) and unused translation strings were removed from the catalogs.
+* Improved: the Slow Query Monitor toolbar menu is now a problem detector: duplicate queries, slow queries and database load are listed by the plugin responsible, and the figures that did not help (queries, memory, log summary) are gone.
+* Fix: a few messages (security override hint, spam-provider errors, view counter table error) were shown in English; they are now translated into Catalan and Spanish, and the Comment Anti-Spam logs are more compact on phones.
+
+= 1.2.8 =
+* Fix: Internals roles table, Leftovers backup rows and the Admin Menu editor no longer show squeezed or letter-by-letter text on phones and narrow screens.
+* Fix: tables on Slow Query Monitor, Redirects and 404 Monitor no longer get clipped or crushed on phones and narrow screens; they scroll inside their own card.
+* Fix in Comment Anti-Spam: the Recent blocks and Learning log tables no longer break the IP, source and reason into one character per line.
+* Fix in Security Review: the wp-config.php constants panel (DISALLOW_FILE_EDIT / DISALLOW_FILE_MODS) no longer crashes with a fatal error.
+
 = 1.2.7 =
 * Login Protection works alongside TSO Login Organizer: its front-end login pages are no longer answered with a 404, login links point to them, and the tab explains which plugin blocks what when both have lockouts, hidden wp-login.php or two-step checks on.
 * Fix in Comment Anti-Spam: on Fluent Forms the hidden honeypot and time fields were printed outside the form and not read from the submitted data, so every message was rejected as "submitted too quickly". They are now printed inside the form and read correctly, and the logging option points to the Logs tab.

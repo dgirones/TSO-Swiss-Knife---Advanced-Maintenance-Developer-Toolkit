@@ -25,7 +25,7 @@
 		Array.prototype.forEach.call( nodes, function ( node ) {
 			node.textContent = value;
 			// Pills disappear when there is nothing to show.
-			if ( key === 'dups_pill' || key === 'slow_pill' ) {
+			if ( key === 'dups_pill' || key === 'slow_pill' || key === 'err_pill' ) {
 				node.hidden = '' === value;
 			}
 		} );

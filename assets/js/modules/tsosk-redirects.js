@@ -388,11 +388,35 @@
 		$count.text( text.replace( '{shown}', shown ).replace( '{total}', total ) );
 	}
 
-	$( document ).on( 'input search', '#tsosk-404-search', function () {
-		var q = String( $( this ).val() || '' ).trim().toLowerCase();
+	// 404 Monitor: text search and the "who requests it" filter work together.
+	function tsosk404TypeMatches( $tr, type ) {
+		var origin = String( $tr.attr( 'data-origin' ) || '' );
+		var isBot  = '1' === String( $tr.attr( 'data-bot' ) || '' );
+		switch ( type ) {
+			case 'bots':
+				return isBot;
+			case 'people':
+				return ! isBot && 'browser' === String( $tr.attr( 'data-kind' ) || '' ) && '1' !== String( $tr.attr( 'data-self' ) || '' );
+			case 'self':
+				return '1' === String( $tr.attr( 'data-self' ) || '' );
+			case 'hotlink':
+				return 'hotlink' === origin;
+			case 'internal':
+				return 'internal' === origin;
+			case 'none':
+				return 'none' === origin;
+			default:
+				return true;
+		}
+	}
+
+	function tsosk404ApplyFilters() {
+		var q    = String( $( '#tsosk-404-search' ).val() || '' ).trim().toLowerCase();
+		var type = String( $( '#tsosk-404-type' ).val() || 'all' );
 		$( '#tsosk-404-table tbody tr' ).each( function () {
 			var $tr   = $( this );
 			var match = ! q || $tr.text().toLowerCase().indexOf( q ) !== -1 || String( $tr.find( '.tsosk-404-select' ).data( 'source' ) || '' ).toLowerCase().indexOf( q ) !== -1;
+			match     = match && tsosk404TypeMatches( $tr, type );
 			$tr.toggleClass( 'tsosk-404-hidden', ! match );
 			if ( ! match ) {
 				// Never leave hidden rows selected: bulk actions must only touch what is visible.
@@ -401,7 +425,35 @@
 		} );
 		tsosk404UpdateCount();
 		tsosk404SyncSelectAll();
+	}
+	$( document ).on( 'input search', '#tsosk-404-search', tsosk404ApplyFilters );
+	$( document ).on( 'change', '#tsosk-404-type', tsosk404ApplyFilters );
+
+	// 404 Monitor: look up the host name of a row's IP (reverse + forward DNS), then refresh that cell.
+	$( document ).on( 'click', '.tsosk-404-lookup', function () {
+		var $btn  = $( this );
+		var $td   = $btn.closest( 'td' );
+		var label = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		ajaxPost( {
+			action : 'tsosk_404_lookup_host',
+			data   : {
+				nonce : $btn.data( 'nonce' ),
+				key   : $btn.data( 'key' )
+			},
+			success: function ( r ) {
+				if ( r && r.success && r.data && r.data.html ) {
+					$td.html( r.data.html );
+				} else {
+					$btn.prop( 'disabled', false ).text( r && r.data ? String( r.data ) : label );
+				}
+			},
+			error  : function () {
+				$btn.prop( 'disabled', false ).text( tsosk.i18n.error );
+			}
+		} );
 	} );
+
 	$( tsosk404UpdateCount );
 
 	function tsosk404SyncSelectAll() {
@@ -414,10 +466,61 @@
 		return $( '#tsosk-redirects-table tbody tr' ).not( '.tsosk-row-hidden' ).find( '.tsosk-redirect-select' );
 	}
 
+	// Redirect rules: header sort (click a column). It overrides the dropdown until the dropdown is used again.
+	var tsoskRulesHeaderSort = null;
+
+	function tsoskRulesHeaderCompare( col, dir ) {
+		var numeric = ( 'status' === col || 'enabled' === col || 'hits' === col );
+		var attr    = ( 'hits' === col ) ? 'data-hits' : ( 'enabled' === col ? 'data-enabled' : ( 'status' === col ? 'data-status' : 'data-' + col ) );
+		return function ( a, b ) {
+			var va   = $( a ).attr( attr ) || '';
+			var vb   = $( b ).attr( attr ) || '';
+			var diff = numeric ? ( ( parseInt( va, 10 ) || 0 ) - ( parseInt( vb, 10 ) || 0 ) ) : String( va ).toLowerCase().localeCompare( String( vb ).toLowerCase(), undefined, { numeric: true } );
+			if ( 'desc' === dir ) {
+				diff = -diff;
+			}
+			// Ties keep the real evaluation order.
+			return diff || ( ( parseInt( $( a ).attr( 'data-index' ), 10 ) || 0 ) - ( parseInt( $( b ).attr( 'data-index' ), 10 ) || 0 ) );
+		};
+	}
+
+	function tsoskRulesHeaderClick( $th ) {
+		var col     = String( $th.data( 'sort' ) );
+		var current = $th.hasClass( 'tsosk-sort-asc' ) ? 'asc' : ( $th.hasClass( 'tsosk-sort-desc' ) ? 'desc' : '' );
+		var dir;
+		if ( ! current ) {
+			dir = ( 'hits' === col || 'enabled' === col ) ? 'desc' : 'asc'; // Most visits / active rules first.
+		} else {
+			dir = 'asc' === current ? 'desc' : 'asc';
+		}
+		$( '#tsosk-redirects-table th.tsosk-th-sortable' ).removeClass( 'tsosk-sort-asc tsosk-sort-desc' ).attr( 'aria-sort', 'none' );
+		$th.addClass( 'asc' === dir ? 'tsosk-sort-asc' : 'tsosk-sort-desc' ).attr( 'aria-sort', 'asc' === dir ? 'ascending' : 'descending' );
+		tsoskRulesHeaderSort = { col: col, dir: dir };
+		tsoskRulesApply();
+	}
+
+	$( document ).on( 'click', '#tsosk-redirects-table th.tsosk-th-sortable', function () {
+		tsoskRulesHeaderClick( $( this ) );
+	} );
+	$( document ).on( 'keydown', '#tsosk-redirects-table th.tsosk-th-sortable', function ( e ) {
+		if ( 'Enter' === e.key || ' ' === e.key ) {
+			e.preventDefault();
+			tsoskRulesHeaderClick( $( this ) );
+		}
+	} );
+	// Using the dropdown hands control back to it.
+	$( document ).on( 'change', '#tsosk-redirect-sort', function () {
+		tsoskRulesHeaderSort = null;
+		$( '#tsosk-redirects-table th.tsosk-th-sortable' ).removeClass( 'tsosk-sort-asc tsosk-sort-desc' ).attr( 'aria-sort', 'none' );
+	} );
+
 	function tsoskRulesCompare( sort ) {
 		var num = function ( el, key ) {
 			return parseInt( $( el ).attr( 'data-' + key ), 10 ) || 0;
 		};
+		if ( tsoskRulesHeaderSort ) {
+			return tsoskRulesHeaderCompare( tsoskRulesHeaderSort.col, tsoskRulesHeaderSort.dir );
+		}
 		return function ( a, b ) {
 			var diff = 0;
 			switch ( sort ) {
@@ -492,7 +595,7 @@
 			}
 		} );
 
-		var viewActive = 'default' !== sort || '' !== query || 'all' !== filter;
+		var viewActive = 'default' !== sort || null !== tsoskRulesHeaderSort || '' !== query || 'all' !== filter;
 		$table.toggleClass( 'tsosk-rules-view-active', viewActive );
 		$( '#tsosk-redirect-no-match' ).prop( 'hidden', shown > 0 || ! rows.length );
 		if ( tsosk.i18n.redirects_showing ) {
@@ -926,6 +1029,31 @@
 		$( '#tsosk-redirect-match-type' ).val( 'regex' );
 		$( '#tsosk-redirect-source' ).val( '^/' + prefix + '(/|$)' );
 		tsosk404FocusRedirectForm();
+	} );
+
+	// Switch the whole Redirects module on or off, then reload so the page shows the new state.
+	$( document ).on( 'click', '.tsosk-rd-module-toggle', function () {
+		var $btn = $( this );
+		var $msg = $( '#tsosk-rd-module-msg' );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_redirects_module_toggle',
+			data   : { nonce: $btn.data( 'nonce' ), enable: $btn.attr( 'data-enable' ) },
+			success: function ( r ) {
+				if ( r.success ) {
+					showMsg( $msg, ( r.data && r.data.message ) || tsosk.i18n.done, 'ok' );
+					window.location.reload();
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+					$btn.prop( 'disabled', false );
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
 	} );
 
 	$( document ).on( 'click', '#tsosk-404-clear', function () {

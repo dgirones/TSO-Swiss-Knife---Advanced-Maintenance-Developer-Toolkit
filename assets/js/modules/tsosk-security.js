@@ -186,6 +186,45 @@
 		} );
 	} );
 
+	$( document ).on( 'click', '#tsosk-sec-headers-check', function () {
+		var $btn  = $( this );
+		var $msg  = $( '#tsosk-sec-headers-msg' );
+		var $list = $( '#tsosk-sec-headers-result' );
+
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.running );
+		$list.empty().hide();
+
+		ajaxPost( {
+			action : 'tsosk_security_check_headers',
+			data   : { nonce: $btn.data( 'nonce' ) },
+			success: function ( r ) {
+				if ( ! r.success ) {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error', 60000 );
+					return;
+				}
+				var data = r.data || {};
+				var $ul  = $( '<ul style="margin:8px 0 0;padding:0;list-style:none;"></ul>' );
+				showMsg( $msg, data.message || tsosk.i18n.done, data.status === 'warn' ? 'warn' : 'ok', 60000 );
+				( data.findings || [] ).forEach( function ( f ) {
+					var warn   = f.level === 'warn';
+					var $badge = $( '<span class="tsosk-badge"></span>' )
+						.addClass( warn ? 'tsosk-badge-warn' : 'tsosk-badge-info' )
+						.text( warn ? $btn.data( 'lbl-warn' ) : $btn.data( 'lbl-info' ) );
+					$ul.append( $( '<li style="margin:0 0 8px;"></li>' ).append( $badge, document.createTextNode( ' ' + f.message ) ) );
+				} );
+				if ( $ul.children().length ) {
+					$list.append( $ul ).show();
+				}
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error', 60000 );
+			},
+			complete: function () {
+				$btn.prop( 'disabled', false ).text( $btn.data( 'label' ) );
+			}
+		} );
+	} );
+
 	$( document ).on( 'click', '#tsosk-security-protect-uploads', function () {
 		var $btn = $( this );
 		var $msg = $( '#tsosk-security-uploads-msg' );

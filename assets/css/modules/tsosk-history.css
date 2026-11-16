@@ -1,4 +1,16 @@
 /*── Activity History details ───────────────────────────────────────────────*/
+.tsosk-history-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.tsosk-history-filters .regular-text {
+    max-width: 100%;
+}
+
 .tsosk-history-count {
     margin-left: 8px;
     font-size: 12px;

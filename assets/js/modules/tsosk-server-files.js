@@ -99,6 +99,33 @@
 		} );
 	} );
 
+	// Show what would change on save (diff of the saved file against the editor).
+	$( document ).on( 'click', '.tsosk-sf-diff-btn', function () {
+		var $btn  = $( this );
+		var key   = $btn.data( 'key' );
+		var $msg  = $( '.tsosk-sf-msg-' + key );
+		var $diff = $( '#tsosk-sf-diff-' + key );
+
+		$btn.prop( 'disabled', true );
+		ajaxPost( {
+			action : 'tsosk_sf_diff',
+			data   : { nonce: $btn.data( 'nonce' ), key: key, content: $( '#tsosk-sf-content-' + key ).val() },
+			success: function ( r ) {
+				if ( r.success ) {
+					$diff.html( r.data.html ).prop( 'hidden', ! r.data.html );
+					showMsg( $msg, r.data.message, 'ok' );
+				} else {
+					showMsg( $msg, r.data || tsosk.i18n.error, 'error' );
+				}
+				$btn.prop( 'disabled', false );
+			},
+			error: function () {
+				showMsg( $msg, tsosk.i18n.error, 'error' );
+				$btn.prop( 'disabled', false );
+			}
+		} );
+	} );
+
 	// Put the editor back to the content saved on the server (the textarea's original value).
 	$( document ).on( 'click', '.tsosk-sf-discard', function () {
 		var $btn  = $( this );

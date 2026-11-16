@@ -53,7 +53,7 @@
 			total += parseInt( $( this ).attr( 'data-count' ), 10 ) || 0;
 		} );
 		$( '#tsosk-lo-delete' ).prop( 'disabled', 0 === total );
-		$( '#tsosk-lo-selected' ).text( total ? String( L.selected || '%d' ).replace( '%d', String( total ) ) : ( L.pick_hint || '' ) );
+		$( '#tsosk-lo-selected' ).text( total ? String( ( 1 === total && L.selected_one ) ? L.selected_one : ( L.selected || '%d' ) ).replace( '%d', String( total ) ) : ( L.pick_hint || '' ) );
 		return total;
 	}
 
@@ -102,7 +102,8 @@
 				var $cb = $( this );
 				$cb.closest( 'tr' ).addClass( 'tsosk-lo-row--gone' );
 				// An option is a single row: it leaves every card that listed it.
-				if ( 'options' === $cb.attr( 'data-source' ) ) {
+				// Exception: uninstall_plugins is shared, only this plugin's entry is removed from it.
+				if ( 'options' === $cb.attr( 'data-source' ) && 'uninstall_plugins' !== $cb.attr( 'data-key' ) ) {
 					goneKeys[ $cb.attr( 'data-key' ) ] = true;
 				}
 			} );
@@ -192,7 +193,7 @@
 			}
 			$card.append( $head );
 
-			var $table = $( '<table class="widefat striped tsosk-lo-table"><thead><tr><th class="tsosk-lo-c-pick"></th><th></th><th></th><th></th><th></th></tr></thead><tbody></tbody></table>' );
+			var $table = $( '<table class="widefat striped tsosk-table tsosk-lo-table"><thead><tr><th class="tsosk-lo-c-pick"></th><th></th><th></th><th></th><th></th></tr></thead><tbody></tbody></table>' );
 			$table.find( 'th' ).eq( 1 ).text( L.where );
 			$table.find( 'th' ).eq( 2 ).text( L.name );
 			$table.find( 'th' ).eq( 3 ).text( L.rows );
@@ -569,7 +570,7 @@
 			return;
 		}
 		$res.append( $( '<h4/>' ).text( L.census_types_title ) );
-		var $table = $( '<table class="widefat striped tsosk-lo-census-table"/>' ), $head = $( '<tr/>' );
+		var $table = $( '<table class="widefat striped tsosk-table tsosk-lo-census-table"/>' ), $head = $( '<tr/>' );
 		$.each( [ L.census_delete_col, L.census_name + ' / ' + L.where, L.rows + ' · ' + L.census_meta_rows, L.census_conf, L.census_evidence, L.census_samples ], function ( i, label ) {
 			$head.append( $( '<th/>' ).text( label || '' ) );
 		} );
@@ -619,7 +620,7 @@
 			}
 			return;
 		}
-		var $table = $( '<table class="widefat striped tsosk-lo-census-table"/>' );
+		var $table = $( '<table class="widefat striped tsosk-table tsosk-lo-census-table"/>' );
 		var $head = $( '<tr/>' );
 		$.each( [ L.census_watch_col, L.census_delete_col, L.census_prefix + ' / ' + L.where, L.census_keys + ' · ' + L.rows + ' · ' + L.census_size, L.census_conf, L.census_evidence, L.census_samples ], function ( i, label ) {
 			$head.append( $( '<th/>' ).text( label || '' ) );
@@ -796,7 +797,7 @@
 			return;
 		}
 		$res.append( $( '<p/>' ).text( String( L.watch_summary || '' ).replace( '%1$d', d.items.length ).replace( '%2$s', d.started ).replace( '%3$d', d.days_left ) ) );
-		var $table = $( '<table class="widefat striped tsosk-lo-census-table"/>' ), $head = $( '<tr/>' );
+		var $table = $( '<table class="widefat striped tsosk-table tsosk-lo-census-table"/>' ), $head = $( '<tr/>' );
 		$.each( [ L.census_prefix, L.where, L.census_keys, L.watch_last, L.watch_readers ], function ( i, label ) {
 			$head.append( $( '<th/>' ).text( label || '' ) );
 		} );

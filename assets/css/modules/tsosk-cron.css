@@ -9,3 +9,182 @@
 	margin-top: 16px;
 }
 
+
+/* Bulk bar */
+.tsosk-cron-bulk {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 10px;
+	margin: 0 0 8px;
+}
+
+.tsosk-cron-bulk-all {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+}
+
+.tsosk-cron-bulk-count {
+	color: #646970;
+	font-size: 12px;
+}
+
+.tsosk-cron-bulk-actions {
+	display: inline-flex;
+	gap: 6px;
+	margin-left: auto;
+}
+
+/* Selection column */
+#tsosk-cron-table th.tsosk-cron-check,
+#tsosk-cron-table td.tsosk-cron-check {
+	width: 28px;
+	padding-right: 0;
+	text-align: center;
+	vertical-align: middle;
+}
+
+#tsosk-cron-table td {
+	vertical-align: middle;
+}
+
+#tsosk-cron-table td.tsosk-code {
+	min-width: 140px;
+	overflow-wrap: anywhere;
+}
+
+.tsosk-cron-row-selected td {
+	background: #f0f6fc;
+}
+
+/* Action buttons: one compact aligned row so the table fits without side scrolling */
+#tsosk-cron-table td.tsosk-cron-actions {
+	white-space: nowrap;
+}
+
+.tsosk-cron-btns {
+	display: inline-flex;
+	gap: 4px;
+	vertical-align: middle;
+}
+
+.tsosk-cron-btns .button {
+	margin: 0;
+	min-width: 0;
+	padding: 0 8px;
+	text-align: center;
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cron-row-selected td {
+	background: var(--tsosk-surface-2, #1e2a38);
+}
+
+html[data-tsosk-theme="night"] .tsosk-content .tsosk-cron-bulk-count {
+	color: #a7aaad;
+}
+
+#tsosk-cron-table thead th {
+	text-align: left;
+	vertical-align: middle;
+}
+
+.tsosk-cron-sort-mobile {
+	display: none;
+}
+
+@media (max-width: 782px) {
+	.tsosk-cron-sort-mobile {
+		display: inline-block;
+	}
+
+	.tsosk-cron-bulk-actions {
+		margin-left: 0;
+		width: 100%;
+	}
+
+	.tsosk-cron-bulk-actions .button {
+		flex: 1;
+	}
+
+	#tsosk-cron-table thead {
+		display: none;
+	}
+
+	#tsosk-cron-table,
+	#tsosk-cron-table tbody,
+	#tsosk-cron-table tr,
+	#tsosk-cron-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	#tsosk-cron-table tr {
+		position: relative;
+		padding: 6px 0;
+		border-bottom: 1px solid #dcdcde;
+	}
+
+	#tsosk-cron-table td[data-label] {
+		display: flex;
+		gap: 10px;
+		justify-content: space-between;
+		align-items: center;
+		border: 0;
+		padding: 6px 12px;
+		text-align: right;
+		overflow-wrap: anywhere;
+	}
+
+	#tsosk-cron-table td[data-label]::before {
+		content: attr(data-label);
+		flex: 0 0 90px;
+		font-weight: 600;
+		text-align: left;
+	}
+
+	#tsosk-cron-table td.tsosk-code {
+		min-width: 0;
+	}
+
+	#tsosk-cron-table td.tsosk-cron-check {
+		width: auto;
+		padding: 6px 12px 0;
+		text-align: left;
+	}
+
+	#tsosk-cron-table td.tsosk-cron-check:empty {
+		display: none;
+	}
+
+	#tsosk-cron-table td.tsosk-cron-actions {
+		flex-wrap: wrap;
+	}
+
+	.tsosk-cron-btns {
+		width: 100%;
+	}
+
+	.tsosk-cron-btns .button {
+		flex: 1;
+	}
+}
+
+/* Filter: events whose hook has no callback loaded */
+.tsosk-cron-nocb[aria-pressed="true"] {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.tsosk-cron-nocb-badge {
+	margin-left: 6px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+#tsosk-cron-table tbody tr.tsosk-cron-row-hide {
+	display: none;
+}

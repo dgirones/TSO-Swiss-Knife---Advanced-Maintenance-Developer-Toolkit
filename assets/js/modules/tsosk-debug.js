@@ -165,6 +165,31 @@
 		} );
 	} );
 
+	// Auto-refresh: re-use the Refresh button of the same card every 10 s while the box is ticked and the tab is visible.
+	$( document ).on( 'change', '.tsosk-log-auto', function () {
+		var $box  = $( this );
+		var $btn  = $box.closest( '.tsosk-log-bar' ).find( '.tsosk-refresh-log' ).first();
+		var prev  = $box.data( 'timer' );
+		if ( prev ) {
+			window.clearInterval( prev );
+			$box.removeData( 'timer' );
+		}
+		if ( ! $box.is( ':checked' ) || ! $btn.length ) {
+			return;
+		}
+		var timer = window.setInterval( function () {
+			if ( ! document.body.contains( $box[ 0 ] ) || ! $box.is( ':checked' ) ) {
+				window.clearInterval( timer );
+				return;
+			}
+			if ( document.hidden || $btn.prop( 'disabled' ) ) {
+				return;
+			}
+			$btn.trigger( 'click' );
+		}, 10000 );
+		$box.data( 'timer', timer );
+	} );
+
 	// Log previews open at the end (newest lines), the first time each one is shown.
 	function tsoskScrollPreviewsToEndOnShow() {
 		var $previews = $( '.tsosk-log-preview' );

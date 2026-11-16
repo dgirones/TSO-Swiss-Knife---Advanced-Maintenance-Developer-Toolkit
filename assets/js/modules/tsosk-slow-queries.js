@@ -17,6 +17,15 @@
 	var sqClearHash = tsoskCore.sqClearHash;
 
 
+	// One colour rule for every query time, relative to the configured slow threshold (same as the PHP side).
+	function sqSlowClass( ms ) {
+		var thr = parseInt( $( '#tsosk-sq-log' ).attr( 'data-threshold' ), 10 ) || 100;
+		if ( ms >= thr * 5 ) {
+			return 'tsosk-sq-warn';
+		}
+		return ms >= thr ? 'tsosk-sq-amber' : '';
+	}
+
 	// Slow Query Monitor: sub-tabs (Settings by default; a reload keeps the tab; links with a #anchor open the tab that holds it).
 	function sqShowTab( tab ) {
 		var $tab = $( '.tsosk-sq-tab[data-tab="' + tab + '"]' );
@@ -89,6 +98,11 @@
 
 
 	// ── Slow Query Monitor ────────────────────────────────────────────────────
+
+	function tsoskSqFmt( key, fallback, val ) {
+		var t = ( tsosk.i18n && tsosk.i18n[ key ] ) ? tsosk.i18n[ key ] : fallback;
+		return String( t ).replace( '%s', val );
+	}
 
 	var tsosk_sq = { page: 1, total_pages: 1, lastSearch: '' };
 
@@ -473,7 +487,7 @@
 			$.each( batch.queries || [], function ( j, q ) {
 				if ( parseFloat( q.time ) > maxTime ) { maxTime = parseFloat( q.time ); }
 			} );
-			var worstCls    = maxTime > 500 ? 'tsosk-sq-warn' : ( maxTime > 200 ? 'tsosk-sq-amber' : '' );
+			var worstCls    = sqSlowClass( maxTime );
 			var badgeCls    = batch.slow_count > 5 ? 'tsosk-badge-warn' : 'tsosk-badge-info';
 			var batchId     = batch.id || ( 'tmp-' + i );
 			var batchIdAttr = String( batchId ).replace( /"/g, '' );
@@ -486,8 +500,8 @@
 				+ '<span class="tsosk-badge ' + badgeCls + ' tsosk-sq-batch-badge">' + batch.slow_count + ' ' + tsosk.i18n.sq_slow + '</span>'
 				+ '<span class="tsosk-sq-batch-url">' + $( '<span>' ).text( batch.url || '—' ).html() + '</span>'
 				+ '<span class="tsosk-sq-batch-meta">' + new Date( batch.ts * 1000 ).toISOString().replace( 'T', ' ' ).slice( 0, 16 ) + ' UTC</span>'
-				+ ( batch.load_ms > 0 ? '<span class="tsosk-sq-batch-meta tsosk-sq-batch-meta-muted">Page: ' + parseFloat( batch.load_ms ).toFixed(1) + ' ms</span>' : '' )
-				+ '<span class="tsosk-sq-batch-worst ' + worstCls + '">Worst: ' + maxTime.toFixed(2) + ' ms</span>'
+				+ ( batch.load_ms > 0 ? '<span class="tsosk-sq-batch-meta tsosk-sq-batch-meta-muted">' + tsoskSqFmt( 'sq_page_ms', 'Page: %s ms', parseFloat( batch.load_ms ).toFixed(1) ) + '</span>' : '' )
+				+ '<span class="tsosk-sq-batch-worst ' + worstCls + '">' + tsoskSqFmt( 'sq_worst_ms', 'Worst: %s ms', maxTime.toFixed(2) ) + '</span>'
 				+ '<button type="button" class="button button-small tsosk-sq-delete-batch tsosk-sq-delete-batch-btn" data-id="' + batchIdAttr + '" data-nonce="' + nonce + '">' + tsosk.i18n.delete + '</button>'
 				+ '<span class="tsosk-sq-toggle-icon">▼</span>'
 				+ '</div>';
@@ -495,7 +509,7 @@
 			var bodyHtml = '<div class="tsosk-sq-batch-body">';
 			$.each( batch.queries || [], function ( j, q ) {
 				var t  = parseFloat( q.time );
-				var tc = t > 500 ? 'tsosk-sq-warn' : ( t > 200 ? 'tsosk-sq-amber' : '' );
+				var tc = sqSlowClass( t );
 				var kw = ( q.sql || '' ).split( ' ' )[0].toUpperCase();
 				var kwColors = { SELECT:'#2271b1', INSERT:'#16a34a', UPDATE:'#d97706', DELETE:'#d63638', CREATE:'#7c3aed', DROP:'#d63638' };
 				var kwc = kwColors[kw] || '#374151';
@@ -539,26 +553,19 @@
 		if ( e.key === 'Enter' ) { tsosk_sq_load( 1 ); }
 	} );
 
-	// Slow Query Monitor: live SAVEQUERIES table filters (duplicates / slow / search).
+	// Slow Query Monitor: live slow-queries table search.
 	function tsosk_sq_apply_debug_filters() {
 		var $filter = $( '#tsosk-sq-filter' );
 		if ( ! $filter.length ) {
 			return;
 		}
 		var q      = $filter.val().toLowerCase();
-		var onlyDu = $( '#tsosk-sq-dupes-only' ).prop( 'checked' );
-		var onlySl = $( '#tsosk-sq-slow-only' ).prop( 'checked' );
 		var $rows  = $( '#tsosk-sq-table tbody .tsosk-sq-row' );
 		var shown  = 0;
 		$rows.each( function () {
 			var $row  = $( this );
 			var sql   = String( $row.attr( 'data-sql' ) || '' ).toLowerCase();
-			// Prefer attr over .data() — jQuery coerces data-dupe="0" to number 0.
-			var isDu  = String( $row.attr( 'data-dupe' ) || '0' ) === '1';
-			var isSl  = String( $row.attr( 'data-slow' ) || '0' ) === '1';
-			var hide  = ( q && sql.indexOf( q ) === -1 )
-				|| ( onlyDu && ! isDu )
-				|| ( onlySl && ! isSl );
+			var hide  = q && sql.indexOf( q ) === -1;
 			$row.toggleClass( 'tsosk-sq-hidden', hide );
 			if ( ! hide ) {
 				shown++;
@@ -571,7 +578,59 @@
 	}
 
 	$( document ).on( 'input', '#tsosk-sq-filter', tsosk_sq_apply_debug_filters );
-	$( document ).on( 'change', '#tsosk-sq-dupes-only, #tsosk-sq-slow-only', tsosk_sq_apply_debug_filters );
 	tsosk_sq_apply_debug_filters();
+
+	// EXPLAIN on demand for a query of the last page snapshot.
+	$( document ).on( 'click', '.tsosk-sq-explain-btn', function () {
+		var $btn = $( this );
+		var $out = $btn.siblings( '.tsosk-sq-explain-out' );
+		if ( $out.data( 'loaded' ) ) {
+			$out.prop( 'hidden', ! $out.prop( 'hidden' ) );
+			return;
+		}
+		var label = $btn.text();
+		$btn.prop( 'disabled', true ).text( tsosk.i18n.sq_explaining );
+		ajaxPost( {
+			action : 'tsosk_sq_explain',
+			data   : { nonce: $btn.data( 'nonce' ), hash: $btn.data( 'hash' ) },
+			success: function ( r ) {
+				$btn.prop( 'disabled', false ).text( label );
+				$out.empty().prop( 'hidden', false );
+				if ( ! r.success ) {
+					$out.append( $( '<p class="tsosk-sq-explain-err"></p>' ).text( r.data || tsosk.i18n.error ) );
+					return;
+				}
+				var warns = r.data.warnings || [];
+				var $w = $( '<ul class="tsosk-sq-explain-warn"></ul>' );
+				if ( warns.length ) {
+					$.each( warns, function ( _i, w ) { $w.append( $( '<li></li>' ).text( w ) ); } );
+				} else {
+					$w.addClass( 'is-ok' ).append( $( '<li></li>' ).text( tsosk.i18n.sq_explain_ok ) );
+				}
+				var cols = [ 'id', 'select_type', 'table', 'type', 'possible_keys', 'key', 'rows', 'Extra' ];
+				var $t = $( '<table class="widefat tsosk-table tsosk-sq-explain-table"></table>' );
+				var $h = $( '<tr></tr>' );
+				$.each( cols, function ( _i, c ) { $h.append( $( '<th></th>' ).text( c ) ); } );
+				$t.append( $( '<thead></thead>' ).append( $h ) );
+				var $b = $( '<tbody></tbody>' );
+				$.each( r.data.rows || [], function ( _i, row ) {
+					var $tr = $( '<tr></tr>' );
+					$.each( cols, function ( _j, c ) {
+						$tr.append( $( '<td></td>' ).attr( 'data-label', c ).text( row[ c ] || '' ) );
+					} );
+					if ( 'ALL' === row.type ) {
+						$tr.addClass( 'tsosk-sq-explain-bad' );
+					}
+					$b.append( $tr );
+				} );
+				$t.append( $b );
+				$out.append( $w ).append( $( '<div class="tsosk-table-wrap"></div>' ).append( $t ) ).data( 'loaded', true );
+			},
+			error: function () {
+				$btn.prop( 'disabled', false ).text( label );
+				$out.empty().prop( 'hidden', false ).append( $( '<p class="tsosk-sq-explain-err"></p>' ).text( tsosk.i18n.error ) );
+			}
+		} );
+	} );
 
 } )( jQuery );
